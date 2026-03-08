@@ -1,0 +1,67 @@
+/*
+ * Global CSS — Tailwind/Uniwind/HeroUI Native theme configuration.
+ *
+ * This is the main entry point for all styling. It imports Tailwind CSS v4,
+ * Uniwind (RN adapter), HeroUI Native component styles, and custom color themes.
+ *
+ * To customize for your app:
+ * - Replace the font families in @theme with your own (also update app.json fonts)
+ * - Adjust the base light/dark color overrides below
+ * - Add or remove theme imports (see src/themes/ for examples)
+ * - After adding a new theme CSS file, register it in metro.config.js `extraThemes`
+ *   and add the variant names to ThemeName in src/context/app-theme-context.tsx
+ */
+
+@import 'tailwindcss';
+@import 'uniwind';
+
+@import 'heroui-native/styles';
+
+/* Custom color themes — remove or add your own here.
+ * Each file defines a light and dark variant (e.g. lavender-light, lavender-dark).
+ * See src/themes/lavander.css for a full example of the required CSS variables. */
+@import './themes/lavander.css';
+@import './themes/mint.css';
+@import './themes/sky.css';
+
+/* Path to the heroui-native lib inside node_modules relative to this file.
+ * Adjust if you move global.css to a different directory. */
+@source '../node_modules/heroui-native/lib';
+
+@theme {
+  /* Default font families — replace these with your app's fonts.
+   * Make sure to also register them in app.json under expo-font plugin. */
+  --font-sans: 'Poppins-Regular';
+  --font-sans-medium: 'Poppins-Medium';
+  --font-sans-bold: 'Poppins-Bold';
+  --font-mono: 'Poppins-SemiBold';
+}
+
+@layer theme {
+  /* Base light theme — these override HeroUI Native's defaults.
+   * Customize colors, fonts, and radius to match your brand. */
+  @variant light {
+    --accent: oklch(0.7324 0.1649 55.36);
+    --success: oklch(0.65 0.15 155);
+
+    --font-normal: 'Inter-Regular';
+    --font-medium: 'Inter-Medium';
+    --font-semibold: 'Inter-SemiBold';
+    --font-bold: 'Inter-Bold';
+
+    --radius: 0.5rem;
+  }
+
+  /* Base dark theme — keep the same variables as light for consistency. */
+  @variant dark {
+    --accent: oklch(0.7324 0.1649 55.36);
+    --success: oklch(0.75 0.12 155);
+
+    --font-normal: 'Inter-Regular';
+    --font-medium: 'Inter-Medium';
+    --font-semibold: 'Inter-SemiBold';
+    --font-bold: 'Inter-Bold';
+
+    --radius: 0.5rem;
+  }
+}
