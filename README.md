@@ -1,8 +1,7 @@
-# Expo Forge Starter
+# Xolace
 
 TypeScript-first Expo + Expo Router + Uniwind + HeroUI Native starter focused on speed, clarity, and good defaults. Ships with multi-theme support, an opinionated project structure, utility helpers, and ready-made screens.
 
-> **Branches:** The `default` branch is Expo Go-compatible. The `main` branch includes additional batteries — auth with Clerk(coming soon), backend with Convex(coming soon), and more.
 
 ## Tech Stack
 
