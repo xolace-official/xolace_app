@@ -12,7 +12,7 @@ import { AppText } from '@/components/shared/app-text';
 import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth } from '@/constants/theme';
 import { useQuery } from 'convex/react';
-import { api } from '../../convex/_generated/api';
+import { api } from '../../../convex/_generated/api';
 
 function getDevMenuHint() {
   if (Platform.OS === 'web') {
