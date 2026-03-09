@@ -11,6 +11,11 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { RootProvider } from '@/providers/root-provider';
 
+/**
+ * Root layout component that wraps the app with RootProvider and a ThemeProvider, and renders the animated splash overlay followed by the tab navigator.
+ *
+ * @returns The root JSX element containing the provider hierarchy, `AnimatedSplashOverlay`, and `AppTabs`.
+ */
 export default function TabLayout() {
   const { theme } = useUniwind()
   return (

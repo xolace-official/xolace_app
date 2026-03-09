@@ -14,6 +14,14 @@ import { BottomTabInset, MaxContentWidth } from '@/constants/theme';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 
+/**
+ * Provides a platform-appropriate hint explaining how to open the developer menu.
+ *
+ * @returns A JSX element (AppText) containing the message appropriate for the current platform:
+ * - On web: a prompt to use browser devtools.
+ * - On physical devices: instructions to shake the device or press `m` in the terminal.
+ * - On simulators/emulators: a keyboard shortcut hint (`cmd+m (or ctrl+m)` on Android, `cmd+d` otherwise).
+ */
 function getDevMenuHint() {
   if (Platform.OS === 'web') {
     return (
