@@ -11,11 +11,13 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@clerk/clerk-expo": "^2.19.30",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@react-navigation/bottom-tabs": "^7.7.3",
     "@react-navigation/elements": "^2.8.1",
     "@react-navigation/native": "^7.1.28",
     "clsx": "^2.1.1",
+    "convex": "^1.32.0",
     "expo": "~55.0.4",
     "expo-blur": "~55.0.8",
     "expo-constants": "~55.0.7",
@@ -58,5 +60,11 @@
     "eslint-config-expo": "~55.0.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "trustedDependencies": [
+    "@clerk/shared",
+    "browser-tabs-lock",
+    "core-js",
+    "unrs-resolver"
+  ]
 }
