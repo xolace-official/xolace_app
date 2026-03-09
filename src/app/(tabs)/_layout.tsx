@@ -5,37 +5,19 @@
  * See src/providers/root-provider.tsx to add your own providers (auth, analytics, etc.).
  */
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
 import { useUniwind } from 'uniwind'
 
+import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import AppTabs from '@/components/app-tabs';
 import { RootProvider } from '@/providers/root-provider';
 
-
-const AppContent = () => {
-    const isOnboarded = false;
-  return (
-        <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Protected guard={!isOnboarded}>
-        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-      </Stack.Protected>
-      <Stack.Protected guard={isOnboarded}>
-        <Stack.Screen name="(tabs)" options={{}} />
-      </Stack.Protected>
-
-    </Stack>
-  )
-}
-
-export default function RootLayout() {
+export default function TabLayout() {
   const { theme } = useUniwind()
   return (
     <RootProvider>
       <ThemeProvider value={theme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AppContent />
+        <AnimatedSplashOverlay />
+        <AppTabs />
       </ThemeProvider>
     </RootProvider>
   );
