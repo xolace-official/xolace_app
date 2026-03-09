@@ -60,5 +60,11 @@
     "eslint-config-expo": "~55.0.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "trustedDependencies": [
+    "@clerk/shared",
+    "browser-tabs-lock",
+    "core-js",
+    "unrs-resolver"
+  ]
 }

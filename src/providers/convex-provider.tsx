@@ -13,7 +13,7 @@ const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
  * normal values, but this is the standard pattern required by the Convex/Clerk integration.
  * @unmemoized
  */
-export default function ConvexClientProvider({
+export function ConvexClientProvider({
   children,
 }: {
   children: ReactNode;

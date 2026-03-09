@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView, KeyboardProvider } from 'react-native-keyboard-controller';
 import { AppThemeProvider } from '@/context/app-theme-context';
+import {ConvexClientProvider} from './convex-provider';
 
 /**
  * Root provider that composes all app-wide providers in the correct order.
@@ -44,11 +45,13 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
         <AppThemeProvider>
+          <ConvexClientProvider>
           <HeroUINativeProvider
           config={config}
           >
             {children}
           </HeroUINativeProvider>
+          </ConvexClientProvider>
           </AppThemeProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
