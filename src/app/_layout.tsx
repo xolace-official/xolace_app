@@ -30,6 +30,13 @@ const AppContent = () => {
   )
 }
 
+/**
+ * Wraps the app content with root providers and supplies a navigation theme based on the current Uniwind theme.
+ *
+ * The component retrieves the active theme from `useUniwind` and passes `DarkTheme` when the theme equals `"dark"`, otherwise `DefaultTheme`. It also establishes the `RootProvider` context before rendering the app content.
+ *
+ * @returns The root layout element that provides app-wide context and a navigation theme.
+ */
 export default function RootLayout() {
   const { theme } = useUniwind()
   return (

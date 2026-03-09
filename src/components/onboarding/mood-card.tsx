@@ -10,6 +10,11 @@ import { AppText } from '@/components/shared/app-text';
 
 const CARD_WIDTH_RATIO = 0.55;
 
+/**
+ * Compute the card width from the provided screen width.
+ *
+ * @returns The card width in pixels, calculated as `screenWidth * CARD_WIDTH_RATIO`.
+ */
 export function getCardWidth(screenWidth: number) {
   return screenWidth * CARD_WIDTH_RATIO;
 }
