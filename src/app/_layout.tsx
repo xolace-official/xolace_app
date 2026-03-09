@@ -12,7 +12,8 @@ import { RootProvider } from '@/providers/root-provider';
 
 
 const AppContent = () => {
-    const isOnboarded = false;
+    const isOnboarded = true;
+    const isAuthenticated = false;
   return (
         <Stack
       screenOptions={{
@@ -22,7 +23,10 @@ const AppContent = () => {
       <Stack.Protected guard={!isOnboarded}>
         <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
       </Stack.Protected>
-      <Stack.Protected guard={isOnboarded}>
+      <Stack.Protected guard={isOnboarded && !isAuthenticated}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack.Protected>
+      <Stack.Protected guard={isOnboarded && isAuthenticated}>
         <Stack.Screen name="(tabs)" options={{}} />
       </Stack.Protected>
 
