@@ -11,6 +11,8 @@ import { HintRow } from '@/components/hint-row';
 import { AppText } from '@/components/shared/app-text';
 import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth } from '@/constants/theme';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 function getDevMenuHint() {
   if (Platform.OS === 'web') {
@@ -36,6 +38,7 @@ function getDevMenuHint() {
 }
 
 export default function HomeScreen() {
+   const tasks = useQuery(api.tasks.get);
   return (
     <View className="flex-1 flex-row justify-center bg-background">
       <SafeAreaView
@@ -86,6 +89,16 @@ export default function HomeScreen() {
             }
           />
         </View>
+
+         <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      {tasks?.map(({ _id, text }) => <AppText key={_id}>{text}</AppText>)}
+    </View>
 
         {Platform.OS === 'web' && <WebBadge />}
       </SafeAreaView>
