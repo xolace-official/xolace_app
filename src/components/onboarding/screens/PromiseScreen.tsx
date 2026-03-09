@@ -7,6 +7,7 @@ import Animated, {
   FadeInDown,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 import { AppText } from '@/components/shared/app-text';
@@ -19,6 +20,7 @@ import { MOODS } from '@/constants/moods';
 export const PromiseScreen = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const debouncedIndex = useDebounce(activeIndex, 400);
+  const router = useRouter();
 
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -46,7 +48,7 @@ export const PromiseScreen = () => {
     if (process.env.EXPO_OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    // TODO: navigate to next onboarding screen
+    router.push('/frame');
   };
 
   return (
