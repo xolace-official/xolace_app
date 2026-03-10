@@ -9,7 +9,7 @@ export const ProcessingState = () => (
     className="flex-1 items-center justify-center gap-8"
   >
     <BreathingOrb />
-    <AppText className="text-sm text-foreground/40">
+    <AppText className="text-sm text-foreground/40 mt-2">
       Listening...
     </AppText>
   </Animated.View>
