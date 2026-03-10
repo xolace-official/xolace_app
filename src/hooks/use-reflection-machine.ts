@@ -1,5 +1,5 @@
 import { useReducer, useCallback } from 'react';
-import type { ReflectionState, ReflectionAction } from '@/interfaces/reflection';
+import type { ReflectionState, ReflectionAction, EntryType } from '@/interfaces/reflection';
 
 const MAX_CLARIFY_ATTEMPTS = 3;
 
@@ -13,6 +13,8 @@ const initialState: ReflectionState = {
   mirrorResponse: '',
   clarifyCount: 0,
   userVariant: { kind: 'first-time' },
+  selectedTextures: [],
+  entryType: 'typed',
 };
 
 
@@ -33,10 +35,27 @@ const initialState: ReflectionState = {
 function reducer(state: ReflectionState, action: ReflectionAction): ReflectionState {
   switch (action.type) {
     case 'TAP_INPUT':
-      return { ...state, screen: 'typing' };
+      return {
+        ...state,
+        screen: 'typing',
+        entryType: state.selectedTextures.length > 0 ? 'hybrid' : 'typed',
+      };
 
-    case 'TEXT_CHANGE':
-      return { ...state, entryText: action.text, screen: 'typing' };
+    case 'TEXT_CHANGE': {
+      const entryType: EntryType =
+        state.selectedTextures.length > 0 ? 'hybrid' : 'typed';
+      return { ...state, entryText: action.text, screen: 'typing', entryType };
+    }
+
+    case 'TOGGLE_TEXTURE': {
+      const textures = state.selectedTextures.includes(action.word)
+        ? state.selectedTextures.filter((w) => w !== action.word)
+        : [...state.selectedTextures, action.word];
+      return { ...state, selectedTextures: textures };
+    }
+
+    case 'SCAFFOLD_SUBMIT':
+      return { ...state, screen: 'processing', entryType: 'scaffold' };
 
     case 'PAUSE_TIMEOUT':
       if (state.screen !== 'typing') return state;
@@ -95,7 +114,13 @@ export function useReflectionMachine() {
 
   const submitReflection = useCallback(() => {
     dispatch({ type: 'SUBMIT' });
-    // Mock AI delay
+    setTimeout(() => {
+      dispatch({ type: 'MIRROR_RECEIVED', mirror: MOCK_MIRROR });
+    }, 3000);
+  }, []);
+
+  const submitScaffold = useCallback(() => {
+    dispatch({ type: 'SCAFFOLD_SUBMIT' });
     setTimeout(() => {
       dispatch({ type: 'MIRROR_RECEIVED', mirror: MOCK_MIRROR });
     }, 3000);
@@ -117,6 +142,7 @@ export function useReflectionMachine() {
     state,
     dispatch,
     submitReflection,
+    submitScaffold,
     submitClarification,
   };
 }
