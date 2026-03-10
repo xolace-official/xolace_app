@@ -23,7 +23,7 @@ export const GaveUpState = ({ onPathSelection, onReset }: Props) => (
 
     <View className="mt-14 gap-6">
       <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-        <Pressable onPress={onPathSelection}>
+        <Pressable accessibilityRole="button" accessibilityLabel="See my options" onPress={onPathSelection}>
           <AppText className="text-base font-semibold text-accent">
             See my options
           </AppText>
@@ -31,7 +31,7 @@ export const GaveUpState = ({ onPathSelection, onReset }: Props) => (
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-        <Pressable onPress={onReset}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Start fresh" onPress={onReset}>
           <AppText className="text-base text-foreground/50">
             Start fresh
           </AppText>
