@@ -2,12 +2,14 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/shared/app-text';
 
+
 /**
  * Screen component that displays a centered "Sit with this" title and a "Coming soon" subtitle,
  * applying device safe-area top and bottom padding.
  *
  * @returns A React element rendering the screen layout with safe-area top and bottom padding applied.
  */
+
 export default function SitWithThis() {
   const insets = useSafeAreaInsets();
 

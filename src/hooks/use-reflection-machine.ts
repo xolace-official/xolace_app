@@ -15,6 +15,7 @@ const initialState: ReflectionState = {
   userVariant: { kind: 'first-time' },
 };
 
+
 /**
  * Drives state transitions for the reflection UI in response to dispatched actions.
  *
@@ -28,6 +29,7 @@ const initialState: ReflectionState = {
  * @param action - Action describing the intended state transition
  * @returns The next reflection state after applying the action
  */
+
 function reducer(state: ReflectionState, action: ReflectionAction): ReflectionState {
   switch (action.type) {
     case 'TAP_INPUT':
@@ -74,6 +76,7 @@ function reducer(state: ReflectionState, action: ReflectionAction): ReflectionSt
   }
 }
 
+
 /**
  * Hook that manages the reflection UI state machine and exposes actions for submitting reflections and clarifications.
  *
@@ -86,6 +89,7 @@ function reducer(state: ReflectionState, action: ReflectionAction): ReflectionSt
  * - `submitReflection` — triggers a submit action and (mock) populates the mirror response after a short delay.
  * - `submitClarification` — triggers a submit action and (mock) populates an alternative mirror response after a short delay.
  */
+
 export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);
 

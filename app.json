@@ -8,7 +8,7 @@
     "scheme": "xolace",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/xolace-icon-sample.icon"
     },
     "android": {
       "adaptiveIcon": {

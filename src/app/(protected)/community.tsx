@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/shared/app-text';
 
+
 /**
  * Renders the Community screen with a centered title and a subdued "Coming soon" subtitle.
  *
@@ -9,6 +10,7 @@ import { AppText } from '@/components/shared/app-text';
  *
  * @returns A JSX.Element representing the Community screen layout.
  */
+
 export default function Community() {
   const insets = useSafeAreaInsets();
 
