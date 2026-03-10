@@ -15,6 +15,21 @@ const initialState: ReflectionState = {
   userVariant: { kind: 'first-time' },
 };
 
+
+/**
+ * Drives state transitions for the reflection UI in response to dispatched actions.
+ *
+ * Handles updating screen, entry/clarify text, mirror responses, and clarify attempt counting.
+ * Notable behaviours:
+ * - TEXT_CHANGE, TAP_INPUT, RESUME_TYPING, PAUSE_TIMEOUT, SUBMIT, MIRROR_RECEIVED, THATS_IT, SAY_MORE and CLARIFY_TEXT_CHANGE update the corresponding fields and/or current screen.
+ * - NOT_QUITE increments `clarifyCount` and sets `screen` to `clarify` or `gave-up` when `clarifyCount` reaches the configured maximum.
+ * - RESET restores the initial state while preserving the existing `userVariant`.
+ *
+ * @param state - Current reflection state
+ * @param action - Action describing the intended state transition
+ * @returns The next reflection state after applying the action
+ */
+
 function reducer(state: ReflectionState, action: ReflectionAction): ReflectionState {
   switch (action.type) {
     case 'TAP_INPUT':
@@ -60,6 +75,20 @@ function reducer(state: ReflectionState, action: ReflectionAction): ReflectionSt
       return state;
   }
 }
+
+
+/**
+ * Hook that manages the reflection UI state machine and exposes actions for submitting reflections and clarifications.
+ *
+ * The hook maintains the current screen, entry and clarify text, mirror response, clarify attempt count, and user variant,
+ * and provides dispatchable actions to drive the state transitions (e.g., submit, mirror received, clarify, reset).
+ *
+ * @returns An object containing:
+ * - `state` — the current reflection machine state (screen, entryText, clarifyText, mirrorResponse, clarifyCount, userVariant).
+ * - `dispatch` — reducer dispatch function for sending actions to the state machine.
+ * - `submitReflection` — triggers a submit action and (mock) populates the mirror response after a short delay.
+ * - `submitClarification` — triggers a submit action and (mock) populates an alternative mirror response after a short delay.
+ */
 
 export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);

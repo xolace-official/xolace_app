@@ -2,6 +2,15 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/shared/app-text';
 
+
+/**
+ * Renders the Community screen with a centered title and a subdued "Coming soon" subtitle.
+ *
+ * Uses safe-area insets to apply top and bottom padding so content is not obscured by device notches or home indicators.
+ *
+ * @returns A JSX.Element representing the Community screen layout.
+ */
+
 export default function Community() {
   const insets = useSafeAreaInsets();
 
