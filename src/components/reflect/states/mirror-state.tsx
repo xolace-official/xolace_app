@@ -31,7 +31,7 @@ export const MirrorState = ({ mirror, onThatsIt, onNotQuite, onSayMore }: Props)
     <View className="mt-12 gap-3">
       <Animated.View entering={FadeInDown.delay(200).duration(400)}>
         <Button variant="primary" onPress={hapticPress(onThatsIt)}>
-          <Button.Label>That's it</Button.Label>
+          <Button.Label>That&apos;s it</Button.Label>
         </Button>
       </Animated.View>
 

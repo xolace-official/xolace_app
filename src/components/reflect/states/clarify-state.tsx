@@ -39,7 +39,7 @@ export const ClarifyState = ({
 
         <Animated.View entering={FadeInDown.delay(200).duration(400)}>
           <AppText className="mb-4 text-center text-lg text-foreground">
-            What didn't land right?
+            What didn&apos;t land right?
           </AppText>
         </Animated.View>
 

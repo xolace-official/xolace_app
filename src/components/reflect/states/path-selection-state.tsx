@@ -41,7 +41,7 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
             variant="secondary"
             onPress={() => router.push('/community' as never)}
           >
-            <Button.Label>You're not alone</Button.Label>
+            <Button.Label>You&apos;re not alone</Button.Label>
           </Button>
         </Animated.View>
 

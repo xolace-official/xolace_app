@@ -15,11 +15,11 @@ export const GaveUpState = ({ onPathSelection, onReset }: Props) => (
     className="flex-1 justify-center px-8"
   >
     <AppText className="text-center text-xl leading-8 text-foreground">
-      Sometimes words can't quite capture what we feel — and that's okay.
+      Sometimes words can&apos;t quite capture what we feel — and that&apos;s okay.
     </AppText>
 
     <AppText className="mt-4 text-center text-base leading-6 text-foreground/40">
-      What you shared still matters, even if the mirror didn't reflect it perfectly.
+      What you shared still matters, even if the mirror didn&apos;t reflect it perfectly.
     </AppText>
 
     <View className="mt-12 gap-3">
