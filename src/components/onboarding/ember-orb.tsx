@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -10,7 +10,6 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect } from 'react';
 
 const AnimatedGradient = Animated.createAnimatedComponent(LinearGradient);
 
