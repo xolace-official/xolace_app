@@ -1,6 +1,5 @@
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
-import { Button } from 'heroui-native';
 import { useRouter } from 'expo-router';
 import { AppText } from '@/components/shared/app-text';
 
@@ -16,39 +15,46 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
     <Animated.View
       entering={FadeIn.duration(600)}
       exiting={FadeOut.duration(500)}
-      className="flex-1 justify-center px-8"
+      className="flex-1 justify-center px-6"
     >
-      <AppText className="mb-10 text-center text-base italic leading-7 text-foreground/30">
+      <AppText className="mb-10 text-base italic leading-7 text-foreground/30">
         {mirror}
       </AppText>
 
-      <AppText className="mb-8 text-center text-lg text-foreground">
+      <AppText className="mb-8 text-lg text-foreground">
         Where would you like to go from here?
       </AppText>
 
-      <View className="gap-3">
+      <View className="gap-8">
         <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-          <Button
-            variant="primary"
-            onPress={() => router.push('/sit-with-this' as never)}
-          >
-            <Button.Label>Sit with this</Button.Label>
-          </Button>
+          <Pressable onPress={() => router.push('/sit-with-this' as never)}>
+            <AppText className="text-lg text-foreground">Sit with this</AppText>
+            <AppText className="mt-1 text-sm text-foreground/30">
+              A quiet space to breathe
+            </AppText>
+          </Pressable>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-          <Button
-            variant="secondary"
-            onPress={() => router.push('/community' as never)}
-          >
-            <Button.Label>You&apos;re not alone</Button.Label>
-          </Button>
+          <Pressable onPress={() => router.push('/community' as never)}>
+            <AppText className="text-lg text-foreground">
+              You&apos;re not alone
+            </AppText>
+            <AppText className="mt-1 text-sm text-foreground/30">
+              See what others have shared
+            </AppText>
+          </Pressable>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(600).duration(400)}>
-          <Button variant="ghost" onPress={onReset}>
-            <Button.Label>I just needed to say it</Button.Label>
-          </Button>
+          <Pressable onPress={onReset}>
+            <AppText className="text-lg text-foreground">
+              I just needed to say it
+            </AppText>
+            <AppText className="mt-1 text-sm text-foreground/30">
+              Return to the beginning
+            </AppText>
+          </Pressable>
         </Animated.View>
       </View>
     </Animated.View>
