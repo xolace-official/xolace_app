@@ -32,7 +32,7 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
 
       <View className="gap-8">
         <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-          <Pressable onPress={() => router.push('/sit-with-this' as never)}>
+          <Pressable onPress={() => router.push('/sit-with-this' )}>
             <AppText className="text-lg text-foreground">Sit with this</AppText>
             <AppText className="mt-1 text-sm text-foreground/30">
               A quiet space to breathe
@@ -41,7 +41,7 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-          <Pressable onPress={() => router.push('/community' as never)}>
+          <Pressable onPress={() => router.push('/community' )}>
             <AppText className="text-lg text-foreground">
               You&apos;re not alone
             </AppText>
