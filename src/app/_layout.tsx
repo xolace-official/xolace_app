@@ -5,11 +5,21 @@
  * See src/providers/root-provider.tsx to add your own providers (auth, analytics, etc.).
  */
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { useUniwind } from 'uniwind'
+import * as SplashScreen from 'expo-splash-screen';
+import {
+  SpaceGrotesk_400Regular,
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
+  SpaceGrotesk_700Bold,
+  useFonts
+} from '@expo-google-fonts/space-grotesk';
 
 import { RootProvider } from '@/providers/root-provider';
 
+SplashScreen.preventAutoHideAsync();
 
 const AppContent = () => {
     const isOnboarded = true;
@@ -43,6 +53,22 @@ const AppContent = () => {
  */
 export default function RootLayout() {
   const { theme } = useUniwind()
+  const [fontsLoaded, fontError] = useFonts({
+    SpaceGrotesk_400Regular,
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
   return (
     <RootProvider>
       <ThemeProvider value={theme === 'dark' ? DarkTheme : DefaultTheme}>
