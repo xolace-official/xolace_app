@@ -16,7 +16,8 @@ const CORE_SIZE = 150;
 const BreathingOrbComponent = () => {
   const accentColor = useThemeColor('accent');
   const scale = useSharedValue(1);
-  const opacity = useSharedValue(0.4);
+  const coreOpacity = useSharedValue(0.4);
+  const haloOpacity = useSharedValue(0.08);
 
   useEffect(() => {
     scale.value = withRepeat(
@@ -24,19 +25,28 @@ const BreathingOrbComponent = () => {
       -1,
       true,
     );
-    opacity.value = withRepeat(
+    coreOpacity.value = withRepeat(
       withTiming(0.8, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
     );
-  }, [scale, opacity]);
+    haloOpacity.value = withRepeat(
+      withTiming(0.15, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true,
+    );
+  }, [scale, coreOpacity, haloOpacity]);
 
   const breathStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  const opacityStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
+  const coreOpacityStyle = useAnimatedStyle(() => ({
+    opacity: coreOpacity.value,
+  }));
+
+  const haloOpacityStyle = useAnimatedStyle(() => ({
+    opacity: haloOpacity.value,
   }));
 
   return (
@@ -57,8 +67,7 @@ const BreathingOrbComponent = () => {
                 borderRadius: HALO_SIZE / 2,
                 backgroundColor: accentColor,
               },
-              opacityStyle,
-              { opacity: 0.08 },
+              haloOpacityStyle,
             ]}
           />
           <Animated.View
@@ -69,7 +78,7 @@ const BreathingOrbComponent = () => {
                 borderRadius: CORE_SIZE / 2,
                 backgroundColor: accentColor,
               },
-              opacityStyle,
+              coreOpacityStyle,
             ]}
           />
         </View>
