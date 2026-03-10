@@ -3,8 +3,10 @@ import { View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  useReducedMotion,
   withRepeat,
   withTiming,
+  cancelAnimation,
   Easing,
   FadeIn,
 } from 'react-native-reanimated';
@@ -15,11 +17,19 @@ const CORE_SIZE = 150;
 
 const BreathingOrbComponent = () => {
   const accentColor = useThemeColor('accent');
+  const reduceMotion = useReducedMotion();
   const scale = useSharedValue(1);
   const coreOpacity = useSharedValue(0.4);
   const haloOpacity = useSharedValue(0.08);
 
   useEffect(() => {
+    if (reduceMotion) {
+      scale.value = 1.15;
+      coreOpacity.value = 0.6;
+      haloOpacity.value = 0.12;
+      return;
+    }
+
     scale.value = withRepeat(
       withTiming(1.3, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
       -1,
@@ -35,7 +45,13 @@ const BreathingOrbComponent = () => {
       -1,
       true,
     );
-  }, [scale, coreOpacity, haloOpacity]);
+
+    return () => {
+      cancelAnimation(scale);
+      cancelAnimation(coreOpacity);
+      cancelAnimation(haloOpacity);
+    };
+  }, [scale, coreOpacity, haloOpacity, reduceMotion]);
 
   const breathStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],

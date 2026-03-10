@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View } from 'react-native';
 import Animated, {
   interpolate,
   SharedValue,
