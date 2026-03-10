@@ -56,7 +56,7 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit }: Props)
       >
         <View className="flex-row items-center gap-2 pb-3">
           <PresenceDot />
-          {showNudge && (
+          {showNudge ? (
             <Animated.View
               key="nudge"
               entering={FadeInDown.springify().damping(20)}
@@ -64,6 +64,16 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit }: Props)
             >
               <AppText className="text-sm text-foreground/40">
                 {NUDGE_MESSAGES[Math.floor(Math.random() * NUDGE_MESSAGES.length)]}
+              </AppText>
+            </Animated.View>
+          ): (
+            <Animated.View
+              key="default"
+              entering={FadeInDown.duration(200)}
+              exiting={FadeOut.duration(200)}
+            >
+              <AppText className="text-sm text-foreground/40">
+                What&apos;s here right now?
               </AppText>
             </Animated.View>
           )}
