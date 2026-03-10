@@ -1,4 +1,4 @@
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { AppText } from '@/components/shared/app-text';
 import * as Haptics from 'expo-haptics';
@@ -23,9 +23,14 @@ export const MirrorState = ({ mirror, onThatsIt, onNotQuite, onSayMore }: Props)
     exiting={FadeOut.duration(500)}
     className="flex-1 justify-center px-6"
   >
-    <AppText className="text-xl italic leading-8 text-foreground">
-      {mirror}
-    </AppText>
+    <ScrollView
+      style={{ flexGrow: 0, maxHeight: '60%' }}
+      showsVerticalScrollIndicator={false}
+    >
+      <AppText className="text-xl italic leading-8 text-foreground">
+        {mirror}
+      </AppText>
+    </ScrollView>
 
     <View className="mt-14 gap-6">
       <Animated.View entering={FadeInDown.delay(200).duration(400)}>

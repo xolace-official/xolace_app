@@ -1,4 +1,4 @@
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { AppText } from '@/components/shared/app-text';
@@ -17,11 +17,16 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
       exiting={FadeOut.duration(500)}
       className="flex-1 justify-center px-6"
     >
-      <AppText className="mb-10 text-base italic leading-7 text-foreground/30">
-        {mirror}
-      </AppText>
+      <ScrollView
+        style={{ flexGrow: 0, maxHeight: '40%' }}
+        showsVerticalScrollIndicator={false}
+      >
+        <AppText className="text-base italic leading-7 text-foreground/30">
+          {mirror}
+        </AppText>
+      </ScrollView>
 
-      <AppText className="mb-8 text-lg text-foreground">
+      <AppText className="mb-8 mt-10 text-lg text-foreground">
         Where would you like to go from here?
       </AppText>
 
