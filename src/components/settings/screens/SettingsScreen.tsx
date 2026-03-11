@@ -40,7 +40,7 @@ export const SettingsScreen = () => {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 8, paddingBottom: 48 }}
+        contentContainerStyle={{ paddingTop: 20, paddingBottom: 48 }}
       >
         {/* ── ACCOUNT ─────────────────────────────────────────── */}
         <SettingsSection title="Account">
