@@ -3,7 +3,9 @@ import { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 
 /**
- * Hook that provides reusable large header screen options
+ * Return navigation options configured for a large transparent header.
+ *
+ * @returns Navigation options with `headerTintColor` set from the resolved foreground color, `headerTransparent` enabled, `headerBlurEffect` set to `"dark"` when a glass effect is unavailable, `headerLargeStyle` background set to `"transparent"`, and `headerLargeTitle` enabled.
  */
 export function useLargeHeaderOptions(): NativeStackNavigationOptions {
    const headerTintColorStyle = useResolveClassNames('bg-foreground')

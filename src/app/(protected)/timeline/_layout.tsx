@@ -5,6 +5,13 @@ import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { useLargeHeaderOptions } from "@/constants/navigation-options";
 
+/**
+ * Layout component that provides the Timeline screen container with a configured Stack navigator and header controls.
+ *
+ * The layout applies large-header options, renders a left back control and a right settings control in the header, and hosts the timeline screen content with a transparent content background.
+ *
+ * @returns The layout's JSX element rendering the configured Stack and its child screen.
+ */
 export default function TimelineLayout() {
   const router = useRouter();
   const largeHeaderOptions = useLargeHeaderOptions();
