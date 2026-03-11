@@ -92,7 +92,13 @@ export const IdleState = ({
       {/* Tap to type zone — takes up available space */}
       <Separator className="mb-0" />
 
-      <Pressable onPress={handleTap} className="flex-1 pt-4">
+      <Pressable
+        onPress={handleTap}
+        accessibilityRole="button"
+        accessibilityLabel="Tap to begin writing"
+        accessibilityHint="Opens the editor to start typing"
+        className="flex-1 pt-4"
+      >
         <AppText className="text-base text-foreground/30">
           Tap to begin writing...
         </AppText>

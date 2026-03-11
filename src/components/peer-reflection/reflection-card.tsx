@@ -1,29 +1,33 @@
 import { SymbolView } from "expo-symbols";
-import { useState } from "react";
-import { View , ColorValue} from "react-native";
+import { View, ColorValue } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Card, Chip, cn } from "heroui-native";
 import { AppText } from "@/components/shared/app-text";
 import * as Haptics from "expo-haptics";
 import { useCSSVariable, withUniwind } from "uniwind";
 
-
 const StyledSymbolView = withUniwind(SymbolView);
 
 type Props = {
   text: string;
   index: number;
+  resonated: boolean;
+  onToggleResonance: () => void;
 };
 
-export const ReflectionCard = ({ text, index }: Props) => {
-  const [resonated, setResonated] = useState(false);
-  const resonanceColor = useCSSVariable('--color-resonance-foreground')
+export const ReflectionCard = ({
+  text,
+  index,
+  resonated,
+  onToggleResonance,
+}: Props) => {
+  const resonanceColor = useCSSVariable("--color-resonance-foreground");
 
   const handleResonance = () => {
     if (process.env.EXPO_OS === "ios") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    setResonated((prev) => !prev);
+    onToggleResonance();
   };
 
   return (
@@ -59,12 +63,16 @@ export const ReflectionCard = ({ text, index }: Props) => {
                 size={14}
                 tintColor={
                   resonated
-                    ? resonanceColor as ColorValue
-                    : resonanceColor as ColorValue
+                    ? (resonanceColor as ColorValue)
+                    : (resonanceColor as ColorValue)
                 }
               />
               <Chip.Label
-                className={cn(resonated ? "text-resonance-foreground" : "text-foreground/30")}
+                className={cn(
+                  resonated
+                    ? "text-resonance-foreground"
+                    : "text-foreground/30",
+                )}
               >
                 {resonated ? "This resonated" : "This resonates"}
               </Chip.Label>
