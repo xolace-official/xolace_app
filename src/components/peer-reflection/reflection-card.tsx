@@ -38,7 +38,7 @@ export const ReflectionCard = ({ text, index }: Props) => {
             &ldquo;{text}&rdquo;
           </AppText>
 
-          <View className="">
+          <View>
             <Chip
               size="sm"
               variant="tertiary"
@@ -47,7 +47,7 @@ export const ReflectionCard = ({ text, index }: Props) => {
               onPress={handleResonance}
               className={cn(
                 "border border-foreground/10 p-2 self-end",
-                resonated && "border-accent/30 bg-resonance",
+                resonated && "border-resonance-foreground bg-resonance",
               )}
             >
               <StyledSymbolView
