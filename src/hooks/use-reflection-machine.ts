@@ -102,16 +102,16 @@ function reducer(
 }
 
 /**
- * Hook that manages the reflection UI state machine and exposes actions for submitting reflections and clarifications.
+ * Manage the reflection UI state machine and provide actions for submitting reflections, scaffolds, and clarifications.
  *
- * The hook maintains the current screen, entry and clarify text, mirror response, clarify attempt count, and user variant,
- * and provides dispatchable actions to drive the state transitions (e.g., submit, mirror received, clarify, reset).
+ * Exposes the current machine state and functions to drive transitions and populate mirror responses (mocked).
  *
- * @returns An object containing:
- * - `state` — the current reflection machine state (screen, entryText, clarifyText, mirrorResponse, clarifyCount, userVariant).
+ * @returns An object with:
+ * - `state` — the current reflection state containing screen, entryText, clarifyText, mirrorResponse, clarifyCount, userVariant, selectedTextures, and entryType.
  * - `dispatch` — reducer dispatch function for sending actions to the state machine.
- * - `submitReflection` — triggers a submit action and (mock) populates the mirror response after a short delay.
- * - `submitClarification` — triggers a submit action and (mock) populates an alternative mirror response after a short delay.
+ * - `submitReflection` — triggers a submit action and (after a mock delay) populates `mirrorResponse` with a mock mirror.
+ * - `submitScaffold` — triggers a scaffold submit action and (after a mock delay) populates `mirrorResponse` with a mock mirror.
+ * - `submitClarification` — triggers a submit action and (after a mock delay) populates `mirrorResponse` with a clarification-oriented mock mirror.
  */
 
 export function useReflectionMachine() {
