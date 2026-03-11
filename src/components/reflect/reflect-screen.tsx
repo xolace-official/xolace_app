@@ -10,7 +10,7 @@ import { GaveUpState } from '@/components/reflect/states/gave-up-state';
 import { PathSelectionState } from '@/components/reflect/states/path-selection-state';
 
 export const ReflectScreen = () => {
-  const { state, dispatch, submitReflection, submitClarification } =
+  const { state, dispatch, submitReflection, submitScaffold, submitClarification } =
     useReflectionMachine();
   const insets = useSafeAreaInsets();
 
@@ -24,7 +24,10 @@ export const ReflectScreen = () => {
       {screen === 'idle' && (
         <IdleState
           variant={state.userVariant}
+          selectedTextures={state.selectedTextures}
+          dispatch={dispatch}
           onTap={() => dispatch({ type: 'TAP_INPUT' })}
+          onScaffoldSubmit={submitScaffold}
         />
       )}
 
@@ -42,6 +45,8 @@ export const ReflectScreen = () => {
       {screen === 'mirror' && (
         <MirrorState
           mirror={state.mirrorResponse}
+          selectedTextures={state.selectedTextures}
+          entryType={state.entryType}
           onThatsIt={() => dispatch({ type: 'THATS_IT' })}
           onNotQuite={() => dispatch({ type: 'NOT_QUITE' })}
           onSayMore={() => dispatch({ type: 'SAY_MORE' })}

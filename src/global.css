@@ -12,15 +12,15 @@
  * and add variant names to ThemeName in src/context/app-theme-context.tsx
  */
 
-@import 'tailwindcss';
-@import 'uniwind';
+@import "tailwindcss";
+@import "uniwind";
 
-@import 'heroui-native/styles';
+@import "heroui-native/styles";
 
 /* Custom color themes — user-selectable alternatives */
-@import './themes/lavander.css';
-@import './themes/mint.css';
-@import './themes/sky.css';
+@import "./themes/lavander.css";
+@import "./themes/mint.css";
+@import "./themes/sky.css";
 
 @source '../node_modules/heroui-native/lib';
 
@@ -30,6 +30,12 @@
   --font-sans-bold: 'SpaceGrotesk-Bold';
   --font-mono: 'SpaceGrotesk-SemiBold';
 } */
+
+@theme static {
+    --color-resonance: oklch(0.796 0.0347 167.72 / 15%); 
+    --resonance-foreground: oklch(0.796 0.0347 167.72);
+    
+}
 
 @layer theme {
   /* ============================================================
@@ -43,84 +49,85 @@
    * the same room at different times of day.
    * ============================================================ */
   @variant light {
-    --font-normal: 'SpaceGrotesk-Regular';
-    --font-medium: 'SpaceGrotesk-Medium';
-    --font-semibold: 'SpaceGrotesk-SemiBold';
-    --font-bold: 'SpaceGrotesk-Bold';
+    --font-normal: "SpaceGrotesk-Regular";
+    --font-medium: "SpaceGrotesk-Medium";
+    --font-semibold: "SpaceGrotesk-SemiBold";
+    --font-bold: "SpaceGrotesk-Bold";
 
     --radius: 0.625rem;
 
     /* Base — warm near-white with a faint violet breath */
-    --background: oklch(97.50% 0.006 285);
-    --foreground: oklch(16.50% 0.020 285);
+    --background: oklch(97.5% 0.006 285);
+    --foreground: oklch(16.5% 0.02 285);
 
     /* Surface — clean but never sterile */
-    --surface: oklch(99.50% 0.003 285);
-    --surface-foreground: oklch(16.50% 0.020 285);
+    --surface: oklch(99.5% 0.003 285);
+    --surface-foreground: oklch(16.5% 0.02 285);
 
-    --surface-secondary: oklch(95.50% 0.008 285);
-    --surface-secondary-foreground: oklch(16.50% 0.020 285);
+    --surface-secondary: oklch(95.5% 0.008 285);
+    --surface-secondary-foreground: oklch(16.5% 0.02 285);
 
-    --surface-tertiary: oklch(93.00% 0.010 285);
-    --surface-tertiary-foreground: oklch(16.50% 0.020 285);
+    --surface-tertiary: oklch(93% 0.01 285);
+    --surface-tertiary-foreground: oklch(16.5% 0.02 285);
 
     /* Overlay — for modals, popovers, sheets */
-    --overlay: oklch(99.50% 0.003 285);
-    --overlay-foreground: oklch(16.50% 0.020 285);
+    --overlay: oklch(99.5% 0.003 285);
+    --overlay-foreground: oklch(16.5% 0.02 285);
 
     /* Muted — secondary text, placeholders */
-    --muted: oklch(52.00% 0.020 285);
+    --muted: oklch(52% 0.02 285);
 
     /* Default — neutral interactive surfaces */
-    --default: oklch(94.00% 0.008 285);
-    --default-foreground: oklch(16.50% 0.020 285);
+    --default: oklch(94% 0.008 285);
+    --default-foreground: oklch(16.5% 0.02 285);
 
     /* Accent — soft lavender, the Xolace signature.
      * Slightly deeper on light backgrounds for contrast. */
-    --accent: oklch(62.00% 0.14 285);
-    --accent-foreground: oklch(99.00% 0.005 285);
+    --accent: oklch(62% 0.14 285);
+    --accent-foreground: oklch(99% 0.005 285);
 
     /* Form fields */
-    --field-background: oklch(99.50% 0.003 285);
-    --field-foreground: oklch(16.50% 0.020 285);
+    --field-background: oklch(99.5% 0.003 285);
+    --field-foreground: oklch(16.5% 0.02 285);
     --field-placeholder: var(--muted);
     --field-border: transparent;
 
-    /* Status — muted but clear */
-    --success: oklch(65.00% 0.16 155);
-    --success-foreground: oklch(16.50% 0.010 155);
+    /* Resonance — quiet shared-feeling signal */
+    --resonance: oklch(0.796 0.0347 167.72 / 15%);
+    --resonance-foreground: oklch(0.796 0.0347 167.72);
 
-    --warning: oklch(75.00% 0.12 75);
-    --warning-foreground: oklch(16.50% 0.010 75);
+    /* Status — muted but clear */
+    --success: oklch(65% 0.16 155);
+    --success-foreground: oklch(16.5% 0.01 155);
+
+    --warning: oklch(75% 0.12 75);
+    --warning-foreground: oklch(16.5% 0.01 75);
 
     /* Danger — soft coral, not alarming red.
      * Even destructive actions shouldn't feel aggressive
      * in an emotional safety app. */
-    --danger: oklch(62.00% 0.16 22);
-    --danger-foreground: oklch(99.00% 0 0);
+    --danger: oklch(62% 0.16 22);
+    --danger-foreground: oklch(99% 0 0);
 
     /* Components */
-    --segment: oklch(99.50% 0.003 285);
-    --segment-foreground: oklch(16.50% 0.020 285);
+    --segment: oklch(99.5% 0.003 285);
+    --segment-foreground: oklch(16.5% 0.02 285);
 
     /* Borders & lines — barely there, like pencil marks */
-    --border: oklch(90.00% 0.008 285);
-    --separator: oklch(84.00% 0.010 285);
-    --focus: oklch(62.00% 0.14 285);
-    --link: oklch(55.00% 0.12 285);
+    --border: oklch(90% 0.008 285);
+    --separator: oklch(84% 0.01 285);
+    --focus: oklch(62% 0.14 285);
+    --link: oklch(55% 0.12 285);
 
     /* Shadows — soft, warm, never harsh */
     --surface-shadow:
-      0 2px 4px 0 rgba(60, 40, 80, 0.04),
-      0 1px 2px 0 rgba(60, 40, 80, 0.05),
+      0 2px 4px 0 rgba(60, 40, 80, 0.04), 0 1px 2px 0 rgba(60, 40, 80, 0.05),
       0 0 1px 0 rgba(60, 40, 80, 0.05);
     --overlay-shadow:
-      0 4px 16px 0 rgba(60, 40, 80, 0.06),
-      0 -2px 8px 0 rgba(60, 40, 80, 0.02),
+      0 4px 16px 0 rgba(60, 40, 80, 0.06), 0 -2px 8px 0 rgba(60, 40, 80, 0.02),
       0 12px 24px 0 rgba(60, 40, 80, 0.04);
     --field-shadow:
-      0 1px 3px 0 rgba(60, 40, 80, 0.04),
-      0 0 1px 0 rgba(60, 40, 80, 0.06);
+      0 1px 3px 0 rgba(60, 40, 80, 0.04), 0 0 1px 0 rgba(60, 40, 80, 0.06);
   }
 
   /* ============================================================
@@ -141,47 +148,47 @@
    * processing context, warmth is the action color.
    * ============================================================ */
   @variant dark {
-    --font-normal: 'SpaceGrotesk-Regular';
-    --font-medium: 'SpaceGrotesk-Medium';
-    --font-semibold: 'SpaceGrotesk-SemiBold';
-    --font-bold: 'SpaceGrotesk-Bold';
+    --font-normal: "SpaceGrotesk-Regular";
+    --font-medium: "SpaceGrotesk-Medium";
+    --font-semibold: "SpaceGrotesk-SemiBold";
+    --font-bold: "SpaceGrotesk-Bold";
 
     --radius: 0.625rem;
 
     /* Base — deep warm indigo, not cold black
      * Hue 285 = violet. Low chroma keeps it from being
      * purple — it reads as warm dark, not colored dark. */
-    --background: oklch(10.50% 0.012 285);
-    --foreground: oklch(93.00% 0.010 285);
+    --background: oklch(10.5% 0.012 285);
+    --foreground: oklch(93% 0.01 285);
 
     /* Surface — elevated cards, timeline entries.
      * Each tier is a subtle step up from the background.
      * The chroma increases slightly with lightness to
      * maintain the warm violet undertone as surfaces
      * get brighter. */
-    --surface: oklch(15.00% 0.014 285);
-    --surface-foreground: oklch(93.00% 0.010 285);
+    --surface: oklch(15% 0.014 285);
+    --surface-foreground: oklch(93% 0.01 285);
 
-    --surface-secondary: oklch(19.00% 0.016 285);
-    --surface-secondary-foreground: oklch(93.00% 0.010 285);
+    --surface-secondary: oklch(19% 0.016 285);
+    --surface-secondary-foreground: oklch(93% 0.01 285);
 
-    --surface-tertiary: oklch(22.00% 0.018 285);
-    --surface-tertiary-foreground: oklch(93.00% 0.010 285);
+    --surface-tertiary: oklch(22% 0.018 285);
+    --surface-tertiary-foreground: oklch(93% 0.01 285);
 
     /* Overlay — modals and sheets.
      * Slightly different from surface to create
      * a sense of floating above the background. */
-    --overlay: oklch(16.00% 0.015 285);
-    --overlay-foreground: oklch(93.00% 0.010 285);
+    --overlay: oklch(16% 0.015 285);
+    --overlay-foreground: oklch(93% 0.01 285);
 
     /* Muted — secondary text, timestamps, labels.
      * Not gray — warm violet muted. */
-    --muted: oklch(48.00% 0.022 285);
+    --muted: oklch(48% 0.022 285);
 
     /* Default — neutral interactive surfaces.
      * Buttons that aren't primary or accent. */
-    --default: oklch(22.00% 0.014 285);
-    --default-foreground: oklch(93.00% 0.010 285);
+    --default: oklch(22% 0.014 285);
+    --default-foreground: oklch(93% 0.01 285);
 
     /* Accent — soft lavender. The Xolace signature.
      *
@@ -189,44 +196,48 @@
      * active states / the timeline icon. Present but calm.
      * Chroma 0.10 is deliberately moderate — not washed
      * out, not vibrant. Like twilight, not neon. */
-    --accent: oklch(75.00% 0.10 285);
-    --accent-foreground: oklch(10.50% 0.012 285);
+    --accent: oklch(75% 0.1 285);
+    --accent-foreground: oklch(10.5% 0.012 285);
 
     /* Form fields — input areas, the writing space */
-    --field-background: oklch(13.50% 0.013 285);
-    --field-foreground: oklch(93.00% 0.010 285);
+    --field-background: oklch(13.5% 0.013 285);
+    --field-foreground: oklch(93% 0.01 285);
     --field-placeholder: var(--muted);
     --field-border: transparent;
+
+    /* Resonance — quiet shared-feeling signal */
+    --resonance: oklch(0.796 0.0347 167.72 / 15%);
+    --resonance-foreground: oklch(0.796 0.0347 167.72);
 
     /* Status colors — present but never alarming.
      * In an emotional safety app, even system colors
      * should feel held, not urgent. */
-    --success: oklch(70.00% 0.14 155);
-    --success-foreground: oklch(15.00% 0.010 155);
+    --success: oklch(70% 0.14 155);
+    --success-foreground: oklch(15% 0.01 155);
 
     /* Warning uses the warm amber — the campfire color.
      * In Xolace, warmth IS the warning: gentle, present,
      * "I'm here, pay attention to this." */
-    --warning: oklch(80.00% 0.10 75);
-    --warning-foreground: oklch(15.00% 0.010 75);
+    --warning: oklch(80% 0.1 75);
+    --warning-foreground: oklch(15% 0.01 75);
 
     /* Danger — soft coral, not screaming red.
      * Someone in crisis doesn't need their app
      * yelling at them with saturated red. */
-    --danger: oklch(65.00% 0.14 22);
-    --danger-foreground: oklch(99.00% 0 0);
+    --danger: oklch(65% 0.14 22);
+    --danger-foreground: oklch(99% 0 0);
 
     /* Components */
-    --segment: oklch(25.00% 0.014 285);
-    --segment-foreground: oklch(93.00% 0.010 285);
+    --segment: oklch(25% 0.014 285);
+    --segment-foreground: oklch(93% 0.01 285);
 
     /* Borders — barely visible. Like pencil lines
      * on dark paper. They define structure without
      * demanding attention. */
-    --border: oklch(22.00% 0.012 285);
-    --separator: oklch(30.00% 0.014 285);
-    --focus: oklch(75.00% 0.10 285);
-    --link: oklch(72.00% 0.10 285);
+    --border: oklch(22% 0.012 285);
+    --separator: oklch(30% 0.014 285);
+    --focus: oklch(75% 0.1 285);
+    --link: oklch(72% 0.1 285);
 
     /* Shadows — invisible on dark. Using subtle
      * inner glow on overlays instead. */
@@ -234,4 +245,9 @@
     --overlay-shadow: 0 0 1px 0 rgba(184, 169, 232, 0.08) inset;
     --field-shadow: 0 0 0 0 transparent inset;
   }
+}
+
+@theme inline {
+  --color-resonance: var(--resonance);
+  --color-resonance-foreground: var(--resonance-foreground);
 }

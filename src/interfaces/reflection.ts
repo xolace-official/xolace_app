@@ -13,9 +13,13 @@ export type ReflectionStateName =
   | 'gave-up'
   | 'path-selection';
 
+export type EntryType = 'typed' | 'scaffold' | 'hybrid';
+
 export type ReflectionAction =
   | { type: 'TAP_INPUT' }
   | { type: 'TEXT_CHANGE'; text: string }
+  | { type: 'TOGGLE_TEXTURE'; word: string }
+  | { type: 'SCAFFOLD_SUBMIT' }
   | { type: 'PAUSE_TIMEOUT' }
   | { type: 'RESUME_TYPING' }
   | { type: 'SUBMIT' }
@@ -33,6 +37,8 @@ export interface ReflectionState {
   mirrorResponse: string;
   clarifyCount: number;
   userVariant: UserVariant;
+  selectedTextures: string[];
+  entryType: EntryType;
 }
 
 export interface MirrorResponse {

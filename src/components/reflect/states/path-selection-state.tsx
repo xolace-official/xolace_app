@@ -41,7 +41,7 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-          <Pressable onPress={() => router.push('/community' )}>
+          <Pressable onPress={() => router.push('/peer-reflections' )}>
             <AppText className="text-lg text-foreground">
               You&apos;re not alone
             </AppText>

@@ -1,5 +1,9 @@
-import { useReducer, useCallback } from 'react';
-import type { ReflectionState, ReflectionAction } from '@/interfaces/reflection';
+import { useReducer, useCallback, useEffect, useRef } from "react";
+import type {
+  ReflectionState,
+  ReflectionAction,
+  EntryType,
+} from "@/interfaces/reflection";
 
 const MAX_CLARIFY_ATTEMPTS = 3;
 
@@ -7,14 +11,15 @@ const MOCK_MIRROR =
   "There's something heavy sitting in your chest today. Not sharp \u2014 more like a weight you've been carrying so long you forgot it wasn't always there.";
 
 const initialState: ReflectionState = {
-  screen: 'idle',
-  entryText: '',
-  clarifyText: '',
-  mirrorResponse: '',
+  screen: "idle",
+  entryText: "",
+  clarifyText: "",
+  mirrorResponse: "",
   clarifyCount: 0,
-  userVariant: { kind: 'first-time' },
+  userVariant: { kind: "first-time" },
+  selectedTextures: [],
+  entryType: "typed",
 };
-
 
 /**
  * Drives state transitions for the reflection UI in response to dispatched actions.
@@ -30,45 +35,65 @@ const initialState: ReflectionState = {
  * @returns The next reflection state after applying the action
  */
 
-function reducer(state: ReflectionState, action: ReflectionAction): ReflectionState {
+function reducer(
+  state: ReflectionState,
+  action: ReflectionAction,
+): ReflectionState {
   switch (action.type) {
-    case 'TAP_INPUT':
-      return { ...state, screen: 'typing' };
+    case "TAP_INPUT":
+      return {
+        ...state,
+        screen: "typing",
+        entryType: state.selectedTextures.length > 0 ? "hybrid" : "typed",
+      };
 
-    case 'TEXT_CHANGE':
-      return { ...state, entryText: action.text, screen: 'typing' };
-
-    case 'PAUSE_TIMEOUT':
-      if (state.screen !== 'typing') return state;
-      return { ...state, screen: 'typing-nudge' };
-
-    case 'RESUME_TYPING':
-      return { ...state, screen: 'typing' };
-
-    case 'SUBMIT':
-      return { ...state, screen: 'processing', clarifyText: '' };
-
-    case 'MIRROR_RECEIVED':
-      return { ...state, screen: 'mirror', mirrorResponse: action.mirror };
-
-    case 'THATS_IT':
-      return { ...state, screen: 'path-selection' };
-
-    case 'NOT_QUITE': {
-      const nextCount = state.clarifyCount + 1;
-      if (nextCount >= MAX_CLARIFY_ATTEMPTS) {
-        return { ...state, screen: 'gave-up', clarifyCount: nextCount };
-      }
-      return { ...state, screen: 'clarify', clarifyCount: nextCount };
+    case "TEXT_CHANGE": {
+      const entryType: EntryType =
+        state.selectedTextures.length > 0 ? "hybrid" : "typed";
+      return { ...state, entryText: action.text, screen: "typing", entryType };
     }
 
-    case 'SAY_MORE':
-      return { ...state, screen: 'clarify' };
+    case "TOGGLE_TEXTURE": {
+      const textures = state.selectedTextures.includes(action.word)
+        ? state.selectedTextures.filter((w) => w !== action.word)
+        : [...state.selectedTextures, action.word];
+      return { ...state, selectedTextures: textures };
+    }
 
-    case 'CLARIFY_TEXT_CHANGE':
+    case "SCAFFOLD_SUBMIT":
+      return { ...state, screen: "processing", entryType: "scaffold" };
+
+    case "PAUSE_TIMEOUT":
+      if (state.screen !== "typing") return state;
+      return { ...state, screen: "typing-nudge" };
+
+    case "RESUME_TYPING":
+      return { ...state, screen: "typing" };
+
+    case "SUBMIT":
+      return { ...state, screen: "processing", clarifyText: "" };
+
+    case "MIRROR_RECEIVED":
+      return { ...state, screen: "mirror", mirrorResponse: action.mirror };
+
+    case "THATS_IT":
+      return { ...state, screen: "path-selection" };
+
+    case "NOT_QUITE": {
+      const nextCount = state.clarifyCount + 1;
+      if (nextCount >= MAX_CLARIFY_ATTEMPTS) {
+        return { ...state, screen: "gave-up", clarifyCount: nextCount };
+      }
+      return { ...state, screen: "clarify", clarifyCount: nextCount };
+    }
+
+    case "SAY_MORE":
+      return { ...state, screen: "clarify" };
+
+    case "CLARIFY_TEXT_CHANGE":
       return { ...state, clarifyText: action.text };
 
-    case 'RESET':
+    case "RESET":
       return { ...initialState, userVariant: state.userVariant };
 
     default:
@@ -76,40 +101,93 @@ function reducer(state: ReflectionState, action: ReflectionAction): ReflectionSt
   }
 }
 
-
 /**
- * Hook that manages the reflection UI state machine and exposes actions for submitting reflections and clarifications.
+ * Manage the reflection UI state machine and provide actions for submitting reflections, scaffolds, and clarifications.
  *
- * The hook maintains the current screen, entry and clarify text, mirror response, clarify attempt count, and user variant,
- * and provides dispatchable actions to drive the state transitions (e.g., submit, mirror received, clarify, reset).
+ * Exposes the current machine state and functions to drive transitions and populate mirror responses (mocked).
  *
- * @returns An object containing:
- * - `state` — the current reflection machine state (screen, entryText, clarifyText, mirrorResponse, clarifyCount, userVariant).
+ * @returns An object with:
+ * - `state` — the current reflection state containing screen, entryText, clarifyText, mirrorResponse, clarifyCount, userVariant, selectedTextures, and entryType.
  * - `dispatch` — reducer dispatch function for sending actions to the state machine.
- * - `submitReflection` — triggers a submit action and (mock) populates the mirror response after a short delay.
- * - `submitClarification` — triggers a submit action and (mock) populates an alternative mirror response after a short delay.
+ * - `submitReflection` — triggers a submit action and (after a mock delay) populates `mirrorResponse` with a mock mirror.
+ * - `submitScaffold` — triggers a scaffold submit action and (after a mock delay) populates `mirrorResponse` with a mock mirror.
+ * - `submitClarification` — triggers a submit action and (after a mock delay) populates `mirrorResponse` with a clarification-oriented mock mirror.
  */
 
 export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  const isMountedRef = useRef(true);
+  const reflectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const scaffoldTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clarificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+
+      if (reflectionTimeoutRef.current) {
+        clearTimeout(reflectionTimeoutRef.current);
+      }
+
+      if (scaffoldTimeoutRef.current) {
+        clearTimeout(scaffoldTimeoutRef.current);
+      }
+
+      if (clarificationTimeoutRef.current) {
+        clearTimeout(clarificationTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const submitReflection = useCallback(() => {
-    dispatch({ type: 'SUBMIT' });
-    // Mock AI delay
-    setTimeout(() => {
-      dispatch({ type: 'MIRROR_RECEIVED', mirror: MOCK_MIRROR });
+    dispatch({ type: "SUBMIT" });
+
+    if (reflectionTimeoutRef.current) {
+      clearTimeout(reflectionTimeoutRef.current);
+    }
+
+    reflectionTimeoutRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      dispatch({ type: "MIRROR_RECEIVED", mirror: MOCK_MIRROR });
+      reflectionTimeoutRef.current = null;
+    }, 3000);
+  }, []);
+
+  const submitScaffold = useCallback(() => {
+    dispatch({ type: "SCAFFOLD_SUBMIT" });
+
+    if (scaffoldTimeoutRef.current) {
+      clearTimeout(scaffoldTimeoutRef.current);
+    }
+
+    scaffoldTimeoutRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      dispatch({ type: "MIRROR_RECEIVED", mirror: MOCK_MIRROR });
+      scaffoldTimeoutRef.current = null;
     }, 3000);
   }, []);
 
   const submitClarification = useCallback(() => {
-    dispatch({ type: 'SUBMIT' });
+    dispatch({ type: "SUBMIT" });
+
+    if (clarificationTimeoutRef.current) {
+      clearTimeout(clarificationTimeoutRef.current);
+    }
+
     // Mock AI delay with slightly different response
-    setTimeout(() => {
+    clarificationTimeoutRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
       dispatch({
-        type: 'MIRROR_RECEIVED',
+        type: "MIRROR_RECEIVED",
         mirror:
           "I hear you more clearly now. It sounds like there's a quiet ache beneath the surface \u2014 not asking to be fixed, just asking to be seen.",
       });
+      clarificationTimeoutRef.current = null;
     }, 3000);
   }, []);
 
@@ -117,6 +195,7 @@ export function useReflectionMachine() {
     state,
     dispatch,
     submitReflection,
+    submitScaffold,
     submitClarification,
   };
 }
