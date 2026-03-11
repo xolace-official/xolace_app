@@ -40,6 +40,10 @@
       --field-foreground: oklch(21.03% 0.0059 225.00);
       --field-placeholder: var(--muted);
       --field-border: transparent;
+      
+      /* Resonance — quiet shared-feeling signal */
+      --resonance: oklch(0.796 0.0347 167.72);
+      --resonance-foreground: oklch(0.98 0 0);
 
       /* Status Colors - Clean, professional palette */
       --success: oklch(73.29% 0.1954 147.35);
@@ -113,6 +117,10 @@
       --field-foreground: oklch(99.11% 0.0000 0.00);
       --field-placeholder: var(--muted);
       --field-border: transparent;
+      
+      /* Resonance — quiet shared-feeling signal */
+      --resonance: oklch(0.796 0.0347 167.72 / 15%);
+      --resonance-foreground: oklch(0.796 0.0347 167.72);
 
       /* Status Colors - Vibrant night palette */
       --success: oklch(73.29% 0.1954 147.35);
