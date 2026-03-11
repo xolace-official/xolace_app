@@ -39,6 +39,7 @@ export default function TimelineLayout() {
       <Pressable
         onPress={() => {
           /* TODO: navigate to settings */
+          router.push("/settings")
         }}
         hitSlop={8}
       >
