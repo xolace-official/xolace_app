@@ -1,6 +1,7 @@
 export interface TimelineEntry {
   id: string;
-  quote: string;
+  userText: string;
+  mirrorText: string;
   emotion: string;
   emotionEmoji: string;
   responseType: string;
@@ -8,5 +9,5 @@ export interface TimelineEntry {
 }
 
 export type TimelineFlatItem =
-  | { type: 'section'; id: string; label: string }
-  | { type: 'entry'; id: string; entry: TimelineEntry };
+  | { type: "section"; id: string; label: string }
+  | { type: "entry"; id: string; entry: TimelineEntry };
