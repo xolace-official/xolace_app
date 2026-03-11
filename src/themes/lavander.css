@@ -57,8 +57,8 @@
       --field-border: transparent;
       
       /* Resonance — quiet shared-feeling signal */
-      --resonance: oklch(0.796 0.0347 167.72);
-      --resonance-foreground: oklch(0.98 0 0);
+      --resonance: oklch(0.796 0.0347 167.72 / 15%);
+      --resonance-foreground: oklch(0.796 0.0347 167.72);
 
       /* Status Colors - Harmonious pastels */
       --success: oklch(73.29% 0.1993 156.95);
