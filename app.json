@@ -8,7 +8,11 @@
     "scheme": "xolace",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/xolace-icon-sample.icon"
+      "icon": "./assets/xolace-icon-sample.icon",
+      "bundleIdentifier": "com.xolaceincorg.xolace",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -35,7 +39,7 @@
           }
         }
       ],
-       [
+      [
         "expo-font",
         {
           "fonts": [
@@ -51,6 +55,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9b49d23b-d85c-48c9-84a4-db117b864dd3"
+      }
+    },
+    "owner": "xolace-inc-org"
   }
 }
