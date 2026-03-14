@@ -2,8 +2,13 @@ import { Doc, Id } from "../_generated/dataModel";
 import { QueryCtx, MutationCtx } from "../_generated/server";
 
 /**
- * Authenticate the current request and return user + profile.
- * Throws if unauthenticated or user not found.
+ * Ensure the request is authenticated and return the authenticated user, their emotional profile, and the identity.
+ *
+ * @returns An object containing `user` (the user document), `profile` (the user's emotional profile document), and `identity` (the authentication identity)
+ * @throws Error when the request has no authenticated identity ("Not authenticated")
+ * @throws Error when no user matches the identity ("User not found. Call getOrCreate first.")
+ * @throws Error when the user's account status is not `"active"` ("Account is not active")
+ * @throws Error when the user's emotional profile cannot be found ("Emotional profile not found")
  */
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
@@ -33,8 +38,12 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
 }
 
 /**
- * Verify that a session belongs to the authenticated user's profile.
- * Returns user, profile, and the session document.
+ * Assert that the specified session belongs to the authenticated user's emotional profile.
+ *
+ * @param sessionId - The id of the session in the `sessions` collection to verify ownership for
+ * @returns An object containing `user`, `profile`, `session`, and `identity`
+ * @throws Error with message "Session not found" if no session exists for `sessionId`
+ * @throws Error with message "Session does not belong to this user" if the session's emotionalProfileId does not match the authenticated profile
  */
 export async function requireSessionOwnership(
   ctx: QueryCtx | MutationCtx,

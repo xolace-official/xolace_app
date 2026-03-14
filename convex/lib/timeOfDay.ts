@@ -1,12 +1,10 @@
 type TimeOfDay = "early_morning" | "morning" | "afternoon" | "evening" | "late_night";
 
 /**
- * Classify the current hour into a time-of-day bucket.
- * - early_morning: 5am-8am
- * - morning: 8am-12pm
- * - afternoon: 12pm-5pm
- * - evening: 5pm-9pm
- * - late_night: 9pm-5am
+ * Determines the time-of-day bucket for the given Date's local hour.
+ *
+ * @param date - The Date whose local hour will be classified.
+ * @returns One of `early_morning`, `morning`, `afternoon`, `evening`, or `late_night`.
  */
 export function getTimeOfDay(date: Date): TimeOfDay {
   const hour = date.getHours();
@@ -18,7 +16,10 @@ export function getTimeOfDay(date: Date): TimeOfDay {
 }
 
 /**
- * Get day of week (0-6, Sunday = 0).
+ * Get the day of the week for the given date.
+ *
+ * @param date - The date to evaluate
+ * @returns The day of the week as a number where 0 = Sunday and 6 = Saturday
  */
 export function getDayOfWeek(date: Date): number {
   return date.getDay();
