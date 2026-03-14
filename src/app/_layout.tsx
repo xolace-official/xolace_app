@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { useUniwind } from 'uniwind'
 import * as SplashScreen from 'expo-splash-screen';
+import { useConvexAuth } from 'convex/react';
 import {
   SpaceGrotesk_400Regular,
   SpaceGrotesk_500Medium,
@@ -18,12 +19,18 @@ import {
 } from '@expo-google-fonts/space-grotesk';
 
 import { RootProvider } from '@/providers/root-provider';
+import { useAuth } from '@clerk/expo';
 
 SplashScreen.preventAutoHideAsync();
 
 const AppContent = () => {
     const isOnboarded = true;
-    const isAuthenticated = true;
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  const { isSignedIn } = useAuth();
+  
+  console.log("isAuthenticated", isAuthenticated, "isSignedIn", isSignedIn)
+
+    if (isAuthLoading) return null;
   return (
         <Stack
       screenOptions={{

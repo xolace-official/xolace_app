@@ -11,16 +11,15 @@ import { HintRow } from '@/components/hint-row';
 import { AppText } from '@/components/shared/app-text';
 import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth } from '@/constants/theme';
-import { useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
 
 /**
- * Provides a platform-appropriate hint explaining how to open the developer menu.
+ * Return a platform-specific AppText hint explaining how to open the developer menu.
  *
- * @returns A JSX element (AppText) containing the message appropriate for the current platform:
- * - On web: a prompt to use browser devtools.
- * - On physical devices: instructions to shake the device or press `m` in the terminal.
- * - On simulators/emulators: a keyboard shortcut hint (`cmd+m (or ctrl+m)` on Android, `cmd+d` otherwise).
+ * On web it prompts to use browser devtools; on physical devices it suggests shaking
+ * the device or pressing `m` in the terminal; on simulators/emulators it shows the
+ * appropriate keyboard shortcut.
+ *
+ * @returns An AppText element containing instructions appropriate for the current platform.
  */
 function getDevMenuHint() {
   if (Platform.OS === 'web') {
@@ -45,8 +44,15 @@ function getDevMenuHint() {
   );
 }
 
+/**
+ * Renders the app's landing Home screen with branding, descriptive text, and actionable hints.
+ *
+ * The screen shows the app title, subtitle, a set of HintRow entries (including a platform-adaptive dev tools hint),
+ * and displays a WebBadge when running on web.
+ *
+ * @returns The rendered Home screen element.
+ */
 export default function HomeScreen() {
-   const tasks = useQuery(api.tasks.get);
   return (
     <View className="flex-1 flex-row justify-center bg-background">
       <SafeAreaView
@@ -97,16 +103,6 @@ export default function HomeScreen() {
             }
           />
         </View>
-
-         <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      {tasks?.map(({ _id, text }) => <AppText key={_id}>{text}</AppText>)}
-    </View>
 
         {Platform.OS === 'web' && <WebBadge />}
       </SafeAreaView>

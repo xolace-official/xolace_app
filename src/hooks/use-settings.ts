@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { Alert } from "react-native";
-import { useClerk, useUser } from "@clerk/clerk-expo";
+import { useClerk, useUser } from "@clerk/expo";
 import { Uniwind, useUniwind } from "uniwind";
 import { useAppStore } from "@/store/store";
 import { useAppTheme } from "@/context/app-theme-context";

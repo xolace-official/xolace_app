@@ -21,7 +21,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.xolaceincorg.xolace"
     },
     "web": {
       "output": "static",
@@ -50,7 +51,9 @@
           ]
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "@clerk/expo",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -60,7 +63,8 @@
       "router": {},
       "eas": {
         "projectId": "9b49d23b-d85c-48c9-84a4-db117b864dd3"
-      }
+      },
+      "EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME": "com.googleusercontent.apps.30023455189-r6r4klf9b4konpvups2ecb0of2nii4f1"
     },
     "owner": "xolace-inc-org"
   }
