@@ -1,10 +1,8 @@
-/* eslint-env node */
+import { defineConfig } from 'eslint/config';
+import expoConfig from 'eslint-config-expo/flat.js';
 import convexPlugin from "@convex-dev/eslint-plugin";
-const { defineConfig } = require('eslint/config');
-const expoConfig = require('eslint-config-expo/flat');
 
-
-module.exports = defineConfig([
+export default defineConfig([
   expoConfig,
   ...convexPlugin.configs.recommended,
   {
