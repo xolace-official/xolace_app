@@ -21,7 +21,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.xolaceincorg.xolace"
     },
     "web": {
       "output": "static",
@@ -51,7 +52,8 @@
         }
       ],
       "expo-sqlite",
-      "@clerk/expo"
+      "@clerk/expo",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

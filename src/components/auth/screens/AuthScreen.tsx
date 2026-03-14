@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Button } from 'heroui-native';
+import { Button , Spinner, useThemeColor} from 'heroui-native';
+import { useSignInWithGoogle } from '@clerk/expo/google';
+import { useMutation } from 'convex/react';
+import { api } from '../../../../convex/_generated/api';
 
 import { AppText } from '@/components/shared/app-text';
 import { AuthBg } from '@/components/auth/auth-bg';
@@ -12,6 +15,10 @@ import { GoogleIcon } from '@/components/auth/google-icon';
 
 export const AuthScreen = () => {
   const insets = useSafeAreaInsets();
+  const themeColorAccentForeground = useThemeColor('accent-foreground');
+  const { startGoogleAuthenticationFlow } = useSignInWithGoogle();
+  const getOrCreate = useMutation(api.users.getOrCreate);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAppleAuth = () => {
     if (process.env.EXPO_OS === 'ios') {
@@ -20,12 +27,39 @@ export const AuthScreen = () => {
     // TODO: wire to Clerk Apple OAuth
   };
 
-  const handleGoogleAuth = () => {
+  const handleGoogleAuth = useCallback(async () => {
     if (process.env.EXPO_OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    // TODO: wire to Clerk Google OAuth
-  };
+
+    try {
+      setIsLoading(true);
+
+      const { createdSessionId, setActive, signUp } =
+        await startGoogleAuthenticationFlow();
+
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+
+        await getOrCreate({
+          authProvider: 'google',
+          authProviderAccountId: signUp?.createdUserId ?? 'google-user',
+        });
+      }
+    } catch (error: unknown) {
+      const code =
+        error && typeof error === 'object' && 'code' in error
+          ? (error as { code: string | number }).code
+          : undefined;
+
+      // Silently handle user cancellation
+      if (code === 'SIGN_IN_CANCELLED' || code === -5) return;
+
+      console.error('Google auth error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [startGoogleAuthenticationFlow, getOrCreate]);
 
   return (
     <View
@@ -65,6 +99,7 @@ export const AuthScreen = () => {
               onPress={handleAppleAuth}
               variant="ghost"
               size="lg"
+              isDisabled={isLoading}
               className="bg-white rounded-[14px] py-3.5 px-6"
             >
               <AppleIcon size={20} color="#000" />
@@ -85,12 +120,14 @@ export const AuthScreen = () => {
               onPress={handleGoogleAuth}
               variant="outline"
               size="lg"
+              isDisabled={isLoading}
               className="rounded-[14px] py-3.5 px-6"
               style={{
                 backgroundColor: 'rgba(255,255,255,0.08)',
                 borderColor: 'rgba(217, 171, 111, 0.2)',
               }}
             >
+              {isLoading &&  <Spinner entering={FadeIn.delay(50)} color={themeColorAccentForeground} />}
               <GoogleIcon size={20} />
               <Button.Label
                 className="text-[15px] text-white/90"
