@@ -5,10 +5,10 @@ import { AppText } from '@/components/shared/app-text';
 
 type Props = {
   mirror: string;
-  onReset: () => void;
+  onExitComplete: () => void;
 };
 
-export const PathSelectionState = ({ mirror, onReset }: Props) => {
+export const PathSelectionState = ({ mirror, onExitComplete }: Props) => {
   const router = useRouter();
 
   return (
@@ -32,7 +32,7 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
 
       <View className="gap-8">
         <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-          <Pressable onPress={() => router.push('/sit-with-this' )}>
+          <Pressable onPress={() => router.push('/sit-with-this')}>
             <AppText className="text-lg text-foreground">Sit with this</AppText>
             <AppText className="mt-1 text-sm text-foreground/30">
               A quiet space to breathe
@@ -41,7 +41,7 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-          <Pressable onPress={() => router.push('/peer-reflections' )}>
+          <Pressable onPress={() => router.push('/peer-reflections')}>
             <AppText className="text-lg text-foreground">
               You&apos;re not alone
             </AppText>
@@ -52,7 +52,7 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(600).duration(400)}>
-          <Pressable onPress={onReset}>
+          <Pressable onPress={onExitComplete}>
             <AppText className="text-lg text-foreground">
               I just needed to say it
             </AppText>

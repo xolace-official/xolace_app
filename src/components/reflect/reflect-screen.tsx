@@ -22,6 +22,7 @@ export const ReflectScreen = () => {
     handleNotQuite,
     handleSayMore,
     handleGaveUpPathSelection,
+    handleExitComplete,
     handleReset,
     handleRetry,
   } = useReflectionMachine();
@@ -96,7 +97,7 @@ export const ReflectScreen = () => {
       {screen === 'path-selection' && (
         <PathSelectionState
           mirror={state.mirrorResponse}
-          onReset={handleReset}
+          onExitComplete={handleExitComplete}
         />
       )}
 

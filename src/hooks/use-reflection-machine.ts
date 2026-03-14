@@ -103,6 +103,7 @@ export function useReflectionMachine() {
     isLoading,
     initiateAndSubmit,
     confirmMirror,
+    completeAsExit,
     submitRefinement,
     abandon,
     retry,
@@ -114,6 +115,7 @@ export function useReflectionMachine() {
   const freezeOccurredRef = useRef(false);
   const freezeStartRef = useRef<number | null>(null);
   const freezeDurationRef = useRef<number | undefined>(undefined);
+  const busyRef = useRef(false);
 
   // --- Bridge server state changes to UI dispatches ---
   useEffect(() => {
@@ -143,20 +145,21 @@ export function useReflectionMachine() {
         });
         break;
       case 'abandoned':
+      case 'completed':
+        // Terminal states — reset UI for a fresh session
+        resetSession();
+        prevServerStateRef.current = null;
         dispatch({ type: 'RESET' });
         break;
     }
-  }, [serverState, mirrorText, errorMessage, state.screen]);
+  }, [serverState, mirrorText, errorMessage, state.screen, resetSession]);
 
   // Track freeze (typing-nudge = user paused)
   useEffect(() => {
     if (state.screen === 'typing-nudge') {
       freezeOccurredRef.current = true;
       freezeStartRef.current = Date.now();
-    } else if (
-      state.screen === 'typing' &&
-      freezeStartRef.current
-    ) {
+    } else if (state.screen === 'typing' && freezeStartRef.current) {
       freezeDurationRef.current =
         (freezeDurationRef.current ?? 0) +
         (Date.now() - freezeStartRef.current);
@@ -171,7 +174,18 @@ export function useReflectionMachine() {
     }
   }, [state.screen]);
 
+  const clearRefs = useCallback(() => {
+    prevServerStateRef.current = null;
+    typingStartRef.current = null;
+    freezeOccurredRef.current = false;
+    freezeStartRef.current = null;
+    freezeDurationRef.current = undefined;
+    busyRef.current = false;
+  }, []);
+
   const submitReflection = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     dispatch({ type: 'SUBMIT' });
     const duration = typingStartRef.current
       ? Date.now() - typingStartRef.current
@@ -186,10 +200,14 @@ export function useReflectionMachine() {
       );
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
     }
   }, [state.entryText, state.entryType, initiateAndSubmit]);
 
   const submitScaffold = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     dispatch({ type: 'SCAFFOLD_SUBMIT' });
     try {
       await initiateAndSubmit(
@@ -200,13 +218,16 @@ export function useReflectionMachine() {
       );
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
     }
   }, [state.selectedTextures, initiateAndSubmit]);
 
   const submitClarification = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     dispatch({ type: 'SUBMIT' });
-    const feedbackType: FeedbackType =
-      state.lastFeedbackType ?? 'not_quite';
+    const feedbackType: FeedbackType = state.lastFeedbackType ?? 'not_quite';
     try {
       await submitRefinement(feedbackType, state.clarifyText);
     } catch (error) {
@@ -214,26 +235,29 @@ export function useReflectionMachine() {
         error instanceof Error &&
         error.message.includes('Maximum refinement turns')
       ) {
-        dispatch({
-          type: 'SESSION_RESUMED',
-          screen: 'gave-up',
-        });
+        dispatch({ type: 'SESSION_RESUMED', screen: 'gave-up' });
       } else {
         dispatch({
           type: 'SESSION_ERROR',
           message: extractErrorMessage(error),
         });
       }
+    } finally {
+      busyRef.current = false;
     }
   }, [state.clarifyText, state.lastFeedbackType, submitRefinement]);
 
   const handleThatsIt = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     dispatch({ type: 'THATS_IT' });
     try {
       const confirmationState = turnsCount > 0 ? 'refined' : 'confirmed';
       await confirmMirror(confirmationState);
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
     }
   }, [turnsCount, confirmMirror]);
 
@@ -254,30 +278,49 @@ export function useReflectionMachine() {
   }, [turnsCount]);
 
   const handleGaveUpPathSelection = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     try {
       await confirmMirror('gave_up');
       dispatch({ type: 'THATS_IT' });
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
     }
   }, [confirmMirror]);
 
+  const handleExitComplete = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await completeAsExit();
+      // The useEffect bridge will detect 'completed' and reset
+    } catch (error) {
+      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
+    }
+  }, [completeAsExit]);
+
   const handleReset = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     await abandon();
     resetSession();
-    prevServerStateRef.current = null;
-    typingStartRef.current = null;
-    freezeOccurredRef.current = false;
-    freezeStartRef.current = null;
-    freezeDurationRef.current = undefined;
+    clearRefs();
     dispatch({ type: 'RESET' });
-  }, [abandon, resetSession]);
+  }, [abandon, resetSession, clearRefs]);
 
   const handleRetry = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     try {
       await retry();
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
     }
   }, [retry]);
 
@@ -292,6 +335,7 @@ export function useReflectionMachine() {
     handleNotQuite,
     handleSayMore,
     handleGaveUpPathSelection,
+    handleExitComplete,
     handleReset,
     handleRetry,
   };

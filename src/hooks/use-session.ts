@@ -5,24 +5,45 @@ import type { Id } from '../../convex/_generated/dataModel';
 import type { EntryType } from '@/interfaces/reflection';
 import { mapEntryType } from '@/services/session-service';
 
+// States where turns are relevant (mirror has been delivered at least once)
+const TURN_RELEVANT_STATES = new Set([
+  'mirror_delivered',
+  'confirmed',
+  'path_selected',
+  'path_in_progress',
+  'completed',
+]);
+
 export function useSession() {
   const [sessionId, setSessionId] = useState<Id<'sessions'> | null>(null);
 
-  // --- Queries ---
-  const activeSession = useQuery(api.sessions.getActive);
+  // Only check for active sessions when we don't already have one
+  const activeSession = useQuery(
+    api.sessions.getActive,
+    sessionId ? 'skip' : undefined,
+  );
+
   const session = useQuery(
     api.sessions.getById,
     sessionId ? { sessionId } : 'skip',
   );
+
+  // Only subscribe to turns when the session is in a state where turns matter
+  const shouldQueryTurns =
+    sessionId != null &&
+    session?.state != null &&
+    TURN_RELEVANT_STATES.has(session.state);
+
   const turns = useQuery(
     api.sessionTurns.listBySession,
-    sessionId ? { sessionId } : 'skip',
+    shouldQueryTurns ? { sessionId: sessionId! } : 'skip',
   );
 
   // --- Mutations ---
   const initiateMutation = useMutation(api.sessions.initiate);
   const submitInputMutation = useMutation(api.sessions.submitInput);
   const confirmMirrorMutation = useMutation(api.sessions.confirmMirror);
+  const completeSessionMutation = useMutation(api.sessions.completeSession);
   const submitFeedbackMutation = useMutation(api.sessionTurns.submitFeedback);
   const abandonMutation = useMutation(api.sessions.abandon);
   const retryMutation = useMutation(api.sessions.retrySession);
@@ -36,7 +57,7 @@ export function useSession() {
 
   // --- Derived state ---
   const turnsCount = turns?.length ?? 0;
-  const isLoading = activeSession === undefined;
+  const isLoading = !sessionId && activeSession === undefined;
   const serverState = session?.state ?? null;
   const mirrorText = session?.mirrorText ?? null;
   const errorMessage = session?.errorMessage ?? null;
@@ -77,6 +98,11 @@ export function useSession() {
     },
     [sessionId, confirmMirrorMutation],
   );
+
+  const completeAsExit = useCallback(async () => {
+    if (!sessionId) return;
+    await completeSessionMutation({ sessionId });
+  }, [sessionId, completeSessionMutation]);
 
   const submitRefinement = useCallback(
     async (
@@ -123,6 +149,7 @@ export function useSession() {
     isLoading,
     initiateAndSubmit,
     confirmMirror,
+    completeAsExit,
     submitRefinement,
     abandon,
     retry,
