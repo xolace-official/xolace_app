@@ -20,9 +20,8 @@ if (typeof navigator !== "undefined" && navigator.onLine === undefined) {
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
 
 /**
- * This component is marked as @unmemoized because it passes a hook reference (`useAuth`)
- * as a prop to `ConvexProviderWithClerk`. The React Compiler forbids passing hooks as
- * normal values, but this is the standard pattern required by the Convex/Clerk integration.
+ * Provides Clerk and Convex contexts configured for the app, injecting Clerk's publishable key and token cache and passing the `useAuth` hook to Convex.
+ *
  * @unmemoized
  */
 export function ConvexClientProvider({

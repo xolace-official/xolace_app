@@ -209,6 +209,15 @@ const TABS = [
   "Data Access Patterns",
 ];
 
+/**
+ * Render an interactive, tabbed visualization of Xolace's data flow, showing phases, database operations, background jobs, and query patterns.
+ *
+ * The component displays a header with a legend and tabs for: Session Lifecycle, Onboarding, Paths & Close, Background Jobs, and Data Access Patterns.
+ * Each tab composes presentational subcomponents (operation badges, table refs, phase headers, dividers, and background-job cards) to illustrate reads, writes,
+ * AI calls, encryption steps, and scheduled or event-triggered jobs for the system.
+ *
+ * @returns {JSX.Element} A React element containing the full data flow map UI.
+ */
 export default function XolaceDataFlow() {
   const [activeTab, setActiveTab] = useState("Session Lifecycle");
 

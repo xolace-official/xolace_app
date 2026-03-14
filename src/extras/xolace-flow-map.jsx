@@ -432,6 +432,16 @@ const ScenarioFlow = ({ title, subtitle, persona, steps }) => (
 
 const TABS = ["Architecture", "Scenario 1", "Scenario 2", "Scenario 3", "Scenario 4", "Scenario 5", "Full Map"];
 
+/**
+ * Render an interactive flow map UI that visualizes the app's screen architecture,
+ * scenario-based user flows, and a full navigation map.
+ *
+ * The component provides a tabbed interface (Architecture, Scenario 1–5, Full Map)
+ * and presents themed, color-coded visualizations including the core screen states,
+ * standalone screens, scenario step sequences, and a text-based complete map.
+ *
+ * @returns {JSX.Element} A React element containing the Xolace flow map interface.
+ */
 export default function XolaceFlowMap() {
   const [activeTab, setActiveTab] = useState("Architecture");
 
