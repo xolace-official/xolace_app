@@ -11,9 +11,12 @@ export type ReflectionStateName =
   | 'mirror'
   | 'clarify'
   | 'gave-up'
-  | 'path-selection';
+  | 'path-selection'
+  | 'error';
 
 export type EntryType = 'typed' | 'scaffold' | 'hybrid';
+
+export type FeedbackType = 'not_quite' | 'say_more';
 
 export type ReflectionAction =
   | { type: 'TAP_INPUT' }
@@ -28,19 +31,18 @@ export type ReflectionAction =
   | { type: 'NOT_QUITE' }
   | { type: 'SAY_MORE' }
   | { type: 'CLARIFY_TEXT_CHANGE'; text: string }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'SESSION_ERROR'; message: string }
+  | { type: 'SESSION_RESUMED'; screen: ReflectionStateName; mirrorResponse?: string };
 
 export interface ReflectionState {
   screen: ReflectionStateName;
   entryText: string;
   clarifyText: string;
   mirrorResponse: string;
-  clarifyCount: number;
+  errorMessage: string;
+  lastFeedbackType: FeedbackType | null;
   userVariant: UserVariant;
   selectedTextures: string[];
   entryType: EntryType;
-}
-
-export interface MirrorResponse {
-  text: string;
 }
