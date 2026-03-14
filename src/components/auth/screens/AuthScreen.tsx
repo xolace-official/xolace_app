@@ -40,6 +40,7 @@ export const AuthScreen = () => {
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
+        console.log("handleGoogleAuth: session created", createdSessionId);
 
         await getOrCreate({
           authProvider: 'google',

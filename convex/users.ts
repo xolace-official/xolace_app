@@ -12,8 +12,10 @@ export const getOrCreate = mutation({
     authProviderAccountId: v.string(),
   },
   handler: async (ctx, args) => {
+    console.log("getOrCreate", args);
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
+      console.log("getOrCreate-error: not authenticated");
       throw new Error("Not authenticated");
     }
 

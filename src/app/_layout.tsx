@@ -19,12 +19,16 @@ import {
 } from '@expo-google-fonts/space-grotesk';
 
 import { RootProvider } from '@/providers/root-provider';
+import { useAuth } from '@clerk/expo';
 
 SplashScreen.preventAutoHideAsync();
 
 const AppContent = () => {
     const isOnboarded = true;
-    const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  const { isSignedIn } = useAuth();
+  
+  console.log("isAuthenticated", isAuthenticated, "isSignedIn", isSignedIn)
 
     if (isAuthLoading) return null;
   return (

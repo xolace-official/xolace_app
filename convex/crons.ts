@@ -6,7 +6,7 @@ const crons = cronJobs();
 // Check for abandoned sessions every 15 minutes
 crons.interval(
   "check abandoned sessions",
-  { minutes: 15 },
+  { hours: 24 },
   internal.sessions.checkAbandoned,
   {}
 );
