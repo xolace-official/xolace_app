@@ -9,7 +9,6 @@ import type { Id } from '../../convex/_generated/dataModel';
  */
 export function usePathSession() {
   const activeSession = useQuery(api.sessions.getActive);
-  const selectPathMutation = useMutation(api.sessions.selectPath);
   const startPathMutation = useMutation(api.sessions.startPath);
   const completePathMutation = useMutation(api.sessions.completePath);
   const busyRef = useRef(false);
@@ -19,33 +18,21 @@ export function usePathSession() {
   const isLoading = activeSession === undefined;
 
   /**
-   * Select a path and immediately start it.
-   * Called on mount from path screens.
+   * Start the path. Called on mount from path screens.
+   * selectPath was already called from PathSelectionState before navigation.
    */
-  const selectAndStartPath = useCallback(
-    async (
-      pathChosen: 'solo' | 'peers',
-      exerciseId?: Id<'exercises'>,
-    ) => {
+  const startPath = useCallback(
+    async (exerciseId?: Id<'exercises'>) => {
       if (!sessionId || busyRef.current) return;
+      if (session?.state !== 'path_selected') return;
       busyRef.current = true;
       try {
-        // Only select if still in confirmed state
-        if (session?.state === 'confirmed') {
-          await selectPathMutation({ sessionId, pathChosen });
-        }
-        // Only start if now in path_selected state (or was already)
-        if (
-          session?.state === 'confirmed' ||
-          session?.state === 'path_selected'
-        ) {
-          await startPathMutation({ sessionId, exerciseId });
-        }
+        await startPathMutation({ sessionId, exerciseId });
       } finally {
         busyRef.current = false;
       }
     },
-    [sessionId, session?.state, selectPathMutation, startPathMutation],
+    [sessionId, session?.state, startPathMutation],
   );
 
   /**
@@ -72,7 +59,7 @@ export function usePathSession() {
     sessionId,
     session,
     isLoading,
-    selectAndStartPath,
+    startPath,
     completePath,
   };
 }

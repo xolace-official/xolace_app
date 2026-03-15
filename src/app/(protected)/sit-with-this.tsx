@@ -12,22 +12,18 @@ export default function SitWithThis() {
   const router = useRouter();
   const startedRef = useRef(false);
 
-  const { sessionId, session, selectAndStartPath, completePath } =
-    usePathSession();
+  const { sessionId, session, startPath, completePath } = usePathSession();
 
   // Start the path on mount
   useEffect(() => {
     if (startedRef.current || !sessionId || !session) return;
-    if (
-      session.state === 'confirmed' ||
-      session.state === 'path_selected'
-    ) {
+    if (session.state === 'path_selected') {
       startedRef.current = true;
-      selectAndStartPath('solo');
+      startPath();
     } else if (session.state === 'path_in_progress') {
       startedRef.current = true;
     }
-  }, [sessionId, session, selectAndStartPath]);
+  }, [sessionId, session, startPath]);
 
   const handleDone = async () => {
     await completePath(true);

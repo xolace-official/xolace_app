@@ -15,22 +15,19 @@ export const PeerReflectionScreen = () => {
   const router = useRouter();
   const startedRef = useRef(false);
 
-  const { sessionId, session, isLoading, selectAndStartPath, completePath } =
+  const { sessionId, session, isLoading, startPath, completePath } =
     usePathSession();
 
-  // Start the path on mount (select + start if still in confirmed)
+  // Start the path on mount
   useEffect(() => {
     if (startedRef.current || !sessionId || !session) return;
-    if (
-      session.state === "confirmed" ||
-      session.state === "path_selected"
-    ) {
+    if (session.state === "path_selected") {
       startedRef.current = true;
-      selectAndStartPath("peers");
+      startPath();
     } else if (session.state === "path_in_progress") {
       startedRef.current = true;
     }
-  }, [sessionId, session, selectAndStartPath]);
+  }, [sessionId, session, startPath]);
 
   // Try matching reflections for this session
   const matchedReflections = useQuery(
@@ -126,7 +123,7 @@ export const PeerReflectionScreen = () => {
 
       <Animated.View
         entering={FadeIn.delay(800).duration(400)}
-        className="items-center pb-4"
+        className="items-center pb-4 pt-1"
       >
         <PillButton label="Done" onPress={handleDone} />
       </Animated.View>

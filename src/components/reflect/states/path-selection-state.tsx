@@ -57,8 +57,11 @@ export const PathSelectionState = ({
         </AppText>
       </ScrollView>
 
-      <AppText className="mb-8 mt-10 text-lg text-foreground">
+      <AppText className="mb-2 mt-10 text-lg text-foreground">
         Where would you like to go from here?
+      </AppText>
+      <AppText className="mb-6 text-sm text-foreground/20">
+        Take a moment; once you choose, you&apos;ll continue there.
       </AppText>
 
       <View className="gap-8">
