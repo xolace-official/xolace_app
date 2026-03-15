@@ -64,25 +64,93 @@ export const matchForSession = query({
 });
 
 /**
- * "I feel this too" — increment resonance count.
+ * Toggle "I feel this too" — insert or delete resonance record.
+ * Returns { resonated: boolean } so the client knows the new state.
  */
-export const incrementResonance = mutation({
+export const toggleResonance = mutation({
   args: {
     reflectionId: v.id("reflections"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const { profile } = await requireAuth(ctx);
 
     const reflection = await ctx.db.get(args.reflectionId);
     if (!reflection) {
       throw new Error("Reflection not found");
     }
 
+    const existing = await ctx.db
+      .query("reflection_resonances")
+      .withIndex("by_profile_reflection", (q) =>
+        q
+          .eq("emotionalProfileId", profile._id)
+          .eq("reflectionId", args.reflectionId)
+      )
+      .unique();
+
+    if (existing) {
+      // Un-resonate
+      await ctx.db.delete(existing._id);
+      await ctx.db.patch(args.reflectionId, {
+        resonanceCount: Math.max(0, reflection.resonanceCount - 1),
+      });
+      return { resonated: false };
+    }
+
+    // Resonate
+    await ctx.db.insert("reflection_resonances", {
+      emotionalProfileId: profile._id,
+      reflectionId: args.reflectionId,
+      createdAt: Date.now(),
+    });
     await ctx.db.patch(args.reflectionId, {
       resonanceCount: reflection.resonanceCount + 1,
     });
+    return { resonated: true };
+  },
+});
 
-    return null;
+/**
+ * Batch check whether the current user has resonated with a set of reflections.
+ */
+export const hasResonated = query({
+  args: {
+    reflectionIds: v.array(v.id("reflections")),
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    const result: Record<string, boolean> = {};
+    for (const reflectionId of args.reflectionIds) {
+      const existing = await ctx.db
+        .query("reflection_resonances")
+        .withIndex("by_profile_reflection", (q) =>
+          q
+            .eq("emotionalProfileId", profile._id)
+            .eq("reflectionId", reflectionId)
+        )
+        .unique();
+      result[reflectionId] = !!existing;
+    }
+    return result;
+  },
+});
+
+/**
+ * Fallback: list recent active reflections when matchForSession returns empty.
+ */
+export const listRecent = query({
+  args: {
+    limit: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+
+    return await ctx.db
+      .query("reflections")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .order("desc")
+      .take(Math.min(args.limit, 20));
   },
 });
 

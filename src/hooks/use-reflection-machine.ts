@@ -104,6 +104,7 @@ export function useReflectionMachine() {
     initiateAndSubmit,
     confirmMirror,
     completeAsExit,
+    selectPath,
     submitRefinement,
     abandon,
     retry,
@@ -303,6 +304,30 @@ export function useReflectionMachine() {
     }
   }, [completeAsExit]);
 
+  const handleSelectSolo = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await selectPath('solo');
+    } catch (error) {
+      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
+    }
+  }, [selectPath]);
+
+  const handleSelectPeers = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await selectPath('peers');
+    } catch (error) {
+      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
+    }
+  }, [selectPath]);
+
   const handleReset = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -336,6 +361,8 @@ export function useReflectionMachine() {
     handleSayMore,
     handleGaveUpPathSelection,
     handleExitComplete,
+    handleSelectSolo,
+    handleSelectPeers,
     handleReset,
     handleRetry,
   };

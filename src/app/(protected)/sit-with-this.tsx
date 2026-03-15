@@ -1,17 +1,38 @@
+import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText } from '@/components/shared/app-text';
-
-
-/**
- * Screen component that displays a centered "Sit with this" title and a "Coming soon" subtitle,
- * applying device safe-area top and bottom padding.
- *
- * @returns A React element rendering the screen layout with safe-area top and bottom padding applied.
- */
+import { PillButton } from '@/components/reflect/pill-button';
+import { usePathSession } from '@/hooks/use-path-session';
 
 export default function SitWithThis() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const startedRef = useRef(false);
+
+  const { sessionId, session, selectAndStartPath, completePath } =
+    usePathSession();
+
+  // Start the path on mount
+  useEffect(() => {
+    if (startedRef.current || !sessionId || !session) return;
+    if (
+      session.state === 'confirmed' ||
+      session.state === 'path_selected'
+    ) {
+      startedRef.current = true;
+      selectAndStartPath('solo');
+    } else if (session.state === 'path_in_progress') {
+      startedRef.current = true;
+    }
+  }, [sessionId, session, selectAndStartPath]);
+
+  const handleDone = async () => {
+    await completePath(true);
+    router.back();
+  };
 
   return (
     <View
@@ -22,8 +43,15 @@ export default function SitWithThis() {
         Sit with this
       </AppText>
       <AppText className="mt-4 text-center text-base text-foreground/40">
-        Coming soon
+        A quiet space to breathe.{'\n'}Full exercises coming soon.
       </AppText>
+
+      <Animated.View
+        entering={FadeIn.delay(600).duration(400)}
+        className="mt-10"
+      >
+        <PillButton label="Done" onPress={handleDone} />
+      </Animated.View>
     </View>
   );
 }

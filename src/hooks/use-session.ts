@@ -43,6 +43,9 @@ export function useSession() {
   const initiateMutation = useMutation(api.sessions.initiate);
   const submitInputMutation = useMutation(api.sessions.submitInput);
   const confirmMirrorMutation = useMutation(api.sessions.confirmMirror);
+  const selectPathMutation = useMutation(api.sessions.selectPath);
+  const startPathMutation = useMutation(api.sessions.startPath);
+  const completePathMutation = useMutation(api.sessions.completePath);
   const completeSessionMutation = useMutation(api.sessions.completeSession);
   const submitFeedbackMutation = useMutation(api.sessionTurns.submitFeedback);
   const abandonMutation = useMutation(api.sessions.abandon);
@@ -104,6 +107,37 @@ export function useSession() {
     await completeSessionMutation({ sessionId });
   }, [sessionId, completeSessionMutation]);
 
+  const selectPath = useCallback(
+    async (pathChosen: 'solo' | 'peers' | 'exit') => {
+      if (!sessionId) return;
+      await selectPathMutation({ sessionId, pathChosen });
+    },
+    [sessionId, selectPathMutation],
+  );
+
+  const startPath = useCallback(
+    async (exerciseId?: string) => {
+      if (!sessionId) return;
+      await startPathMutation({
+        sessionId,
+        exerciseId: exerciseId as Id<'exercises'> | undefined,
+      });
+    },
+    [sessionId, startPathMutation],
+  );
+
+  const completePath = useCallback(
+    async (pathCompleted: boolean, contributedReflection?: boolean) => {
+      if (!sessionId) return;
+      await completePathMutation({
+        sessionId,
+        pathCompleted,
+        contributedReflection,
+      });
+    },
+    [sessionId, completePathMutation],
+  );
+
   const submitRefinement = useCallback(
     async (
       userFeedback: 'not_quite' | 'say_more',
@@ -150,6 +184,9 @@ export function useSession() {
     initiateAndSubmit,
     confirmMirror,
     completeAsExit,
+    selectPath,
+    startPath,
+    completePath,
     submitRefinement,
     abandon,
     retry,

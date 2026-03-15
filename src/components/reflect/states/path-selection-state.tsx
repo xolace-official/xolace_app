@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
@@ -5,11 +6,41 @@ import { AppText } from '@/components/shared/app-text';
 
 type Props = {
   mirror: string;
+  onSelectSolo: () => Promise<void>;
+  onSelectPeers: () => Promise<void>;
   onExitComplete: () => void;
 };
 
-export const PathSelectionState = ({ mirror, onExitComplete }: Props) => {
+export const PathSelectionState = ({
+  mirror,
+  onSelectSolo,
+  onSelectPeers,
+  onExitComplete,
+}: Props) => {
   const router = useRouter();
+  const busyRef = useRef(false);
+
+  const handleSolo = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await onSelectSolo();
+      router.push('/sit-with-this');
+    } finally {
+      busyRef.current = false;
+    }
+  };
+
+  const handlePeers = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await onSelectPeers();
+      router.push('/peer-reflections');
+    } finally {
+      busyRef.current = false;
+    }
+  };
 
   return (
     <Animated.View
@@ -32,7 +63,7 @@ export const PathSelectionState = ({ mirror, onExitComplete }: Props) => {
 
       <View className="gap-8">
         <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-          <Pressable onPress={() => router.push('/sit-with-this')}>
+          <Pressable onPress={handleSolo}>
             <AppText className="text-lg text-foreground">Sit with this</AppText>
             <AppText className="mt-1 text-sm text-foreground/30">
               A quiet space to breathe
@@ -41,7 +72,7 @@ export const PathSelectionState = ({ mirror, onExitComplete }: Props) => {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-          <Pressable onPress={() => router.push('/peer-reflections')}>
+          <Pressable onPress={handlePeers}>
             <AppText className="text-lg text-foreground">
               You&apos;re not alone
             </AppText>
