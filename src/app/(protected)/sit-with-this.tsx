@@ -7,6 +7,13 @@ import { AppText } from '@/components/shared/app-text';
 import { PillButton } from '@/components/reflect/pill-button';
 import { usePathSession } from '@/hooks/use-path-session';
 
+/**
+ * Screen that provides a quiet, temporary space and manages the lifecycle of a path session.
+ *
+ * On mount, if a path session exists and is in the `path_selected` state the component will start the path; if the session is already `path_in_progress` it will mark that the path has started. Pressing the "Done" button completes the path (with a positive completion flag) and navigates back.
+ *
+ * @returns The component's rendered React element.
+ */
 export default function SitWithThis() {
   const insets = useSafeAreaInsets();
   const router = useRouter();

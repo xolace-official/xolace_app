@@ -25,10 +25,22 @@ const ENTRY_TYPE_MAP: Record<EntryType, ServerEntryType> = {
   hybrid: 'guided_entry',
 };
 
+/**
+ * Translate a client entry type into the corresponding server-side entry type.
+ *
+ * @param clientType - The client-facing entry type to map
+ * @returns The corresponding `ServerEntryType` value from `ENTRY_TYPE_MAP`
+ */
 export function mapEntryType(clientType: EntryType): ServerEntryType {
   return ENTRY_TYPE_MAP[clientType];
 }
 
+/**
+ * Map a server session state to the corresponding UI reflection screen name.
+ *
+ * @param serverState - The server session state to translate
+ * @returns The corresponding `ReflectionStateName` for `serverState`, or `null` for terminal or unrecognized states
+ */
 export function mapServerStateToScreen(
   serverState: ServerSessionState,
 ): ReflectionStateName | null {
@@ -54,6 +66,16 @@ export function mapServerStateToScreen(
   }
 }
 
+/**
+ * Produce a user-facing message derived from an error value.
+ *
+ * @param error - The value to inspect for generating a friendly message
+ * @returns A string appropriate for the error:
+ * - A rate-limit hint when the error message contains 'Rate limit'
+ * - A session-expired prompt when the error message contains 'Not authenticated'
+ * - A generic retry prompt for other Error instances
+ * - A generic unexpected-error message for non-Error inputs
+ */
 export function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     if (error.message.includes('Rate limit')) {

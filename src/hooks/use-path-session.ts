@@ -4,8 +4,17 @@ import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 
 /**
- * Lightweight hook for path screens (peers, solo).
- * Gets the active session and exposes path mutations.
+ * Provides the active session and helpers to start and complete a path for path screens.
+ *
+ * Exposes the current active session state and two actions that serialize mutation calls
+ * to avoid concurrent updates.
+ *
+ * @returns An object with:
+ *  - `sessionId` - the active session's Id or `null` when no active session exists.
+ *  - `session` - the full active session object or `undefined` while loading.
+ *  - `isLoading` - `true` when the active session is still being fetched, `false` otherwise.
+ *  - `startPath` - a function `(exerciseId?: Id<'exercises'>) => Promise<void>` that starts the path for the active session when the session state is `'path_selected'`; no-op if there is no active session or another mutation is in progress.
+ *  - `completePath` - a function `(pathCompleted: boolean, contributedReflection?: boolean) => Promise<void>` that marks the current path as completed for the active session; no-op if there is no active session or another mutation is in progress.
  */
 export function usePathSession() {
   const activeSession = useQuery(api.sessions.getActive);

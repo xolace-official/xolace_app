@@ -22,6 +22,13 @@ const initialState: ReflectionState = {
   entryType: 'typed',
 };
 
+/**
+ * Produces the next reflection UI state given the current state and an action.
+ *
+ * @param state - Current reflection state
+ * @param action - Action describing the update to apply
+ * @returns The next ReflectionState after applying the provided action
+ */
 function reducer(
   state: ReflectionState,
   action: ReflectionAction,
@@ -93,6 +100,28 @@ function reducer(
   }
 }
 
+/**
+ * Manages the reflection UI state machine and bridges it to the session API.
+ *
+ * Provides the current reflection state, a reducer dispatch, loading status, and a set of actions that submit reflections, handle clarifications and confirmations, select paths, and control or reset the session.
+ *
+ * @returns An object with:
+ * - `state` — the current `ReflectionState` for the UI.
+ * - `dispatch` — reducer dispatch function for local state actions.
+ * - `isLoading` — `true` while session data is loading.
+ * - `submitReflection` — submit the current typed entry to the session.
+ * - `submitScaffold` — submit a scaffolded entry built from selected textures.
+ * - `submitClarification` — submit a clarification/refinement for the last mirror.
+ * - `handleThatsIt` — confirm the mirror as final (or refined when applicable).
+ * - `handleNotQuite` — transition to the "not quite" clarification flow or give up when turns exhausted.
+ * - `handleSayMore` — transition to the "say more" clarification flow or give up when turns exhausted.
+ * - `handleGaveUpPathSelection` — confirm a "gave up" path and advance to completion.
+ * - `handleExitComplete` — mark the session as completed (exit flow).
+ * - `handleSelectSolo` — select the "solo" path.
+ * - `handleSelectPeers` — select the "peers" path.
+ * - `handleReset` — abandon the current session and reset local state.
+ * - `handleRetry` — request the session to retry the last action.
+ */
 export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const {
