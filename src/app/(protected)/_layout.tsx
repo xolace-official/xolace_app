@@ -14,6 +14,10 @@ export default function ProtectedLayout() {
         headerShown: false,
         contentStyle: { backgroundColor: 'transparent' },
       }}
-    />
+    >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="sit-with-this" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="peer-reflections" options={{ gestureEnabled: false }} />
+    </Stack>
   );
 }

@@ -25,6 +25,7 @@ import type * as lib_validators from "../lib/validators.js";
 import type * as notifications from "../notifications.js";
 import type * as preferences from "../preferences.js";
 import type * as reflections from "../reflections.js";
+import type * as seed from "../seed.js";
 import type * as sessionTurns from "../sessionTurns.js";
 import type * as sessions from "../sessions.js";
 import type * as users from "../users.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   preferences: typeof preferences;
   reflections: typeof reflections;
+  seed: typeof seed;
   sessionTurns: typeof sessionTurns;
   sessions: typeof sessions;
   users: typeof users;
