@@ -31,12 +31,15 @@ export function usePathSession() {
    * selectPath was already called from PathSelectionState before navigation.
    */
   const startPath = useCallback(
-    async (exerciseId?: Id<'exercises'>) => {
-      if (!sessionId || busyRef.current) return;
-      if (session?.state !== 'path_selected') return;
+    async (exerciseId?: Id<'exercises'>): Promise<boolean> => {
+      if (!sessionId || busyRef.current) return false;
+      if (session?.state !== 'path_selected') return false;
       busyRef.current = true;
       try {
         await startPathMutation({ sessionId, exerciseId });
+        return true;
+      } catch {
+        return false;
       } finally {
         busyRef.current = false;
       }
@@ -48,8 +51,8 @@ export function usePathSession() {
    * Complete the current path and mark the session as completed.
    */
   const completePath = useCallback(
-    async (pathCompleted: boolean, contributedReflection?: boolean) => {
-      if (!sessionId || busyRef.current) return;
+    async (pathCompleted: boolean, contributedReflection?: boolean): Promise<boolean> => {
+      if (!sessionId || busyRef.current) return false;
       busyRef.current = true;
       try {
         await completePathMutation({
@@ -57,6 +60,9 @@ export function usePathSession() {
           pathCompleted,
           contributedReflection,
         });
+        return true;
+      } catch {
+        return false;
       } finally {
         busyRef.current = false;
       }

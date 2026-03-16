@@ -25,16 +25,19 @@ export default function SitWithThis() {
   useEffect(() => {
     if (startedRef.current || !sessionId || !session) return;
     if (session.state === 'path_selected') {
-      startedRef.current = true;
-      startPath();
+      const go = async () => {
+        const ok = await startPath();
+        if (ok) startedRef.current = true;
+      };
+      go();
     } else if (session.state === 'path_in_progress') {
       startedRef.current = true;
     }
   }, [sessionId, session, startPath]);
 
   const handleDone = async () => {
-    await completePath(true);
-    router.back();
+    const ok = await completePath(true);
+    if (ok) router.back();
   };
 
   return (

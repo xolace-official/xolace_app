@@ -22,8 +22,11 @@ export const PeerReflectionScreen = () => {
   useEffect(() => {
     if (startedRef.current || !sessionId || !session) return;
     if (session.state === "path_selected") {
-      startedRef.current = true;
-      startPath();
+      const go = async () => {
+        const ok = await startPath();
+        if (ok) startedRef.current = true;
+      };
+      go();
     } else if (session.state === "path_in_progress") {
       startedRef.current = true;
     }
@@ -43,6 +46,12 @@ export const PeerReflectionScreen = () => {
       : "skip",
   );
 
+  // True when matched returned empty and fallback is still loading
+  const awaitingFallback =
+    matchedReflections !== undefined &&
+    matchedReflections.length === 0 &&
+    recentReflections === undefined;
+
   const reflections =
     matchedReflections && matchedReflections.length > 0
       ? matchedReflections
@@ -58,11 +67,11 @@ export const PeerReflectionScreen = () => {
   const toggleResonanceMutation = useMutation(api.reflections.toggleResonance);
 
   const handleDone = async () => {
-    await completePath(true);
-    router.back();
+    const ok = await completePath(true);
+    if (ok) router.back();
   };
 
-  if (isLoading || matchedReflections === undefined) {
+  if (isLoading || matchedReflections === undefined || awaitingFallback) {
     return (
       <View
         className="flex-1 items-center justify-center bg-background"
