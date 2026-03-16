@@ -104,17 +104,28 @@ export function useSession() {
       });
       setSessionId(newSessionId);
 
-      // TODO: encrypt rawText before submission
-      await submitInputMutation({
-        sessionId: newSessionId,
-        rawInputEncrypted: rawText,
-        rawInputLength: rawText.length,
-        inputDuration,
-        freezeOccurred,
-        freezeDuration,
-      });
+      try {
+        // TODO: encrypt rawText before submission
+        await submitInputMutation({
+          sessionId: newSessionId,
+          rawInputEncrypted: rawText,
+          rawInputLength: rawText.length,
+          inputDuration,
+          freezeOccurred,
+          freezeDuration,
+        });
+      } catch (error) {
+        // Roll back the dangling initiated session
+        try {
+          await abandonMutation({ sessionId: newSessionId });
+        } catch {
+          // best-effort cleanup
+        }
+        setSessionId(null);
+        throw error;
+      }
     },
-    [initiateMutation, submitInputMutation],
+    [initiateMutation, submitInputMutation, abandonMutation],
   );
 
   const confirmMirror = useCallback(

@@ -178,11 +178,11 @@ export function useReflectionMachine() {
       case 'completed':
         // Terminal states — reset UI for a fresh session
         resetSession();
-        prevServerStateRef.current = null;
+        clearRefs();
         dispatch({ type: 'RESET' });
         break;
     }
-  }, [serverState, mirrorText, errorMessage, state.screen, resetSession]);
+  }, [serverState, mirrorText, errorMessage, state.screen, resetSession, clearRefs]);
 
   // Track freeze (typing-nudge = user paused)
   useEffect(() => {
