@@ -1,7 +1,10 @@
 import type { TimelineEntry, TimelineFlatItem } from '@/interfaces/timeline';
 
 /**
- * Produce a human-friendly relative day label for a given timestamp.
+ * Produce a human-friendly relative day label for a timestamp.
+ *
+ * @param timestamp - Millisecond UNIX timestamp (milliseconds since 1970-01-01 UTC)
+ * @returns `Today` if the timestamp is the current day, `Yesterday` if it was one day ago, `X days ago` for 2–6 days ago, or a short month/day string (for example, `Jan 3`) for dates 7 or more days ago
  */
 function getRelativeLabel(timestamp: number): string {
   const now = new Date();
@@ -25,7 +28,10 @@ function getRelativeLabel(timestamp: number): string {
 }
 
 /**
- * Group pre-sorted (newest-first) timeline entries into sections by relative date.
+ * Group a pre-sorted timeline into flat items where each relative-date section precedes its entries.
+ *
+ * @param entries - A pre-sorted (newest-first) array of TimelineEntry objects to group by their relative date.
+ * @returns An array of TimelineFlatItem containing section items (type `'section'`) followed by the corresponding entry items (type `'entry'`) for each relative date.
  */
 export function buildTimelineSections(
   entries: TimelineEntry[],
