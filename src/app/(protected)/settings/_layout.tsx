@@ -1,5 +1,4 @@
 import { Stack, useRouter } from "expo-router";
-import { useCallback } from "react";
 import { Pressable, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
@@ -13,21 +12,18 @@ export default function SettingsLayout() {
   const largeHeaderOptions = useLargeHeaderOptions();
   const tintColor = useThemeColor("foreground") as string;
 
-  const renderBackButton = useCallback(
-    () => (
-      <Pressable onPress={() => router.back()} hitSlop={8}>
-        <SymbolView
-          name={{
-            ios: "chevron.left",
-            android: "arrow_back",
-            web: "arrow_back",
-          }}
-          size={20}
-          tintColor={tintColor}
-        />
-      </Pressable>
-    ),
-    [router, tintColor],
+  const renderBackButton = () => (
+    <Pressable onPress={() => router.back()} hitSlop={8}>
+      <SymbolView
+        name={{
+          ios: "chevron.left",
+          android: "arrow_back",
+          web: "arrow_back",
+        }}
+        size={20}
+        tintColor={tintColor}
+      />
+    </Pressable>
   );
 
   return (

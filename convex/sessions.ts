@@ -379,6 +379,74 @@ export const listByProfile = query({
   },
 });
 
+/**
+ * Paginated timeline entries enriched with emotional metadata.
+ * Only returns sessions that have a mirror (meaningful to display).
+ */
+export const listForTimeline = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    const result = await ctx.db
+      .query("sessions")
+      .withIndex("by_profile_time", (q) =>
+        q.eq("emotionalProfileId", profile._id)
+      )
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    const enrichedPage = await Promise.all(
+      result.page
+        .filter((s) => s.mirrorText != null)
+        .map(async (session) => {
+          const metadata = await ctx.db
+            .query("emotional_metadata")
+            .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+            .unique();
+
+          return {
+            _id: session._id,
+            mirrorText: session.mirrorText!,
+            confirmationState: session.confirmationState ?? null,
+            pathChosen: session.pathChosen ?? null,
+            primaryEmotion: metadata?.primaryEmotion ?? null,
+            granularLabel: metadata?.granularLabel ?? null,
+            createdAt: session.createdAt,
+          };
+        })
+    );
+
+    return { ...result, page: enrichedPage };
+  },
+});
+
+/**
+ * Combined session + emotional metadata for the details screen.
+ * Single subscription, single auth check.
+ */
+export const getSessionDetails = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const { session } = await requireSessionOwnership(ctx, args.sessionId);
+
+    const metadata = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+
+    return {
+      ...session,
+      primaryEmotion: metadata?.primaryEmotion ?? null,
+      granularLabel: metadata?.granularLabel ?? null,
+      intensity: metadata?.intensity ?? null,
+      thematicTags: metadata?.thematicTags ?? null,
+    };
+  },
+});
+
 // --- Internal Mutations ---
 
 /**

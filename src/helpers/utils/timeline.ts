@@ -1,47 +1,53 @@
-import type { TimelineEntry, TimelineFlatItem } from "@/interfaces/timeline";
+import type { TimelineEntry, TimelineFlatItem } from '@/interfaces/timeline';
 
 /**
- * Produce a human-friendly relative day label for a given date.
+ * Produce a human-friendly relative day label for a timestamp.
  *
- * @param date - The date to compare against the current time
- * @returns `'Today'` if the difference is 0 days, `'Yesterday'` if 1 day, or `'{N} days ago'` where `N` is the number of full days between the date and now
+ * @param timestamp - Millisecond UNIX timestamp (milliseconds since 1970-01-01 UTC)
+ * @returns `Today` if the timestamp is the current day, `Yesterday` if it was one day ago, `X days ago` for 2–6 days ago, or a short month/day string (for example, `Jan 3`) for dates 7 or more days ago
  */
-function getRelativeLabel(date: Date): string {
+function getRelativeLabel(timestamp: number): string {
   const now = new Date();
+  const date = new Date(timestamp);
   const nowUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  const dateUtc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  const dateUtc = Date.UTC(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  );
   const diffDays = Math.floor((nowUtc - dateUtc) / 86400000);
 
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  return `${diffDays} days ago`;
+  if (diffDays <= 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
 }
 
 /**
- * Produce a flat array that groups timeline entries by relative date with section headers.
+ * Group a pre-sorted timeline into flat items where each relative-date section precedes its entries.
  *
- * @param entries - Timeline entries to group and sort (newest first)
- * @returns An array of `TimelineFlatItem` where each section header (`type: 'section'`) precedes its entries (`type: 'entry'`), ordered newest-first
+ * @param entries - A pre-sorted (newest-first) array of TimelineEntry objects to group by their relative date.
+ * @returns An array of TimelineFlatItem containing section items (type `'section'`) followed by the corresponding entry items (type `'entry'`) for each relative date.
  */
 export function buildTimelineSections(
   entries: TimelineEntry[],
 ): TimelineFlatItem[] {
-  const sorted = [...entries].sort(
-    (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
-  );
-
   const result: TimelineFlatItem[] = [];
-  let lastLabel = "";
+  let lastLabel = '';
 
-  for (const entry of sorted) {
-    const label = getRelativeLabel(entry.timestamp);
+  for (const entry of entries) {
+    const label = getRelativeLabel(entry.createdAt);
 
     if (label !== lastLabel) {
-      result.push({ type: "section", id: `section-${label}`, label });
+      result.push({ type: 'section', id: `section-${label}`, label });
       lastLabel = label;
     }
 
-    result.push({ type: "entry", id: entry.id, entry });
+    result.push({ type: 'entry', id: entry.id, entry });
   }
 
   return result;
