@@ -147,6 +147,15 @@ export function useReflectionMachine() {
   const freezeDurationRef = useRef<number | undefined>(undefined);
   const busyRef = useRef(false);
 
+  const clearRefs = useCallback(() => {
+    prevServerStateRef.current = null;
+    typingStartRef.current = null;
+    freezeOccurredRef.current = false;
+    freezeStartRef.current = null;
+    freezeDurationRef.current = undefined;
+    busyRef.current = false;
+  }, []);
+
   // --- Bridge server state changes to UI dispatches ---
   useEffect(() => {
     if (!serverState || serverState === prevServerStateRef.current) return;
@@ -203,15 +212,6 @@ export function useReflectionMachine() {
       typingStartRef.current = Date.now();
     }
   }, [state.screen]);
-
-  const clearRefs = useCallback(() => {
-    prevServerStateRef.current = null;
-    typingStartRef.current = null;
-    freezeOccurredRef.current = false;
-    freezeStartRef.current = null;
-    freezeDurationRef.current = undefined;
-    busyRef.current = false;
-  }, []);
 
   const submitReflection = useCallback(async () => {
     if (busyRef.current) return;
