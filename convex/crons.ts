@@ -22,7 +22,7 @@ crons.interval(
 // Process account deletions hourly
 crons.interval(
   "process account deletions",
-  { hours: 1 },
+  { hours: 24 },
   internal.jobs.accountDeletion.purge,
   {}
 );

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
@@ -5,11 +6,41 @@ import { AppText } from '@/components/shared/app-text';
 
 type Props = {
   mirror: string;
-  onReset: () => void;
+  onSelectSolo: () => Promise<void>;
+  onSelectPeers: () => Promise<void>;
+  onExitComplete: () => void;
 };
 
-export const PathSelectionState = ({ mirror, onReset }: Props) => {
+export const PathSelectionState = ({
+  mirror,
+  onSelectSolo,
+  onSelectPeers,
+  onExitComplete,
+}: Props) => {
   const router = useRouter();
+  const busyRef = useRef(false);
+
+  const handleSolo = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await onSelectSolo();
+      router.push('/sit-with-this');
+    } finally {
+      busyRef.current = false;
+    }
+  };
+
+  const handlePeers = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await onSelectPeers();
+      router.push('/peer-reflections');
+    } finally {
+      busyRef.current = false;
+    }
+  };
 
   return (
     <Animated.View
@@ -26,13 +57,16 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
         </AppText>
       </ScrollView>
 
-      <AppText className="mb-8 mt-10 text-lg text-foreground">
+      <AppText className="mb-2 mt-10 text-lg text-foreground">
         Where would you like to go from here?
+      </AppText>
+      <AppText className="mb-6 text-sm text-foreground/20">
+        Take a moment; once you choose, you&apos;ll continue there.
       </AppText>
 
       <View className="gap-8">
         <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-          <Pressable onPress={() => router.push('/sit-with-this' )}>
+          <Pressable onPress={handleSolo}>
             <AppText className="text-lg text-foreground">Sit with this</AppText>
             <AppText className="mt-1 text-sm text-foreground/30">
               A quiet space to breathe
@@ -41,7 +75,7 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-          <Pressable onPress={() => router.push('/peer-reflections' )}>
+          <Pressable onPress={handlePeers}>
             <AppText className="text-lg text-foreground">
               You&apos;re not alone
             </AppText>
@@ -52,7 +86,7 @@ export const PathSelectionState = ({ mirror, onReset }: Props) => {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(600).duration(400)}>
-          <Pressable onPress={onReset}>
+          <Pressable onPress={onExitComplete}>
             <AppText className="text-lg text-foreground">
               I just needed to say it
             </AppText>

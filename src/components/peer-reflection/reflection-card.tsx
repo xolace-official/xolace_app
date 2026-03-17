@@ -11,6 +11,7 @@ const StyledSymbolView = withUniwind(SymbolView);
 type Props = {
   text: string;
   index: number;
+  resonanceCount: number;
   resonated: boolean;
   onToggleResonance: () => void;
 };
@@ -18,6 +19,7 @@ type Props = {
 export const ReflectionCard = ({
   text,
   index,
+  resonanceCount,
   resonated,
   onToggleResonance,
 }: Props) => {
@@ -61,11 +63,7 @@ export const ReflectionCard = ({
                   web: resonated ? "favorite" : "favorite_border",
                 }}
                 size={14}
-                tintColor={
-                  resonated
-                    ? (resonanceColor as ColorValue)
-                    : (resonanceColor as ColorValue)
-                }
+                tintColor={resonanceColor as ColorValue}
               />
               <Chip.Label
                 className={cn(
@@ -74,7 +72,9 @@ export const ReflectionCard = ({
                     : "text-foreground/30",
                 )}
               >
-                {resonated ? "This resonated" : "This resonates"}
+                {resonated
+                  ? `${resonanceCount} resonated`
+                  : "This resonates"}
               </Chip.Label>
             </Chip>
           </View>

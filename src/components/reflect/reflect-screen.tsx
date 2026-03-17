@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReflectionMachine } from '@/hooks/use-reflection-machine';
 import { IdleState } from '@/components/reflect/states/idle-state';
@@ -8,11 +8,38 @@ import { MirrorState } from '@/components/reflect/states/mirror-state';
 import { ClarifyState } from '@/components/reflect/states/clarify-state';
 import { GaveUpState } from '@/components/reflect/states/gave-up-state';
 import { PathSelectionState } from '@/components/reflect/states/path-selection-state';
+import { ErrorState } from '@/components/reflect/states/error-state';
 
 export const ReflectScreen = () => {
-  const { state, dispatch, submitReflection, submitScaffold, submitClarification } =
-    useReflectionMachine();
+  const {
+    state,
+    dispatch,
+    isLoading,
+    submitReflection,
+    submitScaffold,
+    submitClarification,
+    handleThatsIt,
+    handleNotQuite,
+    handleSayMore,
+    handleGaveUpPathSelection,
+    handleExitComplete,
+    handleSelectSolo,
+    handleSelectPeers,
+    handleReset,
+    handleRetry,
+  } = useReflectionMachine();
   const insets = useSafeAreaInsets();
+
+  if (isLoading) {
+    return (
+      <View
+        className="flex-1 items-center justify-center bg-background"
+        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      >
+        <ActivityIndicator />
+      </View>
+    );
+  }
 
   const screen = state.screen;
 
@@ -47,9 +74,9 @@ export const ReflectScreen = () => {
           mirror={state.mirrorResponse}
           selectedTextures={state.selectedTextures}
           entryType={state.entryType}
-          onThatsIt={() => dispatch({ type: 'THATS_IT' })}
-          onNotQuite={() => dispatch({ type: 'NOT_QUITE' })}
-          onSayMore={() => dispatch({ type: 'SAY_MORE' })}
+          onThatsIt={handleThatsIt}
+          onNotQuite={handleNotQuite}
+          onSayMore={handleSayMore}
         />
       )}
 
@@ -64,15 +91,25 @@ export const ReflectScreen = () => {
 
       {screen === 'gave-up' && (
         <GaveUpState
-          onPathSelection={() => dispatch({ type: 'THATS_IT' })}
-          onReset={() => dispatch({ type: 'RESET' })}
+          onPathSelection={handleGaveUpPathSelection}
+          onReset={handleReset}
         />
       )}
 
       {screen === 'path-selection' && (
         <PathSelectionState
           mirror={state.mirrorResponse}
-          onReset={() => dispatch({ type: 'RESET' })}
+          onSelectSolo={handleSelectSolo}
+          onSelectPeers={handleSelectPeers}
+          onExitComplete={handleExitComplete}
+        />
+      )}
+
+      {screen === 'error' && (
+        <ErrorState
+          errorMessage={state.errorMessage || 'Something went wrong.'}
+          onRetry={handleRetry}
+          onReset={handleReset}
         />
       )}
     </View>

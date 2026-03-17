@@ -639,6 +639,23 @@ export default defineSchema({
     .index("by_status", ["status", "addedAt"]),
 
   // ===========================================================
+  // 7b. REFLECTION RESONANCES
+  // ===========================================================
+  //
+  // Junction table for deduplicating "I feel this too" taps.
+  // One record per (profile, reflection) pair.
+  // Enables true toggle (insert/delete) and prevents inflated
+  // counts from reinstalls or remounts.
+  //
+  reflection_resonances: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    reflectionId: v.id("reflections"),
+    createdAt: v.number(),
+  })
+    .index("by_profile_reflection", ["emotionalProfileId", "reflectionId"])
+    .index("by_reflection", ["reflectionId"]),
+
+  // ===========================================================
   // 8. EXERCISES
   // ===========================================================
   //
