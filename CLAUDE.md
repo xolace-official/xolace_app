@@ -39,6 +39,9 @@ File-based routing via **Expo Router**. Route files in `src/app/`. Tabs use `exp
 ### State Management
 **Zustand** with `persist` middleware. Single store at `src/store/store.ts` with slices for auth, theme, profile drafts, and preferences. Persistence uses `src/lib/storage/unified-storage.ts` — localStorage on web, `expo-sqlite/kv-store` on native. Only `theme` and `toggles` are persisted.
 
+### Backend
+**Convex** is the backend framework. All API calls go through `src/lib/api.ts` which handles authentication and error handling. Convex functions live in `src/convex/`. Always read AGENTS.md for up-to-date function references.
+
 ### Path Aliases
 `@/*` maps to `./src/*` and `@/assets/*` maps to `./assets/*` (tsconfig.json).
 

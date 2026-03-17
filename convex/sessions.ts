@@ -423,6 +423,30 @@ export const listForTimeline = query({
   },
 });
 
+/**
+ * Combined session + emotional metadata for the details screen.
+ * Single subscription, single auth check.
+ */
+export const getSessionDetails = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const { session } = await requireSessionOwnership(ctx, args.sessionId);
+
+    const metadata = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+
+    return {
+      ...session,
+      primaryEmotion: metadata?.primaryEmotion ?? null,
+      granularLabel: metadata?.granularLabel ?? null,
+      intensity: metadata?.intensity ?? null,
+      thematicTags: metadata?.thematicTags ?? null,
+    };
+  },
+});
+
 // --- Internal Mutations ---
 
 /**

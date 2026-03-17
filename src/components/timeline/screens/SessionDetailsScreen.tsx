@@ -41,16 +41,12 @@ export const SessionDetailsScreen = () => {
   const insets = useSafeAreaInsets();
   const tintColor = useThemeColor('foreground') as string;
 
-  const session = useQuery(
-    api.sessions.getById,
-    id ? { sessionId: id as Id<'sessions'> } : 'skip',
-  );
-  const metadata = useQuery(
-    api.emotionalMetadata.getBySession,
+  const details = useQuery(
+    api.sessions.getSessionDetails,
     id ? { sessionId: id as Id<'sessions'> } : 'skip',
   );
 
-  if (session === undefined || metadata === undefined) {
+  if (details === undefined) {
     return (
       <View
         className="flex-1 items-center justify-center bg-background"
@@ -61,7 +57,7 @@ export const SessionDetailsScreen = () => {
     );
   }
 
-  if (!session) {
+  if (!details) {
     return (
       <View
         className="flex-1 items-center justify-center bg-background"
@@ -72,11 +68,11 @@ export const SessionDetailsScreen = () => {
     );
   }
 
-  const { day, time } = formatDate(session.createdAt);
-  const emotion = metadata?.granularLabel ?? metadata?.primaryEmotion ?? null;
+  const { day, time } = formatDate(details.createdAt);
+  const emotion = details.granularLabel ?? details.primaryEmotion ?? null;
   const emoji = getEmotionEmoji(emotion);
   const emotionLabel = getEmotionLabel(emotion);
-  const pathLabel = getPathLabel(session.pathChosen ?? null);
+  const pathLabel = getPathLabel(details.pathChosen ?? null);
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -117,7 +113,7 @@ export const SessionDetailsScreen = () => {
 
         <View className="px-6">
           {/* User input */}
-          {session.rawInputEncrypted && (
+          {details.rawInputEncrypted && (
             <>
               <SectionLabel>You said</SectionLabel>
               <Card
@@ -127,7 +123,7 @@ export const SessionDetailsScreen = () => {
               >
                 <Card.Body className="px-5 py-4">
                   <AppText className="text-sm font-light leading-6 text-foreground/55">
-                    &ldquo;{session.rawInputEncrypted}&rdquo;
+                    &ldquo;{details.rawInputEncrypted}&rdquo;
                   </AppText>
                 </Card.Body>
               </Card>
@@ -135,11 +131,11 @@ export const SessionDetailsScreen = () => {
           )}
 
           {/* Mirror */}
-          {session.mirrorText && (
+          {details.mirrorText && (
             <>
               <SectionLabel>The mirror</SectionLabel>
               <AppText className="mb-8 text-xl font-light italic leading-9 text-foreground">
-                &ldquo;{session.mirrorText}&rdquo;
+                &ldquo;{details.mirrorText}&rdquo;
               </AppText>
             </>
           )}
