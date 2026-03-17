@@ -17,6 +17,7 @@ import type * as escalation from "../escalation.js";
 import type * as exercises from "../exercises.js";
 import type * as jobs_accountDeletion from "../jobs/accountDeletion.js";
 import type * as jobs_dataRetention from "../jobs/dataRetention.js";
+import type * as jobs_dataWipe from "../jobs/dataWipe.js";
 import type * as jobs_profileStats from "../jobs/profileStats.js";
 import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   exercises: typeof exercises;
   "jobs/accountDeletion": typeof jobs_accountDeletion;
   "jobs/dataRetention": typeof jobs_dataRetention;
+  "jobs/dataWipe": typeof jobs_dataWipe;
   "jobs/profileStats": typeof jobs_profileStats;
   "jobs/reflectionAnonymizer": typeof jobs_reflectionAnonymizer;
   "lib/auth": typeof lib_auth;

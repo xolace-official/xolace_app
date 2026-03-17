@@ -1,34 +1,42 @@
 import { useCallback, useMemo } from "react";
-import { Alert } from "react-native";
 import { useClerk, useUser } from "@clerk/expo";
 import { Uniwind, useUniwind } from "uniwind";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import type { RetentionOption } from "@/components/settings/retention-picker-dialog";
 import { useAppStore } from "@/store/store";
 import { useAppTheme } from "@/context/app-theme-context";
 
 export type ThemeMode = "system" | "light" | "dark";
 
-export const SETTING_KEYS = {
-  REDUCED_MOTION: "reduced_motion",
-  GENTLE_REMINDERS: "gentle_reminders",
-  CONTRIBUTE_ANONYMOUSLY: "contribute_anonymously",
-} as const;
-
 /**
  * Encapsulates all settings screen state and handlers:
- * — toggle preferences (Zustand persisted)
- * — theme mode display + switching (Uniwind + Zustand)
+ * — toggle preferences (Zustand persisted + fire-and-forget Convex sync)
+ * — theme mode display + switching (Uniwind + Zustand + Convex)
  * — sign-in method (Clerk external accounts)
- * — log-out with confirmation
+ * — destructive action handlers (logout, data wipe, account deletion)
  */
 export const useSettings = () => {
   const { signOut } = useClerk();
   const { user } = useUser();
-  const { toggles, setToggle, theme: storedTheme, setTheme: storeSetTheme } =
-    useAppStore();
+  const { theme: storedTheme, setTheme: storeSetTheme } = useAppStore();
   const { currentTheme, isLight } = useAppTheme();
   const { hasAdaptiveThemes } = useUniwind();
 
-  // ─── Sign-in method ──────────────────────────────────────────────────────
+  // ─── Convex (single source of truth for preferences) ──────────────
+  const preferences = useQuery(api.preferences.get);
+  const updatePreferences = useMutation(
+    api.preferences.update,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.preferences.get, {});
+    if (current !== undefined) {
+      localStore.setQuery(api.preferences.get, {}, { ...current, ...args });
+    }
+  });
+  const requestDataWipe = useMutation(api.users.requestDataWipe);
+  const requestDeletion = useMutation(api.users.requestDeletion);
+
+  // ─── Sign-in method ──────────────────────────────────────────────────
   const signInMethod = useMemo(() => {
     if (!user) return "—";
     const ext = user.externalAccounts?.[0];
@@ -39,27 +47,22 @@ export const useSettings = () => {
     return "Email";
   }, [user]);
 
-  // ─── Theme display ────────────────────────────────────────────────────────
+  // ─── Theme display ──────────────────────────────────────────────────
   const themeDisplay = useMemo(() => {
     if (hasAdaptiveThemes) return "System";
     return isLight ? "Light" : "Dark";
   }, [hasAdaptiveThemes, isLight]);
 
-  // ─── Theme switching ──────────────────────────────────────────────────────
-  /**
-   * Switch between System / Light / Dark while preserving any active
-   * colour-theme (lavender, mint, sky, …).
-   */
+  // ─── Theme switching ────────────────────────────────────────────────
   const setThemeMode = useCallback(
     (mode: ThemeMode) => {
       if (mode === "system") {
         Uniwind.setTheme("system" as never);
         storeSetTheme("system");
+        updatePreferences({ theme: "system" });
         return;
       }
 
-      // Derive the colour-theme base from the current Uniwind theme string.
-      // e.g. "lavender-dark" → "lavender", "light" / "dark" → use bare name
       const stripped = currentTheme
         .replace(/-light$/, "")
         .replace(/-dark$/, "");
@@ -71,71 +74,84 @@ export const useSettings = () => {
 
       Uniwind.setTheme(nextTheme);
       storeSetTheme(mode);
+      updatePreferences({ theme: mode });
     },
-    [currentTheme, storeSetTheme],
+    [currentTheme, storeSetTheme, updatePreferences],
   );
 
-  // ─── Toggles ─────────────────────────────────────────────────────────────
-  const reducedMotion = toggles[SETTING_KEYS.REDUCED_MOTION] ?? false;
-  const gentleReminders = toggles[SETTING_KEYS.GENTLE_REMINDERS] ?? false;
+  // ─── Toggles (derived from Convex preferences) ─────────────────────
+  const reducedMotion = preferences?.reducedMotion ?? false;
+  const gentleReminders = preferences?.notifications?.gentleReturn ?? false;
   const contributeAnonymously =
-    toggles[SETTING_KEYS.CONTRIBUTE_ANONYMOUSLY] ?? true;
+    preferences?.autoContributeReflections ?? false;
 
   const setReducedMotion = useCallback(
-    (v: boolean) => setToggle(SETTING_KEYS.REDUCED_MOTION, v),
-    [setToggle],
-  );
-  const setGentleReminders = useCallback(
-    (v: boolean) => setToggle(SETTING_KEYS.GENTLE_REMINDERS, v),
-    [setToggle],
-  );
-  const setContributeAnonymously = useCallback(
-    (v: boolean) => setToggle(SETTING_KEYS.CONTRIBUTE_ANONYMOUSLY, v),
-    [setToggle],
+    (v: boolean) => {
+      updatePreferences({ reducedMotion: v });
+    },
+    [updatePreferences],
   );
 
-  // ─── Log out ─────────────────────────────────────────────────────────────
-  const handleLogout = useCallback(() => {
-    Alert.alert(
-      "Log out",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Log out",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await signOut();
-            } catch {
-              // Clerk will update its own auth state; ignore network errors
-            }
-          },
+  const setGentleReminders = useCallback(
+    (v: boolean) => {
+      const prev = preferences?.notifications;
+      updatePreferences({
+        notifications: {
+          enabled: prev?.enabled ?? false,
+          gentleReturn: v,
+          patternNudge: prev?.patternNudge ?? false,
+          milestone: prev?.milestone ?? false,
         },
-      ],
-      { cancelable: true },
-    );
+      });
+    },
+    [updatePreferences, preferences],
+  );
+
+  const setContributeAnonymously = useCallback(
+    (v: boolean) => {
+      updatePreferences({ autoContributeReflections: v });
+    },
+    [updatePreferences],
+  );
+
+  // ─── Data retention ──────────────────────────────────────────────────
+  const retention: RetentionOption =
+    preferences?.dataRetentionPreference ?? "indefinite";
+
+  const retentionDisplay = useMemo(() => {
+    if (retention === "indefinite") return "Indefinite";
+    if (retention === "6_months") return "6 months";
+    return "1 year";
+  }, [retention]);
+
+  const setRetention = useCallback(
+    (value: RetentionOption) => {
+      updatePreferences({ dataRetentionPreference: value });
+    },
+    [updatePreferences],
+  );
+
+  // ─── Destructive actions ────────────────────────────────────────────
+  const performLogout = useCallback(async () => {
+    try {
+      await signOut();
+    } catch {
+      // Clerk will update its own auth state; ignore network errors
+    }
   }, [signOut]);
 
-  // ─── Delete data ─────────────────────────────────────────────────────────
-  const handleDeleteData = useCallback(() => {
-    Alert.alert(
-      "Delete all my data",
-      "This will permanently erase all your sessions, reflections, and emotional history. This action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete everything",
-          style: "destructive",
-          onPress: () => {
-            // TODO: call Convex mutation to delete user data
-            console.warn("delete-data: not yet implemented");
-          },
-        },
-      ],
-      { cancelable: true },
-    );
-  }, []);
+  const performDeleteData = useCallback(async () => {
+    await requestDataWipe();
+  }, [requestDataWipe]);
+
+  const performDeleteAccount = useCallback(async () => {
+    await requestDeletion();
+    try {
+      await signOut();
+    } catch {
+      // Best-effort sign out after deletion request
+    }
+  }, [requestDeletion, signOut]);
 
   return {
     // Account
@@ -154,8 +170,14 @@ export const useSettings = () => {
     contributeAnonymously,
     setContributeAnonymously,
 
-    // Actions
-    handleLogout,
-    handleDeleteData,
+    // Data retention
+    retention,
+    retentionDisplay,
+    setRetention,
+
+    // Destructive actions
+    performLogout,
+    performDeleteData,
+    performDeleteAccount,
   };
 };
