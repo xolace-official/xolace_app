@@ -94,16 +94,17 @@ export const useSettings = () => {
 
   const setGentleReminders = useCallback(
     (v: boolean) => {
+      const prev = preferences?.notifications;
       updatePreferences({
         notifications: {
-          enabled: v,
+          enabled: prev?.enabled ?? false,
           gentleReturn: v,
-          patternNudge: false,
-          milestone: false,
+          patternNudge: prev?.patternNudge ?? false,
+          milestone: prev?.milestone ?? false,
         },
       });
     },
-    [updatePreferences],
+    [updatePreferences, preferences],
   );
 
   const setContributeAnonymously = useCallback(
