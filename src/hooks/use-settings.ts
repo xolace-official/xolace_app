@@ -1,18 +1,13 @@
 import { useCallback, useMemo } from "react";
 import { useClerk, useUser } from "@clerk/expo";
 import { Uniwind, useUniwind } from "uniwind";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { RetentionOption } from "@/components/settings/retention-picker-dialog";
 import { useAppStore } from "@/store/store";
 import { useAppTheme } from "@/context/app-theme-context";
 
 export type ThemeMode = "system" | "light" | "dark";
-
-export const SETTING_KEYS = {
-  REDUCED_MOTION: "reduced_motion",
-  GENTLE_REMINDERS: "gentle_reminders",
-  CONTRIBUTE_ANONYMOUSLY: "contribute_anonymously",
-} as const;
 
 /**
  * Encapsulates all settings screen state and handlers:
@@ -24,13 +19,20 @@ export const SETTING_KEYS = {
 export const useSettings = () => {
   const { signOut } = useClerk();
   const { user } = useUser();
-  const { toggles, setToggle, theme: storedTheme, setTheme: storeSetTheme } =
-    useAppStore();
+  const { theme: storedTheme, setTheme: storeSetTheme } = useAppStore();
   const { currentTheme, isLight } = useAppTheme();
   const { hasAdaptiveThemes } = useUniwind();
 
-  // ─── Convex mutations (fire-and-forget) ─────────────────────────────
-  const updatePreferences = useMutation(api.preferences.update);
+  // ─── Convex (single source of truth for preferences) ──────────────
+  const preferences = useQuery(api.preferences.get);
+  const updatePreferences = useMutation(
+    api.preferences.update,
+  ).withOptimisticUpdate((localStore, args) => {
+    const current = localStore.getQuery(api.preferences.get, {});
+    if (current !== undefined) {
+      localStore.setQuery(api.preferences.get, {}, { ...current, ...args });
+    }
+  });
   const requestDataWipe = useMutation(api.users.requestDataWipe);
   const requestDeletion = useMutation(api.users.requestDeletion);
 
@@ -77,23 +79,21 @@ export const useSettings = () => {
     [currentTheme, storeSetTheme, updatePreferences],
   );
 
-  // ─── Toggles ───────────────────────────────────────────────────────
-  const reducedMotion = toggles[SETTING_KEYS.REDUCED_MOTION] ?? false;
-  const gentleReminders = toggles[SETTING_KEYS.GENTLE_REMINDERS] ?? false;
+  // ─── Toggles (derived from Convex preferences) ─────────────────────
+  const reducedMotion = preferences?.reducedMotion ?? false;
+  const gentleReminders = preferences?.notifications?.gentleReturn ?? false;
   const contributeAnonymously =
-    toggles[SETTING_KEYS.CONTRIBUTE_ANONYMOUSLY] ?? true;
+    preferences?.autoContributeReflections ?? false;
 
   const setReducedMotion = useCallback(
     (v: boolean) => {
-      setToggle(SETTING_KEYS.REDUCED_MOTION, v);
       updatePreferences({ reducedMotion: v });
     },
-    [setToggle, updatePreferences],
+    [updatePreferences],
   );
 
   const setGentleReminders = useCallback(
     (v: boolean) => {
-      setToggle(SETTING_KEYS.GENTLE_REMINDERS, v);
       updatePreferences({
         notifications: {
           enabled: v,
@@ -103,15 +103,31 @@ export const useSettings = () => {
         },
       });
     },
-    [setToggle, updatePreferences],
+    [updatePreferences],
   );
 
   const setContributeAnonymously = useCallback(
     (v: boolean) => {
-      setToggle(SETTING_KEYS.CONTRIBUTE_ANONYMOUSLY, v);
       updatePreferences({ autoContributeReflections: v });
     },
-    [setToggle, updatePreferences],
+    [updatePreferences],
+  );
+
+  // ─── Data retention ──────────────────────────────────────────────────
+  const retention: RetentionOption =
+    preferences?.dataRetentionPreference ?? "indefinite";
+
+  const retentionDisplay = useMemo(() => {
+    if (retention === "indefinite") return "Indefinite";
+    if (retention === "6_months") return "6 months";
+    return "1 year";
+  }, [retention]);
+
+  const setRetention = useCallback(
+    (value: RetentionOption) => {
+      updatePreferences({ dataRetentionPreference: value });
+    },
+    [updatePreferences],
   );
 
   // ─── Destructive actions ────────────────────────────────────────────
@@ -152,6 +168,11 @@ export const useSettings = () => {
     setGentleReminders,
     contributeAnonymously,
     setContributeAnonymously,
+
+    // Data retention
+    retention,
+    retentionDisplay,
+    setRetention,
 
     // Destructive actions
     performLogout,

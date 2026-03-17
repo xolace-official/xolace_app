@@ -3,6 +3,7 @@ import { ScrollView, View } from "react-native";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsRow } from "@/components/settings/settings-row";
 import { ThemePickerDialog } from "@/components/settings/theme-picker-dialog";
+import { RetentionPickerDialog } from "@/components/settings/retention-picker-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { useSettings } from "@/hooks/use-settings";
 import type { ThemeMode } from "@/hooks/use-settings";
@@ -48,6 +49,7 @@ const CONFIRM_CONFIG = {
  */
 export const SettingsScreen = () => {
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
+  const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [isConfirmLoading, setIsConfirmLoading] = useState(false);
 
@@ -62,6 +64,9 @@ export const SettingsScreen = () => {
     setGentleReminders,
     contributeAnonymously,
     setContributeAnonymously,
+    retention,
+    retentionDisplay,
+    setRetention,
     performLogout,
     performDeleteData,
     performDeleteAccount,
@@ -162,10 +167,8 @@ export const SettingsScreen = () => {
           <SettingsRow
             variant="value"
             label="Retention"
-            value="Indefinite"
-            onPress={() => {
-              // TODO: open retention picker
-            }}
+            value={retentionDisplay}
+            onPress={() => setRetentionDialogOpen(true)}
           />
           <SettingsRow
             variant="chevron"
@@ -200,6 +203,14 @@ export const SettingsScreen = () => {
         onOpenChange={setThemeDialogOpen}
         currentMode={(storedTheme ?? "system") as ThemeMode}
         onSelect={setThemeMode}
+      />
+
+      {/* ── RETENTION PICKER DIALOG ─────────────────────────── */}
+      <RetentionPickerDialog
+        isOpen={retentionDialogOpen}
+        onOpenChange={setRetentionDialogOpen}
+        currentValue={retention}
+        onSelect={setRetention}
       />
 
       {/* ── CONFIRMATION DIALOG ──────────────────────────────── */}
