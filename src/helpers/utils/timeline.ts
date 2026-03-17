@@ -14,7 +14,7 @@ function getRelativeLabel(timestamp: number): string {
   );
   const diffDays = Math.floor((nowUtc - dateUtc) / 86400000);
 
-  if (diffDays === 0) return 'Today';
+  if (diffDays <= 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
 

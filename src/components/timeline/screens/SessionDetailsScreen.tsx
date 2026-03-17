@@ -46,6 +46,17 @@ export const SessionDetailsScreen = () => {
     id ? { sessionId: id as Id<'sessions'> } : 'skip',
   );
 
+  if (!id) {
+    return (
+      <View
+        className="flex-1 items-center justify-center bg-background"
+        style={{ paddingTop: insets.top }}
+      >
+        <AppText className="text-foreground/40">No session ID provided.</AppText>
+      </View>
+    );
+  }
+
   if (details === undefined) {
     return (
       <View
