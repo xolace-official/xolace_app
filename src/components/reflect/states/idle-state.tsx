@@ -149,7 +149,7 @@ export const IdleState = ({
         )}
       </View>
 
-      <View className="absolute bottom-8 right-6">
+      <View className="absolute bottom-10 right-6">
         <TimelineIcon />
       </View>
     </Animated.View>
