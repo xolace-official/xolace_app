@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 
 /**
@@ -136,6 +137,24 @@ export const requestDeletion = mutation({
       accountStatus: "deleted",
       deletionRequestedAt: Date.now(),
       updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Wipe all user content (sessions, reflections, emotional history) while
+ * keeping the account, profile shell, preferences, and consent records intact.
+ * Schedules a background job that processes deletions in batches.
+ */
+export const requestDataWipe = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+
+    await ctx.scheduler.runAfter(0, internal.jobs.dataWipe.wipe, {
+      emotionalProfileId: profile._id,
     });
 
     return null;

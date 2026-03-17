@@ -1,10 +1,39 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ScrollView, View } from "react-native";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsRow } from "@/components/settings/settings-row";
 import { ThemePickerDialog } from "@/components/settings/theme-picker-dialog";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { useSettings } from "@/hooks/use-settings";
 import type { ThemeMode } from "@/hooks/use-settings";
+
+type ConfirmAction = "logout" | "deleteData" | "deleteAccount" | null;
+
+const CONFIRM_CONFIG = {
+  logout: {
+    title: "Log out",
+    description: "Are you sure you want to log out?",
+    confirmLabel: "Log out",
+    isDestructive: true,
+    showLoading: false,
+  },
+  deleteData: {
+    title: "Delete all my data",
+    description:
+      "This will permanently erase all your sessions, reflections, and emotional history. Your account and preferences will be kept. This action cannot be undone.",
+    confirmLabel: "Delete everything",
+    isDestructive: true,
+    showLoading: true,
+  },
+  deleteAccount: {
+    title: "Delete account",
+    description:
+      "This will permanently delete your account and all associated data. This action cannot be undone.",
+    confirmLabel: "Delete account",
+    isDestructive: true,
+    showLoading: true,
+  },
+} as const;
 
 /**
  * Settings screen — composes all preference sections.
@@ -14,11 +43,13 @@ import type { ThemeMode } from "@/hooks/use-settings";
  *  • Appearance     — theme mode, reduced motion
  *  • Notifications  — gentle reminders
  *  • Reflection Pool — contribute anonymously
- *  • Your Data      — export, retention, delete
+ *  • Your Data      — export, retention, delete data, delete account
  *  • Log out
  */
 export const SettingsScreen = () => {
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [isConfirmLoading, setIsConfirmLoading] = useState(false);
 
   const {
     signInMethod,
@@ -31,9 +62,37 @@ export const SettingsScreen = () => {
     setGentleReminders,
     contributeAnonymously,
     setContributeAnonymously,
-    handleLogout,
-    handleDeleteData,
+    performLogout,
+    performDeleteData,
+    performDeleteAccount,
   } = useSettings();
+
+  const handleConfirm = useCallback(async () => {
+    if (!confirmAction) return;
+
+    const actions: Record<NonNullable<ConfirmAction>, () => Promise<void>> = {
+      logout: performLogout,
+      deleteData: performDeleteData,
+      deleteAccount: performDeleteAccount,
+    };
+
+    const config = CONFIRM_CONFIG[confirmAction];
+
+    if (config.showLoading) {
+      setIsConfirmLoading(true);
+      try {
+        await actions[confirmAction]();
+      } finally {
+        setIsConfirmLoading(false);
+      }
+    } else {
+      await actions[confirmAction]();
+    }
+
+    setConfirmAction(null);
+  }, [confirmAction, performLogout, performDeleteData, performDeleteAccount]);
+
+  const activeConfig = confirmAction ? CONFIRM_CONFIG[confirmAction] : null;
 
   return (
     <>
@@ -112,7 +171,13 @@ export const SettingsScreen = () => {
             variant="chevron"
             label="Delete all my data"
             danger
-            onPress={handleDeleteData}
+            onPress={() => setConfirmAction("deleteData")}
+          />
+          <SettingsRow
+            variant="chevron"
+            label="Delete account"
+            danger
+            onPress={() => setConfirmAction("deleteAccount")}
             isLast
           />
         </SettingsSection>
@@ -123,7 +188,7 @@ export const SettingsScreen = () => {
             variant="action"
             label="Log out"
             danger
-            onPress={handleLogout}
+            onPress={() => setConfirmAction("logout")}
             isLast
           />
         </View>
@@ -135,6 +200,20 @@ export const SettingsScreen = () => {
         onOpenChange={setThemeDialogOpen}
         currentMode={(storedTheme ?? "system") as ThemeMode}
         onSelect={setThemeMode}
+      />
+
+      {/* ── CONFIRMATION DIALOG ──────────────────────────────── */}
+      <ConfirmationDialog
+        isOpen={confirmAction !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction(null);
+        }}
+        title={activeConfig?.title ?? ""}
+        description={activeConfig?.description ?? ""}
+        confirmLabel={activeConfig?.confirmLabel ?? ""}
+        onConfirm={handleConfirm}
+        isDestructive={activeConfig?.isDestructive}
+        isLoading={isConfirmLoading}
       />
     </>
   );

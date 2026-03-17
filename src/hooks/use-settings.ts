@@ -1,7 +1,8 @@
 import { useCallback, useMemo } from "react";
-import { Alert } from "react-native";
 import { useClerk, useUser } from "@clerk/expo";
 import { Uniwind, useUniwind } from "uniwind";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { useAppStore } from "@/store/store";
 import { useAppTheme } from "@/context/app-theme-context";
 
@@ -15,10 +16,10 @@ export const SETTING_KEYS = {
 
 /**
  * Encapsulates all settings screen state and handlers:
- * — toggle preferences (Zustand persisted)
- * — theme mode display + switching (Uniwind + Zustand)
+ * — toggle preferences (Zustand persisted + fire-and-forget Convex sync)
+ * — theme mode display + switching (Uniwind + Zustand + Convex)
  * — sign-in method (Clerk external accounts)
- * — log-out with confirmation
+ * — destructive action handlers (logout, data wipe, account deletion)
  */
 export const useSettings = () => {
   const { signOut } = useClerk();
@@ -28,7 +29,12 @@ export const useSettings = () => {
   const { currentTheme, isLight } = useAppTheme();
   const { hasAdaptiveThemes } = useUniwind();
 
-  // ─── Sign-in method ──────────────────────────────────────────────────────
+  // ─── Convex mutations (fire-and-forget) ─────────────────────────────
+  const updatePreferences = useMutation(api.preferences.update);
+  const requestDataWipe = useMutation(api.users.requestDataWipe);
+  const requestDeletion = useMutation(api.users.requestDeletion);
+
+  // ─── Sign-in method ──────────────────────────────────────────────────
   const signInMethod = useMemo(() => {
     if (!user) return "—";
     const ext = user.externalAccounts?.[0];
@@ -39,27 +45,22 @@ export const useSettings = () => {
     return "Email";
   }, [user]);
 
-  // ─── Theme display ────────────────────────────────────────────────────────
+  // ─── Theme display ──────────────────────────────────────────────────
   const themeDisplay = useMemo(() => {
     if (hasAdaptiveThemes) return "System";
     return isLight ? "Light" : "Dark";
   }, [hasAdaptiveThemes, isLight]);
 
-  // ─── Theme switching ──────────────────────────────────────────────────────
-  /**
-   * Switch between System / Light / Dark while preserving any active
-   * colour-theme (lavender, mint, sky, …).
-   */
+  // ─── Theme switching ────────────────────────────────────────────────
   const setThemeMode = useCallback(
     (mode: ThemeMode) => {
       if (mode === "system") {
         Uniwind.setTheme("system" as never);
         storeSetTheme("system");
+        updatePreferences({ theme: "system" });
         return;
       }
 
-      // Derive the colour-theme base from the current Uniwind theme string.
-      // e.g. "lavender-dark" → "lavender", "light" / "dark" → use bare name
       const stripped = currentTheme
         .replace(/-light$/, "")
         .replace(/-dark$/, "");
@@ -71,71 +72,69 @@ export const useSettings = () => {
 
       Uniwind.setTheme(nextTheme);
       storeSetTheme(mode);
+      updatePreferences({ theme: mode });
     },
-    [currentTheme, storeSetTheme],
+    [currentTheme, storeSetTheme, updatePreferences],
   );
 
-  // ─── Toggles ─────────────────────────────────────────────────────────────
+  // ─── Toggles ───────────────────────────────────────────────────────
   const reducedMotion = toggles[SETTING_KEYS.REDUCED_MOTION] ?? false;
   const gentleReminders = toggles[SETTING_KEYS.GENTLE_REMINDERS] ?? false;
   const contributeAnonymously =
     toggles[SETTING_KEYS.CONTRIBUTE_ANONYMOUSLY] ?? true;
 
   const setReducedMotion = useCallback(
-    (v: boolean) => setToggle(SETTING_KEYS.REDUCED_MOTION, v),
-    [setToggle],
-  );
-  const setGentleReminders = useCallback(
-    (v: boolean) => setToggle(SETTING_KEYS.GENTLE_REMINDERS, v),
-    [setToggle],
-  );
-  const setContributeAnonymously = useCallback(
-    (v: boolean) => setToggle(SETTING_KEYS.CONTRIBUTE_ANONYMOUSLY, v),
-    [setToggle],
+    (v: boolean) => {
+      setToggle(SETTING_KEYS.REDUCED_MOTION, v);
+      updatePreferences({ reducedMotion: v });
+    },
+    [setToggle, updatePreferences],
   );
 
-  // ─── Log out ─────────────────────────────────────────────────────────────
-  const handleLogout = useCallback(() => {
-    Alert.alert(
-      "Log out",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Log out",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await signOut();
-            } catch {
-              // Clerk will update its own auth state; ignore network errors
-            }
-          },
+  const setGentleReminders = useCallback(
+    (v: boolean) => {
+      setToggle(SETTING_KEYS.GENTLE_REMINDERS, v);
+      updatePreferences({
+        notifications: {
+          enabled: v,
+          gentleReturn: v,
+          patternNudge: false,
+          milestone: false,
         },
-      ],
-      { cancelable: true },
-    );
+      });
+    },
+    [setToggle, updatePreferences],
+  );
+
+  const setContributeAnonymously = useCallback(
+    (v: boolean) => {
+      setToggle(SETTING_KEYS.CONTRIBUTE_ANONYMOUSLY, v);
+      updatePreferences({ autoContributeReflections: v });
+    },
+    [setToggle, updatePreferences],
+  );
+
+  // ─── Destructive actions ────────────────────────────────────────────
+  const performLogout = useCallback(async () => {
+    try {
+      await signOut();
+    } catch {
+      // Clerk will update its own auth state; ignore network errors
+    }
   }, [signOut]);
 
-  // ─── Delete data ─────────────────────────────────────────────────────────
-  const handleDeleteData = useCallback(() => {
-    Alert.alert(
-      "Delete all my data",
-      "This will permanently erase all your sessions, reflections, and emotional history. This action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete everything",
-          style: "destructive",
-          onPress: () => {
-            // TODO: call Convex mutation to delete user data
-            console.warn("delete-data: not yet implemented");
-          },
-        },
-      ],
-      { cancelable: true },
-    );
-  }, []);
+  const performDeleteData = useCallback(async () => {
+    await requestDataWipe();
+  }, [requestDataWipe]);
+
+  const performDeleteAccount = useCallback(async () => {
+    await requestDeletion();
+    try {
+      await signOut();
+    } catch {
+      // Best-effort sign out after deletion request
+    }
+  }, [requestDeletion, signOut]);
 
   return {
     // Account
@@ -154,8 +153,9 @@ export const useSettings = () => {
     contributeAnonymously,
     setContributeAnonymously,
 
-    // Actions
-    handleLogout,
-    handleDeleteData,
+    // Destructive actions
+    performLogout,
+    performDeleteData,
+    performDeleteAccount,
   };
 };
