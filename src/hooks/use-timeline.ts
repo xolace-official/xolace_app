@@ -12,8 +12,6 @@ export function useTimeline() {
     {},
     { initialNumItems: PAGE_SIZE },
   );
-  
-  console.log("results", results)
 
   const entries: TimelineEntry[] = useMemo(
     () =>
