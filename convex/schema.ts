@@ -160,6 +160,11 @@ export default defineSchema({
       })
     ),
 
+    // --- Data Wipe ---
+    // Set to true when a data wipe is in progress.
+    // Prevents duplicate wipe jobs from being scheduled.
+    dataWipeInProgress: v.optional(v.boolean()),
+
     // --- Timestamps ---
     createdAt: v.number(),
     updatedAt: v.number(),

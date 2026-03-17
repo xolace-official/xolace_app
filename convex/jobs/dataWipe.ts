@@ -42,12 +42,15 @@ export const wipe = internalMutation({
         .unique();
       if (metadata) await ctx.db.delete(metadata._id);
 
-      // Delete turns
-      const turns = await ctx.db
-        .query("session_turns")
-        .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-        .take(10);
-      for (const turn of turns) await ctx.db.delete(turn._id);
+      // Delete all turns (loop until batch is empty)
+      let turns;
+      do {
+        turns = await ctx.db
+          .query("session_turns")
+          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+          .take(10);
+        for (const turn of turns) await ctx.db.delete(turn._id);
+      } while (turns.length === 10);
 
       await ctx.db.delete(session._id);
     }
@@ -98,6 +101,7 @@ export const wipe = internalMutation({
         lastSessionAt: undefined,
         averageSessionDuration: undefined,
         typicalUsagePattern: undefined,
+        dataWipeInProgress: undefined,
         updatedAt: Date.now(),
       });
     }

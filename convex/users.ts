@@ -147,11 +147,19 @@ export const requestDeletion = mutation({
  * Wipe all user content (sessions, reflections, emotional history) while
  * keeping the account, profile shell, preferences, and consent records intact.
  * Schedules a background job that processes deletions in batches.
+ *
+ * Idempotent: repeated calls while a wipe is in progress are no-ops.
  */
 export const requestDataWipe = mutation({
   args: {},
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
+
+    if (profile.dataWipeInProgress) {
+      return null;
+    }
+
+    await ctx.db.patch(profile._id, { dataWipeInProgress: true });
 
     await ctx.scheduler.runAfter(0, internal.jobs.dataWipe.wipe, {
       emotionalProfileId: profile._id,

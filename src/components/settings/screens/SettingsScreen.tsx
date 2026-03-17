@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { ScrollView, View } from "react-native";
+import { useToast } from "heroui-native";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsRow } from "@/components/settings/settings-row";
 import { ThemePickerDialog } from "@/components/settings/theme-picker-dialog";
@@ -48,6 +49,7 @@ const CONFIRM_CONFIG = {
  *  • Log out
  */
 export const SettingsScreen = () => {
+  const { toast } = useToast();
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
   const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
@@ -83,19 +85,22 @@ export const SettingsScreen = () => {
 
     const config = CONFIRM_CONFIG[confirmAction];
 
-    if (config.showLoading) {
-      setIsConfirmLoading(true);
-      try {
-        await actions[confirmAction]();
-      } finally {
-        setIsConfirmLoading(false);
+    try {
+      if (config.showLoading) {
+        setIsConfirmLoading(true);
       }
-    } else {
       await actions[confirmAction]();
+    } catch {
+      toast.show({
+        variant: "danger",
+        label: "Something went wrong",
+        description: "Please try again.",
+      });
+    } finally {
+      setIsConfirmLoading(false);
+      setConfirmAction(null);
     }
-
-    setConfirmAction(null);
-  }, [confirmAction, performLogout, performDeleteData, performDeleteAccount]);
+  }, [confirmAction, performLogout, performDeleteData, performDeleteAccount, toast]);
 
   const activeConfig = confirmAction ? CONFIRM_CONFIG[confirmAction] : null;
 
