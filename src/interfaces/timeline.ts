@@ -1,13 +1,13 @@
 export interface TimelineEntry {
   id: string;
-  userText: string;
   mirrorText: string;
-  emotion: string;
-  emotionEmoji: string;
-  responseType: string;
-  timestamp: Date;
+  primaryEmotion: string | null;
+  granularLabel: string | null;
+  pathChosen: string | null;
+  confirmationState: string | null;
+  createdAt: number;
 }
 
 export type TimelineFlatItem =
-  | { type: "section"; id: string; label: string }
-  | { type: "entry"; id: string; entry: TimelineEntry };
+  | { type: 'section'; id: string; label: string }
+  | { type: 'entry'; id: string; entry: TimelineEntry };

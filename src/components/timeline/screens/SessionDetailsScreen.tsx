@@ -1,26 +1,36 @@
-import { ScrollView, View, Pressable } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SymbolView } from "expo-symbols";
-import { Card, useThemeColor } from "heroui-native";
-import { AppText } from "@/components/shared/app-text";
-import { MOCK_ENTRIES } from "@/helpers/utils/timeline-mock";
+import { ActivityIndicator, ScrollView, View, Pressable } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SymbolView } from 'expo-symbols';
+import { Card, useThemeColor } from 'heroui-native';
+import { useQuery } from 'convex/react';
+import { api } from '../../../../convex/_generated/api';
+import type { Id } from '../../../../convex/_generated/dataModel';
+import { AppText } from '@/components/shared/app-text';
+import {
+  getEmotionEmoji,
+  getEmotionLabel,
+  getPathLabel,
+} from '@/constants/emotions';
 
-const formatDate = (date: Date) => ({
-  day: new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  }).format(date),
-  time: new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).format(date),
-});
+const formatDate = (timestamp: number) => {
+  const date = new Date(timestamp);
+  return {
+    day: new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+    }).format(date),
+    time: new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(date),
+  };
+};
 
 const SectionLabel = ({ children }: { children: string }) => (
-  <AppText className="text-xs tracking-widest uppercase text-foreground/35 mb-3">
+  <AppText className="mb-3 text-xs uppercase tracking-widest text-foreground/35">
     {children}
   </AppText>
 );
@@ -29,11 +39,29 @@ export const SessionDetailsScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const tintColor = useThemeColor("foreground") as string;
+  const tintColor = useThemeColor('foreground') as string;
 
-  const entry = MOCK_ENTRIES.find((e) => e.id === id);
+  const session = useQuery(
+    api.sessions.getById,
+    id ? { sessionId: id as Id<'sessions'> } : 'skip',
+  );
+  const metadata = useQuery(
+    api.emotionalMetadata.getBySession,
+    id ? { sessionId: id as Id<'sessions'> } : 'skip',
+  );
 
-  if (!entry) {
+  if (session === undefined || metadata === undefined) {
+    return (
+      <View
+        className="flex-1 items-center justify-center bg-background"
+        style={{ paddingTop: insets.top }}
+      >
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (!session) {
     return (
       <View
         className="flex-1 items-center justify-center bg-background"
@@ -44,7 +72,11 @@ export const SessionDetailsScreen = () => {
     );
   }
 
-  const { day, time } = formatDate(entry.timestamp);
+  const { day, time } = formatDate(session.createdAt);
+  const emotion = metadata?.granularLabel ?? metadata?.primaryEmotion ?? null;
+  const emoji = getEmotionEmoji(emotion);
+  const emotionLabel = getEmotionLabel(emotion);
+  const pathLabel = getPathLabel(session.pathChosen ?? null);
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -53,7 +85,7 @@ export const SessionDetailsScreen = () => {
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         {/* Back button */}
-        <View className="px-6 pt-3 pb-1">
+        <View className="px-6 pb-1 pt-3">
           <Pressable
             onPress={() => router.back()}
             hitSlop={12}
@@ -63,9 +95,9 @@ export const SessionDetailsScreen = () => {
           >
             <SymbolView
               name={{
-                ios: "chevron.left",
-                android: "arrow_back",
-                web: "arrow_back",
+                ios: 'chevron.left',
+                android: 'arrow_back',
+                web: 'arrow_back',
               }}
               size={20}
               tintColor={tintColor}
@@ -74,48 +106,60 @@ export const SessionDetailsScreen = () => {
         </View>
 
         {/* Date + time */}
-        <View className="px-6 pt-5 pb-8">
+        <View className="px-6 pb-8 pt-5">
           <AppText className="text-base font-medium text-foreground/50">
             {day}
           </AppText>
-          <AppText className="text-base font-medium text-foreground/50 mt-0.5">
+          <AppText className="mt-0.5 text-base font-medium text-foreground/50">
             {time}
           </AppText>
         </View>
 
-        {/* YOU SAID */}
         <View className="px-6">
-          <SectionLabel>You said</SectionLabel>
-          <Card
-            variant="tertiary"
-            className="border border-foreground/10 rounded-2xl mb-8"
-            style={{ borderCurve: "continuous" }}
-          >
-            <Card.Body className="py-4 px-5">
-              <AppText className="text-sm font-light leading-6 text-foreground/55">
-                &ldquo;{entry.userText}&rdquo;
-              </AppText>
-            </Card.Body>
-          </Card>
+          {/* User input */}
+          {session.rawInputEncrypted && (
+            <>
+              <SectionLabel>You said</SectionLabel>
+              <Card
+                variant="tertiary"
+                className="mb-8 rounded-2xl border border-foreground/10"
+                style={{ borderCurve: 'continuous' }}
+              >
+                <Card.Body className="px-5 py-4">
+                  <AppText className="text-sm font-light leading-6 text-foreground/55">
+                    &ldquo;{session.rawInputEncrypted}&rdquo;
+                  </AppText>
+                </Card.Body>
+              </Card>
+            </>
+          )}
 
-          {/* THE MIRROR */}
-          <SectionLabel>The mirror</SectionLabel>
-          <AppText className="text-xl font-light italic leading-9 text-foreground mb-8">
-            &ldquo;{entry.mirrorText}&rdquo;
-          </AppText>
+          {/* Mirror */}
+          {session.mirrorText && (
+            <>
+              <SectionLabel>The mirror</SectionLabel>
+              <AppText className="mb-8 text-xl font-light italic leading-9 text-foreground">
+                &ldquo;{session.mirrorText}&rdquo;
+              </AppText>
+            </>
+          )}
 
           {/* Emotion row */}
           <View className="flex-row items-center gap-2">
-            <AppText className="text-base">
-              {entry.emotionEmoji}
-            </AppText>
+            <AppText className="text-base">{emoji}</AppText>
             <AppText className="text-sm text-foreground/60">
-              {entry.emotion}
+              {emotionLabel}
             </AppText>
-            <AppText className="text-sm text-foreground/25">·</AppText>
-            <AppText className="text-sm text-foreground/40">
-              {entry.responseType}
-            </AppText>
+            {pathLabel ? (
+              <>
+                <AppText className="text-sm text-foreground/25">
+                  &middot;
+                </AppText>
+                <AppText className="text-sm text-foreground/40">
+                  {pathLabel}
+                </AppText>
+              </>
+            ) : null}
           </View>
         </View>
       </ScrollView>
