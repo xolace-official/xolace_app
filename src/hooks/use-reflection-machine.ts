@@ -360,10 +360,14 @@ export function useReflectionMachine() {
   const handleReset = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
-    await abandon();
-    resetSession();
-    clearRefs();
-    dispatch({ type: 'RESET' });
+    try {
+      await abandon();
+    } finally {
+      resetSession();
+      clearRefs();
+      dispatch({ type: 'RESET' });
+      busyRef.current = false;
+    }
   }, [abandon, resetSession, clearRefs]);
 
   const handleRetry = useCallback(async () => {
