@@ -3,7 +3,7 @@ import { EaseView } from 'react-native-ease';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReflectionMachine } from '@/hooks/use-reflection-machine';
 import { useScreenTransition } from '@/hooks/use-screen-transition';
-import { SCREEN_TRANSITIONS } from '@/constants/reflect-transitions';
+import { SCREEN_TRANSITIONS, DEFAULT_SCREEN_TRANSITION } from '@/constants/reflect-transitions';
 import type { ReflectionStateName } from '@/interfaces/reflection';
 import { IdleState } from '@/components/reflect/states/idle-state';
 import { TypingState } from '@/components/reflect/states/typing-state';
@@ -120,8 +120,10 @@ export const ReflectScreen = () => {
     }
   };
 
-  const currentConfig = SCREEN_TRANSITIONS[current];
-  const previousConfig = previous ? SCREEN_TRANSITIONS[previous] : null;
+  const currentConfig = SCREEN_TRANSITIONS[current] ?? DEFAULT_SCREEN_TRANSITION;
+  const previousConfig = previous
+    ? (SCREEN_TRANSITIONS[previous] ?? DEFAULT_SCREEN_TRANSITION)
+    : null;
 
   const absoluteWithInsets: ViewStyle = {
     position: 'absolute',

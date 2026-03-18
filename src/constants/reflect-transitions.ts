@@ -55,7 +55,9 @@ const fade = (enterDuration: number, exitDuration: number): ScreenTransitionConf
   },
 });
 
-export const SCREEN_TRANSITIONS: Record<string, ScreenTransitionConfig> = {
+export const DEFAULT_SCREEN_TRANSITION: ScreenTransitionConfig = fade(400, 300);
+
+export const SCREEN_TRANSITIONS: Record<ReflectionStateName, ScreenTransitionConfig> = {
   idle: fade(400, 300),
   typing: fade(400, 500),
   'typing-nudge': fade(400, 500),
