@@ -36,12 +36,9 @@ export function useSessionEnd() {
     async (contributedReflection?: boolean) => {
       if (busyRef.current) return;
       busyRef.current = true;
-      try {
-        await completePath(true, contributedReflection);
-        navigateHome();
-      } finally {
-        busyRef.current = false;
-      }
+      await completePath(true, contributedReflection);
+      busyRef.current = false;
+      navigateHome();
     },
     [completePath, navigateHome],
   );
@@ -50,12 +47,9 @@ export function useSessionEnd() {
     async (contributedReflection?: boolean) => {
       if (busyRef.current) return;
       busyRef.current = true;
-      try {
-        await completePath(true, contributedReflection);
-        navigateHome();
-      } finally {
-        busyRef.current = false;
-      }
+      await completePath(true, contributedReflection);
+      busyRef.current = false;
+      navigateHome();
     },
     [completePath, navigateHome],
   );
