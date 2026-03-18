@@ -19,7 +19,7 @@ export default function SitWithThis() {
   const router = useRouter();
   const startedRef = useRef(false);
 
-  const { sessionId, session, startPath, completePath } = usePathSession();
+  const { sessionId, session, startPath } = usePathSession();
 
   // Start the path on mount
   useEffect(() => {
@@ -35,9 +35,8 @@ export default function SitWithThis() {
     }
   }, [sessionId, session, startPath]);
 
-  const handleDone = async () => {
-    const ok = await completePath(true);
-    if (ok) router.back();
+  const handleDone = () => {
+    router.replace('/session-end?path=solo');
   };
 
   return (
