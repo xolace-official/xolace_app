@@ -8,14 +8,14 @@ type Props = {
   mirror: string;
   onSelectSolo: () => Promise<void>;
   onSelectPeers: () => Promise<void>;
-  onExitComplete: () => void;
+  onSelectExit: () => Promise<void>;
 };
 
 export const PathSelectionState = ({
   mirror,
   onSelectSolo,
   onSelectPeers,
-  onExitComplete,
+  onSelectExit,
 }: Props) => {
   const router = useRouter();
   const busyRef = useRef(false);
@@ -37,6 +37,17 @@ export const PathSelectionState = ({
     try {
       await onSelectPeers();
       router.push('/peer-reflections');
+    } finally {
+      busyRef.current = false;
+    }
+  };
+
+  const handleExit = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await onSelectExit();
+      router.push('/session-end?path=exit');
     } finally {
       busyRef.current = false;
     }
@@ -82,7 +93,7 @@ export const PathSelectionState = ({
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(600).duration(400)}>
-          <Pressable onPress={onExitComplete}>
+          <Pressable onPress={handleExit}>
             <AppText className="text-lg text-foreground">
               I just needed to say it
             </AppText>

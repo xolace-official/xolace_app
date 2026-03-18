@@ -15,8 +15,7 @@ export const PeerReflectionScreen = () => {
   const router = useRouter();
   const startedRef = useRef(false);
 
-  const { sessionId, session, isLoading, startPath, completePath } =
-    usePathSession();
+  const { sessionId, session, isLoading, startPath } = usePathSession();
 
   // Start the path on mount
   useEffect(() => {
@@ -66,9 +65,8 @@ export const PeerReflectionScreen = () => {
 
   const toggleResonanceMutation = useMutation(api.reflections.toggleResonance);
 
-  const handleDone = async () => {
-    const ok = await completePath(true);
-    if (ok) router.back();
+  const handleDone = () => {
+    router.replace('/session-end?path=peers');
   };
 
   if (isLoading || matchedReflections === undefined || awaitingFallback) {

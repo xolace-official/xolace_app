@@ -26,7 +26,7 @@ export const ReflectScreen = () => {
     handleNotQuite,
     handleSayMore,
     handleGaveUpPathSelection,
-    handleExitComplete,
+    handleSelectExit,
     handleSelectSolo,
     handleSelectPeers,
     handleReset,
@@ -106,7 +106,7 @@ export const ReflectScreen = () => {
             mirror={state.mirrorResponse}
             onSelectSolo={handleSelectSolo}
             onSelectPeers={handleSelectPeers}
-            onExitComplete={handleExitComplete}
+            onSelectExit={handleSelectExit}
           />
         );
       case 'error':

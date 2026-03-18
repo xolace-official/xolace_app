@@ -1,0 +1,40 @@
+import { ActivityIndicator, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSessionEnd } from '@/hooks/use-session-end';
+import { ExitVariant } from '@/components/session-end/exit-variant';
+import { ActivityVariant } from '@/components/session-end/activity-variant';
+
+type PathType = 'solo' | 'peers' | 'exit';
+
+type Props = {
+  path: PathType;
+};
+
+export const SessionEndScreen = ({ path }: Props) => {
+  const insets = useSafeAreaInsets();
+  const { isLoading, dismiss, haveMore } = useSessionEnd();
+
+  if (isLoading) {
+    return (
+      <View
+        className="flex-1 items-center justify-center bg-background"
+        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      >
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  return (
+    <View
+      className="flex-1 bg-background"
+      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+    >
+      {path === 'exit' ? (
+        <ExitVariant onHaveMore={() => haveMore()} />
+      ) : (
+        <ActivityVariant onDismiss={dismiss} onHaveMore={haveMore} />
+      )}
+    </View>
+  );
+};

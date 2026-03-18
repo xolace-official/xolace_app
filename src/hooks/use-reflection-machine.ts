@@ -116,7 +116,7 @@ function reducer(
  * - `handleNotQuite` — transition to the "not quite" clarification flow or give up when turns exhausted.
  * - `handleSayMore` — transition to the "say more" clarification flow or give up when turns exhausted.
  * - `handleGaveUpPathSelection` — confirm a "gave up" path and advance to completion.
- * - `handleExitComplete` — mark the session as completed (exit flow).
+ * - `handleSelectExit` — select the "exit" path for session-end navigation.
  * - `handleSelectSolo` — select the "solo" path.
  * - `handleSelectPeers` — select the "peers" path.
  * - `handleReset` — abandon the current session and reset local state.
@@ -132,7 +132,6 @@ export function useReflectionMachine() {
     isLoading,
     initiateAndSubmit,
     confirmMirror,
-    completeAsExit,
     selectPath,
     submitRefinement,
     abandon,
@@ -320,18 +319,17 @@ export function useReflectionMachine() {
     }
   }, [confirmMirror]);
 
-  const handleExitComplete = useCallback(async () => {
+  const handleSelectExit = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
     try {
-      await completeAsExit();
-      // The useEffect bridge will detect 'completed' and reset
+      await selectPath('exit');
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
     } finally {
       busyRef.current = false;
     }
-  }, [completeAsExit]);
+  }, [selectPath]);
 
   const handleSelectSolo = useCallback(async () => {
     if (busyRef.current) return;
@@ -393,7 +391,7 @@ export function useReflectionMachine() {
     handleNotQuite,
     handleSayMore,
     handleGaveUpPathSelection,
-    handleExitComplete,
+    handleSelectExit,
     handleSelectSolo,
     handleSelectPeers,
     handleReset,
