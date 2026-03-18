@@ -13,13 +13,24 @@ export function useSessionEnd() {
   const router = useRouter();
   const { sessionId, isLoading, completePath } = usePathSession();
   const busyRef = useRef(false);
+  const navigatedRef = useRef(false);
 
-  // Guard: if no active session after loading, bail out
+  const navigateHome = useCallback(() => {
+    if (navigatedRef.current) return;
+    navigatedRef.current = true;
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  }, [router]);
+
+  // Guard: if no active session after loading (e.g. session abandoned externally)
   useEffect(() => {
     if (!isLoading && !sessionId) {
-      router.back();
+      navigateHome();
     }
-  }, [isLoading, sessionId, router]);
+  }, [isLoading, sessionId, navigateHome]);
 
   const dismiss = useCallback(
     async (contributedReflection?: boolean) => {
@@ -27,12 +38,12 @@ export function useSessionEnd() {
       busyRef.current = true;
       try {
         await completePath(true, contributedReflection);
-        router.back();
+        navigateHome();
       } finally {
         busyRef.current = false;
       }
     },
-    [completePath, router],
+    [completePath, navigateHome],
   );
 
   const haveMore = useCallback(
@@ -41,12 +52,12 @@ export function useSessionEnd() {
       busyRef.current = true;
       try {
         await completePath(true, contributedReflection);
-        router.back();
+        navigateHome();
       } finally {
         busyRef.current = false;
       }
     },
-    [completePath, router],
+    [completePath, navigateHome],
   );
 
   return { sessionId, isLoading, dismiss, haveMore };
