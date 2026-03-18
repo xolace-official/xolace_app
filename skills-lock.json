@@ -46,6 +46,11 @@
       "sourceType": "github",
       "computedHash": "de7a20d081cd19bf8bce4038bd62d038a0a88f218f85afb35320d09b052fb534"
     },
+    "react-native-ease-refactor": {
+      "source": "appandflow/react-native-ease",
+      "sourceType": "github",
+      "computedHash": "54e548edf12233522cc48731cb4bca613aa54d7062625618e325d79471bd1d12"
+    },
     "uniwind": {
       "source": "uni-stack/uniwind",
       "sourceType": "github",

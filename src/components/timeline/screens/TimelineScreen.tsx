@@ -1,11 +1,12 @@
-import { ActivityIndicator, FlatList, View, type ListRenderItem } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { LegendList } from '@legendapp/list/react-native';
 import { TimelineEntryCard } from '@/components/timeline/timeline-entry-card';
 import { TimelineSectionHeader } from '@/components/timeline/timeline-section-header';
 import { AppText } from '@/components/shared/app-text';
 import { useTimeline } from '@/hooks/use-timeline';
 import type { TimelineFlatItem } from '@/interfaces/timeline';
 
-const renderItem: ListRenderItem<TimelineFlatItem> = ({ item, index }) => {
+const renderItem = ({ item, index }: { item: TimelineFlatItem; index: number }) => {
   if (item.type === 'section') {
     return <TimelineSectionHeader label={item.label} isFirst={index === 0} />;
   }
@@ -14,8 +15,11 @@ const renderItem: ListRenderItem<TimelineFlatItem> = ({ item, index }) => {
 
 const keyExtractor = (item: TimelineFlatItem) => item.id;
 
+const getEstimatedItemSize = (item: TimelineFlatItem) =>
+  item.type === 'section' ? 44 : 120;
+
 export const TimelineScreen = () => {
-  const { sections, isEmpty, isLoading, canLoadMore, isLoadingMore, loadMore } =
+  const { sections, isLoading, canLoadMore, isLoadingMore, loadMore } =
     useTimeline();
 
   if (isLoading) {
@@ -26,26 +30,27 @@ export const TimelineScreen = () => {
     );
   }
 
-  if (isEmpty) {
-    return (
-      <View className="flex-1 items-center justify-center px-10">
-        <AppText className="text-center text-base leading-7 text-foreground/30">
-          Your reflections will appear here{'\n'}after your first session.
-        </AppText>
-      </View>
-    );
-  }
-
   return (
-    <FlatList
+    <LegendList
       data={sections}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
+      getEstimatedItemSize={getEstimatedItemSize}
+      estimatedItemSize={100}
+      recycleItems
+      getItemType={(item) => item.type}
       onEndReached={canLoadMore ? loadMore : undefined}
       onEndReachedThreshold={0.4}
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 40 }}
+      ListEmptyComponent={
+        <View className="flex-1 items-center justify-center px-10">
+          <AppText className="text-center text-base leading-7 text-foreground/30">
+            Your reflections will appear here{'\n'}after your first session.
+          </AppText>
+        </View>
+      }
       ListFooterComponent={
         isLoadingMore ? (
           <ActivityIndicator style={{ paddingVertical: 20 }} />

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { TextArea } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { AppText } from '@/components/shared/app-text';
@@ -14,6 +14,7 @@ type Props = {
   entryText: string;
   dispatch: React.Dispatch<ReflectionAction>;
   onSubmit: () => void;
+  autoFocus?: boolean;
 };
 
 const NUDGE_MESSAGES = [
@@ -22,7 +23,7 @@ const NUDGE_MESSAGES = [
   "You don't need to explain \u2014 just say what's there.",
 ];
 
-export const TypingState = ({ showNudge, entryText, dispatch, onSubmit }: Props) => {
+export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, autoFocus = true }: Props) => {
   const { resetTimer, clearTimer } = useTypingPause(
     () => dispatch({ type: 'PAUSE_TIMEOUT' }),
     8000,
@@ -51,11 +52,7 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit }: Props)
   const canSubmit = entryText.trim().length > 0;
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(400)}
-      exiting={FadeOut.duration(500)}
-      className="flex-1"
-    >
+    <View className="flex-1">
       <KeyboardAvoidingView
         behavior="padding"
         className="flex-1 px-6 pt-4"
@@ -87,7 +84,7 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit }: Props)
 
         <View className="flex-1">
           <TextArea
-            autoFocus
+            autoFocus={autoFocus}
             placeholder="Start typing..."
             value={entryText}
             onChangeText={handleChangeText}
@@ -103,6 +100,6 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit }: Props)
           />
         </View>
       </KeyboardAvoidingView>
-    </Animated.View>
+    </View>
   );
 };

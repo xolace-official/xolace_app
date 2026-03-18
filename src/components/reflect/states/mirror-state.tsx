@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Chip } from 'heroui-native';
 import { AppText } from '@/components/shared/app-text';
 import type { EntryType } from '@/interfaces/reflection';
@@ -34,11 +34,7 @@ export const MirrorState = ({
     (entryType === 'scaffold' || entryType === 'hybrid');
 
   return (
-    <Animated.View
-      entering={FadeInDown.duration(1000).springify().damping(18)}
-      exiting={FadeOut.duration(500)}
-      className="flex-1 justify-center px-6"
-    >
+    <View className="flex-1 justify-center px-6">
       {/* Texture pills from scaffold */}
       {showTextures && (
         <Animated.View
@@ -93,6 +89,6 @@ export const MirrorState = ({
           </Pressable>
         </Animated.View>
       </View>
-    </Animated.View>
+    </View>
   );
 };

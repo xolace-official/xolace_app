@@ -1,5 +1,5 @@
 import { Pressable, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText } from '@/components/shared/app-text';
 
 type Props = {
@@ -8,11 +8,7 @@ type Props = {
 };
 
 export const GaveUpState = ({ onPathSelection, onReset }: Props) => (
-  <Animated.View
-    entering={FadeIn.duration(600)}
-    exiting={FadeOut.duration(500)}
-    className="flex-1 justify-center px-6"
-  >
+  <View className="flex-1 justify-center px-6">
     <AppText className="text-xl leading-8 text-foreground">
       Sometimes words can&apos;t quite capture what we feel — and that&apos;s okay.
     </AppText>
@@ -38,5 +34,5 @@ export const GaveUpState = ({ onPathSelection, onReset }: Props) => (
         </Pressable>
       </Animated.View>
     </View>
-  </Animated.View>
+  </View>
 );
