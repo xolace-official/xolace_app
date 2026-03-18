@@ -210,7 +210,10 @@ export const completePath = mutation({
     });
 
     // Schedule post-session jobs
-    // TODO: Phase 5 — schedule internal.jobs.profileStats.updateAfterSession
+    await ctx.scheduler.runAfter(0, internal.jobs.profileStats.updateAfterSession, {
+      emotionalProfileId: session.emotionalProfileId,
+      sessionId: args.sessionId,
+    });
     // TODO: Phase 4 — if contributedReflection, schedule internal.jobs.reflectionAnonymizer.anonymize
 
     return null;
@@ -242,7 +245,10 @@ export const completeSession = mutation({
       updatedAt: now,
     });
 
-    // TODO: Phase 5 — schedule internal.jobs.profileStats.updateAfterSession
+    await ctx.scheduler.runAfter(0, internal.jobs.profileStats.updateAfterSession, {
+      emotionalProfileId: session.emotionalProfileId,
+      sessionId: args.sessionId,
+    });
 
     return null;
   },
