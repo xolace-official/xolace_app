@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
@@ -38,13 +38,14 @@ const TURN_RELEVANT_STATES = new Set([
  * - `resetSession()`: clear the local session id to reset client session state.
  */
 export function useSession() {
-  const [sessionId, setSessionId] = useState<Id<'sessions'> | null>(null);
+  const [localSessionId, setLocalSessionId] = useState<Id<'sessions'> | null>(null);
 
-  // Only check for active sessions when we don't already have one
+  // Derive sessionId: prefer explicitly-set local ID, fall back to server active session
   const activeSession = useQuery(
     api.sessions.getActive,
-    sessionId ? 'skip' : undefined,
+    localSessionId ? 'skip' : undefined,
   );
+  const sessionId = localSessionId ?? activeSession?._id ?? null;
 
   const session = useQuery(
     api.sessions.getById,
@@ -74,13 +75,6 @@ export function useSession() {
   const abandonMutation = useMutation(api.sessions.abandon);
   const retryMutation = useMutation(api.sessions.retrySession);
 
-  // --- Resume: pick up an active session on mount ---
-  useEffect(() => {
-    if (activeSession && !sessionId) {
-      setSessionId(activeSession._id);
-    }
-  }, [activeSession, sessionId]);
-
   // --- Derived state ---
   const turnsCount = turns?.length ?? 0;
   const isLoading = !sessionId && activeSession === undefined;
@@ -102,7 +96,7 @@ export function useSession() {
       const newSessionId = await initiateMutation({
         entryType: serverEntryType,
       });
-      setSessionId(newSessionId);
+      setLocalSessionId(newSessionId);
 
       try {
         // TODO: encrypt rawText before submission
@@ -121,7 +115,7 @@ export function useSession() {
         } catch {
           // best-effort cleanup
         }
-        setSessionId(null);
+        setLocalSessionId(null);
         throw error;
       }
     },
@@ -203,7 +197,7 @@ export function useSession() {
   }, [sessionId, retryMutation]);
 
   const resetSession = useCallback(() => {
-    setSessionId(null);
+    setLocalSessionId(null);
   }, []);
 
   return {
