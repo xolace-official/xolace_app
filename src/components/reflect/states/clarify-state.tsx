@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { TextArea } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { AppText } from '@/components/shared/app-text';
@@ -11,6 +11,7 @@ type Props = {
   clarifyText: string;
   dispatch: React.Dispatch<ReflectionAction>;
   onSubmit: () => void;
+  autoFocus?: boolean;
 };
 
 export const ClarifyState = ({
@@ -18,15 +19,12 @@ export const ClarifyState = ({
   clarifyText,
   dispatch,
   onSubmit,
+  autoFocus = true,
 }: Props) => {
   const canSubmit = clarifyText.trim().length > 0;
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(400)}
-      exiting={FadeOut.duration(500)}
-      className="flex-1"
-    >
+    <View className="flex-1">
       <KeyboardAvoidingView
         behavior="padding"
         className="flex-1 px-6 pt-8"
@@ -45,7 +43,7 @@ export const ClarifyState = ({
 
         <View className="flex-1">
           <TextArea
-            autoFocus
+            autoFocus={autoFocus}
             placeholder="Help me understand better..."
             value={clarifyText}
             onChangeText={(text: string) =>
@@ -64,6 +62,6 @@ export const ClarifyState = ({
           />
         </View>
       </KeyboardAvoidingView>
-    </Animated.View>
+    </View>
   );
 };

@@ -1,5 +1,5 @@
 import { Pressable, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText } from '@/components/shared/app-text';
 
 type Props = {
@@ -9,11 +9,7 @@ type Props = {
 };
 
 export const ErrorState = ({ errorMessage, onRetry, onReset }: Props) => (
-  <Animated.View
-    entering={FadeIn.duration(600)}
-    exiting={FadeOut.duration(500)}
-    className="flex-1 justify-center px-6"
-  >
+  <View className="flex-1 justify-center px-6">
     <AppText className="text-xl leading-8 text-foreground">
       Something didn&apos;t go as expected.
     </AppText>
@@ -39,5 +35,5 @@ export const ErrorState = ({ errorMessage, onRetry, onReset }: Props) => (
         </Pressable>
       </Animated.View>
     </View>
-  </Animated.View>
+  </View>
 );

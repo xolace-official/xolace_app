@@ -1,5 +1,5 @@
 import { Pressable, View } from "react-native";
-import Animated, { FadeIn, FadeInDown, FadeOut } from "react-native-reanimated";
+import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
 import { Separator, TagGroup } from "heroui-native";
 import { AppText } from "@/components/shared/app-text";
 import { PillButton } from "@/components/reflect/pill-button";
@@ -73,13 +73,9 @@ export const IdleState = ({
   const hasSelections = selectedTextures.length > 0;
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(400)}
-      exiting={FadeOut.duration(300)}
-      className="flex-1 px-6"
-    >
+    <View className="flex-1 px-6">
       {/* Top section */}
-      <View className="pt-16 pb-4">
+      <View className="pt-10 pb-4">
         <AppText className="text-sm italic leading-6 text-foreground/40">
           {encouragementText(variant)}
         </AppText>
@@ -152,6 +148,6 @@ export const IdleState = ({
       <View className="absolute bottom-20 right-6">
         <TimelineIcon />
       </View>
-    </Animated.View>
+    </View>
   );
 };

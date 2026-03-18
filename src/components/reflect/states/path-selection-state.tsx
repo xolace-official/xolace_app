@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { AppText } from '@/components/shared/app-text';
 
@@ -43,11 +43,7 @@ export const PathSelectionState = ({
   };
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(600)}
-      exiting={FadeOut.duration(500)}
-      className="flex-1 justify-center px-6"
-    >
+    <View className="flex-1 justify-center px-6">
       <ScrollView
         style={{ flexGrow: 0, maxHeight: '40%' }}
         showsVerticalScrollIndicator={false}
@@ -96,6 +92,6 @@ export const PathSelectionState = ({
           </Pressable>
         </Animated.View>
       </View>
-    </Animated.View>
+    </View>
   );
 };
