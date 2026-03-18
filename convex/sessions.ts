@@ -214,7 +214,11 @@ export const completePath = mutation({
       emotionalProfileId: session.emotionalProfileId,
       sessionId: args.sessionId,
     });
-    // TODO: Phase 4 — if contributedReflection, schedule internal.jobs.reflectionAnonymizer.anonymize
+    if (args.contributedReflection) {
+      await ctx.scheduler.runAfter(0, internal.jobs.reflectionAnonymizer.anonymize, {
+        sessionId: args.sessionId,
+      });
+    }
 
     return null;
   },
