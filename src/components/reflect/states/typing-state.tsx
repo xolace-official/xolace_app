@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { TextArea } from 'heroui-native';
@@ -29,17 +29,15 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, autoFocu
     8000,
   );
 
-  useEffect(() => {
-    if (entryText.length > 0) {
-      resetTimer();
-    }
-    return clearTimer;
-  }, [entryText, resetTimer, clearTimer]);
-
   const handleChangeText = (text: string) => {
     dispatch({ type: 'TEXT_CHANGE', text });
     if (showNudge) {
       dispatch({ type: 'RESUME_TYPING' });
+    }
+    if (text.length > 0) {
+      resetTimer();
+    } else {
+      clearTimer();
     }
   };
 
