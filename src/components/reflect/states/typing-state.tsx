@@ -24,7 +24,7 @@ const NUDGE_MESSAGES = [
 ];
 
 export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, autoFocus = true }: Props) => {
-  const { resetTimer } = useTypingPause(
+  const { resetTimer, clearTimer } = useTypingPause(
     () => dispatch({ type: 'PAUSE_TIMEOUT' }),
     8000,
   );
@@ -36,6 +36,8 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, autoFocu
     }
     if (text.length > 0) {
       resetTimer();
+    } else {
+      clearTimer();
     }
   };
 
