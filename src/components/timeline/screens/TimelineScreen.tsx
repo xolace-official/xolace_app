@@ -47,7 +47,7 @@ export const TimelineScreen = () => {
       ListEmptyComponent={
         <View className="flex-1 items-center justify-center px-10">
           <AppText className="text-center text-base leading-7 text-foreground/30">
-            Your reflections will appear here{'\n'}after your first session.
+            Your reflections will appear here{'\n'} after your first session.
           </AppText>
         </View>
       }
