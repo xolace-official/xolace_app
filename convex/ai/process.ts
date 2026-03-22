@@ -20,10 +20,10 @@ export const generateMirror = internalAction({
   handler: async (ctx, args) => {
     try {
       // Load full context
-      const context = await ctx.runQuery(
-        internal.ai.context.buildSessionContext,
-        { sessionId: args.sessionId }
-      );
+      // const context = await ctx.runQuery(
+      //   internal.ai.context.buildSessionContext,
+      //   { sessionId: args.sessionId }
+      // );
 
       // TODO Phase 3a: Replace with real Haiku classification
       // const classification = await classifyEmotion(context);
