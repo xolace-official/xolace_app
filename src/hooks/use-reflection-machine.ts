@@ -85,6 +85,9 @@ function reducer(
     case 'CLARIFY_TEXT_CHANGE':
       return { ...state, clarifyText: action.text };
 
+    case 'SET_USER_VARIANT':
+      return { ...state, userVariant: action.variant };
+
     case 'SESSION_ERROR':
       return { ...state, screen: 'error', errorMessage: action.message };
 

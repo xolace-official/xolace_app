@@ -1,6 +1,6 @@
 import { Pressable, View } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
-import { Separator, TagGroup } from "heroui-native";
+import { Separator, TagGroup, cn } from "heroui-native";
 import { AppText } from "@/components/shared/app-text";
 import { PillButton } from "@/components/reflect/pill-button";
 import { TimelineIcon } from "@/components/reflect/timeline-icon";
@@ -31,7 +31,7 @@ const encouragementText = (variant: UserVariant): string => {
     case "first-time":
       return "You don't need to know what to say.";
     case "returning":
-      return "Welcome back.\nPick up where you left off.";
+      return "It's been a little while.\nNo pressure. I'm here.";
     case "active":
       return `Day ${variant.dayCount}`;
   }
@@ -76,7 +76,7 @@ export const IdleState = ({
     <View className="flex-1 px-6">
       {/* Top section */}
       <View className="pt-10 pb-4">
-        <AppText className="text-sm italic leading-6 text-foreground/40">
+        <AppText className={cn("text-sm italic leading-6 text-foreground/40", variant.kind === "returning" && "text-warning")}>
           {encouragementText(variant)}
         </AppText>
 

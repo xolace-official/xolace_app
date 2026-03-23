@@ -32,6 +32,7 @@ export type ReflectionAction =
   | { type: 'NOT_QUITE' }
   | { type: 'SAY_MORE' }
   | { type: 'CLARIFY_TEXT_CHANGE'; text: string }
+  | { type: 'SET_USER_VARIANT'; variant: UserVariant }
   | { type: 'RESET' }
   | { type: 'SESSION_ERROR'; message: string }
   | { type: 'SESSION_RESUMED'; screen: ReflectionStateName; mirrorResponse?: string };

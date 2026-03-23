@@ -1,9 +1,13 @@
+import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, type ViewStyle, View } from 'react-native';
 import { EaseView } from 'react-native-ease';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import { useReflectionMachine } from '@/hooks/use-reflection-machine';
 import { useScreenTransition } from '@/hooks/use-screen-transition';
 import { SCREEN_TRANSITIONS, DEFAULT_SCREEN_TRANSITION } from '@/constants/reflect-transitions';
+import { computeUserVariant } from '@/helpers/utils/user-variant';
 import type { ReflectionStateName } from '@/interfaces/reflection';
 import { IdleState } from '@/components/reflect/states/idle-state';
 import { TypingState } from '@/components/reflect/states/typing-state';
@@ -33,8 +37,14 @@ export const ReflectScreen = () => {
     handleRetry,
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
+  const context = useQuery(api.users.getFullContext);
   const { current, previous, isTransitioning, onOutgoingComplete } =
     useScreenTransition(state.screen);
+
+  useEffect(() => {
+    if (!context?.profile) return;
+    dispatch({ type: 'SET_USER_VARIANT', variant: computeUserVariant(context.profile) });
+  }, [context?.profile, dispatch]);
 
   if (isLoading) {
     return (
