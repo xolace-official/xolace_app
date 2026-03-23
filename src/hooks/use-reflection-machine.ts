@@ -41,6 +41,9 @@ function reducer(
         entryType: state.selectedTextures.length > 0 ? 'hybrid' : 'typed',
       };
 
+    case 'DISMISS_TYPING':
+      return { ...state, screen: 'idle', entryText: '' };
+
     case 'TEXT_CHANGE': {
       const entryType: EntryType =
         state.selectedTextures.length > 0 ? 'hybrid' : 'typed';
@@ -81,6 +84,9 @@ function reducer(
 
     case 'CLARIFY_TEXT_CHANGE':
       return { ...state, clarifyText: action.text };
+
+    case 'SET_USER_VARIANT':
+      return { ...state, userVariant: action.variant };
 
     case 'SESSION_ERROR':
       return { ...state, screen: 'error', errorMessage: action.message };

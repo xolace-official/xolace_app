@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { TextArea } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import * as Haptics from 'expo-haptics';
 import { AppText } from '@/components/shared/app-text';
 import { PresenceDot } from '@/components/reflect/presence-dot';
 import { PillButton } from '@/components/reflect/pill-button';
@@ -14,6 +15,7 @@ type Props = {
   entryText: string;
   dispatch: React.Dispatch<ReflectionAction>;
   onSubmit: () => void;
+  onDismiss: () => void;
   autoFocus?: boolean;
 };
 
@@ -23,7 +25,7 @@ const NUDGE_MESSAGES = [
   "You don't need to explain \u2014 just say what's there.",
 ];
 
-export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, autoFocus = true }: Props) => {
+export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismiss, autoFocus = true }: Props) => {
   const { resetTimer, clearTimer } = useTypingPause(
     () => dispatch({ type: 'PAUSE_TIMEOUT' }),
     8000,
@@ -53,6 +55,7 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, autoFocu
     <View className="flex-1">
       <KeyboardAvoidingView
         behavior="padding"
+        keyboardVerticalOffset={50}
         className="flex-1 px-6 pt-4"
       >
         <View className="flex-row items-center gap-2 pb-3">
@@ -62,6 +65,7 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, autoFocu
               key="nudge"
               entering={FadeInDown.springify().damping(20)}
               exiting={FadeOut.duration(200)}
+              className="flex-1"
             >
               <AppText className="text-sm text-foreground/40">
                 {nudgeMessage}
@@ -72,12 +76,27 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, autoFocu
               key="default"
               entering={FadeInDown.duration(200)}
               exiting={FadeOut.duration(200)}
+              className="flex-1"
             >
               <AppText className="text-sm text-foreground/40">
                 What&apos;s here right now?
               </AppText>
             </Animated.View>
           )}
+          <Pressable
+            onPress={() => {
+              if (process.env.EXPO_OS === 'ios') {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              onDismiss();
+            }}
+            hitSlop={12}
+            className="items-center justify-center rounded-full bg-foreground/8 p-1.5"
+          >
+            <AppText className="text-xs leading-none text-foreground/40">
+              ✕
+            </AppText>
+          </Pressable>
         </View>
 
         <View className="flex-1">

@@ -20,6 +20,7 @@ export type FeedbackType = 'not_quite' | 'say_more';
 
 export type ReflectionAction =
   | { type: 'TAP_INPUT' }
+  | { type: 'DISMISS_TYPING' }
   | { type: 'TEXT_CHANGE'; text: string }
   | { type: 'TOGGLE_TEXTURE'; word: string }
   | { type: 'SCAFFOLD_SUBMIT' }
@@ -31,6 +32,7 @@ export type ReflectionAction =
   | { type: 'NOT_QUITE' }
   | { type: 'SAY_MORE' }
   | { type: 'CLARIFY_TEXT_CHANGE'; text: string }
+  | { type: 'SET_USER_VARIANT'; variant: UserVariant }
   | { type: 'RESET' }
   | { type: 'SESSION_ERROR'; message: string }
   | { type: 'SESSION_RESUMED'; screen: ReflectionStateName; mirrorResponse?: string };
