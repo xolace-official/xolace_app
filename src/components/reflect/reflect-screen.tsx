@@ -67,6 +67,7 @@ export const ReflectScreen = () => {
             entryText={state.entryText}
             dispatch={dispatch}
             onSubmit={submitReflection}
+            onDismiss={() => dispatch({ type: 'DISMISS_TYPING' })}
             autoFocus={!isOutgoing}
           />
         );

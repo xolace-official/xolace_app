@@ -41,6 +41,9 @@ function reducer(
         entryType: state.selectedTextures.length > 0 ? 'hybrid' : 'typed',
       };
 
+    case 'DISMISS_TYPING':
+      return { ...state, screen: 'idle', entryText: '' };
+
     case 'TEXT_CHANGE': {
       const entryType: EntryType =
         state.selectedTextures.length > 0 ? 'hybrid' : 'typed';
