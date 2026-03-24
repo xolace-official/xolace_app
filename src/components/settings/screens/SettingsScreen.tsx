@@ -4,6 +4,7 @@ import { useToast } from "heroui-native";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsRow } from "@/components/settings/settings-row";
 import { ThemePickerDialog } from "@/components/settings/theme-picker-dialog";
+import { MirrorTonePickerDialog } from "@/components/settings/mirror-tone-picker-dialog";
 import { RetentionPickerDialog } from "@/components/settings/retention-picker-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { useSettings } from "@/hooks/use-settings";
@@ -51,6 +52,7 @@ const CONFIRM_CONFIG = {
 export const SettingsScreen = () => {
   const { toast } = useToast();
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
+  const [mirrorToneDialogOpen, setMirrorToneDialogOpen] = useState(false);
   const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [isConfirmLoading, setIsConfirmLoading] = useState(false);
@@ -66,6 +68,9 @@ export const SettingsScreen = () => {
     setGentleReminders,
     contributeAnonymously,
     setContributeAnonymously,
+    mirrorTone,
+    mirrorToneDisplay,
+    setMirrorTone,
     retention,
     retentionDisplay,
     setRetention,
@@ -134,6 +139,17 @@ export const SettingsScreen = () => {
             label="Reduced motion"
             isSelected={reducedMotion}
             onToggle={setReducedMotion}
+            isLast
+          />
+        </SettingsSection>
+
+        {/* ── MIRROR ─────────────────────────────────────────── */}
+        <SettingsSection title="Mirror">
+          <SettingsRow
+            variant="value"
+            label="Tone"
+            value={mirrorToneDisplay}
+            onPress={() => setMirrorToneDialogOpen(true)}
             isLast
           />
         </SettingsSection>
@@ -208,6 +224,14 @@ export const SettingsScreen = () => {
         onOpenChange={setThemeDialogOpen}
         currentMode={(storedTheme ?? "system") as ThemeMode}
         onSelect={setThemeMode}
+      />
+
+      {/* ── MIRROR TONE PICKER DIALOG ────────────────────────── */}
+      <MirrorTonePickerDialog
+        isOpen={mirrorToneDialogOpen}
+        onOpenChange={setMirrorToneDialogOpen}
+        currentTone={mirrorTone}
+        onSelect={setMirrorTone}
       />
 
       {/* ── RETENTION PICKER DIALOG ─────────────────────────── */}
