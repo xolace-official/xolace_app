@@ -67,6 +67,7 @@ export function useSession() {
   const submitFeedbackMutation = useMutation(api.sessionTurns.submitFeedback);
   const abandonMutation = useMutation(api.sessions.abandon);
   const retryMutation = useMutation(api.sessions.retrySession);
+  const recordEscalationResponseMutation = useMutation(api.escalation.recordUserResponse);
 
   // --- Derived state ---
   const turnsCount = turns?.length ?? 0;
@@ -192,6 +193,14 @@ export function useSession() {
     await retryMutation({ sessionId, rawText: lastRawText });
   }, [sessionId, lastRawText, retryMutation]);
 
+  const recordEscalationResponse = useCallback(
+    async (userResponse: 'engaged' | 'dismissed') => {
+      if (!sessionId) return;
+      await recordEscalationResponseMutation({ sessionId, userResponse });
+    },
+    [sessionId, recordEscalationResponseMutation],
+  );
+
   const resetSession = useCallback(() => {
     setLocalSessionId(null);
     setLastRawText(null);
@@ -213,6 +222,7 @@ export function useSession() {
     startPath,
     completePath,
     submitRefinement,
+    recordEscalationResponse,
     abandon,
     retry,
     resetSession,

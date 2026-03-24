@@ -16,6 +16,7 @@ import { MirrorState } from '@/components/reflect/states/mirror-state';
 import { ClarifyState } from '@/components/reflect/states/clarify-state';
 import { GaveUpState } from '@/components/reflect/states/gave-up-state';
 import { PathSelectionState } from '@/components/reflect/states/path-selection-state';
+import { EscalationState } from '@/components/reflect/states/escalation-state';
 import { ErrorState } from '@/components/reflect/states/error-state';
 
 export const ReflectScreen = () => {
@@ -30,6 +31,8 @@ export const ReflectScreen = () => {
     handleNotQuite,
     handleSayMore,
     handleGaveUpPathSelection,
+    handleEscalationEngage,
+    handleEscalationDismiss,
     handleSelectExit,
     handleSelectSolo,
     handleSelectPeers,
@@ -109,6 +112,14 @@ export const ReflectScreen = () => {
           <GaveUpState
             onPathSelection={handleGaveUpPathSelection}
             onReset={handleReset}
+          />
+        );
+      case 'escalation':
+        return (
+          <EscalationState
+            mirror={state.mirrorResponse}
+            onEngage={handleEscalationEngage}
+            onDismiss={handleEscalationDismiss}
           />
         );
       case 'path-selection':

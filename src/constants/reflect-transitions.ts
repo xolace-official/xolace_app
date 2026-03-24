@@ -75,5 +75,6 @@ export const SCREEN_TRANSITIONS: Record<ReflectionStateName, ScreenTransitionCon
   clarify: fade(400, 500),
   'gave-up': fade(600, 500),
   'path-selection': fade(600, 500),
+  escalation: fade(900, 600),
   error: fade(600, 500),
 };

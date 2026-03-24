@@ -73,6 +73,9 @@ function reducer(
     case 'MIRROR_RECEIVED':
       return { ...state, screen: 'mirror', mirrorResponse: action.mirror };
 
+    case 'ESCALATION_TRIGGERED':
+      return { ...state, screen: 'escalation', mirrorResponse: action.mirror };
+
     case 'THATS_IT':
       return { ...state, screen: 'path-selection' };
 
@@ -131,6 +134,7 @@ function reducer(
 export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const {
+    session,
     serverState,
     mirrorText,
     errorMessage,
@@ -140,6 +144,7 @@ export function useReflectionMachine() {
     confirmMirror,
     selectPath,
     submitRefinement,
+    recordEscalationResponse,
     abandon,
     retry,
     resetSession,
@@ -174,7 +179,11 @@ export function useReflectionMachine() {
         break;
       case 'mirror_delivered':
         if (mirrorText) {
-          dispatch({ type: 'MIRROR_RECEIVED', mirror: mirrorText });
+          if (session?.escalationTriggered) {
+            dispatch({ type: 'ESCALATION_TRIGGERED', mirror: mirrorText });
+          } else {
+            dispatch({ type: 'MIRROR_RECEIVED', mirror: mirrorText });
+          }
         }
         break;
       case 'confirmed':
@@ -196,7 +205,7 @@ export function useReflectionMachine() {
         dispatch({ type: 'RESET' });
         break;
     }
-  }, [serverState, mirrorText, errorMessage, state.screen, resetSession, clearRefs]);
+  }, [serverState, mirrorText, errorMessage, state.screen, session?.escalationTriggered, resetSession, clearRefs]);
 
   // Track freeze (typing-nudge = user paused)
   useEffect(() => {
@@ -361,6 +370,35 @@ export function useReflectionMachine() {
     }
   }, [selectPath]);
 
+  const handleEscalationEngage = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await recordEscalationResponse('engaged');
+      // TODO: transition to dedicated resources screen once built
+      await confirmMirror('confirmed');
+      dispatch({ type: 'THATS_IT' });
+    } catch (error) {
+      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
+    }
+  }, [recordEscalationResponse, confirmMirror]);
+
+  const handleEscalationDismiss = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      await recordEscalationResponse('dismissed');
+      await confirmMirror('confirmed');
+      dispatch({ type: 'THATS_IT' });
+    } catch (error) {
+      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
+    }
+  }, [recordEscalationResponse, confirmMirror]);
+
   const handleReset = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -397,6 +435,8 @@ export function useReflectionMachine() {
     handleNotQuite,
     handleSayMore,
     handleGaveUpPathSelection,
+    handleEscalationEngage,
+    handleEscalationDismiss,
     handleSelectExit,
     handleSelectSolo,
     handleSelectPeers,
