@@ -459,6 +459,7 @@ export const deliverMirror = internalMutation({
     sessionId: v.id("sessions"),
     mirrorText: v.string(),
     mirrorModelVersion: v.string(),
+    escalationTriggered: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
@@ -475,6 +476,7 @@ export const deliverMirror = internalMutation({
       state: "mirror_delivered",
       mirrorText: args.mirrorText,
       mirrorModelVersion: args.mirrorModelVersion,
+      ...(args.escalationTriggered ? { escalationTriggered: true } : {}),
       updatedAt: Date.now(),
     });
   },
