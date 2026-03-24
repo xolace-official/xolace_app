@@ -1,6 +1,41 @@
 import { v } from "convex/values";
 import { internalQuery } from "../_generated/server";
 
+/** Canonical return type of buildSessionContext. */
+export interface SessionContext {
+  session: Record<string, unknown>;
+  isFirstSession: boolean;
+  profile: {
+    sessionCount: number;
+    currentStreak: number;
+    dominantEmotionTags: string[];
+    averageSessionDuration?: number;
+    onboardingComplete: boolean;
+  };
+  preferences: {
+    mirrorTone: string;
+    reducedMotion: boolean;
+  } | null;
+  turns: Record<string, unknown>[];
+  recentSessions: {
+    state: string;
+    entryType: string;
+    timeOfDay?: string;
+    pathChosen?: string;
+    mirrorText?: string;
+    createdAt: number;
+  }[];
+  recentMetadata: {
+    primaryEmotion: string;
+    granularLabel?: string;
+    intensity: number;
+    thematicTags: string[];
+    userLanguageTags: string[];
+    temporalContext?: string;
+    riskFlag: boolean;
+  }[];
+}
+
 /**
  * Build the full context needed for AI processing of a session.
  * Loads session, turns, profile patterns, and preferences.
@@ -44,10 +79,12 @@ export const buildSessionContext = internalQuery({
       .order("desc")
       .take(10);
 
-    // Load recent emotional metadata
+    // Load recent emotional metadata (ordered by _creationTime desc)
+    // Using by_profile_theme index [emotionalProfileId] so .order("desc")
+    // sorts by _creationTime, not by primaryEmotion.
     const recentMetadata = await ctx.db
       .query("emotional_metadata")
-      .withIndex("by_profile_emotion", (q) =>
+      .withIndex("by_profile_theme", (q) =>
         q.eq("emotionalProfileId", profile._id)
       )
       .order("desc")
@@ -55,6 +92,7 @@ export const buildSessionContext = internalQuery({
 
     return {
       session,
+      isFirstSession: profile.sessionCount === 0,
       profile: {
         sessionCount: profile.sessionCount,
         currentStreak: profile.currentStreak,
@@ -77,6 +115,7 @@ export const buildSessionContext = internalQuery({
           entryType: s.entryType,
           timeOfDay: s.timeOfDay,
           pathChosen: s.pathChosen,
+          mirrorText: s.mirrorText,
           createdAt: s.createdAt,
         })),
       recentMetadata: recentMetadata.slice(0, 5).map((m) => ({
@@ -86,6 +125,7 @@ export const buildSessionContext = internalQuery({
         thematicTags: m.thematicTags,
         userLanguageTags: m.userLanguageTags,
         temporalContext: m.temporalContext,
+        riskFlag: m.riskFlag,
       })),
     };
   },

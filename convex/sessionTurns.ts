@@ -15,6 +15,7 @@ export const submitFeedback = mutation({
     sessionId: v.id("sessions"),
     userFeedback: userFeedbackValidator,
     userInputEncrypted: v.optional(v.string()),
+    additionalRawText: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
@@ -53,16 +54,12 @@ export const submitFeedback = mutation({
       updatedAt: now,
     });
 
-    // Schedule AI (mock for Phase 2, real in Phase 3)
-    await ctx.scheduler.runAfter(
-      2000,
-      internal.sessions.deliverMirror,
-      {
-        sessionId: args.sessionId,
-        mirrorText: "I hear you more clearly now. There's something deeper here, and I want you to know that matters.",
-        mirrorModelVersion: "mock-v1-refined",
-      }
-    );
+    // Schedule AI clarification
+    await ctx.scheduler.runAfter(0, internal.ai.clarify.handleClarification, {
+      sessionId: args.sessionId,
+      turnNumber,
+      additionalRawText: args.additionalRawText,
+    });
 
     return null;
   },

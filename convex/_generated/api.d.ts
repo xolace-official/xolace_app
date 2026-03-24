@@ -8,8 +8,15 @@
  * @module
  */
 
+import type * as ai_clarify from "../ai/clarify.js";
 import type * as ai_context from "../ai/context.js";
+import type * as ai_helpers_patternSummary from "../ai/helpers/patternSummary.js";
 import type * as ai_process from "../ai/process.js";
+import type * as ai_prompts_articulator from "../ai/prompts/articulator.js";
+import type * as ai_prompts_classifier from "../ai/prompts/classifier.js";
+import type * as ai_providers_anthropic from "../ai/providers/anthropic.js";
+import type * as ai_providers_moderation from "../ai/providers/moderation.js";
+import type * as ai_safeguard from "../ai/safeguard.js";
 import type * as consent from "../consent.js";
 import type * as crons from "../crons.js";
 import type * as emotionalMetadata from "../emotionalMetadata.js";
@@ -38,8 +45,15 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "ai/clarify": typeof ai_clarify;
   "ai/context": typeof ai_context;
+  "ai/helpers/patternSummary": typeof ai_helpers_patternSummary;
   "ai/process": typeof ai_process;
+  "ai/prompts/articulator": typeof ai_prompts_articulator;
+  "ai/prompts/classifier": typeof ai_prompts_classifier;
+  "ai/providers/anthropic": typeof ai_providers_anthropic;
+  "ai/providers/moderation": typeof ai_providers_moderation;
+  "ai/safeguard": typeof ai_safeguard;
   consent: typeof consent;
   crons: typeof crons;
   emotionalMetadata: typeof emotionalMetadata;

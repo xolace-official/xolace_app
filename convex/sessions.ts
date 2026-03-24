@@ -66,6 +66,7 @@ export const submitInput = mutation({
   args: {
     sessionId: v.id("sessions"),
     rawInputEncrypted: v.string(),
+    rawText: v.string(),
     rawInputLength: v.number(),
     inputDuration: v.optional(v.number()),
     freezeOccurred: v.boolean(),
@@ -92,16 +93,11 @@ export const submitInput = mutation({
       updatedAt: now.getTime(),
     });
 
-    // Schedule AI processing (mock for Phase 2, real in Phase 3)
-    await ctx.scheduler.runAfter(
-      2000, // 2s delay for mock AI
-      internal.sessions.deliverMirror,
-      {
-        sessionId: args.sessionId,
-        mirrorText: "I hear you. It sounds like something is weighing on you right now, and that's okay.",
-        mirrorModelVersion: "mock-v1",
-      }
-    );
+    // Schedule AI processing
+    await ctx.scheduler.runAfter(0, internal.ai.process.generateMirror, {
+      sessionId: args.sessionId,
+      rawText: args.rawText,
+    });
 
     return null;
   },
@@ -264,6 +260,7 @@ export const completeSession = mutation({
 export const retrySession = mutation({
   args: {
     sessionId: v.id("sessions"),
+    rawText: v.string(),
   },
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
@@ -278,16 +275,11 @@ export const retrySession = mutation({
       updatedAt: Date.now(),
     });
 
-    // Re-schedule AI processing (mock for Phase 2)
-    await ctx.scheduler.runAfter(
-      2000,
-      internal.sessions.deliverMirror,
-      {
-        sessionId: args.sessionId,
-        mirrorText: "I hear you. It sounds like something is weighing on you right now, and that's okay.",
-        mirrorModelVersion: "mock-v1",
-      }
-    );
+    // Re-schedule AI processing
+    await ctx.scheduler.runAfter(0, internal.ai.process.generateMirror, {
+      sessionId: args.sessionId,
+      rawText: args.rawText,
+    });
 
     return null;
   },
