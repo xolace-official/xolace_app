@@ -21,6 +21,7 @@ import {
   collectRecentMirrors,
 } from "./helpers/patternSummary";
 
+import type { SessionContext } from "./context";
 import type { ClassificationResult } from "./providers/anthropic";
 
 const FALLBACK_MIRROR =
@@ -40,41 +41,7 @@ export const generateMirror = internalAction({
   handler: async (ctx, args) => {
     try {
       // 1. Load full context (single DB transaction)
-      type ContextType = {
-        session: Record<string, unknown>;
-        isFirstSession: boolean;
-        profile: {
-          sessionCount: number;
-          currentStreak: number;
-          dominantEmotionTags: string[];
-          averageSessionDuration?: number;
-          onboardingComplete: boolean;
-        };
-        preferences: {
-          mirrorTone: string;
-          reducedMotion: boolean;
-        } | null;
-        turns: Record<string, unknown>[];
-        recentSessions: {
-          state: string;
-          entryType: string;
-          timeOfDay?: string;
-          pathChosen?: string;
-          mirrorText?: string;
-          createdAt: number;
-        }[];
-        recentMetadata: {
-          primaryEmotion: string;
-          granularLabel?: string;
-          intensity: number;
-          thematicTags: string[];
-          userLanguageTags: string[];
-          temporalContext?: string;
-          riskFlag: boolean;
-        }[];
-      };
-
-      const context: ContextType = await ctx.runQuery(
+      const context: SessionContext = await ctx.runQuery(
         internal.ai.context.buildSessionContext,
         { sessionId: args.sessionId }
       );

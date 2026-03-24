@@ -1,6 +1,41 @@
 import { v } from "convex/values";
 import { internalQuery } from "../_generated/server";
 
+/** Canonical return type of buildSessionContext. */
+export interface SessionContext {
+  session: Record<string, unknown>;
+  isFirstSession: boolean;
+  profile: {
+    sessionCount: number;
+    currentStreak: number;
+    dominantEmotionTags: string[];
+    averageSessionDuration?: number;
+    onboardingComplete: boolean;
+  };
+  preferences: {
+    mirrorTone: string;
+    reducedMotion: boolean;
+  } | null;
+  turns: Record<string, unknown>[];
+  recentSessions: {
+    state: string;
+    entryType: string;
+    timeOfDay?: string;
+    pathChosen?: string;
+    mirrorText?: string;
+    createdAt: number;
+  }[];
+  recentMetadata: {
+    primaryEmotion: string;
+    granularLabel?: string;
+    intensity: number;
+    thematicTags: string[];
+    userLanguageTags: string[];
+    temporalContext?: string;
+    riskFlag: boolean;
+  }[];
+}
+
 /**
  * Build the full context needed for AI processing of a session.
  * Loads session, turns, profile patterns, and preferences.

@@ -27,7 +27,7 @@ interface ArticulatorInput {
  *   - `rawInput`: the user's original text to be set as the `user` prompt.
  *   - `classification`: detected emotion metadata (primaryEmotion, primaryEmotionConfidence, secondaryEmotion, granularLabel, intensity, specificity, thematicTags, temporalContext) used in the system context.
  *   - `patternSummary`: a summary of observed conversational or emotional patterns to include in system context.
- *   - `safeguardLevel`: one of `gentle | elevated | crisis` controlling additional safety guidance.
+ *   - `safeguardLevel`: one of `none | gentle | elevated | crisis` controlling additional safety guidance.
  *   - `mirrorTone`: tone selection for the mirror (e.g., `poetic | gentle | direct | adaptive`).
  *   - `isFirstSession`: when true, adds a brief warm-but-not-patronizing note.
  *   - `recentMirrors`: array of recent mirror texts to list (used to avoid reusing metaphors/phrasing).

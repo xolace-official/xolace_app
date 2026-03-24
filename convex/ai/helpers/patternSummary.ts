@@ -47,6 +47,7 @@ interface PatternSummaryInput {
  *   - isFirstSession: when true returns a concise "first session" message instead of aggregated history
  *   - mirrorTone: the mirror tone string to append
  * @returns A single-line summary string describing sessions, dominant emotions, average intensity (out of 10), intensity trend when available, up to five themes, path preferences, and the mirror tone.
+ */
 export function buildPatternSummary(input: PatternSummaryInput): string {
   const { profile, recentMetadata, recentSessions, isFirstSession, mirrorTone } = input;
 
