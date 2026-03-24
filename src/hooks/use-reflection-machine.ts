@@ -207,7 +207,7 @@ export function useReflectionMachine() {
         dispatch({ type: 'RESET' });
         break;
     }
-  }, [serverState, mirrorText, errorMessage, state.screen, session?.escalationTriggered, resetSession, clearRefs]);
+  }, [serverState, mirrorText, errorMessage, state.screen, session, resetSession, clearRefs]);
 
   // Track freeze (typing-nudge = user paused)
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useToast } from "heroui-native";
 import { SettingsSection } from "@/components/settings/settings-section";
@@ -8,35 +8,8 @@ import { MirrorTonePickerDialog } from "@/components/settings/mirror-tone-picker
 import { RetentionPickerDialog } from "@/components/settings/retention-picker-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { useSettings } from "@/hooks/use-settings";
+import { useConfirmAction } from "@/hooks/use-confirm-action";
 import type { ThemeMode } from "@/hooks/use-settings";
-
-type ConfirmAction = "logout" | "deleteData" | "deleteAccount" | null;
-
-const CONFIRM_CONFIG = {
-  logout: {
-    title: "Log out",
-    description: "Are you sure you want to log out?",
-    confirmLabel: "Log out",
-    isDestructive: true,
-    showLoading: false,
-  },
-  deleteData: {
-    title: "Delete all my data",
-    description:
-      "This will permanently erase all your sessions, reflections, and emotional history. Your account and preferences will be kept. This action cannot be undone.",
-    confirmLabel: "Delete everything",
-    isDestructive: true,
-    showLoading: true,
-  },
-  deleteAccount: {
-    title: "Delete account",
-    description:
-      "This will permanently delete your account and all associated data. This action cannot be undone.",
-    confirmLabel: "Delete account",
-    isDestructive: true,
-    showLoading: true,
-  },
-} as const;
 
 /**
  * Settings screen — composes all preference sections.
@@ -54,8 +27,6 @@ export const SettingsScreen = () => {
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
   const [mirrorToneDialogOpen, setMirrorToneDialogOpen] = useState(false);
   const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
-  const [isConfirmLoading, setIsConfirmLoading] = useState(false);
 
   const {
     signInMethod,
@@ -79,35 +50,17 @@ export const SettingsScreen = () => {
     performDeleteAccount,
   } = useSettings();
 
-  const handleConfirm = useCallback(async () => {
-    if (!confirmAction) return;
-
-    const actions: Record<NonNullable<ConfirmAction>, () => Promise<void>> = {
-      logout: performLogout,
-      deleteData: performDeleteData,
-      deleteAccount: performDeleteAccount,
-    };
-
-    const config = CONFIRM_CONFIG[confirmAction];
-
-    try {
-      if (config.showLoading) {
-        setIsConfirmLoading(true);
-      }
-      await actions[confirmAction]();
-    } catch {
-      toast.show({
-        variant: "danger",
-        label: "Something went wrong",
-        description: "Please try again.",
-      });
-    } finally {
-      setIsConfirmLoading(false);
-      setConfirmAction(null);
-    }
-  }, [confirmAction, performLogout, performDeleteData, performDeleteAccount, toast]);
-
-  const activeConfig = confirmAction ? CONFIRM_CONFIG[confirmAction] : null;
+  const {
+    setConfirmAction,
+    isConfirmLoading,
+    activeConfig,
+    handleConfirm,
+  } = useConfirmAction({
+    performLogout,
+    performDeleteData,
+    performDeleteAccount,
+    toast,
+  });
 
   return (
     <>
@@ -244,7 +197,7 @@ export const SettingsScreen = () => {
 
       {/* ── CONFIRMATION DIALOG ──────────────────────────────── */}
       <ConfirmationDialog
-        isOpen={confirmAction !== null}
+        isOpen={activeConfig !== null}
         onOpenChange={(open) => {
           if (!open) setConfirmAction(null);
         }}
