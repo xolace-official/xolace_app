@@ -15,27 +15,19 @@ const TURN_RELEVANT_STATES = new Set([
 ]);
 
 /**
- * Manages client-side session state and provides data and action handlers for interacting with a session lifecycle.
+ * Maintain a client-side session identifier and expose server-backed session data, derived state, and actions to drive a session lifecycle.
  *
- * @returns An object exposing session state, derived values, and action creators:
- * - `sessionId`: current session id or `null` if none.
- * - `session`: full session record from the server or `undefined` while loading.
- * - `turns`: array of session turns when subscribed or `undefined` when skipped/loading.
- * - `turnsCount`: number of turns (0 if `turns` is not loaded).
- * - `serverState`: the session's state string or `null` if unavailable.
- * - `mirrorText`: mirror text from the session or `null` if unavailable.
- * - `errorMessage`: session error message or `null` if none.
- * - `isLoading`: `true` when an active session is being resolved locally, otherwise `false`.
- * - `initiateAndSubmit(rawText, entryType, inputDuration?, freezeOccurred?, freezeDuration?)`: starts a new session and submits initial input.
- * - `confirmMirror(confirmationState)`: confirm or refine the session mirror (`'confirmed' | 'refined' | 'gave_up'`).
- * - `completeAsExit()`: mark the current session as completed/exit.
- * - `selectPath(pathChosen)`: choose a path for the session (`'solo' | 'peers' | 'exit'`).
- * - `startPath(exerciseId?)`: start a chosen path, optionally for a specific exercise id.
- * - `completePath(pathCompleted, contributedReflection?)`: mark a path as completed and indicate if the user contributed reflection.
- * - `submitRefinement(userFeedback, userInputEncrypted?)`: submit refinement feedback (`'not_quite' | 'say_more'`) and optional encrypted input.
- * - `abandon()`: attempt to abandon the current session (best-effort; errors are ignored).
- * - `retry()`: retry the current session.
- * - `resetSession()`: clear the local session id to reset client session state.
+ * @returns An object with session identifiers and state (`sessionId`, `session`, `serverState`, `mirrorText`, `errorMessage`, `isLoading`), turn data (`turns`, `turnsCount`), and action creators for the session lifecycle:
+ * - `initiateAndSubmit(rawText, entryType, inputDuration?, freezeOccurred?, freezeDuration?)`
+ * - `confirmMirror(confirmationState)`
+ * - `completeAsExit()`
+ * - `selectPath(pathChosen)`
+ * - `startPath(exerciseId?)`
+ * - `completePath(pathCompleted, contributedReflection?)`
+ * - `submitRefinement(userFeedback, additionalRawText?)`
+ * - `abandon()`
+ * - `retry()`
+ * - `resetSession()`
  */
 export function useSession() {
   const [localSessionId, setLocalSessionId] = useState<Id<'sessions'> | null>(null);

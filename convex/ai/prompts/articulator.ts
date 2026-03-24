@@ -20,6 +20,22 @@ interface ArticulatorInput {
   additionalInput?: string;
 }
 
+/**
+ * Builds the system and user prompt texts for the "Sonnet" emotional mirror articulator.
+ *
+ * @param input - Structured input that configures prompt generation, including:
+ *   - `rawInput`: the user's original text to be set as the `user` prompt.
+ *   - `classification`: detected emotion metadata (primaryEmotion, primaryEmotionConfidence, secondaryEmotion, granularLabel, intensity, specificity, thematicTags, temporalContext) used in the system context.
+ *   - `patternSummary`: a summary of observed conversational or emotional patterns to include in system context.
+ *   - `safeguardLevel`: one of `gentle | elevated | crisis` controlling additional safety guidance.
+ *   - `mirrorTone`: tone selection for the mirror (e.g., `poetic | gentle | direct | adaptive`).
+ *   - `isFirstSession`: when true, adds a brief warm-but-not-patronizing note.
+ *   - `recentMirrors`: array of recent mirror texts to list (used to avoid reusing metaphors/phrasing).
+ *   - `inputDuration` (optional): writing duration in ms used to generate behavioral notes.
+ *   - `freezeOccurred` (optional): whether a significant pause/hesitation was detected.
+ *   - `existingMirror`, `userFeedback`, `additionalInput` (optional): used to build refinement context when revising a previous mirror.
+ * @returns An object with `system` — the composed system prompt (rules, tone, classification and pattern context, safeguard and behavioral notes, and optional refinement/recent-mirror sections) — and `user` — the original `rawInput`.
+ */
 export function buildArticulatorPrompt(
   input: ArticulatorInput
 ): { system: string; user: string } {
@@ -73,6 +89,12 @@ ${recentMirrors.length > 0 ? `\n## Recent Mirrors (do NOT reuse metaphors or phr
   return { system, user };
 }
 
+/**
+ * Provide tone-specific guidance text for composing a mirror response.
+ *
+ * @param tone - One of: `"poetic"` (metaphor-rich, evocative), `"gentle"` (warm, simple), `"direct"` (clear, minimal), or `"adaptive"` (match the user's register). Unknown values use the `"adaptive"` behavior.
+ * @returns The guidance string describing the desired register and an example phrasing for the specified tone.
+ */
 function getToneInstructions(tone: string): string {
   switch (tone) {
     case "poetic":
@@ -87,6 +109,12 @@ function getToneInstructions(tone: string): string {
   }
 }
 
+/**
+ * Produces an optional safety guidance block tailored to the specified safeguard level.
+ *
+ * @param level - One of: `"gentle"`, `"elevated"`, `"crisis"`, or any other string for no additional guidance
+ * @returns A formatted safety instruction string matching `level`, or an empty string when no guidance is required
+ */
 function getSafeguardInstructions(level: string): string {
   switch (level) {
     case "gentle":
@@ -100,6 +128,13 @@ function getSafeguardInstructions(level: string): string {
   }
 }
 
+/**
+ * Constructs an optional "Behavioral Signals" section when writing-speed or pause indicators are present.
+ *
+ * @param inputDuration - Total time in milliseconds the user took to compose the input; used to detect unusually fast or slow writing.
+ * @param freezeOccurred - Whether a significant pause or hesitation occurred before or during writing.
+ * @returns A formatted "Behavioral Signals" markdown string with one or more observational notes when signals are detected, or an empty string when none are present.
+ */
 function getBehaviorNotes(
   inputDuration?: number,
   freezeOccurred?: boolean
@@ -129,6 +164,18 @@ function getBehaviorNotes(
     : "";
 }
 
+/**
+ * Builds a refinement context block for a previous mirror to guide adjustments.
+ *
+ * When `userFeedback` is "not_quite", instructs the model to try a different angle/metaphor/emotional read.
+ * When `userFeedback` is "say_more", instructs the model to incorporate additional context.
+ * If `additionalInput` is provided, it is appended as quoted extra user input.
+ *
+ * @param existingMirror - The previous mirror text to include in the refinement section
+ * @param userFeedback - Optional feedback flag affecting refinement instructions; supported values: `"not_quite"` or `"say_more"`
+ * @param additionalInput - Optional additional user-provided text to append to the refinement context
+ * @returns A formatted refinement context string containing the previous mirror and any refinement instructions or additional input
+ */
 function buildRefinementContext(
   existingMirror: string,
   userFeedback?: string,

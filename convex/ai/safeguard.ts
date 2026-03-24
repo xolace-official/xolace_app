@@ -74,7 +74,14 @@ const HIGH_DISTRESS_EMOTIONS = new Set([
   "helplessness",
 ]);
 
-// --- Main Evaluation ---
+/**
+ * Determines the appropriate safeguard level and associated actions for a message by evaluating moderation signals, classification outputs, and recent session metadata.
+ *
+ * @param classification - Model-derived labels including intensity, primaryEmotion, granularLabel, and their confidences
+ * @param moderation - Content moderation categories and per-category scores
+ * @param recentMetadata - Recent session metadata entries (most recent first) used to detect pattern escalation across interactions
+ * @returns A SafeguardResult containing the decided `level`, optional `triggerType` and `triggerEvidence`, `triggerConfidence`, `actionTaken`, `resourcesPresented`, and `shouldReject` (with `rejectionReason` when applicable)
+ */
 
 export function evaluateSafeguard(
   classification: ClassificationResult,
@@ -108,7 +115,12 @@ export function evaluateSafeguard(
   };
 }
 
-// --- Rejection (skip LLM entirely) ---
+/**
+ * Checks moderation categories for policy violations that require immediate rejection.
+ *
+ * @param moderation - Moderation result containing `categories` and `categoryScores` used to detect disallowed content flags.
+ * @returns A `SafeguardResult` configured to reject the session with `rejectionReason` set to `"content_policy_violation"` when a disallowed category is detected; `null` if no rejection condition matches.
+ */
 
 function checkRejection(
   moderation: ModerationResult
@@ -140,7 +152,13 @@ function checkRejection(
   return null;
 }
 
-// --- Crisis Detection ---
+/**
+ * Determines whether the provided moderation scores and classification indicate crisis-level risk and, if so, constructs a corresponding crisis SafeguardResult.
+ *
+ * @param classification - The classification analysis containing intensity and emotion-related fields used for implicit risk checks.
+ * @param moderation - The moderation result containing category flags and numeric categoryScores used for explicit crisis detection.
+ * @returns A `SafeguardResult` with `level: "crisis"` (and `triggerType` set to either `"explicit_crisis_language"` or `"implicit_risk_language"`, `triggerConfidence`, `triggerEvidence`, `actionTaken: "crisis_line_presented"`, `resourcesPresented: CRISIS_RESOURCES`, and `shouldReject: false`) when crisis conditions match; `null` if no crisis conditions are detected.
+ */
 
 function checkCrisis(
   classification: ClassificationResult,
@@ -191,7 +209,14 @@ function checkCrisis(
   return null;
 }
 
-// --- Elevated Detection ---
+/**
+ * Determines whether the inputs indicate an elevated risk level and, if so, constructs a corresponding SafeguardResult.
+ *
+ * @param classification - Model-derived classification containing intensity, primaryEmotion, granularLabel, and confidence fields
+ * @param moderation - Moderation result with category scores used to detect self-harm signals
+ * @param recentMetadata - Recent per-session metadata entries used to detect pattern escalation (most recent first)
+ * @returns A `SafeguardResult` with `level: "elevated"` and appropriate trigger metadata when an elevated condition is detected, or `null` when no elevated conditions match.
+ */
 
 function checkElevated(
   classification: ClassificationResult,
@@ -254,7 +279,15 @@ function checkElevated(
   return null;
 }
 
-// --- Gentle Detection ---
+/**
+ * Detects lower-severity risk signals and returns a gentle-level safeguard result when a matching condition is found.
+ *
+ * Checks for (1) violence flagged by moderation without harassment and (2) a high-intensity classification combined with a distress emotion.
+ *
+ * @param classification - Classification result; uses `intensity`, `primaryEmotion`, optional `granularLabel`, and `primaryEmotionConfidence` to evaluate emotional distress.
+ * @param moderation - Moderation result; uses `categories.violence`, `categories.harassment`, and `categoryScores.violence` to evaluate content flags.
+ * @returns A `SafeguardResult` with `level: "gentle"` when a gentle condition matches, `null` otherwise.
+ */
 
 function checkGentle(
   classification: ClassificationResult,
@@ -288,7 +321,13 @@ function checkGentle(
   return null;
 }
 
-// --- Helpers ---
+/**
+ * Constructs a rejection SafeguardResult for policy-violating content.
+ *
+ * @param evidence - A human-readable evidence string explaining why the rejection was triggered
+ * @param reason - A short machine-readable code identifying the rejection reason
+ * @returns A `SafeguardResult` that signals the session should be rejected with `shouldReject: true`, `level: "none"`, `triggerConfidence: 1`, the provided `triggerEvidence`, `actionTaken: "session_redirected"`, and the given `rejectionReason`
+ */
 
 function makeRejection(evidence: string, reason: string): SafeguardResult {
   return {
@@ -302,6 +341,14 @@ function makeRejection(evidence: string, reason: string): SafeguardResult {
   };
 }
 
+/**
+ * Builds a dot-separated evidence string that summarizes selected moderation category scores and the classification context.
+ *
+ * @param moderation - Moderation result whose `categoryScores` are inspected; categories with scores greater than 0.01 are included.
+ * @param classification - Classification result whose `intensity` and `primaryEmotion` are appended to the evidence.
+ * @param relevantCategories - Array of moderation category keys to consider for inclusion in the evidence.
+ * @returns A dot-separated string containing `Moderation: <category> (<score>)` entries for included categories followed by `Classification: intensity <intensity>/10, <primaryEmotion>`, ending with a trailing period.
+ */
 function buildEvidence(
   moderation: ModerationResult,
   classification: ClassificationResult,
@@ -323,6 +370,12 @@ function buildEvidence(
   return parts.join(". ") + ".";
 }
 
+/**
+ * Format a numeric score as a two-decimal string.
+ *
+ * @param score - The numeric score to format; `undefined` is treated as `0`.
+ * @returns The value formatted with two decimal places (for example, `0.50`).
+ */
 function fmtScore(score: number | undefined): string {
   return (score ?? 0).toFixed(2);
 }

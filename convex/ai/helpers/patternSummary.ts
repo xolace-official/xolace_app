@@ -37,6 +37,16 @@ interface PatternSummaryInput {
   mirrorTone: string;
 }
 
+/**
+ * Builds a single-line human-readable summary of a user's profile, recent emotion patterns, recent path preferences, and mirror tone for inclusion in an LLM prompt.
+ *
+ * @param input - Object containing:
+ *   - profile: user profile stats (`sessionCount`, `currentStreak`, `dominantEmotionTags`)
+ *   - recentMetadata: recent emotion metadata entries (`primaryEmotion`, `intensity`, `thematicTags`)
+ *   - recentSessions: recent session entries (may include `pathChosen` and `mirrorText`)
+ *   - isFirstSession: when true returns a concise "first session" message instead of aggregated history
+ *   - mirrorTone: the mirror tone string to append
+ * @returns A single-line summary string describing sessions, dominant emotions, average intensity (out of 10), intensity trend when available, up to five themes, path preferences, and the mirror tone.
 export function buildPatternSummary(input: PatternSummaryInput): string {
   const { profile, recentMetadata, recentSessions, isFirstSession, mirrorTone } = input;
 
@@ -129,7 +139,10 @@ export function buildPatternSummary(input: PatternSummaryInput): string {
 }
 
 /**
- * Collect recent mirror texts for anti-repetition in the articulator.
+ * Collect up to the first three non-empty mirror texts from recent sessions to reduce repetition.
+ *
+ * @param recentSessions - Array of session entries to extract mirrorText from; entries without `mirrorText` are ignored.
+ * @returns An array of up to three mirror texts in the same order they appeared in `recentSessions`.
  */
 export function collectRecentMirrors(
   recentSessions: RecentSessionEntry[]
