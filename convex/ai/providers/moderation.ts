@@ -51,8 +51,11 @@ export const MODERATION_UNAVAILABLE: ModerationResult = {
 // --- API Call ---
 
 /**
- * Call OpenAI's free moderation endpoint.
- * Returns safe default on API failure (never blocks the pipeline).
+ * Obtains a moderation assessment for the provided text using OpenAI's moderation API.
+ *
+ * On error or when the API key is not set, returns `MODERATION_UNAVAILABLE` (which has `flagged: false`, all category flags set to `false`, and an empty `categoryScores`).
+ *
+ * @returns A `ModerationResult` with `flagged` indicating whether the text was flagged, `categories` containing all moderation category flags (any missing keys are set to `false`), and `categoryScores` mapping category names to numeric scores.
  */
 export async function moderateInput(text: string): Promise<ModerationResult> {
   const apiKey = process.env.OPENAI_API_KEY;

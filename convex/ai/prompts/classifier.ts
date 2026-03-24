@@ -1,6 +1,14 @@
 /**
- * Build the system + user prompt for Haiku emotion classification.
- * Returns structured JSON matching ClassificationResult.
+ * Construct the system and user prompts used for Haiku emotion classification.
+ *
+ * The system prompt enforces a strict JSON-only output schema, field definitions, classification guidelines,
+ * and includes the provided pattern summary; when `isFirstSession` is true an additional instruction
+ * advising more conservative confidence scores is appended. The user prompt is the raw input verbatim.
+ *
+ * @param rawInput - The user's raw emotional text to classify
+ * @param patternSummary - Background pattern/context to embed in the system prompt
+ * @param isFirstSession - If true, include guidance to be slightly more conservative with confidence
+ * @returns An object with `system` (the composed instruction prompt) and `user` (the raw user text)
  */
 
 export function buildClassifierPrompt(

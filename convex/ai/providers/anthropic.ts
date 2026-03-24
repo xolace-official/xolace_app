@@ -4,6 +4,11 @@ import Anthropic from "@anthropic-ai/sdk";
 
 let client: Anthropic | null = null;
 
+/**
+ * Get the module-level singleton Anthropic client, creating and caching it on first call.
+ *
+ * @returns The shared `Anthropic` client instance
+ */
 export function getAnthropicClient(): Anthropic {
   if (!client) {
     client = new Anthropic({
@@ -40,7 +45,10 @@ export interface ClassificationResult {
 // --- Helpers ---
 
 /**
- * Extract the text content from an Anthropic message response.
+ * Extract the first plain-text block from an Anthropic message's content.
+ *
+ * @param message - The Anthropic message to scan for a text block
+ * @returns The text of the first block whose `type` is `"text"`, or an empty string if no text block is found
  */
 export function extractTextFromResponse(
   message: Anthropic.Message
@@ -54,8 +62,17 @@ export function extractTextFromResponse(
 }
 
 /**
- * Parse a Haiku classification response into a typed result.
- * Validates required fields and fills safe defaults for missing optionals.
+ * Convert a raw Haiku classifier output string into a validated ClassificationResult.
+ *
+ * Accepts raw model output (optionally wrapped in Markdown JSON code fences), parses it, and produces a safe, normalized ClassificationResult:
+ * - `primaryEmotion` is lowercased or `"unclassified"` when missing/invalid.
+ * - `primaryEmotionConfidence` is coerced to a number, defaults to `0.3`, and is clamped to the range `[0, 1]`.
+ * - `intensity` and `specificity` are coerced to integers, default to `5`, and are clamped to the range `[1, 10]`.
+ * - `thematicTags` and `userLanguageTags` are filtered to string values only and truncated to at most 5 entries.
+ * - Optional `granularLabel` and `secondaryEmotion` are included only when non-empty strings (lowercased), and `temporalContext` is included only when it matches `past_focused`, `present_focused`, or `future_focused`.
+ *
+ * @param raw - The raw classifier output string; may include surrounding Markdown JSON code fences.
+ * @returns The normalized and validated ClassificationResult constructed from the parsed input.
  */
 export function parseClassificationResponse(
   raw: string
@@ -108,6 +125,14 @@ export function parseClassificationResponse(
   return result;
 }
 
+/**
+ * Clamp a number to an inclusive range.
+ *
+ * @param value - The number to constrain
+ * @param min - The inclusive lower bound
+ * @param max - The inclusive upper bound
+ * @returns The input value restricted to the inclusive range `[min, max]`
+ */
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
