@@ -54,16 +54,16 @@ export const generateMirror = internalAction({
           mirrorTone: string;
           reducedMotion: boolean;
         } | null;
-        turns: Array<Record<string, unknown>>;
-        recentSessions: Array<{
+        turns: Record<string, unknown>[];
+        recentSessions: {
           state: string;
           entryType: string;
           timeOfDay?: string;
           pathChosen?: string;
           mirrorText?: string;
           createdAt: number;
-        }>;
-        recentMetadata: Array<{
+        }[];
+        recentMetadata: {
           primaryEmotion: string;
           granularLabel?: string;
           intensity: number;
@@ -71,7 +71,7 @@ export const generateMirror = internalAction({
           userLanguageTags: string[];
           temporalContext?: string;
           riskFlag: boolean;
-        }>;
+        }[];
       };
 
       const context: ContextType = await ctx.runQuery(
