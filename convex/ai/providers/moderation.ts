@@ -82,7 +82,6 @@ export async function moderateInput(text: string): Promise<ModerationResult> {
     }
 
     const data = await response.json();
-    console.log("moderation ", data)
     const result = data.results?.[0];
 
     if (!result) {
