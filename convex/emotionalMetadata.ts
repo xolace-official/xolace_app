@@ -53,6 +53,22 @@ export const getBySession = query({
 });
 
 /**
+ * Get emotional metadata for a session (internal, no auth check).
+ * Used by AI actions that already verified session ownership.
+ */
+export const getBySessionInternal = internalQuery({
+  args: {
+    sessionId: v.id("sessions"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+  },
+});
+
+/**
  * Get recent emotional metadata for a profile (for AI context building).
  */
 export const getRecentByProfile = internalQuery({

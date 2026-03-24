@@ -39,6 +39,7 @@ const TURN_RELEVANT_STATES = new Set([
  */
 export function useSession() {
   const [localSessionId, setLocalSessionId] = useState<Id<'sessions'> | null>(null);
+  const [lastRawText, setLastRawText] = useState<string | null>(null);
 
   // Derive sessionId: prefer explicitly-set local ID, fall back to server active session
   const activeSession = useQuery(
@@ -97,12 +98,14 @@ export function useSession() {
         entryType: serverEntryType,
       });
       setLocalSessionId(newSessionId);
+      setLastRawText(rawText);
 
       try {
         // TODO: encrypt rawText before submission
         await submitInputMutation({
           sessionId: newSessionId,
-          rawInputEncrypted: rawText,
+          rawInputEncrypted: rawText, // TODO: replace with encrypted version
+          rawText,
           rawInputLength: rawText.length,
           inputDuration,
           freezeOccurred,
@@ -169,14 +172,15 @@ export function useSession() {
   const submitRefinement = useCallback(
     async (
       userFeedback: 'not_quite' | 'say_more',
-      userInputEncrypted?: string,
+      additionalRawText?: string,
     ) => {
       if (!sessionId) return;
-      // TODO: encrypt userInputEncrypted before submission
+      // TODO: encrypt additionalRawText before submission
       await submitFeedbackMutation({
         sessionId,
         userFeedback,
-        userInputEncrypted,
+        userInputEncrypted: additionalRawText, // TODO: replace with encrypted version
+        additionalRawText,
       });
     },
     [sessionId, submitFeedbackMutation],
@@ -192,12 +196,13 @@ export function useSession() {
   }, [sessionId, abandonMutation]);
 
   const retry = useCallback(async () => {
-    if (!sessionId) return;
-    await retryMutation({ sessionId });
-  }, [sessionId, retryMutation]);
+    if (!sessionId || !lastRawText) return;
+    await retryMutation({ sessionId, rawText: lastRawText });
+  }, [sessionId, lastRawText, retryMutation]);
 
   const resetSession = useCallback(() => {
     setLocalSessionId(null);
+    setLastRawText(null);
   }, []);
 
   return {

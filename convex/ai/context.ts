@@ -44,10 +44,12 @@ export const buildSessionContext = internalQuery({
       .order("desc")
       .take(10);
 
-    // Load recent emotional metadata
+    // Load recent emotional metadata (ordered by _creationTime desc)
+    // Using by_profile_theme index [emotionalProfileId] so .order("desc")
+    // sorts by _creationTime, not by primaryEmotion.
     const recentMetadata = await ctx.db
       .query("emotional_metadata")
-      .withIndex("by_profile_emotion", (q) =>
+      .withIndex("by_profile_theme", (q) =>
         q.eq("emotionalProfileId", profile._id)
       )
       .order("desc")
@@ -55,6 +57,7 @@ export const buildSessionContext = internalQuery({
 
     return {
       session,
+      isFirstSession: profile.sessionCount === 0,
       profile: {
         sessionCount: profile.sessionCount,
         currentStreak: profile.currentStreak,
@@ -77,6 +80,7 @@ export const buildSessionContext = internalQuery({
           entryType: s.entryType,
           timeOfDay: s.timeOfDay,
           pathChosen: s.pathChosen,
+          mirrorText: s.mirrorText,
           createdAt: s.createdAt,
         })),
       recentMetadata: recentMetadata.slice(0, 5).map((m) => ({
@@ -86,6 +90,7 @@ export const buildSessionContext = internalQuery({
         thematicTags: m.thematicTags,
         userLanguageTags: m.userLanguageTags,
         temporalContext: m.temporalContext,
+        riskFlag: m.riskFlag,
       })),
     };
   },
