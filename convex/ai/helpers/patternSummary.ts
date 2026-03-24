@@ -88,10 +88,11 @@ export function buildPatternSummary(input: PatternSummaryInput): string {
       lines.push(`Themes: ${[...allThemes].slice(0, 5).join(", ")}.`);
     }
 
-    // Intensity trend
-    if (recentMetadata.length >= 3) {
-      const recent = recentMetadata.slice(0, 3).map((m) => m.intensity);
-      const older = recentMetadata.slice(-3).map((m) => m.intensity);
+    // Intensity trend (non-overlapping windows)
+    if (recentMetadata.length >= 4) {
+      const windowSize = Math.floor(recentMetadata.length / 2);
+      const recent = recentMetadata.slice(0, windowSize).map((m) => m.intensity);
+      const older = recentMetadata.slice(-windowSize).map((m) => m.intensity);
       const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
       const olderAvg = older.reduce((a, b) => a + b, 0) / older.length;
       const delta = recentAvg - olderAvg;
