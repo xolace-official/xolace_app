@@ -1,6 +1,25 @@
 import { v } from "convex/values";
-import { internalAction } from "../_generated/server";
+import { internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
+
+/**
+ * Load session + its metadata for anonymization.
+ * Queries metadata by sessionId (1:1) to avoid picking up a different session's data.
+ */
+export const loadSessionForAnonymize = internalQuery({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) return null;
+
+    const metadata = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+
+    return { session, metadata };
+  },
+});
 
 /**
  * Contribute a session's distilled reflection into the anonymous pool.
@@ -14,28 +33,21 @@ export const anonymize = internalAction({
     sessionId: v.id("sessions"),
   },
   handler: async (ctx, args) => {
-    const context = await ctx.runQuery(
-      internal.ai.context.buildSessionContext,
+    const result = await ctx.runQuery(
+      internal.jobs.reflectionAnonymizer.loadSessionForAnonymize,
       { sessionId: args.sessionId }
     );
+    if (!result) return;
 
-    const session = context.session as {
-      distilledText?: string;
-      mirrorText?: string;
-      [key: string]: unknown;
-    };
+    const { session, metadata } = result;
+    if (!metadata) return;
 
     // Prefer distilled text (first-person, voice-preserving)
     // Fall back to mirror text (second-person, AI voice)
-    const displayText = session.distilledText ?? session.mirrorText;
-    if (!displayText) {
-      return;
-    }
-
-    const metadata = context.recentMetadata[0];
-    if (!metadata) {
-      return;
-    }
+    const displayText =
+      (session as { distilledText?: string }).distilledText ??
+      (session as { mirrorText?: string }).mirrorText;
+    if (!displayText) return;
 
     await ctx.runMutation(internal.reflections.contribute, {
       displayText,

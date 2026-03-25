@@ -269,10 +269,11 @@ function checkElevated(
   // cause every new session (even happy ones) to escalate.
   if (recentMetadata.length >= 3) {
     const now = Date.now();
-    const riskCount = recentMetadata
+    const windowSessions = recentMetadata
       .slice(0, 5)
-      .filter((m) => m.riskFlag && (now - m.createdAt) < PATTERN_WINDOW_MS)
-      .length;
+      .filter((m) => (now - m.createdAt) < PATTERN_WINDOW_MS);
+    const windowCount = windowSessions.length;
+    const riskCount = windowSessions.filter((m) => m.riskFlag).length;
 
     const currentEmotion =
       classification.granularLabel ?? classification.primaryEmotion;
@@ -282,8 +283,8 @@ function checkElevated(
       return {
         level: "elevated",
         triggerType: "pattern_escalation",
-        triggerConfidence: riskCount / 5,
-        triggerEvidence: `Pattern: ${riskCount} of last ${Math.min(recentMetadata.length, 5)} sessions had risk flags. Current intensity: ${classification.intensity}/10.`,
+        triggerConfidence: windowCount > 0 ? riskCount / windowCount : 0,
+        triggerEvidence: `Pattern: ${riskCount} of last ${windowCount} sessions within 48 hours had risk flags. Current intensity: ${classification.intensity}/10.`,
         actionTaken: "resources_shown",
         resourcesPresented: SUPPORT_RESOURCES,
         shouldReject: false,
