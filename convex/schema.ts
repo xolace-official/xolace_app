@@ -368,6 +368,11 @@ export default defineSchema({
     // If "peers" — did they contribute their reflection.
     contributedReflection: v.optional(v.boolean()),
 
+    // AI-distilled first-person anonymous reflection.
+    // Generated speculatively after mirror delivery.
+    // Shown to user at contribution prompt for consent.
+    distilledText: v.optional(v.string()),
+
     // --- Safety ---
 
     // Whether this session triggered escalation.

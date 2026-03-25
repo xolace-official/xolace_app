@@ -195,7 +195,26 @@ export const generateMirror = internalAction({
           safeguard.triggerType !== "pattern_escalation",
       });
 
-      // 9. Create escalation event if needed
+      // 9. Schedule speculative distillation (for reflection pool)
+      //    Skip if mirror is the fallback — nothing meaningful to distill.
+      if (mirrorText !== FALLBACK_MIRROR) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.jobs.reflectionDistiller.distill,
+          {
+            sessionId: args.sessionId,
+            rawText: args.rawText,
+            mirrorText,
+            primaryEmotion: classification.primaryEmotion,
+            granularLabel: classification.granularLabel,
+            intensity: classification.intensity,
+            thematicTags: classification.thematicTags,
+            userLanguageTags: classification.userLanguageTags,
+          }
+        );
+      }
+
+      // 10. Create escalation event if needed
       if (
         (safeguard.level === "crisis" || safeguard.level === "elevated") &&
         safeguard.triggerType

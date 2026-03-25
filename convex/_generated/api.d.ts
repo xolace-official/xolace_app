@@ -14,6 +14,7 @@ import type * as ai_helpers_patternSummary from "../ai/helpers/patternSummary.js
 import type * as ai_process from "../ai/process.js";
 import type * as ai_prompts_articulator from "../ai/prompts/articulator.js";
 import type * as ai_prompts_classifier from "../ai/prompts/classifier.js";
+import type * as ai_prompts_distiller from "../ai/prompts/distiller.js";
 import type * as ai_providers_anthropic from "../ai/providers/anthropic.js";
 import type * as ai_providers_moderation from "../ai/providers/moderation.js";
 import type * as ai_safeguard from "../ai/safeguard.js";
@@ -27,6 +28,7 @@ import type * as jobs_dataRetention from "../jobs/dataRetention.js";
 import type * as jobs_dataWipe from "../jobs/dataWipe.js";
 import type * as jobs_profileStats from "../jobs/profileStats.js";
 import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js";
+import type * as jobs_reflectionDistiller from "../jobs/reflectionDistiller.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_timeOfDay from "../lib/timeOfDay.js";
 import type * as lib_validators from "../lib/validators.js";
@@ -51,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   "ai/process": typeof ai_process;
   "ai/prompts/articulator": typeof ai_prompts_articulator;
   "ai/prompts/classifier": typeof ai_prompts_classifier;
+  "ai/prompts/distiller": typeof ai_prompts_distiller;
   "ai/providers/anthropic": typeof ai_providers_anthropic;
   "ai/providers/moderation": typeof ai_providers_moderation;
   "ai/safeguard": typeof ai_safeguard;
@@ -64,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/dataWipe": typeof jobs_dataWipe;
   "jobs/profileStats": typeof jobs_profileStats;
   "jobs/reflectionAnonymizer": typeof jobs_reflectionAnonymizer;
+  "jobs/reflectionDistiller": typeof jobs_reflectionDistiller;
   "lib/auth": typeof lib_auth;
   "lib/timeOfDay": typeof lib_timeOfDay;
   "lib/validators": typeof lib_validators;

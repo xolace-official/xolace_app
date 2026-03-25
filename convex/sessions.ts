@@ -505,6 +505,30 @@ export const failSession = internalMutation({
 });
 
 /**
+ * Store the AI-distilled reflection text on a session.
+ * Called speculatively after mirror delivery — the distillation
+ * runs in the background so it's ready by contribution time.
+ */
+export const storeDistilledText = internalMutation({
+  args: {
+    sessionId: v.id("sessions"),
+    distilledText: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) return;
+
+    // Only store if session hasn't been abandoned/completed already
+    if (session.state === "completed" || session.state === "abandoned") return;
+
+    await ctx.db.patch(args.sessionId, {
+      distilledText: args.distilledText,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/**
  * Mark stale non-terminal sessions as abandoned.
  * Called by cron every 15 minutes.
  */

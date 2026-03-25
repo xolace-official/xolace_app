@@ -6,13 +6,14 @@ import { TimelineIcon } from '@/components/reflect/timeline-icon';
 import { ContributedConfirmation } from '@/components/session-end/contributed-confirmation';
 
 type Props = {
+  distilledText: string | null;
   onDismiss: (contributedReflection?: boolean) => void;
   onHaveMore: (contributedReflection?: boolean) => void;
 };
 
 const MOODS = ['lighter', 'same', 'heavier', 'unsure'] as const;
 
-export const ActivityVariant = ({ onDismiss, onHaveMore }: Props) => {
+export const ActivityVariant = ({ distilledText, onDismiss, onHaveMore }: Props) => {
   const [phase, setPhase] = useState<'main' | 'contributed'>('main');
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
 
@@ -38,7 +39,7 @@ export const ActivityVariant = ({ onDismiss, onHaveMore }: Props) => {
         entering={FadeInDown.delay(300).duration(400)}
         className="my-6 border-t border-border pt-5"
       >
-        <AppText className="mb-3 text-xs font-light text-foreground/20">
+        <AppText className="mb-3 text-xs font-light text-muted">
           How do you feel now?
         </AppText>
         <View className="flex-row gap-4">
@@ -71,10 +72,16 @@ export const ActivityVariant = ({ onDismiss, onHaveMore }: Props) => {
         entering={FadeInDown.delay(500).duration(400)}
         className="mb-8 border-t border-border pt-6"
       >
-        <AppText className="mb-4 text-sm font-light leading-6 text-foreground/40">
-          What you shared today — would you{'\n'}want it to exist anonymously
-          for someone{'\n'}who might feel the same?
+        <AppText className="mb-3 text-sm font-light leading-6 text-muted">
+          Would you want this to exist{'\n'}anonymously for someone who{'\n'}might feel the same?
         </AppText>
+        {distilledText && (
+          <View className="mb-4 rounded-xl border border-border/60 bg-surface/50 px-4 py-3">
+            <AppText className="text-sm font-light italic leading-6 text-foreground/60">
+              {`"${distilledText}"`}
+            </AppText>
+          </View>
+        )}
         <View className="flex-row gap-3">
           <Pressable
             onPress={() => setPhase('contributed')}
@@ -97,7 +104,7 @@ export const ActivityVariant = ({ onDismiss, onHaveMore }: Props) => {
 
       <Animated.View entering={FadeIn.delay(700).duration(400)}>
         <Pressable onPress={() => onHaveMore()} hitSlop={8}>
-          <AppText className="text-sm font-light text-foreground/20">
+          <AppText className="text-sm font-light text-foreground/30">
             Have more? I&apos;m here.
           </AppText>
         </Pressable>

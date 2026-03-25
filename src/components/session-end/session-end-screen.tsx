@@ -12,7 +12,7 @@ type Props = {
 
 export const SessionEndScreen = ({ path }: Props) => {
   const insets = useSafeAreaInsets();
-  const { isLoading, dismiss, haveMore } = useSessionEnd();
+  const { isLoading, distilledText, dismiss, haveMore } = useSessionEnd();
 
   if (isLoading) {
     return (
@@ -33,7 +33,11 @@ export const SessionEndScreen = ({ path }: Props) => {
       {path === 'exit' ? (
         <ExitVariant onHaveMore={() => haveMore()} />
       ) : (
-        <ActivityVariant onDismiss={dismiss} onHaveMore={haveMore} />
+        <ActivityVariant
+          distilledText={distilledText}
+          onDismiss={dismiss}
+          onHaveMore={haveMore}
+        />
       )}
     </View>
   );

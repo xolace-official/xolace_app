@@ -11,7 +11,7 @@ import { usePathSession } from '@/hooks/use-path-session';
  */
 export function useSessionEnd() {
   const router = useRouter();
-  const { sessionId, isLoading, completePath } = usePathSession();
+  const { sessionId, session, isLoading, completePath } = usePathSession();
   const busyRef = useRef(false);
   const navigatedRef = useRef(false);
 
@@ -50,5 +50,8 @@ export function useSessionEnd() {
     [completePath, navigateHome],
   );
 
-  return { sessionId, isLoading, dismiss, haveMore };
+  const distilledText = (session as { distilledText?: string } | undefined)
+    ?.distilledText ?? null;
+
+  return { sessionId, isLoading, distilledText, dismiss, haveMore };
 }
