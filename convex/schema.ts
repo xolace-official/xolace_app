@@ -227,8 +227,9 @@ export default defineSchema({
 
     // --- Privacy ---
 
-    // Skip the "share anonymously?" prompt and auto-contribute.
-    autoContributeReflections: v.boolean(),
+    // Pre-select "share anonymously" at session end.
+    // User still sees the distilled text and can untoggle.
+    contributeByDefault: v.boolean(),
 
     // How long to keep session data before auto-purge.
     // "indefinite" is default. Gives users explicit control.
@@ -367,6 +368,11 @@ export default defineSchema({
 
     // If "peers" — did they contribute their reflection.
     contributedReflection: v.optional(v.boolean()),
+
+    // AI-distilled first-person anonymous reflection.
+    // Generated speculatively after mirror delivery.
+    // Shown to user at contribution prompt for consent.
+    distilledText: v.optional(v.string()),
 
     // --- Safety ---
 

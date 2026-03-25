@@ -38,6 +38,7 @@ interface RecentMetadataEntry {
   primaryEmotion: string;
   intensity: number;
   riskFlag?: boolean;
+  createdAt: number;
 }
 
 // --- Resources ---
@@ -52,6 +53,10 @@ const SUPPORT_RESOURCES = [
   "If you need support, help is available.",
   "SAMHSA National Helpline: 1-800-662-4357 (free, confidential, 24/7)",
 ];
+
+// --- Time window for pattern escalation (48 hours) ---
+
+const PATTERN_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 // --- Emotions that signal distress at high intensity ---
 
@@ -116,15 +121,16 @@ export function evaluateSafeguard(
 }
 
 /**
- * Checks moderation categories for policy violations that require immediate rejection.
+ * Detects moderation categories that require immediate session rejection.
  *
- * @param moderation - Moderation result containing `categories` and `categoryScores` used to detect disallowed content flags.
- * @returns A `SafeguardResult` configured to reject the session with `rejectionReason` set to `"content_policy_violation"` when a disallowed category is detected; `null` if no rejection condition matches.
+ * @param moderation - Moderation result with `categories` and `categoryScores` used to identify disallowed content flags.
+ * @returns A `SafeguardResult` configured to reject the session with `rejectionReason` set to `"content_policy_violation"` when a disallowed category is detected, `null` otherwise.
  */
 
 function checkRejection(
   moderation: ModerationResult
 ): SafeguardResult | null {
+  console.log("moderation result ", moderation)
   const cats = moderation.categories;
   const scores = moderation.categoryScores;
 
@@ -258,17 +264,27 @@ function checkElevated(
   }
 
   // Pattern escalation: 3+ of last 5 sessions had riskFlag
+  // Only triggers if the CURRENT input also shows distress signals —
+  // prevents a self-reinforcing loop where historical risk flags
+  // cause every new session (even happy ones) to escalate.
   if (recentMetadata.length >= 3) {
-    const riskCount = recentMetadata
+    const now = Date.now();
+    const windowSessions = recentMetadata
       .slice(0, 5)
-      .filter((m) => m.riskFlag).length;
+      .filter((m) => (now - m.createdAt) < PATTERN_WINDOW_MS);
+    const windowCount = windowSessions.length;
+    const riskCount = windowSessions.filter((m) => m.riskFlag).length;
 
-    if (riskCount >= 3) {
+    const currentEmotion =
+      classification.granularLabel ?? classification.primaryEmotion;
+    const currentShowsDistress = DISTRESS_EMOTIONS.has(currentEmotion);
+
+    if (riskCount >= 3 && currentShowsDistress) {
       return {
         level: "elevated",
         triggerType: "pattern_escalation",
-        triggerConfidence: riskCount / 5,
-        triggerEvidence: `Pattern: ${riskCount} of last ${Math.min(recentMetadata.length, 5)} sessions had risk flags. Current intensity: ${classification.intensity}/10.`,
+        triggerConfidence: windowCount > 0 ? riskCount / windowCount : 0,
+        triggerEvidence: `Pattern: ${riskCount} of last ${windowCount} sessions within 48 hours had risk flags. Current intensity: ${classification.intensity}/10.`,
         actionTaken: "resources_shown",
         resourcesPresented: SUPPORT_RESOURCES,
         shouldReject: false,

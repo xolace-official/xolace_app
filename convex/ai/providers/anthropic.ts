@@ -28,6 +28,9 @@ export const CLASSIFIER_VERSION = "classifier-v1-haiku-4.5";
 export const ARTICULATOR_MODEL = "claude-sonnet-4-6";
 export const ARTICULATOR_VERSION = "articulator-v1-sonnet-4.6";
 
+export const DISTILLER_MODEL = "claude-haiku-4-5-20251001";
+export const DISTILLER_VERSION = "distiller-v1-haiku-4.5";
+
 // --- Types ---
 
 export interface ClassificationResult {

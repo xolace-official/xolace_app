@@ -4,7 +4,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Expo Forge Starter — a TypeScript-first Expo + Expo Router + Uniwind + HeroUI Native starter kit. The `default` branch is Expo Go-compatible; the `main` branch adds auth (Clerk), backend (Convex), and more batteries.
+#### 1. What Xolace Is
+
+Xolace is an emotional processing app/infrastructure. Not a chatbot. Not a social network. Not therapy.
+
+People open Xolace when they feel something they can't name — heavy, anxious, numb, confused — but not "bad enough" for therapy. The app asks one question: "What's here right now?" The user writes whatever is true (or taps texture words if they can't find words). An AI reads what they expressed and mirrors it back with more precision than they could find themselves — 1-3 sentences that make them think "yes, exactly, that's what I'm feeling." Then they choose: sit with a short guided exercise, see that strangers have felt something similar, or simply close the app knowing they were heard.
+
+#### Core Thesis
+
+There is a massive gap between "Everything is fine" (social media performance mode) and "I need therapy" (clinical intervention). Most people live in that gap. Xolace exists in that gap as **emotional processing infrastructure** — the daily layer of mental wellness.
+
+#### What It Is NOT
+
+- Not a chatbot (no chat bubbles, no conversation threads, no back-and-forth)
+- Not a social app (no feed, no profiles, no followers, no public content)
+- Not a wellness app with forced positivity (no gamification, no streak guilt)
+- Not clinical (no diagnoses, no therapeutic terminology)
+- Not an AI companion/relationship (no parasocial attachment by design)
+
+#### The Metaphor
+
+A digital campfire. You sit by the fire alone. The flames help you see what you're carrying. Sometimes you hear quiet voices from others in the darkness — strangers who feel what you feel. The fire is the AI. It illuminates and warms but is not a participant. It's infrastructure.
 
 ## Commands
 

@@ -1,43 +1,53 @@
-"use node";
-
 import { v } from "convex/values";
-import { internalAction } from "../_generated/server";
+import { internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
 
 /**
- * Anonymize a session's mirror text into a pool reflection.
+ * Load session + its metadata for anonymization.
+ * Queries metadata by sessionId (1:1) to avoid picking up a different session's data.
+ */
+export const loadSessionForAnonymize = internalQuery({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) return null;
+
+    const metadata = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+
+    return { session, metadata };
+  },
+});
+
+/**
+ * Contribute a session's distilled reflection into the anonymous pool.
  * Called after session completion when user chose to contribute.
  *
- * TODO Phase 3b: Use AI to distill the mirror into an anonymized
- * reflection that captures emotional essence without identifying details.
- * For now, uses the mirror text directly (which is already AI-generated
- * and should not contain identifying information).
+ * Uses the pre-generated distilledText (voice-preserving, first-person).
+ * Falls back to mirrorText if distillation wasn't generated or returned NULL.
  */
 export const anonymize = internalAction({
   args: {
     sessionId: v.id("sessions"),
   },
   handler: async (ctx, args) => {
-    // Load session and metadata
-    const context = await ctx.runQuery(
-      internal.ai.context.buildSessionContext,
+    const result = await ctx.runQuery(
+      internal.jobs.reflectionAnonymizer.loadSessionForAnonymize,
       { sessionId: args.sessionId }
     );
+    if (!result) return;
 
-    const session = context.session;
-    if (!session.mirrorText) {
-      return;
-    }
+    const { session, metadata } = result;
+    if (!metadata) return;
 
-    // Load emotional metadata for classification data
-    const metadata = context.recentMetadata[0]; // Most recent = this session's
-    if (!metadata) {
-      return;
-    }
-
-    // TODO: Use AI to distill mirror text into anonymized reflection
-    // For now, use mirror text directly
-    const displayText = session.mirrorText;
+    // Prefer distilled text (first-person, voice-preserving)
+    // Fall back to mirror text (second-person, AI voice)
+    const displayText =
+      (session as { distilledText?: string }).distilledText ??
+      (session as { mirrorText?: string }).mirrorText;
+    if (!displayText) return;
 
     await ctx.runMutation(internal.reflections.contribute, {
       displayText,
