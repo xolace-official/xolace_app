@@ -121,10 +121,10 @@ export function evaluateSafeguard(
 }
 
 /**
- * Checks moderation categories for policy violations that require immediate rejection.
+ * Detects moderation categories that require immediate session rejection.
  *
- * @param moderation - Moderation result containing `categories` and `categoryScores` used to detect disallowed content flags.
- * @returns A `SafeguardResult` configured to reject the session with `rejectionReason` set to `"content_policy_violation"` when a disallowed category is detected; `null` if no rejection condition matches.
+ * @param moderation - Moderation result with `categories` and `categoryScores` used to identify disallowed content flags.
+ * @returns A `SafeguardResult` configured to reject the session with `rejectionReason` set to `"content_policy_violation"` when a disallowed category is detected, `null` otherwise.
  */
 
 function checkRejection(
