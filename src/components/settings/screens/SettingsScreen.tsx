@@ -29,6 +29,7 @@ export const SettingsScreen = () => {
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
   const [mirrorToneDialogOpen, setMirrorToneDialogOpen] = useState(false);
   const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
+  const [replayIntroOpen, setReplayIntroOpen] = useState(false);
 
   const {
     signInMethod,
@@ -98,7 +99,7 @@ export const SettingsScreen = () => {
           <SettingsRow
             variant="chevron"
             label="Replay intro"
-            onPress={() => setIntroSeen(false)}
+            onPress={() => setReplayIntroOpen(true)}
             isLast
           />
         </SettingsSection>
@@ -200,6 +201,19 @@ export const SettingsScreen = () => {
         onOpenChange={setRetentionDialogOpen}
         currentValue={retention}
         onSelect={setRetention}
+      />
+
+      {/* ── REPLAY INTRO DIALOG ──────────────────────────────── */}
+      <ConfirmationDialog
+        isOpen={replayIntroOpen}
+        onOpenChange={setReplayIntroOpen}
+        title="Replay intro?"
+        description="You'll be taken back to the opening screens."
+        confirmLabel="Replay"
+        onConfirm={() => {
+          setReplayIntroOpen(false);
+          setIntroSeen(false);
+        }}
       />
 
       {/* ── CONFIRMATION DIALOG ──────────────────────────────── */}
