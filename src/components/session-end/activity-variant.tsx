@@ -79,78 +79,78 @@ export const ActivityVariant = ({
         </View>
       </Animated.View>
 
-      {/* Contribution prompt */}
-      <Animated.View
-        entering={FadeInDown.delay(500).duration(400)}
-        className="mb-8 border-t border-border pt-6"
-      >
-        <AppText className="mb-3 text-sm font-light leading-6 text-muted">
-          Would you want this to exist{'\n'}anonymously for someone who{'\n'}might feel the same?
-        </AppText>
-        {distilledText && (
+      {/* Contribution prompt — only when there's something to share */}
+      {distilledText ? (
+        <Animated.View
+          entering={FadeInDown.delay(500).duration(400)}
+          className="mb-8 border-t border-border pt-6"
+        >
+          <AppText className="mb-3 text-sm font-light leading-6 text-muted">
+            Would you want this to exist{'\n'}anonymously for someone who{'\n'}might feel the same?
+          </AppText>
           <View className="mb-4 rounded-xl border border-border/60 bg-surface/50 px-4 py-3">
             <AppText className="text-sm font-light italic leading-6 text-foreground/60">
               {`"${distilledText}"`}
             </AppText>
           </View>
-        )}
 
-        {contributeByDefault ? (
-          /* Toggle mode: pre-selected, one-tap confirm */
-          <View className="flex-row items-center gap-3">
-            <Pressable
-              onPress={() => setShareToggled((v) => !v)}
-              className={`rounded-full border px-5 py-2.5 ${
-                shareToggled
-                  ? 'border-accent/30 bg-accent/10'
-                  : 'border-border'
-              }`}
-            >
-              <AppText
-                className={`text-sm ${
-                  shareToggled ? 'text-accent' : 'text-foreground/40'
+          {contributeByDefault ? (
+            /* Toggle mode: pre-selected, one-tap confirm */
+            <View className="flex-row items-center gap-3">
+              <Pressable
+                onPress={() => setShareToggled((v) => !v)}
+                className={`rounded-full border px-5 py-2.5 ${
+                  shareToggled
+                    ? 'border-accent/30 bg-accent/10'
+                    : 'border-border'
                 }`}
               >
-                Share anonymously
-              </AppText>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                if (shareToggled) {
-                  setPhase('contributed');
-                } else {
-                  onDismiss(false);
-                }
-              }}
-              className="rounded-full border border-border px-5 py-2.5"
-            >
-              <AppText className="text-sm text-foreground/40">
-                Done
-              </AppText>
-            </Pressable>
-          </View>
-        ) : (
-          /* Default mode: explicit choice */
-          <View className="flex-row gap-3">
-            <Pressable
-              onPress={() => setPhase('contributed')}
-              className="rounded-full border border-accent/30 bg-accent/10 px-5 py-2.5"
-            >
-              <AppText className="text-sm text-accent">
-                Yes, anonymously
-              </AppText>
-            </Pressable>
-            <Pressable
-              onPress={() => onDismiss(false)}
-              className="rounded-full border border-border px-5 py-2.5"
-            >
-              <AppText className="text-sm text-foreground/20">
-                Not this time
-              </AppText>
-            </Pressable>
-          </View>
-        )}
-      </Animated.View>
+                <AppText
+                  className={`text-sm ${
+                    shareToggled ? 'text-accent' : 'text-foreground/40'
+                  }`}
+                >
+                  Share anonymously
+                </AppText>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  if (shareToggled) {
+                    setPhase('contributed');
+                  } else {
+                    onDismiss(false);
+                  }
+                }}
+                className="rounded-full border border-border px-5 py-2.5"
+              >
+                <AppText className="text-sm text-foreground/40">
+                  Done
+                </AppText>
+              </Pressable>
+            </View>
+          ) : (
+            /* Default mode: explicit choice */
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setPhase('contributed')}
+                className="rounded-full border border-accent/30 bg-accent/10 px-5 py-2.5"
+              >
+                <AppText className="text-sm text-accent">
+                  Yes, anonymously
+                </AppText>
+              </Pressable>
+              <Pressable
+                onPress={() => onDismiss(false)}
+                className="rounded-full border border-border px-5 py-2.5"
+              >
+                <AppText className="text-sm text-foreground/20">
+                  Not this time
+                </AppText>
+              </Pressable>
+            </View>
+          )}
+        </Animated.View>
+      ): null}
 
       <Animated.View entering={FadeIn.delay(700).duration(400)}>
         <Pressable onPress={() => onHaveMore()} hitSlop={8}>
