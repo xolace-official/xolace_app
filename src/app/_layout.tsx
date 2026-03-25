@@ -19,31 +19,29 @@ import {
 } from '@expo-google-fonts/space-grotesk';
 
 import { RootProvider } from '@/providers/root-provider';
-import { useAuth } from '@clerk/expo';
+import { useAppStore } from '@/store/store';
 
 SplashScreen.preventAutoHideAsync();
 
 const AppContent = () => {
-    const isOnboarded = true;
+  const introSeen = useAppStore((s) => s.introSeen);
+  const hasHydrated = useAppStore((s) => s._hasHydrated);
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-  const { isSignedIn } = useAuth();
-  
-  console.log("isAuthenticated", isAuthenticated, "isSignedIn", isSignedIn)
 
-    if (isAuthLoading) return null;
+  if (isAuthLoading || !hasHydrated) return null;
   return (
         <Stack
       screenOptions={{
         headerShown: false,
       }}
     >
-      <Stack.Protected guard={!isOnboarded}>
+      <Stack.Protected guard={!introSeen}>
         <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
       </Stack.Protected>
-      <Stack.Protected guard={isOnboarded && !isAuthenticated}>
+      <Stack.Protected guard={introSeen && !isAuthenticated}>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack.Protected>
-      <Stack.Protected guard={isOnboarded && isAuthenticated}>
+      <Stack.Protected guard={introSeen && isAuthenticated}>
         <Stack.Screen name="(protected)" options={{ headerShown: false }} />
       </Stack.Protected>
 

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-// import { useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
+import { useAppStore } from '@/store/store';
 import { AppText } from '@/components/shared/app-text';
 import { EmberOrb } from '@/components/onboarding/ember-orb';
 import { StepReveal } from '@/components/onboarding/step-reveal';
@@ -13,7 +14,8 @@ import { FRAME_STEPS } from '@/constants/frame-steps';
 export const FrameScreen = () => {
   const [phase, setPhase] = useState<0 | 1 | 2>(0);
   const insets = useSafeAreaInsets();
-//   const router = useRouter();
+  const setIntroSeen = useAppStore((s) => s.setIntroSeen);
+  const router = useRouter();
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(1), 1700);
@@ -28,7 +30,8 @@ export const FrameScreen = () => {
     if (process.env.EXPO_OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    // TODO: navigate to auth screen
+    setIntroSeen(true);
+    router.replace('/(auth)/auth');
   };
 
   return (

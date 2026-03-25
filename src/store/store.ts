@@ -53,12 +53,17 @@ type PrefLocalSlice = {
   resetToggles: () => void;
 };
 
+type OnboardingSlice = {
+  introSeen: boolean;
+  setIntroSeen: (v: boolean) => void;
+};
+
 type HydrationSlice = {
   _hasHydrated: boolean;
   _setHasHydrated: (v: boolean) => void;
 };
 
-export type AppState = AuthSlice & ThemeSlice & ProfileLocalSlice & PrefLocalSlice & HydrationSlice;
+export type AppState = AuthSlice & ThemeSlice & ProfileLocalSlice & PrefLocalSlice & OnboardingSlice & HydrationSlice;
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -119,6 +124,10 @@ export const useAppStore = create<AppState>()(
         isSavingProfileDraft: false,
         setIsSavingProfileDraft: (v) => set({ isSavingProfileDraft: v }),
 
+        // ONBOARDING (persisted)
+        introSeen: false,
+        setIntroSeen: (v) => set({ introSeen: v }),
+
         // PREFS (persisted)
         toggles: {},
         setToggle: (key, value) => set((s) => ({ toggles: { ...s.toggles, [key]: value } })),
@@ -135,6 +144,7 @@ export const useAppStore = create<AppState>()(
           // Persist only safe UX bits
           theme: s.theme,
           toggles: s.toggles,
+          introSeen: s.introSeen,
         }),
         onRehydrateStorage: () => (state) => {
           state?._setHasHydrated?.(true);
