@@ -56,7 +56,7 @@ export const getOrCreate = mutation({
         milestone: false,
       },
       mirrorTone: "adaptive",
-      autoContributeReflections: false,
+      contributeByDefault: false,
       dataRetentionPreference: "indefinite",
       preferredInputType: "text",
     });

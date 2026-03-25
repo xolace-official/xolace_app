@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { AppText } from '@/components/shared/app-text';
@@ -7,15 +7,27 @@ import { ContributedConfirmation } from '@/components/session-end/contributed-co
 
 type Props = {
   distilledText: string | null;
+  contributeByDefault: boolean;
   onDismiss: (contributedReflection?: boolean) => void;
   onHaveMore: (contributedReflection?: boolean) => void;
 };
 
 const MOODS = ['lighter', 'same', 'heavier', 'unsure'] as const;
 
-export const ActivityVariant = ({ distilledText, onDismiss, onHaveMore }: Props) => {
+export const ActivityVariant = ({
+  distilledText,
+  contributeByDefault,
+  onDismiss,
+  onHaveMore,
+}: Props) => {
   const [phase, setPhase] = useState<'main' | 'contributed'>('main');
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [shareToggled, setShareToggled] = useState(contributeByDefault);
+
+  // Sync when the async preference loads after initial render
+  useEffect(() => {
+    setShareToggled(contributeByDefault);
+  }, [contributeByDefault]);
 
   if (phase === 'contributed') {
     return (
@@ -82,24 +94,62 @@ export const ActivityVariant = ({ distilledText, onDismiss, onHaveMore }: Props)
             </AppText>
           </View>
         )}
-        <View className="flex-row gap-3">
-          <Pressable
-            onPress={() => setPhase('contributed')}
-            className="rounded-full border border-accent/30 bg-accent/10 px-5 py-2.5"
-          >
-            <AppText className="text-sm text-accent">
-              Yes, anonymously
-            </AppText>
-          </Pressable>
-          <Pressable
-            onPress={() => onDismiss(false)}
-            className="rounded-full border border-border px-5 py-2.5"
-          >
-            <AppText className="text-sm text-foreground/20">
-              Not this time
-            </AppText>
-          </Pressable>
-        </View>
+
+        {contributeByDefault ? (
+          /* Toggle mode: pre-selected, one-tap confirm */
+          <View className="flex-row items-center gap-3">
+            <Pressable
+              onPress={() => setShareToggled((v) => !v)}
+              className={`rounded-full border px-5 py-2.5 ${
+                shareToggled
+                  ? 'border-accent/30 bg-accent/10'
+                  : 'border-border'
+              }`}
+            >
+              <AppText
+                className={`text-sm ${
+                  shareToggled ? 'text-accent' : 'text-foreground/40'
+                }`}
+              >
+                Share anonymously
+              </AppText>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                if (shareToggled) {
+                  setPhase('contributed');
+                } else {
+                  onDismiss(false);
+                }
+              }}
+              className="rounded-full border border-border px-5 py-2.5"
+            >
+              <AppText className="text-sm text-foreground/40">
+                Done
+              </AppText>
+            </Pressable>
+          </View>
+        ) : (
+          /* Default mode: explicit choice */
+          <View className="flex-row gap-3">
+            <Pressable
+              onPress={() => setPhase('contributed')}
+              className="rounded-full border border-accent/30 bg-accent/10 px-5 py-2.5"
+            >
+              <AppText className="text-sm text-accent">
+                Yes, anonymously
+              </AppText>
+            </Pressable>
+            <Pressable
+              onPress={() => onDismiss(false)}
+              className="rounded-full border border-border px-5 py-2.5"
+            >
+              <AppText className="text-sm text-foreground/20">
+                Not this time
+              </AppText>
+            </Pressable>
+          </View>
+        )}
       </Animated.View>
 
       <Animated.View entering={FadeIn.delay(700).duration(400)}>

@@ -1,5 +1,7 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { usePathSession } from '@/hooks/use-path-session';
 
 /**
@@ -12,6 +14,7 @@ import { usePathSession } from '@/hooks/use-path-session';
 export function useSessionEnd() {
   const router = useRouter();
   const { sessionId, session, isLoading, completePath } = usePathSession();
+  const contributeByDefaultQuery = useQuery(api.preferences.getContributeByDefault);
   const busyRef = useRef(false);
   const navigatedRef = useRef(false);
 
@@ -52,6 +55,7 @@ export function useSessionEnd() {
 
   const distilledText = (session as { distilledText?: string } | undefined)
     ?.distilledText ?? null;
+  const contributeByDefault = contributeByDefaultQuery ?? false;
 
-  return { sessionId, isLoading, distilledText, dismiss, haveMore };
+  return { sessionId, isLoading, distilledText, contributeByDefault, dismiss, haveMore };
 }

@@ -84,7 +84,7 @@ export const useSettings = () => {
   const reducedMotion = preferences?.reducedMotion ?? false;
   const gentleReminders = preferences?.notifications?.gentleReturn ?? false;
   const contributeAnonymously =
-    preferences?.autoContributeReflections ?? false;
+    preferences?.contributeByDefault ?? false;
 
   const setReducedMotion = useCallback(
     (v: boolean) => {
@@ -110,7 +110,7 @@ export const useSettings = () => {
 
   const setContributeAnonymously = useCallback(
     (v: boolean) => {
-      updatePreferences({ autoContributeReflections: v });
+      updatePreferences({ contributeByDefault: v });
     },
     [updatePreferences],
   );

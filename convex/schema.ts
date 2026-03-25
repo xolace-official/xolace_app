@@ -227,8 +227,9 @@ export default defineSchema({
 
     // --- Privacy ---
 
-    // Skip the "share anonymously?" prompt and auto-contribute.
-    autoContributeReflections: v.boolean(),
+    // Pre-select "share anonymously" at session end.
+    // User still sees the distilled text and can untoggle.
+    contributeByDefault: v.boolean(),
 
     // How long to keep session data before auto-purge.
     // "indefinite" is default. Gives users explicit control.

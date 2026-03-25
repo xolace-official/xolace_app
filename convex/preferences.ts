@@ -27,6 +27,26 @@ export const get = query({
 });
 
 /**
+ * Whether the user has "share by default" enabled.
+ * Narrow query to avoid re-renders from unrelated preference changes.
+ */
+export const getContributeByDefault = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", profile._id)
+      )
+      .unique();
+
+    return preferences?.contributeByDefault ?? false;
+  },
+});
+
+/**
  * Partial update of preferences. All fields optional.
  */
 export const update = mutation({
@@ -44,7 +64,7 @@ export const update = mutation({
       })
     ),
     mirrorTone: v.optional(mirrorToneValidator),
-    autoContributeReflections: v.optional(v.boolean()),
+    contributeByDefault: v.optional(v.boolean()),
     dataRetentionPreference: v.optional(
       v.union(
         v.literal("indefinite"),
@@ -76,8 +96,8 @@ export const update = mutation({
     if (args.reducedMotion !== undefined) patch.reducedMotion = args.reducedMotion;
     if (args.notifications !== undefined) patch.notifications = args.notifications;
     if (args.mirrorTone !== undefined) patch.mirrorTone = args.mirrorTone;
-    if (args.autoContributeReflections !== undefined)
-      patch.autoContributeReflections = args.autoContributeReflections;
+    if (args.contributeByDefault !== undefined)
+      patch.contributeByDefault = args.contributeByDefault;
     if (args.dataRetentionPreference !== undefined)
       patch.dataRetentionPreference = args.dataRetentionPreference;
     if (args.preferredInputType !== undefined)

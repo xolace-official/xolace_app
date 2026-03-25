@@ -122,7 +122,7 @@ export const SettingsScreen = () => {
         <SettingsSection title="Reflection Pool">
           <SettingsRow
             variant="toggle"
-            label="Contribute anonymously"
+            label="Share by default"
             isSelected={contributeAnonymously}
             onToggle={setContributeAnonymously}
             isLast
