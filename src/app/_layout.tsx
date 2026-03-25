@@ -25,10 +25,9 @@ SplashScreen.preventAutoHideAsync();
 
 const AppContent = () => {
   const introSeen = useAppStore((s) => s.introSeen);
-  const hasHydrated = useAppStore((s) => s._hasHydrated);
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
 
-  if (isAuthLoading || !hasHydrated) return null;
+  if (isAuthLoading) return null;
   return (
         <Stack
       screenOptions={{

@@ -20,4 +20,9 @@ export const FRAME_STEPS: FrameStep[] = [
     action: 'Just clarity',
     detail: 'a quiet mirror for your own thoughts',
   },
+  {
+    id: 'humanity',
+    action: 'Find Humanity',
+    detail: 'Genuine human connection',
+  },
 ];
