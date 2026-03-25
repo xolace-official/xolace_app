@@ -5,11 +5,21 @@ import { api } from '../../convex/_generated/api';
 import { usePathSession } from '@/hooks/use-path-session';
 
 /**
- * Encapsulates session completion logic for the session-end screen.
+ * Prepare and expose session completion and navigation utilities for the session-end screen.
  *
- * Provides `dismiss` and `haveMore` callbacks that complete the active session
- * (optionally recording a contribution) then navigate back to the home screen.
- * Automatically navigates back if no active session is found after loading.
+ * Exposes `dismiss` and `haveMore` callbacks that complete the active session (optionally recording
+ * whether the user contributed a reflection) and then navigate to the home screen. Automatically
+ * navigates home if loading finishes with no active session. Also provides the active `sessionId`,
+ * a loading flag, the session's distilled text (or `null`), and the user's `contributeByDefault`
+ * preference (defaults to `false` while the preference is unavailable).
+ *
+ * @returns An object containing:
+ * - `sessionId` — the current session identifier, if any
+ * - `isLoading` — `true` while session data is loading
+ * - `distilledText` — the session's distilled text, or `null` if unavailable
+ * - `contributeByDefault` — whether contributions are enabled by default (defaults to `false`)
+ * - `dismiss` — callback accepting an optional `contributedReflection` boolean to complete the session and navigate home
+ * - `haveMore` — callback accepting an optional `contributedReflection` boolean to complete the session and navigate home
  */
 export function useSessionEnd() {
   const router = useRouter();
