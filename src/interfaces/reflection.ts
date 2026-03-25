@@ -12,6 +12,7 @@ export type ReflectionStateName =
   | 'clarify'
   | 'gave-up'
   | 'path-selection'
+  | 'escalation'
   | 'error';
 
 export type EntryType = 'typed' | 'scaffold' | 'hybrid';
@@ -35,7 +36,8 @@ export type ReflectionAction =
   | { type: 'SET_USER_VARIANT'; variant: UserVariant }
   | { type: 'RESET' }
   | { type: 'SESSION_ERROR'; message: string }
-  | { type: 'SESSION_RESUMED'; screen: ReflectionStateName; mirrorResponse?: string };
+  | { type: 'SESSION_RESUMED'; screen: ReflectionStateName; mirrorResponse?: string }
+  | { type: 'ESCALATION_TRIGGERED'; mirror: string };
 
 export interface ReflectionState {
   screen: ReflectionStateName;

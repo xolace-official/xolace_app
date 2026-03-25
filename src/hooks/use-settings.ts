@@ -4,6 +4,7 @@ import { Uniwind, useUniwind } from "uniwind";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { RetentionOption } from "@/components/settings/retention-picker-dialog";
+import type { MirrorTone } from "@/components/settings/mirror-tone-picker-dialog";
 import { useAppStore } from "@/store/store";
 import { useAppTheme } from "@/context/app-theme-context";
 
@@ -114,6 +115,20 @@ export const useSettings = () => {
     [updatePreferences],
   );
 
+  // ─── Mirror tone ───────────────────────────────────────────────────
+  const mirrorTone: MirrorTone = preferences?.mirrorTone ?? "adaptive";
+
+  const mirrorToneDisplay = useMemo(() => {
+    return mirrorTone.charAt(0).toUpperCase() + mirrorTone.slice(1);
+  }, [mirrorTone]);
+
+  const setMirrorTone = useCallback(
+    (tone: MirrorTone) => {
+      updatePreferences({ mirrorTone: tone });
+    },
+    [updatePreferences],
+  );
+
   // ─── Data retention ──────────────────────────────────────────────────
   const retention: RetentionOption =
     preferences?.dataRetentionPreference ?? "indefinite";
@@ -169,6 +184,11 @@ export const useSettings = () => {
     setGentleReminders,
     contributeAnonymously,
     setContributeAnonymously,
+
+    // Mirror tone
+    mirrorTone,
+    mirrorToneDisplay,
+    setMirrorTone,
 
     // Data retention
     retention,

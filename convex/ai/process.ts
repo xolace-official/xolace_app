@@ -153,11 +153,17 @@ export const generateMirror = internalAction({
         mirrorText = FALLBACK_MIRROR;
       }
 
-      // 7. Deliver mirror
+      // 7. Deliver mirror (include escalation flag atomically so the
+      //    client sees both state and escalationTriggered in one update)
+      const isEscalation =
+        (safeguard.level === "crisis" || safeguard.level === "elevated") &&
+        !!safeguard.triggerType;
+
       await ctx.runMutation(internal.sessions.deliverMirror, {
         sessionId: args.sessionId,
         mirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
+        ...(isEscalation ? { escalationTriggered: true } : {}),
       });
 
       // 8. Store emotional metadata

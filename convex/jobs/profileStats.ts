@@ -34,13 +34,27 @@ export const updateAfterSession = internalMutation({
       }
     }
 
-    // Update streak (reset if last session was > 48h ago)
+    // Update streak: +1 per calendar day, reset after 48h gap
     const STREAK_WINDOW_MS = 48 * 60 * 60 * 1000;
     let newStreak = profile.currentStreak;
-    if (profile.lastSessionAt && now - profile.lastSessionAt > STREAK_WINDOW_MS) {
-      newStreak = 1; // Reset
+    if (!profile.lastSessionAt) {
+      // First ever session
+      newStreak = 1;
+    } else if (now - profile.lastSessionAt > STREAK_WINDOW_MS) {
+      // Been away too long — reset
+      newStreak = 1;
     } else {
-      newStreak = profile.currentStreak + 1;
+      // Only increment if last session was on a different calendar day (UTC)
+      const lastDate = new Date(profile.lastSessionAt);
+      const nowDate = new Date(now);
+      const sameDay =
+        lastDate.getUTCFullYear() === nowDate.getUTCFullYear() &&
+        lastDate.getUTCMonth() === nowDate.getUTCMonth() &&
+        lastDate.getUTCDate() === nowDate.getUTCDate();
+      if (!sameDay) {
+        newStreak = profile.currentStreak + 1;
+      }
+      // else: same day, streak stays the same
     }
 
     // Update dominant emotion tags from recent metadata
