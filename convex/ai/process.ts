@@ -55,6 +55,7 @@ export const generateMirror = internalAction({
         isFirstSession: context.isFirstSession,
         mirrorTone,
       });
+      console.log("pattern Summary ", patternSummary)
 
       // 3. Parallel: moderation + classification
       const anthropic = getAnthropicClient();
@@ -64,6 +65,7 @@ export const generateMirror = internalAction({
         patternSummary,
         context.isFirstSession
       );
+      console.log("classifier prompt ", classifierPrompt)
 
       const [moderationResult, classificationResponse] = await Promise.all([
         moderateInput(args.rawText),
@@ -108,6 +110,7 @@ export const generateMirror = internalAction({
         moderationResult,
         context.recentMetadata
       );
+      console.log("safeguard ", safeguard)
 
       // 5a. If content should be rejected, fail the session
       if (safeguard.shouldReject) {
@@ -188,7 +191,8 @@ export const generateMirror = internalAction({
         userLanguageTags: classification.userLanguageTags,
         temporalContext: classification.temporalContext,
         riskFlag:
-          safeguard.level === "crisis" || safeguard.level === "elevated",
+          (safeguard.level === "crisis" || safeguard.level === "elevated") &&
+          safeguard.triggerType !== "pattern_escalation",
       });
 
       // 9. Create escalation event if needed

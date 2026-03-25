@@ -36,7 +36,7 @@ export const EscalationState = ({ mirror, onEngage, onDismiss }: Props) => {
       >
         <AppText className="mb-3 text-base font-light leading-7 text-foreground">
           I hear you. What you&apos;re carrying right now sounds really heavy
-          &mdash; heavier than a regular tough day.
+          heavier than a regular tough day.
         </AppText>
         <AppText className="text-base font-light leading-7 text-foreground/50">
           There are people who are trained specifically for moments like this.

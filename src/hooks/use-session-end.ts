@@ -18,11 +18,7 @@ export function useSessionEnd() {
   const navigateHome = useCallback(() => {
     if (navigatedRef.current) return;
     navigatedRef.current = true;
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/');
-    }
+    router.replace('/');
   }, [router]);
 
   // Guard: if no active session after loading (e.g. session abandoned externally)

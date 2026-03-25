@@ -33,6 +33,7 @@ export interface SessionContext {
     userLanguageTags: string[];
     temporalContext?: string;
     riskFlag: boolean;
+    createdAt: number;
   }[];
 }
 
@@ -126,6 +127,7 @@ export const buildSessionContext = internalQuery({
         userLanguageTags: m.userLanguageTags,
         temporalContext: m.temporalContext,
         riskFlag: m.riskFlag,
+        createdAt: m.createdAt,
       })),
     };
   },

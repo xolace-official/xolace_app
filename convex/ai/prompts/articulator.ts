@@ -67,7 +67,7 @@ export function buildArticulatorPrompt(
 - Never offer advice, suggestions, coping strategies, or next steps.
 - Never ask questions.
 - Use second person ("you") naturally.
-- Respond with ONLY the mirror text. No labels, no JSON, no preamble.
+- Respond with ONLY the mirror text. No labels, no JSON, no preamble, no &mdash; (-) in text.
 
 ## Tone
 ${toneInstructions}

@@ -31,6 +31,13 @@ export const PeerReflectionScreen = () => {
     }
   }, [sessionId, session, startPath]);
 
+  // Guard: no active session (e.g. completed or abandoned externally)
+  useEffect(() => {
+    if (!isLoading && !sessionId) {
+      router.replace('/');
+    }
+  }, [isLoading, sessionId, router]);
+
   // Try matching reflections for this session
   const matchedReflections = useQuery(
     api.reflections.matchForSession,

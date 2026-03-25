@@ -38,6 +38,7 @@ interface RecentMetadataEntry {
   primaryEmotion: string;
   intensity: number;
   riskFlag?: boolean;
+  createdAt: number;
 }
 
 // --- Resources ---
@@ -52,6 +53,10 @@ const SUPPORT_RESOURCES = [
   "If you need support, help is available.",
   "SAMHSA National Helpline: 1-800-662-4357 (free, confidential, 24/7)",
 ];
+
+// --- Time window for pattern escalation (48 hours) ---
+
+const PATTERN_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 // --- Emotions that signal distress at high intensity ---
 
@@ -125,6 +130,7 @@ export function evaluateSafeguard(
 function checkRejection(
   moderation: ModerationResult
 ): SafeguardResult | null {
+  console.log("moderation result ", moderation)
   const cats = moderation.categories;
   const scores = moderation.categoryScores;
 
@@ -258,12 +264,21 @@ function checkElevated(
   }
 
   // Pattern escalation: 3+ of last 5 sessions had riskFlag
+  // Only triggers if the CURRENT input also shows distress signals —
+  // prevents a self-reinforcing loop where historical risk flags
+  // cause every new session (even happy ones) to escalate.
   if (recentMetadata.length >= 3) {
+    const now = Date.now();
     const riskCount = recentMetadata
       .slice(0, 5)
-      .filter((m) => m.riskFlag).length;
+      .filter((m) => m.riskFlag && (now - m.createdAt) < PATTERN_WINDOW_MS)
+      .length;
 
-    if (riskCount >= 3) {
+    const currentEmotion =
+      classification.granularLabel ?? classification.primaryEmotion;
+    const currentShowsDistress = DISTRESS_EMOTIONS.has(currentEmotion);
+
+    if (riskCount >= 3 && currentShowsDistress) {
       return {
         level: "elevated",
         triggerType: "pattern_escalation",
