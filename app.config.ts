@@ -1,6 +1,35 @@
-{
-  "expo": {
-    "name": "Xolace",
+import { ConfigContext, ExpoConfig } from "expo/config"
+
+const IS_DEV = process.env.APP_VARIANT === 'development';
+const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
+
+const getUniqueIdentifier = () => {
+  if (IS_DEV) {
+    return 'com.xolaceincorg.xolace.dev';
+  }
+
+  if (IS_PREVIEW) {
+    return 'com.xolaceincorg.xolace.preview';
+  }
+
+  return 'com.xolaceincorg.xolace';
+};
+
+const getAppName = () => {
+  if (IS_DEV) {
+    return 'Xolace (Dev)';
+  }
+
+  if (IS_PREVIEW) {
+    return 'Xolace (Preview)';
+  }
+
+  return 'Xolace';
+};
+
+export default ({ config }: ConfigContext): ExpoConfig => ({
+    ...config,
+    "name": getAppName(),
     "slug": "xolace",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,20 +38,19 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/xolace-icon-sample.icon",
-      "bundleIdentifier": "com.xolaceincorg.xolace",
+      "bundleIdentifier": getUniqueIdentifier(),
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#040307",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.xolaceincorg.xolace"
+      "package": getUniqueIdentifier()
     },
     "web": {
       "output": "static",
@@ -33,11 +61,19 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#040307",
           "android": {
-            "image": "./assets/images/splash-icon.png",
+            "image": "./assets/images/icons/splash-icon-dark.png",
             "imageWidth": 76
-          }
+          },
+          "ios": {
+                  "image": "./assets/images/icons/splash-icon-dark.png",
+                  "imageWidth": 200,
+                  "dark":{
+                  "image": "./assets/images/icons/splash-icon-light.png",
+                  "backgroundColor": "#040307"
+                  }
+            }
         }
       ],
       [
@@ -67,5 +103,5 @@
       "EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME": "com.googleusercontent.apps.30023455189-r6r4klf9b4konpvups2ecb0of2nii4f1"
     },
     "owner": "xolace-inc-org"
-  }
-}
+  
+})
