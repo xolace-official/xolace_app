@@ -27,12 +27,6 @@ export default function AppTabs() {
           <TabTrigger name="home" href="/" asChild>
             <TabButton>Home</TabButton>
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
-          </TabTrigger>
-          <TabTrigger name="theme" href="/theme" asChild>
-            <TabButton>Theme</TabButton>
-          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>
@@ -63,7 +57,7 @@ export function CustomTabList(props: TabListProps) {
   return (
     <View {...props} className="absolute w-full p-4 justify-center items-center flex-row">
       <View
-        className="py-2 px-8 rounded-[32px] flex-row items-center grow gap-2 bg-surface"
+        className="py-2 px-8 rounded-4xl flex-row items-center grow gap-2 bg-surface"
         style={{ maxWidth: MaxContentWidth }}
       >
         <AppText className="text-sm font-bold text-foreground mr-auto">

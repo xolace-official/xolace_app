@@ -6,8 +6,6 @@
  * For Uniwind/Tailwind styling, use className with CSS variable classes (e.g. `bg-background`).
  */
 
-import '@/global.css';
-
 import { Platform } from 'react-native';
 
 export const Colors = {

@@ -4,6 +4,8 @@
  * Provider order: RootProvider (gestures, keyboard, theme, HeroUI) → ThemeProvider (React Navigation).
  * See src/providers/root-provider.tsx to add your own providers (auth, analytics, etc.).
  */
+import '@/global.css';
+
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
