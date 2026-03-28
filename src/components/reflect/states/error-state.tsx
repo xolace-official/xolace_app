@@ -1,5 +1,6 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { LinkButton } from 'heroui-native';
 import { AppText } from '@/components/shared/app-text';
 
 type Props = {
@@ -20,19 +21,19 @@ export const ErrorState = ({ errorMessage, onRetry, onReset }: Props) => (
 
     <View className="mt-14 gap-6">
       <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Try again" onPress={onRetry}>
-          <AppText className="text-base font-semibold text-accent">
+        <LinkButton accessibilityLabel="Try again" onPress={onRetry} size="md" className="self-start">
+          <LinkButton.Label className="font-semibold text-accent">
             Try again
-          </AppText>
-        </Pressable>
+          </LinkButton.Label>
+        </LinkButton>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Start fresh" onPress={onReset}>
-          <AppText className="text-base text-foreground/50">
+        <LinkButton accessibilityLabel="Start fresh" onPress={onReset} size="md" className="self-start">
+          <LinkButton.Label className="text-foreground/50">
             Start fresh
-          </AppText>
-        </Pressable>
+          </LinkButton.Label>
+        </LinkButton>
       </Animated.View>
     </View>
   </View>

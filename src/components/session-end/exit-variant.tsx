@@ -1,5 +1,6 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { LinkButton } from 'heroui-native';
 import { AppText } from '@/components/shared/app-text';
 import { TimelineIcon } from '@/components/reflect/timeline-icon';
 
@@ -21,11 +22,11 @@ export const ExitVariant = ({ onHaveMore }: Props) => {
       </Animated.View>
 
       <Animated.View entering={FadeIn.delay(400).duration(400)}>
-        <Pressable onPress={onHaveMore} hitSlop={8}>
-          <AppText className="text-sm font-light text-foreground/20">
+        <LinkButton onPress={onHaveMore} size="sm" className="self-start">
+          <LinkButton.Label className="font-light text-foreground/20">
             Have more? I&apos;m here.
-          </AppText>
-        </Pressable>
+          </LinkButton.Label>
+        </LinkButton>
       </Animated.View>
 
       <View className="absolute bottom-6 right-7">

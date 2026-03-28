@@ -1,6 +1,6 @@
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Chip } from 'heroui-native';
+import { Chip, LinkButton } from 'heroui-native';
 import { AppText } from '@/components/shared/app-text';
 import type { EntryType } from '@/interfaces/reflection';
 import * as Haptics from 'expo-haptics';
@@ -55,9 +55,16 @@ export const MirrorState = ({
         </Animated.View>
       )}
 
+      <Animated.View entering={FadeIn.duration(600)}>
+        <AppText className="mb-3 text-xs uppercase tracking-widest text-accent">
+          The Mirror
+        </AppText>
+      </Animated.View>
+
       <ScrollView
         style={{ flexGrow: 0, maxHeight: '60%' }}
         showsVerticalScrollIndicator={false}
+        className="border-l-2 border-accent/40 pl-4"
       >
         <AppText className="text-xl italic leading-8 text-foreground">
           {mirror}
@@ -66,27 +73,27 @@ export const MirrorState = ({
 
       <View className="mt-14 gap-6">
         <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-          <Pressable onPress={hapticPress(onThatsIt)}>
-            <AppText className="text-lg font-semibold text-accent">
+          <LinkButton onPress={hapticPress(onThatsIt)} size="lg" className="self-start">
+            <LinkButton.Label className="font-semibold text-accent">
               That&apos;s it
-            </AppText>
-          </Pressable>
+            </LinkButton.Label>
+          </LinkButton>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-          <Pressable onPress={hapticPress(onNotQuite)}>
-            <AppText className="text-base text-foreground/50">
+          <LinkButton onPress={hapticPress(onNotQuite)} size="md" className="self-start">
+            <LinkButton.Label className="text-foreground/50">
               Not quite
-            </AppText>
-          </Pressable>
+            </LinkButton.Label>
+          </LinkButton>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(600).duration(400)}>
-          <Pressable onPress={hapticPress(onSayMore)}>
-            <AppText className="text-base text-foreground/50">
+          <LinkButton onPress={hapticPress(onSayMore)} size="md" className="self-start">
+            <LinkButton.Label className="text-foreground/50">
               Say more
-            </AppText>
-          </Pressable>
+            </LinkButton.Label>
+          </LinkButton>
         </Animated.View>
       </View>
     </View>
