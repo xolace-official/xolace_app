@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import { LinkButton } from 'heroui-native';
+import * as Haptics from 'expo-haptics';
 import { AppText } from '@/components/shared/app-text';
-import { TimelineIcon } from '@/components/reflect/timeline-icon';
 import { ContributedConfirmation } from '@/components/session-end/contributed-confirmation';
 
 type Props = {
@@ -30,6 +31,15 @@ export const ActivityVariant = ({
     setShareToggled(contributeByDefault);
   }, [contributeByDefault]);
 
+  const router = useRouter();
+
+  const handleTimelinePress = () => {
+    if (process.env.EXPO_OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    router.push('/(protected)/timeline');
+  };
+
   if (phase === 'contributed') {
     return (
       <ContributedConfirmation onDone={() => onDismiss(true)} />
@@ -42,9 +52,19 @@ export const ActivityVariant = ({
         <AppText className="mb-2 font-serif text-xl leading-8 text-foreground">
           You showed up for{'\n'}yourself today.
         </AppText>
-        <AppText className="mb-3 text-base font-light leading-7 text-foreground/40">
-          Go live your life. This&apos;ll be here.
-        </AppText>
+        <View className="mb-3 flex-row flex-wrap">
+          <AppText className="text-base font-light leading-7 text-foreground/40">
+            It&apos;s on{' '}
+          </AppText>
+          <LinkButton size="sm" onPress={handleTimelinePress}>
+            <LinkButton.Label className="text-base font-light text-accent/60">
+              your timeline
+            </LinkButton.Label>
+          </LinkButton>
+          <AppText className="text-base font-light leading-7 text-foreground/40">
+            . Go live your life.
+          </AppText>
+        </View>
       </Animated.View>
 
       {/* Optional mood check */}
@@ -96,39 +116,23 @@ export const ActivityVariant = ({
           </View>
 
           {contributeByDefault ? (
-            /* Toggle mode: pre-selected, one-tap confirm */
-            <View className="flex-row items-center gap-3">
-              <Pressable
-                onPress={() => setShareToggled((v) => !v)}
-                className={`rounded-full border px-5 py-2.5 ${
-                  shareToggled
-                    ? 'border-accent/30 bg-accent/10'
-                    : 'border-border'
+            /* Toggle mode: pre-selected, user can untoggle */
+            <Pressable
+              onPress={() => setShareToggled((v) => !v)}
+              className={`self-start rounded-full border px-5 py-2.5 ${
+                shareToggled
+                  ? 'border-accent/30 bg-accent/10'
+                  : 'border-border'
+              }`}
+            >
+              <AppText
+                className={`text-sm ${
+                  shareToggled ? 'text-accent' : 'text-foreground/40'
                 }`}
               >
-                <AppText
-                  className={`text-sm ${
-                    shareToggled ? 'text-accent' : 'text-foreground/40'
-                  }`}
-                >
-                  Share anonymously
-                </AppText>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  if (shareToggled) {
-                    setPhase('contributed');
-                  } else {
-                    onDismiss(false);
-                  }
-                }}
-                className="rounded-full border border-border px-5 py-2.5"
-              >
-                <AppText className="text-sm text-foreground/40">
-                  Done
-                </AppText>
-              </Pressable>
-            </View>
+                Share anonymously
+              </AppText>
+            </Pressable>
           ) : (
             /* Default mode: explicit choice */
             <View className="flex-row gap-3">
@@ -153,6 +157,26 @@ export const ActivityVariant = ({
         </Animated.View>
       ): null}
 
+      {/* Forward action — only in toggle mode */}
+      {contributeByDefault && distilledText ? (
+        <Animated.View entering={FadeInDown.delay(600).duration(400)} className="mb-4">
+          <Pressable
+            onPress={() => {
+              if (shareToggled) {
+                setPhase('contributed');
+              } else {
+                onDismiss(false);
+              }
+            }}
+            className="self-start rounded-full border border-border px-6 py-2.5"
+          >
+            <AppText className="text-sm text-foreground/40">
+              Done
+            </AppText>
+          </Pressable>
+        </Animated.View>
+      ) : null}
+
       <Animated.View entering={FadeIn.delay(700).duration(400)}>
         <LinkButton onPress={() => onHaveMore()} size="sm" className="self-start">
           <LinkButton.Label className="font-light text-foreground/30">
@@ -161,9 +185,6 @@ export const ActivityVariant = ({
         </LinkButton>
       </Animated.View>
 
-      <View className="absolute bottom-6 right-7">
-        <TimelineIcon />
-      </View>
     </View>
   );
 };

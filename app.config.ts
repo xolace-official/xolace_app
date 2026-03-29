@@ -100,7 +100,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "eas": {
         "projectId": "9b49d23b-d85c-48c9-84a4-db117b864dd3"
       },
-      "EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME": "com.googleusercontent.apps.30023455189-r6r4klf9b4konpvups2ecb0of2nii4f1"
+      EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME
     },
     "owner": "xolace-inc-org"
   
