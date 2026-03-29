@@ -96,39 +96,23 @@ export const ActivityVariant = ({
           </View>
 
           {contributeByDefault ? (
-            /* Toggle mode: pre-selected, one-tap confirm */
-            <View className="flex-row items-center gap-3">
-              <Pressable
-                onPress={() => setShareToggled((v) => !v)}
-                className={`rounded-full border px-5 py-2.5 ${
-                  shareToggled
-                    ? 'border-accent/30 bg-accent/10'
-                    : 'border-border'
+            /* Toggle mode: pre-selected, user can untoggle */
+            <Pressable
+              onPress={() => setShareToggled((v) => !v)}
+              className={`self-start rounded-full border px-5 py-2.5 ${
+                shareToggled
+                  ? 'border-accent/30 bg-accent/10'
+                  : 'border-border'
+              }`}
+            >
+              <AppText
+                className={`text-sm ${
+                  shareToggled ? 'text-accent' : 'text-foreground/40'
                 }`}
               >
-                <AppText
-                  className={`text-sm ${
-                    shareToggled ? 'text-accent' : 'text-foreground/40'
-                  }`}
-                >
-                  Share anonymously
-                </AppText>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  if (shareToggled) {
-                    setPhase('contributed');
-                  } else {
-                    onDismiss(false);
-                  }
-                }}
-                className="rounded-full border border-border px-5 py-2.5"
-              >
-                <AppText className="text-sm text-foreground/40">
-                  Done
-                </AppText>
-              </Pressable>
-            </View>
+                Share anonymously
+              </AppText>
+            </Pressable>
           ) : (
             /* Default mode: explicit choice */
             <View className="flex-row gap-3">
@@ -152,6 +136,26 @@ export const ActivityVariant = ({
           )}
         </Animated.View>
       ): null}
+
+      {/* Forward action — only in toggle mode */}
+      {contributeByDefault && distilledText ? (
+        <Animated.View entering={FadeInDown.delay(600).duration(400)} className="mb-4">
+          <Pressable
+            onPress={() => {
+              if (shareToggled) {
+                setPhase('contributed');
+              } else {
+                onDismiss(false);
+              }
+            }}
+            className="self-start rounded-full border border-border px-6 py-2.5"
+          >
+            <AppText className="text-sm text-foreground/40">
+              Done
+            </AppText>
+          </Pressable>
+        </Animated.View>
+      ) : null}
 
       <Animated.View entering={FadeIn.delay(700).duration(400)}>
         <LinkButton onPress={() => onHaveMore()} size="sm" className="self-start">

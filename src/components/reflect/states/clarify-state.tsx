@@ -27,6 +27,7 @@ export const ClarifyState = ({
     <View className="flex-1">
       <KeyboardAvoidingView
         behavior="padding"
+        keyboardVerticalOffset={50}
         className="flex-1 px-6 pt-8"
       >
         <Animated.View entering={FadeIn.duration(600)}>
