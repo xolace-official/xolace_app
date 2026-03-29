@@ -49,10 +49,16 @@ type Props = {
 };
 
 const SparkleStarsComponent = ({ color }: Props) => (
-  <View style={starStyles.wrapper} pointerEvents="none">
+  <View
+    style={starStyles.wrapper}
+    pointerEvents="none"
+    accessibilityElementsHidden={true}
+    importantForAccessibility="no-hide-descendants"
+  >
     {STARS.map((star, i) => (
       <Animated.Text
         key={i}
+        accessible={false}
         style={[
           starStyles.star,
           star.position,

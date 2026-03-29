@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { View, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -57,6 +57,9 @@ export const AuthScreen = () => {
       if (code === 'SIGN_IN_CANCELLED' || code === -5) return;
 
       console.error('Google auth error:', error);
+      
+      // TEMP: make the error visible
+        Alert.alert('Auth Error', JSON.stringify(error));
     } finally {
       setIsLoading(false);
     }

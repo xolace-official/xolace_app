@@ -121,7 +121,7 @@ export const useShimmerAnimation = (config: UseShimmerAnimationConfig) => {
       opacity: 1,
       width: translateContainerWidth.get(),
       height: translateContainerHeight.get(),
-      transform: [{ translateX }, { translateY: '-50%' as unknown as number }],
+      transform: [{ translateX }, { translateY: '-50%' }],
     };
   });
 
