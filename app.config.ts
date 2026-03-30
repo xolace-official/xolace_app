@@ -29,57 +29,57 @@ const getAppName = () => {
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
-    "name": getAppName(),
-    "slug": "xolace",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "xolace",
-    "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/xolace-icon-sample.icon",
-      "bundleIdentifier": getUniqueIdentifier(),
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+    name: getAppName(),
+    slug: "xolace",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: "xolace",
+    userInterfaceStyle: "automatic",
+    ios: {
+      icon: "./assets/xolace-icon-sample.icon",
+      bundleIdentifier: getUniqueIdentifier(),
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false
       }
     },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#040307",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+    android: {
+      adaptiveIcon: {
+        backgroundColor: "#040307",
+        foregroundImage: "./assets/images/android-icon-foreground.png",
+        monochromeImage: "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "package": getUniqueIdentifier()
+      predictiveBackGestureEnabled: false,
+      package: getUniqueIdentifier()
     },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+    web: {
+      output: "static",
+      favicon: "./assets/images/favicon.png"
     },
-    "plugins": [
+    plugins: [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#040307",
-          "android": {
-            "image": "./assets/images/icons/splash-icon-dark.png",
-            "imageWidth": 76
+          backgroundColor: "#040307",
+          android: {
+            image: "./assets/images/icons/splash-icon-dark.png",
+            imageWidth: 76
           },
-          "ios": {
-                  "image": "./assets/images/icons/splash-icon-dark.png",
-                  "imageWidth": 200,
-                  "dark":{
-                  "image": "./assets/images/icons/splash-icon-light.png",
-                  "backgroundColor": "#040307"
-                  }
+          ios: {
+            image: "./assets/images/icons/splash-icon-dark.png",
+            imageWidth: 200,
+            dark: {
+              image: "./assets/images/icons/splash-icon-light.png",
+              backgroundColor: "#040307"
             }
+          }
         }
       ],
       [
         "expo-font",
         {
-          "fonts": [
+          fonts: [
             "./assets/fonts/Poppins-Regular.ttf",
             "./assets/fonts/Poppins-Medium.ttf",
             "./assets/fonts/Poppins-Bold.ttf",
@@ -91,17 +91,22 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "@clerk/expo",
       "expo-secure-store"
     ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+    experiments: {
+      typedRoutes: true,
+      reactCompiler: true
     },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "9b49d23b-d85c-48c9-84a4-db117b864dd3"
+    extra: {
+      router: {},
+      eas: {
+        projectId: "9b49d23b-d85c-48c9-84a4-db117b864dd3"
       },
       EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME
     },
-    "owner": "xolace-inc-org"
-  
+    updates: {
+      url: "https://u.expo.dev/9b49d23b-d85c-48c9-84a4-db117b864dd3"
+    },
+    runtimeVersion: {
+      policy: "appVersion"
+    },
+    owner: "xolace-inc-org"
 })

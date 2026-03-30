@@ -20,6 +20,17 @@ export const AuthScreen = () => {
   const getOrCreate = useMutation(api.users.getOrCreate);
   const [isLoading, setIsLoading] = useState(false);
 
+  // TEMP DEBUG: check if env vars are baked into the bundle
+  const debugEnv = () => {
+    Alert.alert('Env Check', [
+      `WEB: ${process.env.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID ?? 'MISSING'}`,
+      `IOS: ${process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID ?? 'MISSING'}`,
+      `SCHEME: ${process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME ?? 'MISSING'}`,
+      `CLERK_PK: ${process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ? 'SET' : 'MISSING'}`,
+    ].join('\n'));
+  };
+  debugEnv();
+
   const handleAppleAuth = () => {
     if (process.env.EXPO_OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -56,10 +67,20 @@ export const AuthScreen = () => {
       // Silently handle user cancellation
       if (code === 'SIGN_IN_CANCELLED' || code === -5) return;
 
-      console.error('Google auth error:', error);
-      
-      // TEMP: make the error visible
-        Alert.alert('Auth Error', JSON.stringify(error));
+      // TEMP: extract all error details for debugging
+      let msg = 'Unknown';
+      if (error instanceof Error) {
+        msg = `${error.name}: ${error.message}`;
+      } else if (typeof error === 'object' && error !== null) {
+        const keys = Object.getOwnPropertyNames(error);
+        msg = keys.length > 0
+          ? keys.map(k => `${k}: ${JSON.stringify((error as Record<string, unknown>)[k])}`).join('\n')
+          : `Empty object. Proto: ${Object.getPrototypeOf(error)?.constructor?.name ?? 'none'}`;
+      } else {
+        msg = String(error);
+      }
+      console.error('Google auth error:', msg);
+      Alert.alert('Auth Debug', msg);
     } finally {
       setIsLoading(false);
     }
