@@ -100,7 +100,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       eas: {
         projectId: "9b49d23b-d85c-48c9-84a4-db117b864dd3"
       },
-      EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME
+      EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME,
+      EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID,
+      EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID
     },
     updates: {
       url: "https://u.expo.dev/9b49d23b-d85c-48c9-84a4-db117b864dd3"
