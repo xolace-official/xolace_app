@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { Card, PressableFeedback } from 'heroui-native';
 import { View } from 'react-native';
 import { withUniwind } from 'uniwind';
-import { AppText } from '@/components/shared/app-text';
+import { AppText } from '@/src/components/shared/app-text';
 
 const StyledImage = withUniwind(Image);
 

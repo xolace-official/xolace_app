@@ -11,7 +11,7 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import * as Haptics from 'expo-haptics';
 import { useColorScheme } from 'react-native';
 
-import { Colors, TABS } from '@/constants';
+import { Colors, TABS } from '@/src/constants';
 
 export default function AppTabs() {
   const scheme = useColorScheme();
@@ -48,7 +48,7 @@ Note: If you want to use an image for the tab icon, you can use the following co
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
+          src={require('@/src/assets/images/tabIcons/home.png')}
           renderingMode="template"
         />
       </NativeTabs.Trigger>

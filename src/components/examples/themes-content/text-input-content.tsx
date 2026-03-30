@@ -8,10 +8,10 @@ import {
 } from 'heroui-native';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { EyeIcon } from '@/components/icons/eye';
-import { EyeSlashIcon } from '@/components/icons/eye-slash';
-import { LockIcon } from '@/components/icons/lock';
-import { DialogContent } from '@/components/examples/themes-content/dialog-content';
+import { EyeIcon } from '@/src/components/icons/eye';
+import { EyeSlashIcon } from '@/src/components/icons/eye-slash';
+import { LockIcon } from '@/src/components/icons/lock';
+import { DialogContent } from '@/src/components/examples/themes-content/dialog-content';
 
 export const TextInputContent = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);

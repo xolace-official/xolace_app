@@ -1,4 +1,4 @@
-import { FrameScreen } from '@/components/onboarding/screens/FrameScreen';
+import { FrameScreen } from '@/src/components/onboarding/screens/FrameScreen';
 
 const OnboardingFrame = () => {
   return (

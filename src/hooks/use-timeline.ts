@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { usePaginatedQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import { buildTimelineSections } from '@/helpers/utils/timeline';
-import type { TimelineEntry } from '@/interfaces/timeline';
+import { buildTimelineSections } from '@/src/helpers/utils/timeline';
+import type { TimelineEntry } from '@/src/interfaces/timeline';
 
 const PAGE_SIZE = 15;
 

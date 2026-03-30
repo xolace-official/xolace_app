@@ -3,9 +3,9 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { AppText } from '@/components/shared/app-text';
-import { PillButton } from '@/components/reflect/pill-button';
-import { usePathSession } from '@/hooks/use-path-session';
+import { AppText } from '@/src/components/shared/app-text';
+import { PillButton } from '@/src/components/reflect/pill-button';
+import { usePathSession } from '@/src/hooks/use-path-session';
 
 /**
  * Screen that provides a quiet, temporary space and manages the lifecycle of a path session.

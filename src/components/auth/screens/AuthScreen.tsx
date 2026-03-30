@@ -8,10 +8,10 @@ import { useSignInWithGoogle } from '@clerk/expo/google';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 
-import { AppText } from '@/components/shared/app-text';
-import { AuthBg } from '@/components/auth/auth-bg';
-import { AppleIcon } from '@/components/auth/apple-icon';
-import { GoogleIcon } from '@/components/auth/google-icon';
+import { AppText } from '@/src/components/shared/app-text';
+import { AuthBg } from '@/src/components/auth/auth-bg';
+import { AppleIcon } from '@/src/components/auth/apple-icon';
+import { GoogleIcon } from '@/src/components/auth/google-icon';
 
 export const AuthScreen = () => {
   const insets = useSafeAreaInsets();

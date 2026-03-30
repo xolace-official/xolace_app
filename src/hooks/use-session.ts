@@ -2,8 +2,8 @@ import { useState, useCallback } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
-import type { EntryType } from '@/interfaces/reflection';
-import { mapEntryType } from '@/services/session-service';
+import type { EntryType } from '@/src/interfaces/reflection';
+import { mapEntryType } from '@/src/services/session-service';
 
 // States where turns are relevant (mirror has been delivered at least once)
 const TURN_RELEVANT_STATES = new Set([

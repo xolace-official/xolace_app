@@ -3,10 +3,10 @@ import { useClerk, useUser } from "@clerk/expo";
 import { Uniwind, useUniwind } from "uniwind";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import type { RetentionOption } from "@/components/settings/retention-picker-dialog";
-import type { MirrorTone } from "@/components/settings/mirror-tone-picker-dialog";
-import { useAppStore } from "@/store/store";
-import { useAppTheme } from "@/context/app-theme-context";
+import type { RetentionOption } from "@/src/components/settings/retention-picker-dialog";
+import type { MirrorTone } from "@/src/components/settings/mirror-tone-picker-dialog";
+import { useAppStore } from "@/src/store/store";
+import { useAppTheme } from "@/src/context/app-theme-context";
 
 export type ThemeMode = "system" | "light" | "dark";
 

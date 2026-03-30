@@ -1,4 +1,4 @@
-import { AuthScreen } from '@/components/auth/screens/AuthScreen'
+import { AuthScreen } from '@/src/components/auth/screens/AuthScreen'
 
 const AuthRoute = () => {
   return (

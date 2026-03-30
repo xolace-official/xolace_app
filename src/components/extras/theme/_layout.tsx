@@ -1,9 +1,9 @@
 import { Stack } from 'expo-router';
 import { Platform, View } from 'react-native';
-import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { ThemeToggle } from '@/src/components/shared/theme-toggle';
 import { useCallback } from 'react';
 import { useThemeColor } from 'heroui-native';
-import { useAppTheme } from '@/context/app-theme-context';
+import { useAppTheme } from '@/src/context/app-theme-context';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 
 export default function ThemeLayout() {

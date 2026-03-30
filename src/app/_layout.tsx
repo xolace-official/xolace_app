@@ -4,7 +4,7 @@
  * Provider order: RootProvider (gestures, keyboard, theme, HeroUI) → ThemeProvider (React Navigation).
  * See src/providers/root-provider.tsx to add your own providers (auth, analytics, etc.).
  */
-import '@/global.css';
+import '@/src/global.css';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useEffect } from 'react';
@@ -20,8 +20,8 @@ import {
   useFonts
 } from '@expo-google-fonts/space-grotesk';
 
-import { RootProvider } from '@/providers/root-provider';
-import { useAppStore } from '@/store/store';
+import { RootProvider } from '@/src/providers/root-provider';
+import { useAppStore } from '@/src/store/store';
 
 SplashScreen.preventAutoHideAsync();
 

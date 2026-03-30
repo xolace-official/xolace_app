@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinkButton } from 'heroui-native';
-import { AppText } from '@/components/shared/app-text';
+import { AppText } from '@/src/components/shared/app-text';
 
 type Props = {
   errorMessage: string;

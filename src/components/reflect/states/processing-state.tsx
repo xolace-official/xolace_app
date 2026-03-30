@@ -1,9 +1,9 @@
 import { View } from 'react-native';
 import { useThemeColor } from 'heroui-native';
-import { AppText } from '@/components/shared/app-text';
-import { BreathingOrb } from '@/components/reflect/breathing-orb';
-import Shimmer from '@/components/shared/shimmer';
-import { SparkleStars } from '@/components/shared/sparkle-stars';
+import { AppText } from '@/src/components/shared/app-text';
+import { BreathingOrb } from '@/src/components/reflect/breathing-orb';
+import Shimmer from '@/src/components/shared/shimmer';
+import { SparkleStars } from '@/src/components/shared/sparkle-stars';
 
 export const ProcessingState = () => {
   const accentColor = useThemeColor('accent');

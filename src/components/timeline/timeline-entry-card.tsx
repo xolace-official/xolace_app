@@ -1,13 +1,13 @@
 import { useRouter } from 'expo-router';
 import { PressableFeedback, Card, cn } from 'heroui-native';
 import { View } from 'react-native';
-import { AppText } from '@/components/shared/app-text';
+import { AppText } from '@/src/components/shared/app-text';
 import {
   getEmotionEmoji,
   getEmotionLabel,
   getPathLabel,
-} from '@/constants/emotions';
-import type { TimelineEntry } from '@/interfaces/timeline';
+} from '@/src/constants/emotions';
+import type { TimelineEntry } from '@/src/interfaces/timeline';
 
 type Props = {
   entry: TimelineEntry;

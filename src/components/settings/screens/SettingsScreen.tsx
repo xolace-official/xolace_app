@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useToast } from "heroui-native";
-import { SettingsSection } from "@/components/settings/settings-section";
-import { SettingsRow } from "@/components/settings/settings-row";
-import { ThemePickerDialog } from "@/components/settings/theme-picker-dialog";
-import { MirrorTonePickerDialog } from "@/components/settings/mirror-tone-picker-dialog";
-import { RetentionPickerDialog } from "@/components/settings/retention-picker-dialog";
-import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
-import { useSettings } from "@/hooks/use-settings";
-import { useConfirmAction } from "@/hooks/use-confirm-action";
-import { useAppStore } from "@/store/store";
-import type { ThemeMode } from "@/hooks/use-settings";
+import { SettingsSection } from "@/src/components/settings/settings-section";
+import { SettingsRow } from "@/src/components/settings/settings-row";
+import { ThemePickerDialog } from "@/src/components/settings/theme-picker-dialog";
+import { MirrorTonePickerDialog } from "@/src/components/settings/mirror-tone-picker-dialog";
+import { RetentionPickerDialog } from "@/src/components/settings/retention-picker-dialog";
+import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
+import { useSettings } from "@/src/hooks/use-settings";
+import { useConfirmAction } from "@/src/hooks/use-confirm-action";
+import { useAppStore } from "@/src/store/store";
+import type { ThemeMode } from "@/src/hooks/use-settings";
 
 /**
  * Settings screen — composes all preference sections.

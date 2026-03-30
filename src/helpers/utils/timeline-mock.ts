@@ -1,4 +1,4 @@
-import type { TimelineEntry } from '@/interfaces/timeline';
+import type { TimelineEntry } from '@/src/interfaces/timeline';
 
 const now = new Date();
 const daysAgo = (n: number) =>

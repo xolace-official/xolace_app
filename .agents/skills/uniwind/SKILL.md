@@ -570,7 +570,7 @@ import { Image as ExpoImage } from 'expo-image';
 export const Image = withUniwind(ExpoImage);
 
 // Then import everywhere:
-import { Image } from '@/components/styled';
+import { Image } from '@/src/components/styled';
 ```
 
 **NEVER** call `withUniwind` on the same component in multiple files.
@@ -705,7 +705,7 @@ export function cn(...inputs: ClassValue[]) {
 1. **Merging className props** — component accepts external className that may conflict:
 
 ```tsx
-import { cn } from '@/lib/cn';
+import { cn } from '@/src/lib/cn';
 
 <View className={cn('p-4 bg-white', props.className)} />
 <Text className={cn('text-base', isActive && 'text-primary', disabled && 'opacity-50')} />
@@ -1346,7 +1346,7 @@ You can combine custom CSS classes with Tailwind utilities in a single `classNam
 <View className="card-shadow rounded-2xl" />
 
 // CORRECT — cn ensures rounded-2xl wins
-import { cn } from '@/lib/cn';
+import { cn } from '@/src/lib/cn';
 <View className={cn('card-shadow', 'rounded-2xl')} />
 ```
 
@@ -1482,7 +1482,7 @@ export const LinearGradient = withUniwind(RNLinearGradient);
 
 ```tsx
 // usage — className handles layout, colors still passed manually
-import { LinearGradient } from '@/components/styled';
+import { LinearGradient } from '@/src/components/styled';
 
 <LinearGradient className="rounded-xl p-4" colors={['#ff6b6b', '#4ecdc4']}>
   <Text className="text-white">Static gradient</Text>

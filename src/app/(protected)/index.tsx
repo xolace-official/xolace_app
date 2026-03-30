@@ -1,4 +1,4 @@
-import { ReflectScreen } from '@/components/reflect/reflect-screen';
+import { ReflectScreen } from '@/src/components/reflect/reflect-screen';
 
 
 /**

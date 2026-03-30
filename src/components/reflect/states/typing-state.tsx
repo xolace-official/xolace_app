@@ -4,11 +4,11 @@ import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { TextArea } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import * as Haptics from 'expo-haptics';
-import { AppText } from '@/components/shared/app-text';
-import { PresenceDot } from '@/components/reflect/presence-dot';
-import { PillButton } from '@/components/reflect/pill-button';
-import { useTypingPause } from '@/hooks/use-typing-pause';
-import type { ReflectionAction } from '@/interfaces/reflection';
+import { AppText } from '@/src/components/shared/app-text';
+import { PresenceDot } from '@/src/components/reflect/presence-dot';
+import { PillButton } from '@/src/components/reflect/pill-button';
+import { useTypingPause } from '@/src/hooks/use-typing-pause';
+import type { ReflectionAction } from '@/src/interfaces/reflection';
 
 type Props = {
   showNudge: boolean;

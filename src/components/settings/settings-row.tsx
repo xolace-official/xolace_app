@@ -1,8 +1,8 @@
 import { Pressable, View } from "react-native";
 import { Switch, Separator, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
-import { AppText } from "@/components/shared/app-text";
-import { cn } from "@/lib/utils";
+import { AppText } from "@/src/components/shared/app-text";
+import { cn } from "@/src/lib/utils";
 
 type BaseProps = {
   label: string;

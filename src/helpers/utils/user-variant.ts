@@ -1,4 +1,4 @@
-import type { UserVariant } from '@/interfaces/reflection';
+import type { UserVariant } from '@/src/interfaces/reflection';
 
 type ProfileFields = {
   sessionCount: number;

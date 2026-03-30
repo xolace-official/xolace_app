@@ -1,6 +1,6 @@
 import { Pressable } from 'react-native';
-import { AppText } from '@/components/shared/app-text';
-import { cn } from '@/lib/utils';
+import { AppText } from '@/src/components/shared/app-text';
+import { cn } from '@/src/lib/utils';
 import * as Haptics from 'expo-haptics';
 
 type Props = {

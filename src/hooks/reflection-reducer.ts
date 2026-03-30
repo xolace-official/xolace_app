@@ -2,7 +2,7 @@ import type {
   ReflectionState,
   ReflectionAction,
   EntryType,
-} from '@/interfaces/reflection';
+} from '@/src/interfaces/reflection';
 
 export const MAX_TURNS = 2;
 

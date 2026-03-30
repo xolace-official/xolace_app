@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { SessionDetailsScreen } from "@/components/timeline/screens/SessionDetailsScreen";
+import { SessionDetailsScreen } from "@/src/components/timeline/screens/SessionDetailsScreen";
 
 const SessionDetails = () => {
   return (

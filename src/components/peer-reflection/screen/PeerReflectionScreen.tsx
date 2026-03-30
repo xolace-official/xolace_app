@@ -5,10 +5,10 @@ import { useRouter } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { AppText } from "@/components/shared/app-text";
-import { PillButton } from "@/components/reflect/pill-button";
-import { ReflectionCard } from "@/components/peer-reflection/reflection-card";
-import { usePathSession } from "@/hooks/use-path-session";
+import { AppText } from "@/src/components/shared/app-text";
+import { PillButton } from "@/src/components/reflect/pill-button";
+import { ReflectionCard } from "@/src/components/peer-reflection/reflection-card";
+import { usePathSession } from "@/src/hooks/use-path-session";
 
 export const PeerReflectionScreen = () => {
   const insets = useSafeAreaInsets();

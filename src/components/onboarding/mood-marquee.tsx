@@ -8,7 +8,7 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { MoodCard, MoodItem, getCardWidth } from '@/components/onboarding/mood-card';
+import { MoodCard, MoodItem, getCardWidth } from '@/src/components/onboarding/mood-card';
 
 /** Slow, contemplative scroll — like thoughts drifting */
 const AUTO_SCROLL_SPEED = 18;

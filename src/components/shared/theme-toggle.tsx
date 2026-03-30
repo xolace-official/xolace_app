@@ -8,7 +8,7 @@ import { type FC } from 'react';
 import { Platform, TouchableOpacity } from 'react-native';
 import Animated, { FadeOut, ZoomIn } from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
-import { useAppTheme } from '@/context/app-theme-context';
+import { useAppTheme } from '@/src/context/app-theme-context';
 
 const StyledIonicons = withUniwind(Ionicons);
 const StyledAntDesign = withUniwind(AntDesign);

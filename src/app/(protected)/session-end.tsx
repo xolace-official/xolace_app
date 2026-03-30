@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { SessionEndScreen } from '@/components/session-end/session-end-screen';
+import { SessionEndScreen } from '@/src/components/session-end/session-end-screen';
 
 type Params = {
   path: 'solo' | 'peers' | 'exit';
