@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { View, ColorValue } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Card, Chip, cn } from "heroui-native";
-import { AppText } from "@/components/shared/app-text";
+import { AppText } from "@/src/components/shared/app-text";
 import * as Haptics from "expo-haptics";
 import { useCSSVariable, withUniwind } from "uniwind";
 

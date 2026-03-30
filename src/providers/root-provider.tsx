@@ -2,7 +2,7 @@ import { HeroUINativeConfig, HeroUINativeProvider } from 'heroui-native';
 import { useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView, KeyboardProvider } from 'react-native-keyboard-controller';
-import { AppThemeProvider } from '@/context/app-theme-context';
+import { AppThemeProvider } from '@/src/context/app-theme-context';
 import {ConvexClientProvider} from './convex-provider';
 
 /**

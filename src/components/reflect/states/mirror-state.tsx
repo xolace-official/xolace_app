@@ -1,8 +1,8 @@
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Chip, LinkButton } from 'heroui-native';
-import { AppText } from '@/components/shared/app-text';
-import type { EntryType } from '@/interfaces/reflection';
+import { AppText } from '@/src/components/shared/app-text';
+import type { EntryType } from '@/src/interfaces/reflection';
 import * as Haptics from 'expo-haptics';
 
 type Props = {

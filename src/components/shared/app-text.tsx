@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/src/lib/utils';
 import React from 'react';
 import { Text as RNText, type TextProps as RNTextProps } from 'react-native';
 

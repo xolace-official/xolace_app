@@ -1,7 +1,7 @@
 import { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { useThemeColor } from "heroui-native";
-import { useAppTheme } from "@/context/app-theme-context";
+import { useAppTheme } from "@/src/context/app-theme-context";
 
 /**
  * Return navigation options configured for a large transparent header.

@@ -10,12 +10,12 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
-import { AppText } from '@/components/shared/app-text';
-import { MoodMarquee } from '@/components/onboarding/mood-marquee';
-import { MoodBg } from '@/components/onboarding/mood-bg';
-import { getCardWidth } from '@/components/onboarding/mood-card';
-import { useDebounce } from '@/hooks/use-debounce';
-import { MOODS } from '@/constants/moods';
+import { AppText } from '@/src/components/shared/app-text';
+import { MoodMarquee } from '@/src/components/onboarding/mood-marquee';
+import { MoodBg } from '@/src/components/onboarding/mood-bg';
+import { getCardWidth } from '@/src/components/onboarding/mood-card';
+import { useDebounce } from '@/src/hooks/use-debounce';
+import { MOODS } from '@/src/constants/moods';
 
 export const PromiseScreen = () => {
   const [activeIndex, setActiveIndex] = useState(0);

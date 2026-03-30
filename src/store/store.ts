@@ -6,7 +6,7 @@
  */
 import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
-import { zustandJSONStorage } from '@/lib/storage/unified-storage';
+import { zustandJSONStorage } from '@/src/lib/storage/unified-storage';
 
 type ThemeSlice = {
   theme: 'system' | 'light' | 'dark';

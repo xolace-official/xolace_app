@@ -1,10 +1,10 @@
 import { ActivityIndicator, View } from 'react-native';
 import { LegendList } from '@legendapp/list/react-native';
-import { TimelineEntryCard } from '@/components/timeline/timeline-entry-card';
-import { TimelineSectionHeader } from '@/components/timeline/timeline-section-header';
-import { AppText } from '@/components/shared/app-text';
-import { useTimeline } from '@/hooks/use-timeline';
-import type { TimelineFlatItem } from '@/interfaces/timeline';
+import { TimelineEntryCard } from '@/src/components/timeline/timeline-entry-card';
+import { TimelineSectionHeader } from '@/src/components/timeline/timeline-section-header';
+import { AppText } from '@/src/components/shared/app-text';
+import { useTimeline } from '@/src/hooks/use-timeline';
+import type { TimelineFlatItem } from '@/src/interfaces/timeline';
 
 const renderItem = ({ item, index }: { item: TimelineFlatItem; index: number }) => {
   if (item.type === 'section') {

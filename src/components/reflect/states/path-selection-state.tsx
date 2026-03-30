@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import { AppText } from '@/components/shared/app-text';
+import { AppText } from '@/src/components/shared/app-text';
 
 type Props = {
   mirror: string;

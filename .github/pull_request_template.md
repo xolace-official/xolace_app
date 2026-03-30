@@ -22,7 +22,7 @@
 - [ ] I've tested on at least one platform (iOS, Android, or web)
 - [ ] Linting passes (`bun expo lint`)
 - [ ] No `console.log` left in code
-- [ ] New files use the `@/` path alias for imports
+- [ ] New files use the `@/src/` path alias for imports
 - [ ] Theme colors use CSS variables, not hard-coded values
 - [ ] Files stay under 200 lines
 

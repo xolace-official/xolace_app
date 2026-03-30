@@ -1,10 +1,10 @@
 import { Pressable, View } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
 import { Separator, TagGroup, cn } from "heroui-native";
-import { AppText } from "@/components/shared/app-text";
-import { PillButton } from "@/components/reflect/pill-button";
-import { TimelineIcon } from "@/components/reflect/timeline-icon";
-import type { UserVariant, ReflectionAction } from "@/interfaces/reflection";
+import { AppText } from "@/src/components/shared/app-text";
+import { PillButton } from "@/src/components/reflect/pill-button";
+import { TimelineIcon } from "@/src/components/reflect/timeline-icon";
+import type { UserVariant, ReflectionAction } from "@/src/interfaces/reflection";
 import * as Haptics from "expo-haptics";
 
 const TEXTURE_WORDS = [

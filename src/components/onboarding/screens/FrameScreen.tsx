@@ -5,11 +5,11 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
-import { useAppStore } from '@/store/store';
-import { AppText } from '@/components/shared/app-text';
-import { EmberOrb } from '@/components/onboarding/ember-orb';
-import { StepReveal } from '@/components/onboarding/step-reveal';
-import { FRAME_STEPS } from '@/constants/frame-steps';
+import { useAppStore } from '@/src/store/store';
+import { AppText } from '@/src/components/shared/app-text';
+import { EmberOrb } from '@/src/components/onboarding/ember-orb';
+import { StepReveal } from '@/src/components/onboarding/step-reveal';
+import { FRAME_STEPS } from '@/src/constants/frame-steps';
 
 export const FrameScreen = () => {
   const [phase, setPhase] = useState<0 | 1 | 2>(0);

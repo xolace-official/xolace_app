@@ -3,7 +3,7 @@ import { PropsWithChildren, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { AppText } from '@/components/shared/app-text';
+import { AppText } from '@/src/components/shared/app-text';
 
 export function Collapsible({ children, title }: PropsWithChildren & { title: string }) {
   const [isOpen, setIsOpen] = useState(false);

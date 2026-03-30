@@ -6,7 +6,7 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { AppText } from '@/components/shared/app-text';
+import { AppText } from '@/src/components/shared/app-text';
 
 const CARD_WIDTH_RATIO = 0.55;
 

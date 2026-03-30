@@ -166,7 +166,7 @@ export async function apiClient<T>(
 
 ```typescript
 // services/user.service.ts
-import { apiClient } from '@/services/api/client';
+import { apiClient } from '@/src/services/api/client';
 
 /** Fetches user by ID. Used by useUser and prefetch. */
 export async function fetchUser(id: string) {
@@ -314,9 +314,9 @@ const displayAmount = (totalCents / 100).toFixed(2);
 
 ## 10. Project Conventions
 
-**Path alias** – Use `@/` for imports: `@/components/Button`, `@/services/api/client`, `@/constants/colors`. Configure in `tsconfig.json` and `babel.config.js` (babel-plugin-module-resolver).
+**Path alias** – Use `@/src/` for imports: `@/src/components/Button`, `@/src/services/api/client`, `@/src/constants/colors`. Configure in `tsconfig.json` and `babel.config.js` (babel-plugin-module-resolver).
 
-**Barrel imports** – Avoid `index.ts` re-exports that pull in unused code. Import directly from source for tree shaking: `import { Button } from '@/components/ui/Button'` not `import { Button } from '@/components'`.
+**Barrel imports** – Avoid `index.ts` re-exports that pull in unused code. Import directly from source for tree shaking: `import { Button } from '@/src/components/ui/Button'` not `import { Button } from '@/src/components'`.
 
 **Platform extensions** – Use `.ios.tsx`, `.android.tsx`, or `.native.ts` for platform-specific code. Expo picks the right file at build time.
 

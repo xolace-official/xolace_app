@@ -22,7 +22,7 @@ A concise engineering reference for React Native Expo projects. **Copy this READ
 - **Expo Router** for routing and native tabs
 - **Expo SDKs and Expo-compatible libraries** — no custom native code
 - **State management**: **Zustand**
-- **Path alias**: Always use `@/` (e.g. `@/constants/colors`, `@/components/common/Text`)
+- **Path alias**: Always use `@/src/` (e.g. `@/src/constants/colors`, `@/src/components/common/Text`)
 
 ### Images
 
@@ -32,7 +32,7 @@ A concise engineering reference for React Native Expo projects. **Copy this READ
 ### Text
 
 - ❌ Never import `Text` from `react-native`
-- ✅ Use the custom **AppText** component from `@/components/shared/app-text`
+- ✅ Use the custom **AppText** component from `@/src/components/shared/app-text`
 
 ---
 
@@ -102,14 +102,14 @@ docs/                — Usage examples (maybe for heroui-native)
 - Prefer: interfaces, union types, enums
 - **Interfaces**: `interfaces/` by domain
 - **Types**: `types/` for props and constants
-- Use `@/` path alias for imports
+- Use `@/src/` path alias for imports
 
 ---
 
 ## 8. UI & Design System
 
-- **AppText** from `@/components/shared/app-text`
-- **MainContainer** from `@/components/common/MainContainer` for screens that it is neccesary for. (e.g. screens that need the scrollView)
+- **AppText** from `@/src/components/shared/app-text`
+- **MainContainer** from `@/src/components/common/MainContainer` for screens that it is neccesary for. (e.g. screens that need the scrollView)
 - Use semantic variable names: Name variables based on their purpose (e.g., --color-background, --color-primary) rather than their value (e.g., --color-blue-500).
 - Avoid hard-coded colors in components: Use CSS variables for colors that should adapt to themes. This ensures your UI remains consistent across theme changes.
 - Keep theme variables consistent: Ensure all themes define the same set of variables. If you miss a variable in one theme, we will warn you about it in __DEV__ mode.

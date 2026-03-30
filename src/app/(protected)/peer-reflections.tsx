@@ -1,4 +1,4 @@
-import { PeerReflectionScreen } from '@/components/peer-reflection/screen/PeerReflectionScreen';
+import { PeerReflectionScreen } from '@/src/components/peer-reflection/screen/PeerReflectionScreen';
 
 
 /**

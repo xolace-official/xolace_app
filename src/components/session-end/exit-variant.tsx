@@ -3,7 +3,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { LinkButton } from 'heroui-native';
 import * as Haptics from 'expo-haptics';
-import { AppText } from '@/components/shared/app-text';
+import { AppText } from '@/src/components/shared/app-text';
 
 type Props = {
   onHaveMore: () => void;

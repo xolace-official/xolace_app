@@ -4,8 +4,8 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { LinkButton } from 'heroui-native';
 import * as Haptics from 'expo-haptics';
-import { AppText } from '@/components/shared/app-text';
-import { ContributedConfirmation } from '@/components/session-end/contributed-confirmation';
+import { AppText } from '@/src/components/shared/app-text';
+import { ContributedConfirmation } from '@/src/components/session-end/contributed-confirmation';
 
 type Props = {
   distilledText: string | null;

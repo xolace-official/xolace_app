@@ -1,8 +1,8 @@
 import { ActivityIndicator, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSessionEnd } from '@/hooks/use-session-end';
-import { ExitVariant } from '@/components/session-end/exit-variant';
-import { ActivityVariant } from '@/components/session-end/activity-variant';
+import { useSessionEnd } from '@/src/hooks/use-session-end';
+import { ExitVariant } from '@/src/components/session-end/exit-variant';
+import { ActivityVariant } from '@/src/components/session-end/activity-variant';
 
 type PathType = 'solo' | 'peers' | 'exit';
 

@@ -4,20 +4,20 @@ import { EaseView } from 'react-native-ease';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import { useReflectionMachine } from '@/hooks/use-reflection-machine';
-import { useScreenTransition } from '@/hooks/use-screen-transition';
-import { SCREEN_TRANSITIONS, DEFAULT_SCREEN_TRANSITION } from '@/constants/reflect-transitions';
-import { computeUserVariant } from '@/helpers/utils/user-variant';
-import type { ReflectionStateName } from '@/interfaces/reflection';
-import { IdleState } from '@/components/reflect/states/idle-state';
-import { TypingState } from '@/components/reflect/states/typing-state';
-import { ProcessingState } from '@/components/reflect/states/processing-state';
-import { MirrorState } from '@/components/reflect/states/mirror-state';
-import { ClarifyState } from '@/components/reflect/states/clarify-state';
-import { GaveUpState } from '@/components/reflect/states/gave-up-state';
-import { PathSelectionState } from '@/components/reflect/states/path-selection-state';
-import { EscalationState } from '@/components/reflect/states/escalation-state';
-import { ErrorState } from '@/components/reflect/states/error-state';
+import { useReflectionMachine } from '@/src/hooks/use-reflection-machine';
+import { useScreenTransition } from '@/src/hooks/use-screen-transition';
+import { SCREEN_TRANSITIONS, DEFAULT_SCREEN_TRANSITION } from '@/src/constants/reflect-transitions';
+import { computeUserVariant } from '@/src/helpers/utils/user-variant';
+import type { ReflectionStateName } from '@/src/interfaces/reflection';
+import { IdleState } from '@/src/components/reflect/states/idle-state';
+import { TypingState } from '@/src/components/reflect/states/typing-state';
+import { ProcessingState } from '@/src/components/reflect/states/processing-state';
+import { MirrorState } from '@/src/components/reflect/states/mirror-state';
+import { ClarifyState } from '@/src/components/reflect/states/clarify-state';
+import { GaveUpState } from '@/src/components/reflect/states/gave-up-state';
+import { PathSelectionState } from '@/src/components/reflect/states/path-selection-state';
+import { EscalationState } from '@/src/components/reflect/states/escalation-state';
+import { ErrorState } from '@/src/components/reflect/states/error-state';
 
 export const ReflectScreen = () => {
   const {

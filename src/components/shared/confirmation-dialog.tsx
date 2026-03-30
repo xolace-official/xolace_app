@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { Dialog, Button, Spinner, useThemeColor } from "heroui-native";
-import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
-import { AppText } from "@/components/shared/app-text";
+import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
+import { AppText } from "@/src/components/shared/app-text";
 
 type Props = {
   isOpen: boolean;

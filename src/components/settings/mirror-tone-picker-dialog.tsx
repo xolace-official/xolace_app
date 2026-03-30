@@ -1,7 +1,7 @@
 import { Dialog, RadioGroup, Radio, Separator } from "heroui-native";
 import { View } from "react-native";
-import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
-import { AppText } from "@/components/shared/app-text";
+import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
+import { AppText } from "@/src/components/shared/app-text";
 
 export type MirrorTone = "adaptive" | "poetic" | "gentle" | "direct";
 

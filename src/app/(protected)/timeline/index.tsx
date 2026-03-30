@@ -1,4 +1,4 @@
-import { TimelineScreen } from "@/components/timeline/screens/TimelineScreen"
+import { TimelineScreen } from "@/src/components/timeline/screens/TimelineScreen"
 
 const Timeline = () => {
   return (

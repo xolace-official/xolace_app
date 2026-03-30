@@ -1,8 +1,8 @@
 import { Button, Dialog } from 'heroui-native';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { DialogBlurBackdrop } from '@/components/dialog-blur-backdrop';
-import { TrashIcon } from '@/components/icons/trash';
+import { DialogBlurBackdrop } from '@/src/components/dialog-blur-backdrop';
+import { TrashIcon } from '@/src/components/icons/trash';
 
 export const DialogContent = () => {
   const [dialogOpen, setDialogOpen] = useState(false);

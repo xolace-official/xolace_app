@@ -1,7 +1,7 @@
 import { useReducer, useCallback, useEffect, useRef } from 'react';
-import type { FeedbackType } from '@/interfaces/reflection';
-import { useSession } from '@/hooks/use-session';
-import { extractErrorMessage } from '@/services/session-service';
+import type { FeedbackType } from '@/src/interfaces/reflection';
+import { useSession } from '@/src/hooks/use-session';
+import { extractErrorMessage } from '@/src/services/session-service';
 import { MAX_TURNS, initialState, reducer } from './reflection-reducer';
 
 /**

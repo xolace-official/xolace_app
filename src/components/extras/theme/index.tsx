@@ -14,10 +14,10 @@ import React from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { useAppTheme } from '@/context/app-theme-context';
+import { useAppTheme } from '@/src/context/app-theme-context';
 
-import { CardContent } from '@/components/examples/themes-content/card-content';
-import {TextInputContent} from '@/components/examples/themes-content/text-input-content';
+import { CardContent } from '@/src/components/examples/themes-content/card-content';
+import {TextInputContent} from '@/src/components/examples/themes-content/text-input-content';
 
 type ThemeOption = {
   id: string;

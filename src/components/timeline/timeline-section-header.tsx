@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { cn } from 'heroui-native';
-import { AppText } from '@/components/shared/app-text';
+import { AppText } from '@/src/components/shared/app-text';
 
 type Props = {
   label: string;
