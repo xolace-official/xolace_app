@@ -1,120 +1,36 @@
-import CoreHaptics from '@/modules/native-core-haptics';
-import type { HapticPatternData } from '@/modules/native-core-haptics';
+// No-op stubs for non-iOS platforms (Android, web).
+// The iOS implementation lives in haptics.ios.ts (Expo platform resolution).
 
-import {
-  processingBreath,
-  gentlePresence,
-  mirrorArrival,
-  sessionComplete,
-  resonanceToggle,
-  pathChoice,
-  textureSelect,
-  typingBegin,
-  softPress,
-  affirmativePress,
-  errorNotice,
-  compassionateHold,
-  onboardingEntrance,
-  homeEntrance,
-} from './haptics-patterns.ios';
+export function tap(_intensity?: number, _sharpness?: number): void {}
+export function playProcessingBreath(): void {}
+export function playGentlePresence(): void {}
+export function playMirrorArrival(): void {}
+export function playSessionComplete(): void {}
+export function playResonanceToggle(): void {}
+export function playPathChoice(): void {}
+export function playTextureSelect(): void {}
+export function playTypingBegin(): void {}
+export function playSoftPress(): void {}
+export function playAffirmativePress(): void {}
+export function playErrorNotice(): void {}
+export function playCompassionateHold(): void {}
+export function playOnboardingEntrance(): void {}
+export function playHomeEntrance(): void {}
 
-// ── Generic helpers ──────────────────────────────────────────────────
+export type HapticName =
+  | 'processingBreath'
+  | 'gentlePresence'
+  | 'mirrorArrival'
+  | 'sessionComplete'
+  | 'resonanceToggle'
+  | 'pathChoice'
+  | 'textureSelect'
+  | 'typingBegin'
+  | 'softPress'
+  | 'affirmativePress'
+  | 'errorNotice'
+  | 'compassionateHold'
+  | 'onboardingEntrance'
+  | 'homeEntrance';
 
-function play(pattern: HapticPatternData): void {
-  console.log("play ", pattern)
-  if (process.env.EXPO_OS !== 'ios') return;
-  console.log("playPattern")
-  CoreHaptics.playPattern(pattern).catch((e: unknown) => {
-    console.warn('[haptics] playPattern failed:', e);
-  });
-}
-
-export function tap(intensity = 0.2, sharpness = 0.1): void {
-  if (process.env.EXPO_OS !== 'ios') return;
-  CoreHaptics.impact(sharpness, intensity).catch((e: unknown) => {
-    console.warn('[haptics] impact failed:', e);
-  });
-}
-
-// ── Named pattern functions ──────────────────────────────────────────
-
-export function playProcessingBreath(): void {
-  play(processingBreath);
-}
-
-export function playGentlePresence(): void {
-  play(gentlePresence);
-}
-
-export function playMirrorArrival(): void {
-  play(mirrorArrival);
-}
-
-export function playSessionComplete(): void {
-  play(sessionComplete);
-}
-
-export function playResonanceToggle(): void {
-  play(resonanceToggle);
-}
-
-export function playPathChoice(): void {
-  play(pathChoice);
-}
-
-export function playTextureSelect(): void {
-  play(textureSelect);
-}
-
-export function playTypingBegin(): void {
-  play(typingBegin);
-}
-
-export function playSoftPress(): void {
-  play(softPress);
-}
-
-export function playAffirmativePress(): void {
-  play(affirmativePress);
-}
-
-export function playErrorNotice(): void {
-  play(errorNotice);
-}
-
-export function playCompassionateHold(): void {
-  play(compassionateHold);
-}
-
-export function playOnboardingEntrance(): void {
-  play(onboardingEntrance);
-}
-
-export function playHomeEntrance(): void {
-  play(homeEntrance);
-}
-
-// ── Dynamic play-by-name ─────────────────────────────────────────────
-
-const patternMap = {
-  processingBreath,
-  gentlePresence,
-  mirrorArrival,
-  sessionComplete,
-  resonanceToggle,
-  pathChoice,
-  textureSelect,
-  typingBegin,
-  softPress,
-  affirmativePress,
-  errorNotice,
-  compassionateHold,
-  onboardingEntrance,
-  homeEntrance,
-} as const;
-
-export type HapticName = keyof typeof patternMap;
-
-export function playHaptic(name: HapticName): void {
-  play(patternMap[name]);
-}
+export function playHaptic(_name: HapticName): void {}
