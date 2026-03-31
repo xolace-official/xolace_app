@@ -3,8 +3,8 @@ import { Pressable, View } from 'react-native';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { TextArea } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import * as Haptics from 'expo-haptics';
 import { AppText } from '@/src/components/shared/app-text';
+import { playSoftPress } from '@/src/lib/haptics';
 import { PresenceDot } from '@/src/components/reflect/presence-dot';
 import { PillButton } from '@/src/components/reflect/pill-button';
 import { useTypingPause } from '@/src/hooks/use-typing-pause';
@@ -85,9 +85,7 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismis
           )}
           <Pressable
             onPress={() => {
-              if (process.env.EXPO_OS === 'ios') {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }
+              playSoftPress();
               onDismiss();
             }}
             hitSlop={12}

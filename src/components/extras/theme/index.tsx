@@ -7,11 +7,11 @@
  * - Extend availableThemes below when you add new color themes
  */
 import { useHeaderHeight } from '@react-navigation/elements';
-import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { playSoftPress } from '@/src/lib/haptics';
 import { useThemeColor } from 'heroui-native';
 import React from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useAppTheme } from '@/src/context/app-theme-context';
@@ -134,9 +134,7 @@ export default function Themes() {
   const handleThemeSelect = (theme: ThemeOption) => {
     const variant = isLight ? theme.lightVariant : theme.darkVariant;
     setTheme(variant as any);
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playSoftPress();
   };
 
   return (

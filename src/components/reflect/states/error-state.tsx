@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinkButton } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
+import { playErrorNotice } from '@/src/lib/haptics';
 
 type Props = {
   errorMessage: string;
@@ -9,7 +11,12 @@ type Props = {
   onReset: () => void;
 };
 
-export const ErrorState = ({ errorMessage, onRetry, onReset }: Props) => (
+export const ErrorState = ({ errorMessage, onRetry, onReset }: Props) => {
+  useEffect(() => {
+    playErrorNotice();
+  }, []);
+
+  return (
   <View className="flex-1 justify-center px-6">
     <AppText className="text-xl leading-8 text-foreground">
       Something didn&apos;t go as expected.
@@ -37,4 +44,5 @@ export const ErrorState = ({ errorMessage, onRetry, onReset }: Props) => (
       </Animated.View>
     </View>
   </View>
-);
+  );
+};

@@ -1,14 +1,21 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinkButton } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
+import { playCompassionateHold } from '@/src/lib/haptics';
 
 type Props = {
   onPathSelection: () => void;
   onReset: () => void;
 };
 
-export const GaveUpState = ({ onPathSelection, onReset }: Props) => (
+export const GaveUpState = ({ onPathSelection, onReset }: Props) => {
+  useEffect(() => {
+    playCompassionateHold();
+  }, []);
+
+  return (
   <View className="flex-1 justify-center px-6">
     <AppText className="text-xl leading-8 text-foreground">
       Sometimes words can&apos;t quite capture what we feel — and that&apos;s okay.
@@ -36,4 +43,5 @@ export const GaveUpState = ({ onPathSelection, onReset }: Props) => (
       </Animated.View>
     </View>
   </View>
-);
+  );
+};

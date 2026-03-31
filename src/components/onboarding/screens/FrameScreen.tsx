@@ -3,9 +3,9 @@ import { View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 
 import { useAppStore } from '@/src/store/store';
+import { playGentlePresence } from '@/src/lib/haptics';
 import { AppText } from '@/src/components/shared/app-text';
 import { EmberOrb } from '@/src/components/onboarding/ember-orb';
 import { StepReveal } from '@/src/components/onboarding/step-reveal';
@@ -27,9 +27,7 @@ export const FrameScreen = () => {
   }, []);
 
   const handlePress = () => {
-    if (process.env.EXPO_OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playGentlePresence();
     setIntroSeen(true);
     router.replace('/(auth)/auth');
   };

@@ -1,7 +1,7 @@
 import { Pressable } from 'react-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { cn } from '@/src/lib/utils';
-import * as Haptics from 'expo-haptics';
+import { playAffirmativePress } from '@/src/lib/haptics';
 
 type Props = {
   label: string;
@@ -12,9 +12,7 @@ type Props = {
 
 export const PillButton = ({ label, onPress, className, disabled }: Props) => {
   const handlePress = () => {
-    if (process.env.EXPO_OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playAffirmativePress();
     onPress();
   };
 

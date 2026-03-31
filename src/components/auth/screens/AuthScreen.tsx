@@ -2,8 +2,8 @@ import React, { useCallback, useState } from 'react';
 import { View, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
 import { Button , Spinner, useThemeColor} from 'heroui-native';
+import { playSoftPress } from '@/src/lib/haptics';
 import { useSignInWithGoogle } from '@clerk/expo/google';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -32,16 +32,12 @@ export const AuthScreen = () => {
   debugEnv();
 
   const handleAppleAuth = () => {
-    if (process.env.EXPO_OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playSoftPress();
     // TODO: wire to Clerk Apple OAuth
   };
 
   const handleGoogleAuth = useCallback(async () => {
-    if (process.env.EXPO_OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playSoftPress();
 
     try {
       setIsLoading(true);

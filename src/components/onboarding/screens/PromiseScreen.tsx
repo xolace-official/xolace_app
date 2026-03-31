@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Pressable, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -8,9 +8,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { playGentlePresence, playOnboardingEntrance } from '@/src/lib/haptics';
 import { MoodMarquee } from '@/src/components/onboarding/mood-marquee';
 import { MoodBg } from '@/src/components/onboarding/mood-bg';
 import { getCardWidth } from '@/src/components/onboarding/mood-card';
@@ -18,6 +18,7 @@ import { useDebounce } from '@/src/hooks/use-debounce';
 import { MOODS } from '@/src/constants/moods';
 
 export const PromiseScreen = () => {
+  const hasPlayedEntrance = useRef(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const debouncedIndex = useDebounce(activeIndex, 400);
   const router = useRouter();
@@ -28,6 +29,13 @@ export const PromiseScreen = () => {
   const scrollOffsetX = useSharedValue(0);
   const cardWidth = getCardWidth(width);
   const allItemsWidth = MOODS.length * cardWidth;
+
+  useEffect(() => {
+    if (!hasPlayedEntrance.current) {
+      hasPlayedEntrance.current = true;
+      playOnboardingEntrance();
+    }
+  }, []);
 
   useAnimatedReaction(
     () => scrollOffsetX.value,
@@ -45,9 +53,7 @@ export const PromiseScreen = () => {
   );
 
   const handlePress = () => {
-    if (process.env.EXPO_OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playGentlePresence();
     router.push('/frame');
   };
 
