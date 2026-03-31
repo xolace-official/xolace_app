@@ -1,19 +1,12 @@
 import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
 import { AppText } from '@/src/components/shared/app-text';
+import { playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
 
 type Props = {
   mirror: string;
   onEngage: () => Promise<void>;
   onDismiss: () => Promise<void>;
-};
-
-const hapticPress = (fn: () => Promise<void>) => async () => {
-  if (process.env.EXPO_OS === 'ios') {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }
-  await fn();
 };
 
 export const EscalationState = ({ mirror, onEngage, onDismiss }: Props) => {
@@ -47,7 +40,7 @@ export const EscalationState = ({ mirror, onEngage, onDismiss }: Props) => {
       <View className="gap-3">
         <Animated.View entering={FadeInDown.delay(1200).duration(500)}>
           <Pressable
-            onPress={hapticPress(onEngage)}
+            onPress={async () => { playAffirmativePress(); await onEngage(); }}
             accessibilityRole="button"
             accessibilityLabel="Yes, show me some resources"
             className="rounded-xl border border-warning/30 bg-warning/10 px-6 py-3.5"
@@ -60,7 +53,7 @@ export const EscalationState = ({ mirror, onEngage, onDismiss }: Props) => {
 
         <Animated.View entering={FadeInDown.delay(1400).duration(500)}>
           <Pressable
-            onPress={hapticPress(onDismiss)}
+            onPress={async () => { playSoftPress(); await onDismiss(); }}
             accessibilityRole="button"
             accessibilityLabel="Not right now, but thank you"
             className="rounded-xl border border-foreground/10 bg-transparent px-6 py-3.5"

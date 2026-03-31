@@ -2,8 +2,8 @@ import { View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { LinkButton } from 'heroui-native';
-import * as Haptics from 'expo-haptics';
 import { AppText } from '@/src/components/shared/app-text';
+import { playSoftPress } from '@/src/lib/haptics';
 
 type Props = {
   onHaveMore: () => void;
@@ -13,9 +13,7 @@ export const ExitVariant = ({ onHaveMore }: Props) => {
   const router = useRouter();
 
   const handleTimelinePress = () => {
-    if (process.env.EXPO_OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playSoftPress();
     router.push('/(protected)/timeline');
   };
 

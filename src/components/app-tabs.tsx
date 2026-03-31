@@ -8,10 +8,10 @@
  * To customize: edit TABS in constants/tabs.ts to add/remove/reorder tabs.
  */
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import * as Haptics from 'expo-haptics';
 import { useColorScheme } from 'react-native';
 
 import { Colors, TABS } from '@/src/constants';
+import { playSoftPress } from '@/src/lib/haptics';
 
 export default function AppTabs() {
   const scheme = useColorScheme();
@@ -24,7 +24,7 @@ export default function AppTabs() {
       labelStyle={{ selected: { color: colors.text } }}
       screenListeners={{
         tabPress: () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          playSoftPress();
         },
       }}
     >

@@ -2,16 +2,14 @@ import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
-import * as Haptics from "expo-haptics";
+import { playSoftPress } from "@/src/lib/haptics";
 
 export const TimelineIcon = () => {
   const router = useRouter();
   const foregroundColor = useThemeColor("foreground");
 
   const handlePress = () => {
-    if (process.env.EXPO_OS === "ios") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playSoftPress();
     router.push("/(protected)/timeline");
   };
 

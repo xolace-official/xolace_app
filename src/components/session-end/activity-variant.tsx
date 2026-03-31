@@ -3,8 +3,8 @@ import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { LinkButton } from 'heroui-native';
-import * as Haptics from 'expo-haptics';
 import { AppText } from '@/src/components/shared/app-text';
+import { playSoftPress, playTextureSelect } from '@/src/lib/haptics';
 import { ContributedConfirmation } from '@/src/components/session-end/contributed-confirmation';
 
 type Props = {
@@ -34,9 +34,7 @@ export const ActivityVariant = ({
   const router = useRouter();
 
   const handleTimelinePress = () => {
-    if (process.env.EXPO_OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playSoftPress();
     router.push('/(protected)/timeline');
   };
 
@@ -79,7 +77,7 @@ export const ActivityVariant = ({
           {MOODS.map((mood) => (
             <Pressable
               key={mood}
-              onPress={() => setSelectedMood(mood)}
+              onPress={() => { playTextureSelect(); setSelectedMood(mood); }}
               className={`rounded-full border px-3 py-1.5 ${
                 selectedMood === mood
                   ? 'border-accent/30 bg-accent/10'

@@ -1,12 +1,18 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { useThemeColor } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { BreathingOrb } from '@/src/components/reflect/breathing-orb';
 import Shimmer from '@/src/components/shared/shimmer';
 import { SparkleStars } from '@/src/components/shared/sparkle-stars';
+import { playProcessingBreath } from '@/src/lib/haptics';
 
 export const ProcessingState = () => {
   const accentColor = useThemeColor('accent');
+
+  useEffect(() => {
+    playProcessingBreath();
+  }, []);
 
   return (
     <View className="flex-1 items-center justify-center gap-8">

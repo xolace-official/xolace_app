@@ -3,6 +3,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { AppText } from '@/src/components/shared/app-text';
+import { playPathChoice } from '@/src/lib/haptics';
 
 type Props = {
   mirror: string;
@@ -23,6 +24,7 @@ export const PathSelectionState = ({
   const handleSolo = async () => {
     if (busyRef.current) return;
     busyRef.current = true;
+    playPathChoice();
     try {
       await onSelectSolo();
       router.push('/sit-with-this');
@@ -34,6 +36,7 @@ export const PathSelectionState = ({
   const handlePeers = async () => {
     if (busyRef.current) return;
     busyRef.current = true;
+    playPathChoice();
     try {
       await onSelectPeers();
       router.push('/peer-reflections');
@@ -45,6 +48,7 @@ export const PathSelectionState = ({
   const handleExit = async () => {
     if (busyRef.current) return;
     busyRef.current = true;
+    playPathChoice();
     try {
       await onSelectExit();
       router.push('/session-end?path=exit');

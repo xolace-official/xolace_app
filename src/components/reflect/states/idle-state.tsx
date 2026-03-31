@@ -5,7 +5,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/reflect/pill-button";
 import { TimelineIcon } from "@/src/components/reflect/timeline-icon";
 import type { UserVariant, ReflectionAction } from "@/src/interfaces/reflection";
-import * as Haptics from "expo-haptics";
+import { playTypingBegin, playTextureSelect } from "@/src/lib/haptics";
 
 const TEXTURE_WORDS = [
   "heavy",
@@ -45,16 +45,12 @@ export const IdleState = ({
   onScaffoldSubmit,
 }: Props) => {
   const handleTap = () => {
-    if (process.env.EXPO_OS === "ios") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playTypingBegin();
     onTap();
   };
 
   const handleToggle = (word: string) => {
-    if (process.env.EXPO_OS === "ios") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playTextureSelect();
     dispatch({ type: "TOGGLE_TEXTURE", word });
   };
 

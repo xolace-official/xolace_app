@@ -1,9 +1,10 @@
+import { useEffect } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Chip, LinkButton } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import type { EntryType } from '@/src/interfaces/reflection';
-import * as Haptics from 'expo-haptics';
+import { playMirrorArrival, playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
 
 type Props = {
   mirror: string;
@@ -14,13 +15,6 @@ type Props = {
   onSayMore: () => void;
 };
 
-const hapticPress = (fn: () => void) => () => {
-  if (process.env.EXPO_OS === 'ios') {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }
-  fn();
-};
-
 export const MirrorState = ({
   mirror,
   selectedTextures,
@@ -29,6 +23,10 @@ export const MirrorState = ({
   onNotQuite,
   onSayMore,
 }: Props) => {
+  useEffect(() => {
+    playMirrorArrival();
+  }, []);
+
   const showTextures =
     selectedTextures.length > 0 &&
     (entryType === 'scaffold' || entryType === 'hybrid');
@@ -73,7 +71,7 @@ export const MirrorState = ({
 
       <View className="mt-14 gap-6">
         <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-          <LinkButton onPress={hapticPress(onThatsIt)} size="lg" className="self-start">
+          <LinkButton onPress={() => { playAffirmativePress(); onThatsIt(); }} size="lg" className="self-start">
             <LinkButton.Label className="font-semibold text-accent">
               That&apos;s it
             </LinkButton.Label>
@@ -81,7 +79,7 @@ export const MirrorState = ({
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
-          <LinkButton onPress={hapticPress(onNotQuite)} size="md" className="self-start">
+          <LinkButton onPress={() => { playSoftPress(); onNotQuite(); }} size="md" className="self-start">
             <LinkButton.Label className="text-foreground/50">
               Not quite
             </LinkButton.Label>
@@ -89,7 +87,7 @@ export const MirrorState = ({
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(600).duration(400)}>
-          <LinkButton onPress={hapticPress(onSayMore)} size="md" className="self-start">
+          <LinkButton onPress={() => { playSoftPress(); onSayMore(); }} size="md" className="self-start">
             <LinkButton.Label className="text-foreground/50">
               Say more
             </LinkButton.Label>

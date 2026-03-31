@@ -3,7 +3,7 @@ import { View, ColorValue } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Card, Chip, cn } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-import * as Haptics from "expo-haptics";
+import { playResonanceToggle } from "@/src/lib/haptics";
 import { useCSSVariable, withUniwind } from "uniwind";
 
 const StyledSymbolView = withUniwind(SymbolView);
@@ -26,9 +26,7 @@ export const ReflectionCard = ({
   const resonanceColor = useCSSVariable("--color-resonance-foreground");
 
   const handleResonance = () => {
-    if (process.env.EXPO_OS === "ios") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playResonanceToggle();
     onToggleResonance();
   };
 

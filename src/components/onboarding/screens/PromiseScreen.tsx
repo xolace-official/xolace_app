@@ -8,9 +8,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { playGentlePresence } from '@/src/lib/haptics';
 import { MoodMarquee } from '@/src/components/onboarding/mood-marquee';
 import { MoodBg } from '@/src/components/onboarding/mood-bg';
 import { getCardWidth } from '@/src/components/onboarding/mood-card';
@@ -45,9 +45,7 @@ export const PromiseScreen = () => {
   );
 
   const handlePress = () => {
-    if (process.env.EXPO_OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+    playGentlePresence();
     router.push('/frame');
   };
 
