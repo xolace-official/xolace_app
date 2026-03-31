@@ -12,6 +12,8 @@ export {
   playAffirmativePress,
   playErrorNotice,
   playCompassionateHold,
+  playOnboardingEntrance,
+  playHomeEntrance,
   playHaptic,
 } from './haptics';
 

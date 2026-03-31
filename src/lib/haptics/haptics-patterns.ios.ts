@@ -2,7 +2,7 @@ import type { HapticPatternData } from '@/modules/native-core-haptics';
 
 /**
  * Xolace haptic patterns — designed for emotional processing.
- * Low intensity, low sharpness baseline. Patterns feel like breath, not buzzes.
+ * Warm and present, never aggressive or gamified.
  */
 
 // ── Presence Patterns ────────────────────────────────────────────────
@@ -15,8 +15,8 @@ export const processingBreath: HapticPatternData = {
       time: 0.0,
       eventDuration: 3.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.1 },
-        { parameterID: 'hapticSharpness', value: 0.1 },
+        { parameterID: 'hapticIntensity', value: 0.6 },
+        { parameterID: 'hapticSharpness', value: 0.2 },
       ],
     },
   ],
@@ -35,15 +35,15 @@ export const processingBreath: HapticPatternData = {
   ],
 };
 
-/** Softest acknowledgment. Idle-state entry, onboarding transitions. */
+/** Soft acknowledgment. Onboarding transitions. */
 export const gentlePresence: HapticPatternData = {
   events: [
     {
       eventType: 'hapticTransient',
       time: 0.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.2 },
-        { parameterID: 'hapticSharpness', value: 0.1 },
+        { parameterID: 'hapticIntensity', value: 0.6 },
+        { parameterID: 'hapticSharpness', value: 0.35 },
       ],
     },
   ],
@@ -58,24 +58,24 @@ export const mirrorArrival: HapticPatternData = {
       eventType: 'hapticTransient',
       time: 0.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.15 },
-        { parameterID: 'hapticSharpness', value: 0.1 },
+        { parameterID: 'hapticIntensity', value: 0.5 },
+        { parameterID: 'hapticSharpness', value: 0.25 },
       ],
     },
     {
       eventType: 'hapticTransient',
       time: 0.1,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.3 },
-        { parameterID: 'hapticSharpness', value: 0.15 },
+        { parameterID: 'hapticIntensity', value: 0.7 },
+        { parameterID: 'hapticSharpness', value: 0.35 },
       ],
     },
     {
       eventType: 'hapticTransient',
       time: 0.2,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.5 },
-        { parameterID: 'hapticSharpness', value: 0.2 },
+        { parameterID: 'hapticIntensity', value: 0.95 },
+        { parameterID: 'hapticSharpness', value: 0.5 },
       ],
     },
   ],
@@ -88,8 +88,8 @@ export const sessionComplete: HapticPatternData = {
       eventType: 'hapticTransient',
       time: 0.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.4 },
-        { parameterID: 'hapticSharpness', value: 0.15 },
+        { parameterID: 'hapticIntensity', value: 0.75 },
+        { parameterID: 'hapticSharpness', value: 0.4 },
       ],
     },
     {
@@ -97,8 +97,8 @@ export const sessionComplete: HapticPatternData = {
       time: 0.2,
       eventDuration: 0.3,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.3 },
-        { parameterID: 'hapticSharpness', value: 0.1 },
+        { parameterID: 'hapticIntensity', value: 0.6 },
+        { parameterID: 'hapticSharpness', value: 0.2 },
       ],
     },
   ],
@@ -121,8 +121,8 @@ export const resonanceToggle: HapticPatternData = {
       eventType: 'hapticTransient',
       time: 0.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.35 },
-        { parameterID: 'hapticSharpness', value: 0.15 },
+        { parameterID: 'hapticIntensity', value: 0.7 },
+        { parameterID: 'hapticSharpness', value: 0.35 },
       ],
     },
   ],
@@ -137,16 +137,16 @@ export const pathChoice: HapticPatternData = {
       eventType: 'hapticTransient',
       time: 0.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.25 },
-        { parameterID: 'hapticSharpness', value: 0.15 },
+        { parameterID: 'hapticIntensity', value: 0.6 },
+        { parameterID: 'hapticSharpness', value: 0.35 },
       ],
     },
     {
       eventType: 'hapticTransient',
       time: 0.08,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.4 },
-        { parameterID: 'hapticSharpness', value: 0.2 },
+        { parameterID: 'hapticIntensity', value: 0.8 },
+        { parameterID: 'hapticSharpness', value: 0.45 },
       ],
     },
   ],
@@ -159,8 +159,8 @@ export const textureSelect: HapticPatternData = {
       eventType: 'hapticTransient',
       time: 0.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.25 },
-        { parameterID: 'hapticSharpness', value: 0.2 },
+        { parameterID: 'hapticIntensity', value: 0.65 },
+        { parameterID: 'hapticSharpness', value: 0.45 },
       ],
     },
   ],
@@ -173,8 +173,8 @@ export const typingBegin: HapticPatternData = {
       eventType: 'hapticTransient',
       time: 0.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.2 },
-        { parameterID: 'hapticSharpness', value: 0.15 },
+        { parameterID: 'hapticIntensity', value: 0.6 },
+        { parameterID: 'hapticSharpness', value: 0.3 },
       ],
     },
   ],
@@ -189,8 +189,8 @@ export const softPress: HapticPatternData = {
       eventType: 'hapticTransient',
       time: 0.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.2 },
-        { parameterID: 'hapticSharpness', value: 0.1 },
+        { parameterID: 'hapticIntensity', value: 0.6 },
+        { parameterID: 'hapticSharpness', value: 0.4 },
       ],
     },
   ],
@@ -203,8 +203,8 @@ export const affirmativePress: HapticPatternData = {
       eventType: 'hapticTransient',
       time: 0.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.35 },
-        { parameterID: 'hapticSharpness', value: 0.15 },
+        { parameterID: 'hapticIntensity', value: 0.8 },
+        { parameterID: 'hapticSharpness', value: 0.45 },
       ],
     },
   ],
@@ -219,16 +219,16 @@ export const errorNotice: HapticPatternData = {
       eventType: 'hapticTransient',
       time: 0.0,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.35 },
-        { parameterID: 'hapticSharpness', value: 0.4 },
+        { parameterID: 'hapticIntensity', value: 0.8 },
+        { parameterID: 'hapticSharpness', value: 0.7 },
       ],
     },
     {
       eventType: 'hapticTransient',
       time: 0.06,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.35 },
-        { parameterID: 'hapticSharpness', value: 0.4 },
+        { parameterID: 'hapticIntensity', value: 0.8 },
+        { parameterID: 'hapticSharpness', value: 0.7 },
       ],
     },
   ],
@@ -242,8 +242,8 @@ export const compassionateHold: HapticPatternData = {
       time: 0.0,
       eventDuration: 0.5,
       parameters: [
-        { parameterID: 'hapticIntensity', value: 0.25 },
-        { parameterID: 'hapticSharpness', value: 0.05 },
+        { parameterID: 'hapticIntensity', value: 0.6 },
+        { parameterID: 'hapticSharpness', value: 0.15 },
       ],
     },
   ],
@@ -255,6 +255,91 @@ export const compassionateHold: HapticPatternData = {
         { relativeTime: 0.0, value: 1.0 },
         { relativeTime: 0.3, value: 0.6 },
         { relativeTime: 0.5, value: 0.0 },
+      ],
+    },
+  ],
+};
+
+// ── Entrance Patterns ───────────────────────────────────────────────
+
+/** Synced with PromiseScreen's staggered FadeInDown. First thing the user feels. */
+export const onboardingEntrance: HapticPatternData = {
+  events: [
+    {
+      eventType: 'hapticTransient',
+      time: 0.0,
+      parameters: [
+        { parameterID: 'hapticIntensity', value: 0.3 },
+        { parameterID: 'hapticSharpness', value: 0.2 },
+      ],
+    },
+    {
+      eventType: 'hapticTransient',
+      time: 0.3,
+      parameters: [
+        { parameterID: 'hapticIntensity', value: 0.45 },
+        { parameterID: 'hapticSharpness', value: 0.3 },
+      ],
+    },
+    {
+      eventType: 'hapticTransient',
+      time: 0.6,
+      parameters: [
+        { parameterID: 'hapticIntensity', value: 0.6 },
+        { parameterID: 'hapticSharpness', value: 0.35 },
+      ],
+    },
+    {
+      eventType: 'hapticContinuous',
+      time: 0.8,
+      eventDuration: 0.3,
+      parameters: [
+        { parameterID: 'hapticIntensity', value: 0.25 },
+        { parameterID: 'hapticSharpness', value: 0.15 },
+      ],
+    },
+  ],
+  parameterCurves: [
+    {
+      parameterID: 'hapticIntensityControl',
+      relativeTime: 0.8,
+      controlPoints: [
+        { relativeTime: 0.0, value: 1.0 },
+        { relativeTime: 0.3, value: 0.0 },
+      ],
+    },
+  ],
+};
+
+/** Warm landing for idle-state mount. "I'm here, ready when you are." */
+export const homeEntrance: HapticPatternData = {
+  events: [
+    {
+      eventType: 'hapticTransient',
+      time: 0.0,
+      parameters: [
+        { parameterID: 'hapticIntensity', value: 0.4 },
+        { parameterID: 'hapticSharpness', value: 0.25 },
+      ],
+    },
+    {
+      eventType: 'hapticContinuous',
+      time: 0.15,
+      eventDuration: 0.4,
+      parameters: [
+        { parameterID: 'hapticIntensity', value: 0.5 },
+        { parameterID: 'hapticSharpness', value: 0.2 },
+      ],
+    },
+  ],
+  parameterCurves: [
+    {
+      parameterID: 'hapticIntensityControl',
+      relativeTime: 0.15,
+      controlPoints: [
+        { relativeTime: 0.0, value: 1.0 },
+        { relativeTime: 0.25, value: 0.5 },
+        { relativeTime: 0.4, value: 0.0 },
       ],
     },
   ],

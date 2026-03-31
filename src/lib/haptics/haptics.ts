@@ -14,18 +14,26 @@ import {
   affirmativePress,
   errorNotice,
   compassionateHold,
+  onboardingEntrance,
+  homeEntrance,
 } from './haptics-patterns.ios';
 
 // ── Generic helpers ──────────────────────────────────────────────────
 
 function play(pattern: HapticPatternData): void {
+  console.log("play ", pattern)
   if (process.env.EXPO_OS !== 'ios') return;
-  CoreHaptics.playPattern(pattern);
+  console.log("playPattern")
+  CoreHaptics.playPattern(pattern).catch((e: unknown) => {
+    console.warn('[haptics] playPattern failed:', e);
+  });
 }
 
 export function tap(intensity = 0.2, sharpness = 0.1): void {
   if (process.env.EXPO_OS !== 'ios') return;
-  CoreHaptics.impact(sharpness, intensity);
+  CoreHaptics.impact(sharpness, intensity).catch((e: unknown) => {
+    console.warn('[haptics] impact failed:', e);
+  });
 }
 
 // ── Named pattern functions ──────────────────────────────────────────
@@ -78,6 +86,14 @@ export function playCompassionateHold(): void {
   play(compassionateHold);
 }
 
+export function playOnboardingEntrance(): void {
+  play(onboardingEntrance);
+}
+
+export function playHomeEntrance(): void {
+  play(homeEntrance);
+}
+
 // ── Dynamic play-by-name ─────────────────────────────────────────────
 
 const patternMap = {
@@ -93,6 +109,8 @@ const patternMap = {
   affirmativePress,
   errorNotice,
   compassionateHold,
+  onboardingEntrance,
+  homeEntrance,
 } as const;
 
 export type HapticName = keyof typeof patternMap;

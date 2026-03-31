@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
 import { Separator, TagGroup, cn } from "heroui-native";
@@ -5,7 +6,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/reflect/pill-button";
 import { TimelineIcon } from "@/src/components/reflect/timeline-icon";
 import type { UserVariant, ReflectionAction } from "@/src/interfaces/reflection";
-import { playTypingBegin, playTextureSelect } from "@/src/lib/haptics";
+import { playTypingBegin, playTextureSelect, playHomeEntrance } from "@/src/lib/haptics";
 
 const TEXTURE_WORDS = [
   "heavy",
@@ -44,6 +45,15 @@ export const IdleState = ({
   onTap,
   onScaffoldSubmit,
 }: Props) => {
+  const hasPlayedEntrance = useRef(false);
+
+  useEffect(() => {
+    if (!hasPlayedEntrance.current) {
+      hasPlayedEntrance.current = true;
+      playHomeEntrance();
+    }
+  }, []);
+
   const handleTap = () => {
     playTypingBegin();
     onTap();
