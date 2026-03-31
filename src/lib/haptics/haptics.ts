@@ -1,6 +1,9 @@
 // No-op stubs for non-iOS platforms (Android, web).
 // The iOS implementation lives in haptics.ios.ts (Expo platform resolution).
 
+export type { HapticName } from './haptics.types';
+import type { HapticName } from './haptics.types';
+
 export function tap(_intensity?: number, _sharpness?: number): void {}
 export function playProcessingBreath(): void {}
 export function playGentlePresence(): void {}
@@ -16,21 +19,5 @@ export function playErrorNotice(): void {}
 export function playCompassionateHold(): void {}
 export function playOnboardingEntrance(): void {}
 export function playHomeEntrance(): void {}
-
-export type HapticName =
-  | 'processingBreath'
-  | 'gentlePresence'
-  | 'mirrorArrival'
-  | 'sessionComplete'
-  | 'resonanceToggle'
-  | 'pathChoice'
-  | 'textureSelect'
-  | 'typingBegin'
-  | 'softPress'
-  | 'affirmativePress'
-  | 'errorNotice'
-  | 'compassionateHold'
-  | 'onboardingEntrance'
-  | 'homeEntrance';
 
 export function playHaptic(_name: HapticName): void {}

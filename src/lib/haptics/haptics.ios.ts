@@ -1,5 +1,6 @@
 import CoreHaptics from '@/modules/native-core-haptics';
 import type { HapticPatternData } from '@/modules/native-core-haptics';
+import type { HapticName } from './haptics.types';
 
 import {
   processingBreath,
@@ -16,7 +17,7 @@ import {
   compassionateHold,
   onboardingEntrance,
   homeEntrance,
-} from './haptics-patterns.ios';
+} from '@/src/lib/haptics/haptics-patterns.ios';
 
 // ── Generic helpers ──────────────────────────────────────────────────
 
@@ -92,7 +93,7 @@ export function playHomeEntrance(): void {
 
 // ── Dynamic play-by-name ─────────────────────────────────────────────
 
-const patternMap = {
+const patternMap: Record<HapticName, HapticPatternData> = {
   processingBreath,
   gentlePresence,
   mirrorArrival,
@@ -107,9 +108,9 @@ const patternMap = {
   compassionateHold,
   onboardingEntrance,
   homeEntrance,
-} as const;
+};
 
-export type HapticName = keyof typeof patternMap;
+export type { HapticName };
 
 export function playHaptic(name: HapticName): void {
   play(patternMap[name]);
