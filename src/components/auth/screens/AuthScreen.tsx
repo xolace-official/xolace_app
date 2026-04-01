@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Alert } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { Button , Spinner, useThemeColor} from 'heroui-native';
@@ -20,16 +20,6 @@ export const AuthScreen = () => {
   const getOrCreate = useMutation(api.users.getOrCreate);
   const [isLoading, setIsLoading] = useState(false);
 
-  // TEMP DEBUG: check if env vars are baked into the bundle
-  const debugEnv = () => {
-    Alert.alert('Env Check', [
-      `WEB: ${process.env.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID ?? 'MISSING'}`,
-      `IOS: ${process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID ?? 'MISSING'}`,
-      `SCHEME: ${process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME ?? 'MISSING'}`,
-      `CLERK_PK: ${process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ? 'SET' : 'MISSING'}`,
-    ].join('\n'));
-  };
-  debugEnv();
 
   const handleAppleAuth = () => {
     playSoftPress();
@@ -47,7 +37,6 @@ export const AuthScreen = () => {
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
-        console.log("handleGoogleAuth: session created", createdSessionId);
 
         await getOrCreate({
           authProvider: 'google',
@@ -76,7 +65,6 @@ export const AuthScreen = () => {
         msg = String(error);
       }
       console.error('Google auth error:', msg);
-      Alert.alert('Auth Debug', msg);
     } finally {
       setIsLoading(false);
     }

@@ -321,9 +321,9 @@ export const getActive = query({
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
-    // Check non-terminal states for an active session.
-    // Return the most recently created one in case multiple exist
-    // (e.g. a previous session that was never completed).
+    // Query each non-terminal state via the by_profile_state index.
+    // 8 bounded index lookups (each returns at most 1 doc), then pick
+    // the most recent. O(1) per state regardless of total sessions.
     const nonTerminalStates = [
       "initiated",
       "input_received",
@@ -345,7 +345,7 @@ export const getActive = query({
         .order("desc")
         .first();
 
-      if (session && (!latest || session.createdAt > latest.createdAt)) {
+      if (session && (!latest || session._creationTime > latest._creationTime)) {
         latest = session;
       }
     }
