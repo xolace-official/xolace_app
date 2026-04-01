@@ -11,6 +11,7 @@ import {
   entryTypeValidator,
   confirmationStateValidator,
   pathChosenValidator,
+  postSessionMoodValidator,
 } from "./lib/validators";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
 
@@ -186,6 +187,7 @@ export const completePath = mutation({
     sessionId: v.id("sessions"),
     pathCompleted: v.boolean(),
     contributedReflection: v.optional(v.boolean()),
+    postSessionMood: v.optional(postSessionMoodValidator),
   },
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
@@ -200,6 +202,7 @@ export const completePath = mutation({
       state: "completed",
       pathCompleted: args.pathCompleted,
       contributedReflection: args.contributedReflection,
+      ...(args.postSessionMood ? { postSessionMood: args.postSessionMood } : {}),
       completedAt: now,
       sessionDuration: now - session.createdAt,
       updatedAt: now,
@@ -318,7 +321,9 @@ export const getActive = query({
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
-    // Check non-terminal states for an active session
+    // Check non-terminal states for an active session.
+    // Return the most recently created one in case multiple exist
+    // (e.g. a previous session that was never completed).
     const nonTerminalStates = [
       "initiated",
       "input_received",
@@ -330,20 +335,22 @@ export const getActive = query({
       "error",
     ] as const;
 
+    let latest = null;
     for (const state of nonTerminalStates) {
       const session = await ctx.db
         .query("sessions")
         .withIndex("by_profile_state", (q) =>
           q.eq("emotionalProfileId", profile._id).eq("state", state)
         )
+        .order("desc")
         .first();
 
-      if (session) {
-        return session;
+      if (session && (!latest || session.createdAt > latest.createdAt)) {
+        latest = session;
       }
     }
 
-    return null;
+    return latest;
   },
 });
 

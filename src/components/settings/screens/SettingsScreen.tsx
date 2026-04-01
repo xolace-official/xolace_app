@@ -139,13 +139,12 @@ export const SettingsScreen = () => {
 
         {/* ── YOUR DATA ────────────────────────────────────────── */}
         <SettingsSection title="Your Data">
-          <SettingsRow
+          {/* TODO: export data flow not yet implemented */}
+          {/* <SettingsRow
             variant="chevron"
             label="Export my data"
-            onPress={() => {
-              // TODO: trigger data export flow
-            }}
-          />
+            onPress={() => {}}
+          /> */}
           <SettingsRow
             variant="value"
             label="Retention"

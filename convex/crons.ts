@@ -6,7 +6,7 @@ const crons = cronJobs();
 // Check for abandoned sessions every 15 minutes
 crons.interval(
   "check abandoned sessions",
-  { hours: 24 },
+  { minutes: 15 },
   internal.sessions.checkAbandoned,
   {}
 );
@@ -22,7 +22,7 @@ crons.interval(
 // Process account deletions hourly
 crons.interval(
   "process account deletions",
-  { hours: 24 },
+  { hours: 1 },
   internal.jobs.accountDeletion.purge,
   {}
 );

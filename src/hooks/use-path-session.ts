@@ -51,7 +51,11 @@ export function usePathSession() {
    * Complete the current path and mark the session as completed.
    */
   const completePath = useCallback(
-    async (pathCompleted: boolean, contributedReflection?: boolean): Promise<boolean> => {
+    async (
+      pathCompleted: boolean,
+      contributedReflection?: boolean,
+      postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
+    ): Promise<boolean> => {
       if (!sessionId || busyRef.current) return false;
       busyRef.current = true;
       try {
@@ -59,6 +63,7 @@ export function usePathSession() {
           sessionId,
           pathCompleted,
           contributedReflection,
+          postSessionMood,
         });
         return true;
       } catch {
