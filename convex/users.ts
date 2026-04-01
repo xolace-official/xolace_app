@@ -29,6 +29,15 @@ export const getOrCreate = mutation({
       .unique();
 
     if (existingUser) {
+      // Grace period: if the user signed back in before the cron
+      // purged their account, cancel the deletion and reactivate.
+      if (existingUser.accountStatus === "deleted") {
+        await ctx.db.patch(existingUser._id, {
+          accountStatus: "active",
+          deletionRequestedAt: undefined,
+          updatedAt: Date.now(),
+        });
+      }
       return existingUser._id;
     }
 
