@@ -93,9 +93,9 @@ public class NativeCoreHapticsModule: Module {
         self.hapticEngine?.stoppedHandler = { [weak self] reason in
           print("Haptic engine stopped with reason: \(reason)")
           switch reason {
-          case .audioSessionInterrupt, .applicationSuspended, .idleTimeout:
-            break // expected, will restart automatically
-          case .systemError, .notifyWhenFinished, .gameControllerDisconnect, .engineDestroyed:
+          case .audioSessionInterrupt, .applicationSuspended:
+            break // expected, will restart on foreground
+          case .idleTimeout, .systemError, .notifyWhenFinished, .gameControllerDisconnect, .engineDestroyed:
             self?.restartHapticEngineIfNeeded()
           @unknown default:
             print("Unknown stop reason: \(reason)")

@@ -89,7 +89,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ],
       "expo-sqlite",
       "@clerk/expo",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-apple-authentication"
     ],
     experiments: {
       typedRoutes: true,
