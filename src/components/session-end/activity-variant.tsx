@@ -28,7 +28,6 @@ export const ActivityVariant = ({
   const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(null);
   const [shareToggled, setShareToggled] = useState(contributeByDefault);
 
-  console.log("distilledText", distilledText)
   // Sync when the async preference loads after initial render
   useEffect(() => {
     setShareToggled(contributeByDefault);

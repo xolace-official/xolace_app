@@ -28,7 +28,7 @@ const EMOTION_EMOJI: Record<string, string> = {
  * @returns The emoji for the provided emotion, or '💭' if `emotion` is null, falsy, or not found
  */
 export function getEmotionEmoji(emotion: string | null): string {
-  console.log("emotion", emotion)
+  
   if (!emotion) return '💭';
   return EMOTION_EMOJI[emotion.toLowerCase()] ?? '💭';
 }

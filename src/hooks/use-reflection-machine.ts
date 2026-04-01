@@ -74,8 +74,6 @@ export function useReflectionMachine() {
         break;
       case 'mirror_delivered':
         if (mirrorText) {
-          console.log('mirrorText', mirrorText);
-          console.log('session', session);
           if (session?.escalationTriggered) {
             dispatch({ type: 'ESCALATION_TRIGGERED', mirror: mirrorText });
           } else {

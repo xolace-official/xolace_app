@@ -72,8 +72,6 @@ export function useSessionEnd() {
   const distilledText = (session as { distilledText?: string } | undefined)
     ?.distilledText ?? null;
   const contributeByDefault = contributeByDefaultQuery ?? false;
-  console.log("session ", session)
-  console.log("distilledText from session ", distilledText)
 
   return { sessionId, isLoading, distilledText, contributeByDefault, dismiss, haveMore };
 }

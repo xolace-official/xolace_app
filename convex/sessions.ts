@@ -321,10 +321,8 @@ export const getActive = query({
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
-    // Check non-terminal states for an active session.
-    // Return the most recently created one in case multiple exist
-    // (e.g. a previous session that was never completed).
-    const nonTerminalStates = [
+    // Single query ordered by most recent, pick the first non-terminal session.
+    const nonTerminalStates = new Set([
       "initiated",
       "input_received",
       "processing",
@@ -333,20 +331,20 @@ export const getActive = query({
       "path_selected",
       "path_in_progress",
       "error",
-    ] as const;
+    ]);
 
     let latest = null;
-    for (const state of nonTerminalStates) {
-      const session = await ctx.db
-        .query("sessions")
-        .withIndex("by_profile_state", (q) =>
-          q.eq("emotionalProfileId", profile._id).eq("state", state)
-        )
-        .order("desc")
-        .first();
+    const sessions = ctx.db
+      .query("sessions")
+      .withIndex("by_profile_time", (q) =>
+        q.eq("emotionalProfileId", profile._id)
+      )
+      .order("desc");
 
-      if (session && (!latest || session.createdAt > latest.createdAt)) {
+    for await (const session of sessions) {
+      if (nonTerminalStates.has(session.state)) {
         latest = session;
+        break;
       }
     }
 
