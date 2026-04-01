@@ -7,11 +7,13 @@ import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress, playTextureSelect } from '@/src/lib/haptics';
 import { ContributedConfirmation } from '@/src/components/session-end/contributed-confirmation';
 
+type PostSessionMood = 'lighter' | 'same' | 'heavier' | 'unsure';
+
 type Props = {
   distilledText: string | null;
   contributeByDefault: boolean;
-  onDismiss: (contributedReflection?: boolean) => void;
-  onHaveMore: (contributedReflection?: boolean) => void;
+  onDismiss: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
+  onHaveMore: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
 };
 
 const MOODS = ['lighter', 'same', 'heavier', 'unsure'] as const;
@@ -23,9 +25,10 @@ export const ActivityVariant = ({
   onHaveMore,
 }: Props) => {
   const [phase, setPhase] = useState<'main' | 'contributed'>('main');
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(null);
   const [shareToggled, setShareToggled] = useState(contributeByDefault);
 
+  console.log("distilledText", distilledText)
   // Sync when the async preference loads after initial render
   useEffect(() => {
     setShareToggled(contributeByDefault);
@@ -40,7 +43,7 @@ export const ActivityVariant = ({
 
   if (phase === 'contributed') {
     return (
-      <ContributedConfirmation onDone={() => onDismiss(true)} />
+      <ContributedConfirmation onDone={() => onDismiss(true, selectedMood ?? undefined)} />
     );
   }
 
@@ -143,7 +146,7 @@ export const ActivityVariant = ({
                 </AppText>
               </Pressable>
               <Pressable
-                onPress={() => onDismiss(false)}
+                onPress={() => onDismiss(false, selectedMood ?? undefined)}
                 className="rounded-full border border-border px-5 py-2.5"
               >
                 <AppText className="text-sm text-foreground/20">
@@ -163,7 +166,7 @@ export const ActivityVariant = ({
               if (shareToggled) {
                 setPhase('contributed');
               } else {
-                onDismiss(false);
+                onDismiss(false, selectedMood ?? undefined);
               }
             }}
             className="self-start rounded-full border border-border px-6 py-2.5"
@@ -176,7 +179,7 @@ export const ActivityVariant = ({
       ) : null}
 
       <Animated.View entering={FadeIn.delay(700).duration(400)}>
-        <LinkButton onPress={() => onHaveMore()} size="sm" className="self-start">
+        <LinkButton onPress={() => onHaveMore(undefined, selectedMood ?? undefined)} size="sm" className="self-start">
           <LinkButton.Label className="font-light text-foreground/30">
             Have more? I&apos;m here.
           </LinkButton.Label>

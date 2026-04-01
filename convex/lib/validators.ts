@@ -77,3 +77,10 @@ export const userFeedbackValidator = v.union(
   v.literal("not_quite"),
   v.literal("say_more")
 );
+
+export const postSessionMoodValidator = v.union(
+  v.literal("lighter"),
+  v.literal("same"),
+  v.literal("heavier"),
+  v.literal("unsure")
+);

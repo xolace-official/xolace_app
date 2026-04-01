@@ -42,10 +42,13 @@ export function useSessionEnd() {
   }, [isLoading, sessionId, navigateHome]);
 
   const dismiss = useCallback(
-    async (contributedReflection?: boolean) => {
+    async (
+      contributedReflection?: boolean,
+      postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
+    ) => {
       if (busyRef.current) return;
       busyRef.current = true;
-      const ok = await completePath(true, contributedReflection);
+      const ok = await completePath(true, contributedReflection, postSessionMood);
       busyRef.current = false;
       if (ok) navigateHome();
     },
@@ -53,10 +56,13 @@ export function useSessionEnd() {
   );
 
   const haveMore = useCallback(
-    async (contributedReflection?: boolean) => {
+    async (
+      contributedReflection?: boolean,
+      postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
+    ) => {
       if (busyRef.current) return;
       busyRef.current = true;
-      const ok = await completePath(true, contributedReflection);
+      const ok = await completePath(true, contributedReflection, postSessionMood);
       busyRef.current = false;
       if (ok) navigateHome();
     },
@@ -66,6 +72,8 @@ export function useSessionEnd() {
   const distilledText = (session as { distilledText?: string } | undefined)
     ?.distilledText ?? null;
   const contributeByDefault = contributeByDefaultQuery ?? false;
+  console.log("session ", session)
+  console.log("distilledText from session ", distilledText)
 
   return { sessionId, isLoading, distilledText, contributeByDefault, dismiss, haveMore };
 }

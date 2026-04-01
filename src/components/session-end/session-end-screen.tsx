@@ -6,6 +6,7 @@ import { ExitVariant } from '@/src/components/session-end/exit-variant';
 import { ActivityVariant } from '@/src/components/session-end/activity-variant';
 import { playSessionComplete } from '@/src/lib/haptics';
 
+type PostSessionMood = 'lighter' | 'same' | 'heavier' | 'unsure';
 type PathType = 'solo' | 'peers' | 'exit';
 
 type Props = {
@@ -44,8 +45,12 @@ export const SessionEndScreen = ({ path }: Props) => {
         <ActivityVariant
           distilledText={distilledText}
           contributeByDefault={contributeByDefault}
-          onDismiss={dismiss}
-          onHaveMore={haveMore}
+          onDismiss={(contributed?: boolean, mood?: PostSessionMood) =>
+            dismiss(contributed, mood)
+          }
+          onHaveMore={(contributed?: boolean, mood?: PostSessionMood) =>
+            haveMore(contributed, mood)
+          }
         />
       )}
     </View>

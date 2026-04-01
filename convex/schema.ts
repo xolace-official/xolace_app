@@ -374,6 +374,19 @@ export default defineSchema({
     // Shown to user at contribution prompt for consent.
     distilledText: v.optional(v.string()),
 
+    // --- Post-Session Mood ---
+
+    // How the user feels after the session.
+    // Optional: only set if the user engages with the mood check.
+    postSessionMood: v.optional(
+      v.union(
+        v.literal("lighter"),
+        v.literal("same"),
+        v.literal("heavier"),
+        v.literal("unsure")
+      )
+    ),
+
     // --- Safety ---
 
     // Whether this session triggered escalation.
