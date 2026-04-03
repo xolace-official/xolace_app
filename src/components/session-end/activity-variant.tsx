@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View , ScrollView} from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { LinkButton } from 'heroui-native';
@@ -109,11 +109,14 @@ export const ActivityVariant = ({
           <AppText className="mb-3 text-sm font-light leading-6 text-muted">
             Would you want this to exist{'\n'}anonymously for someone who{'\n'}might feel the same?
           </AppText>
-          <View className="mb-4 rounded-xl border border-border/60 bg-surface/50 px-4 py-3">
+          <ScrollView
+            style={{ flexGrow: 0, maxHeight: '50%' }}
+            showsVerticalScrollIndicator={false}
+            className="mb-4 rounded-xl border border-border/60 bg-surface/50 px-4 py-3">
             <AppText className="text-sm font-light italic leading-6 text-foreground/60">
               {`"${distilledText}"`}
             </AppText>
-          </View>
+          </ScrollView>
 
           {contributeByDefault ? (
             /* Toggle mode: pre-selected, user can untoggle */
