@@ -45,6 +45,13 @@ export interface ClassificationResult {
   temporalContext?: "past_focused" | "present_focused" | "future_focused";
 }
 
+// --- Valid primary emotions (must match the classifier prompt enum) ---
+
+const VALID_PRIMARY_EMOTIONS = new Set([
+  "anger", "sadness", "grief", "fear", "anxiety", "joy", "love",
+  "surprise", "disgust", "shame", "guilt", "confusion", "numbness",
+]);
+
 // --- Helpers ---
 
 /**
@@ -91,10 +98,15 @@ export function parseClassificationResponse(
   const parsed = JSON.parse(cleaned);
 
   // Validate and coerce required fields
-  const result: ClassificationResult = {
-    primaryEmotion: typeof parsed.primaryEmotion === "string"
+  const rawEmotion =
+    typeof parsed.primaryEmotion === "string"
       ? parsed.primaryEmotion.toLowerCase()
-      : "unclassified",
+      : "unclassified";
+
+  const result: ClassificationResult = {
+    primaryEmotion: VALID_PRIMARY_EMOTIONS.has(rawEmotion)
+      ? rawEmotion
+      : "confusion",
     primaryEmotionConfidence: clamp(
       Number(parsed.primaryEmotionConfidence) || 0.3,
       0,

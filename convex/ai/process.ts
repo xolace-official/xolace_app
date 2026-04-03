@@ -60,10 +60,19 @@ export const generateMirror = internalAction({
       // 3. Parallel: moderation + classification
       const anthropic = getAnthropicClient();
 
+      const session = context.session as {
+        entryType?: string;
+        timeOfDay?: string;
+        emotionalProfileId: string;
+        [key: string]: unknown;
+      };
+
       const classifierPrompt = buildClassifierPrompt(
         args.rawText,
         patternSummary,
-        context.isFirstSession
+        context.isFirstSession,
+        session.entryType ?? "open_prompt",
+        session.timeOfDay
       );
       console.log("classifier prompt ", classifierPrompt)
 
@@ -134,6 +143,7 @@ export const generateMirror = internalAction({
           mirrorTone,
           isFirstSession: context.isFirstSession,
           recentMirrors,
+          entryType: session.entryType ?? "open_prompt",
           inputDuration: context.session.inputDuration as number | undefined,
           freezeOccurred: context.session.freezeOccurred as boolean | undefined,
         });
@@ -170,11 +180,6 @@ export const generateMirror = internalAction({
       });
 
       // 8. Store emotional metadata
-      const session = context.session as {
-        emotionalProfileId: string;
-        [key: string]: unknown;
-      };
-
       await ctx.runMutation(internal.emotionalMetadata.store, {
         sessionId: args.sessionId,
         emotionalProfileId: session.emotionalProfileId as ReturnType<

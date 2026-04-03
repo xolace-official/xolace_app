@@ -14,6 +14,9 @@ export const EscalationState = ({ mirror, onEngage, onDismiss }: Props) => {
     <View className="flex-1 justify-center px-7">
       {/* Quoted mirror — what the user shared, reflected back */}
       <Animated.View entering={FadeIn.delay(200).duration(600)}>
+        <AppText className="mb-2 text-xs uppercase tracking-widest text-foreground/20">
+          Your mirror
+        </AppText>
         <AppText
           className="mb-6 text-base italic leading-7 text-foreground/30"
           selectable

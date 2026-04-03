@@ -38,6 +38,7 @@ export const handleClarification = internalAction({
       const session = context.session as {
         mirrorText?: string;
         emotionalProfileId: string;
+        entryType?: string;
         inputDuration?: number;
         freezeOccurred?: boolean;
         [key: string]: unknown;
@@ -105,6 +106,7 @@ export const handleClarification = internalAction({
         patternSummary,
         safeguardLevel: "none", // Already evaluated on initial pass
         mirrorTone,
+        entryType: session.entryType ?? "open_prompt",
         isFirstSession: context.isFirstSession,
         recentMirrors,
         inputDuration: session.inputDuration,
