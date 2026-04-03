@@ -22,7 +22,7 @@ export const TimelineIcon = () => {
     >
       <View className="h-10 w-10 items-center justify-center rounded-full border border-border">
         <SymbolView
-          name="clock"
+          name={{ ios: "clock", android: "history"}}
           size={18}
           tintColor={foregroundColor}
           style={{ opacity: 0.4 }}
