@@ -14,8 +14,8 @@ import {
   postSessionMoodValidator,
 } from "./lib/validators";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
+import { rateLimiter } from "./lib/rateLimits";
 
-const RATE_LIMIT_PER_HOUR = 5;
 const ABANDON_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 
 // Terminal states — sessions in these states cannot be transitioned further.
@@ -35,18 +35,11 @@ export const initiate = mutation({
     const { profile } = await requireAuth(ctx);
     const now = Date.now();
 
-    // Rate limit: count sessions in the last hour
-    const oneHourAgo = now - 60 * 60 * 1000;
-    const recentSessions = await ctx.db
-      .query("sessions")
-      .withIndex("by_profile_time", (q) =>
-        q.eq("emotionalProfileId", profile._id).gte("createdAt", oneHourAgo)
-      )
-      .take(RATE_LIMIT_PER_HOUR + 1);
-
-    if (recentSessions.length >= RATE_LIMIT_PER_HOUR) {
-      throw new Error("Rate limit exceeded. Please wait before starting a new session.");
-    }
+    // Rate limit: 5 sessions/hour per profile (token bucket with burst of 3)
+    await rateLimiter.limit(ctx, "sessionInitiate", {
+      key: profile._id,
+      throws: true,
+    });
 
     const sessionId = await ctx.db.insert("sessions", {
       emotionalProfileId: profile._id,

@@ -44,19 +44,21 @@ interface RecentMetadataEntry {
 // --- Resources ---
 
 const CRISIS_RESOURCES = [
-  "988 Suicide & Crisis Lifeline (call or text 988)",
-  "Crisis Text Line (text HOME to 741741)",
-  "International Association for Suicide Prevention: https://www.iasp.info/resources/Crisis_Centres/",
+  "If you're in Ghana, you can call the Mental Health Authority Helpline: 0800 678 678 (free, 24/7)",
+  "You can also reach the Ghana Health Service for urgent support: 112 (national emergency line)",
+  "If you're outside Ghana, find a local helpline: https://www.iasp.info/resources/Crisis_Centres/",
 ];
 
 const SUPPORT_RESOURCES = [
-  "If you need support, help is available.",
-  "SAMHSA National Helpline: 1-800-662-4357 (free, confidential, 24/7)",
+  "If you need someone to talk to, support is available.",
+  "Mental Health Authority (Ghana) Helpline: 0800 678 678",
+  "MindFreedom Ghana (mental health advocacy & support)",
 ];
 
 const TRAUMA_RESOURCES = [
-  "RAINN National Sexual Assault Hotline: 1-800-656-4673 (free, confidential, 24/7)",
-  "Crisis Text Line (text HOME to 741741)",
+  "Domestic Violence and Victim Support Unit (DOVVSU - Ghana Police): 18555",
+  "Mental Health Authority Helpline: 0800 678 678",
+  "If you're outside Ghana, find a local support center: https://www.iasp.info/resources/Crisis_Centres/",
 ];
 
 // --- Time window for pattern escalation (48 hours) ---
