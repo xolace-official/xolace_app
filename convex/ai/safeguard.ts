@@ -54,6 +54,11 @@ const SUPPORT_RESOURCES = [
   "SAMHSA National Helpline: 1-800-662-4357 (free, confidential, 24/7)",
 ];
 
+const TRAUMA_RESOURCES = [
+  "RAINN National Sexual Assault Hotline: 1-800-656-4673 (free, confidential, 24/7)",
+  "Crisis Text Line (text HOME to 741741)",
+];
+
 // --- Time window for pattern escalation (48 hours) ---
 
 const PATTERN_WINDOW_MS = 48 * 60 * 60 * 1000;
@@ -79,6 +84,18 @@ const HIGH_DISTRESS_EMOTIONS = new Set([
   "helplessness",
 ]);
 
+const SURVIVOR_NARRATIVE_EMOTIONS = new Set([
+  "grief",
+  "fear",
+  "shame",
+  "anger",
+  "sadness",
+  "anguish",
+  "disgust",
+  "numbness",
+  "helplessness",
+]);
+
 /**
  * Determines the appropriate safeguard level and associated actions for a message by evaluating moderation signals, classification outputs, and recent session metadata.
  *
@@ -94,7 +111,7 @@ export function evaluateSafeguard(
   recentMetadata: RecentMetadataEntry[]
 ): SafeguardResult {
   // Step 1: Check for content that should be rejected entirely
-  const rejection = checkRejection(moderation);
+  const rejection = checkRejection(moderation, classification);
   if (rejection) return rejection;
 
   // Step 2: Check for crisis signals
@@ -121,24 +138,59 @@ export function evaluateSafeguard(
 }
 
 /**
+ * Detects whether the classification signals a survivor recounting past
+ * trauma rather than producing harmful content.
+ *
+ * Requires ALL THREE of:
+ * - past_focused temporal context (describing something that happened)
+ * - specificity >= 6 (describing real events with detail, not vague/fictional)
+ * - primary emotion in the trauma-relevant set
+ */
+function isSurvivorNarrative(
+  classification: ClassificationResult
+): boolean {
+  if (classification.temporalContext !== "past_focused") return false;
+  if (classification.specificity < 6) return false;
+
+  // Check primaryEmotion first (broad, reliable match like "grief")
+  if (SURVIVOR_NARRATIVE_EMOTIONS.has(classification.primaryEmotion))
+    return true;
+
+  // Fallback: check granularLabel for exact match
+  if (
+    classification.granularLabel &&
+    SURVIVOR_NARRATIVE_EMOTIONS.has(classification.granularLabel)
+  )
+    return true;
+
+  return false;
+}
+
+/**
  * Detects moderation categories that require immediate session rejection.
+ * Consults classification to avoid rejecting survivor trauma disclosures.
  *
  * @param moderation - Moderation result with `categories` and `categoryScores` used to identify disallowed content flags.
- * @returns A `SafeguardResult` configured to reject the session with `rejectionReason` set to `"content_policy_violation"` when a disallowed category is detected, `null` otherwise.
+ * @param classification - Classification result used to detect survivor narrative context.
+ * @returns A `SafeguardResult` configured to reject the session with `rejectionReason` set to `"content_policy_violation"` when a disallowed category is detected and the input is not a survivor narrative, `null` otherwise.
  */
 
 function checkRejection(
-  moderation: ModerationResult
+  moderation: ModerationResult,
+  classification: ClassificationResult
 ): SafeguardResult | null {
-  console.log("moderation result ", moderation)
+  console.log("moderation result ", moderation);
   const cats = moderation.categories;
   const scores = moderation.categoryScores;
 
   if (cats["sexual/minors"]) {
-    return makeRejection(
-      `Moderation: sexual/minors flagged (score: ${fmtScore(scores["sexual/minors"])}).`,
-      "content_policy_violation"
-    );
+    if (!isSurvivorNarrative(classification)) {
+      return makeRejection(
+        `Moderation: sexual/minors flagged (score: ${fmtScore(scores["sexual/minors"])}).`,
+        "content_policy_violation"
+      );
+    }
+    // Survivor narrative detected — fall through to elevated/gentle checks
   }
 
   if (cats["hate/threatening"]) {
@@ -149,10 +201,12 @@ function checkRejection(
   }
 
   if (cats.violence && cats.harassment) {
-    return makeRejection(
-      `Moderation: violence (${fmtScore(scores.violence)}) + harassment (${fmtScore(scores.harassment)}) both flagged.`,
-      "content_policy_violation"
-    );
+    if (!isSurvivorNarrative(classification)) {
+      return makeRejection(
+        `Moderation: violence (${fmtScore(scores.violence)}) + harassment (${fmtScore(scores.harassment)}) both flagged.`,
+        "content_policy_violation"
+      );
+    }
   }
 
   return null;
@@ -230,6 +284,37 @@ function checkElevated(
   recentMetadata: RecentMetadataEntry[]
 ): SafeguardResult | null {
   const scores = moderation.categoryScores;
+
+  // Trauma disclosure: moderation flagged sexual content or violence+harassment
+  // but classification indicates a survivor recounting past abuse
+  const hasSexualFlag =
+    moderation.categories["sexual/minors"] || moderation.categories.sexual;
+  const hasViolenceHarassmentFlag =
+    moderation.categories.violence && moderation.categories.harassment;
+
+  if (
+    (hasSexualFlag || hasViolenceHarassmentFlag) &&
+    isSurvivorNarrative(classification)
+  ) {
+    const relevantCategories = hasSexualFlag
+      ? ["sexual/minors", "sexual", "violence"]
+      : ["violence", "harassment"];
+
+    return {
+      level: "elevated",
+      triggerType: "implicit_risk_language",
+      triggerConfidence: classification.primaryEmotionConfidence,
+      triggerEvidence: buildEvidence(
+        moderation,
+        classification,
+        relevantCategories
+      ),
+      actionTaken: "resources_shown",
+      resourcesPresented: hasSexualFlag ? TRAUMA_RESOURCES : SUPPORT_RESOURCES,
+      shouldReject: false,
+    };
+  }
+
   const selfHarmScore = scores["self-harm"] ?? 0;
 
   // Moderate self-harm signal

@@ -57,7 +57,7 @@ The JSON must have this exact shape:
   5 = "I'm anxious about work"
   10 = "I'm furious at my mother for making my graduation about her boyfriend"
 
-**thematicTags**: 2-5 life domain tags inferred from content. Choose from: "work", "relationships", "family", "identity", "health", "finances", "purpose", "self-worth", "loss", "change", "conflict", "isolation", "achievement", "creativity".
+**thematicTags**: 2-5 life domain tags inferred from content. Choose from: "work", "relationships", "family", "identity", "health", "finances", "purpose", "self-worth", "loss", "change", "conflict", "isolation", "achievement", "creativity", "trauma", "abuse", "neglect".
 
 **userLanguageTags**: 2-5 key emotional words or short phrases extracted VERBATIM from the user's input. These are the user's own words that carry emotional weight. Examples: "stuck", "glass wall", "drowning", "invisible", "can't breathe".
 
@@ -67,7 +67,8 @@ The JSON must have this exact shape:
 - Classify THIS input on its own merit. The pattern summary below is background context, not a prediction.
 - Be calibrated. If the input is genuinely ambiguous, say so with low confidence.
 - Do not inflate intensity. Match the actual emotional weight of the words.
-- Extract userLanguageTags from the actual input text, not from your interpretation.${isFirstSession ? "\n- This is the user's first session. There is no history. Be slightly more conservative with confidence scores." : ""}
+- Extract userLanguageTags from the actual input text, not from your interpretation.
+- Use everyday emotional language for granularLabel. Avoid clinical or diagnostic terms (e.g., "complex trauma", "PTSD", "dissociation"). Prefer descriptive labels like "deep hurt", "long-held pain", "wounded grief".${isFirstSession ? "\n- This is the user's first session. There is no history. Be slightly more conservative with confidence scores." : ""}
 
 ## User's Pattern Context
 ${patternSummary}`;
