@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, internalMutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import { rateLimiter } from "./lib/rateLimits";
 
 /**
  * Schedule a notification for delivery.
@@ -21,18 +22,12 @@ export const schedule = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Rate limit: no more than 1 notification per 24 hours
-    const oneDayAgo = now - 24 * 60 * 60 * 1000;
-    const recent = await ctx.db
-      .query("notification_log")
-      .withIndex("by_profile", (q) =>
-        q
-          .eq("emotionalProfileId", args.emotionalProfileId)
-          .gte("sentAt", oneDayAgo)
-      )
-      .first();
+    // Rate limit: 1 notification per 24 hours per profile
+    const { ok } = await rateLimiter.limit(ctx, "notification", {
+      key: args.emotionalProfileId,
+    });
 
-    if (recent) {
+    if (!ok) {
       // Suppress: too recent
       await ctx.db.insert("notification_log", {
         emotionalProfileId: args.emotionalProfileId,

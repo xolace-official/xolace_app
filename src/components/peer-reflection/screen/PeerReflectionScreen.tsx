@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useQuery, useMutation } from "convex/react";
+import { useToast } from "heroui-native";
 import { api } from "../../../../convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/reflect/pill-button";
@@ -13,6 +14,7 @@ import { usePathSession } from "@/src/hooks/use-path-session";
 export const PeerReflectionScreen = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast } = useToast();
   const startedRef = useRef(false);
 
   const { sessionId, session, isLoading, startPath } = usePathSession();
@@ -128,9 +130,24 @@ export const PeerReflectionScreen = () => {
             index={i}
             resonanceCount={reflection.resonanceCount}
             resonated={!!resonatedMap?.[reflection._id]}
-            onToggleResonance={() =>
-              toggleResonanceMutation({ reflectionId: reflection._id })
-            }
+            onToggleResonance={async () => {
+              try {
+                const result = await toggleResonanceMutation({ reflectionId: reflection._id });
+                if (result?.rateLimited) {
+                  toast.show({
+                    label: "Slow down",
+                    description: "Take a breath before resonating again.",
+                    variant: "default",
+                  });
+                }
+              } catch {
+                toast.show({
+                  label: "Something went wrong",
+                  description: "Try again in a moment.",
+                  variant: "default",
+                });
+              }
+            }}
           />
         ))}
       </ScrollView>

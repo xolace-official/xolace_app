@@ -71,14 +71,19 @@ export function mapServerStateToScreen(
  *
  * @param error - The value to inspect for generating a friendly message
  * @returns A string appropriate for the error:
- * - A rate-limit hint when the error message contains 'Rate limit'
+ * - A rate-limit hint when the error is a RateLimited ConvexError
  * - A session-expired prompt when the error message contains 'Not authenticated'
  * - A generic retry prompt for other Error instances
  * - A generic unexpected-error message for non-Error inputs
  */
 export function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
-    if (error.message.includes('Rate limit')) {
+    // ConvexError from @convex-dev/rate-limiter includes "RateLimited" in the message
+    if (error.message.includes('RateLimited')) {
+      const retryMinutes = parseRetryAfter(error.message);
+      if (retryMinutes !== null && retryMinutes > 0) {
+        return `You've been reflecting a lot. Come back in ${retryMinutes} ${retryMinutes === 1 ? 'minute' : 'minutes'}.`;
+      }
       return "You've been reflecting a lot. Take a moment and come back soon.";
     }
     if (error.message.includes('Not authenticated')) {
@@ -87,4 +92,13 @@ export function extractErrorMessage(error: unknown): string {
     return 'Something went wrong. You can try again when you are ready.';
   }
   return 'Something unexpected happened.';
+}
+
+/**
+ * Extract retryAfter (ms) from a RateLimited ConvexError message and convert to minutes.
+ */
+function parseRetryAfter(message: string): number | null {
+  const match = message.match(/"retryAfter"\s*:\s*([\d.]+)/);
+  if (!match) return null;
+  return Math.ceil(parseFloat(match[1]) / 60000);
 }

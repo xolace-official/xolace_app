@@ -21,6 +21,8 @@ import {
   collectRecentMirrors,
 } from "./helpers/patternSummary";
 
+import { rateLimiter } from "../lib/rateLimits";
+
 import type { SessionContext } from "./context";
 import type { ClassificationResult } from "./providers/anthropic";
 
@@ -45,6 +47,24 @@ export const generateMirror = internalAction({
         internal.ai.context.buildSessionContext,
         { sessionId: args.sessionId }
       );
+
+      // 1a. Rate limit AI requests (main cost control)
+      const { ok, retryAfter } = await rateLimiter.limit(ctx, "aiMirrorRequest", {
+        key: context.session.emotionalProfileId as string,
+      });
+
+      if (!ok) {
+        const minutes = Math.ceil((retryAfter ?? 0) / 60000);
+        const retryText = minutes > 0
+          ? `Try again in ${minutes} ${minutes === 1 ? "minute" : "minutes"}.`
+          : "Try again in a few minutes.";
+
+        await ctx.runMutation(internal.sessions.failSession, {
+          sessionId: args.sessionId,
+          errorMessage: `You've reached the limit for reflections. ${retryText}`,
+        });
+        return;
+      }
 
       // 2. Build pattern summary (pure function)
       const mirrorTone = context.preferences?.mirrorTone ?? "adaptive";

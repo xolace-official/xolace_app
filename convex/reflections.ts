@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import { rateLimiter } from "./lib/rateLimits";
 
 /**
  * Match reflections for a session based on its emotional metadata.
@@ -73,6 +74,14 @@ export const toggleResonance = mutation({
   },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+
+    // Rate limit: prevent resonance toggle spam
+    const { ok } = await rateLimiter.limit(ctx, "resonanceToggle", {
+      key: profile._id,
+    });
+    if (!ok) {
+      return { resonated: false, rateLimited: true };
+    }
 
     const reflection = await ctx.db.get(args.reflectionId);
     if (!reflection) {

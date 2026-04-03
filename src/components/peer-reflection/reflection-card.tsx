@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { View, ColorValue } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Card, Chip, cn } from "heroui-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { TruncatedText } from "@/src/components/peer-reflection/truncated-text";
 import { playResonanceToggle } from "@/src/lib/haptics";
 import { useCSSVariable, withUniwind } from "uniwind";
 
@@ -13,7 +13,7 @@ type Props = {
   index: number;
   resonanceCount: number;
   resonated: boolean;
-  onToggleResonance: () => void;
+  onToggleResonance: () => void | Promise<void>;
 };
 
 export const ReflectionCard = ({
@@ -38,9 +38,10 @@ export const ReflectionCard = ({
         style={{ borderCurve: "continuous" }}
       >
         <Card.Body className="gap-5 py-4 px-4">
-          <AppText className="text-base italic leading-7 text-foreground">
-            &ldquo;{text}&rdquo;
-          </AppText>
+          <TruncatedText
+            text={text}
+            className="text-base italic leading-7 text-foreground"
+          />
 
           <View>
             <Chip

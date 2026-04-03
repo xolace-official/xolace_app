@@ -22,6 +22,7 @@ import {
 
 import { RootProvider } from '@/src/providers/root-provider';
 import { useAppStore } from '@/src/store/store';
+import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -58,6 +59,7 @@ const AppContent = () => {
  * @returns The root layout element that provides app-wide context and a navigation theme.
  */
 export default function RootLayout() {
+  useOtaUpdate();
   const { theme } = useUniwind()
   const [fontsLoaded, fontError] = useFonts({
     SpaceGrotesk_400Regular,
