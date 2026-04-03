@@ -76,10 +76,12 @@ export const toggleResonance = mutation({
     const { profile } = await requireAuth(ctx);
 
     // Rate limit: prevent resonance toggle spam
-    await rateLimiter.limit(ctx, "resonanceToggle", {
+    const { ok } = await rateLimiter.limit(ctx, "resonanceToggle", {
       key: profile._id,
-      throws: true,
     });
+    if (!ok) {
+      return { resonated: false, rateLimited: true };
+    }
 
     const reflection = await ctx.db.get(args.reflectionId);
     if (!reflection) {

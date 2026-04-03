@@ -54,9 +54,14 @@ export const generateMirror = internalAction({
       });
 
       if (!ok) {
+        const minutes = Math.ceil((retryAfter ?? 0) / 60000);
+        const retryText = minutes > 0
+          ? `Try again in ${minutes} ${minutes === 1 ? "minute" : "minutes"}.`
+          : "Try again in a few minutes.";
+
         await ctx.runMutation(internal.sessions.failSession, {
           sessionId: args.sessionId,
-          errorMessage: `You've reached the limit for reflections. Try again in ${Math.ceil((retryAfter ?? 0) / 60000)} minutes.`,
+          errorMessage: `You've reached the limit for reflections. ${retryText}`,
         });
         return;
       }
