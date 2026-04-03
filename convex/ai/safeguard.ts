@@ -90,10 +90,8 @@ const SURVIVOR_NARRATIVE_EMOTIONS = new Set([
   "shame",
   "anger",
   "sadness",
-  "anguish",
   "disgust",
   "numbness",
-  "helplessness",
 ]);
 
 /**

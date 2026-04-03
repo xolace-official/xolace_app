@@ -48,7 +48,7 @@ export interface ClassificationResult {
 // --- Valid primary emotions (must match the classifier prompt enum) ---
 
 const VALID_PRIMARY_EMOTIONS = new Set([
-  "anger", "sadness", "fear", "anxiety", "joy", "love",
+  "anger", "sadness", "grief", "fear", "anxiety", "joy", "love",
   "surprise", "disgust", "shame", "guilt", "confusion", "numbness",
 ]);
 

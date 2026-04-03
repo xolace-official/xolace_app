@@ -51,7 +51,7 @@ The JSON must have this exact shape:
 
 ## Field Definitions
 
-**primaryEmotion**: The DOMINANT emotion. Must be one of: "anger", "sadness", "fear", "anxiety", "joy", "love", "surprise", "disgust", "shame", "guilt", "confusion", "numbness".
+**primaryEmotion**: The DOMINANT emotion. Must be one of: "anger", "sadness", "grief", "fear", "anxiety", "joy", "love", "surprise", "disgust", "shame", "guilt", "confusion", "numbness".
 
 Read through the surface to the real emotion. Someone who writes "I'm so angry at myself" is probably feeling shame, not anger. Someone who writes "I don't care anymore" is probably feeling exhaustion or grief, not apathy. Choose the most TRUE emotion, not the most OBVIOUS one.
 

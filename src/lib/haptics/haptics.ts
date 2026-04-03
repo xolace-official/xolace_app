@@ -16,15 +16,15 @@ const isAndroid = process.env.EXPO_OS === 'android';
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function androidHaptic(type: Haptics.AndroidHaptics): void {
-  Haptics.performAndroidHapticsAsync(type);
+  Haptics.performAndroidHapticsAsync(type).catch(() => {});
 }
 
 function impact(style: Haptics.ImpactFeedbackStyle): void {
-  Haptics.impactAsync(style);
+  Haptics.impactAsync(style).catch(() => {});
 }
 
 function notification(type: Haptics.NotificationFeedbackType): void {
-  Haptics.notificationAsync(type);
+  Haptics.notificationAsync(type).catch(() => {});
 }
 
 // ── Generic tap ──────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ export function playResonanceToggle(): void {
   if (isAndroid) {
     androidHaptic(Haptics.AndroidHaptics.Toggle_On);
   } else {
-    Haptics.selectionAsync();
+    Haptics.selectionAsync().catch(() => {});
   }
 }
 
@@ -83,7 +83,7 @@ export function playTextureSelect(): void {
   if (isAndroid) {
     androidHaptic(Haptics.AndroidHaptics.Segment_Tick);
   } else {
-    Haptics.selectionAsync();
+    Haptics.selectionAsync().catch(() => {});
   }
 }
 
