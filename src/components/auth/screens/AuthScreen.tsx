@@ -20,13 +20,13 @@ export const AuthScreen = () => {
   const { startGoogleAuthenticationFlow } = useSignInWithGoogle();
   const { startAppleAuthenticationFlow } = useSignInWithApple();
   const getOrCreate = useMutation(api.users.getOrCreate);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<'apple' | 'google' | null>(null);
 
   const handleAppleAuth = useCallback(async () => {
     playSoftPress();
 
     try {
-      setIsLoading(true);
+      setLoadingProvider('apple');
 
       const { createdSessionId, setActive, signUp } =
         await startAppleAuthenticationFlow();
@@ -60,7 +60,7 @@ export const AuthScreen = () => {
       }
       console.error('Apple auth error:', msg);
     } finally {
-      setIsLoading(false);
+      setLoadingProvider(null);
     }
   }, [startAppleAuthenticationFlow, getOrCreate]);
 
@@ -68,7 +68,7 @@ export const AuthScreen = () => {
     playSoftPress();
 
     try {
-      setIsLoading(true);
+      setLoadingProvider('google');
 
       const { createdSessionId, setActive, signUp } =
         await startGoogleAuthenticationFlow();
@@ -104,7 +104,7 @@ export const AuthScreen = () => {
       }
       console.error('Google auth error:', msg);
     } finally {
-      setIsLoading(false);
+      setLoadingProvider(null);
     }
   }, [startGoogleAuthenticationFlow, getOrCreate]);
 
@@ -146,10 +146,10 @@ export const AuthScreen = () => {
               onPress={handleAppleAuth}
               variant="ghost"
               size="lg"
-              isDisabled={isLoading}
+              isDisabled={loadingProvider !== null}
               className="bg-white rounded-[14px] py-3.5 px-6"
             >
-              {isLoading && <Spinner entering={FadeIn.delay(50)} color="#000" />}
+              {loadingProvider === 'apple' && <Spinner entering={FadeIn.delay(50)} color="#000" />}
               <AppleIcon size={20} color="#000" />
               <Button.Label
                 className="text-[15px] text-black"
@@ -168,14 +168,14 @@ export const AuthScreen = () => {
               onPress={handleGoogleAuth}
               variant="outline"
               size="lg"
-              isDisabled={isLoading}
+              isDisabled={loadingProvider !== null}
               className="rounded-[14px] py-3.5 px-6"
               style={{
                 backgroundColor: 'rgba(255,255,255,0.08)',
                 borderColor: 'rgba(217, 171, 111, 0.2)',
               }}
             >
-              {isLoading &&  <Spinner entering={FadeIn.delay(50)} color={themeColorAccentForeground} />}
+              {loadingProvider === 'google' && <Spinner entering={FadeIn.delay(50)} color={themeColorAccentForeground} />}
               <GoogleIcon size={20} />
               <Button.Label
                 className="text-[15px] text-white/90"
