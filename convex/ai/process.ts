@@ -143,6 +143,7 @@ export const generateMirror = internalAction({
           mirrorTone,
           isFirstSession: context.isFirstSession,
           recentMirrors,
+          entryType: session.entryType ?? "open_prompt",
           inputDuration: context.session.inputDuration as number | undefined,
           freezeOccurred: context.session.freezeOccurred as boolean | undefined,
         });
