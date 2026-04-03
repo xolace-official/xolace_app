@@ -131,11 +131,19 @@ export const PeerReflectionScreen = () => {
             resonanceCount={reflection.resonanceCount}
             resonated={!!resonatedMap?.[reflection._id]}
             onToggleResonance={async () => {
-              const result = await toggleResonanceMutation({ reflectionId: reflection._id });
-              if (result?.rateLimited) {
+              try {
+                const result = await toggleResonanceMutation({ reflectionId: reflection._id });
+                if (result?.rateLimited) {
+                  toast.show({
+                    label: "Slow down",
+                    description: "Take a breath before resonating again.",
+                    variant: "default",
+                  });
+                }
+              } catch {
                 toast.show({
-                  label: "Slow down",
-                  description: "Take a breath before resonating again.",
+                  label: "Something went wrong",
+                  description: "Try again in a moment.",
                   variant: "default",
                 });
               }

@@ -13,7 +13,7 @@ type Props = {
   index: number;
   resonanceCount: number;
   resonated: boolean;
-  onToggleResonance: () => void;
+  onToggleResonance: () => void | Promise<void>;
 };
 
 export const ReflectionCard = ({
