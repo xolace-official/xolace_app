@@ -12,6 +12,7 @@ interface ArticulatorInput {
   mirrorTone: string;
   isFirstSession: boolean;
   recentMirrors: string[];
+  entryType?: string;
   inputDuration?: number;
   freezeOccurred?: boolean;
   // Refinement context (for clarification turns)
