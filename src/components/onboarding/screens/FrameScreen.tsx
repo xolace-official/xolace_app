@@ -66,7 +66,7 @@ export const FrameScreen = () => {
 
         {/* CTA */}
         <Animated.View
-          entering={FadeInDown.delay(3200).duration(800).springify().damping(20)}
+          entering={FadeInDown.delay(3400).duration(800).springify().damping(15)}
           style={{ paddingBottom: 24 }}
         >
           <Pressable

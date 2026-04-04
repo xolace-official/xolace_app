@@ -15,7 +15,7 @@ export const StepReveal = ({ step, index }: Props) => {
       entering={FadeInDown.delay(800 + index * 900)
         .duration(800)
         .springify()
-        .damping(20)}
+        .damping(15)}
       style={{
         flexDirection: 'row',
         alignItems: 'flex-start',
