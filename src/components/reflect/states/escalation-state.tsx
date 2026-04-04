@@ -1,136 +1,31 @@
-import { useState } from 'react';
-import { Linking, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
 import { playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
 
-type Resource = {
-  type: 'phone' | 'url' | 'text' | 'email';
-  source: 'crisis_line' | 'xolace_support' | 'text_support' | 'local_service' | 'online_resource';
-  priority: number;
-  label: string;
-  value: string;
-  description?: string;
-};
-
 type Props = {
   mirror: string;
-  resources: Array<string | Resource> | null;
   onEngage: () => Promise<void>;
   onDismiss: () => Promise<void>;
-  onContinue: () => Promise<void>;
 };
 
-function ResourceItem({ resource, index }: { resource: string | Resource; index: number }) {
-  const delay = 400 + index * 150;
-
-  if (typeof resource === 'string') {
-    return (
-      <Animated.View entering={FadeInDown.delay(delay).duration(500)}>
-        <View className="rounded-xl border border-foreground/10 bg-surface px-4 py-3.5">
-          <AppText className="text-sm font-light text-foreground/70">{resource}</AppText>
-        </View>
-      </Animated.View>
-    );
-  }
-
-  const isTappable = resource.type === 'phone' || resource.type === 'url' || resource.type === 'email';
-
-  const handlePress = () => {
-    playSoftPress();
-    if (resource.type === 'phone') {
-      Linking.openURL(`tel:${resource.value}`);
-    } else if (resource.type === 'url') {
-      Linking.openURL(resource.value);
-    } else if (resource.type === 'email') {
-      Linking.openURL(`mailto:${resource.value}`);
-    }
-  };
-
-  const isXolace = resource.source === 'xolace_support';
-
-  const inner = (
-    <View className={`rounded-xl border px-4 py-3.5 ${isXolace ? 'border-accent/30 bg-accent/10' : 'border-foreground/10 bg-surface'}`}>
-      <View className="flex-row items-center justify-between">
-        <AppText className={`flex-1 text-sm ${isXolace ? 'text-accent' : 'text-foreground'}`}>
-          {resource.label}
-        </AppText>
-        {isTappable && (
-          <AppText className={`ml-3 text-xs ${isXolace ? 'text-accent/70' : 'text-accent'}`}>
-            {resource.type === 'phone' ? resource.value : resource.type === 'email' ? resource.value : 'Open →'}
-          </AppText>
-        )}
-      </View>
-      {resource.description && (
-        <AppText className="mt-0.5 text-xs font-light text-foreground/40">
-          {resource.description}
-        </AppText>
-      )}
-      {resource.type === 'text' && (
-        <AppText className="mt-1 text-xs font-light text-foreground/60">{resource.value}</AppText>
-      )}
-    </View>
-  );
-
-  return (
-    <Animated.View entering={FadeInDown.delay(delay).duration(500)}>
-      {isTappable ? (
-        <Pressable onPress={handlePress} accessibilityRole="button" accessibilityLabel={resource.label}>
-          {inner}
-        </Pressable>
-      ) : (
-        inner
-      )}
-    </Animated.View>
-  );
-}
-
-export const EscalationState = ({ mirror, resources, onEngage, onDismiss, onContinue }: Props) => {
-  const [phase, setPhase] = useState<'prompt' | 'resources'>('prompt');
-
-  if (phase === 'resources') {
-    return (
-      <View className="flex-1 justify-center px-7">
-        <Animated.View entering={FadeIn.duration(400)} className="mb-5">
-          <AppText className="mb-1 text-xs uppercase tracking-widest text-foreground/20">
-            Support resources
-          </AppText>
-          <AppText className="text-base font-light leading-7 text-foreground/60">
-            These are here whenever you need them.
-          </AppText>
-        </Animated.View>
-
-        <View className="mb-6 gap-2.5">
-          {(resources ?? []).map((resource, i) => (
-            <ResourceItem key={i} resource={resource} index={i} />
-          ))}
-        </View>
-
-        <Animated.View entering={FadeInDown.delay(400 + (resources?.length ?? 0) * 150).duration(500)}>
-          <Pressable
-            onPress={async () => { playAffirmativePress(); await onContinue(); }}
-            accessibilityRole="button"
-            accessibilityLabel="I've seen these"
-            className="rounded-xl border border-warning/30 bg-warning/10 px-6 py-3.5"
-          >
-            <AppText className="text-sm text-warning">I&apos;ve seen these</AppText>
-          </Pressable>
-        </Animated.View>
-      </View>
-    );
-  }
-
+export const EscalationState = ({ mirror, onEngage, onDismiss }: Props) => {
   return (
     <View className="flex-1 justify-center px-7">
+      {/* Quoted mirror — what the user shared, reflected back */}
       <Animated.View entering={FadeIn.delay(200).duration(600)}>
         <AppText className="mb-2 text-xs uppercase tracking-widest text-foreground/20">
           Your mirror
         </AppText>
-        <AppText className="mb-6 text-base italic leading-7 text-foreground/30" selectable>
+        <AppText
+          className="mb-6 text-base italic leading-7 text-foreground/30"
+          selectable
+        >
           &ldquo;{mirror}&rdquo;
         </AppText>
       </Animated.View>
 
+      {/* Empathetic response block */}
       <Animated.View
         entering={FadeIn.delay(600).duration(800)}
         className="mb-8 border-l-2 border-warning pl-4"
@@ -144,19 +39,18 @@ export const EscalationState = ({ mirror, resources, onEngage, onDismiss, onCont
         </AppText>
       </Animated.View>
 
+      {/* Action buttons */}
       <View className="gap-3">
         <Animated.View entering={FadeInDown.delay(1200).duration(500)}>
           <Pressable
-            onPress={async () => {
-              playAffirmativePress();
-              await onEngage();
-              setPhase('resources');
-            }}
+            onPress={async () => { playAffirmativePress(); await onEngage(); }}
             accessibilityRole="button"
             accessibilityLabel="Yes, show me some resources"
             className="rounded-xl border border-warning/30 bg-warning/10 px-6 py-3.5"
           >
-            <AppText className="text-sm text-warning">Yes, show me some resources</AppText>
+            <AppText className="text-sm text-warning">
+              Yes, show me some resources
+            </AppText>
           </Pressable>
         </Animated.View>
 

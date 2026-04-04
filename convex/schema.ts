@@ -1,6 +1,5 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { resourceValidator } from "./lib/validators";
 
 // =============================================================
 // XOLACE — LAYER 1 MVP SCHEMA (MERGED)
@@ -393,11 +392,6 @@ export default defineSchema({
     // Whether this session triggered escalation.
     // Optional: not set until AI processing completes.
     escalationTriggered: v.optional(v.boolean()),
-
-    // Structured resources delivered alongside the escalation mirror.
-    // Passed from safeguard engine through deliverMirror so the client
-    // has them in a single subscription with zero extra queries.
-    escalationResources: v.optional(v.array(resourceValidator)),
 
     // --- Temporal Context ---
     // Stored explicitly for fast pattern queries without
@@ -799,8 +793,7 @@ export default defineSchema({
     ),
 
     // Which specific resources were presented.
-    // Accepts both legacy string entries and structured Resource objects.
-    resourcesPresented: v.array(v.union(v.string(), resourceValidator)),
+    resourcesPresented: v.array(v.string()),
 
     // --- Human Review ---
     // For safety team oversight.
@@ -812,9 +805,6 @@ export default defineSchema({
   })
     // Safety review: full escalation history for a user.
     .index("by_profile", ["emotionalProfileId", "createdAt"])
-
-    // Lookup all events for a session.
-    .index("by_session", ["sessionId"])
 
     // Unreviewed events queue.
     .index("by_review_status", ["reviewedByHuman", "createdAt"])

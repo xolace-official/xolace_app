@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, internalMutation } from "./_generated/server";
 import { requireSessionOwnership } from "./lib/auth";
-import { triggerTypeValidator, actionTakenValidator, resourceValidator } from "./lib/validators";
+import { triggerTypeValidator, actionTakenValidator } from "./lib/validators";
 
 /**
  * AI creates an escalation event when safety signals are detected.
@@ -16,7 +16,7 @@ export const create = internalMutation({
     triggerConfidence: v.number(),
     triggerEvidence: v.string(),
     actionTaken: actionTakenValidator,
-    resourcesPresented: v.array(v.union(v.string(), resourceValidator)),
+    resourcesPresented: v.array(v.string()),
   },
   handler: async (ctx, args) => {
     // Create the escalation event

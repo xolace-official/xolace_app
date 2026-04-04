@@ -196,10 +196,7 @@ export const generateMirror = internalAction({
         sessionId: args.sessionId,
         mirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
-        ...(isEscalation ? {
-          escalationTriggered: true,
-          escalationResources: safeguard.resourcesPresented,
-        } : {}),
+        ...(isEscalation ? { escalationTriggered: true } : {}),
       });
 
       // 8. Store emotional metadata

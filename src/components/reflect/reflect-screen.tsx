@@ -24,7 +24,6 @@ export const ReflectScreen = () => {
     state,
     dispatch,
     isLoading,
-    escalationResources,
     submitReflection,
     submitScaffold,
     submitClarification,
@@ -33,7 +32,6 @@ export const ReflectScreen = () => {
     handleSayMore,
     handleGaveUpPathSelection,
     handleEscalationEngage,
-    handleEscalationContinue,
     handleEscalationDismiss,
     handleSelectExit,
     handleSelectSolo,
@@ -120,10 +118,8 @@ export const ReflectScreen = () => {
         return (
           <EscalationState
             mirror={state.mirrorResponse}
-            resources={escalationResources}
             onEngage={handleEscalationEngage}
             onDismiss={handleEscalationDismiss}
-            onContinue={handleEscalationContinue}
           />
         );
       case 'path-selection':
