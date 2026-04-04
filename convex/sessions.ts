@@ -12,6 +12,7 @@ import {
   confirmationStateValidator,
   pathChosenValidator,
   postSessionMoodValidator,
+  resourceValidator,
 } from "./lib/validators";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
 import { rateLimiter } from "./lib/rateLimits";
@@ -460,6 +461,7 @@ export const deliverMirror = internalMutation({
     mirrorText: v.string(),
     mirrorModelVersion: v.string(),
     escalationTriggered: v.optional(v.boolean()),
+    escalationResources: v.optional(v.array(resourceValidator)),
   },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
@@ -477,6 +479,7 @@ export const deliverMirror = internalMutation({
       mirrorText: args.mirrorText,
       mirrorModelVersion: args.mirrorModelVersion,
       ...(args.escalationTriggered ? { escalationTriggered: true } : {}),
+      ...(args.escalationResources ? { escalationResources: args.escalationResources } : {}),
       updatedAt: Date.now(),
     });
   },

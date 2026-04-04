@@ -270,7 +270,18 @@ export function useReflectionMachine() {
     busyRef.current = true;
     try {
       await recordEscalationResponse('engaged');
-      // TODO: transition to dedicated resources screen once built
+      // Resources phase is shown inline — component manages local state.
+    } catch (error) {
+      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+    } finally {
+      busyRef.current = false;
+    }
+  }, [recordEscalationResponse]);
+
+  const handleEscalationContinue = useCallback(async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
       const confirmation = turnsCount > 0 ? 'refined' : 'confirmed';
       await confirmMirror(confirmation);
       dispatch({ type: 'THATS_IT' });
@@ -279,7 +290,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [recordEscalationResponse, confirmMirror, turnsCount]);
+  }, [turnsCount, confirmMirror]);
 
   const handleEscalationDismiss = useCallback(async () => {
     if (busyRef.current) return;
@@ -325,6 +336,7 @@ export function useReflectionMachine() {
     state,
     dispatch,
     isLoading,
+    escalationResources: session?.escalationResources ?? null,
     submitReflection,
     submitScaffold,
     submitClarification,
@@ -333,6 +345,7 @@ export function useReflectionMachine() {
     handleSayMore,
     handleGaveUpPathSelection,
     handleEscalationEngage,
+    handleEscalationContinue,
     handleEscalationDismiss,
     handleSelectExit,
     handleSelectSolo,

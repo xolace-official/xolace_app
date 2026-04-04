@@ -23,13 +23,22 @@ type ActionTaken =
   | "crisis_line_presented"
   | "session_redirected";
 
+export type Resource = {
+  type: "phone" | "url" | "text" | "email";
+  source: "crisis_line" | "xolace_support" | "text_support" | "local_service" | "online_resource";
+  priority: number;
+  label: string;
+  value: string;
+  description?: string;
+};
+
 export interface SafeguardResult {
   level: SafeguardLevel;
   triggerType?: TriggerType;
   triggerConfidence: number;
   triggerEvidence: string;
   actionTaken: ActionTaken;
-  resourcesPresented: string[];
+  resourcesPresented: Resource[];
   shouldReject: boolean;
   rejectionReason?: string;
 }
@@ -43,22 +52,35 @@ interface RecentMetadataEntry {
 
 // --- Resources ---
 
-const CRISIS_RESOURCES = [
-  "If you're in Ghana, you can call the Mental Health Authority Helpline: 0800 678 678 (free, 24/7)",
-  "You can also reach the Ghana Health Service for urgent support: 112 (national emergency line)",
-  "If you're outside Ghana, find a local helpline: https://www.iasp.info/resources/Crisis_Centres/",
+// Xolace first-party contact — included in every resource set so users
+// always know we're here regardless of their situation.
+const XOLACE_CONTACT: Resource = {
+  type: "email",
+  source: "xolace_support",
+  priority: 1,
+  label: "Xolace Support",
+  value: "support@xolaceinc.com",
+  description: "We're here - reach us any time",
+};
+
+const CRISIS_RESOURCES: Resource[] = [
+  XOLACE_CONTACT,
+  { type: "phone", source: "crisis_line", priority: 2, label: "Mental Health Authority (Ghana)", value: "0800 678 678", description: "Free, 24/7" },
+  { type: "phone", source: "crisis_line", priority: 3, label: "Ghana Emergency Line", value: "112", description: "National emergency" },
+  { type: "url", source: "online_resource", priority: 4, label: "Find a local crisis centre", value: "https://www.iasp.info/resources/Crisis_Centres/", description: "If outside Ghana" },
 ];
 
-const SUPPORT_RESOURCES = [
-  "If you need someone to talk to, support is available.",
-  "Mental Health Authority (Ghana) Helpline: 0800 678 678",
-  "MindFreedom Ghana (mental health advocacy & support)",
+const SUPPORT_RESOURCES: Resource[] = [
+  XOLACE_CONTACT,
+  { type: "phone", source: "local_service", priority: 2, label: "Mental Health Authority (Ghana)", value: "0800 678 678" },
+  { type: "text", source: "local_service", priority: 3, label: "MindFreedom Ghana", value: "Mental health advocacy & support" },
 ];
 
-const TRAUMA_RESOURCES = [
-  "Domestic Violence and Victim Support Unit (DOVVSU - Ghana Police): 18555",
-  "Mental Health Authority Helpline: 0800 678 678",
-  "If you're outside Ghana, find a local support center: https://www.iasp.info/resources/Crisis_Centres/",
+const TRAUMA_RESOURCES: Resource[] = [
+  XOLACE_CONTACT,
+  { type: "phone", source: "crisis_line", priority: 2, label: "DOVVSU (Domestic Violence Support)", value: "18555", description: "Ghana Police" },
+  { type: "phone", source: "local_service", priority: 3, label: "Mental Health Authority (Ghana)", value: "0800 678 678" },
+  { type: "url", source: "online_resource", priority: 4, label: "Find a local support centre", value: "https://www.iasp.info/resources/Crisis_Centres/", description: "If outside Ghana" },
 ];
 
 // --- Time window for pattern escalation (48 hours) ---

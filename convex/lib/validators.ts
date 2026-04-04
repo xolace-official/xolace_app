@@ -1,5 +1,23 @@
 import { v } from "convex/values";
 
+export const resourceValidator = v.object({
+  // How the value is opened: phone → tel:, url → browser, email → mailto:, text → display only
+  type: v.union(v.literal("phone"), v.literal("url"), v.literal("text"), v.literal("email")),
+  // Distinguishes origin for rendering priority and future feature flags
+  source: v.union(
+    v.literal("crisis_line"),    // External 24/7 crisis hotline
+    v.literal("xolace_support"), // First-party Xolace contact
+    v.literal("text_support"),   // SMS/WhatsApp support service
+    v.literal("local_service"),  // Local NGO / government service
+    v.literal("online_resource") // Web resource / directory
+  ),
+  // Lower number = shown first. Xolace contact is always 1.
+  priority: v.number(),
+  label: v.string(),
+  value: v.string(),
+  description: v.optional(v.string()),
+});
+
 export const sessionStateValidator = v.union(
   v.literal("initiated"),
   v.literal("input_received"),
