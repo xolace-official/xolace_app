@@ -15,7 +15,7 @@ type Resource = {
 
 type Props = {
   mirror: string;
-  resources: Array<string | Resource> | null;
+  resources: (string | Resource)[] | null;
   onEngage: () => Promise<void>;
   onDismiss: () => Promise<void>;
   onContinue: () => Promise<void>;
