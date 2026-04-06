@@ -4,25 +4,29 @@ export type FrameStep = {
   detail: string;
 };
 
+export const STEP_BASE_DELAY = 800;
+export const STEP_INTERVAL = 900;
+export const STEP_DURATION = 800;
+
 export const FRAME_STEPS: FrameStep[] = [
   {
     id: 'share',
     action: 'You share',
-    detail: "whatever's on your mind — raw, unfiltered",
+    detail: "whatever's on your mind, raw, unfiltered",
   },
   {
     id: 'reflect',
-    action: 'AI reflects',
+    action: 'It reflects',
     detail: 'gently, without judgment or advice',
   },
   {
     id: 'clarity',
-    action: 'Just clarity',
+    action: 'You understand it',
     detail: 'a quiet mirror for your own thoughts',
   },
   {
     id: 'humanity',
-    action: 'Find Humanity',
-    detail: 'Genuine human connection',
+    action: 'Not alone',
+    detail: 'others have felt this too',
   },
 ];

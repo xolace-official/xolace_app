@@ -64,7 +64,7 @@ export const MirrorState = ({
         showsVerticalScrollIndicator={false}
         className="border-l-2 border-accent/40 pl-4"
       >
-        <AppText className="text-xl italic leading-8 text-foreground">
+        <AppText className="text-xl italic leading-8 text-foreground" selectable>
           {mirror}
         </AppText>
       </ScrollView>

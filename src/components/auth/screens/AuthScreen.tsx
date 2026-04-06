@@ -140,7 +140,7 @@ export const AuthScreen = () => {
         <View style={{ gap: 12 }}>
           {/* Apple */}
           <Animated.View
-            entering={FadeInDown.delay(600).duration(800).springify().damping(20)}
+            entering={FadeInDown.delay(600).duration(800).springify().damping(30)}
           >
             <Button
               onPress={handleAppleAuth}
@@ -162,7 +162,7 @@ export const AuthScreen = () => {
 
           {/* Google */}
           <Animated.View
-            entering={FadeInDown.delay(750).duration(800).springify().damping(20)}
+            entering={FadeInDown.delay(750).duration(800).springify().damping(30)}
           >
             <Button
               onPress={handleGoogleAuth}
@@ -198,7 +198,7 @@ export const AuthScreen = () => {
           >
             This just saves your reflections so you{'\n'}
             never lose them. We don&apos;t see your{'\n'}
-            name or email.
+            name or email. We don&apos;t post anything. Ever.
           </AppText>
           <AppText
             className="text-white/30 text-[12px] leading-5"
