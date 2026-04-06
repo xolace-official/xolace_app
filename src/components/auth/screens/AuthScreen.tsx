@@ -140,7 +140,7 @@ export const AuthScreen = () => {
         <View style={{ gap: 12 }}>
           {/* Apple */}
           <Animated.View
-            entering={FadeInDown.delay(600).duration(800).springify().damping(10)}
+            entering={FadeInDown.delay(600).duration(800).springify().damping(30)}
           >
             <Button
               onPress={handleAppleAuth}
@@ -162,7 +162,7 @@ export const AuthScreen = () => {
 
           {/* Google */}
           <Animated.View
-            entering={FadeInDown.delay(750).duration(800).springify().damping(10)}
+            entering={FadeInDown.delay(750).duration(800).springify().damping(30)}
           >
             <Button
               onPress={handleGoogleAuth}

@@ -8,7 +8,7 @@ export const FRAME_STEPS: FrameStep[] = [
   {
     id: 'share',
     action: 'You share',
-    detail: "whatever's on your mind — raw, unfiltered",
+    detail: "whatever's on your mind, raw, unfiltered",
   },
   {
     id: 'reflect',

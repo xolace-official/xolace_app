@@ -133,7 +133,7 @@ export const SessionDetailsScreen = () => {
                 style={{ borderCurve: 'continuous' }}
               >
                 <Card.Body className="px-5 py-4">
-                  <AppText className="text-sm font-light leading-6 text-foreground/55">
+                  <AppText className="text-sm font-light leading-6 text-foreground/55" selectable>
                     &ldquo;{details.rawInputEncrypted}&rdquo;
                   </AppText>
                 </Card.Body>
@@ -145,7 +145,7 @@ export const SessionDetailsScreen = () => {
           {details.mirrorText && (
             <>
               <SectionLabel>The mirror</SectionLabel>
-              <AppText className="mb-8 text-xl font-light italic leading-9 text-foreground">
+              <AppText className="mb-8 text-xl font-light italic leading-9 text-foreground" selectable>
                 &ldquo;{details.mirrorText}&rdquo;
               </AppText>
             </>

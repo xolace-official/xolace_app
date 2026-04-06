@@ -22,7 +22,7 @@ type Props = {
 const NUDGE_MESSAGES = [
   "There's no rush. Let it come.",
   'Even a few words are enough.',
-  "You don't need to explain \u2014 just say what's there.",
+  "You don't need to explain, just say what's there.",
 ];
 
 export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismiss, autoFocus = true }: Props) => {
