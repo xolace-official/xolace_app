@@ -87,7 +87,7 @@ export const IdleState = ({
         </AppText>
 
         <AppText className="mt-4 text-4xl font-semibold text-foreground">
-          What&apos;s here{"\n"}right now?
+          What&apos;s here right now... what are you feeling?
         </AppText>
       </View>
 

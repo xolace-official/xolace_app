@@ -198,7 +198,7 @@ export const AuthScreen = () => {
           >
             This just saves your reflections so you{'\n'}
             never lose them. We don&apos;t see your{'\n'}
-            name or email.
+            name or email. We don&apos;t post anything. Ever.
           </AppText>
           <AppText
             className="text-white/30 text-[12px] leading-5"
