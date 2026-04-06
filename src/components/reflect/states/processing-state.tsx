@@ -1,18 +1,58 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useThemeColor } from 'heroui-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
 import { BreathingOrb } from '@/src/components/reflect/breathing-orb';
 import Shimmer from '@/src/components/shared/shimmer';
 import { SparkleStars } from '@/src/components/shared/sparkle-stars';
 import { playProcessingBreath } from '@/src/lib/haptics';
 
+const PHRASES = [
+  'Taking this in...',
+  'Sitting with what you shared...',
+  'Finding the words...',
+  'Feeling into this...',
+  'Sensing what\'s here...',
+];
+
+const PHRASE_DURATION_MS = 2500;
+const FADE_DURATION_MS = 400;
+
 export const ProcessingState = () => {
   const accentColor = useThemeColor('accent');
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const opacity = useSharedValue(1);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     playProcessingBreath();
   }, []);
+
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      // Fade out
+      opacity.value = withTiming(0, { duration: FADE_DURATION_MS, easing: Easing.out(Easing.ease) }, (finished) => {
+        if (!finished) return;
+        // Swap phrase and fade in
+        setPhraseIndex((prev) => (prev + 1) % PHRASES.length);
+        opacity.value = withTiming(1, { duration: FADE_DURATION_MS, easing: Easing.in(Easing.ease) });
+      });
+    }, PHRASE_DURATION_MS);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
 
   return (
     <View className="flex-1 items-center justify-center gap-8">
@@ -27,9 +67,11 @@ export const ProcessingState = () => {
           >
             <View style={{ flex: 1, opacity: 0.15, backgroundColor: accentColor }} />
           </Shimmer.Overlay>
-          <AppText className="text-sm text-foreground/40">
-            Listening...
-          </AppText>
+          <Animated.View style={animatedStyle}>
+            <AppText className="text-sm text-foreground/40">
+              {PHRASES[phraseIndex]}
+            </AppText>
+          </Animated.View>
         </Shimmer>
         <SparkleStars color={accentColor} />
       </View>
