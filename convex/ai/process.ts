@@ -6,13 +6,11 @@ import { internal } from "../_generated/api";
 import {
   getAnthropicClient,
   extractTextFromResponse,
-  parseClassificationResponse,
-  CLASSIFIER_MODEL,
   CLASSIFIER_VERSION,
   ARTICULATOR_MODEL,
   ARTICULATOR_VERSION,
 } from "./providers/anthropic";
-import { moderateInput } from "./providers/moderation";
+import { moderationCache, classifierCache } from "./cached";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt } from "./prompts/articulator";
 import { evaluateSafeguard } from "./safeguard";
@@ -24,7 +22,6 @@ import {
 import { rateLimiter } from "../lib/rateLimits";
 
 import type { SessionContext } from "./context";
-import type { ClassificationResult } from "./providers/anthropic";
 
 const FALLBACK_MIRROR =
   "I hear you, and what you're feeling matters.";
@@ -77,7 +74,7 @@ export const generateMirror = internalAction({
       });
       console.log("pattern Summary ", patternSummary)
 
-      // 3. Parallel: moderation + classification
+      // 3. Parallel: moderation + classification (both cached)
       const anthropic = getAnthropicClient();
 
       const session = context.session as {
@@ -96,42 +93,14 @@ export const generateMirror = internalAction({
       );
       console.log("classifier prompt ", classifierPrompt)
 
-      const [moderationResult, classificationResponse] = await Promise.all([
-        moderateInput(args.rawText),
-        anthropic.messages.create({
-          model: CLASSIFIER_MODEL,
-          max_tokens: 512,
-          system: classifierPrompt.system,
-          messages: [{ role: "user", content: classifierPrompt.user }],
+      // 4. Fetch moderation + classification in parallel (cache-backed)
+      const [moderationResult, classification] = await Promise.all([
+        moderationCache.fetch(ctx, { text: args.rawText }),
+        classifierCache.fetch(ctx, {
+          systemPrompt: classifierPrompt.system,
+          userPrompt: classifierPrompt.user,
         }),
       ]);
-
-      // 4. Parse classification
-      let classification: ClassificationResult;
-      const rawClassification = extractTextFromResponse(classificationResponse);
-
-      try {
-        classification = parseClassificationResponse(rawClassification);
-      } catch {
-        // Retry once with stricter instruction
-        const retryResponse = await anthropic.messages.create({
-          model: CLASSIFIER_MODEL,
-          max_tokens: 512,
-          system: classifierPrompt.system,
-          messages: [
-            { role: "user", content: classifierPrompt.user },
-            { role: "assistant", content: rawClassification },
-            {
-              role: "user",
-              content:
-                "Your response was not valid JSON. Respond with ONLY a valid JSON object, no other text.",
-            },
-          ],
-        });
-        classification = parseClassificationResponse(
-          extractTextFromResponse(retryResponse)
-        );
-      }
 
       // 5. Evaluate safeguard (rule engine, no LLM)
       const safeguard = evaluateSafeguard(

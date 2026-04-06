@@ -3,11 +3,7 @@
 import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
-import {
-  getAnthropicClient,
-  extractTextFromResponse,
-  DISTILLER_MODEL,
-} from "../ai/providers/anthropic";
+import { distillerCache } from "../ai/cached";
 import { buildDistillerPrompt } from "../ai/prompts/distiller";
 
 /**
@@ -31,8 +27,6 @@ export const distill = internalAction({
   },
   handler: async (ctx, args) => {
     try {
-      const anthropic = getAnthropicClient();
-
       const prompt = buildDistillerPrompt({
         rawInput: args.rawText,
         mirrorText: args.mirrorText,
@@ -43,14 +37,10 @@ export const distill = internalAction({
         userLanguageTags: args.userLanguageTags,
       });
 
-      const response = await anthropic.messages.create({
-        model: DISTILLER_MODEL,
-        max_tokens: 200,
-        system: prompt.system,
-        messages: [{ role: "user", content: prompt.user }],
+      const result = await distillerCache.fetch(ctx, {
+        systemPrompt: prompt.system,
+        userPrompt: prompt.user,
       });
-
-      const result = extractTextFromResponse(response).trim();
 
       // Model returned NULL — input not suitable for the pool
       if (!result || result === "NULL") {
