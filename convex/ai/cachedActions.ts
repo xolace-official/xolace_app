@@ -11,8 +11,8 @@ import {
 } from "./providers/anthropic";
 import {
   MODERATION_UNAVAILABLE,
+  EMPTY_CATEGORIES,
   type ModerationResult,
-  type ModerationCategories,
 } from "./providers/moderation";
 import type { ClassificationResult } from "./providers/anthropic";
 
@@ -36,14 +36,6 @@ export const moderationAction = internalAction({
       const data = await response.json();
       const result = data.results?.[0];
       if (!result) return MODERATION_UNAVAILABLE;
-      const EMPTY_CATEGORIES: ModerationCategories = {
-        sexual: false, "sexual/minors": false,
-        harassment: false, "harassment/threatening": false,
-        hate: false, "hate/threatening": false,
-        "self-harm": false, "self-harm/intent": false, "self-harm/instructions": false,
-        violence: false, "violence/graphic": false,
-        illicit: false, "illicit/violent": false,
-      };
       return {
         flagged: result.flagged ?? false,
         categories: { ...EMPTY_CATEGORIES, ...result.categories },
@@ -84,7 +76,14 @@ export const classifierAction = internalAction({
           },
         ],
       });
-      return parseClassificationResponse(extractTextFromResponse(retryResponse));
+      const retryRaw = extractTextFromResponse(retryResponse);
+      try {
+        return parseClassificationResponse(retryRaw);
+      } catch {
+        throw new Error(
+          `Classification retry failed: model returned non-JSON after two attempts. Raw retry response: ${retryRaw}`
+        );
+      }
     }
   },
 });

@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { AppText } from '@/src/components/shared/app-text';
 import { BreathingOrb } from '@/src/components/reflect/breathing-orb';
 import Shimmer from '@/src/components/shared/shimmer';
@@ -28,6 +29,7 @@ export const ProcessingState = () => {
   const accentColor = useThemeColor('accent');
   const [phraseIndex, setPhraseIndex] = useState(0);
   const opacity = useSharedValue(1);
+  const phraseIndexSV = useSharedValue(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -38,9 +40,12 @@ export const ProcessingState = () => {
     intervalRef.current = setInterval(() => {
       // Fade out
       opacity.value = withTiming(0, { duration: FADE_DURATION_MS, easing: Easing.out(Easing.ease) }, (finished) => {
+        'worklet';
         if (!finished) return;
-        // Swap phrase and fade in
-        setPhraseIndex((prev) => (prev + 1) % PHRASES.length);
+        // Compute next index on UI thread, schedule React state update on JS thread
+        const nextIndex = (phraseIndexSV.value + 1) % PHRASES.length;
+        phraseIndexSV.value = nextIndex;
+        scheduleOnRN(setPhraseIndex, nextIndex);
         opacity.value = withTiming(1, { duration: FADE_DURATION_MS, easing: Easing.in(Easing.ease) });
       });
     }, PHRASE_DURATION_MS);
