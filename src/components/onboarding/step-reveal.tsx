@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
+import { STEP_BASE_DELAY, STEP_DURATION, STEP_INTERVAL } from '@/src/constants/frame-steps';
 import type { FrameStep } from '@/src/constants/frame-steps';
 
 type Props = {
@@ -12,8 +13,8 @@ type Props = {
 export const StepReveal = ({ step, index }: Props) => {
   return (
     <Animated.View
-      entering={FadeInDown.delay(800 + index * 900)
-        .duration(800)
+      entering={FadeInDown.delay(STEP_BASE_DELAY + index * STEP_INTERVAL)
+        .duration(STEP_DURATION)
         .springify()
         .damping(15)}
       style={{

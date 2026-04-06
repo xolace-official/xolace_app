@@ -9,7 +9,7 @@ import { playGentlePresence } from '@/src/lib/haptics';
 import { AppText } from '@/src/components/shared/app-text';
 import { EmberOrb } from '@/src/components/onboarding/ember-orb';
 import { StepReveal } from '@/src/components/onboarding/step-reveal';
-import { FRAME_STEPS } from '@/src/constants/frame-steps';
+import { FRAME_STEPS, STEP_BASE_DELAY, STEP_INTERVAL } from '@/src/constants/frame-steps';
 
 export const FrameScreen = () => {
   const [phase, setPhase] = useState<0 | 1 | 2>(0);
@@ -66,7 +66,7 @@ export const FrameScreen = () => {
 
         {/* CTA */}
         <Animated.View
-          entering={FadeInDown.delay(4400).duration(800).springify().damping(15)}
+          entering={FadeInDown.delay(STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL).duration(800).springify().damping(15)}
           style={{ paddingBottom: 24 }}
         >
           <Pressable

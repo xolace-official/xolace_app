@@ -4,6 +4,10 @@ export type FrameStep = {
   detail: string;
 };
 
+export const STEP_BASE_DELAY = 800;
+export const STEP_INTERVAL = 900;
+export const STEP_DURATION = 800;
+
 export const FRAME_STEPS: FrameStep[] = [
   {
     id: 'share',
