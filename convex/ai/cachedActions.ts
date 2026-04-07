@@ -23,27 +23,27 @@ export const moderationAction = internalAction({
     if (!apiKey) {
       return MODERATION_UNAVAILABLE;
     }
-    try {
-      const response = await fetch("https://api.openai.com/v1/moderations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({ model: "omni-moderation-latest", input: args.text }),
-      });
-      if (!response.ok) return MODERATION_UNAVAILABLE;
-      const data = await response.json();
-      const result = data.results?.[0];
-      if (!result) return MODERATION_UNAVAILABLE;
-      return {
-        flagged: result.flagged ?? false,
-        categories: { ...EMPTY_CATEGORIES, ...result.categories },
-        categoryScores: result.category_scores ?? {},
-      };
-    } catch {
-      return MODERATION_UNAVAILABLE;
+    const response = await fetch("https://api.openai.com/v1/moderations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ model: "omni-moderation-latest", input: args.text }),
+    });
+    if (!response.ok) {
+      throw new Error(`Moderation API returned ${response.status}`);
     }
+    const data = await response.json();
+    const result = data.results?.[0];
+    if (!result) {
+      throw new Error("Moderation API returned no result");
+    }
+    return {
+      flagged: result.flagged ?? false,
+      categories: { ...EMPTY_CATEGORIES, ...result.categories },
+      categoryScores: result.category_scores ?? {},
+    };
   },
 });
 
@@ -80,8 +80,14 @@ export const classifierAction = internalAction({
       try {
         return parseClassificationResponse(retryRaw);
       } catch {
+        console.error(
+          "[classifierAction] retry parse failed. Response length:",
+          retryRaw.length,
+          "| Raw:",
+          retryRaw
+        );
         throw new Error(
-          `Classification retry failed: model returned non-JSON after two attempts. Raw retry response: ${retryRaw}`
+          "Classification retry failed: model returned non-JSON after two attempts."
         );
       }
     }

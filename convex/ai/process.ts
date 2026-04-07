@@ -11,6 +11,7 @@ import {
   ARTICULATOR_VERSION,
 } from "./providers/anthropic";
 import { moderationCache, classifierCache } from "./cached";
+import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt } from "./prompts/articulator";
 import { evaluateSafeguard } from "./safeguard";
@@ -95,7 +96,7 @@ export const generateMirror = internalAction({
 
       // 4. Fetch moderation + classification in parallel (cache-backed)
       const [moderationResult, classification] = await Promise.all([
-        moderationCache.fetch(ctx, { text: args.rawText }),
+        moderationCache.fetch(ctx, { text: args.rawText }).catch(() => MODERATION_UNAVAILABLE),
         classifierCache.fetch(ctx, {
           systemPrompt: classifierPrompt.system,
           userPrompt: classifierPrompt.user,
