@@ -22,7 +22,7 @@ export interface ModerationResult {
   categoryScores: Record<string, number>;
 }
 
-const EMPTY_CATEGORIES: ModerationCategories = {
+export const EMPTY_CATEGORIES: ModerationCategories = {
   sexual: false,
   "sexual/minors": false,
   harassment: false,

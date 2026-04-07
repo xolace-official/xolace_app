@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as ai_cached from "../ai/cached.js";
+import type * as ai_cachedActions from "../ai/cachedActions.js";
 import type * as ai_clarify from "../ai/clarify.js";
 import type * as ai_context from "../ai/context.js";
 import type * as ai_helpers_patternSummary from "../ai/helpers/patternSummary.js";
@@ -48,6 +50,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "ai/cached": typeof ai_cached;
+  "ai/cachedActions": typeof ai_cachedActions;
   "ai/clarify": typeof ai_clarify;
   "ai/context": typeof ai_context;
   "ai/helpers/patternSummary": typeof ai_helpers_patternSummary;
@@ -241,6 +245,48 @@ export declare const components: {
     };
     time: {
       getServerTime: FunctionReference<"mutation", "internal", {}, number>;
+    };
+  };
+  actionCache: {
+    crons: {
+      purge: FunctionReference<
+        "mutation",
+        "internal",
+        { expiresAt?: number },
+        null
+      >;
+    };
+    lib: {
+      get: FunctionReference<
+        "query",
+        "internal",
+        { args: any; name: string; ttl: number | null },
+        { kind: "hit"; value: any } | { expiredEntry?: string; kind: "miss" }
+      >;
+      put: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          args: any;
+          expiredEntry?: string;
+          name: string;
+          ttl: number | null;
+          value: any;
+        },
+        { cacheHit: boolean; deletedExpiredEntry: boolean }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "internal",
+        { args: any; name: string },
+        null
+      >;
+      removeAll: FunctionReference<
+        "mutation",
+        "internal",
+        { batchSize?: number; before?: number; name?: string },
+        null
+      >;
     };
   };
 };
