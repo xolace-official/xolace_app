@@ -94,10 +94,9 @@ export function useSession() {
       setLastRawText(rawText);
 
       try {
-        // TODO: encrypt rawText before submission
         await submitInputMutation({
           sessionId: newSessionId,
-          rawInputEncrypted: rawText, // TODO: replace with encrypted version
+          rawInput: rawText,
           rawText,
           rawInputLength: rawText.length,
           inputDuration,
@@ -168,11 +167,10 @@ export function useSession() {
       additionalRawText?: string,
     ) => {
       if (!sessionId) return;
-      // TODO: encrypt additionalRawText before submission
       await submitFeedbackMutation({
         sessionId,
         userFeedback,
-        userInputEncrypted: additionalRawText, // TODO: replace with encrypted version
+        userInput: additionalRawText,
         additionalRawText,
       });
     },

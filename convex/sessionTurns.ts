@@ -14,7 +14,7 @@ export const submitFeedback = mutation({
   args: {
     sessionId: v.id("sessions"),
     userFeedback: userFeedbackValidator,
-    userInputEncrypted: v.optional(v.string()),
+    userInput: v.optional(v.string()),
     additionalRawText: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -42,7 +42,7 @@ export const submitFeedback = mutation({
       sessionId: args.sessionId,
       turnNumber,
       userFeedback: args.userFeedback,
-      userInputEncrypted: args.userInputEncrypted,
+      userInput: args.userInput,
       revisedMirrorText: "", // Placeholder until AI delivers
       modelVersion: "",
       createdAt: now,

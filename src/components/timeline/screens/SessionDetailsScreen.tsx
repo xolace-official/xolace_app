@@ -124,7 +124,7 @@ export const SessionDetailsScreen = () => {
 
         <View className="px-6">
           {/* User input */}
-          {details.rawInputEncrypted && (
+          {details.rawInput && (
             <>
               <SectionLabel>You said</SectionLabel>
               <Card
@@ -134,7 +134,7 @@ export const SessionDetailsScreen = () => {
               >
                 <Card.Body className="px-5 py-4">
                   <AppText className="text-sm font-light leading-6 text-foreground/55" selectable>
-                    &ldquo;{details.rawInputEncrypted}&rdquo;
+                    &ldquo;{details.rawInput}&rdquo;
                   </AppText>
                 </Card.Body>
               </Card>

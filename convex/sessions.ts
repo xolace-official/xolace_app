@@ -60,7 +60,7 @@ export const initiate = mutation({
 export const submitInput = mutation({
   args: {
     sessionId: v.id("sessions"),
-    rawInputEncrypted: v.string(),
+    rawInput: v.string(),
     rawText: v.string(),
     rawInputLength: v.number(),
     inputDuration: v.optional(v.number()),
@@ -78,7 +78,7 @@ export const submitInput = mutation({
 
     await ctx.db.patch(args.sessionId, {
       state: "processing",
-      rawInputEncrypted: args.rawInputEncrypted,
+      rawInput: args.rawInput,
       rawInputLength: args.rawInputLength,
       inputDuration: args.inputDuration,
       freezeOccurred: args.freezeOccurred,
