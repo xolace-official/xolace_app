@@ -206,9 +206,6 @@ export default defineSchema({
       milestone: v.boolean(),     // "30 days of showing up"
     }),
 
-    // Expo push token. Only populated when notifications enabled.
-    pushToken: v.optional(v.string()),
-
     // --- AI Calibration ---
 
     // How the mirror speaks to this user.

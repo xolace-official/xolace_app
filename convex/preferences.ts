@@ -111,31 +111,3 @@ export const update = mutation({
   },
 });
 
-/**
- * Store Expo push token for notifications.
- */
-export const updatePushToken = mutation({
-  args: {
-    pushToken: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
-
-    const preferences = await ctx.db
-      .query("preferences")
-      .withIndex("by_profile", (q) =>
-        q.eq("emotionalProfileId", profile._id)
-      )
-      .unique();
-
-    if (!preferences) {
-      throw new Error("Preferences not found");
-    }
-
-    await ctx.db.patch(preferences._id, {
-      pushToken: args.pushToken,
-    });
-
-    return null;
-  },
-});
