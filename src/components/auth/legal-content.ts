@@ -10,7 +10,7 @@ export const PRIVACY_POLICY: LegalDocument = {
   sections: [
     {
       heading: 'What We Collect',
-      body: 'We collect your account info (name, email, auth ID from Google or Apple), the text and emotion tags you enter during sessions, AI-generated reflections, and basic usage data like session duration and features used.',
+      body: 'We collect your account info (auth ID from Google or Apple), the text and emotion tags you enter during sessions, AI-generated reflections, and basic usage data like session duration and features used.',
     },
     {
       heading: 'AI Processing',

@@ -83,7 +83,7 @@ export const LegalBottomSheet = ({ document, onClose }: Props) => {
                       className="text-white/50 text-[12px]"
                       style={{ textDecorationLine: 'underline' }}
                     >
-                      Read the full version at xolace.app
+                      Read the full version at xolaceinc.com
                     </AppText>
                   </AppText>
                 </View>
