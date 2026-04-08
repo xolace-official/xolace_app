@@ -7,6 +7,7 @@ import type { RetentionOption } from "@/src/components/settings/retention-picker
 import type { MirrorTone } from "@/src/components/settings/mirror-tone-picker-dialog";
 import { useAppStore } from "@/src/store/store";
 import { useAppTheme } from "@/src/context/app-theme-context";
+import { requestPushToken } from "@/src/hooks/use-notifications";
 
 export type ThemeMode = "system" | "light" | "dark";
 
@@ -36,6 +37,8 @@ export const useSettings = () => {
   });
   const requestDataWipe = useMutation(api.users.requestDataWipe);
   const requestDeletion = useMutation(api.users.requestDeletion);
+  const registerToken = useMutation(api.notifications.registerToken);
+  const removeToken = useMutation(api.notifications.removeToken);
 
   // ─── Sign-in method ──────────────────────────────────────────────────
   const signInMethod = useMemo(() => {
@@ -82,7 +85,7 @@ export const useSettings = () => {
 
   // ─── Toggles (derived from Convex preferences) ─────────────────────
   const reducedMotion = preferences?.reducedMotion ?? false;
-  const gentleReminders = preferences?.notifications?.gentleReturn ?? false;
+  const gentleReminders = preferences?.notifications?.enabled ?? false;
   const contributeAnonymously =
     preferences?.contributeByDefault ?? false;
 
@@ -94,18 +97,29 @@ export const useSettings = () => {
   );
 
   const setGentleReminders = useCallback(
-    (v: boolean) => {
-      const prev = preferences?.notifications;
+    async (enabled: boolean) => {
+      // Master toggle: all notification types follow the single switch
       updatePreferences({
         notifications: {
-          enabled: prev?.enabled ?? false,
-          gentleReturn: v,
-          patternNudge: prev?.patternNudge ?? false,
-          milestone: prev?.milestone ?? false,
+          enabled,
+          gentleReturn: enabled,
+          patternNudge: enabled,
+          milestone: enabled,
         },
       });
+
+      if (enabled) {
+        // Request OS permission (no-op if already granted) and register token
+        const token = await requestPushToken();
+        if (token) {
+          await registerToken({ pushToken: token });
+        }
+      } else {
+        // Unregister token so no push is delivered while disabled
+        await removeToken();
+      }
     },
-    [updatePreferences, preferences],
+    [updatePreferences, registerToken, removeToken],
   );
 
   const setContributeAnonymously = useCallback(

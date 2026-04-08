@@ -27,4 +27,20 @@ crons.interval(
   {}
 );
 
+// Check for gentle return notifications every 6 hours
+crons.interval(
+  "check gentle return notifications",
+  { hours: 6 },
+  internal.jobs.notificationTriggers.checkGentleReturn,
+  {}
+);
+
+// Check for pattern nudge notifications every hour
+crons.interval(
+  "check pattern nudge notifications",
+  { hours: 1 },
+  internal.jobs.notificationTriggers.checkPatternNudge,
+  {}
+);
+
 export default crons;

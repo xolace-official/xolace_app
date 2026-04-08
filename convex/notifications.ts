@@ -87,6 +87,27 @@ export const registerToken = mutation({
       pushToken: args.pushToken,
     });
 
+    // Auto-enable notification preferences on first token registration
+    // so cron jobs include this user. If the user later disables via
+    // Settings, removeToken is called and preferences are set to false.
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", profile._id)
+      )
+      .unique();
+
+    if (preferences && !preferences.notifications.enabled) {
+      await ctx.db.patch(preferences._id, {
+        notifications: {
+          enabled: true,
+          gentleReturn: true,
+          patternNudge: true,
+          milestone: true,
+        },
+      });
+    }
+
     return null;
   },
 });

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
+import { internal } from "../_generated/api";
 
 /**
  * Update emotional profile stats after a session completes.
@@ -135,5 +136,41 @@ export const updateAfterSession = internalMutation({
       firstSessionAt: profile.firstSessionAt ?? now,
       updatedAt: now,
     });
+
+    // Check for milestone notification
+    const milestoneMessages: Record<number, string> = {
+      1: "You showed up. That's the hardest part.",
+      7: "A week of showing up for yourself. That takes something real.",
+      30: "30 sessions. You've built a practice of listening to yourself.",
+      100: "100 sessions. What started as a moment has become a practice.",
+    };
+
+    const milestoneMessage = milestoneMessages[newSessionCount];
+    if (milestoneMessage) {
+      // Check if milestone notifications are enabled
+      const preferences = await ctx.db
+        .query("preferences")
+        .withIndex("by_profile", (q) =>
+          q.eq("emotionalProfileId", args.emotionalProfileId)
+        )
+        .unique();
+
+      if (
+        preferences?.notifications.enabled &&
+        preferences.notifications.milestone
+      ) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.notifications.schedule,
+          {
+            emotionalProfileId: args.emotionalProfileId,
+            type: "milestone",
+            content: milestoneMessage,
+            triggerReason: `Session count reached ${newSessionCount}`,
+            scheduledFor: now,
+          }
+        );
+      }
+    }
   },
 });

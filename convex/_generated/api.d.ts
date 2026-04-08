@@ -28,6 +28,7 @@ import type * as exercises from "../exercises.js";
 import type * as jobs_accountDeletion from "../jobs/accountDeletion.js";
 import type * as jobs_dataRetention from "../jobs/dataRetention.js";
 import type * as jobs_dataWipe from "../jobs/dataWipe.js";
+import type * as jobs_notificationTriggers from "../jobs/notificationTriggers.js";
 import type * as jobs_profileStats from "../jobs/profileStats.js";
 import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js";
 import type * as jobs_reflectionDistiller from "../jobs/reflectionDistiller.js";
@@ -72,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/accountDeletion": typeof jobs_accountDeletion;
   "jobs/dataRetention": typeof jobs_dataRetention;
   "jobs/dataWipe": typeof jobs_dataWipe;
+  "jobs/notificationTriggers": typeof jobs_notificationTriggers;
   "jobs/profileStats": typeof jobs_profileStats;
   "jobs/reflectionAnonymizer": typeof jobs_reflectionAnonymizer;
   "jobs/reflectionDistiller": typeof jobs_reflectionDistiller;

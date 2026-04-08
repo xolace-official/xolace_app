@@ -31,8 +31,8 @@ export function useNotifications() {
   const router = useRouter();
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
-  const notificationListener = useRef<Notifications.Subscription | null>(null);
-  const responseListener = useRef<Notifications.Subscription | null>(null);
+  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -40,7 +40,7 @@ export function useNotifications() {
     let cancelled = false;
 
     async function register() {
-      const token = await getExpoPushToken();
+      const token = await requestPushToken();
       if (token && !cancelled) {
         setExpoPushToken(token);
         await registerToken({ pushToken: token });
@@ -76,7 +76,11 @@ export function useNotifications() {
   return { expoPushToken };
 }
 
-async function getExpoPushToken(): Promise<string | null> {
+/**
+ * Request OS push notification permission and return the Expo push token.
+ * Exported so settings can trigger re-registration when notifications are enabled.
+ */
+export async function requestPushToken(): Promise<string | null> {
   // Push notifications only work on physical devices
   if (!Device.isDevice) {
     console.log("Push notifications require a physical device");
