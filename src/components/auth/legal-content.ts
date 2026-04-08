@@ -1,7 +1,7 @@
 export type LegalDocument = {
   title: string;
   fullUrl: string;
-  sections: Array<{ heading: string; body: string }>;
+  sections: {heading: string; body: string}[];
 };
 
 export const PRIVACY_POLICY: LegalDocument = {
@@ -30,7 +30,7 @@ export const PRIVACY_POLICY: LegalDocument = {
     },
     {
       heading: 'Your Rights',
-      body: 'Depending on your location, you have the right to access, correct, delete, or export your data. Contact us at privacy@xolace.app. We respond within 5 business days.',
+      body: 'Depending on your location, you have the right to access, correct, delete, or export your data. Contact us at privacy@xolaceinc.com. We respond within 5 business days.',
     },
     {
       heading: 'Children & Changes',
@@ -45,7 +45,7 @@ export const TERMS_OF_SERVICE: LegalDocument = {
   sections: [
     {
       heading: 'What Xolace Is',
-      body: 'Xolace is a personal emotional processing tool — not a healthcare provider, therapist, crisis service, or social network. Using Xolace does not create a doctor-patient or therapist-client relationship.',
+      body: 'Xolace is a personal emotional processing tool, not a healthcare provider, therapist, crisis service, or social network. Using Xolace does not create a doctor-patient or therapist-client relationship.',
     },
     {
       heading: 'Eligibility',

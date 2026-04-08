@@ -27,12 +27,16 @@ export const LegalBottomSheet = ({ document, onClose }: Props) => {
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
           snapPoints={['90%']}
-          backgroundClassName="bg-neutral-950"
-          handleIndicatorClassName="bg-white/20"
+          enableOverDrag={false}
+          enableDynamicSizing={false}
+          backgroundClassName="bg-background"
+          handleIndicatorClassName="bg-foreground"
+          contentContainerClassName="h-full"
         >
           <BottomSheet.Close className="absolute top-4 right-4 z-10" />
 
           <BottomSheetScrollView
+            showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 48, paddingTop: 8 }}
           >
             {document && (

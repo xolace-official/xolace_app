@@ -28,6 +28,13 @@ export const LegalLinks = () => {
           name or email. We don&apos;t post anything. Ever.
         </AppText>
 
+        <AppText
+          className="text-white/25 text-[11px] leading-5"
+          style={{ textAlign: 'center', fontWeight: '300' }}
+        >
+          Xolace is not designed for crisis situations.{'\n'}If you feel unsafe, contact emergency services{'\n'}or a crisis line immediately.
+        </AppText>
+
         <View
           style={{
             flexDirection: 'row',
