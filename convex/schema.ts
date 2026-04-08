@@ -261,8 +261,8 @@ export default defineSchema({
   // Key design decisions:
   // - State machine tracks exactly where users are and where
   //   they drop off.
-  // - rawInputEncrypted is AES-256-GCM. The AI service encrypts
-  //   before returning to Convex. Never decrypted server-side.
+  // - rawInput stores the user's plaintext. Convex encrypts at rest;
+  //   TLS encrypts in transit. No app-level encryption needed.
   // - inputDuration and freezeOccurred capture pre-articulation
   //   behavior that is emotionally meaningful signal.
   // - mirrorModelVersion tracks which AI produced this mirror,
@@ -303,10 +303,8 @@ export default defineSchema({
       v.literal("voice")
     ),
 
-    // The user's raw text, AES-256-GCM encrypted.
-    // Ciphertext + IV + auth tag as a single base64 string.
-    // Optional: not set until input_received state.
-    rawInputEncrypted: v.optional(v.string()),
+    // The user's raw text. Optional: not set until input_received state.
+    rawInput: v.optional(v.string()),
 
     // Character count of the raw input. Useful for analysis
     // without decrypting content.
@@ -475,8 +473,7 @@ export default defineSchema({
     // Additional text the user provided to guide the AI.
     // For "not_quite": "It's more like frustration than anger"
     // For "say_more": the additional raw input.
-    // Encrypted same as rawInput.
-    userInputEncrypted: v.optional(v.string()),
+    userInput: v.optional(v.string()),
 
     // The AI's revised mirror after this feedback.
     revisedMirrorText: v.string(),
