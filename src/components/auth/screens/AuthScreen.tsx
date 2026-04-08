@@ -13,6 +13,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { AuthBg } from '@/src/components/auth/auth-bg';
 import { AppleIcon } from '@/src/components/auth/apple-icon';
 import { GoogleIcon } from '@/src/components/auth/google-icon';
+import { LegalLinks } from '@/src/components/auth/legal-links';
 
 export const AuthScreen = () => {
   const insets = useSafeAreaInsets();
@@ -188,38 +189,7 @@ export const AuthScreen = () => {
         </View>
 
         {/* Privacy reassurance + terms */}
-        <Animated.View
-          entering={FadeIn.delay(900).duration(800)}
-          style={{ gap: 16 }}
-        >
-          <AppText
-            className="text-white/40 text-[13px] leading-6"
-            style={{ textAlign: 'center', fontWeight: '300' }}
-          >
-            This just saves your reflections so you{'\n'}
-            never lose them. We don&apos;t see your{'\n'}
-            name or email. We don&apos;t post anything. Ever.
-          </AppText>
-          <AppText
-            className="text-white/30 text-[12px] leading-5"
-            style={{ textAlign: 'center' }}
-          >
-            By continuing you agree to the{' '}
-            <AppText
-              className="text-white/50 text-[12px]"
-              style={{ textDecorationLine: 'underline' }}
-            >
-              Terms of Service
-            </AppText>
-            {' '}and{' '}
-            <AppText
-              className="text-white/50 text-[12px]"
-              style={{ textDecorationLine: 'underline' }}
-            >
-              Privacy Policy
-            </AppText>
-          </AppText>
-        </Animated.View>
+        <LegalLinks />
       </View>
     </View>
   );
