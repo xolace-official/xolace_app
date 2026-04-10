@@ -55,7 +55,7 @@ export function useNotifications() {
     notificationListener.current =
       Notifications.addNotificationReceivedListener((_notification) => {
         // No-op for now. Could be used for in-app notification UI.
-        console.log("notification received ", _notification);
+        // console.log("notification received ", _notification); for dev testing
       });
 
     // Listen for user tapping a notification
