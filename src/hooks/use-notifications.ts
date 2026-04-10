@@ -84,7 +84,7 @@ export function useNotifications() {
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, [isSignedIn]);
+  }, [isSignedIn, registerToken, markResultedInSession, router]);
 
   return { expoPushToken };
 }
