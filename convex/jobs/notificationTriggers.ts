@@ -1,3 +1,4 @@
+import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 
@@ -13,16 +14,17 @@ const INACTIVE_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
  * transaction limits.
  */
 export const checkGentleReturn = internalMutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    cursor: v.optional(v.union(v.string(), v.null())),
+  },
+  handler: async (ctx, args) => {
     const now = Date.now();
     const gentleReturnCutoff = now - GENTLE_RETURN_WINDOW_MS;
     const inactiveCutoff = now - INACTIVE_THRESHOLD_MS;
 
-    // Get profiles that have a lastSessionAt (have completed at least one session)
-    // We scan emotional_profiles and filter in-memory since there's no index
-    // on lastSessionAt. At MVP scale (<10k profiles) this is fine.
-    const profiles = await ctx.db.query("emotional_profiles").take(500);
+    const { page: profiles, isDone, continueCursor } = await ctx.db
+      .query("emotional_profiles")
+      .paginate({ numItems: 500, cursor: args.cursor ?? null });
 
     for (const profile of profiles) {
       // Skip profiles that have never completed a session
@@ -60,6 +62,14 @@ export const checkGentleReturn = internalMutation({
         }
       );
     }
+
+    if (!isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.jobs.notificationTriggers.checkGentleReturn,
+        { cursor: continueCursor }
+      );
+    }
   },
 });
 
@@ -71,14 +81,18 @@ export const checkGentleReturn = internalMutation({
  * Runs hourly on a cron schedule.
  */
 export const checkPatternNudge = internalMutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    cursor: v.optional(v.union(v.string(), v.null())),
+  },
+  handler: async (ctx, args) => {
     const now = Date.now();
     const currentDate = new Date(now);
     const currentDay = currentDate.getUTCDay(); // 0-6
     const currentHour = currentDate.getUTCHours(); // 0-23
 
-    const profiles = await ctx.db.query("emotional_profiles").take(500);
+    const { page: profiles, isDone, continueCursor } = await ctx.db
+      .query("emotional_profiles")
+      .paginate({ numItems: 500, cursor: args.cursor ?? null });
 
     for (const profile of profiles) {
       // Need at least 5 sessions for a usage pattern
@@ -118,16 +132,32 @@ export const checkPatternNudge = internalMutation({
         "Saturday",
       ];
 
+      const hour = profile.typicalUsagePattern.hourOfDay;
+      const timeOfDay =
+        hour < 6 ? "night" :
+        hour < 12 ? "morning" :
+        hour < 17 ? "afternoon" :
+        hour < 21 ? "evening" :
+        "night";
+
       await ctx.scheduler.runAfter(
         0,
         internal.notifications.schedule,
         {
           emotionalProfileId: profile._id,
           type: "pattern_nudge",
-          content: `${dayNames[currentDay]} evening, you usually check in around now. How are you?`,
+          content: `${dayNames[currentDay]} ${timeOfDay}, you usually check in around now. How are you?`,
           triggerReason: `Pattern match: day=${currentDay} hour=${currentHour}`,
           scheduledFor: now,
         }
+      );
+    }
+
+    if (!isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.jobs.notificationTriggers.checkPatternNudge,
+        { cursor: continueCursor }
       );
     }
   },

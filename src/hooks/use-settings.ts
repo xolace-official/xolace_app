@@ -109,14 +109,42 @@ export const useSettings = () => {
       });
 
       if (enabled) {
-        // Request OS permission (no-op if already granted) and register token
-        const token = await requestPushToken();
-        if (token) {
+        try {
+          // Request OS permission (no-op if already granted) and register token
+          const token = await requestPushToken();
+          if (!token) {
+            // Permission denied or non-device — revert the optimistic update
+            updatePreferences({
+              notifications: {
+                enabled: false,
+                gentleReturn: false,
+                patternNudge: false,
+                milestone: false,
+              },
+            });
+            return;
+          }
           await registerToken({ pushToken: token });
+        } catch {
+          // Registration failed — revert so UI reflects the real state
+          updatePreferences({
+            notifications: {
+              enabled: false,
+              gentleReturn: false,
+              patternNudge: false,
+              milestone: false,
+            },
+          });
         }
       } else {
-        // Unregister token so no push is delivered while disabled
-        await removeToken();
+        // Unregister token so no push is delivered while disabled.
+        // Best-effort — server preferences are already false so no
+        // notifications will be sent even if this call fails.
+        try {
+          await removeToken();
+        } catch {
+          // Ignore — server-side notifications are already disabled
+        }
       }
     },
     [updatePreferences, registerToken, removeToken],
