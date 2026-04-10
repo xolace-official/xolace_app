@@ -137,6 +137,25 @@ export const updateAfterSession = internalMutation({
       updatedAt: now,
     });
 
+    // Mark any unresolved notification_log entries within the last 24h as
+    // having resulted in a session — covers organic returns (no tap required).
+    const ATTRIBUTION_WINDOW_MS = 24 * 60 * 60 * 1000;
+    const attributionCutoff = now - ATTRIBUTION_WINDOW_MS;
+    const recentLogs = await ctx.db
+      .query("notification_log")
+      .withIndex("by_profile", (q) =>
+        q
+          .eq("emotionalProfileId", args.emotionalProfileId)
+          .gte("sentAt", attributionCutoff)
+      )
+      .take(5);
+
+    for (const log of recentLogs) {
+      if (log.resultedInSession === undefined) {
+        await ctx.db.patch(log._id, { resultedInSession: true });
+      }
+    }
+
     // Check for milestone notification
     const milestoneMessages: Record<number, string> = {
       1: "You showed up. That's the hardest part.",

@@ -43,6 +43,19 @@ export const schedule = internalMutation({
       return;
     }
 
+    // Insert log first so we have the ID to embed in the notification payload.
+    // The client uses this ID to mark resultedInSession when the user taps.
+    const logId = await ctx.db.insert("notification_log", {
+      emotionalProfileId: args.emotionalProfileId,
+      type: args.type,
+      content: args.content,
+      triggerReason: args.triggerReason,
+      delivered: true,
+      sentAt: now,
+      scheduledFor: args.scheduledFor,
+      createdAt: now,
+    });
+
     // Dispatch via push notifications component.
     // allowUnregisteredTokens: true — don't throw if user hasn't
     // registered a token yet (e.g. notifications enabled in prefs
@@ -52,21 +65,9 @@ export const schedule = internalMutation({
       notification: {
         title: "Xolace",
         body: args.content,
-        data: { type: args.type },
+        data: { type: args.type, logId },
       },
       allowUnregisteredTokens: true,
-    });
-
-    // Log for analytics (what was sent and why)
-    await ctx.db.insert("notification_log", {
-      emotionalProfileId: args.emotionalProfileId,
-      type: args.type,
-      content: args.content,
-      triggerReason: args.triggerReason,
-      delivered: true,
-      sentAt: now,
-      scheduledFor: args.scheduledFor,
-      createdAt: now,
     });
   },
 });
@@ -125,6 +126,28 @@ export const removeToken = mutation({
       userId: profile._id,
     });
 
+    return null;
+  },
+});
+
+/**
+ * Mark a notification as having resulted in a session.
+ * Called from the client when the user taps a notification and opens the app.
+ */
+export const markResultedInSession = mutation({
+  args: {
+    logId: v.id("notification_log"),
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    const log = await ctx.db.get(args.logId);
+    if (!log) return null;
+
+    // Ownership check — only the profile that received it can mark it
+    if (log.emotionalProfileId !== profile._id) return null;
+
+    await ctx.db.patch(args.logId, { resultedInSession: true });
     return null;
   },
 });

@@ -54,7 +54,7 @@ export const checkGentleReturn = internalMutation({
         {
           emotionalProfileId: profile._id,
           type: "gentle_return",
-          content: "It's been a little while. There's no rush — but if something's sitting with you, this is a safe place to let it out.",
+          content: "It's been a little while. There's no rush but if something's sitting with you, this is a safe place to let it out.",
           triggerReason: `No session in ${Math.round((now - profile.lastSessionAt) / (60 * 60 * 1000))}h`,
           scheduledFor: now,
         }
@@ -124,7 +124,7 @@ export const checkPatternNudge = internalMutation({
         {
           emotionalProfileId: profile._id,
           type: "pattern_nudge",
-          content: `${dayNames[currentDay]} evening — you usually check in around now. How are you?`,
+          content: `${dayNames[currentDay]} evening, you usually check in around now. How are you?`,
           triggerReason: `Pattern match: day=${currentDay} hour=${currentHour}`,
           scheduledFor: now,
         }

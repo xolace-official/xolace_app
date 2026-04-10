@@ -6,6 +6,7 @@ import Constants from "expo-constants";
 import { useMutation } from "convex/react";
 import { useAuth } from "@clerk/expo";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useRouter } from "expo-router";
 
 // Configure how notifications appear when the app is in the foreground.
@@ -28,6 +29,7 @@ Notifications.setNotificationHandler({
 export function useNotifications() {
   const { isSignedIn } = useAuth();
   const registerToken = useMutation(api.notifications.registerToken);
+  const markResultedInSession = useMutation(api.notifications.markResultedInSession);
   const router = useRouter();
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
@@ -53,15 +55,26 @@ export function useNotifications() {
     notificationListener.current =
       Notifications.addNotificationReceivedListener((_notification) => {
         // No-op for now. Could be used for in-app notification UI.
+        console.log("notification received ", _notification);
       });
 
     // Listen for user tapping a notification
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data;
+        const logId = data?.logId as Id<"notification_log"> | undefined;
+
+        // Mark conversion — fire-and-forget
+        if (logId) {
+          markResultedInSession({ logId });
+        }
 
         // Route based on notification type
-        if (data?.type === "gentle_return" || data?.type === "pattern_nudge") {
+        if (
+          data?.type === "gentle_return" ||
+          data?.type === "pattern_nudge" ||
+          data?.type === "milestone"
+        ) {
           router.push("/(protected)");
         }
       });
