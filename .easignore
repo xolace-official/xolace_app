@@ -43,7 +43,4 @@ app-example
 /android
 
 # key files
-/application-c2b13354-c248-45b6-a0eb-749209fa0ea4.aab
-*.aab
 /xolace-app-firebase-adminsdk-fbsvc-68c84aaff8.json
-/google-services.json

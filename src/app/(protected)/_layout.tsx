@@ -1,13 +1,13 @@
 import { Stack } from 'expo-router';
-
+import { useNotifications } from '@/src/hooks/use-notifications';
 
 /**
  * Provides the navigation layout used by protected routes.
- *
- * @returns A Stack element configured with headers hidden and a transparent content background.
+ * Initializes push notification registration for authenticated users.
  */
-
 export default function ProtectedLayout() {
+  useNotifications();
+
   return (
     <Stack
       screenOptions={{

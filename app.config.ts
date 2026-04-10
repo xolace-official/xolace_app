@@ -50,7 +50,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         monochromeImage: "./assets/images/android-icon-monochrome.png"
       },
       predictiveBackGestureEnabled: false,
-      package: getUniqueIdentifier()
+      package: getUniqueIdentifier(),
+      googleServicesFile: "./google-services.json"
     },
     web: {
       output: "static",
@@ -90,7 +91,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-sqlite",
       "@clerk/expo",
       "expo-secure-store",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-notifications"
     ],
     experiments: {
       typedRoutes: true,

@@ -1,11 +1,13 @@
 import { v } from "convex/values";
-import { query, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
+import { pushNotifications } from "./lib/pushNotifications";
 
 /**
  * Schedule a notification for delivery.
- * Includes rate limit check to prevent spam.
+ * Rate-limited, then dispatched via the push notifications component.
+ * Also logs to notification_log for analytics.
  */
 export const schedule = internalMutation({
   args: {
@@ -28,7 +30,6 @@ export const schedule = internalMutation({
     });
 
     if (!ok) {
-      // Suppress: too recent
       await ctx.db.insert("notification_log", {
         emotionalProfileId: args.emotionalProfileId,
         type: args.type,
@@ -42,15 +43,112 @@ export const schedule = internalMutation({
       return;
     }
 
-    await ctx.db.insert("notification_log", {
+    // Insert log first so we have the ID to embed in the notification payload.
+    // The client uses this ID to mark resultedInSession when the user taps.
+    const logId = await ctx.db.insert("notification_log", {
       emotionalProfileId: args.emotionalProfileId,
       type: args.type,
       content: args.content,
       triggerReason: args.triggerReason,
-      delivered: false,
+      delivered: true,
+      sentAt: now,
       scheduledFor: args.scheduledFor,
       createdAt: now,
     });
+
+    // Dispatch via push notifications component.
+    // allowUnregisteredTokens: true — don't throw if user hasn't
+    // registered a token yet (e.g. notifications enabled in prefs
+    // but app not yet opened on a physical device).
+    await pushNotifications.sendPushNotification(ctx, {
+      userId: args.emotionalProfileId,
+      notification: {
+        title: "Xolace",
+        body: args.content,
+        data: { type: args.type, logId },
+      },
+      allowUnregisteredTokens: true,
+    });
+  },
+});
+
+/**
+ * Register an Expo push token for the authenticated user.
+ * Called from the client after obtaining permissions and a token.
+ */
+export const registerToken = mutation({
+  args: {
+    pushToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    await pushNotifications.recordToken(ctx, {
+      userId: profile._id,
+      pushToken: args.pushToken,
+    });
+
+    // Auto-enable notification preferences on first token registration
+    // so cron jobs include this user. If the user later disables via
+    // Settings, removeToken is called and preferences are set to false.
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", profile._id)
+      )
+      .unique();
+
+    if (preferences && !preferences.notifications.enabled) {
+      await ctx.db.patch(preferences._id, {
+        notifications: {
+          enabled: true,
+          gentleReturn: true,
+          patternNudge: true,
+          milestone: true,
+        },
+      });
+    }
+
+    return null;
+  },
+});
+
+/**
+ * Remove the push token for the authenticated user.
+ * Called when the user disables notifications.
+ */
+export const removeToken = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+
+    await pushNotifications.removeToken(ctx, {
+      userId: profile._id,
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Mark a notification as having resulted in a session.
+ * Called from the client when the user taps a notification and opens the app.
+ */
+export const markResultedInSession = mutation({
+  args: {
+    logId: v.id("notification_log"),
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    const log = await ctx.db.get(args.logId);
+    if (!log) return null;
+
+    // Ownership check — only the profile that received it can mark it
+    if (log.emotionalProfileId !== profile._id) return null;
+
+    await ctx.db.patch(args.logId, { resultedInSession: true });
+    return null;
   },
 });
 
