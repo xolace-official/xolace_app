@@ -206,6 +206,7 @@ export const seed = internalMutation({
         granularLabel: v.optional(v.string()),
         thematicTags: v.array(v.string()),
         intensity: v.number(),
+        addedAt: v.optional(v.number()),
       })
     ),
   },
@@ -214,12 +215,13 @@ export const seed = internalMutation({
     const roundedDay = Math.floor(now / 86400000) * 86400000;
 
     for (const reflection of args.reflections) {
+      const { addedAt, ...rest } = reflection;
       await ctx.db.insert("reflections", {
-        ...reflection,
+        ...rest,
         resonanceCount: 0,
         status: "active",
         isSeed: true,
-        addedAt: roundedDay,
+        addedAt: addedAt ?? roundedDay,
       });
     }
   },
