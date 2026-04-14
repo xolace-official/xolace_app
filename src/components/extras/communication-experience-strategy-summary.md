@@ -174,7 +174,7 @@ Connection features must:
 Goal:
 
 > “I’m not the only one who feels this.”
-> "Someone has been through this and came out at the other side , so I can to."
+> "Someone has been through this and came out the other side, so I can too."
 > "Getting insight from real people"
 
 Not:
@@ -219,8 +219,8 @@ Agents should recognize these as negative signals:
 
 > Do not build features that make users stay longer unless required.
 > Build experiences that make users feel understood faster.
-> Build features that make users keep coming back daily because they get real value.
-> Important: we do want users to keep coming back.
+> Build features that make users want to return when needed because they get real value.
+> Important: return should come from genuine value, never pressure or habit loops.
 
 ---
 

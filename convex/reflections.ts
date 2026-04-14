@@ -216,6 +216,21 @@ export const seed = internalMutation({
 
     for (const reflection of args.reflections) {
       const { addedAt, ...rest } = reflection;
+
+      // Upsert: skip if this seed reflection already exists (any status).
+      // Uses a full-scan filter because displayText has no index — acceptable
+      // for a one-time manual seed operation on a small table.
+      const existing = await ctx.db
+        .query("reflections")
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("isSeed"), true),
+            q.eq(q.field("displayText"), rest.displayText)
+          )
+        )
+        .first();
+      if (existing !== null) continue;
+
       await ctx.db.insert("reflections", {
         ...rest,
         resonanceCount: 0,

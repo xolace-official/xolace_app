@@ -1152,43 +1152,19 @@ const BATCH_C = [
 ];
 
 /**
- * Idempotency check — returns true if seed reflections already exist.
- * Filters specifically for isSeed: true so real user contributions
- * already in prod don't incorrectly trigger a skip.
- */
-export const isSeedComplete = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const existing = await ctx.db
-      .query("reflections")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
-      .filter((q) => q.eq(q.field("isSeed"), true))
-      .take(1);
-    return existing.length > 0;
-  },
-});
-
-/**
  * Seed the full beta launch pool (125 curated reflections).
  *
  * Run once from the Convex dashboard or CLI:
  *   bunx convex run seed:seedReflections
  *
- * Safe to re-run — skips if the pool is already populated.
+ * Safe to re-run — each batch upserts by displayText so repeated runs
+ * and partial-failure recoveries never produce duplicates.
  */
 export const seedReflections = internalAction({
   args: {},
   handler: async (ctx) => {
-    const alreadySeeded: boolean = await ctx.runMutation(
-      internal.seed.isSeedComplete,
-      {}
-    );
-    if (alreadySeeded) {
-      console.log("[seed] Reflections pool already populated — skipping.");
-      return { seeded: false, count: 0 };
-    }
-
-    // Insert in three batches to stay well within mutation limits.
+    // Run all three batches every time; internal.reflections.seed skips
+    // any reflection whose displayText already exists in the table.
     await ctx.runMutation(internal.reflections.seed, {
       reflections: [...BATCH_A],
     });
@@ -1200,7 +1176,7 @@ export const seedReflections = internalAction({
     });
 
     const total = BATCH_A.length + BATCH_B.length + BATCH_C.length;
-    console.log(`[seed] Seeded ${total} reflections.`);
+    console.log(`[seed] Seed complete — pool contains up to ${total} reflections.`);
     return { seeded: true, count: total };
   },
 });
