@@ -57,10 +57,7 @@ export const matchForSession = query({
       (r) => Math.abs(r.intensity - metadata.intensity) <= 3
     );
 
-    // Sort by resonance count (most resonant first), take 5
-    return intensityFiltered
-      .sort((a, b) => b.resonanceCount - a.resonanceCount)
-      .slice(0, 5);
+    return intensityFiltered.slice(0, 4);
   },
 });
 

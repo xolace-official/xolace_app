@@ -50,7 +50,7 @@ export const PeerReflectionScreen = () => {
   const recentReflections = useQuery(
     api.reflections.listRecent,
     matchedReflections !== undefined && matchedReflections.length === 0
-      ? { limit: 5 }
+      ? { limit: 4 }
       : "skip",
   );
 
@@ -59,6 +59,11 @@ export const PeerReflectionScreen = () => {
     matchedReflections !== undefined &&
     matchedReflections.length === 0 &&
     recentReflections === undefined;
+
+  const isFallback =
+    matchedReflections !== undefined &&
+    matchedReflections.length === 0 &&
+    (recentReflections?.length ?? 0) > 0;
 
   const reflections =
     matchedReflections && matchedReflections.length > 0
@@ -121,6 +126,12 @@ export const PeerReflectionScreen = () => {
           <AppText className="text-lg leading-7 text-foreground/50">
             Others have felt{"\n"}something like this.
           </AppText>
+          {isFallback && (
+            <AppText className="mt-2 text-sm leading-6 text-foreground/30">
+              We couldn&apos;t find a close match for what you&apos;re feeling right now.
+              {"\n"}These are recent reflections from others — and yours could be the first of its kind here.
+            </AppText>
+          )}
         </Animated.View>
 
         {reflections.map((reflection, i) => (
