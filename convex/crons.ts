@@ -3,7 +3,14 @@ import { internal } from "./_generated/api";
 
 // Set CONVEX_ENV=production on the prod deployment, leave unset (or "development") on dev.
 // Dev gets much longer intervals to avoid burning resources during development.
-const isProd = process.env.CONVEX_ENV === "production";
+const CONVEX_ENV = process.env.CONVEX_ENV;
+const VALID_ENVS = ["production", "development"] as const;
+if (CONVEX_ENV !== undefined && !(VALID_ENVS as readonly string[]).includes(CONVEX_ENV)) {
+  throw new Error(
+    `Invalid CONVEX_ENV="${CONVEX_ENV}". Expected one of: ${VALID_ENVS.join(", ")} (or leave unset for development).`,
+  );
+}
+const isProd = CONVEX_ENV === "production";
 
 const crons = cronJobs();
 

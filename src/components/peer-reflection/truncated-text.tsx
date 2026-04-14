@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, type NativeSyntheticEvent, type TextLayoutEventData } from "react-native";
+import { Pressable, View, type NativeSyntheticEvent, type TextLayoutEventData } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 import { AppText } from "@/src/components/shared/app-text";
 
@@ -24,15 +24,18 @@ export const TruncatedText = ({ text, className }: Props) => {
   return (
     <Animated.View layout={LinearTransition.springify().damping(18).stiffness(120)}>
       {/* Hidden render with no line cap to get the true line count */}
-      <AppText
-        className={className}
-        numberOfLines={undefined}
-        onTextLayout={handleFullTextLayout}
-        style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-        aria-hidden
+      <View
+        pointerEvents="none"
+        style={{ position: 'absolute', left: 0, right: 0, opacity: 0 }}
       >
-        &ldquo;{text}&rdquo;
-      </AppText>
+        <AppText
+          className={className}
+          numberOfLines={undefined}
+          onTextLayout={handleFullTextLayout}
+        >
+          &ldquo;{text}&rdquo;
+        </AppText>
+      </View>
 
       <Pressable onPress={clipped ? () => setExpanded((v) => !v) : undefined}>
         <AppText
