@@ -6,6 +6,7 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { AppText } from '@/src/components/shared/app-text';
 
 const CARD_WIDTH_RATIO = 0.55;
@@ -23,6 +24,7 @@ export interface MoodItem {
   id: number;
   word: string;
   colors: [string, string, string];
+  image?: ReturnType<typeof require>;
 }
 
 type Props = {
@@ -98,19 +100,42 @@ const MoodCardComponent = ({
       <View
         style={{ flex: 1, borderRadius: 24, overflow: 'hidden', borderCurve: 'continuous' }}
       >
-        <LinearGradient
-          colors={item.colors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ flex: 1, justifyContent: 'flex-end', padding: 24 }}
-        >
-          <AppText
-            className="text-white/70 text-lg font-medium"
-            style={{ letterSpacing: 1 }}
+        {item.image ? (
+          <View style={{ flex: 1 }}>
+            <Image
+              source={item.image}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+              contentFit="cover"
+            />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.55)']}
+              start={{ x: 0, y: 0.4 }}
+              end={{ x: 0, y: 1 }}
+              style={{ flex: 1, justifyContent: 'flex-end', padding: 24 }}
+            >
+              <AppText
+                className="text-white/80 text-lg font-medium"
+                style={{ letterSpacing: 1 }}
+              >
+                {item.word}
+              </AppText>
+            </LinearGradient>
+          </View>
+        ) : (
+          <LinearGradient
+            colors={item.colors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ flex: 1, justifyContent: 'flex-end', padding: 24 }}
           >
-            {item.word}
-          </AppText>
-        </LinearGradient>
+            <AppText
+              className="text-white/70 text-lg font-medium"
+              style={{ letterSpacing: 1 }}
+            >
+              {item.word}
+            </AppText>
+          </LinearGradient>
+        )}
       </View>
     </Animated.View>
   );
