@@ -23,11 +23,13 @@ export const MOODS: MoodItem[] = [
     id: 3,
     word: 'numb',
     colors: ['#1f2937', '#2b3544', '#171e28'],
+    image: require('@/assets/images/onboarding/numb.png'),
   },
   {
     id: 4,
     word: 'restless',
     colors: ['#3b2f1f', '#4a3a28', '#2a2118'],
+    image: require('@/assets/images/onboarding/restless.png'),
   },
   {
     id: 5,
