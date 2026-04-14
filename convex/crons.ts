@@ -1,44 +1,55 @@
 import { cronJobs } from "convex/server";
 import { internal } from "./_generated/api";
 
+// Set CONVEX_ENV=production on the prod deployment, leave unset (or "development") on dev.
+// Dev gets much longer intervals to avoid burning resources during development.
+const CONVEX_ENV = process.env.CONVEX_ENV;
+const VALID_ENVS = ["production", "development"] as const;
+if (CONVEX_ENV !== undefined && !(VALID_ENVS as readonly string[]).includes(CONVEX_ENV)) {
+  throw new Error(
+    `Invalid CONVEX_ENV="${CONVEX_ENV}". Expected one of: ${VALID_ENVS.join(", ")} (or leave unset for development).`,
+  );
+}
+const isProd = CONVEX_ENV === "production";
+
 const crons = cronJobs();
 
-// Check for abandoned sessions every 15 minutes
+// Check for abandoned sessions
 crons.interval(
   "check abandoned sessions",
-  { minutes: 15 },
+  isProd ? { minutes: 15 } : { hours: 2 },
   internal.sessions.checkAbandoned,
   {}
 );
 
-// Enforce data retention policies daily
+// Enforce data retention policies
 crons.interval(
   "enforce data retention",
-  { hours: 24 },
+  isProd ? { hours: 24 } : { hours: 72 },
   internal.jobs.dataRetention.enforce,
   {}
 );
 
-// Process account deletions hourly
+// Process account deletions
 crons.interval(
   "process account deletions",
-  { hours: 1 },
+  isProd ? { hours: 1 } : { hours: 12 },
   internal.jobs.accountDeletion.purge,
   {}
 );
 
-// Check for gentle return notifications every 6 hours
+// Check for gentle return notifications
 crons.interval(
   "check gentle return notifications",
-  { hours: 6 },
+  isProd ? { hours: 6 } : { hours: 24 },
   internal.jobs.notificationTriggers.checkGentleReturn,
   {}
 );
 
-// Check for pattern nudge notifications every hour
+// Check for pattern nudge notifications
 crons.interval(
   "check pattern nudge notifications",
-  { hours: 1 },
+  isProd ? { hours: 1 } : { hours: 12 },
   internal.jobs.notificationTriggers.checkPatternNudge,
   {}
 );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, type NativeSyntheticEvent, type TextLayoutEventData } from "react-native";
+import { Pressable, View, type NativeSyntheticEvent, type TextLayoutEventData } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 import { AppText } from "@/src/components/shared/app-text";
 
@@ -14,20 +14,33 @@ export const TruncatedText = ({ text, className }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const [clipped, setClipped] = useState(false);
 
-  const handleTextLayout = (e: NativeSyntheticEvent<TextLayoutEventData>) => {
-    // Detect if the text was actually truncated
-    if (!expanded && e.nativeEvent.lines.length >= MAX_LINES) {
-      setClipped(true);
-    }
+  // Measure the full (uncapped) line count to know if truncation is actually needed.
+  // onTextLayout on the visible text fires with lines capped at numberOfLines,
+  // so a 4-line text that fits perfectly would incorrectly appear "clipped".
+  const handleFullTextLayout = (e: NativeSyntheticEvent<TextLayoutEventData>) => {
+    setClipped(e.nativeEvent.lines.length > MAX_LINES);
   };
 
   return (
     <Animated.View layout={LinearTransition.springify().damping(18).stiffness(120)}>
+      {/* Hidden render with no line cap to get the true line count */}
+      <View
+        pointerEvents="none"
+        style={{ position: 'absolute', left: 0, right: 0, opacity: 0 }}
+      >
+        <AppText
+          className={className}
+          numberOfLines={undefined}
+          onTextLayout={handleFullTextLayout}
+        >
+          &ldquo;{text}&rdquo;
+        </AppText>
+      </View>
+
       <Pressable onPress={clipped ? () => setExpanded((v) => !v) : undefined}>
         <AppText
           className={className}
           numberOfLines={expanded ? undefined : MAX_LINES}
-          onTextLayout={handleTextLayout}
         >
           &ldquo;{text}&rdquo;
         </AppText>
