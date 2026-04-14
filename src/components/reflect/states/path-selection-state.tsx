@@ -27,7 +27,7 @@ export const PathSelectionState = ({
     playPathChoice();
     try {
       await onSelectSolo();
-      router.push('/sit-with-this');
+      router.replace('/sit-with-this');
     } finally {
       busyRef.current = false;
     }
@@ -39,7 +39,7 @@ export const PathSelectionState = ({
     playPathChoice();
     try {
       await onSelectPeers();
-      router.push('/peer-reflections');
+      router.replace('/peer-reflections');
     } finally {
       busyRef.current = false;
     }
@@ -51,7 +51,7 @@ export const PathSelectionState = ({
     playPathChoice();
     try {
       await onSelectExit();
-      router.push('/session-end?path=exit');
+      router.replace('/session-end?path=exit');
     } finally {
       busyRef.current = false;
     }
