@@ -1,5 +1,12 @@
 import { ConfigContext, ExpoConfig } from "expo/config"
 
+function requireEnv(name: string, value: string | undefined): string {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
 const IS_DEV = process.env.APP_VARIANT === 'development';
 const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
 
@@ -103,9 +110,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       eas: {
         projectId: "9b49d23b-d85c-48c9-84a4-db117b864dd3"
       },
-      EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME,
-      EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID,
-      EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID
+      EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME", process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME),
+      EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID", process.env.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID),
+      EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID", process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID),
+      EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID", process.env.EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID)
     },
     updates: {
       url: "https://u.expo.dev/9b49d23b-d85c-48c9-84a4-db117b864dd3"
