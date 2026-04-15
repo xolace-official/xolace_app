@@ -5,6 +5,7 @@ import { useSessionEnd } from '@/src/hooks/use-session-end';
 import { ExitVariant } from '@/src/components/session-end/exit-variant';
 import { ActivityVariant } from '@/src/components/session-end/activity-variant';
 import { playSessionComplete } from '@/src/lib/haptics';
+import { useSessionMode } from '@/src/context/session-mode-context';
 
 type PostSessionMood = 'lighter' | 'same' | 'heavier' | 'unsure';
 type PathType = 'solo' | 'peers' | 'exit';
@@ -16,6 +17,7 @@ type Props = {
 export const SessionEndScreen = ({ path }: Props) => {
   const insets = useSafeAreaInsets();
   const { isLoading, distilledText, contributeByDefault, dismiss, haveMore } = useSessionEnd();
+  const { isNight } = useSessionMode();
 
   useEffect(() => {
     if (!isLoading) {
@@ -40,7 +42,7 @@ export const SessionEndScreen = ({ path }: Props) => {
       style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
     >
       {path === 'exit' ? (
-        <ExitVariant onHaveMore={() => haveMore()} />
+        <ExitVariant onHaveMore={() => haveMore()} isNight={isNight} />
       ) : (
         <ActivityVariant
           distilledText={distilledText}
@@ -51,6 +53,7 @@ export const SessionEndScreen = ({ path }: Props) => {
           onHaveMore={(contributed?: boolean, mood?: PostSessionMood) =>
             haveMore(contributed, mood)
           }
+          isNight={isNight}
         />
       )}
     </View>

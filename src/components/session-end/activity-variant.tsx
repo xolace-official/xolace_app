@@ -6,6 +6,7 @@ import { LinkButton } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress, playTextureSelect } from '@/src/lib/haptics';
 import { ContributedConfirmation } from '@/src/components/session-end/contributed-confirmation';
+import { NIGHT_SESSION_END_ACTIVITY } from '@/src/constants/night-copy';
 
 type PostSessionMood = 'lighter' | 'same' | 'heavier' | 'unsure';
 
@@ -14,6 +15,7 @@ type Props = {
   contributeByDefault: boolean;
   onDismiss: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
   onHaveMore: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
+  isNight?: boolean;
 };
 
 const MOODS = ['lighter', 'same', 'heavier', 'unsure'] as const;
@@ -23,6 +25,7 @@ export const ActivityVariant = ({
   contributeByDefault,
   onDismiss,
   onHaveMore,
+  isNight = false,
 }: Props) => {
   const [phase, setPhase] = useState<'main' | 'contributed'>('main');
   const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(null);
@@ -50,7 +53,7 @@ export const ActivityVariant = ({
     <View className="flex-1 justify-center px-7">
       <Animated.View entering={FadeIn.duration(600)}>
         <AppText className="mb-2 font-serif text-xl leading-8 text-foreground">
-          You showed up for{'\n'}yourself today.
+          {isNight ? NIGHT_SESSION_END_ACTIVITY : 'You showed up for\nyourself today.'}
         </AppText>
         <View className="mb-3 flex-row flex-wrap">
           <AppText className="text-base font-light leading-7 text-foreground/40">
@@ -67,38 +70,40 @@ export const ActivityVariant = ({
         </View>
       </Animated.View>
 
-      {/* Optional mood check */}
-      <Animated.View
-        entering={FadeInDown.delay(300).duration(400)}
-        className="my-6 border-t border-border pt-5"
-      >
-        <AppText className="mb-3 text-xs font-light text-muted">
-          How do you feel now?
-        </AppText>
-        <View className="flex-row gap-4">
-          {MOODS.map((mood) => (
-            <Pressable
-              key={mood}
-              onPress={() => { playTextureSelect(); setSelectedMood(mood); }}
-              className={`rounded-full border px-3 py-1.5 ${
-                selectedMood === mood
-                  ? 'border-accent/30 bg-accent/10'
-                  : 'border-border'
-              }`}
-            >
-              <AppText
-                className={`text-xs font-light ${
+      {/* Optional mood check — skipped for night sessions */}
+      {!isNight && (
+        <Animated.View
+          entering={FadeInDown.delay(300).duration(400)}
+          className="my-6 border-t border-border pt-5"
+        >
+          <AppText className="mb-3 text-xs font-light text-muted">
+            How do you feel now?
+          </AppText>
+          <View className="flex-row gap-4">
+            {MOODS.map((mood) => (
+              <Pressable
+                key={mood}
+                onPress={() => { playTextureSelect(); setSelectedMood(mood); }}
+                className={`rounded-full border px-3 py-1.5 ${
                   selectedMood === mood
-                    ? 'text-accent'
-                    : 'text-foreground/40'
+                    ? 'border-accent/30 bg-accent/10'
+                    : 'border-border'
                 }`}
               >
-                {mood}
-              </AppText>
-            </Pressable>
-          ))}
-        </View>
-      </Animated.View>
+                <AppText
+                  className={`text-xs font-light ${
+                    selectedMood === mood
+                      ? 'text-accent'
+                      : 'text-foreground/40'
+                  }`}
+                >
+                  {mood}
+                </AppText>
+              </Pressable>
+            ))}
+          </View>
+        </Animated.View>
+      )}
 
       {/* Contribution prompt — only when there's something to share */}
       {distilledText ? (

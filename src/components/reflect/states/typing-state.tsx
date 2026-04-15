@@ -9,6 +9,8 @@ import { PresenceDot } from '@/src/components/reflect/presence-dot';
 import { PillButton } from '@/src/components/reflect/pill-button';
 import { useTypingPause } from '@/src/hooks/use-typing-pause';
 import type { ReflectionAction } from '@/src/interfaces/reflection';
+import { useSessionMode } from '@/src/context/session-mode-context';
+import { NIGHT_NUDGE_DELAY_MS, DAY_NUDGE_DELAY_MS } from '@/src/constants/night-copy';
 
 type Props = {
   showNudge: boolean;
@@ -26,9 +28,10 @@ const NUDGE_MESSAGES = [
 ];
 
 export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismiss, autoFocus = true }: Props) => {
+  const { isNight } = useSessionMode();
   const { resetTimer, clearTimer } = useTypingPause(
     () => dispatch({ type: 'PAUSE_TIMEOUT' }),
-    8000,
+    isNight ? NIGHT_NUDGE_DELAY_MS : DAY_NUDGE_DELAY_MS,
   );
 
   const handleChangeText = (text: string) => {

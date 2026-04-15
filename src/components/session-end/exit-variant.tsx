@@ -4,12 +4,14 @@ import { useRouter } from 'expo-router';
 import { LinkButton } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
+import { NIGHT_SESSION_END_EXIT } from '@/src/constants/night-copy';
 
 type Props = {
   onHaveMore: () => void;
+  isNight?: boolean;
 };
 
-export const ExitVariant = ({ onHaveMore }: Props) => {
+export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
   const router = useRouter();
 
   const handleTimelinePress = () => {
@@ -21,7 +23,7 @@ export const ExitVariant = ({ onHaveMore }: Props) => {
     <View className="flex-1 justify-center px-8">
       <Animated.View entering={FadeIn.duration(600)}>
         <AppText className="mb-2 font-serif text-xl text-foreground">
-          Heard.
+          {isNight ? NIGHT_SESSION_END_EXIT : 'Heard.'}
         </AppText>
         <View className="mb-12 flex-row flex-wrap">
           <AppText className="text-base font-light leading-7 text-foreground/40">

@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardAvoidingView, KeyboardProvider } from 'react-native-keyboard-controller';
 import { AppThemeProvider } from '@/src/context/app-theme-context';
+import { SessionModeProvider } from '@/src/context/session-mode-context';
 import {ConvexClientProvider} from './convex-provider';
 
 /**
@@ -45,14 +46,14 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
         <AppThemeProvider>
-          <ConvexClientProvider>
-          <HeroUINativeProvider
-          config={config}
-          >
-            {children}
-          </HeroUINativeProvider>
-          </ConvexClientProvider>
-          </AppThemeProvider>
+          <SessionModeProvider>
+            <ConvexClientProvider>
+              <HeroUINativeProvider config={config}>
+                {children}
+              </HeroUINativeProvider>
+            </ConvexClientProvider>
+          </SessionModeProvider>
+        </AppThemeProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );

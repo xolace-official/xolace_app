@@ -19,6 +19,8 @@ interface ArticulatorInput {
   existingMirror?: string;
   userFeedback?: string;
   additionalInput?: string;
+  // 3am Mode — session started during the night window (10pm–4am)
+  sessionMode?: "day" | "night";
 }
 
 /**
@@ -54,6 +56,7 @@ export function buildArticulatorPrompt(
     existingMirror,
     userFeedback,
     additionalInput,
+    sessionMode,
   } = input;
 
   const toneInstructions = getToneInstructions(mirrorTone);
@@ -89,7 +92,7 @@ Intensity: ${classification.intensity}/10 | Specificity: ${classification.specif
 ${classification.thematicTags.length > 0 ? `Themes: ${classification.thematicTags.join(", ")}` : ""}${classification.temporalContext ? `\nTemporal: ${classification.temporalContext}` : ""}
 User's words: ${classification.userLanguageTags.length > 0 ? classification.userLanguageTags.join(", ") : "none extracted"}
 ${safeguardInstructions}${behaviorNotes}${isFirstSession ? "\nFirst session. Be slightly warmer — they don't know what to expect. The mirror should feel like a surprise." : ""}
-
+${sessionMode === "night" ? getLateNightAddendum() : ""}
 ## Pattern Context (use for subtle continuity — never reference past sessions explicitly)
 ${patternSummary}
 ${recentMirrors.length > 0 ? `\n## Recent Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${recentMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}`;
@@ -166,6 +169,27 @@ function getEntryTypeInstructions(entryType?: string): string {
     default:
       return "";
   }
+}
+
+/**
+ * Returns the late-night register addendum for sessions started between 10pm and 4am.
+ *
+ * Tone-bias line intentionally omitted — the user's mirrorTone preference is respected.
+ * Inserted between Classification Context and Pattern Context in the system prompt.
+ */
+function getLateNightAddendum(): string {
+  return `
+## Late-Night Register
+This session started between 10pm and 4am. The user is likely tired,
+raw, less filtered. The feelings they brought are probably things they
+managed all day until the quiet let them through.
+
+- Lean toward accompaniment, not resolution. They don't want to feel
+  fixed — they want to feel found.
+- Lower energy. Shorter sentences. More air between words.
+- No forward motion ("tomorrow", "you'll", "soon"). Stay in the now.
+- If intensity is high, ground but do not brighten.
+`;
 }
 
 /**
