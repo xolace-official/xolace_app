@@ -44,8 +44,12 @@ export const AppearanceScreen = () => {
       contentContainerStyle={{ paddingTop: 16, paddingBottom: 48 }}
     >
       {/* ── FREE THEMES ─────────────────────────────────────────── */}
-      <Animated.View entering={FadeInDown.duration(300)} className="px-5 mb-8">
-        <View className="flex-row gap-3">
+      <Animated.View entering={FadeInDown.duration(300)} className="mb-8">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+        >
           {FREE_THEMES.map((theme) => (
             <ThemePreviewCard
               key={theme.id}
@@ -54,7 +58,7 @@ export const AppearanceScreen = () => {
               onPress={() => handleFreeThemePress(theme.id)}
             />
           ))}
-        </View>
+        </ScrollView>
       </Animated.View>
 
       {/* ── THE MIRROR (premium) ─────────────────────────────────── */}
@@ -69,7 +73,11 @@ export const AppearanceScreen = () => {
           </View>
         </View>
 
-        <View className="flex-row gap-3 px-5">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+        >
           {PREMIUM_THEMES.map((theme) => (
             <ThemePreviewCard
               key={theme.id}
@@ -78,7 +86,7 @@ export const AppearanceScreen = () => {
               onPress={handlePremiumThemePress}
             />
           ))}
-        </View>
+        </ScrollView>
       </Animated.View>
 
       {/* ── NIGHT MODE ───────────────────────────────────────────── */}

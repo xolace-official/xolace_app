@@ -35,6 +35,9 @@ export function useLargeHeaderOptions(): NativeStackNavigationOptions {
     headerLargeStyle: {
       backgroundColor: "transparent",
     },
+    headerTitleStyle: {
+      color: headerTintColor,
+    },
     headerLargeTitleStyle: {
       color: headerTintColor,
     },
