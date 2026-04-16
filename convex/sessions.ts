@@ -31,6 +31,7 @@ const TERMINAL_STATES = new Set(["completed", "abandoned"]);
 export const initiate = mutation({
   args: {
     entryType: entryTypeValidator,
+    sessionMode: v.optional(v.union(v.literal("day"), v.literal("night"))),
   },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
@@ -46,6 +47,7 @@ export const initiate = mutation({
       emotionalProfileId: profile._id,
       state: "initiated",
       entryType: args.entryType,
+      ...(args.sessionMode ? { sessionMode: args.sessionMode } : {}),
       createdAt: now,
       updatedAt: now,
     });

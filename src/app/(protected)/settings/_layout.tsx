@@ -41,6 +41,12 @@ export default function SettingsLayout() {
             title: "Settings",
           }}
         />
+        <Stack.Screen
+          name="appearance"
+          options={{
+            title: "Appearance",
+          }}
+        />
       </Stack>
     </View>
   );

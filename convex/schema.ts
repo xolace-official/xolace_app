@@ -194,6 +194,10 @@ export default defineSchema({
       v.literal("system")
     ),
 
+    // Selected color palette (e.g. "default", "lavender", "mint", "sky").
+    // Stored separately from light/dark mode so both can change independently.
+    colorTheme: v.optional(v.string()),
+
     // Disable breath animation and motion effects.
     reducedMotion: v.boolean(),
 
@@ -413,6 +417,11 @@ export default defineSchema({
     // Dynamic prompt shown, if different from default.
     // Null = "What's here right now?"
     customPrompt: v.optional(v.string()),
+
+    // Whether this session started during the "night mode" window (10pm–4am).
+    // Captured at session start; copy and theme stay locked to this mode
+    // for the full session regardless of clock changes mid-session.
+    sessionMode: v.optional(v.union(v.literal("day"), v.literal("night"))),
 
     // --- Duration ---
 

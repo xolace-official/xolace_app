@@ -7,8 +7,14 @@ import { PillButton } from "@/src/components/reflect/pill-button";
 import { TimelineIcon } from "@/src/components/reflect/timeline-icon";
 import type { UserVariant, ReflectionAction } from "@/src/interfaces/reflection";
 import { playTypingBegin, playTextureSelect, playHomeEntrance } from "@/src/lib/haptics";
+import { useSessionMode } from "@/src/context/session-mode-context";
+import {
+  NIGHT_ENCOURAGEMENT,
+  NIGHT_HEADLINE,
+  NIGHT_TEXTURE_WORDS,
+} from "@/src/constants/night-copy";
 
-const TEXTURE_WORDS = [
+const DAY_TEXTURE_WORDS = [
   "heavy",
   "tight",
   "foggy",
@@ -45,6 +51,11 @@ export const IdleState = ({
   onTap,
   onScaffoldSubmit,
 }: Props) => {
+  const { isNight } = useSessionMode();
+  const TEXTURE_WORDS: readonly string[] = isNight
+    ? NIGHT_TEXTURE_WORDS
+    : DAY_TEXTURE_WORDS;
+
   const hasPlayedEntrance = useRef(false);
 
   useEffect(() => {
@@ -83,11 +94,11 @@ export const IdleState = ({
       {/* Top section */}
       <View className="pt-10 pb-4">
         <AppText className={cn("text-sm italic leading-6 text-foreground/40", variant.kind === "returning" && "text-warning")}>
-          {encouragementText(variant)}
+          {isNight ? NIGHT_ENCOURAGEMENT : encouragementText(variant)}
         </AppText>
 
         <AppText className="mt-4 text-4xl font-semibold text-foreground">
-          What&apos;s here right now... what are you feeling?
+          {isNight ? NIGHT_HEADLINE : "What\u2019s here right now... what are you feeling?"}
         </AppText>
       </View>
 

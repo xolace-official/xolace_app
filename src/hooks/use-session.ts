@@ -4,6 +4,7 @@ import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import type { EntryType } from '@/src/interfaces/reflection';
 import { mapEntryType } from '@/src/services/session-service';
+import { useSessionMode } from '@/src/context/session-mode-context';
 
 // States where turns are relevant (mirror has been delivered at least once)
 const TURN_RELEVANT_STATES = new Set([
@@ -32,6 +33,7 @@ const TURN_RELEVANT_STATES = new Set([
 export function useSession() {
   const [localSessionId, setLocalSessionId] = useState<Id<'sessions'> | null>(null);
   const [lastRawText, setLastRawText] = useState<string | null>(null);
+  const { mode: sessionModeAtHook } = useSessionMode();
 
   // Derive sessionId: prefer explicitly-set local ID, fall back to server active session
   const activeSession = useQuery(
@@ -89,6 +91,7 @@ export function useSession() {
       const serverEntryType = mapEntryType(entryType);
       const newSessionId = await initiateMutation({
         entryType: serverEntryType,
+        sessionMode: sessionModeAtHook,
       });
       setLocalSessionId(newSessionId);
       setLastRawText(rawText);
@@ -114,7 +117,7 @@ export function useSession() {
         throw error;
       }
     },
-    [initiateMutation, submitInputMutation, abandonMutation],
+    [initiateMutation, submitInputMutation, abandonMutation, sessionModeAtHook],
   );
 
   const confirmMirror = useCallback(

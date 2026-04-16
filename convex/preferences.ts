@@ -75,6 +75,7 @@ export const update = mutation({
     preferredInputType: v.optional(
       v.union(v.literal("text"), v.literal("voice"))
     ),
+    colorTheme: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
@@ -102,6 +103,7 @@ export const update = mutation({
       patch.dataRetentionPreference = args.dataRetentionPreference;
     if (args.preferredInputType !== undefined)
       patch.preferredInputType = args.preferredInputType;
+    if (args.colorTheme !== undefined) patch.colorTheme = args.colorTheme;
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(preferences._id, patch);

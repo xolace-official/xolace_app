@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useClerk, useUser } from "@clerk/expo";
-import { Uniwind, useUniwind } from "uniwind";
+import { Uniwind } from "uniwind";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { RetentionOption } from "@/src/components/settings/retention-picker-dialog";
@@ -21,9 +21,13 @@ export type ThemeMode = "system" | "light" | "dark";
 export const useSettings = () => {
   const { signOut } = useClerk();
   const { user } = useUser();
-  const { theme: storedTheme, setTheme: storeSetTheme } = useAppStore();
+  const {
+    theme: storedTheme,
+    setTheme: storeSetTheme,
+    colorThemeId,
+    setColorThemeId,
+  } = useAppStore();
   const { currentTheme, isLight } = useAppTheme();
-  const { hasAdaptiveThemes } = useUniwind();
 
   // ─── Convex (single source of truth for preferences) ──────────────
   const preferences = useQuery(api.preferences.get);
@@ -52,10 +56,13 @@ export const useSettings = () => {
   }, [user]);
 
   // ─── Theme display ──────────────────────────────────────────────────
+  // Use storedTheme (Zustand) as the source of truth, not Uniwind's runtime
+  // hasAdaptiveThemes — that flips to false when setColorTheme applies a
+  // concrete variant like 'lavender-dark', even when the user's mode is system.
   const themeDisplay = useMemo(() => {
-    if (hasAdaptiveThemes) return "System";
-    return isLight ? "Light" : "Dark";
-  }, [hasAdaptiveThemes, isLight]);
+    if (storedTheme === 'system') return "System";
+    return storedTheme === 'light' ? "Light" : "Dark";
+  }, [storedTheme]);
 
   // ─── Theme switching ────────────────────────────────────────────────
   const setThemeMode = useCallback(
@@ -157,6 +164,24 @@ export const useSettings = () => {
     [updatePreferences],
   );
 
+  // ─── Color theme ────────────────────────────────────────────────────
+  const setColorTheme = useCallback(
+    (themeId: string) => {
+      // Reuse the stripping/reassembly pattern from setThemeMode.
+      // Determine the current light/dark suffix from storedTheme.
+      const mode =
+        storedTheme === 'system'
+          ? (isLight ? 'light' : 'dark')
+          : storedTheme;
+      const nextVariant =
+        themeId === 'default' ? mode : (`${themeId}-${mode}` as never);
+      Uniwind.setTheme(nextVariant);
+      setColorThemeId(themeId);
+      updatePreferences({ colorTheme: themeId });
+    },
+    [storedTheme, isLight, setColorThemeId, updatePreferences],
+  );
+
   // ─── Mirror tone ───────────────────────────────────────────────────
   const mirrorTone: MirrorTone = preferences?.mirrorTone ?? "adaptive";
 
@@ -218,6 +243,8 @@ export const useSettings = () => {
     themeDisplay,
     setThemeMode,
     storedTheme,
+    colorThemeId,
+    setColorTheme,
 
     // Toggles
     reducedMotion,

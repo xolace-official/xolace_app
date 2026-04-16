@@ -81,6 +81,7 @@ export const generateMirror = internalAction({
       const session = context.session as {
         entryType?: string;
         timeOfDay?: string;
+        sessionMode?: "day" | "night";
         emotionalProfileId: string;
         [key: string]: unknown;
       };
@@ -136,6 +137,7 @@ export const generateMirror = internalAction({
           entryType: session.entryType ?? "open_prompt",
           inputDuration: context.session.inputDuration as number | undefined,
           freezeOccurred: context.session.freezeOccurred as boolean | undefined,
+          sessionMode: session.sessionMode,
         });
 
         const mirrorResponse = await anthropic.messages.create({

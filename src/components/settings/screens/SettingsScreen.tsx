@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useToast } from "heroui-native";
 import { SettingsSection } from "@/src/components/settings/settings-section";
 import { SettingsRow } from "@/src/components/settings/settings-row";
@@ -25,6 +26,7 @@ import type { ThemeMode } from "@/src/hooks/use-settings";
  */
 export const SettingsScreen = () => {
   const { toast } = useToast();
+  const router = useRouter();
   const setIntroSeen = useAppStore((s) => s.setIntroSeen);
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
   const [mirrorToneDialogOpen, setMirrorToneDialogOpen] = useState(false);
@@ -86,9 +88,14 @@ export const SettingsScreen = () => {
         <SettingsSection title="Appearance">
           <SettingsRow
             variant="value"
-            label="Theme"
+            label="Mode"
             value={themeDisplay}
             onPress={() => setThemeDialogOpen(true)}
+          />
+          <SettingsRow
+            variant="chevron"
+            label="Appearance"
+            onPress={() => router.push('/(protected)/settings/appearance')}
           />
           <SettingsRow
             variant="toggle"
