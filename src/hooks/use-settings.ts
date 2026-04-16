@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useClerk, useUser } from "@clerk/expo";
-import { Uniwind, useUniwind } from "uniwind";
+import { Uniwind } from "uniwind";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { RetentionOption } from "@/src/components/settings/retention-picker-dialog";
@@ -28,7 +28,6 @@ export const useSettings = () => {
     setColorThemeId,
   } = useAppStore();
   const { currentTheme, isLight } = useAppTheme();
-  const { hasAdaptiveThemes } = useUniwind();
 
   // ─── Convex (single source of truth for preferences) ──────────────
   const preferences = useQuery(api.preferences.get);
@@ -172,7 +171,7 @@ export const useSettings = () => {
       // Determine the current light/dark suffix from storedTheme.
       const mode =
         storedTheme === 'system'
-          ? (hasAdaptiveThemes ? 'dark' : isLight ? 'light' : 'dark')
+          ? (isLight ? 'light' : 'dark')
           : storedTheme;
       const nextVariant =
         themeId === 'default' ? mode : (`${themeId}-${mode}` as never);
@@ -180,7 +179,7 @@ export const useSettings = () => {
       setColorThemeId(themeId);
       updatePreferences({ colorTheme: themeId });
     },
-    [storedTheme, hasAdaptiveThemes, isLight, setColorThemeId, updatePreferences],
+    [storedTheme, isLight, setColorThemeId, updatePreferences],
   );
 
   // ─── Mirror tone ───────────────────────────────────────────────────
