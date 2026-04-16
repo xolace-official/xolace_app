@@ -418,7 +418,7 @@ export default defineSchema({
     // Null = "What's here right now?"
     customPrompt: v.optional(v.string()),
 
-    // Whether this session started during the 3am night window (10pm–4am).
+    // Whether this session started during the "night mode" window (10pm–4am).
     // Captured at session start; copy and theme stay locked to this mode
     // for the full session regardless of clock changes mid-session.
     sessionMode: v.optional(v.union(v.literal("day"), v.literal("night"))),

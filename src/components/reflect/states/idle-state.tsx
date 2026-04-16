@@ -52,8 +52,8 @@ export const IdleState = ({
   onScaffoldSubmit,
 }: Props) => {
   const { isNight } = useSessionMode();
-  const TEXTURE_WORDS = isNight
-    ? (NIGHT_TEXTURE_WORDS as unknown as string[])
+  const TEXTURE_WORDS: readonly string[] = isNight
+    ? NIGHT_TEXTURE_WORDS
     : DAY_TEXTURE_WORDS;
 
   const hasPlayedEntrance = useRef(false);

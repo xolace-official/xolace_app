@@ -18,7 +18,7 @@
 @import "heroui-native/styles";
 
 /* Custom color themes — user-selectable alternatives */
-@import "./themes/lavander.css";
+@import "./themes/lavender.css";
 @import "./themes/mint.css";
 @import "./themes/sky.css";
 /* Night mode palette — activated automatically by SessionModeProvider */

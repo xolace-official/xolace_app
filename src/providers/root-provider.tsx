@@ -10,7 +10,7 @@ import {ConvexClientProvider} from './convex-provider';
  * Root provider that composes all app-wide providers in the correct order.
  *
  * Provider hierarchy:
- *   GestureHandlerRootView → KeyboardProvider → AppThemeProvider → HeroUINativeProvider
+ *   GestureHandlerRootView → KeyboardProvider → AppThemeProvider → SessionModeProvider → ConvexClientProvider → HeroUINativeProvider
  *
  * Customize this for your app:
  * - Add your own providers (e.g. auth, analytics, query client) inside the chain
