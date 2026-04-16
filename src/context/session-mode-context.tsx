@@ -66,10 +66,10 @@ export function SessionModeProvider({
     if (nightAppliedRef.current) return;
     nightAppliedRef.current = true;
     // Stash the current Uniwind theme before switching
-    const current = Uniwind.currentTheme as string;
+    const current = Uniwind.currentTheme;
     setPreviousTheme(current);
     // nightly always uses its dark variant (night mode = dark by intent)
-    Uniwind.setTheme('nightly-dark' as never);
+    Uniwind.setTheme('nightly-dark');
   }, [setPreviousTheme]);
 
   const restoreDayTheme = useCallback(() => {
