@@ -5,6 +5,7 @@
  * See src/providers/root-provider.tsx to add your own providers (auth, analytics, etc.).
  */
 import '@/src/global.css';
+import '@/src/lib/theme-bootstrap';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useEffect } from 'react';

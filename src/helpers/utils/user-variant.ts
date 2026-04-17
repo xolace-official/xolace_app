@@ -43,10 +43,10 @@ export function computeQuietReturn(
   }
 
   if (profile.firstSessionAt) {
-    const anniversaryDays = Math.round(
+    const anniversaryDays = Math.floor(
       (now - profile.firstSessionAt) / DAY_MS,
     );
-    if (anniversaryDays >= 364 && anniversaryDays <= 366) {
+    if (anniversaryDays >= 360 && anniversaryDays <= 380) {
       return 'anniversary';
     }
   }

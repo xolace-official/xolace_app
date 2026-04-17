@@ -117,7 +117,13 @@ export const IdleState = ({
           </AppText>
         )}
 
-        <AppText className={cn("text-4xl font-semibold text-foreground", encouragement && "mt-4")}>
+        <AppText
+          className={cn(
+            "font-semibold text-foreground",
+            activeQuietReturn ? "text-2xl leading-9" : "text-4xl",
+            encouragement && "mt-4",
+          )}
+        >
           {headline}
         </AppText>
       </View>
