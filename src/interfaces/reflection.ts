@@ -1,3 +1,5 @@
+import type { QuietReturnTier } from '@/src/constants/quiet-return-copy';
+
 export type UserVariant =
   | { kind: 'first-time' }
   | { kind: 'returning' }
@@ -34,6 +36,7 @@ export type ReflectionAction =
   | { type: 'SAY_MORE' }
   | { type: 'CLARIFY_TEXT_CHANGE'; text: string }
   | { type: 'SET_USER_VARIANT'; variant: UserVariant }
+  | { type: 'SET_QUIET_RETURN'; tier: QuietReturnTier | null }
   | { type: 'RESET' }
   | { type: 'SESSION_ERROR'; message: string }
   | { type: 'SESSION_RESUMED'; screen: ReflectionStateName; mirrorResponse?: string }
@@ -47,6 +50,7 @@ export interface ReflectionState {
   errorMessage: string;
   lastFeedbackType: FeedbackType | null;
   userVariant: UserVariant;
+  quietReturn: QuietReturnTier | null;
   selectedTextures: string[];
   entryType: EntryType;
 }

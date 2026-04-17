@@ -1,10 +1,10 @@
 @layer theme {
   :root {
     @variant reverie-light {
-      --font-normal: 'SNPro-Regular';
-      --font-medium: 'SNPro-Medium';
-      --font-semibold: 'SNPro-SemiBold';
-      --font-bold: 'SNPro-Bold';
+    --font-normal: "SpaceGrotesk-Regular";
+    --font-medium: "SpaceGrotesk-Medium";
+    --font-semibold: "SpaceGrotesk-SemiBold";
+    --font-bold: "SpaceGrotesk-Bold";
 
       --radius: 0.65rem;
 
@@ -64,10 +64,10 @@
     }
 
     @variant reverie-dark {
-      --font-normal: 'SNPro-Regular';
-      --font-medium: 'SNPro-Medium';
-      --font-semibold: 'SNPro-SemiBold';
-      --font-bold: 'SNPro-Bold';
+      --font-normal: "SpaceGrotesk-Regular";
+      --font-medium: "SpaceGrotesk-Medium";
+      --font-semibold: "SpaceGrotesk-SemiBold";
+      --font-bold: "SpaceGrotesk-Bold";
 
       --radius: 0.65rem;
 

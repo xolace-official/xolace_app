@@ -1,12 +1,15 @@
 import type { UserVariant } from '@/src/interfaces/reflection';
+import type { QuietReturnTier } from '@/src/constants/quiet-return-copy';
 
 type ProfileFields = {
   sessionCount: number;
   currentStreak: number;
   lastSessionAt?: number;
+  firstSessionAt?: number;
 };
 
 const STREAK_WINDOW_MS = 48 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function computeUserVariant(profile: ProfileFields): UserVariant {
   if (profile.sessionCount === 0) {
@@ -22,4 +25,36 @@ export function computeUserVariant(profile: ProfileFields): UserVariant {
   }
 
   return { kind: 'active', dayCount: profile.currentStreak };
+}
+
+/**
+ * Classify a returning user's gap-since-last-visit (or first-session anniversary)
+ * for the Quiet Return prompt. Anniversary wins over gap tier.
+ *
+ * Returns null when no tier applies — first-timers, active users, and gaps
+ * under 14 days all fall through to default idle copy.
+ */
+export function computeQuietReturn(
+  profile: ProfileFields,
+  now: number = Date.now(),
+): QuietReturnTier | null {
+  if (profile.sessionCount === 0 || !profile.lastSessionAt) {
+    return null;
+  }
+
+  if (profile.firstSessionAt) {
+    const anniversaryDays = Math.round(
+      (now - profile.firstSessionAt) / DAY_MS,
+    );
+    if (anniversaryDays >= 364 && anniversaryDays <= 366) {
+      return 'anniversary';
+    }
+  }
+
+  const gapDays = Math.floor((now - profile.lastSessionAt) / DAY_MS);
+
+  if (gapDays >= 90) return 'away-90-plus';
+  if (gapDays >= 30) return 'away-30-90';
+  if (gapDays >= 14) return 'away-14-30';
+  return null;
 }
