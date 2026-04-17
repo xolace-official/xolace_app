@@ -3,7 +3,7 @@
 
 declare module 'uniwind' {
     export interface UniwindConfig {
-        themes: readonly ['light', 'dark', 'lavender-light', 'lavender-dark', 'mint-light', 'mint-dark', 'sky-light', 'sky-dark', 'nightly-light', 'nightly-dark']
+        themes: readonly ['light', 'dark', 'quiet-light', 'quiet-dark', 'reverie-light', 'reverie-dark', 'human-light', 'human-dark', 'nightly-light', 'nightly-dark']
     }
 }
 

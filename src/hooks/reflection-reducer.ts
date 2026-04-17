@@ -14,6 +14,7 @@ export const initialState: ReflectionState = {
   errorMessage: '',
   lastFeedbackType: null,
   userVariant: { kind: 'first-time' },
+  quietReturn: null,
   selectedTextures: [],
   entryType: 'typed',
 };
@@ -86,6 +87,9 @@ export function reducer(
 
     case 'SET_USER_VARIANT':
       return { ...state, userVariant: action.variant };
+
+    case 'SET_QUIET_RETURN':
+      return { ...state, quietReturn: action.tier };
 
     case 'SESSION_ERROR':
       return { ...state, screen: 'error', errorMessage: action.message };

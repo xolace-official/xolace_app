@@ -14,12 +14,12 @@ import { Uniwind, useUniwind } from 'uniwind';
 type ThemeName =
   | 'light'
   | 'dark'
-  | 'lavender-light'
-  | 'lavender-dark'
-  | 'mint-light'
-  | 'mint-dark'
-  | 'sky-light'
-  | 'sky-dark'
+  | 'quiet-light'
+  | 'quiet-dark'
+  | 'reverie-light'
+  | 'reverie-dark'
+  | 'human-light'
+  | 'human-dark'
   | 'nightly-light'
   | 'nightly-dark';
 
@@ -65,23 +65,23 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       case 'dark':
         Uniwind.setTheme('light');
         break;
-      case 'lavender-light':
-        Uniwind.setTheme('lavender-dark');
+      case 'quiet-light':
+        Uniwind.setTheme('quiet-dark');
         break;
-      case 'lavender-dark':
-        Uniwind.setTheme('lavender-light');
+      case 'quiet-dark':
+        Uniwind.setTheme('quiet-light');
         break;
-      case 'mint-light':
-        Uniwind.setTheme('mint-dark');
+      case 'reverie-light':
+        Uniwind.setTheme('reverie-dark');
         break;
-      case 'mint-dark':
-        Uniwind.setTheme('mint-light');
+      case 'reverie-dark':
+        Uniwind.setTheme('reverie-light');
         break;
-      case 'sky-light':
-        Uniwind.setTheme('sky-dark');
+      case 'human-light':
+        Uniwind.setTheme('human-dark');
         break;
-      case 'sky-dark':
-        Uniwind.setTheme('sky-light');
+      case 'human-dark':
+        Uniwind.setTheme('human-light');
         break;
       case 'nightly-light':
         Uniwind.setTheme('nightly-dark');

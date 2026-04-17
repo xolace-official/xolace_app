@@ -7,7 +7,7 @@ import { api } from '../../../convex/_generated/api';
 import { useReflectionMachine } from '@/src/hooks/use-reflection-machine';
 import { useScreenTransition } from '@/src/hooks/use-screen-transition';
 import { SCREEN_TRANSITIONS, DEFAULT_SCREEN_TRANSITION } from '@/src/constants/reflect-transitions';
-import { computeUserVariant } from '@/src/helpers/utils/user-variant';
+import { computeUserVariant, computeQuietReturn } from '@/src/helpers/utils/user-variant';
 import type { ReflectionStateName } from '@/src/interfaces/reflection';
 import { IdleState } from '@/src/components/reflect/states/idle-state';
 import { TypingState } from '@/src/components/reflect/states/typing-state';
@@ -49,6 +49,7 @@ export const ReflectScreen = () => {
   useEffect(() => {
     if (!context?.profile) return;
     dispatch({ type: 'SET_USER_VARIANT', variant: computeUserVariant(context.profile) });
+    dispatch({ type: 'SET_QUIET_RETURN', tier: computeQuietReturn(context.profile) });
   }, [context?.profile, dispatch]);
 
   if (isLoading) {
@@ -68,6 +69,7 @@ export const ReflectScreen = () => {
         return (
           <IdleState
             variant={state.userVariant}
+            quietReturn={state.quietReturn}
             selectedTextures={state.selectedTextures}
             dispatch={dispatch}
             onTap={() => dispatch({ type: 'TAP_INPUT' })}

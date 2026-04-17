@@ -16,12 +16,12 @@ module.exports = withUniwindConfig(config, {
   //   3. Add both variant names to this array
   //   4. Add the variant names to ThemeName in src/context/app-theme-context.tsx
   extraThemes: [
-    'lavender-light',
-    'lavender-dark',
-    'mint-light',
-    'mint-dark',
-    'sky-light',
-    'sky-dark',
+    'quiet-light',
+    'quiet-dark',
+    'reverie-light',
+    'reverie-dark',
+    'human-light',
+    'human-dark',
     'nightly-light',
     'nightly-dark',
   ],

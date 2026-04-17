@@ -13,6 +13,10 @@ import {
   NIGHT_HEADLINE,
   NIGHT_TEXTURE_WORDS,
 } from "@/src/constants/night-copy";
+import {
+  QUIET_RETURN_PROMPTS,
+  type QuietReturnTier,
+} from "@/src/constants/quiet-return-copy";
 
 const DAY_TEXTURE_WORDS = [
   "heavy",
@@ -27,6 +31,7 @@ const DAY_TEXTURE_WORDS = [
 
 type Props = {
   variant: UserVariant;
+  quietReturn: QuietReturnTier | null;
   selectedTextures: string[];
   dispatch: React.Dispatch<ReflectionAction>;
   onTap: () => void;
@@ -46,6 +51,7 @@ const encouragementText = (variant: UserVariant): string => {
 
 export const IdleState = ({
   variant,
+  quietReturn,
   selectedTextures,
   dispatch,
   onTap,
@@ -55,6 +61,18 @@ export const IdleState = ({
   const TEXTURE_WORDS: readonly string[] = isNight
     ? NIGHT_TEXTURE_WORDS
     : DAY_TEXTURE_WORDS;
+
+  const activeQuietReturn = !isNight ? quietReturn : null;
+  const headline = isNight
+    ? NIGHT_HEADLINE
+    : activeQuietReturn
+      ? QUIET_RETURN_PROMPTS[activeQuietReturn]
+      : "What\u2019s here right now... what are you feeling?";
+  const encouragement = isNight
+    ? NIGHT_ENCOURAGEMENT
+    : activeQuietReturn
+      ? null
+      : encouragementText(variant);
 
   const hasPlayedEntrance = useRef(false);
 
@@ -93,12 +111,20 @@ export const IdleState = ({
     <View className="flex-1 px-6">
       {/* Top section */}
       <View className="pt-10 pb-4">
-        <AppText className={cn("text-sm italic leading-6 text-foreground/40", variant.kind === "returning" && "text-warning")}>
-          {isNight ? NIGHT_ENCOURAGEMENT : encouragementText(variant)}
-        </AppText>
+        {encouragement && (
+          <AppText className={cn("text-sm italic leading-6 text-foreground/40", variant.kind === "returning" && "text-warning")}>
+            {encouragement}
+          </AppText>
+        )}
 
-        <AppText className="mt-4 text-4xl font-semibold text-foreground">
-          {isNight ? NIGHT_HEADLINE : "What\u2019s here right now... what are you feeling?"}
+        <AppText
+          className={cn(
+            "font-semibold text-foreground",
+            activeQuietReturn ? "text-2xl leading-9" : "text-4xl",
+            encouragement && "mt-4",
+          )}
+        >
+          {headline}
         </AppText>
       </View>
 
