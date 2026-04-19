@@ -195,6 +195,18 @@ export const generateMirror = internalAction({
           safeguard.triggerType !== "pattern_escalation",
       });
 
+      // 8.5. Stub matcher — always let_it_land in Phase 1.
+      //      Phase 2 replaces with matchExercise(classification, ...).
+      const letItLand = await ctx.runQuery(internal.exercises.getByTitle, {
+        title: "let_it_land",
+      });
+      if (letItLand) {
+        await ctx.runMutation(internal.exercises.setMatched, {
+          sessionId: args.sessionId,
+          matchedExerciseId: letItLand._id,
+        });
+      }
+
       // 9. Schedule speculative distillation (for reflection pool)
       //    Skip if mirror is the fallback — nothing meaningful to distill.
       if (mirrorText !== FALLBACK_MIRROR) {

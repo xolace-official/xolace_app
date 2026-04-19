@@ -1180,3 +1180,315 @@ export const seedReflections = internalAction({
     return { seeded: true, count: total };
   },
 });
+
+// ---------------------------------------------------------------------------
+// Exercise seed data — 6 exercises for beta.
+// Run: bunx convex run seed:seedExercises
+// Safe to re-run — upserts by title.
+// ---------------------------------------------------------------------------
+
+const EXERCISES = [
+  {
+    title: "let_it_land",
+    type: "grounding" as const,
+    targetEmotions: ["sadness", "confusion", "relief", "loneliness"],
+    intensityRange: { min: 2, max: 7 },
+    estimatedMinutes: 1.5,
+    steps: [
+      {
+        order: 1,
+        type: "text" as const,
+        content: "You named it. Let's just sit with that for a moment.",
+        durationSeconds: 4,
+      },
+      {
+        order: 2,
+        type: "text" as const,
+        content: "{{mirror_line}}",
+        defaultContent: "What you named is here with you.",
+        durationSeconds: 3,
+        slotKeys: ["mirror_line"],
+      },
+      {
+        order: 3,
+        type: "breath" as const,
+        content: "Breathe with it.",
+        breathPattern: "physiological_sigh" as const,
+        breathCycles: 2,
+        hapticIntensity: "light" as const,
+      },
+      {
+        order: 4,
+        type: "text" as const,
+        content: "Notice where in your body '{{user_phrase}}' lives right now. Not to fix it. Just so it knows you heard it.",
+        defaultContent: "Notice where this lives in your body right now. Not to fix it. Just so it knows you heard it.",
+        durationSeconds: 4,
+        slotKeys: ["user_phrase"],
+      },
+      {
+        order: 5,
+        type: "text" as const,
+        content: "You don't have to do anything with it.",
+        durationSeconds: 6,
+      },
+      {
+        order: 6,
+        type: "text" as const,
+        content: "You stayed.",
+        durationSeconds: 5,
+      },
+    ],
+  },
+  {
+    title: "find_your_edges",
+    type: "body_scan" as const,
+    targetEmotions: ["numbness", "confusion"],
+    intensityRange: { min: 1, max: 5 },
+    estimatedMinutes: 2,
+    steps: [
+      {
+        order: 1,
+        type: "text" as const,
+        content: "Before anything else, let's find where you are.",
+        durationSeconds: 5,
+      },
+      {
+        order: 2,
+        type: "text" as const,
+        content: "Look around. Don't move your head much — just your eyes.",
+        durationSeconds: 4,
+      },
+      {
+        order: 3,
+        type: "text" as const,
+        content: "Find three things. A corner. A shadow. A color. Anything.",
+        durationSeconds: 6,
+      },
+      {
+        order: 4,
+        type: "text" as const,
+        content: "Now feel your feet. Whatever they're touching.",
+        durationSeconds: 5,
+      },
+      {
+        order: 5,
+        type: "text" as const,
+        content: "Your back. Against what's behind it.",
+        durationSeconds: 5,
+      },
+      {
+        order: 6,
+        type: "text" as const,
+        content: "Hands. What temperature are they.",
+        durationSeconds: 6,
+      },
+      {
+        order: 7,
+        type: "breath" as const,
+        content: "One slow exhale.",
+        breathPattern: "slow_exhale" as const,
+        breathCycles: 1,
+      },
+      {
+        order: 8,
+        type: "text" as const,
+        content: "You're here. That's enough.",
+        durationSeconds: 5,
+      },
+    ],
+  },
+  {
+    title: "make_room",
+    type: "cognitive_reframe" as const,
+    targetEmotions: ["overwhelm", "helplessness", "dread", "anxiety"],
+    intensityRange: { min: 4, max: 9 },
+    estimatedMinutes: 1.5,
+    steps: [
+      {
+        order: 1,
+        type: "text" as const,
+        content: "{{mirror_line}}",
+        defaultContent: "You're carrying something heavy.",
+        durationSeconds: 4,
+        slotKeys: ["mirror_line"],
+      },
+      {
+        order: 2,
+        type: "text" as const,
+        content: "What if you didn't have to make this smaller right now?",
+        durationSeconds: 4,
+      },
+      {
+        order: 3,
+        type: "breath" as const,
+        content: "Breathing in — imagine giving it room.\nBreathing out — rest beside it.",
+        breathPattern: "extended_exhale" as const,
+        breathCycles: 3,
+      },
+      {
+        order: 4,
+        type: "text" as const,
+        content: "It doesn't have to leave to stop hurting.",
+        durationSeconds: 5,
+      },
+      {
+        order: 5,
+        type: "text" as const,
+        content: "You stayed.",
+        durationSeconds: 5,
+      },
+    ],
+  },
+  {
+    title: "speak_to_it",
+    type: "journaling_prompt" as const,
+    targetEmotions: ["anger", "frustration"],
+    intensityRange: { min: 3, max: 8 },
+    estimatedMinutes: 2.5,
+    steps: [
+      {
+        order: 1,
+        type: "text" as const,
+        content: "Something in you is {{user_emotion}}.",
+        defaultContent: "Something in you is stirred up.",
+        durationSeconds: 5,
+        slotKeys: ["user_emotion"],
+      },
+      {
+        order: 2,
+        type: "text" as const,
+        content: "Not all of you. Something.",
+        durationSeconds: 4,
+      },
+      {
+        order: 3,
+        type: "text" as const,
+        content: "If it could speak, what does it want you to know?",
+        durationSeconds: 6,
+      },
+      {
+        order: 4,
+        type: "private_prompt" as const,
+        content: "This stays on your phone. No one else will see it.",
+        promptPlaceholder: "What does it want you to know?",
+        promptMaxSeconds: 60,
+      },
+      {
+        order: 5,
+        type: "text" as const,
+        content: "You heard it. That matters.",
+        durationSeconds: 4,
+      },
+      {
+        order: 6,
+        type: "text" as const,
+        content: "You stayed.",
+        durationSeconds: 5,
+      },
+    ],
+  },
+  {
+    title: "soften_toward_it",
+    type: "self_compassion" as const,
+    targetEmotions: ["shame"],
+    intensityRange: { min: 3, max: 8 },
+    estimatedMinutes: 1.5,
+    steps: [
+      {
+        order: 1,
+        type: "text" as const,
+        content: "You said: '{{user_phrase}}'.",
+        defaultContent: "You named something hard.",
+        durationSeconds: 4,
+        slotKeys: ["user_phrase"],
+      },
+      {
+        order: 2,
+        type: "text" as const,
+        content: "Right now, in this moment, you're not the only one feeling something like this.",
+        durationSeconds: 5,
+      },
+      {
+        order: 3,
+        type: "text" as const,
+        content: "Place a hand somewhere on yourself. Chest, arm, face — wherever feels natural.",
+        durationSeconds: 5,
+      },
+      {
+        order: 4,
+        type: "haptic" as const,
+        content: "",
+        hapticIntensity: "medium" as const,
+        durationSeconds: 4,
+      },
+      {
+        order: 5,
+        type: "text" as const,
+        content: "If you could offer yourself one kind sentence, what would it be?",
+        durationSeconds: 6,
+      },
+      {
+        order: 6,
+        type: "text" as const,
+        content: "You don't have to say it out loud. Just let yourself hear it.",
+        durationSeconds: 5,
+      },
+      {
+        order: 7,
+        type: "text" as const,
+        content: "That was kind. You stayed.",
+        durationSeconds: 5,
+      },
+    ],
+  },
+  {
+    title: "reset",
+    type: "breathing" as const,
+    targetEmotions: ["anxiety", "overwhelm", "dread"],
+    intensityRange: { min: 5, max: 10 },
+    estimatedMinutes: 1,
+    steps: [
+      {
+        order: 1,
+        type: "text" as const,
+        content: "Three breaths. That's it.",
+        durationSeconds: 3,
+      },
+      {
+        order: 2,
+        type: "breath" as const,
+        content: "",
+        breathPattern: "physiological_sigh" as const,
+        breathCycles: 3,
+        hapticIntensity: "light" as const,
+      },
+      {
+        order: 3,
+        type: "text" as const,
+        content: "That was enough.",
+        durationSeconds: 4,
+      },
+      {
+        order: 4,
+        type: "text" as const,
+        content: "Okay.",
+        durationSeconds: 4,
+      },
+    ],
+  },
+];
+
+/**
+ * Seed the 6 beta exercises into the library.
+ *
+ * Run: bunx convex run seed:seedExercises
+ * Safe to re-run — upserts by title.
+ */
+export const seedExercises = internalAction({
+  args: {},
+  handler: async (ctx) => {
+    await ctx.runMutation(internal.exercises.seed, { exercises: EXERCISES });
+    console.log(`[seed] ${EXERCISES.length} exercises seeded.`);
+    return { seeded: true, count: EXERCISES.length };
+  },
+});
