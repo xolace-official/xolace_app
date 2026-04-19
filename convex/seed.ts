@@ -1231,12 +1231,6 @@ const EXERCISES = [
         content: "You don't have to do anything with it.",
         durationSeconds: 6,
       },
-      {
-        order: 6,
-        type: "text" as const,
-        content: "You stayed.",
-        durationSeconds: 5,
-      },
     ],
   },
   {

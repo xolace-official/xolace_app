@@ -12,7 +12,11 @@ import { useThemeColor } from 'heroui-native';
 export type BreathPattern = 'physiological_sigh' | 'extended_exhale' | 'slow_exhale';
 
 export type PacedOrbHandle = {
-  playCycle: (pattern: BreathPattern, cycles: number) => Promise<void>;
+  playCycle: (
+    pattern: BreathPattern,
+    cycles: number,
+    onPhaseTransition?: (phaseIndex: number) => void,
+  ) => Promise<void>;
 };
 
 type StepTiming = { to: number; duration: number };
@@ -46,13 +50,30 @@ export const PacedOrb = forwardRef<PacedOrbHandle, Props>(
     const haloOpacity = useSharedValue(0.08);
 
     useImperativeHandle(ref, () => ({
-      playCycle: (pattern, cycles) =>
+      playCycle: (pattern, cycles, onPhaseTransition) =>
         new Promise<void>((resolve) => {
           const steps = TIMINGS[pattern];
           const totalMs = steps.reduce((acc, s) => acc + s.duration, 0) * cycles;
+          const transitionTimers: ReturnType<typeof setTimeout>[] = [];
+
+          let cursorMs = 0;
+          let phaseCounter = 0;
+          for (let i = 0; i < cycles; i++) {
+            steps.forEach((step) => {
+              const firePhase = phaseCounter;
+              transitionTimers.push(
+                setTimeout(() => onPhaseTransition?.(firePhase), cursorMs),
+              );
+              cursorMs += step.duration;
+              phaseCounter += 1;
+            });
+          }
 
           if (reducedMotion) {
-            setTimeout(resolve, totalMs);
+            setTimeout(() => {
+              transitionTimers.forEach(clearTimeout);
+              resolve();
+            }, totalMs);
             return;
           }
 
@@ -60,9 +81,9 @@ export const PacedOrb = forwardRef<PacedOrbHandle, Props>(
           cancelAnimation(coreOpacity);
           cancelAnimation(haloOpacity);
 
-          const scaleAnims: ReturnType<typeof withTiming>[] = [];
-          const coreAnims: ReturnType<typeof withTiming>[] = [];
-          const haloAnims: ReturnType<typeof withTiming>[] = [];
+          const scaleAnims: number[] = [];
+          const coreAnims: number[] = [];
+          const haloAnims: number[] = [];
 
           for (let i = 0; i < cycles; i++) {
             steps.forEach((step, j) => {

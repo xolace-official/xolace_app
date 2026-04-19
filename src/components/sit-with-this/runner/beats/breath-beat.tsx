@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
 import { PacedOrb, type PacedOrbHandle, type BreathPattern } from '@/src/components/sit-with-this/paced-orb';
@@ -24,7 +25,13 @@ export function BreathBeat({
   useEffect(() => {
     let cancelled = false;
 
-    orbRef.current?.playCycle(breathPattern, breathCycles).then(() => {
+    const onPhaseTransition = reducedMotion
+      ? undefined
+      : () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+        };
+
+    orbRef.current?.playCycle(breathPattern, breathCycles, onPhaseTransition).then(() => {
       if (!cancelled && !doneRef.current) {
         doneRef.current = true;
         onComplete();

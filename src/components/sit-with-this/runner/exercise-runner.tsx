@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/reflect/pill-button';
 import { PreRollCard } from '@/src/components/sit-with-this/pre-roll-card';
@@ -77,12 +77,9 @@ export function ExerciseRunner({ exercise, reducedMotion, onComplete, onExitEarl
             <PillButton label="Done" onPress={() => dispatch({ type: 'DONE' })} />
           </Animated.View>
         ) : (
-          <Animated.View
-            exiting={FadeOut.duration(200)}
-            style={{ opacity: 0 }}
-          >
+          <View style={{ opacity: 0 }}>
             <PillButton label="Done" onPress={() => {}} disabled />
-          </Animated.View>
+          </View>
         )}
         <Animated.View entering={FadeIn.delay(400).duration(400)}>
           <AppText
