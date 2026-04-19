@@ -12,6 +12,7 @@ export type ExerciseStep = {
   slotKeys?: string[];
   promptPlaceholder?: string;
   promptMaxSeconds?: number;
+  syncToBreath?: boolean;
 };
 
 export type ExerciseData = {

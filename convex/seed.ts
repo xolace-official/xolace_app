@@ -1315,7 +1315,7 @@ const EXERCISES = [
       {
         order: 3,
         type: "breath" as const,
-        content: "Breathing in — imagine giving it room.\nBreathing out — rest beside it.",
+        content: "Breathing in; imagine giving it room.\nBreathing out — rest beside it.",
         breathPattern: "extended_exhale" as const,
         breathCycles: 3,
       },
@@ -1323,7 +1323,10 @@ const EXERCISES = [
         order: 4,
         type: "text" as const,
         content: "It doesn't have to leave to stop hurting.",
-        durationSeconds: 5,
+        durationSeconds: 6,
+        syncToBreath: true,
+        breathPattern: "slow_exhale" as const,
+        breathCycles: 1,
       },
       {
         order: 5,
@@ -1405,13 +1408,14 @@ const EXERCISES = [
       {
         order: 3,
         type: "text" as const,
-        content: "Place a hand somewhere on yourself. Chest, arm, face — wherever feels natural.",
+        content: "Place a hand somewhere on yourself. Chest, arm, face, wherever feels natural.",
         durationSeconds: 5,
       },
       {
         order: 4,
         type: "haptic" as const,
         content: "",
+        defaultContent: "Feel your hand resting there.",
         hapticIntensity: "medium" as const,
         durationSeconds: 4,
       },
@@ -1425,7 +1429,10 @@ const EXERCISES = [
         order: 6,
         type: "text" as const,
         content: "You don't have to say it out loud. Just let yourself hear it.",
-        durationSeconds: 5,
+        durationSeconds: 6,
+        syncToBreath: true,
+        breathPattern: "slow_exhale" as const,
+        breathCycles: 1,
       },
       {
         order: 7,

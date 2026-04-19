@@ -23,6 +23,7 @@ import {
 import { rateLimiter } from "../lib/rateLimits";
 
 import type { SessionContext } from "./context";
+import { matchExercise } from "../exercises/match";
 
 const FALLBACK_MIRROR =
   "I hear you, and what you're feeling matters.";
@@ -195,15 +196,25 @@ export const generateMirror = internalAction({
           safeguard.triggerType !== "pattern_escalation",
       });
 
-      // 8.5. Stub matcher — always let_it_land in Phase 1.
-      //      Phase 2 replaces with matchExercise(classification, ...).
-      const letItLand = await ctx.runQuery(internal.exercises.getByTitle, {
-        title: "let_it_land",
+      // 8.5. Match exercise from emotional classification.
+      //      Confidence < 0.6 = ambiguous input → safe fallback to "reset".
+      const rankedTitles = matchExercise({
+        primaryEmotion: classification.primaryEmotion,
+        granularLabel: classification.granularLabel,
+        intensity: classification.intensity,
+        userLanguageTags: classification.userLanguageTags,
+        entryType: session.entryType ?? "open_prompt",
+        confirmationState: "confirmed",
       });
-      if (letItLand) {
+      const primaryTitle =
+        classification.primaryEmotionConfidence < 0.6 ? "reset" : rankedTitles[0];
+      const matched = await ctx.runQuery(internal.exercises.getByTitle, {
+        title: primaryTitle,
+      });
+      if (matched) {
         await ctx.runMutation(internal.exercises.setMatched, {
           sessionId: args.sessionId,
-          matchedExerciseId: letItLand._id,
+          matchedExerciseId: matched._id,
         });
       }
 

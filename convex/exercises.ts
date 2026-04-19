@@ -29,6 +29,7 @@ const stepValidator = v.object({
   slotKeys: v.optional(v.array(v.string())),
   promptPlaceholder: v.optional(v.string()),
   promptMaxSeconds: v.optional(v.number()),
+  syncToBreath: v.optional(v.boolean()),
 });
 
 /**

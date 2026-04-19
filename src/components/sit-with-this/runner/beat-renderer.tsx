@@ -36,6 +36,10 @@ export function BeatRenderer({ step, slots, reducedMotion, onComplete }: Props) 
           content={content}
           durationSeconds={step.durationSeconds ?? 8}
           onComplete={onComplete}
+          syncToBreath={step.syncToBreath}
+          breathPattern={step.breathPattern}
+          breathCycles={step.breathCycles}
+          reducedMotion={reducedMotion}
         />
       );
 
@@ -56,6 +60,7 @@ export function BeatRenderer({ step, slots, reducedMotion, onComplete }: Props) 
         <HapticBeat
           key={step.order}
           content={content}
+          fallbackContent={step.defaultContent}
           durationSeconds={step.durationSeconds ?? 6}
           reducedMotion={reducedMotion}
           onComplete={onComplete}
