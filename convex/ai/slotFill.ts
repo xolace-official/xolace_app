@@ -48,10 +48,14 @@ export const fillSlots = internalAction({
       try {
         const anthropic = getAnthropicClient();
 
-        const langContext =
-          args.userLanguageTags.length > 0
-            ? args.userLanguageTags.join(", ")
-            : args.primaryEmotion;
+        const hasUserWords = args.userLanguageTags.length > 0;
+        const langContext = hasUserWords
+          ? args.userLanguageTags.join(", ")
+          : "(none provided)";
+
+        const sourceRule = hasUserWords
+          ? `Prefer exact words from "User's own words" above.`
+          : `No user's own words are provided. Extract only from Mirror text; do not use Primary emotion or clinical terms.`;
 
         const userPrompt = `Mirror text: "${args.mirrorText}"
 Primary emotion: ${args.primaryEmotion}
@@ -60,7 +64,7 @@ User's own words: ${langContext}
 Extract a slot value as a JSON object. The value must be 10 words or fewer, lowercase, no trailing punctuation. Return null if you cannot fill it authentically from the context above.
 
 Slot to fill:
-- user_phrase: A 2–6 word phrase in the user's own language that names what they feel. Prefer exact words from "User's own words" above.
+- user_phrase: A 2–6 word phrase in the user's own language that names what they feel. ${sourceRule}
 
 Respond with only a JSON object, for example: {"user_phrase": "stuck and can't move"}`;
 

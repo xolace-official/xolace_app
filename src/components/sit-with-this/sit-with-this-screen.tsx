@@ -45,14 +45,30 @@ export function SitWithThisScreen() {
   }, [sessionId, session, startPath]);
 
   const handleComplete = useCallback(async () => {
-    await completePath(true);
-    router.replace('/session-end?path=solo');
-  }, [completePath, router]);
+    const ok = await completePath(true);
+    if (ok) {
+      router.replace('/session-end?path=solo');
+    } else {
+      toast.show({
+        label: 'Could not wrap up',
+        description: 'Try again in a moment.',
+        variant: 'default',
+      });
+    }
+  }, [completePath, router, toast]);
 
   const handleExitEarly = useCallback(async () => {
-    await completePath(false);
-    router.replace('/session-end?path=solo');
-  }, [completePath, router]);
+    const ok = await completePath(false);
+    if (ok) {
+      router.replace('/session-end?path=solo');
+    } else {
+      toast.show({
+        label: 'Could not wrap up',
+        description: 'Try again in a moment.',
+        variant: 'default',
+      });
+    }
+  }, [completePath, router, toast]);
 
   const handleSwap = useCallback(async (newExerciseId: Id<'exercises'>) => {
     if (!sessionId) return;
