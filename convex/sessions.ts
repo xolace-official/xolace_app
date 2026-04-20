@@ -510,6 +510,25 @@ export const failSession = internalMutation({
 });
 
 /**
+ * Write filled slot values onto a session.
+ * Called from the slot-fill action after Haiku resolves user_phrase.
+ */
+export const writeExerciseSlots = internalMutation({
+  args: {
+    sessionId: v.id("sessions"),
+    slots: v.record(v.string(), v.string()),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) return;
+    const existing = session.exerciseSlots ?? {};
+    await ctx.db.patch(args.sessionId, {
+      exerciseSlots: { ...existing, ...args.slots },
+    });
+  },
+});
+
+/**
  * Store the AI-distilled reflection text on a session.
  * Called speculatively after mirror delivery — the distillation
  * runs in the background so it's ready by contribution time.

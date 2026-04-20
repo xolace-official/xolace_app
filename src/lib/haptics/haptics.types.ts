@@ -14,6 +14,10 @@ export const hapticNames = [
   'compassionateHold',
   'onboardingEntrance',
   'homeEntrance',
+  'softenPulse',
 ] as const;
 
 export type HapticName = (typeof hapticNames)[number];
+
+/** Breath phase kinds — consumed by `playBreathPhase` from the PacedOrb runner. */
+export type BreathPhase = 'inhale' | 'top' | 'exhale';

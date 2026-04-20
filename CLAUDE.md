@@ -109,7 +109,7 @@ File-based routing via **Expo Router**. Route files in `src/app/`. Three route g
 ### Styling & Theming
 **Uniwind** (Tailwind CSS v4 for React Native) via `className` props. Configured in `metro.config.js` with `withUniwindConfig`. Types auto-generated to `src/uniwind-types.d.ts`. Use `cn()` from `@/src/lib/utils` to merge classes. Use `tailwind-variants` (`tv()`) for component variant patterns.
 
-**Multi-theme system**: Base light/dark themes defined in `src/global.css`. Additional color themes (lavender, mint, sky) in `src/themes/*.css` with light/dark variants each (e.g., `lavender-light`, `lavender-dark`). Theme switching via `useAppTheme()` hook from `@/src/context/app-theme-context` which calls `Uniwind.setTheme()`. HeroUI Native styles imported in `global.css` via `@import 'heroui-native/styles'` with `@source` pointing to `node_modules/heroui-native/lib`.
+**Multi-theme system**: Base light/dark themes defined in `src/global.css`. Additional color themes (`quiet`, `reverie`, `human`, `nightly`, `alpha`) in `src/themes/*.css` with light/dark variants each (e.g., `quiet-light`, `quiet-dark`). Theme switching via `useAppTheme()` hook from `@/src/context/app-theme-context` which calls `Uniwind.setTheme()`. HeroUI Native styles imported in `global.css` via `@import 'heroui-native/styles'` with `@source` pointing to `node_modules/heroui-native/lib`.
 
 ### UI Components
 **HeroUI Native** is the primary component library. Use `useThemeColor` from `heroui-native` for reading theme color values in JS. Custom SVG icons live in `src/components/icons/`. Bottom sheets use `@gorhom/bottom-sheet` with blur backdrop support (`expo-blur`).
@@ -169,7 +169,7 @@ convex/
 - **Imports**: Always use `@/src/` path alias. Avoid barrel re-exports that pull in unused code.
 - **State**: Zustand for shared/form state. `useState` only for trivial local UI.
 - **Services**: Backend logic in `src/services/`, never directly in UI components.
-- **Adding themes**: Create a new CSS file in `src/themes/`, define `@variant <name>-light` and `@variant <name>-dark` with all required CSS variables, import it in `global.css`, and add the theme names to the `ThemeName` union in `src/context/app-theme-context.tsx`.
+- **Adding themes**: Create a new CSS file in `src/themes/`, define `@variant <name>-light` and `@variant <name>-dark` with all required CSS variables, import it in `global.css`, register both variants in `metro.config.js` `extraThemes`, add the names to the `ThemeName` union in `src/context/app-theme-context.tsx`, and add a `toggleTheme` case for the light/dark pair.
 
 ## Key Experiments Enabled
 
@@ -192,7 +192,7 @@ helpers/       — Helper functions and hooks (utils/, hooks/)
 lib/           — Library code (utils.ts, storage/)
 store/         — Zustand stores
 services/      — API & integrations
-themes/        — CSS theme files (lavender, mint, sky, alpha)
+themes/        — CSS theme files (quiet, reverie, human, nightly, alpha)
 interfaces/    — TypeScript interfaces by domain
 types/         — Type definitions
 ```

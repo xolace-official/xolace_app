@@ -14,7 +14,9 @@ export {
   playCompassionateHold,
   playOnboardingEntrance,
   playHomeEntrance,
+  playSoftenPulse,
+  playBreathPhase,
   playHaptic,
 } from './haptics';
 
-export type { HapticName } from './haptics';
+export type { BreathPhase, HapticName } from './haptics';

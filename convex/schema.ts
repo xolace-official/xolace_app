@@ -366,6 +366,15 @@ export default defineSchema({
     // If "solo" — which exercise was selected.
     exerciseId: v.optional(v.id("exercises")),
 
+    // Which exercise the matcher picked at mirror time.
+    matchedExerciseId: v.optional(v.id("exercises")),
+
+    // Exercises swapped into during the session (append-only, bounded ≤2).
+    swappedExerciseIds: v.optional(v.array(v.id("exercises"))),
+
+    // Claude-filled slot values for the matched exercise (e.g. user_phrase).
+    exerciseSlots: v.optional(v.record(v.string(), v.string())),
+
     // If "peers" — did they contribute their reflection.
     contributedReflection: v.optional(v.boolean()),
 
@@ -726,14 +735,31 @@ export default defineSchema({
       v.object({
         order: v.number(),
         content: v.string(),
-        // Seconds before showing "Next". Null = user advances manually.
+        defaultContent: v.optional(v.string()),
         durationSeconds: v.optional(v.number()),
-        // Step type — affects rendering.
         type: v.union(
-          v.literal("text"),    // Display instruction
-          v.literal("timer"),   // Show a countdown
-          v.literal("prompt")   // Ask user to reflect (no input captured)
+          v.literal("text"),
+          v.literal("timer"),
+          v.literal("prompt"),
+          v.literal("breath"),
+          v.literal("haptic"),
+          v.literal("private_prompt"),
         ),
+        breathPattern: v.optional(v.union(
+          v.literal("physiological_sigh"),
+          v.literal("extended_exhale"),
+          v.literal("slow_exhale"),
+        )),
+        breathCycles: v.optional(v.number()),
+        hapticIntensity: v.optional(v.union(
+          v.literal("light"),
+          v.literal("medium"),
+          v.literal("heavy"),
+        )),
+        slotKeys: v.optional(v.array(v.string())),
+        promptPlaceholder: v.optional(v.string()),
+        promptMaxSeconds: v.optional(v.number()),
+        syncToBreath: v.optional(v.boolean()),
       })
     ),
 
@@ -746,7 +772,8 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_active", ["active"]),
+    .index("by_active", ["active"])
+    .index("by_title", ["title"]),
 
   // ===========================================================
   // 9. ESCALATION EVENTS

@@ -23,6 +23,7 @@ import {
 import { rateLimiter } from "../lib/rateLimits";
 
 import type { SessionContext } from "./context";
+import { matchExercise } from "../exercises/match";
 
 const FALLBACK_MIRROR =
   "I hear you, and what you're feeling matters.";
@@ -194,6 +195,45 @@ export const generateMirror = internalAction({
           (safeguard.level === "crisis" || safeguard.level === "elevated") &&
           safeguard.triggerType !== "pattern_escalation",
       });
+
+      // 8.5. Match exercise from emotional classification.
+      //      Confidence < 0.6 = ambiguous input → safe fallback to "reset".
+      const rankedTitles = matchExercise({
+        primaryEmotion: classification.primaryEmotion,
+        granularLabel: classification.granularLabel,
+        intensity: classification.intensity,
+        userLanguageTags: classification.userLanguageTags,
+        entryType: session.entryType ?? "open_prompt",
+        confirmationState: "confirmed",
+      });
+      const primaryTitle =
+        classification.primaryEmotionConfidence < 0.6 ? "reset" : rankedTitles[0];
+      const matched = await ctx.runQuery(internal.exercises.getByTitle, {
+        title: primaryTitle,
+      });
+      if (matched) {
+        await ctx.runMutation(internal.exercises.setMatched, {
+          sessionId: args.sessionId,
+          matchedExerciseId: matched._id,
+        });
+
+        // 8.7: Slot-fill — fire-and-forget so it doesn't block mirror delivery.
+        const slotKeys = [
+          ...new Set(
+            matched.steps.flatMap((s) => s.slotKeys ?? [])
+          ),
+        ];
+        if (slotKeys.length > 0) {
+          await ctx.scheduler.runAfter(0, internal.ai.slotFill.fillSlots, {
+            sessionId: args.sessionId,
+            exerciseTitle: primaryTitle,
+            slotKeys,
+            mirrorText,
+            userLanguageTags: classification.userLanguageTags,
+            primaryEmotion: classification.primaryEmotion,
+          });
+        }
+      }
 
       // 9. Schedule speculative distillation (for reflection pool)
       //    Skip if mirror is the fallback — nothing meaningful to distill.

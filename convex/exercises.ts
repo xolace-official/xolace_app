@@ -1,46 +1,181 @@
 import { v } from "convex/values";
-import { query, internalMutation } from "./_generated/server";
+import { query, mutation, internalQuery, internalMutation, QueryCtx, MutationCtx } from "./_generated/server";
+import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import { matchExercise } from "./exercises/match";
+
+/**
+ * Compute allowed swap target IDs for a session: the reset exercise + the
+ * next-best recommendation (excluding the currently active exercise).
+ * Shared by getSwapOptions (client hint) and recordSwap (server validation).
+ */
+async function computeSwapOptions(
+  ctx: QueryCtx | MutationCtx,
+  session: Doc<"sessions">,
+): Promise<{ resetId: Id<"exercises"> | null; nextBestId: Id<"exercises"> | null }> {
+  const resetDoc = await ctx.db
+    .query("exercises")
+    .withIndex("by_title", (q) => q.eq("title", "reset"))
+    .unique();
+  const resetId = resetDoc && resetDoc.active ? resetDoc._id : null;
+
+  const metadata = await ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+    .unique();
+
+  if (!metadata) return { resetId, nextBestId: null };
+
+  const ranked = matchExercise({
+    primaryEmotion: metadata.primaryEmotion,
+    granularLabel: metadata.granularLabel,
+    intensity: metadata.intensity,
+    userLanguageTags: metadata.userLanguageTags,
+    entryType: session.entryType ?? "open_prompt",
+    confirmationState: "confirmed",
+  });
+
+  const currentId = session.swappedExerciseIds?.length
+    ? session.swappedExerciseIds[session.swappedExerciseIds.length - 1]
+    : (session.matchedExerciseId ?? null);
+
+  let nextBestId: Id<"exercises"> | null = null;
+  for (const title of ranked) {
+    if (title === "reset") continue;
+    const doc = await ctx.db
+      .query("exercises")
+      .withIndex("by_title", (q) => q.eq("title", title))
+      .unique();
+    if (doc && doc.active && doc._id !== currentId) {
+      nextBestId = doc._id;
+      break;
+    }
+  }
+
+  return { resetId, nextBestId };
+}
+
+const stepValidator = v.object({
+  order: v.number(),
+  content: v.string(),
+  defaultContent: v.optional(v.string()),
+  durationSeconds: v.optional(v.number()),
+  type: v.union(
+    v.literal("text"),
+    v.literal("timer"),
+    v.literal("prompt"),
+    v.literal("breath"),
+    v.literal("haptic"),
+    v.literal("private_prompt"),
+  ),
+  breathPattern: v.optional(v.union(
+    v.literal("physiological_sigh"),
+    v.literal("extended_exhale"),
+    v.literal("slow_exhale"),
+  )),
+  breathCycles: v.optional(v.number()),
+  hapticIntensity: v.optional(v.union(
+    v.literal("light"),
+    v.literal("medium"),
+    v.literal("heavy"),
+  )),
+  slotKeys: v.optional(v.array(v.string())),
+  promptPlaceholder: v.optional(v.string()),
+  promptMaxSeconds: v.optional(v.number()),
+  syncToBreath: v.optional(v.boolean()),
+});
+
+/**
+ * Get the active exercise for a running session (matched or latest swap).
+ * Returns exercise doc + filled slot values.
+ */
+export const getForSession = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const { session } = await requireSessionOwnership(ctx, args.sessionId);
+
+    const swapped = session.swappedExerciseIds;
+    const exerciseId =
+      swapped && swapped.length > 0
+        ? swapped[swapped.length - 1]
+        : (session.matchedExerciseId ?? null);
+
+    if (!exerciseId) {
+      const fallback = await ctx.db
+        .query("exercises")
+        .withIndex("by_title", (q) => q.eq("title", "let_it_land"))
+        .unique();
+      if (!fallback) return null;
+      return { exercise: fallback, slots: {} as Record<string, string> };
+    }
+
+    const exercise = await ctx.db.get(exerciseId);
+    if (!exercise) return null;
+
+    return {
+      exercise,
+      slots: (session.exerciseSlots ?? {}) as Record<string, string>,
+    };
+  },
+});
 
 /**
  * Match exercises for a session based on its emotional metadata.
- * Accepts sessionId, verifies ownership, derives emotion from metadata.
  */
 export const matchForSession = query({
-  args: {
-    sessionId: v.id("sessions"),
-  },
+  args: { sessionId: v.id("sessions") },
   handler: async (ctx, args) => {
-    await requireSessionOwnership(ctx, args.sessionId);
+    const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
-    // Get emotional metadata for this session
     const metadata = await ctx.db
       .query("emotional_metadata")
       .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
       .unique();
 
-    if (!metadata) {
-      return [];
-    }
+    if (!metadata) return [];
 
-    // Get all active exercises
     const exercises = await ctx.db
       .query("exercises")
       .withIndex("by_active", (q) => q.eq("active", true))
       .take(50);
 
-    // Filter by emotion match and intensity range
-    const matched = exercises.filter((exercise) => {
-      const emotionMatch = exercise.targetEmotions.includes(
-        metadata.primaryEmotion
-      );
+    const matching = exercises.filter((e) => {
+      const emotionMatch = e.targetEmotions.includes(metadata.primaryEmotion);
       const intensityMatch =
-        metadata.intensity >= exercise.intensityRange.min &&
-        metadata.intensity <= exercise.intensityRange.max;
+        metadata.intensity >= e.intensityRange.min &&
+        metadata.intensity <= e.intensityRange.max;
       return emotionMatch && intensityMatch;
     });
 
-    return matched.slice(0, 3);
+    const rankedTitles = matchExercise({
+      primaryEmotion: metadata.primaryEmotion,
+      granularLabel: metadata.granularLabel,
+      intensity: metadata.intensity,
+      userLanguageTags: metadata.userLanguageTags,
+      entryType: session.entryType ?? "open_prompt",
+      confirmationState: "confirmed",
+    });
+
+    const byTitle = new Map(matching.map((e) => [e.title, e]));
+    const ordered: typeof matching = [];
+    for (const title of rankedTitles) {
+      const doc = byTitle.get(title);
+      if (doc) ordered.push(doc);
+    }
+
+    return ordered.slice(0, 3);
+  },
+});
+
+/**
+ * Get ranked swap options for a session (reset + next-best).
+ * Returns IDs only — client passes to recordSwap.
+ */
+export const getSwapOptions = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const { session } = await requireSessionOwnership(ctx, args.sessionId);
+    return await computeSwapOptions(ctx, session);
   },
 });
 
@@ -48,9 +183,7 @@ export const matchForSession = query({
  * Get a single exercise by ID.
  */
 export const getById = query({
-  args: {
-    exerciseId: v.id("exercises"),
-  },
+  args: { exerciseId: v.id("exercises") },
   handler: async (ctx, args) => {
     await requireAuth(ctx);
     return await ctx.db.get(args.exerciseId);
@@ -58,7 +191,65 @@ export const getById = query({
 });
 
 /**
- * Seed exercises into the library.
+ * Record an exercise swap for a session (max 2 swaps enforced).
+ */
+export const recordSwap = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    newExerciseId: v.id("exercises"),
+  },
+  handler: async (ctx, args) => {
+    const { session } = await requireSessionOwnership(ctx, args.sessionId);
+
+    const currentSwaps = session.swappedExerciseIds ?? [];
+    if (currentSwaps.length >= 2) throw new Error("Maximum swaps reached");
+
+    const { resetId, nextBestId } = await computeSwapOptions(ctx, session);
+    const allowed = new Set(
+      [resetId, nextBestId].filter((id): id is Id<"exercises"> => id !== null),
+    );
+    if (!allowed.has(args.newExerciseId)) {
+      throw new Error("Exercise not allowed for this session");
+    }
+
+    await ctx.db.patch(args.sessionId, {
+      swappedExerciseIds: [...currentSwaps, args.newExerciseId],
+    });
+  },
+});
+
+/**
+ * Look up an exercise by internal title.
+ */
+export const getByTitle = internalQuery({
+  args: { title: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("exercises")
+      .withIndex("by_title", (q) => q.eq("title", args.title))
+      .unique();
+  },
+});
+
+/**
+ * Set the matched exercise on a session (called from generateMirror).
+ */
+export const setMatched = internalMutation({
+  args: {
+    sessionId: v.id("sessions"),
+    matchedExerciseId: v.id("exercises"),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) return;
+    await ctx.db.patch(args.sessionId, {
+      matchedExerciseId: args.matchedExerciseId,
+    });
+  },
+});
+
+/**
+ * Seed exercises into the library (upserts by title).
  */
 export const seed = internalMutation({
   args: {
@@ -72,25 +263,11 @@ export const seed = internalMutation({
           v.literal("self_compassion"),
           v.literal("cognitive_reframe"),
           v.literal("visualization"),
-          v.literal("journaling_prompt")
+          v.literal("journaling_prompt"),
         ),
         targetEmotions: v.array(v.string()),
-        intensityRange: v.object({
-          min: v.number(),
-          max: v.number(),
-        }),
-        steps: v.array(
-          v.object({
-            order: v.number(),
-            content: v.string(),
-            durationSeconds: v.optional(v.number()),
-            type: v.union(
-              v.literal("text"),
-              v.literal("timer"),
-              v.literal("prompt")
-            ),
-          })
-        ),
+        intensityRange: v.object({ min: v.number(), max: v.number() }),
+        steps: v.array(stepValidator),
         estimatedMinutes: v.number(),
       })
     ),
@@ -98,12 +275,20 @@ export const seed = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     for (const exercise of args.exercises) {
-      await ctx.db.insert("exercises", {
-        ...exercise,
-        active: true,
-        createdAt: now,
-        updatedAt: now,
-      });
+      const existing = await ctx.db
+        .query("exercises")
+        .withIndex("by_title", (q) => q.eq("title", exercise.title))
+        .unique();
+      if (existing) {
+        await ctx.db.patch(existing._id, { ...exercise, updatedAt: now });
+      } else {
+        await ctx.db.insert("exercises", {
+          ...exercise,
+          active: true,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
     }
   },
 });
