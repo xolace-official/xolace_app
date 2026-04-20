@@ -74,7 +74,7 @@ export function SitWithThisScreen() {
     }
   }, [sessionId, recordSwapMutation, toast]);
 
-  if (exerciseResult === undefined || !session) {
+  if (exerciseResult === undefined || !session || preferences === undefined) {
     return (
       <View
         className="flex-1 items-center justify-center bg-background"
@@ -129,7 +129,7 @@ export function SitWithThisScreen() {
       <ExerciseRunner
         key={exerciseData.exercise._id}
         exercise={exerciseData}
-        reducedMotion={preferences?.reducedMotion ?? false}
+        reducedMotion={preferences.reducedMotion}
         showPreRoll={!hasSwapped}
         onComplete={handleComplete}
         onExitEarly={handleExitEarly}

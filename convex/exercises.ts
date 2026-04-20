@@ -39,18 +39,18 @@ async function computeSwapOptions(
     ? session.swappedExerciseIds[session.swappedExerciseIds.length - 1]
     : (session.matchedExerciseId ?? null);
 
-  const nextBestTitle = ranked.find((t) => t !== "reset") ?? null;
-  const nextBestDoc = nextBestTitle
-    ? await ctx.db
-        .query("exercises")
-        .withIndex("by_title", (q) => q.eq("title", nextBestTitle))
-        .unique()
-    : null;
-
-  const nextBestId =
-    nextBestDoc && nextBestDoc.active && nextBestDoc._id !== currentId
-      ? nextBestDoc._id
-      : null;
+  let nextBestId: Id<"exercises"> | null = null;
+  for (const title of ranked) {
+    if (title === "reset") continue;
+    const doc = await ctx.db
+      .query("exercises")
+      .withIndex("by_title", (q) => q.eq("title", title))
+      .unique();
+    if (doc && doc.active && doc._id !== currentId) {
+      nextBestId = doc._id;
+      break;
+    }
+  }
 
   return { resetId, nextBestId };
 }
@@ -125,7 +125,7 @@ export const getForSession = query({
 export const matchForSession = query({
   args: { sessionId: v.id("sessions") },
   handler: async (ctx, args) => {
-    await requireSessionOwnership(ctx, args.sessionId);
+    const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
     const metadata = await ctx.db
       .query("emotional_metadata")
@@ -139,15 +139,31 @@ export const matchForSession = query({
       .withIndex("by_active", (q) => q.eq("active", true))
       .take(50);
 
-    return exercises
-      .filter((e) => {
-        const emotionMatch = e.targetEmotions.includes(metadata.primaryEmotion);
-        const intensityMatch =
-          metadata.intensity >= e.intensityRange.min &&
-          metadata.intensity <= e.intensityRange.max;
-        return emotionMatch && intensityMatch;
-      })
-      .slice(0, 3);
+    const matching = exercises.filter((e) => {
+      const emotionMatch = e.targetEmotions.includes(metadata.primaryEmotion);
+      const intensityMatch =
+        metadata.intensity >= e.intensityRange.min &&
+        metadata.intensity <= e.intensityRange.max;
+      return emotionMatch && intensityMatch;
+    });
+
+    const rankedTitles = matchExercise({
+      primaryEmotion: metadata.primaryEmotion,
+      granularLabel: metadata.granularLabel,
+      intensity: metadata.intensity,
+      userLanguageTags: metadata.userLanguageTags,
+      entryType: session.entryType ?? "open_prompt",
+      confirmationState: "confirmed",
+    });
+
+    const byTitle = new Map(matching.map((e) => [e.title, e]));
+    const ordered: typeof matching = [];
+    for (const title of rankedTitles) {
+      const doc = byTitle.get(title);
+      if (doc) ordered.push(doc);
+    }
+
+    return ordered.slice(0, 3);
   },
 });
 

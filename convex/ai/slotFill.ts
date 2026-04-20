@@ -82,7 +82,7 @@ Respond with only a JSON object, for example: {"user_phrase": "stuck and can't m
         const parsed = JSON.parse(cleaned);
 
         const tokenize = (s: string) =>
-          s.toLowerCase().match(/[a-z']+/g) ?? [];
+          s.toLowerCase().match(/[\p{L}']+/gu) ?? [];
         const sourceTokens = new Set<string>([
           ...tokenize(args.mirrorText),
           ...args.userLanguageTags.flatMap(tokenize),
@@ -99,9 +99,9 @@ Respond with only a JSON object, for example: {"user_phrase": "stuck and can't m
           if (!normalized) continue;
           const words = normalized.split(/\s+/);
           if (words.length > 10) continue;
-          const grounded = tokenize(normalized).every((t) =>
-            sourceTokens.has(t)
-          );
+          const tokens = tokenize(normalized);
+          if (tokens.length === 0) continue;
+          const grounded = tokens.every((t) => sourceTokens.has(t));
           if (!grounded) continue;
           slots[key] = normalized;
         }
