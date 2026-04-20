@@ -14,6 +14,7 @@ export {
   playCompassionateHold,
   playOnboardingEntrance,
   playHomeEntrance,
+  playSoftenPulse,
   playHaptic,
 } from './haptics';
 

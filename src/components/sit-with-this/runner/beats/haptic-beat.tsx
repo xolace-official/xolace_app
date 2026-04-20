@@ -7,7 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+import { playSoftenPulse } from '@/src/lib/haptics';
 import { AppText } from '@/src/components/shared/app-text';
 
 type Props = {
@@ -31,7 +31,7 @@ export function HapticBeat({
   useEffect(() => {
     // Gate haptic on reducedMotion per plan §4.2 — dissociated states can be startled.
     if (!reducedMotion) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      playSoftenPulse();
       pulse.value = withRepeat(
         withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.quad) }),
         -1,

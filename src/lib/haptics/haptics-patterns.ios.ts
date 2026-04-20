@@ -260,6 +260,32 @@ export const compassionateHold: HapticPatternData = {
   ],
 };
 
+/** Single warm pulse. Soften-toward-it haptic beat — holds space without startling. */
+export const softenPulse: HapticPatternData = {
+  events: [
+    {
+      eventType: 'hapticContinuous',
+      time: 0.0,
+      eventDuration: 0.8,
+      parameters: [
+        { parameterID: 'hapticIntensity', value: 0.55 },
+        { parameterID: 'hapticSharpness', value: 0.18 },
+      ],
+    },
+  ],
+  parameterCurves: [
+    {
+      parameterID: 'hapticIntensityControl',
+      relativeTime: 0.0,
+      controlPoints: [
+        { relativeTime: 0.0, value: 0.4 },
+        { relativeTime: 0.4, value: 1.0 },
+        { relativeTime: 0.8, value: 0.0 },
+      ],
+    },
+  ],
+};
+
 // ── Entrance Patterns ───────────────────────────────────────────────
 
 /** Synced with PromiseScreen's staggered FadeInDown. First thing the user feels. */

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
@@ -6,20 +6,36 @@ import { PillButton } from '@/src/components/reflect/pill-button';
 import { PreRollCard } from '@/src/components/sit-with-this/pre-roll-card';
 import { BeatRenderer } from './beat-renderer';
 import { runnerReducer } from './exercise-runner.reducer';
-import type { ExerciseData } from './exercise-runner.types';
+import type { ExerciseData, RunnerPhase } from './exercise-runner.types';
 
 type Props = {
   exercise: ExerciseData;
   reducedMotion: boolean;
+  showPreRoll?: boolean;
   onComplete: () => Promise<void>;
   onExitEarly: () => Promise<void>;
+  onSwap?: () => void;
 };
 
-export function ExerciseRunner({ exercise, reducedMotion, onComplete, onExitEarly }: Props) {
-  const steps = [...exercise.exercise.steps].sort((a, b) => a.order - b.order);
+export function ExerciseRunner({
+  exercise,
+  reducedMotion,
+  showPreRoll = true,
+  onComplete,
+  onExitEarly,
+  onSwap,
+}: Props) {
+  const steps = useMemo(
+    () => [...exercise.exercise.steps].sort((a, b) => a.order - b.order),
+    [exercise.exercise.steps],
+  );
   const totalBeats = steps.length;
 
-  const [phase, dispatch] = useReducer(runnerReducer, { kind: 'pre_roll' });
+  const initialPhase: RunnerPhase = showPreRoll
+    ? { kind: 'pre_roll' }
+    : { kind: 'playing', beatIndex: 0 };
+
+  const [phase, dispatch] = useReducer(runnerReducer, initialPhase);
 
   useEffect(() => {
     if (phase.kind === 'close' && !phase.doneEnabled) {
@@ -59,6 +75,19 @@ export function ExerciseRunner({ exercise, reducedMotion, onComplete, onExitEarl
           reducedMotion={reducedMotion}
           onComplete={handleBeatComplete}
         />
+        {onSwap && (
+          <Animated.View
+            entering={FadeIn.delay(3000).duration(600)}
+            className="absolute bottom-8"
+          >
+            <AppText
+              className="text-center text-sm text-foreground/30"
+              onPress={onSwap}
+            >
+              Something different
+            </AppText>
+          </Animated.View>
+        )}
       </View>
     );
   }

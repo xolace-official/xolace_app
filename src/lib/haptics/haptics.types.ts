@@ -14,6 +14,7 @@ export const hapticNames = [
   'compassionateHold',
   'onboardingEntrance',
   'homeEntrance',
+  'softenPulse',
 ] as const;
 
 export type HapticName = (typeof hapticNames)[number];

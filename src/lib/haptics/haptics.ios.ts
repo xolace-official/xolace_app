@@ -17,6 +17,7 @@ import {
   compassionateHold,
   onboardingEntrance,
   homeEntrance,
+  softenPulse,
 } from '@/src/lib/haptics/haptics-patterns.ios';
 
 // ── Generic helpers ──────────────────────────────────────────────────
@@ -83,6 +84,10 @@ export function playCompassionateHold(): void {
   play(compassionateHold);
 }
 
+export function playSoftenPulse(): void {
+  play(softenPulse);
+}
+
 export function playOnboardingEntrance(): void {
   play(onboardingEntrance);
 }
@@ -108,6 +113,7 @@ const patternMap: Record<HapticName, HapticPatternData> = {
   compassionateHold,
   onboardingEntrance,
   homeEntrance,
+  softenPulse,
 };
 
 export type { HapticName };

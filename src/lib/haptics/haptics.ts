@@ -121,6 +121,14 @@ export function playErrorNotice(): void {
 
 export function playCompassionateHold(): void {}
 
+export function playSoftenPulse(): void {
+  if (isAndroid) {
+    androidHaptic(Haptics.AndroidHaptics.Context_Click);
+  } else {
+    impact(Haptics.ImpactFeedbackStyle.Medium);
+  }
+}
+
 export function playOnboardingEntrance(): void {
   if (isAndroid) {
     androidHaptic(Haptics.AndroidHaptics.Gesture_Start);
@@ -154,6 +162,7 @@ const handlerMap: Record<HapticName, () => void> = {
   compassionateHold: playCompassionateHold,
   onboardingEntrance: playOnboardingEntrance,
   homeEntrance: playHomeEntrance,
+  softenPulse: playSoftenPulse,
 };
 
 export function playHaptic(name: HapticName): void {
