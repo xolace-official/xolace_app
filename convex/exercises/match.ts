@@ -54,30 +54,33 @@ function hasTag(tags: string[], set: Set<string>): boolean {
 
 /** Returns ranked exercises (primary + fallbacks). Never returns an empty list. */
 export function matchExercise(input: MatchInput): ExerciseTitle[] {
-  const { primaryEmotion, intensity, userLanguageTags, confirmationState } = input;
+  const { primaryEmotion, granularLabel, intensity, userLanguageTags, confirmationState } = input;
   const emotion = primaryEmotion.toLowerCase();
+  const granular = granularLabel?.toLowerCase();
+  const matches = (set: Set<string>) =>
+    set.has(emotion) || (granular !== undefined && set.has(granular));
 
   if (confirmationState === "gave_up" || confirmationState === "abandoned") {
     return ["reset", "let_it_land", "find_your_edges", "make_room", "speak_to_it", "soften_toward_it"];
   }
 
-  if (intensity >= 8 || HIGH_ACTIVATION.has(emotion)) {
+  if (intensity >= 8 || matches(HIGH_ACTIVATION)) {
     return ["reset", "let_it_land", "make_room", "find_your_edges", "speak_to_it", "soften_toward_it"];
   }
 
-  if (NUMB.has(emotion) || hasTag(userLanguageTags, NUMB_TAGS)) {
+  if (matches(NUMB) || hasTag(userLanguageTags, NUMB_TAGS)) {
     return ["find_your_edges", "let_it_land", "reset", "make_room", "speak_to_it", "soften_toward_it"];
   }
 
-  if (STUCK.has(emotion) || hasTag(userLanguageTags, STUCK_TAGS)) {
+  if (matches(STUCK) || hasTag(userLanguageTags, STUCK_TAGS)) {
     return ["make_room", "let_it_land", "reset", "find_your_edges", "speak_to_it", "soften_toward_it"];
   }
 
-  if (SHAME.has(emotion) || hasTag(userLanguageTags, SHAME_TAGS)) {
+  if (matches(SHAME) || hasTag(userLanguageTags, SHAME_TAGS)) {
     return ["soften_toward_it", "let_it_land", "make_room", "reset", "find_your_edges", "speak_to_it"];
   }
 
-  if (ANGER.has(emotion) || hasTag(userLanguageTags, ANGER_TAGS)) {
+  if (matches(ANGER) || hasTag(userLanguageTags, ANGER_TAGS)) {
     return ["speak_to_it", "make_room", "let_it_land", "reset", "find_your_edges", "soften_toward_it"];
   }
 

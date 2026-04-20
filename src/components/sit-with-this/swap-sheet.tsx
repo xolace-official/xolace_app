@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { BottomSheet } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
@@ -12,7 +13,7 @@ type Props = {
   resetId: Id<'exercises'> | null;
   nextBestId: Id<'exercises'> | null;
   onKeepGoing: () => void;
-  onSwap: (exerciseId: Id<'exercises'>) => void;
+  onSwap: (exerciseId: Id<'exercises'>) => void | Promise<void>;
 };
 
 export function SwapSheet({
@@ -25,6 +26,21 @@ export function SwapSheet({
   onSwap,
 }: Props) {
   const canSwap = swapsUsed < 2;
+  const [isSwapping, setIsSwapping] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) setIsSwapping(false);
+  }, [isOpen]);
+
+  const handleSwapPress = async (exerciseId: Id<'exercises'>) => {
+    if (isSwapping) return;
+    setIsSwapping(true);
+    try {
+      await onSwap(exerciseId);
+    } finally {
+      setIsSwapping(false);
+    }
+  };
 
   return (
     <BottomSheet isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -50,7 +66,8 @@ export function SwapSheet({
             {canSwap && resetId && (
               <PillButton
                 label="Try something simpler"
-                onPress={() => onSwap(resetId)}
+                onPress={() => handleSwapPress(resetId)}
+                disabled={isSwapping}
                 className="border border-accent/20 bg-transparent"
               />
             )}
@@ -58,7 +75,8 @@ export function SwapSheet({
             {canSwap && nextBestId && (
               <PillButton
                 label="Try something else"
-                onPress={() => onSwap(nextBestId)}
+                onPress={() => handleSwapPress(nextBestId)}
+                disabled={isSwapping}
                 className="border border-accent/20 bg-transparent"
               />
             )}

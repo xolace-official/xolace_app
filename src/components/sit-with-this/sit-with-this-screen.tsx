@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery, useMutation } from 'convex/react';
+import { useToast } from 'heroui-native';
 import { api } from '../../../convex/_generated/api';
 import { usePathSession } from '@/src/hooks/use-path-session';
 import { ExerciseRunner } from './runner/exercise-runner';
@@ -14,6 +15,7 @@ import type { Id } from '../../../convex/_generated/dataModel';
 export function SitWithThisScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { toast } = useToast();
   const startedRef = useRef(false);
   const [swapSheetOpen, setSwapSheetOpen] = useState(false);
 
@@ -56,13 +58,23 @@ export function SitWithThisScreen() {
     if (!sessionId) return;
     try {
       await recordSwapMutation({ sessionId, newExerciseId });
-    } catch {
-      // Server-enforced cap — button will be hidden on next render
+      setSwapSheetOpen(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      // Server-state mismatches: close sheet and let queries re-render.
+      if (msg.includes('Maximum swaps reached') || msg.includes('Exercise not allowed')) {
+        setSwapSheetOpen(false);
+        return;
+      }
+      toast.show({
+        label: 'Could not switch',
+        description: 'Try again in a moment.',
+        variant: 'default',
+      });
     }
-    setSwapSheetOpen(false);
-  }, [sessionId, recordSwapMutation]);
+  }, [sessionId, recordSwapMutation, toast]);
 
-  if (!exerciseResult || !session) {
+  if (exerciseResult === undefined || !session) {
     return (
       <View
         className="flex-1 items-center justify-center bg-background"
@@ -70,6 +82,25 @@ export function SitWithThisScreen() {
       >
         <AppText className="text-center text-base text-foreground/40">
           Getting ready...
+        </AppText>
+      </View>
+    );
+  }
+
+  if (exerciseResult === null) {
+    return (
+      <View
+        className="flex-1 items-center justify-center gap-8 bg-background px-8"
+        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      >
+        <AppText className="text-center text-base text-foreground/60">
+          No exercise available right now.
+        </AppText>
+        <AppText
+          className="text-center text-sm text-foreground/40"
+          onPress={handleExitEarly}
+        >
+          Go back
         </AppText>
       </View>
     );

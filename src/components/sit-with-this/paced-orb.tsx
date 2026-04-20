@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { View } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -18,6 +18,7 @@ export type PacedOrbHandle = {
     cycles: number,
     onPhaseTransition?: (phase: BreathPhase, durationMs: number) => void,
   ) => Promise<void>;
+  cancel: () => void;
 };
 
 type StepTiming = { to: number; duration: number; phase: BreathPhase };
@@ -38,6 +39,12 @@ const TIMINGS: Record<BreathPattern, StepTiming[]> = {
   ],
 };
 
+export const BREATH_CYCLE_MS: Record<BreathPattern, number> = {
+  physiological_sigh: TIMINGS.physiological_sigh.reduce((a, s) => a + s.duration, 0),
+  extended_exhale: TIMINGS.extended_exhale.reduce((a, s) => a + s.duration, 0),
+  slow_exhale: TIMINGS.slow_exhale.reduce((a, s) => a + s.duration, 0),
+};
+
 const HALO_SIZE = 240;
 const CORE_SIZE = 150;
 
@@ -50,19 +57,29 @@ export const PacedOrb = forwardRef<PacedOrbHandle, Props>(
     const coreOpacity = useSharedValue(0.4);
     const haloOpacity = useSharedValue(0.08);
 
+    const transitionTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+    const clearTimers = () => {
+      transitionTimersRef.current.forEach(clearTimeout);
+      transitionTimersRef.current = [];
+    };
+
+    useEffect(() => clearTimers, []);
+
     useImperativeHandle(ref, () => ({
       playCycle: (pattern, cycles, onPhaseTransition) =>
         new Promise<void>((resolve) => {
+          clearTimers();
+
           const steps = TIMINGS[pattern];
           const totalMs = steps.reduce((acc, s) => acc + s.duration, 0) * cycles;
-          const transitionTimers: ReturnType<typeof setTimeout>[] = [];
 
           let cursorMs = 0;
           for (let i = 0; i < cycles; i++) {
             steps.forEach((step) => {
               const firedPhase = step.phase;
               const firedDuration = step.duration;
-              transitionTimers.push(
+              transitionTimersRef.current.push(
                 setTimeout(
                   () => onPhaseTransition?.(firedPhase, firedDuration),
                   cursorMs,
@@ -73,10 +90,12 @@ export const PacedOrb = forwardRef<PacedOrbHandle, Props>(
           }
 
           if (reducedMotion) {
-            setTimeout(() => {
-              transitionTimers.forEach(clearTimeout);
-              resolve();
-            }, totalMs);
+            transitionTimersRef.current.push(
+              setTimeout(() => {
+                clearTimers();
+                resolve();
+              }, totalMs),
+            );
             return;
           }
 
@@ -107,8 +126,14 @@ export const PacedOrb = forwardRef<PacedOrbHandle, Props>(
             haloOpacity.value = withSequence(haloAnims[0], ...haloAnims.slice(1));
           }
 
-          setTimeout(resolve, totalMs);
+          transitionTimersRef.current.push(setTimeout(resolve, totalMs));
         }),
+      cancel: () => {
+        clearTimers();
+        cancelAnimation(scale);
+        cancelAnimation(coreOpacity);
+        cancelAnimation(haloOpacity);
+      },
     }));
 
     const scaleStyle = useAnimatedStyle(() => ({

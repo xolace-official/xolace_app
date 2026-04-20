@@ -2,7 +2,12 @@ import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
-import { PacedOrb, type PacedOrbHandle, type BreathPattern } from '@/src/components/sit-with-this/paced-orb';
+import {
+  BREATH_CYCLE_MS,
+  PacedOrb,
+  type BreathPattern,
+  type PacedOrbHandle,
+} from '@/src/components/sit-with-this/paced-orb';
 
 type Props = {
   content: string;
@@ -25,46 +30,74 @@ export function TextBeat({
 }: Props) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pausedAtRef = useRef<number | null>(null);
-  const remainingRef = useRef(durationSeconds * 1000);
+  const deadlineRef = useRef(0);
+  const remainingRef = useRef(0);
   const orbRef = useRef<PacedOrbHandle>(null);
   const doneRef = useRef(false);
 
   useEffect(() => {
-    if (syncToBreath && breathPattern && breathCycles) {
-      let cancelled = false;
-      orbRef.current?.playCycle(breathPattern, breathCycles).then(() => {
-        if (!cancelled && !doneRef.current) {
-          doneRef.current = true;
-          onComplete();
-        }
-      });
-      return () => { cancelled = true; };
-    }
+    const isBreath = !!(syncToBreath && breathPattern && breathCycles);
+    const totalMs = isBreath
+      ? BREATH_CYCLE_MS[breathPattern!] * breathCycles!
+      : durationSeconds * 1000;
+    remainingRef.current = totalMs;
+
+    const finish = () => {
+      if (doneRef.current) return;
+      doneRef.current = true;
+      onComplete();
+    };
 
     const startTimer = (ms: number) => {
-      timerRef.current = setTimeout(() => { onComplete(); }, ms);
+      deadlineRef.current = Date.now() + ms;
+      timerRef.current = setTimeout(finish, ms);
+    };
+
+    const startBreath = (cycles: number) => {
+      deadlineRef.current = Date.now() + BREATH_CYCLE_MS[breathPattern!] * cycles;
+      orbRef.current?.playCycle(breathPattern!, cycles).then(() => {
+        // cancel() clears the resolve timer, so this only fires on natural completion.
+        finish();
+      });
     };
 
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'background' || state === 'inactive') {
+        if (pausedAtRef.current !== null || doneRef.current) return;
+        pausedAtRef.current = Date.now();
+        remainingRef.current = Math.max(0, deadlineRef.current - Date.now());
         if (timerRef.current) {
           clearTimeout(timerRef.current);
           timerRef.current = null;
-          pausedAtRef.current = Date.now();
         }
+        if (isBreath) orbRef.current?.cancel();
       } else if (state === 'active' && pausedAtRef.current !== null) {
-        const elapsed = Date.now() - pausedAtRef.current;
-        remainingRef.current = Math.max(0, remainingRef.current - elapsed);
         pausedAtRef.current = null;
-        startTimer(remainingRef.current);
+        if (doneRef.current) return;
+        if (remainingRef.current === 0) {
+          finish();
+          return;
+        }
+        if (isBreath && breathPattern) {
+          const cycleMs = BREATH_CYCLE_MS[breathPattern];
+          const remainingCycles = Math.max(1, Math.ceil(remainingRef.current / cycleMs));
+          startBreath(remainingCycles);
+        } else {
+          startTimer(remainingRef.current);
+        }
       }
     });
 
-    startTimer(remainingRef.current);
+    if (isBreath) {
+      startBreath(breathCycles!);
+    } else {
+      startTimer(totalMs);
+    }
 
     return () => {
       sub.remove();
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (isBreath) orbRef.current?.cancel();
     };
     // Mount-once: step props are fixed for a beat's lifetime
     // eslint-disable-next-line react-hooks/exhaustive-deps

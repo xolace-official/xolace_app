@@ -34,9 +34,11 @@ export const fillSlots = internalAction({
     // Fill deterministic slots without LLM
     for (const key of args.slotKeys) {
       if (key === "mirror_line") {
-        slots[key] = args.mirrorText;
+        const cleaned = args.mirrorText.replace(/\s+/g, " ").trim();
+        if (cleaned) slots[key] = cleaned;
       } else if (key === "user_emotion") {
-        slots[key] = args.primaryEmotion;
+        const cleaned = args.primaryEmotion.trim();
+        if (cleaned) slots[key] = cleaned;
       }
     }
 
@@ -79,15 +81,29 @@ Respond with only a JSON object, for example: {"user_phrase": "stuck and can't m
 
         const parsed = JSON.parse(cleaned);
 
+        const tokenize = (s: string) =>
+          s.toLowerCase().match(/[a-z']+/g) ?? [];
+        const sourceTokens = new Set<string>([
+          ...tokenize(args.mirrorText),
+          ...args.userLanguageTags.flatMap(tokenize),
+        ]);
+
         for (const key of llmKeys) {
           const val = parsed[key];
-          if (
-            typeof val === "string" &&
-            val.trim() &&
-            val.split(/\s+/).length <= 10
-          ) {
-            slots[key] = val.trim();
-          }
+          if (typeof val !== "string") continue;
+          const normalized = val
+            .toLowerCase()
+            .replace(/[.,;:!?"'`]+$/g, "")
+            .replace(/\s+/g, " ")
+            .trim();
+          if (!normalized) continue;
+          const words = normalized.split(/\s+/);
+          if (words.length > 10) continue;
+          const grounded = tokenize(normalized).every((t) =>
+            sourceTokens.has(t)
+          );
+          if (!grounded) continue;
+          slots[key] = normalized;
         }
       } catch {
         // Haiku failed — user_phrase will fall back to defaultContent in the runner

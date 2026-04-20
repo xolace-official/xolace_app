@@ -1,7 +1,59 @@
 import { v } from "convex/values";
-import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
+import { query, mutation, internalQuery, internalMutation, QueryCtx, MutationCtx } from "./_generated/server";
+import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { matchExercise } from "./exercises/match";
+
+/**
+ * Compute allowed swap target IDs for a session: the reset exercise + the
+ * next-best recommendation (excluding the currently active exercise).
+ * Shared by getSwapOptions (client hint) and recordSwap (server validation).
+ */
+async function computeSwapOptions(
+  ctx: QueryCtx | MutationCtx,
+  session: Doc<"sessions">,
+): Promise<{ resetId: Id<"exercises"> | null; nextBestId: Id<"exercises"> | null }> {
+  const resetDoc = await ctx.db
+    .query("exercises")
+    .withIndex("by_title", (q) => q.eq("title", "reset"))
+    .unique();
+  const resetId = resetDoc && resetDoc.active ? resetDoc._id : null;
+
+  const metadata = await ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+    .unique();
+
+  if (!metadata) return { resetId, nextBestId: null };
+
+  const ranked = matchExercise({
+    primaryEmotion: metadata.primaryEmotion,
+    granularLabel: metadata.granularLabel,
+    intensity: metadata.intensity,
+    userLanguageTags: metadata.userLanguageTags,
+    entryType: session.entryType ?? "open_prompt",
+    confirmationState: "confirmed",
+  });
+
+  const currentId = session.swappedExerciseIds?.length
+    ? session.swappedExerciseIds[session.swappedExerciseIds.length - 1]
+    : (session.matchedExerciseId ?? null);
+
+  const nextBestTitle = ranked.find((t) => t !== "reset") ?? null;
+  const nextBestDoc = nextBestTitle
+    ? await ctx.db
+        .query("exercises")
+        .withIndex("by_title", (q) => q.eq("title", nextBestTitle))
+        .unique()
+    : null;
+
+  const nextBestId =
+    nextBestDoc && nextBestDoc.active && nextBestDoc._id !== currentId
+      ? nextBestDoc._id
+      : null;
+
+  return { resetId, nextBestId };
+}
 
 const stepValidator = v.object({
   order: v.number(),
@@ -107,46 +159,7 @@ export const getSwapOptions = query({
   args: { sessionId: v.id("sessions") },
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
-
-    const resetDoc = await ctx.db
-      .query("exercises")
-      .withIndex("by_title", (q) => q.eq("title", "reset"))
-      .unique();
-
-    const metadata = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-      .unique();
-
-    if (!metadata) {
-      return { resetId: resetDoc?._id ?? null, nextBestId: null };
-    }
-
-    const ranked = matchExercise({
-      primaryEmotion: metadata.primaryEmotion,
-      granularLabel: metadata.granularLabel,
-      intensity: metadata.intensity,
-      userLanguageTags: metadata.userLanguageTags,
-      entryType: session.entryType ?? "open_prompt",
-      confirmationState: "confirmed",
-    });
-
-    const currentId = session.swappedExerciseIds?.length
-      ? session.swappedExerciseIds[session.swappedExerciseIds.length - 1]
-      : (session.matchedExerciseId ?? null);
-
-    const nextBestTitle = ranked.find((t) => t !== "reset") ?? null;
-    const nextBestDoc = nextBestTitle
-      ? await ctx.db
-          .query("exercises")
-          .withIndex("by_title", (q) => q.eq("title", nextBestTitle))
-          .unique()
-      : null;
-
-    const nextBestId =
-      nextBestDoc && nextBestDoc._id !== currentId ? nextBestDoc._id : null;
-
-    return { resetId: resetDoc?._id ?? null, nextBestId };
+    return await computeSwapOptions(ctx, session);
   },
 });
 
@@ -175,8 +188,13 @@ export const recordSwap = mutation({
     const currentSwaps = session.swappedExerciseIds ?? [];
     if (currentSwaps.length >= 2) throw new Error("Maximum swaps reached");
 
-    const exercise = await ctx.db.get(args.newExerciseId);
-    if (!exercise) throw new Error("Exercise not found");
+    const { resetId, nextBestId } = await computeSwapOptions(ctx, session);
+    const allowed = new Set(
+      [resetId, nextBestId].filter((id): id is Id<"exercises"> => id !== null),
+    );
+    if (!allowed.has(args.newExerciseId)) {
+      throw new Error("Exercise not allowed for this session");
+    }
 
     await ctx.db.patch(args.sessionId, {
       swappedExerciseIds: [...currentSwaps, args.newExerciseId],

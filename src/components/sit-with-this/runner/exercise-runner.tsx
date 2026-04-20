@@ -33,7 +33,9 @@ export function ExerciseRunner({
 
   const initialPhase: RunnerPhase = showPreRoll
     ? { kind: 'pre_roll' }
-    : { kind: 'playing', beatIndex: 0 };
+    : totalBeats === 0
+      ? { kind: 'close', doneEnabled: false }
+      : { kind: 'playing', beatIndex: 0 };
 
   const [phase, dispatch] = useReducer(runnerReducer, initialPhase);
 
@@ -43,6 +45,12 @@ export function ExerciseRunner({
       return () => clearTimeout(t);
     }
   }, [phase]);
+
+  useEffect(() => {
+    if (phase.kind === 'playing' && !steps[phase.beatIndex]) {
+      dispatch({ type: 'BEAT_COMPLETE', totalBeats });
+    }
+  }, [phase, steps, totalBeats]);
 
   useEffect(() => {
     if (phase.kind === 'done') {
@@ -66,6 +74,7 @@ export function ExerciseRunner({
 
   if (phase.kind === 'playing') {
     const step = steps[phase.beatIndex];
+    if (!step) return null;
     return (
       <View className="flex-1 items-center justify-center">
         <BeatRenderer
