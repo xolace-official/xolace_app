@@ -8,6 +8,7 @@ import Animated, {
   cancelAnimation,
 } from 'react-native-reanimated';
 import { useThemeColor } from 'heroui-native';
+import type { BreathPhase } from '@/src/lib/haptics';
 
 export type BreathPattern = 'physiological_sigh' | 'extended_exhale' | 'slow_exhale';
 
@@ -15,25 +16,25 @@ export type PacedOrbHandle = {
   playCycle: (
     pattern: BreathPattern,
     cycles: number,
-    onPhaseTransition?: (phaseIndex: number) => void,
+    onPhaseTransition?: (phase: BreathPhase, durationMs: number) => void,
   ) => Promise<void>;
 };
 
-type StepTiming = { to: number; duration: number };
+type StepTiming = { to: number; duration: number; phase: BreathPhase };
 
 const TIMINGS: Record<BreathPattern, StepTiming[]> = {
   physiological_sigh: [
-    { to: 1.3, duration: 4000 },
-    { to: 1.35, duration: 1000 },
-    { to: 1.0, duration: 8000 },
+    { to: 1.3, duration: 4000, phase: 'inhale' },
+    { to: 1.35, duration: 1000, phase: 'top' },
+    { to: 1.0, duration: 8000, phase: 'exhale' },
   ],
   extended_exhale: [
-    { to: 1.3, duration: 4000 },
-    { to: 1.0, duration: 8000 },
+    { to: 1.3, duration: 4000, phase: 'inhale' },
+    { to: 1.0, duration: 8000, phase: 'exhale' },
   ],
   slow_exhale: [
-    { to: 1.2, duration: 3000 },
-    { to: 1.0, duration: 6000 },
+    { to: 1.2, duration: 3000, phase: 'inhale' },
+    { to: 1.0, duration: 6000, phase: 'exhale' },
   ],
 };
 
@@ -57,15 +58,17 @@ export const PacedOrb = forwardRef<PacedOrbHandle, Props>(
           const transitionTimers: ReturnType<typeof setTimeout>[] = [];
 
           let cursorMs = 0;
-          let phaseCounter = 0;
           for (let i = 0; i < cycles; i++) {
             steps.forEach((step) => {
-              const firePhase = phaseCounter;
+              const firedPhase = step.phase;
+              const firedDuration = step.duration;
               transitionTimers.push(
-                setTimeout(() => onPhaseTransition?.(firePhase), cursorMs),
+                setTimeout(
+                  () => onPhaseTransition?.(firedPhase, firedDuration),
+                  cursorMs,
+                ),
               );
               cursorMs += step.duration;
-              phaseCounter += 1;
             });
           }
 

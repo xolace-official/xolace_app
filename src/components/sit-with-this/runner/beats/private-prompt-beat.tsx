@@ -27,8 +27,8 @@ export function PrivatePromptBeat({ content, placeholder, onComplete }: Props) {
   return (
     <KeyboardAvoidingView
       behavior="padding"
-      keyboardVerticalOffset={50}
-      className="flex-1 px-6 pt-4"
+      keyboardVerticalOffset={10}
+      className="flex-1 w-full items-center justify-center"
     >
       <Animated.View
         entering={FadeIn.duration(500)}

@@ -1222,7 +1222,7 @@ const EXERCISES = [
         type: "text" as const,
         content: "Notice where in your body '{{user_phrase}}' lives right now. Not to fix it. Just so it knows you heard it.",
         defaultContent: "Notice where this lives in your body right now. Not to fix it. Just so it knows you heard it.",
-        durationSeconds: 4,
+        durationSeconds: 6,
         slotKeys: ["user_phrase"],
       },
       {
@@ -1315,7 +1315,7 @@ const EXERCISES = [
       {
         order: 3,
         type: "breath" as const,
-        content: "Breathing in; imagine giving it room.\nBreathing out — rest beside it.",
+        content: "Breathing in; imagine giving it room.\nBreathing out; rest beside it.",
         breathPattern: "extended_exhale" as const,
         breathCycles: 3,
       },

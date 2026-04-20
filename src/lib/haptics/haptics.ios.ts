@@ -1,6 +1,6 @@
 import CoreHaptics from '@/modules/native-core-haptics';
 import type { HapticPatternData } from '@/modules/native-core-haptics';
-import type { HapticName } from './haptics.types';
+import type { BreathPhase, HapticName } from './haptics.types';
 
 import {
   processingBreath,
@@ -18,6 +18,9 @@ import {
   onboardingEntrance,
   homeEntrance,
   softenPulse,
+  breathInhalePattern,
+  breathTopHold,
+  breathExhalePattern,
 } from '@/src/lib/haptics/haptics-patterns.ios';
 
 // ── Generic helpers ──────────────────────────────────────────────────
@@ -96,6 +99,25 @@ export function playHomeEntrance(): void {
   play(homeEntrance);
 }
 
+// ── Breath phase haptics ─────────────────────────────────────────────
+// Called per PacedOrb phase transition. The continuous patterns breathe
+// *with* the orb rather than ticking at boundaries.
+
+export function playBreathPhase(phase: BreathPhase, durationMs: number): void {
+  const seconds = durationMs / 1000;
+  switch (phase) {
+    case 'inhale':
+      play(breathInhalePattern(seconds));
+      return;
+    case 'top':
+      play(breathTopHold);
+      return;
+    case 'exhale':
+      play(breathExhalePattern(seconds));
+      return;
+  }
+}
+
 // ── Dynamic play-by-name ─────────────────────────────────────────────
 
 const patternMap: Record<HapticName, HapticPatternData> = {
@@ -116,7 +138,7 @@ const patternMap: Record<HapticName, HapticPatternData> = {
   softenPulse,
 };
 
-export type { HapticName };
+export type { BreathPhase, HapticName };
 
 export function playHaptic(name: HapticName): void {
   play(patternMap[name]);

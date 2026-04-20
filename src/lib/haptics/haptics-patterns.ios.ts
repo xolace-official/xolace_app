@@ -337,6 +337,81 @@ export const onboardingEntrance: HapticPatternData = {
   ],
 };
 
+// ── Breath Patterns ─────────────────────────────────────────────────
+// Sync with PacedOrb phases. Continuous intensity curves swell with the
+// inhale and release with the exhale; the physiological-sigh "top-up"
+// is the only transient — it's the pattern's defining feature.
+
+/** Warm swell matching orb expansion. Duration matches the inhale phase. */
+export function breathInhalePattern(durationSeconds: number): HapticPatternData {
+  return {
+    events: [
+      {
+        eventType: 'hapticContinuous',
+        time: 0.0,
+        eventDuration: durationSeconds,
+        parameters: [
+          { parameterID: 'hapticIntensity', value: 0.65 },
+          { parameterID: 'hapticSharpness', value: 0.15 },
+        ],
+      },
+    ],
+    parameterCurves: [
+      {
+        parameterID: 'hapticIntensityControl',
+        relativeTime: 0.0,
+        controlPoints: [
+          { relativeTime: 0.0, value: 0.35 },
+          { relativeTime: durationSeconds * 0.7, value: 0.9 },
+          { relativeTime: durationSeconds, value: 1.0 },
+        ],
+      },
+    ],
+  };
+}
+
+/** Tiny second-inhale pop — physiological sigh's signature. */
+export const breathTopHold: HapticPatternData = {
+  events: [
+    {
+      eventType: 'hapticTransient',
+      time: 0.0,
+      parameters: [
+        { parameterID: 'hapticIntensity', value: 0.5 },
+        { parameterID: 'hapticSharpness', value: 0.3 },
+      ],
+    },
+  ],
+};
+
+/** Long release matching orb contraction. The decay is the cue. */
+export function breathExhalePattern(durationSeconds: number): HapticPatternData {
+  return {
+    events: [
+      {
+        eventType: 'hapticContinuous',
+        time: 0.0,
+        eventDuration: durationSeconds,
+        parameters: [
+          { parameterID: 'hapticIntensity', value: 0.55 },
+          { parameterID: 'hapticSharpness', value: 0.12 },
+        ],
+      },
+    ],
+    parameterCurves: [
+      {
+        parameterID: 'hapticIntensityControl',
+        relativeTime: 0.0,
+        controlPoints: [
+          { relativeTime: 0.0, value: 1.0 },
+          { relativeTime: durationSeconds * 0.5, value: 0.5 },
+          { relativeTime: durationSeconds, value: 0.0 },
+        ],
+      },
+    ],
+  };
+}
+
 /** Warm landing for idle-state mount. "I'm here, ready when you are." */
 export const homeEntrance: HapticPatternData = {
   events: [

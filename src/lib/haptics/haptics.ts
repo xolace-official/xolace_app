@@ -8,8 +8,8 @@
 
 import * as Haptics from 'expo-haptics';
 
-import type { HapticName } from './haptics.types';
-export type { HapticName };
+import type { BreathPhase, HapticName } from './haptics.types';
+export type { BreathPhase, HapticName };
 
 const isAndroid = process.env.EXPO_OS === 'android';
 
@@ -142,6 +142,23 @@ export function playHomeEntrance(): void {
     androidHaptic(Haptics.AndroidHaptics.Gesture_Start);
   } else {
     impact(Haptics.ImpactFeedbackStyle.Soft);
+  }
+}
+
+// ── Breath phase haptics ─────────────────────────────────────────────
+// expo-haptics can't produce duration-scaled continuous patterns, so
+// this is a best-effort boundary tick. The iOS override provides the
+// real swell/release curves.
+
+export function playBreathPhase(phase: BreathPhase, _durationMs: number): void {
+  if (isAndroid) {
+    androidHaptic(
+      phase === 'top'
+        ? Haptics.AndroidHaptics.Segment_Tick
+        : Haptics.AndroidHaptics.Context_Click,
+    );
+  } else {
+    impact(Haptics.ImpactFeedbackStyle.Light);
   }
 }
 

@@ -20,6 +20,7 @@ import type * as ai_prompts_distiller from "../ai/prompts/distiller.js";
 import type * as ai_providers_anthropic from "../ai/providers/anthropic.js";
 import type * as ai_providers_moderation from "../ai/providers/moderation.js";
 import type * as ai_safeguard from "../ai/safeguard.js";
+import type * as ai_slotFill from "../ai/slotFill.js";
 import type * as consent from "../consent.js";
 import type * as crons from "../crons.js";
 import type * as emotionalMetadata from "../emotionalMetadata.js";
@@ -66,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   "ai/providers/anthropic": typeof ai_providers_anthropic;
   "ai/providers/moderation": typeof ai_providers_moderation;
   "ai/safeguard": typeof ai_safeguard;
+  "ai/slotFill": typeof ai_slotFill;
   consent: typeof consent;
   crons: typeof crons;
   emotionalMetadata: typeof emotionalMetadata;

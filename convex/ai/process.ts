@@ -216,6 +216,23 @@ export const generateMirror = internalAction({
           sessionId: args.sessionId,
           matchedExerciseId: matched._id,
         });
+
+        // 8.7: Slot-fill — fire-and-forget so it doesn't block mirror delivery.
+        const slotKeys = [
+          ...new Set(
+            matched.steps.flatMap((s) => s.slotKeys ?? [])
+          ),
+        ];
+        if (slotKeys.length > 0) {
+          await ctx.scheduler.runAfter(0, internal.ai.slotFill.fillSlots, {
+            sessionId: args.sessionId,
+            exerciseTitle: primaryTitle,
+            slotKeys,
+            mirrorText,
+            userLanguageTags: classification.userLanguageTags,
+            primaryEmotion: classification.primaryEmotion,
+          });
+        }
       }
 
       // 9. Schedule speculative distillation (for reflection pool)
