@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { TextArea } from 'heroui-native';
@@ -46,10 +46,8 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismis
     }
   };
 
-  // Pick a nudge message once when showNudge becomes true; stable across re-renders
-  const nudgeMessage = useMemo(
+  const [nudgeMessage] = useState(
     () => NUDGE_MESSAGES[Math.floor(Math.random() * NUDGE_MESSAGES.length)],
-    [],
   );
 
   const canSubmit = entryText.trim().length > 0;

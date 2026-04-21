@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Pressable, View , ScrollView} from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
@@ -29,12 +29,9 @@ export const ActivityVariant = ({
 }: Props) => {
   const [phase, setPhase] = useState<'main' | 'contributed'>('main');
   const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(null);
-  const [shareToggled, setShareToggled] = useState(contributeByDefault);
-
-  // Sync when the async preference loads after initial render
-  useEffect(() => {
-    setShareToggled(contributeByDefault);
-  }, [contributeByDefault]);
+  // null = no explicit user choice yet, fall back to prop
+  const [shareOverride, setShareOverride] = useState<boolean | null>(null);
+  const shareToggled = shareOverride ?? contributeByDefault;
 
   const router = useRouter();
 
@@ -126,7 +123,7 @@ export const ActivityVariant = ({
           {contributeByDefault ? (
             /* Toggle mode: pre-selected, user can untoggle */
             <Pressable
-              onPress={() => setShareToggled((v) => !v)}
+              onPress={() => setShareOverride((v) => !(v ?? contributeByDefault))}
               className={`self-start rounded-full border px-5 py-2.5 ${
                 shareToggled
                   ? 'border-accent/30 bg-accent/10'

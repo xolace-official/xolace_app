@@ -19,6 +19,7 @@ type Props = {
 };
 
 const MoodMarqueeComponent = ({ moods, scrollOffsetX }: Props) => {
+  "use no memo";
   const { width: screenWidth } = useWindowDimensions();
   const cardWidth = getCardWidth(screenWidth);
   const scrollSpeed = useSharedValue(AUTO_SCROLL_SPEED);

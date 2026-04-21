@@ -25,6 +25,7 @@ export function HapticBeat({
   reducedMotion,
   onComplete,
 }: Props) {
+  "use no memo";
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pulse = useSharedValue(reducedMotion ? 1 : 0.5);
 

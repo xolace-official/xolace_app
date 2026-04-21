@@ -28,6 +28,8 @@ export const PathSelectionState = ({
     try {
       await onSelectSolo();
       router.replace('/sit-with-this');
+    } catch {
+      // navigation errors are non-fatal
     } finally {
       busyRef.current = false;
     }
@@ -40,6 +42,8 @@ export const PathSelectionState = ({
     try {
       await onSelectPeers();
       router.replace('/peer-reflections');
+    } catch {
+      // navigation errors are non-fatal
     } finally {
       busyRef.current = false;
     }
@@ -52,6 +56,8 @@ export const PathSelectionState = ({
     try {
       await onSelectExit();
       router.replace('/session-end?path=exit');
+    } catch {
+      // navigation errors are non-fatal
     } finally {
       busyRef.current = false;
     }
