@@ -27,9 +27,15 @@ export const PathSelectionState = ({
     playPathChoice();
     try {
       await onSelectSolo();
+    } catch (e) {
+      if (__DEV__) console.error('[PathSelection] onSelectSolo failed:', e);
+      busyRef.current = false;
+      return;
+    }
+    try {
       router.replace('/sit-with-this');
     } catch {
-      // navigation errors are non-fatal
+      // non-fatal nav error
     } finally {
       busyRef.current = false;
     }
@@ -41,9 +47,15 @@ export const PathSelectionState = ({
     playPathChoice();
     try {
       await onSelectPeers();
+    } catch (e) {
+      if (__DEV__) console.error('[PathSelection] onSelectPeers failed:', e);
+      busyRef.current = false;
+      return;
+    }
+    try {
       router.replace('/peer-reflections');
     } catch {
-      // navigation errors are non-fatal
+      // non-fatal nav error
     } finally {
       busyRef.current = false;
     }
@@ -55,9 +67,15 @@ export const PathSelectionState = ({
     playPathChoice();
     try {
       await onSelectExit();
+    } catch (e) {
+      if (__DEV__) console.error('[PathSelection] onSelectExit failed:', e);
+      busyRef.current = false;
+      return;
+    }
+    try {
       router.replace('/session-end?path=exit');
     } catch {
-      // navigation errors are non-fatal
+      // non-fatal nav error
     } finally {
       busyRef.current = false;
     }

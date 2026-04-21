@@ -61,7 +61,8 @@ export const recordUserResponse = mutation({
     const event = await ctx.db
       .query("escalation_events")
       .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-      .unique();
+      .order("desc")
+      .first();
 
     if (!event) {
       throw new Error("No escalation event found for this session");
