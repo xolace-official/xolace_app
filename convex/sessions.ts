@@ -561,30 +561,25 @@ export const checkAbandoned = internalMutation({
   handler: async (ctx) => {
     const cutoff = Date.now() - ABANDON_THRESHOLD_MS;
 
-    const staleStates = [
+    const staleStateSet = new Set([
       "initiated",
       "input_received",
       "processing",
       "mirror_delivered",
       "error",
-    ] as const;
+    ]);
 
-    for (const state of staleStates) {
-      const staleSessions = await ctx.db
-        .query("sessions")
-        .withIndex("by_date", (q) => q.lt("createdAt", cutoff))
-        .take(50);
+    const staleSessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_date", (q) => q.lt("createdAt", cutoff))
+      .take(50);
 
-      for (const session of staleSessions) {
-        if (
-          session.state === state &&
-          session.updatedAt < cutoff
-        ) {
-          await ctx.db.patch(session._id, {
-            state: "abandoned",
-            updatedAt: Date.now(),
-          });
-        }
+    for (const session of staleSessions) {
+      if (staleStateSet.has(session.state) && session.updatedAt < cutoff) {
+        await ctx.db.patch(session._id, {
+          state: "abandoned",
+          updatedAt: Date.now(),
+        });
       }
     }
   },
