@@ -27,6 +27,7 @@ type Props = {
 };
 
 const EmberOrbComponent = ({ phase }: Props) => {
+  "use no memo";
   const scale = useSharedValue(1);
 
   useEffect(() => {

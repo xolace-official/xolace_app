@@ -81,7 +81,7 @@ export const getRecentByProfile = internalQuery({
 
     return await ctx.db
       .query("emotional_metadata")
-      .withIndex("by_profile_emotion", (q) =>
+      .withIndex("by_profile_theme", (q) =>
         q.eq("emotionalProfileId", args.emotionalProfileId)
       )
       .order("desc")

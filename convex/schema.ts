@@ -250,7 +250,8 @@ export default defineSchema({
       v.literal("voice")
     ),
   })
-    .index("by_profile", ["emotionalProfileId"]),
+    .index("by_profile", ["emotionalProfileId"])
+    .index("by_retention", ["dataRetentionPreference"]),
 
   // ===========================================================
   // 4. SESSIONS

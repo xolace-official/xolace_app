@@ -173,9 +173,11 @@ export const contribute = internalMutation({
     intensity: v.number(),
   },
   handler: async (ctx, args) => {
-    // Round to nearest day for timing anonymization
+    // Round to nearest day then add random jitter within that day to
+    // prevent timing correlation attacks across low-traffic periods.
     const now = Date.now();
     const roundedDay = Math.floor(now / 86400000) * 86400000;
+    const jitter = Math.floor(Math.random() * 86400000);
 
     await ctx.db.insert("reflections", {
       displayText: args.displayText,
@@ -186,7 +188,7 @@ export const contribute = internalMutation({
       resonanceCount: 0,
       status: "active",
       isSeed: false,
-      addedAt: roundedDay,
+      addedAt: roundedDay + jitter,
     });
   },
 });

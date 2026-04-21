@@ -42,9 +42,9 @@
       "computedHash": "6a13eea450dda0b57edc358970f53c55ad7a2eb237d31decbc38e312555ddac5"
     },
     "convex": {
-      "source": "waynesutton/convexskills",
+      "source": "get-convex/agent-skills",
       "sourceType": "github",
-      "computedHash": "de7a20d081cd19bf8bce4038bd62d038a0a88f218f85afb35320d09b052fb534"
+      "computedHash": "613ee9955985085d0fca8f96e1fc6d7cfd204dffa203499a1d508b8def76577b"
     },
     "convex-create-component": {
       "source": "get-convex/agent-skills",

@@ -3,8 +3,8 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useReducer,
   useRef,
-  useState,
 } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import { Uniwind } from 'uniwind';
@@ -53,22 +53,20 @@ export function SessionModeProvider({
   const previousTheme = useAppStore((s) => s.previousTheme);
   const setPreviousTheme = useAppStore((s) => s.setPreviousTheme);
 
-  const [mode, setMode] = useState<SessionMode>(() =>
-    computeMode(nightModeEnabled),
-  );
+  // mode is derived during render — nightModeEnabled from the store already
+  // triggers re-renders; forceRefresh handles time-based foreground refreshes.
+  const [, forceRefresh] = useReducer((n: number) => n + 1, 0);
+  const mode: SessionMode = computeMode(nightModeEnabled);
 
   // Track whether we've already applied the nightly theme swap so we
   // don't double-stash on repeated AppState events within the window.
-  // Always starts false — the first refresh() call on mount applies it.
   const nightAppliedRef = useRef(false);
 
   const applyNightTheme = useCallback(() => {
     if (nightAppliedRef.current) return;
     nightAppliedRef.current = true;
-    // Stash the current Uniwind theme before switching
     const current = Uniwind.currentTheme;
     setPreviousTheme(current);
-    // nightly always uses its dark variant (night mode = dark by intent)
     Uniwind.setTheme('nightly-dark');
   }, [setPreviousTheme]);
 
@@ -83,9 +81,7 @@ export function SessionModeProvider({
       return;
     }
 
-    // Fallback: reconstruct from stored preferences
-    const modeStr =
-      storedTheme === 'system' ? 'dark' : storedTheme;
+    const modeStr = storedTheme === 'system' ? 'dark' : storedTheme;
     const nextTheme =
       colorThemeId === 'default'
         ? modeStr
@@ -93,31 +89,23 @@ export function SessionModeProvider({
     Uniwind.setTheme(nextTheme);
   }, [previousTheme, setPreviousTheme, storedTheme, colorThemeId]);
 
-  const refresh = useCallback(() => {
-    const next = computeMode(nightModeEnabled);
-    setMode(next);
-    if (next === 'night') {
+  // Sync Uniwind theme whenever mode changes
+  useEffect(() => {
+    if (mode === 'night') {
       applyNightTheme();
     } else {
       restoreDayTheme();
     }
-  }, [nightModeEnabled, applyNightTheme, restoreDayTheme]);
+  }, [mode, applyNightTheme, restoreDayTheme]);
 
-  // On mount and when nightModeEnabled changes
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  // On app foreground
+  // On app foreground, re-render so mode recomputes with the current hour
   useEffect(() => {
     const handler = (state: AppStateStatus) => {
-      if (state === 'active') {
-        refresh();
-      }
+      if (state === 'active') forceRefresh();
     };
     const sub = AppState.addEventListener('change', handler);
     return () => sub.remove();
-  }, [refresh]);
+  }, []);
 
   return (
     <SessionModeContext.Provider value={{ mode, isNight: mode === 'night' }}>

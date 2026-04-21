@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
+import { rateLimiter } from "./lib/rateLimits";
 
 /**
  * Idempotent onboarding: find existing user by tokenIdentifier
@@ -166,6 +167,13 @@ export const requestDataWipe = mutation({
 
     if (profile.dataWipeInProgress) {
       return null;
+    }
+
+    const { ok } = await rateLimiter.limit(ctx, "dataWipe", {
+      key: profile._id,
+    });
+    if (!ok) {
+      throw new Error("Data wipe can only be requested once every 7 days");
     }
 
     await ctx.db.patch(profile._id, { dataWipeInProgress: true });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { BottomSheet } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
@@ -28,15 +28,13 @@ export function SwapSheet({
   const canSwap = swapsUsed < 2;
   const [isSwapping, setIsSwapping] = useState(false);
 
-  useEffect(() => {
-    if (!isOpen) setIsSwapping(false);
-  }, [isOpen]);
-
   const handleSwapPress = async (exerciseId: Id<'exercises'>) => {
     if (isSwapping) return;
     setIsSwapping(true);
     try {
       await onSwap(exerciseId);
+    } catch {
+      // swap errors are handled by the caller
     } finally {
       setIsSwapping(false);
     }
