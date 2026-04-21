@@ -15,16 +15,21 @@ const BATCH_SIZE = 50;
 export const enforce = internalMutation({
   args: {},
   handler: async (ctx) => {
-    // Find profiles with non-indefinite retention
-    const allPreferences = await ctx.db
-      .query("preferences")
-      .take(100);
-
     let moreWork = false;
 
-    for (const pref of allPreferences) {
-      if (pref.dataRetentionPreference === "indefinite") continue;
+    // Query each non-indefinite retention tier separately to avoid a full table scan.
+    const tieredPreferences = (
+      await Promise.all(
+        (Object.keys(RETENTION_MS) as (keyof typeof RETENTION_MS)[]).map((tier) =>
+          ctx.db
+            .query("preferences")
+            .withIndex("by_retention", (q) => q.eq("dataRetentionPreference", tier))
+            .take(100)
+        )
+      )
+    ).flat();
 
+    for (const pref of tieredPreferences) {
       const retentionMs =
         RETENTION_MS[pref.dataRetentionPreference as keyof typeof RETENTION_MS];
       if (!retentionMs) continue;

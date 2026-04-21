@@ -222,6 +222,39 @@ Subscription management for premium features.
 
 ---
 
+### `@mux/convex`
+
+**Status: STAGE 1.5 (Glimpses Infrastructure)**
+
+Mux is a professional video platform with a first-party Convex component. It handles transcoding, adaptive bitrate streaming, thumbnail generation, upload progress, and real-time webhook delivery — all wired into Convex tables reactively. This is the right infrastructure layer for Glimpses.
+
+**Why it matters:**
+- Glimpses are 60–90 second emotional testimony videos. They will be watched on mobile, on varied connections, in vulnerable moments. Buffering is unacceptable. Adaptive bitrate (HLS/DASH) is non-negotiable.
+- Mux handles transcoding automatically — a submitted `.mov` becomes a streamable asset without any pipeline work on your end.
+- The Convex component syncs asset state reactively: when a Glimpse finishes processing, the UI updates without polling.
+- Webhook-driven status means you can gate Glimpse delivery until `asset.ready` — users never see a broken video.
+
+**Integration:**
+- Install `@mux/convex` + `@mux/mux-node`, scaffold app-level files via `npx @mux/convex-mux-init`
+- `videoMetadata` table stores Xolace-specific fields: uploader identity (internal), emotional tags, intensity range, granular label — the match dimensions used by the AI classifier
+- Mirror confirmation triggers a query against tagged Glimpses; if a match exists, fourth path option appears: "Someone who felt something like this made something for you"
+- Glimpse delivery path is read-only and internal — users never browse, never see counts, never see who made it
+
+**Pros:**
+- Battle-tested video infrastructure, not DIY
+- Convex component = reactive asset state with zero custom webhook code
+- Thumbnail generation for Glimpse preview (if ever needed)
+- Signed URL delivery for private/internal content
+
+**Cons:**
+- Per-minute pricing (mitigated by short format — 60–90s max)
+- Adds Mux account + API key configuration
+- Requires small Glimpse metadata schema alongside Mux tables
+
+**Timing:** Start building the Glimpses library quietly during TestFlight beta. Aim for 20–30 videos covering the most common emotional themes before switching the path option on in production. Mux integration should be wired before the first Glimpse is uploaded.
+
+---
+
 ## 3. Components to Skip (Don't Bother)
 
 ### `@convex-dev/prosemirror-sync`
@@ -235,6 +268,15 @@ Subscription management for premium features.
 
 ### LaunchDarkly Component
 **Why skip:** Enterprise tool with enterprise pricing. MVP doesn't need sophisticated feature flagging. Use Convex documents or env vars instead.
+
+### `@djpanda/convex-authz`
+**Why skip:** Xolace has one user type with one permission model — authenticated users access only their own data. `requireAuth()` + `requireSessionOwnership()` in `convex/lib/auth.ts` already covers this completely. RBAC/ABAC/ReBAC is enterprise authorization infrastructure for multi-tenant SaaS with roles, teams, and resource hierarchies. None of those concepts exist in Xolace. Adding this would be solving a problem you don't have.
+
+### `convex-timeline`
+**Why skip:** Undo/redo state management for documents and editors. Reflections in Xolace are single-submit emotional snapshots, not iteratively edited documents. There's no undo concept in the product model — you write what's true, you submit it. Entirely wrong abstraction.
+
+### `convex-bunny`
+**Why skip (for now):** Bunny.net is a cost-effective CDN for static files. For Glimpses, Mux is the correct choice — it handles transcoding, adaptive streaming, and processing webhooks that Bunny doesn't. Bunny would only make sense as a cheaper long-term storage tier for raw uploaded files before processing, which is premature optimization. Revisit if Mux costs become a problem at scale.
 
 ---
 
@@ -253,6 +295,15 @@ Provides simple retry logic for Anthropic calls without the overhead of Workpool
 Enables per-user scheduling (e.g., "Check in at 8pm daily") without redeployment.
 
 **Decision:** Depends on product roadmap. If personalized reminders become a feature, this is cleaner than hacks. Otherwise skip.
+
+### `@clipin/convex-wearables`
+**Status: STAGE 3+ (Physiological Context)**
+
+Syncs health metrics from Garmin, Strava, Whoop, Apple Health, etc. — heart rate, HRV, stress score, sleep quality, body battery — directly into Convex with normalized schemas and OAuth per provider.
+
+**Why it's interesting:** Emotional state and physiological state are correlated. HRV the morning before a heavy session, body battery at the time of entry, sleep depth the night before — these could enrich the emotional fingerprint beyond what the user consciously reports. "You've been running low for 3 days" as optional context for the mirror would be a meaningful product differentiator.
+
+**Why it's not now:** This fundamentally changes what Xolace collects and what users consent to. It requires a new permission model, new privacy disclosures, new onboarding for wearable connection, and a product decision about whether Xolace should know your body data alongside your emotional data. That's a meaningful product expansion, not a feature add. Revisit post-PMF when the core product is validated and you're exploring what the next layer of context looks like.
 
 ---
 
@@ -274,6 +325,14 @@ Enables per-user scheduling (e.g., "Check in at 8pm daily") without redeployment
 - [ ] Plan RAG if semantic matching becomes feature request
 - [ ] Consider Workflow for durable account deletion
 
+### Phase 1.5 (Glimpses)
+- [ ] Set up Mux account, configure `MUX_TOKEN_ID` + `MUX_TOKEN_SECRET` + `MUX_WEBHOOK_SECRET` in Convex
+- [ ] Run `npx @mux/convex-mux-init` to scaffold component tables and webhook handlers
+- [ ] Define `glimpses` table in schema with emotional fingerprint fields: `primaryEmotion`, `granularLabel`, `intensityRange`, `thematicTags`
+- [ ] Build internal upload flow (team-only — not user-facing)
+- [ ] Wire AI classifier output → Glimpse match query → conditional fourth path in path selection
+- [ ] Record and tag first 20–30 Glimpses covering core emotional themes before enabling the path in production
+
 ---
 
 ## References
@@ -281,8 +340,9 @@ Enables per-user scheduling (e.g., "Check in at 8pm daily") without redeployment
 - Convex Components: https://www.convex.dev/components
 - Convex Best Practices: https://docs.convex.dev/understanding/best-practices/
 - Expo Push Notifications: https://docs.expo.dev/push-notifications/overview/
+- Mux Convex Component: https://www.convex.dev/components/mux/convex
 
 ---
 
-**Last Updated:** April 4, 2026  
+**Last Updated:** April 20, 2026  
 **Next Review:** After first 100 beta users or 2 weeks, whichever comes first

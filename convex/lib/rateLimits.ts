@@ -15,4 +15,7 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 
   // Resonance toggle abuse prevention
   resonanceToggle: { kind: "token bucket", rate: 20, period: MINUTE, capacity: 5 },
+
+  // Data wipe — once per 7 days (wipeInProgress flag handles in-flight dedup)
+  dataWipe: { kind: "fixed window", rate: 1, period: 7 * DAY },
 });
