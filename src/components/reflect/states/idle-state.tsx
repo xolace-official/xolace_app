@@ -36,6 +36,7 @@ type Props = {
   dispatch: React.Dispatch<ReflectionAction>;
   onTap: () => void;
   onScaffoldSubmit: () => void;
+  spaceName?: string;
 };
 
 const encouragementText = (variant: UserVariant): string => {
@@ -56,6 +57,7 @@ export const IdleState = ({
   dispatch,
   onTap,
   onScaffoldSubmit,
+  spaceName,
 }: Props) => {
   const { isNight } = useSessionMode();
   const TEXTURE_WORDS: readonly string[] = isNight
@@ -66,6 +68,7 @@ export const IdleState = ({
   const headline = isNight
     ? NIGHT_HEADLINE
     : activeQuietReturn
+      // TODO(space-name-greeting): "Your space, [Name], is still here" for quiet-return tier
       ? QUIET_RETURN_PROMPTS[activeQuietReturn]
       : "What\u2019s here right now... what are you feeling?";
   const encouragement = isNight
@@ -73,6 +76,9 @@ export const IdleState = ({
     : activeQuietReturn
       ? null
       : encouragementText(variant);
+
+  const isSpaceNameActive =
+    variant.kind === "active" && !!spaceName && !isNight && !activeQuietReturn;
 
   const hasPlayedEntrance = useRef(false);
 
@@ -111,11 +117,23 @@ export const IdleState = ({
     <View className="flex-1 px-6">
       {/* Top section */}
       <View className="pt-10 pb-4">
-        {encouragement && (
-          <AppText className={cn("text-sm italic leading-6 text-foreground/40", variant.kind === "returning" && "text-warning")}>
+        {isSpaceNameActive ? (
+          <View className="flex-row items-center gap-2">
+            <View className="rounded-full bg-accent/15 px-3 py-1">
+              <AppText className="text-xs font-semibold text-accent">
+                {spaceName}
+              </AppText>
+            </View>
+            <AppText className="text-sm text-foreground/40">{encouragement}</AppText>
+          </View>
+        ) : encouragement ? (
+          <AppText className={cn(
+            "text-sm italic leading-6 text-foreground/40",
+            variant.kind === "returning" && "text-warning",
+          )}>
             {encouragement}
           </AppText>
-        )}
+        ) : null}
 
         <AppText
           className={cn(

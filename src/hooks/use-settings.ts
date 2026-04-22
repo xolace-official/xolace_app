@@ -36,7 +36,19 @@ export const useSettings = () => {
   ).withOptimisticUpdate((localStore, args) => {
     const current = localStore.getQuery(api.preferences.get, {});
     if (current !== undefined) {
-      localStore.setQuery(api.preferences.get, {}, { ...current, ...args });
+      localStore.setQuery(api.preferences.get, {}, {
+        ...current,
+        ...(args.theme !== undefined && { theme: args.theme }),
+        ...(args.reducedMotion !== undefined && { reducedMotion: args.reducedMotion }),
+        ...(args.notifications !== undefined && { notifications: args.notifications }),
+        ...(args.mirrorTone !== undefined && { mirrorTone: args.mirrorTone }),
+        ...(args.contributeByDefault !== undefined && { contributeByDefault: args.contributeByDefault }),
+        ...(args.dataRetentionPreference !== undefined && { dataRetentionPreference: args.dataRetentionPreference }),
+        ...(args.preferredInputType !== undefined && { preferredInputType: args.preferredInputType }),
+        ...(args.colorTheme !== undefined && { colorTheme: args.colorTheme }),
+        ...(args.spaceName !== undefined && { spaceName: args.spaceName ?? undefined }),
+        ...(args.spaceNamePromptDismissed !== undefined && { spaceNamePromptDismissed: args.spaceNamePromptDismissed }),
+      });
     }
   });
   const requestDataWipe = useMutation(api.users.requestDataWipe);
@@ -182,6 +194,16 @@ export const useSettings = () => {
     [storedTheme, isLight, setColorThemeId, updatePreferences],
   );
 
+  // ─── Space name ─────────────────────────────────────────────────────
+  const spaceName = preferences?.spaceName;
+
+  const setSpaceName = useCallback(
+    async (next: string | null) => {
+      await updatePreferences({ spaceName: next });
+    },
+    [updatePreferences],
+  );
+
   // ─── Mirror tone ───────────────────────────────────────────────────
   const mirrorTone: MirrorTone = preferences?.mirrorTone ?? "adaptive";
 
@@ -253,6 +275,10 @@ export const useSettings = () => {
     setGentleReminders,
     contributeAnonymously,
     setContributeAnonymously,
+
+    // Space name
+    spaceName,
+    setSpaceName,
 
     // Mirror tone
     mirrorTone,

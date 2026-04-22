@@ -7,6 +7,7 @@ import { SettingsRow } from "@/src/components/settings/settings-row";
 import { ThemePickerDialog } from "@/src/components/settings/theme-picker-dialog";
 import { MirrorTonePickerDialog } from "@/src/components/settings/mirror-tone-picker-dialog";
 import { RetentionPickerDialog } from "@/src/components/settings/retention-picker-dialog";
+import { SpaceNameDialog } from "@/src/components/settings/space-name-dialog";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { useSettings } from "@/src/hooks/use-settings";
 import { useConfirmAction } from "@/src/hooks/use-confirm-action";
@@ -31,6 +32,7 @@ export const SettingsScreen = () => {
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
   const [mirrorToneDialogOpen, setMirrorToneDialogOpen] = useState(false);
   const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
+  const [spaceNameDialogOpen, setSpaceNameDialogOpen] = useState(false);
   const [replayIntroOpen, setReplayIntroOpen] = useState(false);
 
   const {
@@ -44,6 +46,8 @@ export const SettingsScreen = () => {
     setGentleReminders,
     contributeAnonymously,
     setContributeAnonymously,
+    spaceName,
+    setSpaceName,
     mirrorTone,
     mirrorToneDisplay,
     setMirrorTone,
@@ -118,6 +122,17 @@ export const SettingsScreen = () => {
             label="Tone"
             value={mirrorToneDisplay}
             onPress={() => setMirrorToneDialogOpen(true)}
+            isLast
+          />
+        </SettingsSection>
+
+        {/* ── YOUR SPACE ──────────────────────────────────────── */}
+        <SettingsSection title="Your space">
+          <SettingsRow
+            variant="value"
+            label="Name"
+            value={spaceName ?? "—"}
+            onPress={() => setSpaceNameDialogOpen(true)}
             isLast
           />
         </SettingsSection>
@@ -199,6 +214,15 @@ export const SettingsScreen = () => {
         onOpenChange={setMirrorToneDialogOpen}
         currentTone={mirrorTone}
         onSelect={setMirrorTone}
+      />
+
+      {/* ── SPACE NAME DIALOG ───────────────────────────────── */}
+      <SpaceNameDialog
+        isOpen={spaceNameDialogOpen}
+        currentName={spaceName}
+        onOpenChange={setSpaceNameDialogOpen}
+        onSave={async (name) => { await setSpaceName(name); }}
+        onClear={async () => { await setSpaceName(null); }}
       />
 
       {/* ── RETENTION PICKER DIALOG ─────────────────────────── */}

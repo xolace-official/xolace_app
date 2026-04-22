@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { mirrorToneValidator } from "./lib/validators";
+import { validateSpaceName } from "./lib/spaceName";
 
 /**
  * Fetch preferences for the current user's profile.
@@ -76,6 +77,9 @@ export const update = mutation({
       v.union(v.literal("text"), v.literal("voice"))
     ),
     colorTheme: v.optional(v.string()),
+    // null = clear the name; string = set/update; undefined = no-op
+    spaceName: v.optional(v.union(v.string(), v.null())),
+    spaceNamePromptDismissed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
@@ -104,6 +108,18 @@ export const update = mutation({
     if (args.preferredInputType !== undefined)
       patch.preferredInputType = args.preferredInputType;
     if (args.colorTheme !== undefined) patch.colorTheme = args.colorTheme;
+    if (args.spaceName !== undefined) {
+      if (args.spaceName === null) {
+        patch.spaceName = undefined;
+      } else {
+        const result = validateSpaceName(args.spaceName);
+        if (!result.ok) throw new Error(result.message);
+        patch.spaceName = result.trimmed;
+      }
+    }
+    if (args.spaceNamePromptDismissed !== undefined) {
+      patch.spaceNamePromptDismissed = args.spaceNamePromptDismissed;
+    }
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(preferences._id, patch);

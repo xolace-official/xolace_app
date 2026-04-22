@@ -249,6 +249,14 @@ export default defineSchema({
       v.literal("text"),
       v.literal("voice")
     ),
+
+    // Name the user chose for their processing space. Undefined = unnamed.
+    // Display-only; never shown to the AI.
+    spaceName: v.optional(v.string()),
+
+    // True once the naming dialog has been shown and the user tapped "Not now".
+    // Prevents re-prompting; settings entry is the only other path.
+    spaceNamePromptDismissed: v.optional(v.boolean()),
   })
     .index("by_profile", ["emotionalProfileId"])
     .index("by_retention", ["dataRetentionPreference"]),
