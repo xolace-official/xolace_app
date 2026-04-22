@@ -3,9 +3,7 @@ import { View, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { Dialog, TextField, Input, Label, FieldError, Button } from 'heroui-native';
 import { DialogBlurBackdrop } from '@/src/components/dialog-blur-backdrop';
 import { AppText } from '@/src/components/shared/app-text';
-
-const VALID_NAME_RE = /^[A-Za-z0-9-]+$/;
-const MAX_LENGTH = 20;
+import { SPACE_NAME_MAX_LENGTH, validateSpaceName } from '@/convex/lib/spaceName';
 
 function extractErrorMessage(e: unknown): string {
   if (!(e instanceof Error)) return 'Something went wrong';
@@ -14,12 +12,9 @@ function extractErrorMessage(e: unknown): string {
 }
 
 function clientValidate(name: string): string | null {
-  const trimmed = name.trim();
-  if (!trimmed) return null;
-  if (trimmed.length > MAX_LENGTH) return `${MAX_LENGTH} characters max`;
-  if (/\s/.test(trimmed)) return 'No spaces allowed';
-  if (!VALID_NAME_RE.test(trimmed)) return 'Letters, numbers, and hyphens only';
-  return null;
+  if (!name.trim()) return null;
+  const result = validateSpaceName(name);
+  return result.ok ? null : result.message;
 }
 
 type Props = {
@@ -72,7 +67,9 @@ export const SpaceNameDialog = ({
     try {
       await onClear();
       onOpenChange(false);
-    } catch {
+    } catch (e) {
+      setError(extractErrorMessage(e));
+    } finally {
       setIsSaving(false);
     }
   };
@@ -98,7 +95,7 @@ export const SpaceNameDialog = ({
                 placeholder="e.g. ember, haven, mine"
                 autoCapitalize="none"
                 autoCorrect={false}
-                maxLength={MAX_LENGTH + 2}
+                maxLength={SPACE_NAME_MAX_LENGTH + 2}
                 returnKeyType="done"
                 onSubmitEditing={handleSave}
               />

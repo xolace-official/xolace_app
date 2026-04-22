@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { View, KeyboardAvoidingView, Platform } from 'react-native';
 import { Dialog, TextField, Input, Label, FieldError, Button } from 'heroui-native';
 import { DialogBlurBackdrop } from '@/src/components/dialog-blur-backdrop';
-
-const VALID_NAME_RE = /^[A-Za-z0-9-]+$/;
-const MAX_LENGTH = 20;
+import { SPACE_NAME_MAX_LENGTH, validateSpaceName } from '@/convex/lib/spaceName';
 
 function extractErrorMessage(e: unknown): string {
   if (!(e instanceof Error)) return 'Something went wrong';
@@ -13,18 +11,15 @@ function extractErrorMessage(e: unknown): string {
 }
 
 function clientValidate(name: string): string | null {
-  const trimmed = name.trim();
-  if (!trimmed) return null;
-  if (trimmed.length > MAX_LENGTH) return `${MAX_LENGTH} characters max`;
-  if (/\s/.test(trimmed)) return 'No spaces allowed';
-  if (!VALID_NAME_RE.test(trimmed)) return 'Letters, numbers, and hyphens only';
-  return null;
+  if (!name.trim()) return null;
+  const result = validateSpaceName(name);
+  return result.ok ? null : result.message;
 }
 
 type Props = {
   isOpen: boolean;
   onSave: (name: string) => Promise<void>;
-  onDismiss: () => void;
+  onDismiss: () => Promise<void>;
 };
 
 export const SpaceNamePromptDialog = ({ isOpen, onSave, onDismiss }: Props) => {
@@ -50,14 +45,18 @@ export const SpaceNamePromptDialog = ({ isOpen, onSave, onDismiss }: Props) => {
     }
   };
 
-  const handleDismiss = () => {
+  const handleDismiss = async () => {
     setValue('');
     setError(null);
-    onDismiss();
+    try {
+      await onDismiss();
+    } catch (e) {
+      setError(extractErrorMessage(e));
+    }
   };
 
   return (
-    <Dialog isOpen={isOpen} onOpenChange={(open) => { if (!open) handleDismiss(); }}>
+    <Dialog isOpen={isOpen} onOpenChange={(open) => { if (!open) void handleDismiss(); }}>
       <Dialog.Portal>
         <DialogBlurBackdrop />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -77,7 +76,7 @@ export const SpaceNamePromptDialog = ({ isOpen, onSave, onDismiss }: Props) => {
                 placeholder="e.g. ember, haven, mine"
                 autoCapitalize="none"
                 autoCorrect={false}
-                maxLength={MAX_LENGTH + 2}
+                maxLength={SPACE_NAME_MAX_LENGTH + 2}
                 returnKeyType="done"
                 onSubmitEditing={handleSave}
               />

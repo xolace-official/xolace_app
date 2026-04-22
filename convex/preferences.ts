@@ -2,26 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { mirrorToneValidator } from "./lib/validators";
-
-const CRISIS_BLOCKLIST = [
-  "kill", "die", "suicide", "suicid", "hurt", "dead", "death",
-  "harm", "selfharm", "self-harm", "cut", "bleed",
-];
-
-const VALID_NAME_RE = /^[A-Za-z0-9-]+$/;
-
-function validateSpaceName(name: string): string {
-  const trimmed = name.trim();
-  if (!trimmed) throw new Error("Name cannot be empty");
-  if (trimmed.length > 20) throw new Error("Name must be 20 characters or fewer");
-  if (/\s/.test(trimmed)) throw new Error("Name cannot contain spaces");
-  if (!VALID_NAME_RE.test(trimmed)) throw new Error("Only letters, numbers, and hyphens");
-  const lower = trimmed.toLowerCase();
-  for (const term of CRISIS_BLOCKLIST) {
-    if (lower.includes(term)) throw new Error("That's not a name we can use here");
-  }
-  return trimmed;
-}
+import { validateSpaceName } from "./lib/spaceName";
 
 /**
  * Fetch preferences for the current user's profile.
@@ -128,7 +109,13 @@ export const update = mutation({
       patch.preferredInputType = args.preferredInputType;
     if (args.colorTheme !== undefined) patch.colorTheme = args.colorTheme;
     if (args.spaceName !== undefined) {
-      patch.spaceName = args.spaceName === null ? undefined : validateSpaceName(args.spaceName);
+      if (args.spaceName === null) {
+        patch.spaceName = undefined;
+      } else {
+        const result = validateSpaceName(args.spaceName);
+        if (!result.ok) throw new Error(result.message);
+        patch.spaceName = result.trimmed;
+      }
     }
     if (args.spaceNamePromptDismissed !== undefined) {
       patch.spaceNamePromptDismissed = args.spaceNamePromptDismissed;

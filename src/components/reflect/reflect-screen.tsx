@@ -211,8 +211,8 @@ export const ReflectScreen = () => {
           await updatePreferences({ spaceName: name });
           setShowSpaceNameDialog(false);
         }}
-        onDismiss={() => {
-          updatePreferences({ spaceNamePromptDismissed: true });
+        onDismiss={async () => {
+          await updatePreferences({ spaceNamePromptDismissed: true });
           setShowSpaceNameDialog(false);
         }}
       />
