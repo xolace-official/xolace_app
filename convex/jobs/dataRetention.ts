@@ -7,6 +7,13 @@ const RETENTION_MS = {
   "1_year": 365 * 24 * 60 * 60 * 1000,
 } as const;
 
+const CURSOR_KEYS = {
+  "6_months": "six_months",
+  "1_year": "one_year",
+} as const;
+
+type CursorKey = (typeof CURSOR_KEYS)[keyof typeof CURSOR_KEYS];
+
 const BATCH_SIZE = 50;
 const PREFS_PAGE_SIZE = 100;
 
@@ -18,17 +25,18 @@ export const enforce = internalMutation({
   args: {
     cursors: v.optional(
       v.object({
-        "6_months": v.optional(v.union(v.string(), v.null())),
-        "1_year": v.optional(v.union(v.string(), v.null())),
+        six_months: v.optional(v.union(v.string(), v.null())),
+        one_year: v.optional(v.union(v.string(), v.null())),
       })
     ),
   },
   handler: async (ctx, args) => {
     let moreWork = false;
-    const nextCursors: Record<string, string | null> = {};
+    const nextCursors: Partial<Record<CursorKey, string | null>> = {};
 
     for (const tier of Object.keys(RETENTION_MS) as (keyof typeof RETENTION_MS)[]) {
-      const cursor = args.cursors?.[tier] ?? null;
+      const cursorKey = CURSOR_KEYS[tier];
+      const cursor = args.cursors?.[cursorKey] ?? null;
 
       const { page: prefs, isDone, continueCursor } = await ctx.db
         .query("preferences")
@@ -37,7 +45,7 @@ export const enforce = internalMutation({
 
       if (!isDone) {
         moreWork = true;
-        nextCursors[tier] = continueCursor;
+        nextCursors[cursorKey] = continueCursor;
       }
 
       const retentionMs = RETENTION_MS[tier];

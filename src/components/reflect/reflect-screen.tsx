@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, type ViewStyle, View } from 'react-native';
 import { EaseView } from 'react-native-ease';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useReflectionMachine } from '@/src/hooks/use-reflection-machine';
 import { useScreenTransition } from '@/src/hooks/use-screen-transition';
@@ -18,6 +18,7 @@ import { GaveUpState } from '@/src/components/reflect/states/gave-up-state';
 import { PathSelectionState } from '@/src/components/reflect/states/path-selection-state';
 import { EscalationState } from '@/src/components/reflect/states/escalation-state';
 import { ErrorState } from '@/src/components/reflect/states/error-state';
+import { SpaceNamePromptDialog } from '@/src/components/reflect/space-name-prompt-dialog';
 
 export const ReflectScreen = () => {
   const {
@@ -43,14 +44,27 @@ export const ReflectScreen = () => {
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
   const context = useQuery(api.users.getFullContext);
+  const updatePreferences = useMutation(api.preferences.update);
   const { current, previous, isTransitioning, onOutgoingComplete } =
     useScreenTransition(state.screen);
+
+  const [showSpaceNameDialog, setShowSpaceNameDialog] = useState(false);
+  const firedSpaceNameDialog = useRef(false);
 
   useEffect(() => {
     if (!context?.profile) return;
     dispatch({ type: 'SET_USER_VARIANT', variant: computeUserVariant(context.profile) });
     dispatch({ type: 'SET_QUIET_RETURN', tier: computeQuietReturn(context.profile) });
   }, [context?.profile, dispatch]);
+
+  useEffect(() => {
+    if (current !== 'path-selection') return;
+    if (firedSpaceNameDialog.current) return;
+    if (!context?.preferences) return;
+    if (context.preferences.spaceName || context.preferences.spaceNamePromptDismissed) return;
+    firedSpaceNameDialog.current = true;
+    setShowSpaceNameDialog(true);
+  }, [current, context?.preferences]);
 
   if (isLoading) {
     return (
@@ -74,6 +88,7 @@ export const ReflectScreen = () => {
             dispatch={dispatch}
             onTap={() => dispatch({ type: 'TAP_INPUT' })}
             onScaffoldSubmit={submitScaffold}
+            spaceName={context?.preferences?.spaceName}
           />
         );
       case 'typing':
@@ -188,6 +203,19 @@ export const ReflectScreen = () => {
       >
         {renderScreen(current)}
       </EaseView>
+
+      {/* Space naming — fires once on first path-selection when unnamed */}
+      <SpaceNamePromptDialog
+        isOpen={showSpaceNameDialog}
+        onSave={async (name) => {
+          await updatePreferences({ spaceName: name });
+          setShowSpaceNameDialog(false);
+        }}
+        onDismiss={() => {
+          updatePreferences({ spaceNamePromptDismissed: true });
+          setShowSpaceNameDialog(false);
+        }}
+      />
     </View>
   );
 };
