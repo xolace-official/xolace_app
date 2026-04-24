@@ -41,7 +41,7 @@ export const generate = internalAction({
 
     const { profile, preferences, lastSession, userLanguageTags, recentNotificationContent } = context;
 
-    const reach = preferences?.notifications.reach ?? "warm";
+    const reach = preferences?.notifications?.reach ?? "warm";
     const sessionCount = profile.sessionCount;
 
     // Reach-weighted: sometimes swap a re-engagement nudge for an affirmation
@@ -118,11 +118,28 @@ export const generate = internalAction({
         content = raw;
         generatedBy = "haiku_personalized";
       } else {
+        console.warn("[generateNotification] AI response invalid; using template fallback", {
+          rawLength: raw.length,
+          requestId: response._request_id,
+          reach,
+          effectiveType,
+        });
         const fallback = pickFallbackTemplate(reach, effectiveType, recentNotificationContent);
         content = fallback.content;
         generatedBy = fallback.generatedBy;
       }
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const status = err != null && typeof err === "object" && "status" in err
+        ? (err as { status: unknown }).status
+        : undefined;
+      console.error("[generateNotification] Anthropic call failed; using template fallback", {
+        message,
+        ...(status !== undefined && { status }),
+        name: err instanceof Error ? err.name : undefined,
+        stack: err instanceof Error ? err.stack : undefined,
+        emotionalProfileId: args.emotionalProfileId,
+      });
       const fallback = pickFallbackTemplate(reach, effectiveType, recentNotificationContent);
       content = fallback.content;
       generatedBy = fallback.generatedBy;

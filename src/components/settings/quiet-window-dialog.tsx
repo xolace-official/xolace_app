@@ -34,6 +34,17 @@ export const QuietWindowDialog = ({ isOpen, onOpenChange, current, onSave }: Pro
   const [beforeHour, setBeforeHour] = useState(current?.dontReachBefore ?? 8);
   const [afterHour, setAfterHour] = useState(current?.dontReachAfter ?? 21);
 
+  // Dialog stays mounted across open/close. Reset to the persisted value each
+  // time it opens so stale picks don't leak between sessions.
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setBeforeHour(current?.dontReachBefore ?? 8);
+      setAfterHour(current?.dontReachAfter ?? 21);
+    }
+  }
+
   const handleSave = () => {
     onSave({ dontReachBefore: beforeHour, dontReachAfter: afterHour });
     onOpenChange(false);
@@ -48,7 +59,7 @@ export const QuietWindowDialog = ({ isOpen, onOpenChange, current, onSave }: Pro
     <Dialog isOpen={isOpen} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <DialogBlurBackdrop />
-        <Dialog.Content className="max-w-sm mx-auto">
+        <Dialog.Content className="max-w-sm">
           <View className="mb-5">
             <Dialog.Title>Quiet hours</Dialog.Title>
             <Dialog.Description>

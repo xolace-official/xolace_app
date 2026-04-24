@@ -20,13 +20,13 @@ type Props = {
  */
 export const ReachFeedbackCard = ({ sessionCount }: Props) => {
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(false);
 
   const recordLanded = useMutation(api.notifications.recordLandedPublic);
-  const notificationLog = useQuery(api.notifications.list);
+  const lastDelivered = useQuery(api.notifications.lastDelivered);
 
   if (!MILESTONE_COUNTS.has(sessionCount)) return null;
 
-  const lastDelivered = notificationLog?.find((n) => n.delivered && n.sentAt);
   if (!lastDelivered) return null;
 
   // Don't show if this notification already has feedback
@@ -35,11 +35,17 @@ export const ReachFeedbackCard = ({ sessionCount }: Props) => {
   if (submitted) return null;
 
   const handleChoice = async (choice: LandedChoice) => {
-    setSubmitted(true);
-    await recordLanded({
-      notificationId: lastDelivered._id as Id<"notification_log">,
-      landed: choice,
-    });
+    setError(false);
+    try {
+      await recordLanded({
+        notificationId: lastDelivered._id as Id<"notification_log">,
+        landed: choice,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Failed to record notification feedback", err);
+      setError(true);
+    }
   };
 
   return (
@@ -72,6 +78,12 @@ export const ReachFeedbackCard = ({ sessionCount }: Props) => {
             </Pressable>
           ))}
         </View>
+
+        {error && (
+          <AppText className="text-xs text-danger mt-3">
+            Couldn&apos;t save that. Tap again to retry.
+          </AppText>
+        )}
       </View>
     </Animated.View>
   );

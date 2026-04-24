@@ -36,11 +36,30 @@ export const useSettings = () => {
   ).withOptimisticUpdate((localStore, args) => {
     const current = localStore.getQuery(api.preferences.get, {});
     if (current !== undefined) {
+      // Merge notifications once so multiple sub-field args combine instead
+      // of clobbering each other. Matches backend order: args.notifications
+      // is applied first, then sub-field merges win on top.
+      const hasNotificationsChange =
+        args.notifications !== undefined ||
+        args.notificationReach !== undefined ||
+        args.notificationQuietWindow !== undefined ||
+        args.notificationTimezone !== undefined;
+
+      const mergedNotifications = hasNotificationsChange
+        ? {
+            ...(args.notifications ?? current.notifications),
+            ...(args.notificationReach !== undefined && { reach: args.notificationReach }),
+            ...(args.notificationQuietWindow !== undefined && {
+              quietWindow: args.notificationQuietWindow ?? undefined,
+            }),
+            ...(args.notificationTimezone !== undefined && { timezone: args.notificationTimezone }),
+          }
+        : undefined;
+
       localStore.setQuery(api.preferences.get, {}, {
         ...current,
         ...(args.theme !== undefined && { theme: args.theme }),
         ...(args.reducedMotion !== undefined && { reducedMotion: args.reducedMotion }),
-        ...(args.notifications !== undefined && { notifications: args.notifications }),
         ...(args.mirrorTone !== undefined && { mirrorTone: args.mirrorTone }),
         ...(args.contributeByDefault !== undefined && { contributeByDefault: args.contributeByDefault }),
         ...(args.dataRetentionPreference !== undefined && { dataRetentionPreference: args.dataRetentionPreference }),
@@ -48,15 +67,7 @@ export const useSettings = () => {
         ...(args.colorTheme !== undefined && { colorTheme: args.colorTheme }),
         ...(args.spaceName !== undefined && { spaceName: args.spaceName ?? undefined }),
         ...(args.spaceNamePromptDismissed !== undefined && { spaceNamePromptDismissed: args.spaceNamePromptDismissed }),
-        ...(args.notificationReach !== undefined && {
-          notifications: { ...current.notifications, reach: args.notificationReach },
-        }),
-        ...(args.notificationQuietWindow !== undefined && {
-          notifications: { ...current.notifications, quietWindow: args.notificationQuietWindow ?? undefined },
-        }),
-        ...(args.notificationTimezone !== undefined && {
-          notifications: { ...current.notifications, timezone: args.notificationTimezone },
-        }),
+        ...(mergedNotifications !== undefined && { notifications: mergedNotifications }),
       });
     }
   });

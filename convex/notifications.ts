@@ -184,24 +184,6 @@ export const markDelivered = internalMutation({
 /**
  * Record user feedback on a notification's emotional landing.
  * Called by the "What landed?" card shown after milestone sessions.
- */
-export const recordLanded = internalMutation({
-  args: {
-    notificationId: v.id("notification_log"),
-    landed: v.union(
-      v.literal("felt_right"),
-      v.literal("too_much"),
-      v.literal("not_enough")
-    ),
-  },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.notificationId, { landed: args.landed });
-    return null;
-  },
-});
-
-/**
- * Public version of recordLanded — called from the client feedback card.
  * Ownership-gated: only the receiving profile can record feedback.
  */
 export const recordLandedPublic = mutation({
@@ -306,5 +288,27 @@ export const list = query({
       )
       .order("desc")
       .take(20);
+  },
+});
+
+/**
+ * Return the most recent delivered notification for the current user's profile,
+ * or null if none exist. Used by the feedback card shown after milestone sessions.
+ */
+export const lastDelivered = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+
+    const latest = await ctx.db
+      .query("notification_log")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", profile._id)
+      )
+      .order("desc")
+      .first();
+
+    if (!latest || !latest.delivered || !latest.sentAt) return null;
+    return latest;
   },
 });
