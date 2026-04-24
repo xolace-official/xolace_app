@@ -19,9 +19,9 @@ interface ArticulatorInput {
   existingMirror?: string;
   userFeedback?: string;
   additionalInput?: string;
-  // 3am Mode — session started during the night window (10pm–4am)
+  // 3am Mode: session started during the night window (10pm to 4am)
   sessionMode?: "day" | "night";
-  // User's named space (if set) — personalizes identity responses
+  // User's named space (if set): personalizes identity responses
   spaceName?: string;
 }
 
@@ -39,7 +39,7 @@ interface ArticulatorInput {
  *   - `inputDuration` (optional): writing duration in ms used to generate behavioral notes.
  *   - `freezeOccurred` (optional): whether a significant pause/hesitation was detected.
  *   - `existingMirror`, `userFeedback`, `additionalInput` (optional): used to build refinement context when revising a previous mirror.
- * @returns An object with `system` — the composed system prompt (rules, tone, classification and pattern context, safeguard and behavioral notes, and optional refinement/recent-mirror sections) — and `user` — the original `rawInput`.
+ * @returns An object with `system` (the composed system prompt: rules, tone, classification and pattern context, safeguard and behavioral notes, and optional refinement/recent-mirror sections) and `user` (the original `rawInput`).
  */
 export function buildArticulatorPrompt(
   input: ArticulatorInput
@@ -85,9 +85,9 @@ In some rare cases you can give acknowledgement as part of the mirror but only i
 - Never offer advice, reassurance, or next steps ("It'll get better", "Try to...")
 - Never minimize ("At least...") or compare ("Many people feel this way")
 - Never use clinical language or diagnose
-- Never aestheticize pain. Don't turn what they feel into something pretty, literary, or poetic-for-its-own-sake. Imagery is only allowed when it sharpens recognition — the moment it starts sounding like writing, drop it.
+- Never aestheticize pain. Don't turn what they feel into something pretty, literary, or poetic-for-its-own-sake. Imagery is only allowed when it sharpens recognition; the moment it starts sounding like writing, drop it.
 - Never ask more than one question (questions should be rare)
--  Never use emoji. Strictly no em dashes (—) or en dashes (–).
+-  Never use emoji. Strictly no dashes (—) or en dashes (–).
 
 ## Tone
 ${toneInstructions}
@@ -100,9 +100,9 @@ Primary: ${classification.primaryEmotion} (${classification.primaryEmotionConfid
 Intensity: ${classification.intensity}/10 | Specificity: ${classification.specificity}/10
 ${classification.thematicTags.length > 0 ? `Themes: ${classification.thematicTags.join(", ")}` : ""}${classification.temporalContext ? `\nTemporal: ${classification.temporalContext}` : ""}
 User's words: ${classification.userLanguageTags.length > 0 ? classification.userLanguageTags.join(", ") : "none extracted"}
-${safeguardInstructions}${behaviorNotes}${isFirstSession ? "\nFirst session. Be slightly warmer — they don't know what to expect. The mirror should feel like a surprise." : ""}
+${safeguardInstructions}${behaviorNotes}${isFirstSession ? "\nFirst session. Be slightly warmer. They don't know what to expect. The mirror should feel like a surprise." : ""}
 ${sessionMode === "night" ? getLateNightAddendum() : ""}
-## Pattern Context (use for subtle continuity — never reference past sessions explicitly)
+## Pattern Context (use for subtle continuity; never reference past sessions explicitly)
 ${patternSummary}
 ${recentMirrors.length > 0 ? `\n## Recent Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${recentMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}`;
 
@@ -147,7 +147,7 @@ function sanitizeSpaceName(raw?: string): string | null {
 function getToneInstructions(tone: string): string {
   switch (tone) {
     case "poetic":
-      return "Imagery is permitted only when it sharpens recognition — never as flourish. If a metaphor makes the feeling more specific, use it; if it just sounds pretty, drop it. Plain is always safe. Example register: \"There's a specific kind of tired that comes from carrying something you can't put down.\"";
+      return "Imagery is permitted only when it sharpens recognition: never as flourish. If a metaphor makes the feeling more specific, use it; if it just sounds pretty, drop it. Plain is always safe. Example register: \"There's a specific kind of tired that comes from carrying something you can't put down.\"";
     case "gentle":
       return "Use warm, simple, everyday language. Be soft without being vague, and avoid counselor cadence. Example register: \"This one's sitting heavy.\"";
     case "direct":
@@ -166,9 +166,9 @@ function getSafeguardInstructions(level: string): string {
     case "gentle":
       return "\n\n## Safety Note\nMirror with extra warmth. Be grounding without escalating intensity.";
     case "elevated":
-      return "\n\n## Safety Note\nSignificant distress detected. Mirror with care — be warm and steady. Do not intensify or dramatize. The system will show support resources separately.";
+      return "\n\n## Safety Note\nSignificant distress detected. Mirror with care: be warm and steady. Do not intensify or dramatize. The system will show support resources separately.";
     case "crisis":
-      return "\n\n## Safety Note — Crisis\nCrisis signals detected. Mirror their pain with deep care, but be grounding, not evocative. Do not reflect hopelessness back without anchoring. Keep to 1-2 sentences. The system will show crisis resources after your mirror.";
+      return "\n\n## Safety Note: Crisis\nCrisis signals detected. Mirror their pain with deep care, but be grounding, not evocative. Do not reflect hopelessness back without anchoring. Keep to 1-2 sentences. The system will show crisis resources after your mirror.";
     default:
       return "";
   }
@@ -182,13 +182,13 @@ function getIntensitySpecificityGuidance(intensity: number, specificity: number)
   const highSpecificity = specificity >= 6;
 
   if (highIntensity && highSpecificity) {
-    return "High intensity, high specificity — meet them at full depth. Be direct and precise. No hedging.";
+    return "High intensity, high specificity: meet them at full depth. Be direct and precise. No hedging.";
   } else if (highIntensity && !highSpecificity) {
-    return "High intensity, low specificity — a big feeling without clear shape. Ground it. Give the vague enormity a form.";
+    return "High intensity, low specificity: a big feeling without clear shape. Ground it. Give the vague enormity a form.";
   } else if (!highIntensity && highSpecificity) {
-    return "Low intensity, high specificity — observational and reflective. Match their measured tone.";
+    return "Low intensity, high specificity: observational and reflective. Match their measured tone.";
   }
-  return "Low intensity, low specificity — light and curious. Something is there but hasn't announced itself yet.";
+  return "Low intensity, low specificity: light and curious. Something is there but hasn't announced itself yet.";
 }
 
 /**
@@ -197,11 +197,11 @@ function getIntensitySpecificityGuidance(intensity: number, specificity: number)
 function getEntryTypeInstructions(entryType?: string): string {
   switch (entryType) {
     case "word_cloud":
-      return "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language — build the mirror around them. Make the combination feel like a complete emotional picture. Do not add emotions not implied by the words.\n\n";
+      return "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language: build the mirror around them. Make the combination feel like a complete emotional picture. Do not add emotions not implied by the words.\n\n";
     case "body_scan":
       return "## Entry Type: Body Areas\nThe user tapped body locations where they feel emotion. Translate somatic to emotional: chest = grief/anxiety/tightness, stomach = dread/guilt, head = overwhelm/rumination, throat = suppression/things unsaid, hands = helplessness/restlessness.\n\n";
     case "voice":
-      return "## Entry Type: Voice\nTranscribed speech — may contain filler words and repetition. Focus on the emotional content, not the polish.\n\n";
+      return "## Entry Type: Voice\nTranscribed speech: may contain filler words and repetition. Focus on the emotional content, not the polish.\n\n";
     default:
       return "";
   }
@@ -210,7 +210,7 @@ function getEntryTypeInstructions(entryType?: string): string {
 /**
  * Returns the late-night register addendum for sessions started between 10pm and 4am.
  *
- * Tone-bias line intentionally omitted — the user's mirrorTone preference is respected.
+ * Tone-bias line intentionally omitted; the user's mirrorTone preference is respected.
  * Inserted between Classification Context and Pattern Context in the system prompt.
  */
 function getLateNightAddendum(): string {
@@ -221,7 +221,7 @@ raw, less filtered. The feelings they brought are probably things they
 managed all day until the quiet let them through.
 
 - Lean toward accompaniment, not resolution. They don't want to feel
-  fixed — they want to feel found.
+  fixed; they want to feel found.
 - Lower energy. Shorter sentences. More air between words.
 - No forward motion ("tomorrow", "you'll", "soon"). Stay in the now.
 - If intensity is high, ground but do not brighten.
@@ -244,18 +244,18 @@ function getBehaviorNotes(
   if (inputDuration !== undefined) {
     if (inputDuration < 10_000) {
       notes.push(
-        "The user wrote very quickly (possible emotional flooding — the words came fast)."
+        "The user wrote very quickly (possible emotional flooding: the words came fast)."
       );
     } else if (inputDuration > 120_000) {
       notes.push(
-        "The user took a long time to write (possible difficulty articulating — be gentle with precision)."
+        "The user took a long time to write (possible difficulty articulating: be gentle with precision)."
       );
     }
   }
 
   if (freezeOccurred) {
     notes.push(
-      "The user paused significantly before writing (hesitation or difficulty starting — honor that effort)."
+      "The user paused significantly before writing (hesitation or difficulty starting: honor that effort)."
     );
   }
 
@@ -284,9 +284,9 @@ function buildRefinementContext(
   let context = `\n\n## Refinement\nYour previous mirror was: "${existingMirror}"`;
 
   if (userFeedback === "not_quite") {
-    context += `\nThe user said "Not quite" — your mirror didn't land. Try a different angle, different metaphor, different emotional read.`;
+    context += `\nThe user said "Not quite": your mirror didn't land. Try a different angle, different metaphor, different emotional read.`;
   } else if (userFeedback === "say_more") {
-    context += `\nThe user wanted to say more — they had additional context to share. Incorporate it.`;
+    context += `\nThe user wanted to say more: they had additional context to share. Incorporate it.`;
   }
 
   if (additionalInput) {
