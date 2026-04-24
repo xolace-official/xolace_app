@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import { zustandJSONStorage } from '@/src/lib/storage/unified-storage';
+import type { Id } from '@/convex/_generated/dataModel';
 
 type ThemeSlice = {
   theme: 'system' | 'light' | 'dark';
@@ -30,7 +31,14 @@ type TogglesSlice = {
   setNightModeEnabled: (v: boolean) => void;
 };
 
-export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice;
+/** Ephemeral, not persisted. Set when user taps a notification to open the app. */
+type LastNotificationSlice = {
+  lastNotification: { content: string; notificationId: Id<"notification_log"> } | null;
+  setLastNotification: (n: { content: string; notificationId: Id<"notification_log"> } | null) => void;
+  clearLastNotification: () => void;
+};
+
+export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & LastNotificationSlice;
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -50,6 +58,10 @@ export const useAppStore = create<AppState>()(
 
         nightModeEnabled: true,
         setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
+
+        lastNotification: null,
+        setLastNotification: (n) => set({ lastNotification: n }),
+        clearLastNotification: () => set({ lastNotification: null }),
       }),
       {
         name: 'xolace-app',

@@ -8,6 +8,8 @@ import { ThemePickerDialog } from "@/src/components/settings/theme-picker-dialog
 import { MirrorTonePickerDialog } from "@/src/components/settings/mirror-tone-picker-dialog";
 import { RetentionPickerDialog } from "@/src/components/settings/retention-picker-dialog";
 import { SpaceNameDialog } from "@/src/components/settings/space-name-dialog";
+import { ReachSelectorDialog } from "@/src/components/settings/reach-selector-dialog";
+import { QuietWindowDialog } from "@/src/components/settings/quiet-window-dialog";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { useSettings } from "@/src/hooks/use-settings";
 import { useConfirmAction } from "@/src/hooks/use-confirm-action";
@@ -33,6 +35,8 @@ export const SettingsScreen = () => {
   const [mirrorToneDialogOpen, setMirrorToneDialogOpen] = useState(false);
   const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
   const [spaceNameDialogOpen, setSpaceNameDialogOpen] = useState(false);
+  const [reachDialogOpen, setReachDialogOpen] = useState(false);
+  const [quietWindowDialogOpen, setQuietWindowDialogOpen] = useState(false);
   const [replayIntroOpen, setReplayIntroOpen] = useState(false);
 
   const {
@@ -54,10 +58,19 @@ export const SettingsScreen = () => {
     retention,
     retentionDisplay,
     setRetention,
+    reach,
+    setReach,
+    quietWindow,
+    setQuietWindow,
     performLogout,
     performDeleteData,
     performDeleteAccount,
   } = useSettings();
+
+  const reachDisplay = reach === "warm" ? "Warm" : reach === "direct" ? "Direct" : "Quiet";
+  const quietWindowDisplay = quietWindow
+    ? `${quietWindow.dontReachBefore}–${quietWindow.dontReachAfter}h`
+    : "Off";
 
   const {
     setConfirmAction,
@@ -144,8 +157,25 @@ export const SettingsScreen = () => {
             label="Gentle reminders"
             isSelected={gentleReminders}
             onToggle={setGentleReminders}
-            isLast
+            isLast={!gentleReminders}
           />
+          {gentleReminders && (
+            <>
+              <SettingsRow
+                variant="value"
+                label="How I reach out"
+                value={reachDisplay}
+                onPress={() => setReachDialogOpen(true)}
+              />
+              <SettingsRow
+                variant="value"
+                label="Quiet hours"
+                value={quietWindowDisplay}
+                onPress={() => setQuietWindowDialogOpen(true)}
+                isLast
+              />
+            </>
+          )}
         </SettingsSection>
 
         {/* ── REFLECTION POOL ──────────────────────────────────── */}
@@ -223,6 +253,22 @@ export const SettingsScreen = () => {
         onOpenChange={setSpaceNameDialogOpen}
         onSave={async (name) => { await setSpaceName(name); }}
         onClear={async () => { await setSpaceName(null); }}
+      />
+
+      {/* ── REACH SELECTOR DIALOG ───────────────────────────── */}
+      <ReachSelectorDialog
+        isOpen={reachDialogOpen}
+        onOpenChange={setReachDialogOpen}
+        currentReach={reach}
+        onSelect={setReach}
+      />
+
+      {/* ── QUIET WINDOW DIALOG ─────────────────────────────── */}
+      <QuietWindowDialog
+        isOpen={quietWindowDialogOpen}
+        onOpenChange={setQuietWindowDialogOpen}
+        current={quietWindow}
+        onSave={setQuietWindow}
       />
 
       {/* ── RETENTION PICKER DIALOG ─────────────────────────── */}

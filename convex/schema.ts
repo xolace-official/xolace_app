@@ -208,6 +208,16 @@ export default defineSchema({
       gentleReturn: v.boolean(),  // "It's been a while..."
       patternNudge: v.boolean(),  // "Sunday evening..."
       milestone: v.boolean(),     // "30 days of showing up"
+      // Reach preset: how the AI sounds when it reaches out.
+      // Defaults to "warm" on first enable. User-adjustable in Settings.
+      reach: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
+      // Quiet Window: suppress notifications outside these local hours (0–23).
+      quietWindow: v.optional(v.object({
+        dontReachBefore: v.number(),
+        dontReachAfter: v.number(),
+      })),
+      // IANA timezone captured client-side so the server can gate by local hour.
+      timezone: v.optional(v.string()),
     }),
 
     // --- AI Calibration ---
@@ -903,6 +913,26 @@ export default defineSchema({
     scheduledFor: v.number(),
     sentAt: v.optional(v.number()),
     createdAt: v.number(),
+
+    // Which Reach variant produced this notification.
+    reachUsed: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
+
+    // Whether session/pattern data was available at generation time.
+    patternContextUsed: v.optional(v.boolean()),
+
+    // How the content was produced (for debugging + future analytics).
+    generatedBy: v.optional(v.union(
+      v.literal("haiku_personalized"),
+      v.literal("template_cold_start"),
+      v.literal("template_fallback")
+    )),
+
+    // Feedback-loop answer from the "What landed?" card.
+    landed: v.optional(v.union(
+      v.literal("felt_right"),
+      v.literal("too_much"),
+      v.literal("not_enough")
+    )),
   })
     // Check: have we already nudged this user recently?
     .index("by_profile", ["emotionalProfileId", "sentAt"])
@@ -911,7 +941,10 @@ export default defineSchema({
     .index("by_type", ["type", "resultedInSession"])
 
     // Delivery queue: what needs to be sent?
-    .index("by_schedule", ["delivered", "scheduledFor"]),
+    .index("by_schedule", ["delivered", "scheduledFor"])
+
+    // Per-user Reach effectiveness queries (Phase 2 learning layer).
+    .index("by_profile_and_reach", ["emotionalProfileId", "reachUsed"]),
 
   // ===========================================================
   // 11. CONSENT RECORDS

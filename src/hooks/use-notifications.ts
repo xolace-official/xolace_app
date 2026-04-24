@@ -8,6 +8,7 @@ import { useAuth } from "@clerk/expo";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useRouter } from "expo-router";
+import { useAppStore } from "@/src/store/store";
 
 // Configure how notifications appear when the app is in the foreground.
 Notifications.setNotificationHandler({
@@ -30,7 +31,9 @@ export function useNotifications() {
   const { isSignedIn } = useAuth();
   const registerToken = useMutation(api.notifications.registerToken);
   const markResultedInSession = useMutation(api.notifications.markResultedInSession);
+  const updatePreferences = useMutation(api.preferences.update);
   const router = useRouter();
+  const setLastNotification = useAppStore((s) => s.setLastNotification);
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
@@ -46,30 +49,41 @@ export function useNotifications() {
       if (token && !cancelled) {
         setExpoPushToken(token);
         await registerToken({ pushToken: token });
+
+        // Sync the device's IANA timezone so the server can compute Quiet Window gates.
+        try {
+          const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          if (timezone) {
+            await updatePreferences({ notificationTimezone: timezone });
+          }
+        } catch {
+          // Non-blocking; timezone is best-effort
+        }
       }
     }
 
     register();
 
-    // Listen for notifications received while app is foregrounded
     notificationListener.current =
       Notifications.addNotificationReceivedListener((_notification) => {
         // No-op for now. Could be used for in-app notification UI.
-        // console.log("notification received ", _notification); for dev testing
       });
 
-    // Listen for user tapping a notification
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data;
         const logId = data?.logId as Id<"notification_log"> | undefined;
+        const body = response.notification.request.content.body;
 
-        // Mark conversion — fire-and-forget
         if (logId) {
           markResultedInSession({ logId });
+
+          // Store notification content for the soft framing banner on the reflect screen.
+          if (body) {
+            setLastNotification({ content: body, notificationId: logId });
+          }
         }
 
-        // Route based on notification type
         if (
           data?.type === "gentle_return" ||
           data?.type === "pattern_nudge" ||
@@ -84,7 +98,7 @@ export function useNotifications() {
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, [isSignedIn, registerToken, markResultedInSession, router]);
+  }, [isSignedIn, registerToken, markResultedInSession, updatePreferences, router, setLastNotification]);
 
   return { expoPushToken };
 }
@@ -94,13 +108,11 @@ export function useNotifications() {
  * Exported so settings can trigger re-registration when notifications are enabled.
  */
 export async function requestPushToken(): Promise<string | null> {
-  // Push notifications only work on physical devices
   if (!Device.isDevice) {
     console.log("Push notifications require a physical device");
     return null;
   }
 
-  // Android requires a notification channel
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",

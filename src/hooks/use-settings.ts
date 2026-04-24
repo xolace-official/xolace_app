@@ -48,6 +48,15 @@ export const useSettings = () => {
         ...(args.colorTheme !== undefined && { colorTheme: args.colorTheme }),
         ...(args.spaceName !== undefined && { spaceName: args.spaceName ?? undefined }),
         ...(args.spaceNamePromptDismissed !== undefined && { spaceNamePromptDismissed: args.spaceNamePromptDismissed }),
+        ...(args.notificationReach !== undefined && {
+          notifications: { ...current.notifications, reach: args.notificationReach },
+        }),
+        ...(args.notificationQuietWindow !== undefined && {
+          notifications: { ...current.notifications, quietWindow: args.notificationQuietWindow ?? undefined },
+        }),
+        ...(args.notificationTimezone !== undefined && {
+          notifications: { ...current.notifications, timezone: args.notificationTimezone },
+        }),
       });
     }
   });
@@ -55,6 +64,36 @@ export const useSettings = () => {
   const requestDeletion = useMutation(api.users.requestDeletion);
   const registerToken = useMutation(api.notifications.registerToken);
   const removeToken = useMutation(api.notifications.removeToken);
+
+  // ─── Reach & Quiet Window ────────────────────────────────────────────
+  const reach = (preferences?.notifications?.reach ?? "warm") as "warm" | "direct" | "quiet";
+
+  const quietWindow = preferences?.notifications?.quietWindow ?? null;
+
+  const setReach = useCallback(
+    (next: "warm" | "direct" | "quiet") => {
+      updatePreferences({ notificationReach: next });
+    },
+    [updatePreferences],
+  );
+
+  const setQuietWindow = useCallback(
+    (window: { dontReachBefore: number; dontReachAfter: number } | null) => {
+      updatePreferences({ notificationQuietWindow: window });
+    },
+    [updatePreferences],
+  );
+
+  const syncTimezone = useCallback(async () => {
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (timezone) {
+        await updatePreferences({ notificationTimezone: timezone });
+      }
+    } catch {
+      // Non-blocking
+    }
+  }, [updatePreferences]);
 
   // ─── Sign-in method ──────────────────────────────────────────────────
   const signInMethod = useMemo(() => {
@@ -117,13 +156,18 @@ export const useSettings = () => {
 
   const setGentleReminders = useCallback(
     async (enabled: boolean) => {
-      // Master toggle: all notification types follow the single switch
+      // Master toggle: all notification types follow the single switch.
+      // Spread existing preferences to preserve reach/quietWindow/timezone.
+      const current = preferences?.notifications;
       updatePreferences({
         notifications: {
           enabled,
           gentleReturn: enabled,
           patternNudge: enabled,
           milestone: enabled,
+          reach: current?.reach ?? "warm",
+          quietWindow: current?.quietWindow,
+          timezone: current?.timezone,
         },
       });
 
@@ -139,6 +183,9 @@ export const useSettings = () => {
                 gentleReturn: false,
                 patternNudge: false,
                 milestone: false,
+                reach: current?.reach ?? "warm",
+                quietWindow: current?.quietWindow,
+                timezone: current?.timezone,
               },
             });
             return;
@@ -152,6 +199,9 @@ export const useSettings = () => {
               gentleReturn: false,
               patternNudge: false,
               milestone: false,
+              reach: current?.reach ?? "warm",
+              quietWindow: current?.quietWindow,
+              timezone: current?.timezone,
             },
           });
         }
@@ -166,7 +216,7 @@ export const useSettings = () => {
         }
       }
     },
-    [updatePreferences, registerToken, removeToken],
+    [updatePreferences, registerToken, removeToken, preferences],
   );
 
   const setContributeAnonymously = useCallback(
@@ -289,6 +339,13 @@ export const useSettings = () => {
     retention,
     retentionDisplay,
     setRetention,
+
+    // Notifications — Reach & Quiet Window
+    reach,
+    setReach,
+    quietWindow,
+    setQuietWindow,
+    syncTimezone,
 
     // Destructive actions
     performLogout,

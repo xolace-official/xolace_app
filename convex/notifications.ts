@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
 import { pushNotifications } from "./lib/pushNotifications";
@@ -20,6 +20,13 @@ export const schedule = internalMutation({
     content: v.string(),
     triggerReason: v.string(),
     scheduledFor: v.number(),
+    reachUsed: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
+    patternContextUsed: v.optional(v.boolean()),
+    generatedBy: v.optional(v.union(
+      v.literal("haiku_personalized"),
+      v.literal("template_cold_start"),
+      v.literal("template_fallback")
+    )),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -39,6 +46,9 @@ export const schedule = internalMutation({
         suppressedReason: "rate_limit",
         scheduledFor: args.scheduledFor,
         createdAt: now,
+        ...(args.reachUsed && { reachUsed: args.reachUsed }),
+        ...(args.patternContextUsed !== undefined && { patternContextUsed: args.patternContextUsed }),
+        ...(args.generatedBy && { generatedBy: args.generatedBy }),
       });
       return;
     }
@@ -54,6 +64,9 @@ export const schedule = internalMutation({
       sentAt: now,
       scheduledFor: args.scheduledFor,
       createdAt: now,
+      ...(args.reachUsed && { reachUsed: args.reachUsed }),
+      ...(args.patternContextUsed !== undefined && { patternContextUsed: args.patternContextUsed }),
+      ...(args.generatedBy && { generatedBy: args.generatedBy }),
     });
 
     // Dispatch via push notifications component.
@@ -101,10 +114,12 @@ export const registerToken = mutation({
     if (preferences && !preferences.notifications.enabled) {
       await ctx.db.patch(preferences._id, {
         notifications: {
+          ...preferences.notifications,
           enabled: true,
           gentleReturn: true,
           patternNudge: true,
           milestone: true,
+          reach: preferences.notifications.reach ?? "warm",
         },
       });
     }
@@ -164,6 +179,116 @@ export const markDelivered = internalMutation({
       delivered: true,
       sentAt: Date.now(),
     });
+  },
+});
+
+/**
+ * Record user feedback on a notification's emotional landing.
+ * Called by the "What landed?" card shown after milestone sessions.
+ */
+export const recordLanded = internalMutation({
+  args: {
+    notificationId: v.id("notification_log"),
+    landed: v.union(
+      v.literal("felt_right"),
+      v.literal("too_much"),
+      v.literal("not_enough")
+    ),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.notificationId, { landed: args.landed });
+    return null;
+  },
+});
+
+/**
+ * Public version of recordLanded — called from the client feedback card.
+ * Ownership-gated: only the receiving profile can record feedback.
+ */
+export const recordLandedPublic = mutation({
+  args: {
+    notificationId: v.id("notification_log"),
+    landed: v.union(
+      v.literal("felt_right"),
+      v.literal("too_much"),
+      v.literal("not_enough")
+    ),
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+    const log = await ctx.db.get(args.notificationId);
+    if (!log || log.emotionalProfileId !== profile._id) return null;
+    await ctx.db.patch(args.notificationId, { landed: args.landed });
+    return null;
+  },
+});
+
+/**
+ * Load the context needed to generate a personalized notification.
+ * Called by the generateNotification action.
+ */
+export const loadGenerationContext = internalQuery({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+  },
+  handler: async (ctx, args) => {
+    const profile = await ctx.db.get(args.emotionalProfileId);
+    if (!profile) return null;
+
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId)
+      )
+      .unique();
+
+    // Most recent completed session for mood/confirmation context
+    const recentSessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_profile_state", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId).eq("state", "completed")
+      )
+      .order("desc")
+      .take(1);
+    const lastSession = recentSessions[0] ?? null;
+
+    // Most recent emotional metadata for userLanguageTags
+    const recentMetadata = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_profile_theme", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId)
+      )
+      .order("desc")
+      .take(3);
+
+    // Recent notification content to avoid template repetition
+    const recentNotifications = await ctx.db
+      .query("notification_log")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId)
+      )
+      .order("desc")
+      .take(5);
+
+    // Aggregate userLanguageTags from recent metadata
+    const tagFrequency: Record<string, number> = {};
+    for (const meta of recentMetadata) {
+      for (const tag of meta.userLanguageTags) {
+        tagFrequency[tag] = (tagFrequency[tag] ?? 0) + 1;
+      }
+    }
+    const userLanguageTags = Object.entries(tagFrequency)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([tag]) => tag);
+
+    return {
+      profile,
+      preferences,
+      lastSession,
+      userLanguageTags,
+      recentNotificationContent: recentNotifications.map((n) => n.content),
+    };
   },
 });
 

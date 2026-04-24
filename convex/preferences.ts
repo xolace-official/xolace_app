@@ -62,8 +62,18 @@ export const update = mutation({
         gentleReturn: v.boolean(),
         patternNudge: v.boolean(),
         milestone: v.boolean(),
+        reach: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
+        quietWindow: v.optional(v.object({ dontReachBefore: v.number(), dontReachAfter: v.number() })),
+        timezone: v.optional(v.string()),
       })
     ),
+    // Notification sub-field updates — update just one field without replacing the whole object.
+    notificationReach: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
+    notificationQuietWindow: v.optional(v.union(
+      v.object({ dontReachBefore: v.number(), dontReachAfter: v.number() }),
+      v.null()
+    )),
+    notificationTimezone: v.optional(v.string()),
     mirrorTone: v.optional(mirrorToneValidator),
     contributeByDefault: v.optional(v.boolean()),
     dataRetentionPreference: v.optional(
@@ -100,6 +110,26 @@ export const update = mutation({
     if (args.theme !== undefined) patch.theme = args.theme;
     if (args.reducedMotion !== undefined) patch.reducedMotion = args.reducedMotion;
     if (args.notifications !== undefined) patch.notifications = args.notifications;
+
+    // Merge notification sub-fields without replacing the whole notifications object
+    if (
+      args.notificationReach !== undefined ||
+      args.notificationQuietWindow !== undefined ||
+      args.notificationTimezone !== undefined
+    ) {
+      const current = preferences.notifications;
+      const merged = { ...current };
+      if (args.notificationReach !== undefined) {
+        merged.reach = args.notificationReach;
+      }
+      if (args.notificationQuietWindow !== undefined) {
+        merged.quietWindow = args.notificationQuietWindow ?? undefined;
+      }
+      if (args.notificationTimezone !== undefined) {
+        merged.timezone = args.notificationTimezone;
+      }
+      patch.notifications = merged;
+    }
     if (args.mirrorTone !== undefined) patch.mirrorTone = args.mirrorTone;
     if (args.contributeByDefault !== undefined)
       patch.contributeByDefault = args.contributeByDefault;
