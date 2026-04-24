@@ -20,12 +20,12 @@ export const TimelineIcon = () => {
       accessibilityRole="button"
       accessibilityLabel="Open your timeline"
     >
-      <View className="h-10 w-10 items-center justify-center rounded-full border border-border">
+      <View className="h-10 w-10 items-center justify-center rounded-full border border-accent">
         <SymbolView
           name={{ ios: "clock", android: "history"}}
-          size={18}
+          size={20}
           tintColor={foregroundColor}
-          style={{ opacity: 0.4 }}
+          style={{ opacity: 0.5 }}
         />
       </View>
     </Pressable>
