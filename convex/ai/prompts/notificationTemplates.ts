@@ -1,4 +1,9 @@
-type TemplateKey = `${"warm" | "direct" | "quiet"}_${"gentle_return" | "pattern_nudge"}`;
+export type NotificationTemplateType =
+  | "gentle_return"
+  | "pattern_nudge"
+  | "affirmation";
+
+type TemplateKey = `${"warm" | "direct" | "quiet"}_${NotificationTemplateType}`;
 
 const TEMPLATES: Record<TemplateKey, string[]> = {
   warm_gentle_return: [
@@ -73,6 +78,46 @@ const TEMPLATES: Record<TemplateKey, string[]> = {
     "Present, as usual.",
     "If now works.",
   ],
+  // Affirmation pool — lines that don't reference the app at all.
+  // Could have come from a friend's text thread. No "come back", no
+  // pattern replay, no "space". Break the gravitational pull of every
+  // other template type orbiting re-engagement.
+  warm_affirmation: [
+    "Being tired doesn't mean you're failing.",
+    "You're allowed to not be performing today.",
+    "The version of you that showed up this week was enough.",
+    "Not every hard day is a warning sign. Some are just hard days.",
+    "Rest counts as progress too.",
+    "You don't have to earn your way into being okay.",
+    "Slow days are still days you're here for.",
+    "Hard to feel it, but you're doing better than you think.",
+    "The fact that you care is not nothing.",
+    "It's fine to not have a reason for feeling off.",
+  ],
+  direct_affirmation: [
+    "Hard week. Doesn't mean you broke.",
+    "Being off today isn't evidence of anything.",
+    "Tired is information, not a verdict.",
+    "You can be struggling and still be fine.",
+    "Some days just cost more. That's all.",
+    "Not every low is a trend.",
+    "Feeling flat isn't failing.",
+    "You don't owe anyone a good week.",
+    "The bar doesn't have to be high right now.",
+    "Showing up once this week counts.",
+  ],
+  quiet_affirmation: [
+    "You're doing fine.",
+    "Enough for today.",
+    "This counts.",
+    "You're allowed to rest.",
+    "Hard days happen.",
+    "Still worth it.",
+    "You're okay.",
+    "Quiet is allowed.",
+    "No need to push.",
+    "That's enough.",
+  ],
 };
 
 /**
@@ -81,7 +126,7 @@ const TEMPLATES: Record<TemplateKey, string[]> = {
  */
 export function pickTemplate(
   reach: "warm" | "direct" | "quiet",
-  notificationType: "gentle_return" | "pattern_nudge",
+  notificationType: NotificationTemplateType,
   recentlyUsedContent: string[]
 ): { content: string; generatedBy: "template_cold_start" | "template_fallback" } {
   const key: TemplateKey = `${reach}_${notificationType}`;
@@ -100,9 +145,32 @@ export function pickTemplate(
  */
 export function pickFallbackTemplate(
   reach: "warm" | "direct" | "quiet",
-  notificationType: "gentle_return" | "pattern_nudge",
+  notificationType: NotificationTemplateType,
   recentlyUsedContent: string[]
 ): { content: string; generatedBy: "template_cold_start" | "template_fallback" } {
   const { content } = pickTemplate(reach, notificationType, recentlyUsedContent);
   return { content, generatedBy: "template_fallback" };
+}
+
+/**
+ * Reach-weighted probability of substituting an affirmation in place of a
+ * re-engagement notification (gentle_return / pattern_nudge). Warm users get
+ * the highest mix; quiet users almost never do.
+ */
+const AFFIRMATION_MIX: Record<"warm" | "direct" | "quiet", number> = {
+  warm: 0.28,
+  direct: 0.15,
+  quiet: 0.05,
+};
+
+export function shouldSubstituteAffirmation(
+  reach: "warm" | "direct" | "quiet",
+  sourceType: "gentle_return" | "pattern_nudge"
+): boolean {
+  // Milestone-ish re-engagement types only. Pattern_nudge gets a lower
+  // effective rate because pattern_nudge *is* the user's time slot; breaking
+  // that frame with an unrelated affirmation is jarring.
+  const base = AFFIRMATION_MIX[reach];
+  const rate = sourceType === "pattern_nudge" ? base * 0.5 : base;
+  return Math.random() < rate;
 }

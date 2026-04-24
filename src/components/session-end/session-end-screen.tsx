@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
 import { useSessionEnd } from '@/src/hooks/use-session-end';
 import { ExitVariant } from '@/src/components/session-end/exit-variant';
 import { ActivityVariant } from '@/src/components/session-end/activity-variant';
@@ -19,10 +17,8 @@ type Props = {
 
 export const SessionEndScreen = ({ path }: Props) => {
   const insets = useSafeAreaInsets();
-  const { isLoading, distilledText, contributeByDefault, dismiss, haveMore } = useSessionEnd();
+  const { isLoading, distilledText, contributeByDefault, sessionCount, dismiss, haveMore } = useSessionEnd();
   const { isNight } = useSessionMode();
-  const fullContext = useQuery(api.users.getFullContext);
-  const sessionCount = fullContext?.profile?.sessionCount ?? 0;
 
   useEffect(() => {
     if (!isLoading) {

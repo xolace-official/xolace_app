@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { mirrorToneValidator } from "./lib/validators";
 import { validateSpaceName } from "./lib/spaceName";
+import { updateNotificationPrefs } from "./lib/notificationPrefs";
 
 /**
  * Fetch preferences for the current user's profile.
@@ -111,25 +112,6 @@ export const update = mutation({
     if (args.reducedMotion !== undefined) patch.reducedMotion = args.reducedMotion;
     if (args.notifications !== undefined) patch.notifications = args.notifications;
 
-    // Merge notification sub-fields without replacing the whole notifications object
-    if (
-      args.notificationReach !== undefined ||
-      args.notificationQuietWindow !== undefined ||
-      args.notificationTimezone !== undefined
-    ) {
-      const current = preferences.notifications;
-      const merged = { ...current };
-      if (args.notificationReach !== undefined) {
-        merged.reach = args.notificationReach;
-      }
-      if (args.notificationQuietWindow !== undefined) {
-        merged.quietWindow = args.notificationQuietWindow ?? undefined;
-      }
-      if (args.notificationTimezone !== undefined) {
-        merged.timezone = args.notificationTimezone;
-      }
-      patch.notifications = merged;
-    }
     if (args.mirrorTone !== undefined) patch.mirrorTone = args.mirrorTone;
     if (args.contributeByDefault !== undefined)
       patch.contributeByDefault = args.contributeByDefault;
@@ -153,6 +135,22 @@ export const update = mutation({
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(preferences._id, patch);
+    }
+
+    // Notification sub-field merges run last so they're preserved even if
+    // args.notifications was also provided above.
+    if (
+      args.notificationReach !== undefined ||
+      args.notificationQuietWindow !== undefined ||
+      args.notificationTimezone !== undefined
+    ) {
+      await updateNotificationPrefs(ctx, preferences.emotionalProfileId, {
+        ...(args.notificationReach !== undefined && { reach: args.notificationReach }),
+        ...(args.notificationQuietWindow !== undefined && {
+          quietWindow: args.notificationQuietWindow ?? undefined,
+        }),
+        ...(args.notificationTimezone !== undefined && { timezone: args.notificationTimezone }),
+      });
     }
 
     return null;

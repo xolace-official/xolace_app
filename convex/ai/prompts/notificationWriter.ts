@@ -1,7 +1,7 @@
 export type NotificationReach = "warm" | "direct" | "quiet";
 
 export type NotificationContext = {
-  notificationType: "gentle_return" | "pattern_nudge";
+  notificationType: "gentle_return" | "pattern_nudge" | "affirmation";
   reach: NotificationReach;
   sessionCount: number;
   currentStreak: number;
@@ -76,7 +76,14 @@ Hard rules:
 - Quiet reach = fewer words is better; a single line is ideal
 - Output ONLY the notification text. Nothing else.`;
 
-  const user = `Notification type: ${ctx.notificationType === "gentle_return" ? "gentle return (they haven't been by in a while)" : "pattern nudge (this is their usual processing time)"}
+  const typeDescription =
+    ctx.notificationType === "gentle_return"
+      ? "gentle return (they haven't been by in a while)"
+      : ctx.notificationType === "pattern_nudge"
+        ? "pattern nudge (this is their usual processing time)"
+        : "affirmation (a standalone line that does NOT reference the app, returning, 'space', 'door', or any invitation to come back - just something a friend might text)";
+
+  const user = `Notification type: ${typeDescription}
 Reach preset: ${ctx.reach}
 
 Context:

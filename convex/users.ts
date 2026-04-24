@@ -116,6 +116,18 @@ export const getCurrent = query({
 });
 
 /**
+ * Narrow query for the session-end screen's ReachFeedbackCard. Avoids pulling
+ * getFullContext into a leaf screen just for one number.
+ */
+export const getSessionCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    return profile.sessionCount;
+  },
+});
+
+/**
  * App open: return user + profile + preferences in one call.
  */
 export const getFullContext = query({

@@ -3,6 +3,7 @@ import { query, mutation, internalMutation, internalQuery } from "./_generated/s
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
 import { pushNotifications } from "./lib/pushNotifications";
+import { updateNotificationPrefs } from "./lib/notificationPrefs";
 
 /**
  * Schedule a notification for delivery.
@@ -15,7 +16,8 @@ export const schedule = internalMutation({
     type: v.union(
       v.literal("gentle_return"),
       v.literal("pattern_nudge"),
-      v.literal("milestone")
+      v.literal("milestone"),
+      v.literal("affirmation")
     ),
     content: v.string(),
     triggerReason: v.string(),
@@ -112,15 +114,12 @@ export const registerToken = mutation({
       .unique();
 
     if (preferences && !preferences.notifications.enabled) {
-      await ctx.db.patch(preferences._id, {
-        notifications: {
-          ...preferences.notifications,
-          enabled: true,
-          gentleReturn: true,
-          patternNudge: true,
-          milestone: true,
-          reach: preferences.notifications.reach ?? "warm",
-        },
+      await updateNotificationPrefs(ctx, profile._id, {
+        enabled: true,
+        gentleReturn: true,
+        patternNudge: true,
+        milestone: true,
+        reach: preferences.notifications.reach ?? "warm",
       });
     }
 

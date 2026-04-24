@@ -25,6 +25,7 @@ export function useSessionEnd() {
   const router = useRouter();
   const { sessionId, session, isLoading, completePath } = usePathSession();
   const contributeByDefaultQuery = useQuery(api.preferences.getContributeByDefault);
+  const sessionCountQuery = useQuery(api.users.getSessionCount);
   const busyRef = useRef(false);
   const navigatedRef = useRef(false);
 
@@ -72,6 +73,7 @@ export function useSessionEnd() {
   const distilledText = (session as { distilledText?: string } | undefined)
     ?.distilledText ?? null;
   const contributeByDefault = contributeByDefaultQuery ?? false;
+  const sessionCount = sessionCountQuery ?? 0;
 
-  return { sessionId, isLoading, distilledText, contributeByDefault, dismiss, haveMore };
+  return { sessionId, isLoading, distilledText, contributeByDefault, sessionCount, dismiss, haveMore };
 }

@@ -10,7 +10,7 @@ function NotificationBanner({ content, onDismiss }: { content: string; onDismiss
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    const timer = setTimeout(onDismiss, 20_000);
+    const timer = setTimeout(onDismiss, 8_000);
     return () => clearTimeout(timer);
   }, [onDismiss]);
 
@@ -21,23 +21,27 @@ function NotificationBanner({ content, onDismiss }: { content: string; onDismiss
       style={{
         position: 'absolute',
         top: insets.top + 8,
-        left: 16,
-        right: 16,
+        left: 20,
+        right: 20,
         zIndex: 10,
+        boxShadow:
+          '0 2px 6px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.10)',
       }}
-      className={"bg-red-400"}
+      className={"rounded-2xl"}
     >
       <Pressable
         onPress={onDismiss}
-        style={{
-          backgroundColor: 'rgba(10,20,110,0.06)',
-          borderRadius: 12,
-          paddingHorizontal: 14,
-          paddingVertical: 10,
-        }}
+        className="bg-surface border border-border/40 rounded-2xl px-4 py-3"
       >
-        <AppText className="text-xs text-foreground/50 mb-0.5">You were reached</AppText>
-        <AppText className="text-sm text-foreground/70 italic">&quot;{content}&quot;</AppText>
+        <AppText className="text-[11px] uppercase tracking-wide text-foreground/40 mb-0.5">
+          You were reached
+        </AppText>
+        <AppText className="text-sm text-foreground/85 leading-5">
+          {content}
+        </AppText>
+        <AppText className="text-[10px] text-foreground/30 mt-1.5">
+          tap to dismiss
+        </AppText>
       </Pressable>
     </Animated.View>
   );
@@ -50,9 +54,9 @@ export default function ProtectedIndex() {
   return (
     <View style={{ flex: 1 }}>
       <ReflectScreen />
-      {!lastNotification && (
+      {lastNotification && (
         <NotificationBanner
-          content={"hi"}
+          content={lastNotification.content}
           onDismiss={clearLastNotification}
         />
       )}

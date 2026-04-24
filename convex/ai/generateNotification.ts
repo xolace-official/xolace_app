@@ -5,7 +5,12 @@ import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { getAnthropicClient, extractTextFromResponse } from "./providers/anthropic";
 import { buildNotificationPrompt } from "./prompts/notificationWriter";
-import { pickTemplate, pickFallbackTemplate } from "./prompts/notificationTemplates";
+import {
+  pickTemplate,
+  pickFallbackTemplate,
+  shouldSubstituteAffirmation,
+  type NotificationTemplateType,
+} from "./prompts/notificationTemplates";
 
 const NOTIFICATION_MODEL = "claude-haiku-4-5-20251001";
 const COLD_START_THRESHOLD = 3;
@@ -39,17 +44,27 @@ export const generate = internalAction({
     const reach = preferences?.notifications.reach ?? "warm";
     const sessionCount = profile.sessionCount;
 
+    // Reach-weighted: sometimes swap a re-engagement nudge for an affirmation
+    // that doesn't reference the app at all. Breaks the gravitational pull of
+    // every other template orbiting "come back".
+    const effectiveType: NotificationTemplateType = shouldSubstituteAffirmation(
+      reach,
+      args.notificationType
+    )
+      ? "affirmation"
+      : args.notificationType;
+
     // Cold-start path: no personalization until we have enough sessions
     if (sessionCount < COLD_START_THRESHOLD) {
       const { content, generatedBy } = pickTemplate(
         reach,
-        args.notificationType,
+        effectiveType,
         recentNotificationContent
       );
 
       await ctx.runMutation(internal.notifications.schedule, {
         emotionalProfileId: args.emotionalProfileId,
-        type: args.notificationType,
+        type: effectiveType,
         content,
         triggerReason: args.triggerReason,
         scheduledFor: args.scheduledFor,
@@ -67,7 +82,7 @@ export const generate = internalAction({
       : 48;
 
     const notificationCtx = {
-      notificationType: args.notificationType,
+      notificationType: effectiveType,
       reach,
       sessionCount,
       currentStreak: profile.currentStreak,
@@ -103,19 +118,19 @@ export const generate = internalAction({
         content = raw;
         generatedBy = "haiku_personalized";
       } else {
-        const fallback = pickFallbackTemplate(reach, args.notificationType, recentNotificationContent);
+        const fallback = pickFallbackTemplate(reach, effectiveType, recentNotificationContent);
         content = fallback.content;
         generatedBy = fallback.generatedBy;
       }
     } catch {
-      const fallback = pickFallbackTemplate(reach, args.notificationType, recentNotificationContent);
+      const fallback = pickFallbackTemplate(reach, effectiveType, recentNotificationContent);
       content = fallback.content;
       generatedBy = fallback.generatedBy;
     }
 
     await ctx.runMutation(internal.notifications.schedule, {
       emotionalProfileId: args.emotionalProfileId,
-      type: args.notificationType,
+      type: effectiveType,
       content,
       triggerReason: args.triggerReason,
       scheduledFor: args.scheduledFor,

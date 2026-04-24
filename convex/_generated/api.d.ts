@@ -38,6 +38,7 @@ import type * as jobs_profileStats from "../jobs/profileStats.js";
 import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js";
 import type * as jobs_reflectionDistiller from "../jobs/reflectionDistiller.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_notificationPrefs from "../lib/notificationPrefs.js";
 import type * as lib_pushNotifications from "../lib/pushNotifications.js";
 import type * as lib_rateLimits from "../lib/rateLimits.js";
 import type * as lib_spaceName from "../lib/spaceName.js";
@@ -89,6 +90,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/reflectionAnonymizer": typeof jobs_reflectionAnonymizer;
   "jobs/reflectionDistiller": typeof jobs_reflectionDistiller;
   "lib/auth": typeof lib_auth;
+  "lib/notificationPrefs": typeof lib_notificationPrefs;
   "lib/pushNotifications": typeof lib_pushNotifications;
   "lib/rateLimits": typeof lib_rateLimits;
   "lib/spaceName": typeof lib_spaceName;

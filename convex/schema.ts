@@ -885,7 +885,8 @@ export default defineSchema({
     type: v.union(
       v.literal("gentle_return"),  // "It's been a while..."
       v.literal("pattern_nudge"),  // "Sunday evening..."
-      v.literal("milestone")       // "30 days of showing up"
+      v.literal("milestone"),      // "30 days of showing up"
+      v.literal("affirmation")     // "Being tired doesn't mean you're failing."
     ),
 
     // AI-generated, contextual notification text.
