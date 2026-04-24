@@ -80,6 +80,7 @@ export const schedule = internalMutation({
       notification: {
         title: "Xolace",
         body: args.content,
+        sound: "default",
         data: { type: args.type, logId },
       },
       allowUnregisteredTokens: true,

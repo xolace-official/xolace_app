@@ -14,6 +14,7 @@ const tierValidator = v.union(v.literal("6_months"), v.literal("1_year"));
 
 const BATCH_SIZE = 50;
 const PREFS_PAGE_SIZE = 100;
+const TURNS_PER_SESSION_BATCH = 100;
 
 function nextTier(tier: Tier): Tier | null {
   const idx = TIERS.indexOf(tier);
@@ -29,10 +30,12 @@ export const enforce = internalMutation({
   args: {
     tier: v.optional(tierValidator),
     cursor: v.optional(v.union(v.string(), v.null())),
+    sessionWorkPending: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const tier: Tier = args.tier ?? TIERS[0];
     const cursor = args.cursor ?? null;
+    const priorPending = args.sessionWorkPending ?? false;
 
     const { page: prefs, isDone, continueCursor } = await ctx.db
       .query("preferences")
@@ -40,7 +43,7 @@ export const enforce = internalMutation({
       .paginate({ numItems: PREFS_PAGE_SIZE, cursor });
 
     const cutoff = Date.now() - RETENTION_MS[tier];
-    let moreSessionWork = false;
+    let moreSessionWork = priorPending;
 
     for (const pref of prefs) {
       const oldSessions = await ctx.db
@@ -68,9 +71,16 @@ export const enforce = internalMutation({
         const turns = await ctx.db
           .query("session_turns")
           .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-          .take(10);
+          .take(TURNS_PER_SESSION_BATCH);
         for (const turn of turns) {
           await ctx.db.delete(turn._id);
+        }
+
+        if (turns.length === TURNS_PER_SESSION_BATCH) {
+          // More turns remain for this session — leave the session row so the
+          // next scan revisits it and finishes the turn cleanup first.
+          moreSessionWork = true;
+          continue;
         }
 
         await ctx.db.delete(session._id);
@@ -81,6 +91,7 @@ export const enforce = internalMutation({
       await ctx.scheduler.runAfter(0, internal.jobs.dataRetention.enforce, {
         tier,
         cursor: continueCursor,
+        sessionWorkPending: moreSessionWork,
       });
       return;
     }
