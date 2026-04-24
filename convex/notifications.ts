@@ -305,10 +305,11 @@ export const lastDelivered = query({
       .withIndex("by_profile", (q) =>
         q.eq("emotionalProfileId", profile._id)
       )
+      .filter((q) => q.eq(q.field("delivered"), true))
       .order("desc")
       .first();
 
-    if (!latest || !latest.delivered || !latest.sentAt) return null;
+    if (!latest || !latest.sentAt) return null;
     return latest;
   },
 });
