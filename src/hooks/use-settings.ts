@@ -36,11 +36,30 @@ export const useSettings = () => {
   ).withOptimisticUpdate((localStore, args) => {
     const current = localStore.getQuery(api.preferences.get, {});
     if (current !== undefined) {
+      // Merge notifications once so multiple sub-field args combine instead
+      // of clobbering each other. Matches backend order: args.notifications
+      // is applied first, then sub-field merges win on top.
+      const hasNotificationsChange =
+        args.notifications !== undefined ||
+        args.notificationReach !== undefined ||
+        args.notificationQuietWindow !== undefined ||
+        args.notificationTimezone !== undefined;
+
+      const mergedNotifications = hasNotificationsChange
+        ? {
+            ...(args.notifications ?? current.notifications),
+            ...(args.notificationReach !== undefined && { reach: args.notificationReach }),
+            ...(args.notificationQuietWindow !== undefined && {
+              quietWindow: args.notificationQuietWindow ?? undefined,
+            }),
+            ...(args.notificationTimezone !== undefined && { timezone: args.notificationTimezone }),
+          }
+        : undefined;
+
       localStore.setQuery(api.preferences.get, {}, {
         ...current,
         ...(args.theme !== undefined && { theme: args.theme }),
         ...(args.reducedMotion !== undefined && { reducedMotion: args.reducedMotion }),
-        ...(args.notifications !== undefined && { notifications: args.notifications }),
         ...(args.mirrorTone !== undefined && { mirrorTone: args.mirrorTone }),
         ...(args.contributeByDefault !== undefined && { contributeByDefault: args.contributeByDefault }),
         ...(args.dataRetentionPreference !== undefined && { dataRetentionPreference: args.dataRetentionPreference }),
@@ -48,6 +67,7 @@ export const useSettings = () => {
         ...(args.colorTheme !== undefined && { colorTheme: args.colorTheme }),
         ...(args.spaceName !== undefined && { spaceName: args.spaceName ?? undefined }),
         ...(args.spaceNamePromptDismissed !== undefined && { spaceNamePromptDismissed: args.spaceNamePromptDismissed }),
+        ...(mergedNotifications !== undefined && { notifications: mergedNotifications }),
       });
     }
   });
@@ -55,6 +75,36 @@ export const useSettings = () => {
   const requestDeletion = useMutation(api.users.requestDeletion);
   const registerToken = useMutation(api.notifications.registerToken);
   const removeToken = useMutation(api.notifications.removeToken);
+
+  // ─── Reach & Quiet Window ────────────────────────────────────────────
+  const reach = (preferences?.notifications?.reach ?? "warm") as "warm" | "direct" | "quiet";
+
+  const quietWindow = preferences?.notifications?.quietWindow ?? null;
+
+  const setReach = useCallback(
+    (next: "warm" | "direct" | "quiet") => {
+      updatePreferences({ notificationReach: next });
+    },
+    [updatePreferences],
+  );
+
+  const setQuietWindow = useCallback(
+    (window: { dontReachBefore: number; dontReachAfter: number } | null) => {
+      updatePreferences({ notificationQuietWindow: window });
+    },
+    [updatePreferences],
+  );
+
+  const syncTimezone = useCallback(async () => {
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (timezone) {
+        await updatePreferences({ notificationTimezone: timezone });
+      }
+    } catch {
+      // Non-blocking
+    }
+  }, [updatePreferences]);
 
   // ─── Sign-in method ──────────────────────────────────────────────────
   const signInMethod = useMemo(() => {
@@ -117,13 +167,18 @@ export const useSettings = () => {
 
   const setGentleReminders = useCallback(
     async (enabled: boolean) => {
-      // Master toggle: all notification types follow the single switch
+      // Master toggle: all notification types follow the single switch.
+      // Spread existing preferences to preserve reach/quietWindow/timezone.
+      const current = preferences?.notifications;
       updatePreferences({
         notifications: {
           enabled,
           gentleReturn: enabled,
           patternNudge: enabled,
           milestone: enabled,
+          reach: current?.reach ?? "warm",
+          quietWindow: current?.quietWindow,
+          timezone: current?.timezone,
         },
       });
 
@@ -139,6 +194,9 @@ export const useSettings = () => {
                 gentleReturn: false,
                 patternNudge: false,
                 milestone: false,
+                reach: current?.reach ?? "warm",
+                quietWindow: current?.quietWindow,
+                timezone: current?.timezone,
               },
             });
             return;
@@ -152,6 +210,9 @@ export const useSettings = () => {
               gentleReturn: false,
               patternNudge: false,
               milestone: false,
+              reach: current?.reach ?? "warm",
+              quietWindow: current?.quietWindow,
+              timezone: current?.timezone,
             },
           });
         }
@@ -166,7 +227,7 @@ export const useSettings = () => {
         }
       }
     },
-    [updatePreferences, registerToken, removeToken],
+    [updatePreferences, registerToken, removeToken, preferences],
   );
 
   const setContributeAnonymously = useCallback(
@@ -289,6 +350,13 @@ export const useSettings = () => {
     retention,
     retentionDisplay,
     setRetention,
+
+    // Notifications — Reach & Quiet Window
+    reach,
+    setReach,
+    quietWindow,
+    setQuietWindow,
+    syncTimezone,
 
     // Destructive actions
     performLogout,

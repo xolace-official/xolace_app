@@ -6,6 +6,36 @@ const GENTLE_RETURN_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
 const INACTIVE_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 /**
+ * Returns the local hour (0–23) for a given IANA timezone using Intl.
+ * Available in the Convex V8 runtime.
+ */
+function getLocalHour(timezone: string): number {
+  try {
+    const formatted = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      hour: "numeric",
+      hour12: false,
+    }).format(new Date());
+    return parseInt(formatted, 10) % 24;
+  } catch {
+    return new Date().getUTCHours();
+  }
+}
+
+/**
+ * Returns true if the current local hour is inside the user's quiet window
+ * (i.e., outside active delivery hours).
+ */
+function isInQuietWindow(
+  timezone: string,
+  dontReachBefore: number,
+  dontReachAfter: number
+): boolean {
+  const localHour = getLocalHour(timezone);
+  return localHour < dontReachBefore || localHour > dontReachAfter;
+}
+
+/**
  * Scan profiles and send gentle_return notifications to users
  * who haven't had a session in 48+ hours but are still active
  * (last session within 30 days).
@@ -27,16 +57,10 @@ export const checkGentleReturn = internalMutation({
       .paginate({ numItems: 500, cursor: args.cursor ?? null });
 
     for (const profile of profiles) {
-      // Skip profiles that have never completed a session
       if (!profile.lastSessionAt) continue;
-
-      // Skip if session was recent (within 48h)
       if (profile.lastSessionAt > gentleReturnCutoff) continue;
-
-      // Skip if user has been inactive too long (>30 days) — don't pester
       if (profile.lastSessionAt < inactiveCutoff) continue;
 
-      // Check if this profile has notifications enabled
       const preferences = await ctx.db
         .query("preferences")
         .withIndex("by_profile", (q) =>
@@ -48,16 +72,23 @@ export const checkGentleReturn = internalMutation({
       if (!preferences.notifications.enabled) continue;
       if (!preferences.notifications.gentleReturn) continue;
 
-      // Schedule the notification — rate limiter inside schedule()
-      // will prevent duplicates within 24h
+      // Quiet Window gate
+      const { quietWindow, timezone } = preferences.notifications;
+      if (quietWindow && timezone) {
+        if (isInQuietWindow(timezone, quietWindow.dontReachBefore, quietWindow.dontReachAfter)) {
+          continue;
+        }
+      }
+
+      const hoursSince = Math.round((now - profile.lastSessionAt) / (60 * 60 * 1000));
+
       await ctx.scheduler.runAfter(
         0,
-        internal.notifications.schedule,
+        internal.ai.generateNotification.generate,
         {
           emotionalProfileId: profile._id,
-          type: "gentle_return",
-          content: "It's been a little while. There's no rush but if something's sitting with you, this is a safe place to let it out.",
-          triggerReason: `No session in ${Math.round((now - profile.lastSessionAt) / (60 * 60 * 1000))}h`,
+          notificationType: "gentle_return",
+          triggerReason: `No session in ${hoursSince}h`,
           scheduledFor: now,
         }
       );
@@ -95,14 +126,10 @@ export const checkPatternNudge = internalMutation({
       .paginate({ numItems: 500, cursor: args.cursor ?? null });
 
     for (const profile of profiles) {
-      // Need at least 5 sessions for a usage pattern
       if (!profile.typicalUsagePattern) continue;
-
-      // Check if current time matches their pattern
       if (profile.typicalUsagePattern.dayOfWeek !== currentDay) continue;
       if (profile.typicalUsagePattern.hourOfDay !== currentHour) continue;
 
-      // Skip if they already had a session today
       if (
         profile.lastSessionAt &&
         now - profile.lastSessionAt < 12 * 60 * 60 * 1000
@@ -110,7 +137,6 @@ export const checkPatternNudge = internalMutation({
         continue;
       }
 
-      // Check notification preferences
       const preferences = await ctx.db
         .query("preferences")
         .withIndex("by_profile", (q) =>
@@ -122,31 +148,20 @@ export const checkPatternNudge = internalMutation({
       if (!preferences.notifications.enabled) continue;
       if (!preferences.notifications.patternNudge) continue;
 
-      const dayNames = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
-
-      const hour = profile.typicalUsagePattern.hourOfDay;
-      const timeOfDay =
-        hour < 6 ? "night" :
-        hour < 12 ? "morning" :
-        hour < 17 ? "afternoon" :
-        hour < 21 ? "evening" :
-        "night";
+      // Quiet Window gate
+      const { quietWindow, timezone } = preferences.notifications;
+      if (quietWindow && timezone) {
+        if (isInQuietWindow(timezone, quietWindow.dontReachBefore, quietWindow.dontReachAfter)) {
+          continue;
+        }
+      }
 
       await ctx.scheduler.runAfter(
         0,
-        internal.notifications.schedule,
+        internal.ai.generateNotification.generate,
         {
           emotionalProfileId: profile._id,
-          type: "pattern_nudge",
-          content: `${dayNames[currentDay]} ${timeOfDay}, you usually check in around now. How are you?`,
+          notificationType: "pattern_nudge",
           triggerReason: `Pattern match: day=${currentDay} hour=${currentHour}`,
           scheduledFor: now,
         }

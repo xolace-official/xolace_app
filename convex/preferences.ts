@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { mirrorToneValidator } from "./lib/validators";
 import { validateSpaceName } from "./lib/spaceName";
+import { updateNotificationPrefs } from "./lib/notificationPrefs";
 
 /**
  * Fetch preferences for the current user's profile.
@@ -62,8 +63,18 @@ export const update = mutation({
         gentleReturn: v.boolean(),
         patternNudge: v.boolean(),
         milestone: v.boolean(),
+        reach: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
+        quietWindow: v.optional(v.object({ dontReachBefore: v.number(), dontReachAfter: v.number() })),
+        timezone: v.optional(v.string()),
       })
     ),
+    // Notification sub-field updates — update just one field without replacing the whole object.
+    notificationReach: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
+    notificationQuietWindow: v.optional(v.union(
+      v.object({ dontReachBefore: v.number(), dontReachAfter: v.number() }),
+      v.null()
+    )),
+    notificationTimezone: v.optional(v.string()),
     mirrorTone: v.optional(mirrorToneValidator),
     contributeByDefault: v.optional(v.boolean()),
     dataRetentionPreference: v.optional(
@@ -100,6 +111,7 @@ export const update = mutation({
     if (args.theme !== undefined) patch.theme = args.theme;
     if (args.reducedMotion !== undefined) patch.reducedMotion = args.reducedMotion;
     if (args.notifications !== undefined) patch.notifications = args.notifications;
+
     if (args.mirrorTone !== undefined) patch.mirrorTone = args.mirrorTone;
     if (args.contributeByDefault !== undefined)
       patch.contributeByDefault = args.contributeByDefault;
@@ -123,6 +135,22 @@ export const update = mutation({
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(preferences._id, patch);
+    }
+
+    // Notification sub-field merges run last so they're preserved even if
+    // args.notifications was also provided above.
+    if (
+      args.notificationReach !== undefined ||
+      args.notificationQuietWindow !== undefined ||
+      args.notificationTimezone !== undefined
+    ) {
+      await updateNotificationPrefs(ctx, preferences.emotionalProfileId, {
+        ...(args.notificationReach !== undefined && { reach: args.notificationReach }),
+        ...(args.notificationQuietWindow !== undefined && {
+          quietWindow: args.notificationQuietWindow ?? undefined,
+        }),
+        ...(args.notificationTimezone !== undefined && { timezone: args.notificationTimezone }),
+      });
     }
 
     return null;
