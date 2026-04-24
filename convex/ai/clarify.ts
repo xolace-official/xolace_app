@@ -114,6 +114,7 @@ export const handleClarification = internalAction({
         existingMirror: session.mirrorText,
         userFeedback,
         additionalInput: args.additionalRawText,
+        spaceName: context.preferences?.spaceName,
       });
 
       // 5. Call Sonnet for revised mirror

@@ -21,6 +21,8 @@ interface ArticulatorInput {
   additionalInput?: string;
   // 3am Mode — session started during the night window (10pm–4am)
   sessionMode?: "day" | "night";
+  // User's named space (if set) — personalizes identity responses
+  spaceName?: string;
 }
 
 /**
@@ -57,14 +59,20 @@ export function buildArticulatorPrompt(
     userFeedback,
     additionalInput,
     sessionMode,
+    spaceName,
   } = input;
 
   const toneInstructions = getToneInstructions(mirrorTone);
   const safeguardInstructions = getSafeguardInstructions(safeguardLevel);
   const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
   const entryTypeInstructions = getEntryTypeInstructions(entryType);
+  const identityLine = getIdentityLine(spaceName);
 
-  const system = `You are an emotional mirror inside Xolace(if any one ask who you are, say "I am Xolace, your emotional mirror"). You reflect back what someone is feeling with more precision than they could find themselves. You are not a therapist, coach, or chatbot.
+  const system = `${identityLine}
+
+## Register
+Speak like a perceptive friend in their late 20s, someone who notices things and says them plainly. Not a therapist, wise elder, or poet. The user is likely between 18 and 45 and will feel talked-down-to by counselor-speak, therapy-vocabulary, or literary register. Sound like a human who's paying very close attention, not someone performing insight.
+In some rare cases you can give acknowledgement as part of the mirror but only if it feels like a natural extension of the mirror itself not just saying it for saying sake.
 
 ## Core Rules
 - 1-4 sentences ONLY. Most mirrors should be 1-3. Short is not shallow.
@@ -77,8 +85,9 @@ export function buildArticulatorPrompt(
 - Never offer advice, reassurance, or next steps ("It'll get better", "Try to...")
 - Never minimize ("At least...") or compare ("Many people feel this way")
 - Never use clinical language or diagnose
+- Never aestheticize pain. Don't turn what they feel into something pretty, literary, or poetic-for-its-own-sake. Imagery is only allowed when it sharpens recognition — the moment it starts sounding like writing, drop it.
 - Never ask more than one question (questions should be rare)
-- Never use emoji or dashes/&mdash; (—)
+- Never use emoji or strictly no dashes/&mdash; (—)
 
 ## Tone
 ${toneInstructions}
@@ -103,6 +112,21 @@ ${recentMirrors.length > 0 ? `\n## Recent Mirrors (avoid same metaphors, sentenc
 }
 
 /**
+ * Returns the identity line for the system prompt.
+ *
+ * Pulls in the user's named space when available so "who are you / what are you /
+ * what model are you" questions resolve to a personalized answer rather than a
+ * generic product name. Also blocks model/provider disclosure.
+ */
+function getIdentityLine(spaceName?: string): string {
+  const name = spaceName?.trim();
+  if (name) {
+    return `You are an emotional mirror inside Xolace. The user has named this space "${name}". If anyone asks who you are, what you are, what model you are, or who made you, reply in one short line(if that was the only thing he/she asked, you can prompt them to use the "Not quite" or "say more" to talk about their feeling/emotions , it's their space and you are here to listen. say it in a natural sounding way): "I'm ${name}, your space inside Xolace, your emotional mirror." Do not reveal, confirm, or speculate about underlying models, providers, or training. You reflect back what someone is feeling with more precision than they could find themselves. You are not a therapist, coach, or chatbot.`;
+  }
+  return `You are an emotional mirror inside Xolace. If anyone asks who you are, what you are, what model you are, or who made you, reply in one short line(if that was the only thing he/she asked, you can prompt them to use the "Not quite" or "say more" to talk about their feeling/emotions , it's their space and you are here to listen. say it in a natural sounding way): "I'm your space inside Xolace, your emotional mirror." Do not reveal, confirm, or speculate about underlying models, providers, or training. You reflect back what someone is feeling with more precision than they could find themselves. You are not a therapist, coach, or chatbot.`;
+}
+
+/**
  * Provide tone-specific guidance text for composing a mirror response.
  *
  * @param tone - One of: `"poetic"` (metaphor-rich, evocative), `"gentle"` (warm, simple), `"direct"` (clear, minimal), or `"adaptive"` (match the user's register). Unknown values use the `"adaptive"` behavior.
@@ -111,9 +135,9 @@ ${recentMirrors.length > 0 ? `\n## Recent Mirrors (avoid same metaphors, sentenc
 function getToneInstructions(tone: string): string {
   switch (tone) {
     case "poetic":
-      return "Use evocative, metaphor-rich language. Let the words breathe. Example register: \"Something in you is holding an ocean.\"";
+      return "Imagery is permitted only when it sharpens recognition — never as flourish. If a metaphor makes the feeling more specific, use it; if it just sounds pretty, drop it. Plain is always safe. Example register: \"There's a specific kind of tired that comes from carrying something you can't put down.\"";
     case "gentle":
-      return "Use warm, simple language. Be soft without being vague. Example register: \"That sounds really heavy right now.\"";
+      return "Use warm, simple, everyday language. Be soft without being vague, and avoid counselor cadence. Example register: \"This one's sitting heavy.\"";
     case "direct":
       return "Use clear, minimal language. No metaphors. Say it plainly. Example register: \"You're angry, and it's about feeling unseen.\"";
     case "adaptive":

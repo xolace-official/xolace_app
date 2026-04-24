@@ -261,7 +261,9 @@ export default defineSchema({
     ),
 
     // Name the user chose for their processing space. Undefined = unnamed.
-    // Display-only; never shown to the AI.
+    // Passed to the articulator so identity questions ("who are you / what
+    // model are you") resolve to the user's chosen name rather than exposing
+    // the underlying provider.
     spaceName: v.optional(v.string()),
 
     // True once the naming dialog has been shown and the user tapped "Not now".
