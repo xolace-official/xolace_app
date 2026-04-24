@@ -1,6 +1,16 @@
 {
   "version": 1,
   "skills": {
+    "apple-search-ads": {
+      "source": "eronred/aso-skills",
+      "sourceType": "github",
+      "computedHash": "735639c0470adc80af02040d9f87b7331f2d38e7af2527f8ffcbfb9c19bd0451"
+    },
+    "aso-audit": {
+      "source": "eronred/aso-skills",
+      "sourceType": "github",
+      "computedHash": "3d2eb475a58f5913bb78802491f6845f713da3bbf1d5581e2a2c54f0ae540941"
+    },
     "clerk": {
       "source": "clerk/skills",
       "sourceType": "github",

@@ -18,11 +18,13 @@ const PAGE_SIZE = 15;
  * - `loadMore` — Function that requests the next page of items.
  */
 export function useTimeline() {
-  const { results, status, loadMore, isLoading } = usePaginatedQuery(
+  const { results, status, loadMore } = usePaginatedQuery(
     api.sessions.listForTimeline,
     {},
     { initialNumItems: PAGE_SIZE },
   );
+
+  const isLoading = status === 'LoadingFirstPage';
 
   const entries: TimelineEntry[] = useMemo(
     () =>

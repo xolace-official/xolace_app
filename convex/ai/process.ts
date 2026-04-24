@@ -139,6 +139,7 @@ export const generateMirror = internalAction({
           inputDuration: context.session.inputDuration as number | undefined,
           freezeOccurred: context.session.freezeOccurred as boolean | undefined,
           sessionMode: session.sessionMode,
+          spaceName: context.preferences?.spaceName,
         });
 
         const mirrorResponse = await anthropic.messages.create({

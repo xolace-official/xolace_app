@@ -19,6 +19,20 @@ const EMOTION_EMOJI: Record<string, string> = {
   overwhelm: '🌊',
   contentment: '☀️',
   love: '💛',
+  paralysis: '⏸️',
+  inadequacy: '🪨',
+  'emotional flatness': '🫥',
+  'emotional exhaustion': '🔋',
+  disconnection: '🔌',
+  heartbreak: '💔',
+  ambivalence: '⚖️',
+  flatness: '➖',
+  rage: '🔥',
+  'emotional shutdown': '🛑',
+  'self-directed shame': '🪞',
+  restlessness: '⚡',
+  disorientation: '🌪️',
+  resentment: '💢',
 };
 
 /**

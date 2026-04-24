@@ -17,7 +17,7 @@ const crons = cronJobs();
 // Check for abandoned sessions
 crons.interval(
   "check abandoned sessions",
-  isProd ? { minutes: 15 } : { hours: 2 },
+  isProd ? { hours: 6 } : { hours: 12 },
   internal.sessions.checkAbandoned,
   {}
 );
@@ -33,7 +33,7 @@ crons.interval(
 // Process account deletions
 crons.interval(
   "process account deletions",
-  isProd ? { hours: 1 } : { hours: 12 },
+  isProd ? { hours: 2 } : { hours: 24 },
   internal.jobs.accountDeletion.purge,
   {}
 );

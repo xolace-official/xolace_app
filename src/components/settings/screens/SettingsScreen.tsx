@@ -19,13 +19,6 @@ import type { ThemeMode } from "@/src/hooks/use-settings";
 /**
  * Settings screen — composes all preference sections.
  *
- * Sections:
- *  • Account        — sign-in method
- *  • Appearance     — theme mode, reduced motion
- *  • Notifications  — gentle reminders
- *  • Reflection Pool — contribute anonymously
- *  • Your Data      — export, retention, delete data, delete account
- *  • Log out
  */
 export const SettingsScreen = () => {
   const { toast } = useToast();
@@ -100,6 +93,17 @@ export const SettingsScreen = () => {
             isLast
           />
         </SettingsSection>
+        
+        {/* ── YOUR SPACE ──────────────────────────────────────── */}
+        <SettingsSection title="Your space">
+          <SettingsRow
+            variant="value"
+            label="Name"
+            value={spaceName ?? "—"}
+            onPress={() => setSpaceNameDialogOpen(true)}
+            isLast
+          />
+        </SettingsSection>
 
         {/* ── APPEARANCE ──────────────────────────────────────── */}
         <SettingsSection title="Appearance">
@@ -139,16 +143,6 @@ export const SettingsScreen = () => {
           />
         </SettingsSection>
 
-        {/* ── YOUR SPACE ──────────────────────────────────────── */}
-        <SettingsSection title="Your space">
-          <SettingsRow
-            variant="value"
-            label="Name"
-            value={spaceName ?? "—"}
-            onPress={() => setSpaceNameDialogOpen(true)}
-            isLast
-          />
-        </SettingsSection>
 
         {/* ── NOTIFICATIONS ────────────────────────────────────── */}
         <SettingsSection title="Notifications">

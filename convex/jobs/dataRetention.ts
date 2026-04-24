@@ -2,100 +2,114 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 
-const RETENTION_MS = {
+const TIERS = ["6_months", "1_year"] as const;
+type Tier = (typeof TIERS)[number];
+
+const RETENTION_MS: Record<Tier, number> = {
   "6_months": 6 * 30 * 24 * 60 * 60 * 1000,
   "1_year": 365 * 24 * 60 * 60 * 1000,
-} as const;
+};
 
-const CURSOR_KEYS = {
-  "6_months": "six_months",
-  "1_year": "one_year",
-} as const;
-
-type CursorKey = (typeof CURSOR_KEYS)[keyof typeof CURSOR_KEYS];
+const tierValidator = v.union(v.literal("6_months"), v.literal("1_year"));
 
 const BATCH_SIZE = 50;
 const PREFS_PAGE_SIZE = 100;
+const TURNS_PER_SESSION_BATCH = 100;
+
+function nextTier(tier: Tier): Tier | null {
+  const idx = TIERS.indexOf(tier);
+  return idx >= 0 && idx < TIERS.length - 1 ? TIERS[idx + 1] : null;
+}
 
 /**
  * Purge session data older than the user's retention preference.
- * Processes in batches and self-reschedules if more work remains.
+ * Processes one retention tier per invocation (Convex allows only one
+ * paginated query per mutation) and self-reschedules to continue.
  */
 export const enforce = internalMutation({
   args: {
-    cursors: v.optional(
-      v.object({
-        six_months: v.optional(v.union(v.string(), v.null())),
-        one_year: v.optional(v.union(v.string(), v.null())),
-      })
-    ),
+    tier: v.optional(tierValidator),
+    cursor: v.optional(v.union(v.string(), v.null())),
+    sessionWorkPending: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    let moreWork = false;
-    const nextCursors: Partial<Record<CursorKey, string | null>> = {};
+    const tier: Tier = args.tier ?? TIERS[0];
+    const cursor = args.cursor ?? null;
+    const priorPending = args.sessionWorkPending ?? false;
 
-    for (const tier of Object.keys(RETENTION_MS) as (keyof typeof RETENTION_MS)[]) {
-      const cursorKey = CURSOR_KEYS[tier];
-      const cursor = args.cursors?.[cursorKey] ?? null;
+    const { page: prefs, isDone, continueCursor } = await ctx.db
+      .query("preferences")
+      .withIndex("by_retention", (q) => q.eq("dataRetentionPreference", tier))
+      .paginate({ numItems: PREFS_PAGE_SIZE, cursor });
 
-      const { page: prefs, isDone, continueCursor } = await ctx.db
-        .query("preferences")
-        .withIndex("by_retention", (q) => q.eq("dataRetentionPreference", tier))
-        .paginate({ numItems: PREFS_PAGE_SIZE, cursor });
+    const cutoff = Date.now() - RETENTION_MS[tier];
+    let moreSessionWork = priorPending;
 
-      if (!isDone) {
-        moreWork = true;
-        nextCursors[cursorKey] = continueCursor;
+    for (const pref of prefs) {
+      const oldSessions = await ctx.db
+        .query("sessions")
+        .withIndex("by_profile_time", (q) =>
+          q
+            .eq("emotionalProfileId", pref.emotionalProfileId)
+            .lt("createdAt", cutoff)
+        )
+        .take(BATCH_SIZE);
+
+      if (oldSessions.length === BATCH_SIZE) {
+        moreSessionWork = true;
       }
 
-      const retentionMs = RETENTION_MS[tier];
-      const cutoff = Date.now() - retentionMs;
-
-      for (const pref of prefs) {
-        // Find old sessions for this profile
-        const oldSessions = await ctx.db
-          .query("sessions")
-          .withIndex("by_profile_time", (q) =>
-            q
-              .eq("emotionalProfileId", pref.emotionalProfileId)
-              .lt("createdAt", cutoff)
-          )
-          .take(BATCH_SIZE);
-
-        if (oldSessions.length === BATCH_SIZE) {
-          moreWork = true;
+      for (const session of oldSessions) {
+        const metadata = await ctx.db
+          .query("emotional_metadata")
+          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+          .unique();
+        if (metadata) {
+          await ctx.db.delete(metadata._id);
         }
 
-        for (const session of oldSessions) {
-          // Delete associated metadata
-          const metadata = await ctx.db
-            .query("emotional_metadata")
-            .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-            .unique();
-          if (metadata) {
-            await ctx.db.delete(metadata._id);
-          }
-
-          // Delete associated turns
-          const turns = await ctx.db
-            .query("session_turns")
-            .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-            .take(10);
-          for (const turn of turns) {
-            await ctx.db.delete(turn._id);
-          }
-
-          // Delete the session
-          await ctx.db.delete(session._id);
+        const turns = await ctx.db
+          .query("session_turns")
+          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+          .take(TURNS_PER_SESSION_BATCH);
+        for (const turn of turns) {
+          await ctx.db.delete(turn._id);
         }
+
+        if (turns.length === TURNS_PER_SESSION_BATCH) {
+          // More turns remain for this session — leave the session row so the
+          // next scan revisits it and finishes the turn cleanup first.
+          moreSessionWork = true;
+          continue;
+        }
+
+        await ctx.db.delete(session._id);
       }
     }
 
-    // Self-reschedule if more work remains, forwarding cursors for any
-    // unfinished preference pages so we continue where we left off.
-    if (moreWork) {
+    if (!isDone) {
       await ctx.scheduler.runAfter(0, internal.jobs.dataRetention.enforce, {
-        cursors: nextCursors,
+        tier,
+        cursor: continueCursor,
+        sessionWorkPending: moreSessionWork,
+      });
+      return;
+    }
+
+    if (moreSessionWork) {
+      // Restart this tier's pref scan on the next run so stalled deletions resume.
+      await ctx.scheduler.runAfter(0, internal.jobs.dataRetention.enforce, {
+        tier,
+        cursor: null,
+      });
+      return;
+    }
+
+    const next = nextTier(tier);
+    if (next) {
+      await ctx.scheduler.runAfter(0, internal.jobs.dataRetention.enforce, {
+        tier: next,
+        cursor: null,
       });
     }
   },

@@ -162,7 +162,7 @@ export const IdleState = ({
       </Pressable>
 
       {/* Scaffold section */}
-      <View className="border-t border-foreground/5 pt-5 pb-8">
+      <View className="border-t border-foreground/5 pt-6 pb-8">
         <AppText className="mb-3 text-xs text-foreground/30">
           Or just tap what feels close:
         </AppText>
@@ -206,7 +206,7 @@ export const IdleState = ({
         )}
       </View>
 
-      <View className="absolute bottom-20 right-6">
+      <View className="absolute bottom-22 right-6">
         <TimelineIcon />
       </View>
     </View>
