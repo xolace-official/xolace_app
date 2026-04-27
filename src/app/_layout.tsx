@@ -8,11 +8,12 @@ import '@/src/global.css';
 import '@/src/lib/theme-bootstrap';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { useEffect, useRef } from 'react';
+import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
 import { useUniwind } from 'uniwind'
 import * as SplashScreen from 'expo-splash-screen';
 import { useConvexAuth } from 'convex/react';
+import { usePostHog } from 'posthog-react-native';
 import {
   SpaceGrotesk_400Regular,
   SpaceGrotesk_500Medium,
@@ -30,6 +31,20 @@ SplashScreen.preventAutoHideAsync();
 const AppContent = () => {
   const introSeen = useAppStore((s) => s.introSeen);
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  const posthog = usePostHog();
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
+  const previousPathname = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (previousPathname.current !== pathname) {
+      posthog.screen(pathname, {
+        previous_screen: previousPathname.current ?? null,
+        ...params,
+      });
+      previousPathname.current = pathname;
+    }
+  }, [pathname, params, posthog]);
 
   if (isAuthLoading) return null;
   return (

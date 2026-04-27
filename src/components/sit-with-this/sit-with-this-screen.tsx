@@ -6,6 +6,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { useToast } from 'heroui-native';
 import { api } from '../../../convex/_generated/api';
 import { usePathSession } from '@/src/hooks/use-path-session';
+import { usePostHog } from 'posthog-react-native';
 import { ExerciseRunner } from './runner/exercise-runner';
 import { SwapSheet } from './swap-sheet';
 import { AppText } from '@/src/components/shared/app-text';
@@ -20,6 +21,7 @@ export function SitWithThisScreen() {
   const [swapSheetOpen, setSwapSheetOpen] = useState(false);
 
   const { sessionId, session, startPath, completePath } = usePathSession();
+  const posthog = usePostHog();
   const exerciseResult = useQuery(
     api.exercises.getForSession,
     sessionId ? { sessionId } : 'skip',
@@ -72,8 +74,12 @@ export function SitWithThisScreen() {
 
   const handleSwap = useCallback(async (newExerciseId: Id<'exercises'>) => {
     if (!sessionId) return;
+    const swapsUsedBefore = session?.swappedExerciseIds?.length ?? 0;
     try {
       await recordSwapMutation({ sessionId, newExerciseId });
+      posthog.capture('exercise_swapped', {
+        swaps_used: swapsUsedBefore + 1,
+      });
       setSwapSheetOpen(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
@@ -88,7 +94,7 @@ export function SitWithThisScreen() {
         variant: 'default',
       });
     }
-  }, [sessionId, recordSwapMutation, toast]);
+  }, [sessionId, session?.swappedExerciseIds?.length, recordSwapMutation, posthog, toast]);
 
   if (exerciseResult === undefined || !session || preferences === undefined) {
     return (

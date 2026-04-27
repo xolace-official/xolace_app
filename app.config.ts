@@ -99,7 +99,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "@clerk/expo",
       "expo-secure-store",
       "expo-apple-authentication",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-localization"
     ],
     experiments: {
       typedRoutes: true,
@@ -110,6 +111,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       eas: {
         projectId: "9b49d23b-d85c-48c9-84a4-db117b864dd3"
       },
+      posthogProjectToken: process.env.POSTHOG_PROJECT_TOKEN,
+      posthogHost: process.env.POSTHOG_HOST,
       EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME", process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME),
       EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID", process.env.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID),
       EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID", process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID),
