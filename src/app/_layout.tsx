@@ -25,6 +25,7 @@ import {
 import { RootProvider } from '@/src/providers/root-provider';
 import { useAppStore } from '@/src/store/store';
 import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
+import { EmberLoader } from '@/src/components/shared/loader/ember-loader';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -46,7 +47,7 @@ const AppContent = () => {
     }
   }, [pathname, params, posthog]);
 
-  if (isAuthLoading) return null;
+  if (isAuthLoading) return <EmberLoader />;
   return (
         <Stack
       screenOptions={{
