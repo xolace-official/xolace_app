@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useClerk, useUser } from "@clerk/expo";
+import { usePostHog } from "posthog-react-native";
 import { Uniwind } from "uniwind";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -21,6 +22,7 @@ export type ThemeMode = "system" | "light" | "dark";
 export const useSettings = () => {
   const { signOut } = useClerk();
   const { user } = useUser();
+  const posthog = usePostHog();
   const {
     theme: storedTheme,
     setTheme: storeSetTheme,
@@ -298,12 +300,14 @@ export const useSettings = () => {
 
   // ─── Destructive actions ────────────────────────────────────────────
   const performLogout = useCallback(async () => {
+    posthog.capture('user_signed_out');
+    posthog.reset();
     try {
       await signOut();
     } catch {
       // Clerk will update its own auth state; ignore network errors
     }
-  }, [signOut]);
+  }, [signOut, posthog]);
 
   const performDeleteData = useCallback(async () => {
     await requestDataWipe();
