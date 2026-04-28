@@ -41,7 +41,7 @@ const AppContent = () => {
     if (previousPathname.current !== pathname) {
       posthog.screen(pathname, {
         previous_screen: previousPathname.current ?? null,
-        ...params,
+        path: typeof params.path === 'string' ? params.path : undefined,
       });
       previousPathname.current = pathname;
     }

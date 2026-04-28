@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Easing, withRepeat, withTiming, withSequence, withDelay } from "react-native-reanimated";
+import { Easing, withRepeat, withTiming, withSequence, withDelay, cancelAnimation } from "react-native-reanimated";
 import type { UseLoaderAnimationConfig } from "./types";
 
 /**
@@ -48,5 +48,9 @@ export const useLoaderAnimation = (config: UseLoaderAnimationConfig) => {
     }
 
     progress.set(initialDelay > 0 ? withDelay(initialDelay, repeatedAnimation) : repeatedAnimation);
+
+    return () => {
+      cancelAnimation(progress);
+    };
   }, [autoPlay, progress, duration, initialDelay, repeatDelay, numberOfReps, reverse, easing]);
 };

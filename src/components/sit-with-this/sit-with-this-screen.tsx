@@ -74,11 +74,10 @@ export function SitWithThisScreen() {
 
   const handleSwap = useCallback(async (newExerciseId: Id<'exercises'>) => {
     if (!sessionId) return;
-    const swapsUsedBefore = session?.swappedExerciseIds?.length ?? 0;
     try {
-      await recordSwapMutation({ sessionId, newExerciseId });
+      const result = await recordSwapMutation({ sessionId, newExerciseId });
       posthog.capture('exercise_swapped', {
-        swaps_used: swapsUsedBefore + 1,
+        swaps_used: result.swapsUsed,
       });
       setSwapSheetOpen(false);
     } catch (err) {
@@ -94,7 +93,7 @@ export function SitWithThisScreen() {
         variant: 'default',
       });
     }
-  }, [sessionId, session?.swappedExerciseIds?.length, recordSwapMutation, posthog, toast]);
+  }, [sessionId, recordSwapMutation, posthog, toast]);
 
   if (exerciseResult === undefined || !session || preferences === undefined) {
     return (

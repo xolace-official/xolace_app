@@ -5,7 +5,7 @@ import { TimelineSectionHeader } from '@/src/components/timeline/timeline-sectio
 import { AppText } from '@/src/components/shared/app-text';
 import { useTimeline } from '@/src/hooks/use-timeline';
 import type { TimelineFlatItem } from '@/src/interfaces/timeline';
-import { FullMorphLoader as ActiveLoader } from '../../shared/loader/morph/full-morph-loader';
+import { FullMorphLoader as ActiveLoader } from '@/src/components/shared/loader/morph/full-morph-loader';
 
 const renderItem = ({ item, index }: { item: TimelineFlatItem; index: number }) => {
   if (item.type === 'section') {

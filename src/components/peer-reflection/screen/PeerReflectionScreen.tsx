@@ -149,7 +149,7 @@ export const PeerReflectionScreen = () => {
                 const result = await toggleResonanceMutation({ reflectionId: reflection._id });
                 if (!result?.rateLimited) {
                   posthog.capture('peer_resonance_toggled', {
-                    resonated: !resonatedMap?.[reflection._id],
+                    resonated: result.resonated,
                     reflection_index: i,
                     is_fallback: isFallback,
                   });

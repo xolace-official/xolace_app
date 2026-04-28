@@ -8,9 +8,13 @@ import Animated, {
   interpolateColor,
   Extrapolation,
 } from "react-native-reanimated";
-import type { LoaderContextValue, LoaderKeyframeViewProps, LoaderProps } from "./types";
-import { useLoaderAnimation } from "./use-loader-animation";
-import { ANGLE_TRANSFORM_KEYS, parseKeyframes } from "./utils";
+import type {
+  LoaderContextValue,
+  LoaderKeyframeViewProps,
+  LoaderProps,
+} from "@/src/components/shared/loader/types";
+import { useLoaderAnimation } from "@/src/components/shared/loader/use-loader-animation";
+import { ANGLE_TRANSFORM_KEYS, parseKeyframes } from "@/src/components/shared/loader/utils";
 
 export const LoaderContext = createContext<LoaderContextValue | null>(null);
 
