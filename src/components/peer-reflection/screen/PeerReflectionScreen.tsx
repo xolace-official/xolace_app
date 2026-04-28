@@ -97,6 +97,12 @@ export const PeerReflectionScreen = () => {
           description: "You've reported a lot recently. Try again later.",
           variant: "default",
         });
+      } else if (result?.alreadyReported) {
+        toast.show({
+          label: "Already reported",
+          description: "You've already flagged this reflection.",
+          variant: "default",
+        });
       } else {
         toast.show({
           label: "Report received",
