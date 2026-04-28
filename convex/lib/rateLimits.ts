@@ -18,4 +18,7 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 
   // Data wipe — once per 7 days (wipeInProgress flag handles in-flight dedup)
   dataWipe: { kind: "fixed window", rate: 1, period: 7 * DAY },
+
+  // Reflection reports — 5 per day to prevent abuse
+  reportReflection: { kind: "fixed window", rate: 5, period: DAY },
 });

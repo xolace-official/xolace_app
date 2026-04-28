@@ -950,7 +950,32 @@ export default defineSchema({
     .index("by_profile_and_reach", ["emotionalProfileId", "reachUsed"]),
 
   // ===========================================================
-  // 11. CONSENT RECORDS
+  // 11. REFLECTION REPORTS
+  // ===========================================================
+  //
+  // User-submitted reports for offensive or harmful content
+  // in the peer reflection pool. Required by App Store
+  // Guideline 1.2 (UGC moderation mechanism).
+  //
+  // Auto-flag heuristic: ≥3 reports flips reflection.status
+  // to "flagged", which removes it from all active indexes.
+  //
+  reflection_reports: defineTable({
+    reflectionId: v.id("reflections"),
+    reporterProfileId: v.id("emotional_profiles"),
+    reason: v.union(
+      v.literal("offensive"),
+      v.literal("self_harm"),
+      v.literal("spam"),
+      v.literal("other"),
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_reflection", ["reflectionId"])
+    .index("by_profile_reflection", ["reporterProfileId", "reflectionId"]),
+
+  // ===========================================================
+  // 12. CONSENT RECORDS
   // ===========================================================
   //
   // Granular, auditable consent tracking.
