@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -91,7 +92,7 @@ export const PeerReflectionScreen = () => {
         className="flex-1 items-center justify-center bg-background"
         style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
-        <ActivityIndicator />
+        <MorphLoader />
       </View>
     );
   }

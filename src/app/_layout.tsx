@@ -25,7 +25,7 @@ import {
 import { RootProvider } from '@/src/providers/root-provider';
 import { useAppStore } from '@/src/store/store';
 import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
-import { EmberLoader } from '@/src/components/shared/loader/ember-loader';
+import { FullRippleLoader } from '@/src/components/shared/loader/ripple/full-ripple-loader';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -47,7 +47,7 @@ const AppContent = () => {
     }
   }, [pathname, params, posthog]);
 
-  if (isAuthLoading) return <EmberLoader />;
+  if (isAuthLoading) return <FullRippleLoader />;
   return (
         <Stack
       screenOptions={{

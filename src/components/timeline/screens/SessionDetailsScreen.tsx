@@ -1,4 +1,5 @@
-import { ActivityIndicator, ScrollView, View, Pressable } from 'react-native';
+import { ScrollView, View, Pressable } from 'react-native';
+import { MorphLoader } from '@/src/components/shared/loader/morph/morph-loader';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
@@ -63,7 +64,7 @@ export const SessionDetailsScreen = () => {
         className="flex-1 items-center justify-center bg-background"
         style={{ paddingTop: insets.top }}
       >
-        <ActivityIndicator />
+        <MorphLoader />
       </View>
     );
   }
