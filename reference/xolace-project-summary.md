@@ -8,11 +8,15 @@
 
 Xolace is an emotional processing app. Not a chatbot. Not a social network. Not therapy.
 
-People open Xolace when they feel something they can't name — heavy, anxious, numb, confused — but not "bad enough" for therapy. The app asks one question: "What's here right now?" The user writes whatever is true (or taps texture words if they can't find words). An AI reads what they expressed and mirrors it back with more precision than they could find themselves — 1-3 sentences that make them think "yes, exactly, that's what I'm feeling." Then they choose: sit with a short guided exercise, see that strangers have felt something similar, or simply close the app knowing they were heard.
+People open Xolace when they feel something they can't name — heavy, anxious, numb, confused — but not "bad enough" for therapy. The app asks one question: "What's here right now?" The user either writes what they're experiencing or vents into a voice session that disappears when they're done. An AI reads what they expressed and mirrors it back with more precision than they could find themselves — 1-3 sentences that make them think "yes, exactly, that's what I'm feeling." Then they choose: sit with a short guided exercise, see words from strangers who felt the same thing, or simply close the app knowing what they're feeling is enough.
+
+Sessions are self-contained and take a few minutes. No feeds. No ongoing conversations.
 
 ### Core Thesis
 
-There is a massive gap between "Everything is fine" (social media performance mode) and "I need therapy" (clinical intervention). Most people live in that gap. Xolace exists in that gap as **emotional processing infrastructure** — the daily layer of mental wellness.
+There is a massive gap between "Everything is fine" (social media performance mode) and "I need therapy" (clinical intervention). Most people live in that gap — and most existing tools assume users already know what they're feeling and are ready to engage with support. **Most people are stuck at an earlier layer: they feel something but cannot name it.** Without that clarity, they don't seek help, and when they do, they don't benefit from it as quickly.
+
+Xolace exists to close that gap as **emotional processing infrastructure** — the articulation layer that makes every other form of support more effective.
 
 ### What It Is NOT
 
@@ -46,6 +50,12 @@ The redesign forces a sharper thesis: **Xolace = Emotional Processing Infrastruc
 2. **Ash is solitary. Xolace has human connection.** Ash is you alone with an AI forever. Xolace connects you to real humans who feel what you feel through anonymous peer reflections and structured shared spaces.
 3. **Ash wants to be therapy. Xolace doesn't.** By positioning as AI therapy, Ash accepts clinical constraints (regulatory scrutiny, liability, clinical validation requirements). Xolace sits before/between/outside therapy — a dramatically larger addressable market.
 4. **Ash creates dependency. Xolace prevents it.** Users open Ash 5x/day for emotional conversations. Xolace sessions are 3-8 minutes, and the app encourages you to leave. Anti-addiction design is a trust moat.
+
+**The deeper competitive insight:** Most competitors — AI companions, therapy apps, journaling tools — are designed for users who already know what they're feeling and are ready to engage. They don't address the earlier problem: people who feel something but can't name it. Without articulation, they don't seek help or don't benefit from it when they do. That's the layer nobody is building for, and it is the layer Xolace owns.
+
+**The AI companion → real human handoff:** Users of AI companion apps already know the relationship is an illusion. They use it anyway because it's available and non-judgmental. But once they can articulate what they feel, they want real human connection and real help — not more AI. Xolace is positioned exactly at that transition: it gives users the language they need, then routes them toward real humans (peer reflections, Phase 2 resonance matching, Phase 3 therapy marketplace). AI companions have no answer for this. Xolace is designed for it.
+
+**Clinician validation:** Mental health counselors confirmed this directly — understanding a client's emotional state before a session meaningfully improves and speeds up the work. Xolace is the layer that makes professional support more effective, not a replacement for it. This is the B2B thesis: Xolace as intake infrastructure for universities, employers, and therapy practices.
 
 **Secondary competitors:** Rosebud (AI journaling), Flourish (Harvard-validated wellness), Wysa (CBT chatbot), Woebot (shut down its chatbot app despite $123M raised — validates that the chatbot-as-therapist model is hard to sustain).
 
@@ -355,37 +365,35 @@ Using Uniwind (Tailwind for React Native) + HeroUI Native. Multi-theme support p
 
 ---
 
-## 9. What Must Be Proven
+## 9. What Has Been Proven — and What's Next
 
-Everything above is a hypothesis. There is exactly one question that determines success:
+The core question driving the MVP was:
 
 > **Can AI help people articulate emotions they couldn't articulate alone — and does that moment of articulation itself create relief?**
 
-### The Test
+### Closed Beta Results (TestFlight, Month 1 Post-Pivot)
 
-- Build Layer 1 MVP
-- Ship to 50 users via TestFlight
-- Measure: do they come back within 72 hours without being prompted?
-- Target: 3+ sessions per week from users who received no push notifications
+- **20 users, 68 completed sessions**
+- **50% returned without prompts or push notifications**
+- Users consistently described the reflection as accurate: *"putting how I was feeling into the right words"*
+- Sessions were self-contained; no users reported needing more conversation after receiving their mirror
 
-If yes → everything else follows.
-If no → the entire architecture is intellectually impressive but emotionally weak.
+The core thesis holds. The product delivers articulation. Unprompted return at 50% is a strong signal that the relief is real and users remember it.
 
-### The 2-Week Sprint
+### The Remaining Questions
 
-**Week 1:**
-- Expo app shell with auth (Google OAuth via Clerk)
-- Core screen: "What's here right now?" → text input + texture words
-- AI service: emotion classification + articulation mirror endpoint
-- Mirror display with confirmation flow
-- Basic session storage in Convex
+The beta proves the session works. What it doesn't prove yet:
 
-**Week 2:**
-- Three path options (solo exercise, peer reflections, exit)
-- Seed reflection pool with 200-300 curated anonymous reflections
-- Basic emotion classification and session tagging
-- Timeline view (past sessions, read-only)
-- Ship to TestFlight → 50 users
+- **Does this become a daily or weekly behavior?** 68 sessions across 20 users is ~3.4 sessions per user in the first month. That's promising but not yet habit-forming frequency. The target is 3+ sessions per week.
+- **Does voice mode change retention?** The text-first beta didn't include voice sessions. Voice is a fundamentally different emotional experience — lower friction, higher rawness. It may reach a different user segment entirely.
+- **Does the 50% retention hold at public scale?** Closed betas over-index on motivated early adopters. Public launch will surface the real retention floor.
+
+### What's Next
+
+- Public beta launch (moving from TestFlight to open)
+- Voice session implementation (ElevenLabs STT/TTS)
+- Measure 30-day and 60-day retention curves
+- B2B pilot with one university counseling center
 
 ---
 
@@ -401,11 +409,12 @@ If no → the entire architecture is intellectually impressive but emotionally w
 
 ## 11. Open Questions / Known Risks
 
-1. **Is articulation alone enough for retention?** The relief of naming a feeling is real. But is it enough to build a daily habit? It might be a weekly behavior, not daily. Weekly-use apps are hard to grow.
-2. **The $93M threat.** Ash has massive funding and could add peer features if they wanted to. Speed to market matters.
-3. **Moderation at scale.** Even with AI scaffolding, human connection features (resonance matching, circles) introduce safety risks that grow non-linearly with user count.
-4. **Clinical validation.** Flourish has a Harvard RCT. For institutional credibility and Series A fundraising, Xolace should plan for a study — even a small one — within 12-18 months.
-5. **The question that decides everything:** If Xolace disappeared tomorrow, would users say "I miss that place where I processed my feelings" or "I miss the people there"? The answer should be both. Layer 1 proves the tool. Layers 2 and 3 build the home.
+1. **Session frequency vs. daily habit.** The beta showed ~3.4 sessions per user in the first month. The relief of naming a feeling is real. But does it pull users back daily or weekly? Weekly-use apps are significantly harder to grow and monetize. The public beta will clarify this.
+2. **Voice mode changes the product.** Adding voice sessions isn't a feature — it may be a different product for a different emotional register. A user who vents verbally and hears a mirror read back to them has a qualitatively different experience than a text session. This needs its own retention measurement.
+3. **The $93M threat.** Ash has massive funding and could add peer features or pivot toward articulation if they recognized the gap. Speed to market matters.
+4. **Moderation at scale.** Even with AI scaffolding, human connection features (resonance matching, circles) introduce safety risks that grow non-linearly with user count.
+5. **Clinical validation.** Flourish has a Harvard RCT. For institutional credibility and Series A fundraising, Xolace should plan for a study — even a small one — within 12-18 months. The counselor validation insight is qualitative right now; it needs to become quantitative.
+6. **The question that decides everything:** If Xolace disappeared tomorrow, would users say "I miss that place where I processed my feelings" or "I miss the people there"? The answer should eventually be both. Layer 1 proves the tool. Layers 2 and 3 build the home.
 
 ---
 

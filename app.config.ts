@@ -2,7 +2,13 @@ import { ConfigContext, ExpoConfig } from "expo/config"
 
 function requireEnv(name: string, value: string | undefined): string {
   if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
+    if (process.env.EAS_BUILD === "true" || process.env.CI === "true") {
+      throw new Error(`Missing required environment variable: ${name}`);
+    }
+    console.warn(
+      `[app.config] ${name} is missing — run \`eas env:pull <environment>\` to populate .env.local`,
+    );
+    return "";
   }
   return value;
 }
