@@ -8,6 +8,7 @@ import { useSignInWithGoogle } from '@clerk/expo/google';
 import { useSignInWithApple } from '@clerk/expo/apple';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
+import { usePostHog } from 'posthog-react-native';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { AuthBg } from '@/src/components/auth/auth-bg';
@@ -22,6 +23,7 @@ export const AuthScreen = () => {
   const { startAppleAuthenticationFlow } = useSignInWithApple();
   const getOrCreate = useMutation(api.users.getOrCreate);
   const [loadingProvider, setLoadingProvider] = useState<'apple' | 'google' | null>(null);
+  const posthog = usePostHog();
 
   const handleAppleAuth = useCallback(async () => {
     playSoftPress();
@@ -35,9 +37,18 @@ export const AuthScreen = () => {
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
 
-        await getOrCreate({
+        const userId = await getOrCreate({
           authProvider: 'apple',
           authProviderAccountId: signUp?.createdUserId ?? 'apple-user',
+        });
+
+        posthog.identify(userId, {
+          $set: { auth_provider: 'apple' },
+          $set_once: { first_sign_in_date: new Date().toISOString() },
+        });
+        posthog.capture('user_signed_in', {
+          auth_provider: 'apple',
+          is_new_user: !!signUp?.createdUserId,
         });
       }
     } catch (error: unknown) {
@@ -60,10 +71,19 @@ export const AuthScreen = () => {
         msg = String(error);
       }
       console.error('Apple auth error:', msg);
+      posthog.capture('$exception', {
+        $exception_list: [
+          {
+            type: 'AppleAuthError',
+            value: msg,
+          },
+        ],
+        auth_provider: 'apple',
+      });
     } finally {
       setLoadingProvider(null);
     }
-  }, [startAppleAuthenticationFlow, getOrCreate]);
+  }, [startAppleAuthenticationFlow, getOrCreate, posthog]);
 
   const handleGoogleAuth = useCallback(async () => {
     playSoftPress();
@@ -77,9 +97,18 @@ export const AuthScreen = () => {
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
 
-        await getOrCreate({
+        const userId = await getOrCreate({
           authProvider: 'google',
           authProviderAccountId: signUp?.createdUserId ?? 'google-user',
+        });
+
+        posthog.identify(userId, {
+          $set: { auth_provider: 'google' },
+          $set_once: { first_sign_in_date: new Date().toISOString() },
+        });
+        posthog.capture('user_signed_in', {
+          auth_provider: 'google',
+          is_new_user: !!signUp?.createdUserId,
         });
       }
     } catch (error: unknown) {
@@ -104,10 +133,19 @@ export const AuthScreen = () => {
         msg = String(error);
       }
       console.error('Google auth error:', msg);
+      posthog.capture('$exception', {
+        $exception_list: [
+          {
+            type: 'GoogleAuthError',
+            value: msg,
+          },
+        ],
+        auth_provider: 'google',
+      });
     } finally {
       setLoadingProvider(null);
     }
-  }, [startGoogleAuthenticationFlow, getOrCreate]);
+  }, [startGoogleAuthenticationFlow, getOrCreate, posthog]);
 
   return (
     <View

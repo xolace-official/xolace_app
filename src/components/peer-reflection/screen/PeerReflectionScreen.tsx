@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useQuery, useMutation } from "convex/react";
 import { useToast } from "heroui-native";
+import { usePostHog } from "posthog-react-native";
 import { api } from "../../../../convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/reflect/pill-button";
@@ -18,6 +20,7 @@ export const PeerReflectionScreen = () => {
   const startedRef = useRef(false);
 
   const { sessionId, session, isLoading, startPath } = usePathSession();
+  const posthog = usePostHog();
 
   // Start the path on mount
   useEffect(() => {
@@ -89,7 +92,7 @@ export const PeerReflectionScreen = () => {
         className="flex-1 items-center justify-center bg-background"
         style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
-        <ActivityIndicator />
+        <MorphLoader />
       </View>
     );
   }
@@ -144,6 +147,13 @@ export const PeerReflectionScreen = () => {
             onToggleResonance={async () => {
               try {
                 const result = await toggleResonanceMutation({ reflectionId: reflection._id });
+                if (result != null && !result.rateLimited) {
+                  posthog.capture('peer_resonance_toggled', {
+                    resonated: result.resonated,
+                    reflection_index: i,
+                    is_fallback: isFallback,
+                  });
+                }
                 if (result?.rateLimited) {
                   toast.show({
                     label: "Slow down",

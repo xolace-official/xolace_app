@@ -3,6 +3,7 @@ import { View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
 
 import { useAppStore } from '@/src/store/store';
 import { playGentlePresence } from '@/src/lib/haptics';
@@ -16,6 +17,7 @@ export const FrameScreen = () => {
   const insets = useSafeAreaInsets();
   const setIntroSeen = useAppStore((s) => s.setIntroSeen);
   const router = useRouter();
+  const posthog = usePostHog();
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(1), 1700);
@@ -28,6 +30,7 @@ export const FrameScreen = () => {
 
   const handlePress = () => {
     playGentlePresence();
+    posthog.capture('onboarding_completed');
     setIntroSeen(true);
     router.replace('/(auth)/auth');
   };

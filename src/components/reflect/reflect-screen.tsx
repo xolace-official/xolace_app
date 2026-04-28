@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, type ViewStyle, View } from 'react-native';
+import { StyleSheet, type ViewStyle, View } from 'react-native';
+import { MorphLoader } from '@/src/components/shared/loader/morph/morph-loader';
 import { EaseView } from 'react-native-ease';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
@@ -72,7 +73,7 @@ export const ReflectScreen = () => {
         className="flex-1 items-center justify-center bg-background"
         style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
-        <ActivityIndicator />
+        <MorphLoader />
       </View>
     );
   }

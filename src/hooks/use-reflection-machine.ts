@@ -1,4 +1,5 @@
 import { useReducer, useCallback, useEffect, useRef } from 'react';
+import { usePostHog } from 'posthog-react-native';
 import type { FeedbackType } from '@/src/interfaces/reflection';
 import { useSession } from '@/src/hooks/use-session';
 import { extractErrorMessage } from '@/src/services/session-service';
@@ -28,6 +29,7 @@ import { MAX_TURNS, initialState, reducer } from './reflection-reducer';
  */
 export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const posthog = usePostHog();
   const {
     session,
     serverState,
@@ -75,6 +77,7 @@ export function useReflectionMachine() {
       case 'mirror_delivered':
         if (mirrorText) {
           if (session?.escalationTriggered) {
+            posthog.capture('escalation_triggered');
             dispatch({ type: 'ESCALATION_TRIGGERED', mirror: mirrorText });
           } else {
             dispatch({ type: 'MIRROR_RECEIVED', mirror: mirrorText });
@@ -100,7 +103,7 @@ export function useReflectionMachine() {
         dispatch({ type: 'RESET' });
         break;
     }
-  }, [serverState, mirrorText, errorMessage, state.screen, session, resetSession, clearRefs]);
+  }, [serverState, mirrorText, errorMessage, state.screen, session, resetSession, clearRefs, posthog]);
 
   // Track freeze (typing-nudge = user paused)
   useEffect(() => {
@@ -137,12 +140,17 @@ export function useReflectionMachine() {
         freezeOccurredRef.current,
         freezeDurationRef.current,
       );
+      posthog.capture('reflection_submitted', {
+        entry_type: state.entryType,
+        input_length: state.entryText.length,
+        freeze_occurred: freezeOccurredRef.current,
+      });
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
     } finally {
       busyRef.current = false;
     }
-  }, [state.entryText, state.entryType, initiateAndSubmit]);
+  }, [state.entryText, state.entryType, initiateAndSubmit, posthog]);
 
   const submitScaffold = useCallback(async () => {
     if (busyRef.current) return;
@@ -155,12 +163,17 @@ export function useReflectionMachine() {
         undefined,
         false,
       );
+      posthog.capture('reflection_submitted', {
+        entry_type: 'scaffold',
+        input_length: state.selectedTextures.length,
+        freeze_occurred: false,
+      });
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
     } finally {
       busyRef.current = false;
     }
-  }, [state.selectedTextures, initiateAndSubmit]);
+  }, [state.selectedTextures, initiateAndSubmit, posthog]);
 
   const submitClarification = useCallback(async () => {
     if (busyRef.current) return;
@@ -193,28 +206,31 @@ export function useReflectionMachine() {
     try {
       const confirmationState = turnsCount > 0 ? 'refined' : 'confirmed';
       await confirmMirror(confirmationState);
+      posthog.capture('mirror_confirmed', { turns_count: turnsCount });
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
     } finally {
       busyRef.current = false;
     }
-  }, [turnsCount, confirmMirror]);
+  }, [turnsCount, confirmMirror, posthog]);
 
   const handleNotQuite = useCallback(() => {
     if (turnsCount >= MAX_TURNS) {
       dispatch({ type: 'SESSION_RESUMED', screen: 'gave-up' });
     } else {
+      posthog.capture('mirror_not_quite', { turns_count: turnsCount });
       dispatch({ type: 'NOT_QUITE' });
     }
-  }, [turnsCount]);
+  }, [turnsCount, posthog]);
 
   const handleSayMore = useCallback(() => {
     if (turnsCount >= MAX_TURNS) {
       dispatch({ type: 'SESSION_RESUMED', screen: 'gave-up' });
     } else {
+      posthog.capture('mirror_say_more', { turns_count: turnsCount });
       dispatch({ type: 'SAY_MORE' });
     }
-  }, [turnsCount]);
+  }, [turnsCount, posthog]);
 
   const handleGaveUpPathSelection = useCallback(async () => {
     if (busyRef.current) return;
@@ -234,49 +250,53 @@ export function useReflectionMachine() {
     busyRef.current = true;
     try {
       await selectPath('exit');
+      posthog.capture('path_selected', { path: 'exit' });
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
     } finally {
       busyRef.current = false;
     }
-  }, [selectPath]);
+  }, [selectPath, posthog]);
 
   const handleSelectSolo = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
     try {
       await selectPath('solo');
+      posthog.capture('path_selected', { path: 'solo' });
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
     } finally {
       busyRef.current = false;
     }
-  }, [selectPath]);
+  }, [selectPath, posthog]);
 
   const handleSelectPeers = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
     try {
       await selectPath('peers');
+      posthog.capture('path_selected', { path: 'peers' });
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
     } finally {
       busyRef.current = false;
     }
-  }, [selectPath]);
+  }, [selectPath, posthog]);
 
   const handleEscalationEngage = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
     try {
       await recordEscalationResponse('engaged');
+      posthog.capture('escalation_engaged');
       // Resources phase is shown inline — component manages local state.
     } catch (error) {
       dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
     } finally {
       busyRef.current = false;
     }
-  }, [recordEscalationResponse]);
+  }, [recordEscalationResponse, posthog]);
 
   const handleEscalationContinue = useCallback(async () => {
     if (busyRef.current) return;

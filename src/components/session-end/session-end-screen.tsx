@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
+import { MorphLoader } from '@/src/components/shared/loader/morph/morph-loader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSessionEnd } from '@/src/hooks/use-session-end';
 import { ExitVariant } from '@/src/components/session-end/exit-variant';
@@ -32,7 +33,7 @@ export const SessionEndScreen = ({ path }: Props) => {
         className="flex-1 items-center justify-center bg-background"
         style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
-        <ActivityIndicator />
+        <MorphLoader />
       </View>
     );
   }

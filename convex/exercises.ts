@@ -212,9 +212,11 @@ export const recordSwap = mutation({
       throw new Error("Exercise not allowed for this session");
     }
 
+    const updatedSwaps = [...currentSwaps, args.newExerciseId];
     await ctx.db.patch(args.sessionId, {
-      swappedExerciseIds: [...currentSwaps, args.newExerciseId],
+      swappedExerciseIds: updatedSwaps,
     });
+    return { swapsUsed: updatedSwaps.length };
   },
 });
 

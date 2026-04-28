@@ -1,6 +1,7 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery } from 'convex/react';
+import { usePostHog } from 'posthog-react-native';
 import { api } from '../../convex/_generated/api';
 import { usePathSession } from '@/src/hooks/use-path-session';
 
@@ -26,6 +27,7 @@ export function useSessionEnd() {
   const { sessionId, session, isLoading, completePath } = usePathSession();
   const contributeByDefaultQuery = useQuery(api.preferences.getContributeByDefault);
   const sessionCountQuery = useQuery(api.users.getSessionCount);
+  const posthog = usePostHog();
   const busyRef = useRef(false);
   const navigatedRef = useRef(false);
 
@@ -51,9 +53,16 @@ export function useSessionEnd() {
       busyRef.current = true;
       const ok = await completePath(true, contributedReflection, postSessionMood);
       busyRef.current = false;
-      if (ok) navigateHome();
+      if (ok) {
+        posthog.capture('session_completed', {
+          post_session_mood: postSessionMood ?? null,
+          contributed_reflection: contributedReflection ?? false,
+          action: 'dismiss',
+        });
+        navigateHome();
+      }
     },
-    [completePath, navigateHome],
+    [completePath, navigateHome, posthog],
   );
 
   const haveMore = useCallback(
@@ -65,9 +74,16 @@ export function useSessionEnd() {
       busyRef.current = true;
       const ok = await completePath(true, contributedReflection, postSessionMood);
       busyRef.current = false;
-      if (ok) navigateHome();
+      if (ok) {
+        posthog.capture('session_completed', {
+          post_session_mood: postSessionMood ?? null,
+          contributed_reflection: contributedReflection ?? false,
+          action: 'have_more',
+        });
+        navigateHome();
+      }
     },
-    [completePath, navigateHome],
+    [completePath, navigateHome, posthog],
   );
 
   const distilledText = (session as { distilledText?: string } | undefined)
