@@ -22,7 +22,7 @@ if (!isPostHogConfigured) {
 
 export const posthog = new PostHog(apiKey || 'placeholder_key', {
   ...(host ? { host } : {}),
-  disabled: !isPostHogConfigured,
+  disabled: !isPostHogConfigured || __DEV__,
   captureAppLifecycleEvents: true,
   flushAt: 20,
   flushInterval: 10000,
