@@ -10,11 +10,15 @@ export const PRIVACY_POLICY: LegalDocument = {
   sections: [
     {
       heading: 'What We Collect',
-      body: 'We collect your account info (auth ID from Google or Apple), the text and emotion tags you enter during sessions, AI-generated reflections, and basic usage data like session duration and features used.',
+      body: 'We collect your account info (auth ID from Google or Apple), the text, AI-generated reflections, and session metadata like duration, features used, and app lifecycle events.',
     },
     {
       heading: 'AI Processing',
       body: 'Your emotional input is processed by a third-party AI service to generate reflections. This data is transmitted securely and is not used to train AI models. Content is also automatically screened for safety signals to detect potential crisis situations.',
+    },
+    {
+      heading: 'Analytics',
+      body: 'We use PostHog, a third-party product analytics service, to understand how the app is used. PostHog records screen views(nothing personal is shown), button taps, and app lifecycle events (open/close), linked to your account ID. We do not use this data for advertising and never sell it. You can request deletion of analytics data along with your account.',
     },
     {
       heading: 'How We Use It',

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,6 +12,8 @@ import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/reflect/pill-button";
 import { ReflectionCard } from "@/src/components/peer-reflection/reflection-card";
 import { usePathSession } from "@/src/hooks/use-path-session";
+import { ReportSheet } from "@/src/components/peer-reflection/report-sheet";
+import { Id } from "../../../../convex/_generated/dataModel";
 
 export const PeerReflectionScreen = () => {
   const insets = useSafeAreaInsets();
@@ -81,6 +83,36 @@ export const PeerReflectionScreen = () => {
   );
 
   const toggleResonanceMutation = useMutation(api.reflections.toggleResonance);
+  const reportReflectionMutation = useMutation(api.reflections.reportReflection);
+
+  const [reportTarget, setReportTarget] = useState<Id<"reflections"> | null>(null);
+
+  const handleReport = async (reason: "offensive" | "self_harm" | "spam" | "other") => {
+    if (!reportTarget) return;
+    try {
+      const result = await reportReflectionMutation({ reflectionId: reportTarget, reason });
+      if (result?.rateLimited) {
+        toast.show({
+          label: "Too many reports",
+          description: "You've reported a lot recently. Try again later.",
+          variant: "default",
+        });
+      } else {
+        toast.show({
+          label: "Report received",
+          description: "Thanks. We'll review this.",
+          variant: "default",
+        });
+        posthog.capture('peer_reflection_reported', { reason });
+      }
+    } catch {
+      toast.show({
+        label: "Something went wrong",
+        description: "Try again in a moment.",
+        variant: "default",
+      });
+    }
+  };
 
   const handleDone = () => {
     router.replace('/session-end?path=peers');
@@ -144,6 +176,7 @@ export const PeerReflectionScreen = () => {
             index={i}
             resonanceCount={reflection.resonanceCount}
             resonated={!!resonatedMap?.[reflection._id]}
+            onRequestReport={() => setReportTarget(reflection._id)}
             onToggleResonance={async () => {
               try {
                 const result = await toggleResonanceMutation({ reflectionId: reflection._id });
@@ -175,10 +208,19 @@ export const PeerReflectionScreen = () => {
 
       <Animated.View
         entering={FadeIn.delay(800).duration(400)}
-        className="items-center pb-4 pt-1"
+        className="items-center gap-3 pb-2 pt-1"
       >
         <PillButton label="Done" onPress={handleDone} />
+        <AppText className="text-xs text-foreground/25 text-center pb-2">
+          Long press any card to report
+        </AppText>
       </Animated.View>
+
+      <ReportSheet
+        isOpen={!!reportTarget}
+        onClose={() => setReportTarget(null)}
+        onSubmit={handleReport}
+      />
     </View>
   );
 };

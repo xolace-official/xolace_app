@@ -67,6 +67,21 @@ export const FrameScreen = () => {
           ))}
         </View>
 
+        {/* Disclaimer */}
+        <Animated.View
+          entering={FadeIn.delay(STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL - 200).duration(600)}
+        >
+          <AppText
+            style={{
+              fontSize: 12,
+              color: 'rgba(217, 171, 111, 0.5)',
+              lineHeight: 18,
+            }}
+          >
+            Xolace isn&apos;t a substitute for professional mental health care. If you&apos;re in crisis, please contact a professional.
+          </AppText>
+        </Animated.View>
+
         {/* CTA */}
         <Animated.View
           entering={FadeInDown.delay(STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL).duration(800).springify().damping(15)}

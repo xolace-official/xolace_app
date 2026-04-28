@@ -1,5 +1,5 @@
 import { SymbolView } from "expo-symbols";
-import { View, ColorValue } from "react-native";
+import { View, ColorValue, Pressable } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Card, Chip, cn } from "heroui-native";
 import { TruncatedText } from "@/src/components/peer-reflection/truncated-text";
@@ -8,12 +8,14 @@ import { useCSSVariable, withUniwind } from "uniwind";
 
 const StyledSymbolView = withUniwind(SymbolView);
 
+
 type Props = {
   text: string;
   index: number;
   resonanceCount: number;
   resonated: boolean;
   onToggleResonance: () => void | Promise<void>;
+  onRequestReport: () => void;
 };
 
 export const ReflectionCard = ({
@@ -22,6 +24,7 @@ export const ReflectionCard = ({
   resonanceCount,
   resonated,
   onToggleResonance,
+  onRequestReport,
 }: Props) => {
   const resonanceColor = useCSSVariable("--color-resonance-foreground");
 
@@ -32,16 +35,19 @@ export const ReflectionCard = ({
 
   return (
     <Animated.View entering={FadeInDown.delay(200 + index * 150).duration(500)}>
+      <Pressable onLongPress={onRequestReport} delayLongPress={400}>
       <Card
         variant="tertiary"
         className="border border-foreground/10 rounded-2xl"
         style={{ borderCurve: "continuous" }}
       >
         <Card.Body className="gap-5 py-4 px-4">
-          <TruncatedText
-            text={text}
-            className="text-base italic leading-7 text-foreground"
-          />
+          <View>
+            <TruncatedText
+              text={text}
+              className="text-base italic leading-7 text-foreground"
+            />
+          </View>
 
           <View>
             <Chip
@@ -79,6 +85,7 @@ export const ReflectionCard = ({
           </View>
         </Card.Body>
       </Card>
+      </Pressable>
     </Animated.View>
   );
 };

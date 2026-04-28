@@ -160,6 +160,69 @@ export const listRecent = query({
   },
 });
 
+const reportReasonValidator = v.union(
+  v.literal("offensive"),
+  v.literal("self_harm"),
+  v.literal("spam"),
+  v.literal("other"),
+);
+
+/**
+ * Report a peer reflection for offensive or harmful content.
+ * Auto-flags the reflection after ≥3 reports from distinct profiles.
+ */
+export const reportReflection = mutation({
+  args: {
+    reflectionId: v.id("reflections"),
+    reason: reportReasonValidator,
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    const { ok } = await rateLimiter.limit(ctx, "reportReflection", {
+      key: profile._id,
+    });
+    if (!ok) {
+      return { rateLimited: true };
+    }
+
+    const reflection = await ctx.db.get(args.reflectionId);
+    if (!reflection) {
+      throw new Error("Reflection not found");
+    }
+
+    const existing = await ctx.db
+      .query("reflection_reports")
+      .withIndex("by_profile_reflection", (q) =>
+        q.eq("reporterProfileId", profile._id).eq("reflectionId", args.reflectionId)
+      )
+      .unique();
+
+    if (existing) {
+      return { alreadyReported: true };
+    }
+
+    await ctx.db.insert("reflection_reports", {
+      reflectionId: args.reflectionId,
+      reporterProfileId: profile._id,
+      reason: args.reason,
+      createdAt: Date.now(),
+    });
+
+    // Auto-flag after ≥3 distinct reports
+    const reports = await ctx.db
+      .query("reflection_reports")
+      .withIndex("by_reflection", (q) => q.eq("reflectionId", args.reflectionId))
+      .take(3);
+
+    if (reports.length >= 3 && reflection.status === "active") {
+      await ctx.db.patch(args.reflectionId, { status: "flagged" });
+    }
+
+    return { reported: true };
+  },
+});
+
 /**
  * Insert an anonymized reflection into the pool.
  * No profile reference — anonymity is structural.
