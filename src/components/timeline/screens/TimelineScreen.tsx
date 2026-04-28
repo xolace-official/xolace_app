@@ -5,9 +5,6 @@ import { TimelineSectionHeader } from '@/src/components/timeline/timeline-sectio
 import { AppText } from '@/src/components/shared/app-text';
 import { useTimeline } from '@/src/hooks/use-timeline';
 import type { TimelineFlatItem } from '@/src/interfaces/timeline';
-// Swap to test: FullRippleLoader | FullMorphLoader | FullSquishLoader
-import { FullRippleLoader  } from '../../shared/loader/ripple/full-ripple-loader';
-import { FullSquishLoader  } from '../../shared/loader/squish/full-squish-loader';
 import { FullMorphLoader as ActiveLoader } from '../../shared/loader/morph/full-morph-loader';
 
 const renderItem = ({ item, index }: { item: TimelineFlatItem; index: number }) => {
@@ -26,7 +23,7 @@ export const TimelineScreen = () => {
   const { sections, isLoading, canLoadMore, isLoadingMore, loadMore } =
     useTimeline();
 
-  if (!isLoading) {
+  if (isLoading) {
     return (
       <ActiveLoader />
     );
