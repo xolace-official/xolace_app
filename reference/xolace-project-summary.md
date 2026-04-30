@@ -8,15 +8,21 @@
 
 Xolace is an emotional processing app. Not a chatbot. Not a social network. Not therapy.
 
-People open Xolace when they feel something they can't name — heavy, anxious, numb, confused — but not "bad enough" for therapy. The app asks one question: "What's here right now?" The user either writes what they're experiencing or vents into a voice session that disappears when they're done. An AI reads what they expressed and mirrors it back with more precision than they could find themselves — 1-3 sentences that make them think "yes, exactly, that's what I'm feeling." Then they choose: sit with a short guided exercise, see words from strangers who felt the same thing, or simply close the app knowing what they're feeling is enough.
+People open Xolace when they feel something they can't name — heavy, anxious, numb, confused — but not "bad enough" for therapy. The app offers two parallel paths:
+
+**Mirror** — For users seeking understanding. The app asks: "What's here right now?" The user writes or taps texture words. An AI reads what they expressed and mirrors it back with more precision than they could find themselves — 1-3 sentences that make them think "yes, exactly, that's what I'm feeling."
+
+**Vent Box** — For users seeking release. The user opens the mic and speaks. The session is ephemeral — an affirming presence listens (not judges, not advises), then it's gone. "Gone." appears on screen. No storage. No transcript. Just erasure with witness.
+
+After either path, users can see **Glimpses** — short videos (60-90s) of real people describing similar emotions and how they moved through them. Not advice. Not diagnosis. Just: "I felt this. I'm still here."
 
 Sessions are self-contained and take a few minutes. No feeds. No ongoing conversations.
 
 ### Core Thesis
 
-There is a massive gap between "Everything is fine" (social media performance mode) and "I need therapy" (clinical intervention). Most people live in that gap — and most existing tools assume users already know what they're feeling and are ready to engage with support. **Most people are stuck at an earlier layer: they feel something but cannot name it.** Without that clarity, they don't seek help, and when they do, they don't benefit from it as quickly.
+There is a massive gap between "Everything is fine" (social media performance mode) and "I need therapy" (clinical intervention). Most people live in that gap — and most existing tools assume users already know what they're feeling and are ready to engage with support. **Most people are stuck at an earlier layer: they feel something but cannot name it, or they need to release it without naming it.** Without that clarity (or release), they don't seek help, and when they do, they don't benefit from it as quickly.
 
-Xolace exists to close that gap as **emotional processing infrastructure** — the articulation layer that makes every other form of support more effective.
+Xolace exists to close that gap as **emotional processing infrastructure** — the articulation and release layers that make every other form of support more effective, plus the human recognition that follows.
 
 ### What It Is NOT
 
@@ -49,7 +55,7 @@ The redesign forces a sharper thesis: **Xolace = Emotional Processing Infrastruc
 1. **Ash is a chatbot. Xolace is not.** Ash creates a conversational relationship between user and AI. Xolace's AI is invisible infrastructure — the user never "talks to" it. They express, the AI mirrors, they move on.
 2. **Ash is solitary. Xolace has human connection.** Ash is you alone with an AI forever. Xolace connects you to real humans who feel what you feel through anonymous peer reflections and structured shared spaces.
 3. **Ash wants to be therapy. Xolace doesn't.** By positioning as AI therapy, Ash accepts clinical constraints (regulatory scrutiny, liability, clinical validation requirements). Xolace sits before/between/outside therapy — a dramatically larger addressable market.
-4. **Ash creates dependency. Xolace prevents it.** Users open Ash 5x/day for emotional conversations. Xolace sessions are 3-8 minutes, and the app encourages you to leave. Anti-addiction design is a trust moat.
+4. **Ash builds dependency. Xolace builds trust.** Ash designs for daily use through persistent memory and conversation continuity. Xolace designs for return through genuine value: users come back not because they're compelled by streaks or unfinished threads, but because they consistently get understood and (optionally) connected to real people who felt the same way. The difference is why they return — compulsion vs. trust. Anti-addiction design is a trust moat.
 
 **The deeper competitive insight:** Most competitors — AI companions, therapy apps, journaling tools — are designed for users who already know what they're feeling and are ready to engage. They don't address the earlier problem: people who feel something but can't name it. Without articulation, they don't seek help or don't benefit from it when they do. That's the layer nobody is building for, and it is the layer Xolace owns.
 
@@ -100,13 +106,27 @@ The redesign forces a sharper thesis: **Xolace = Emotional Processing Infrastruc
 
 ## 3. Product Architecture — Three Layers
 
-### Layer 1: SENSE — The Emotional Awareness Engine (MVP)
+### Layer 1: PROCESS — Parallel Paths for Emotional Processing (MVP)
 
-Helps users understand what they're feeling when they can't articulate it themselves. The core product.
+Helps users either understand what they're feeling, release it without naming, or recognize they're not alone.
 
-**The flow:** User expresses (text or texture words) → AI classifies emotion → AI generates mirror (1-3 sentences) → User confirms/refines → User chooses a path (exercise, peer reflections, or close) → Session ends.
+**Path A: Mirror (Articulation)**
+
+User expresses via text, texture words, or body location → AI classifies emotion → AI generates mirror (1-3 sentences) → User confirms/refines → User chooses a path (exercise, peer reflections, or close) → Glimpses optionally shown at session end → Session ends.
 
 **Key insight:** The core problem is articulation, not expression. People don't lack places to talk. They lack language for what they feel. If Xolace can help people name and externalize their emotions, the relief comes from the articulation itself.
+
+**Path B: Vent Box (Release)**
+
+User opens the mic and records. An affirming presence (ElevenLabs agent) listens via brief responses ("I hear you." "That's real."). When user stops, a beat of silence, then: "Gone." The session is architecturally ephemeral — zero server writes, audio never stored, device-only → Optionally, Glimpses shown at session end → Session ends.
+
+**Key insight:** Some users don't want to name what they feel. They want to release it without record. The burn-the-paper ritual works for them — the ephemeral vent box is its digital equivalent. The relief comes from being heard, then the erasure.
+
+**Path C: Glimpses (Recognition)**
+
+At session end (either path), a short video (60-90s) appears: a real person describing an emotion similar to what the user just processed, and that they're still here. Matched to emotional fingerprint. Skip always available. No engagement metrics visible.
+
+**Key insight:** Anonymous text reflections provide intellectual recognition ("someone else felt this"). A real face and voice provide embodied recognition ("I felt what you felt, I'm still here"). Glimpses appear at peak emotional resonance — right after the user has been understood or heard.
 
 ### Layer 2: BRIDGE — Intelligent Routing (Phase 2)
 
@@ -124,9 +144,9 @@ Longitudinal pattern detection. Over weeks and months, the AI builds a private e
 
 ## 4. The AI Service Architecture
 
-### Processing Pipeline (Per Session)
+### Processing Pipeline (Mirror Path — Per Session)
 
-The AI pipeline runs entirely as Convex `internalAction` functions in Node.js runtime — no separate AI microservice.
+The Mirror AI pipeline runs entirely as Convex `internalAction` functions in Node.js runtime — no separate AI microservice.
 
 ```
 Step 1: CONTEXT BUILDING → Convex query loads user history, profile, preferences, recent metadata
@@ -142,6 +162,17 @@ Step 10: ESCALATE → If crisis/elevated, escalation_event record created
 ```
 
 **Refinement turns ("Not quite" / "Say more"):** Skip moderation + classification entirely. Reuse existing emotional metadata. Only Step 6 (Sonnet re-articulation) runs with the revised context.
+
+### Voice Vent Processing (Vent Box Path)
+
+Vent sessions are architecturally zero-write:
+- Audio captured via `expo-av` on device, never uploaded to Xolace servers
+- Streamed client-side to ElevenLabs Conversational AI agent via SDK
+- Agent processes audio and returns affirming presence audio (no transcript, no metadata)
+- Audio and agent responses exist only in memory during the session
+- When user stops, session ends — nothing persisted to Xolace database
+- **Privacy:** The entire session is architecturally ephemeral. No server logs, no transcripts, no emotional metadata. "Gone." is real, not UX theater.
+- **Fallback:** If ElevenLabs agent unavailable, client-side playback of pre-recorded affirming audio based on basic amplitude analysis. User experience unchanged.
 
 ### The Articulation Engine — 5 Principles
 
@@ -186,8 +217,9 @@ At 500 DAU, ~1.5 sessions/day: Anthropic API (Haiku + Sonnet) ~$80-130/month + O
 | AI Hosting | Convex Node.js runtime (`"use node"` actions) | No separate AI service needed — Convex handles it directly |
 | Content Moderation | OpenAI `omni-moderation-latest` | Parallel safety check on every raw input before articulation |
 | AI Call Caching | `@convex-dev/action-cache` (Convex component) | Cache moderation (48h), classification (7 days), distillation (30 days) |
-| Voice STT (Phase 2) | Deepgram | Fast transcription + sentiment/tone from audio signal |
+| Voice STT (Vent Box) | ElevenLabs Conversational AI | Client-side streaming audio to agent; agent returns affirming presence responses, no transcription |
 | Voice TTS (Phase 2) | ElevenLabs | Most natural AI voice for mirror read-back |
+| Video Hosting (Glimpses) | Bunny.net Stream or Mux | HLS-native delivery, signed URLs for privacy, time-limited access. Bunny cheaper at low volume; Mux better analytics. Either works for 30–50 videos. |
 | Analytics | PostHog | Privacy-friendly, self-hostable, generous free tier |
 | Error Tracking | Sentry (`sentry-expo`) | Crash monitoring |
 
@@ -221,18 +253,20 @@ xolace_app/
 
 ## 6. Database Schema
 
-### The 12 Tables
+### The 14 Tables
 
 | Table | Purpose | Key Design Decision |
 |---|---|---|
 | `users` | Auth shell only. Nothing emotional. | **Decoupled from emotional data.** A breach reveals auth tokens but zero emotional content. |
 | `emotional_profiles` | Pseudonymous emotional identity. | **The bridge** (`users.emotionalProfileId`) is the most sensitive mapping. Breach of this table reveals patterns but no real-world identities. |
 | `preferences` | User configuration (theme, tone, notifications, privacy). | **Separate from profile** because config updates on user action, profile updates on session completion. Different access patterns. |
-| `sessions` | One per emotional processing cycle. | **State machine** (`initiated → input_received → processing → mirror_delivered → confirmed → path_selected → path_in_progress → completed → abandoned → error`). Tracks exactly where users drop off. `rawInput` stored as plaintext (Convex encrypts at rest; TLS in transit). `inputDuration` and `freezeOccurred` capture pre-articulation behavior. `mirrorModelVersion` tracks which AI version produced this mirror. |
+| `sessions` | One per emotional processing cycle. | **State machine** (`initiated → input_received → processing → mirror_delivered → confirmed → path_selected → path_in_progress → completed → abandoned → error`). Tracks exactly where users drop off. `rawInput` stored as plaintext (Convex encrypts at rest; TLS in transit). `inputDuration` and `freezeOccurred` capture pre-articulation behavior. `mirrorModelVersion` tracks which AI version produced this mirror. Vent box sessions NOT stored here — they exist only client-side during the session. |
 | `session_turns` | Each refinement loop ("Not quite" / "Say more"). | **Separate from sessions** because the delta between attempt 1 and the confirmed mirror is the purest signal for improving the AI. |
 | `emotional_metadata` | AI's structured interpretation of a session. | **Separate from sessions** so it can be re-classified when models improve. Includes `classifierVersion`, `primaryEmotionConfidence`, `granularLabel`, `userLanguageTags` (the user's own emotional words preserved as tags). |
 | `reflections` | Anonymized peer reflection pool. | **NO reference to users, profiles, or sessions.** Link severed at creation time. Anonymity is structural, not policy. Content is AI-distilled (Haiku), not raw user text. |
 | `reflection_resonances` | Junction table for "I feel this too" taps. | **Deduplication** — one record per (profile, reflection) pair. Enables true toggle and prevents inflated resonance counts from reinstalls. |
+| `glimpses` | Team-curated videos for human connection at session end. | **NO reference to users or sessions.** `videoHostingId` points to Bunny.net or Mux-hosted video. `emotionTags` (array of emotion strings) and `intensityRange` (min/max 0-1) power matching. `contributorAlias` for internal tracking only, never shown to users. `isActive` for soft delete. Index by `isActive` for fetching active pool. Matching happens in-memory at 30–50 video scale. |
+| `glimpse_views` | Tracking which Glimpses each user has seen. | **Deduplication & freshness** — one record per (profile, glimpse) pair. Prevents repeat views within 30 days and enables rotation. |
 | `exercises` | Micro-exercise library (authored content). | Seeded at MVP. Tagged by emotion + intensity range. Each has typed steps (text/timer/prompt). |
 | `escalation_events` | Safety-critical records when AI detects risk. | **Survives account deletion.** Anonymized (profileId stripped) but retained for safety auditing. Must be disclosed in privacy policy. |
 | `notification_log` | Every nudge sent. | Tracks delivery, effectiveness (`resultedInSession`), suppression reasons. Prevents spam. |
@@ -253,28 +287,48 @@ xolace_app/
 
 ### Screen Architecture
 
-**10 actual screens in Expo Router.**
+**11 actual screens in Expo Router.**
 
 - 2 onboarding screens (Promise, Frame)
 - 1 auth screen (Google OAuth via Clerk)
-- 1 Core Screen (reflect) — the 9-state machine
+- 1 Core Screen (reflect) — the state machine for Mirror + Vent paths
+- 1 Voice Vent screen (minimal recording UI with waveform)
 - 3 standalone path screens (Sit With This, Peer Reflections, Session End)
 - 2 secondary screens (Timeline list, Session Detail)
 - 1 settings screen
 
-### The Core Screen — 9-State Machine
+### The Core Screen — Mirror Path State Machine
 
 The reflect screen is driven by `useReflectionMachine()` — a single screen that reshapes itself through states. No navigation occurs within the core flow. States:
 
-1. **Idle** — "What's here right now?" + texture word tags
-2. **Typing** — Freeform text input. 8s pause detection triggers a gentle nudge.
-3. **Processing** — Breath animation while Convex generates the AI mirror
+1. **Idle** — Dual entry points:
+   - Primary: "What's here right now?" + texture word tags (heavy, tight, fuzzy, buzzing, empty, scattered, numb, raw)
+   - Secondary (quieter, smaller, ~60% opacity): "Just need to let it out →" (routes to Voice Vent)
+2. **Typing** — Freeform text input. 8s pause detection triggers a gentle nudge ("There's no rush. Let it come.").
+3. **Processing** — Breath animation while Convex generates the AI mirror.
 4. **Mirror** — AI reflection displayed. User chooses: "That's it" / "Not quite" / "Say more"
-5. **Clarify** — Follow-up input for refinement (max 2 turns)
+5. **Clarify** — Follow-up text input for refinement (max 2 turns).
 6. **Gave Up** — After 2 turns without confirmation. Empathetic message + options.
 7. **Escalation** — Conditional. Triggers if server flags `escalationTriggered`.
 8. **Path Selection** — Three choices: Solo / Peers / Exit
 9. **Error** — Retry or reset
+
+### The Voice Vent Screen
+
+A minimal recording interface (no text input, no texture words). One button to start recording. Waveform visualizer responds to audio. ElevenLabs Conversational AI agent listens with brief affirming presence (never asks questions, never advises, never reflects back — max 8 words per response). When user stops recording, a beat of silence, then: "Gone." displayed with visual fade. No transcript. No session record. Just processed and released.
+
+**Error fallback:** If ElevenLabs agent unavailable, client-side playback of pre-recorded affirming audio clips based on basic energy/intensity analysis. User experience unchanged — no error shown.
+
+### Session End — Glimpses Integration
+
+After either Mirror or Vent path completion, before the session end screen:
+
+- User sees "Heard." or "You showed up for yourself today."
+- Below, with soft transition: "Someone who felt something close to this." → Glimpse video card appears (if match exists)
+- Video is 60-90 seconds, face on camera, direct address: what they felt, one thing that helped, "I'm still here."
+- Skip option always visible, never forced
+- Matching: primary emotion + intensity ±1 tier, with 30-day no-repeat buffer
+- Fallback (no match): silent omission — no placeholder, no broken card
 
 ### Onboarding Flow
 
@@ -388,37 +442,48 @@ The beta proves the session works. What it doesn't prove yet:
 - **Does voice mode change retention?** The text-first beta didn't include voice sessions. Voice is a fundamentally different emotional experience — lower friction, higher rawness. It may reach a different user segment entirely.
 - **Does the 50% retention hold at public scale?** Closed betas over-index on motivated early adopters. Public launch will surface the real retention floor.
 
-### What's Next
+### What's Next (Immediate Priority)
 
-- Public beta launch (moving from TestFlight to open)
-- Voice session implementation (ElevenLabs STT/TTS)
-- Measure 30-day and 60-day retention curves
+Before public launch:
+- **Implement Voice Vent Box** (ElevenLabs Conversational AI, client-side streaming, zero-write architecture)
+- **Produce Glimpses content** (30-50 videos of team members describing emotional experiences; 2-3 week sprint)
+- **Add Glimpses schema tables** (`glimpses`, `glimpse_views`) and matching logic
+- **Update Idle screen** with dual entry points (Mirror vs. Vent)
+- **Update session end** to conditionally show Glimpses
+
+After launch:
+- Public beta with full feature set (Mirror, Vent, Glimpses, Peer Reflections)
+- Measure vent-only retention vs. mirror-only retention (critical test of the "articulation is the core" premise)
+- Measure Glimpses engagement (skip rate, watch-through rate, impact on return)
+- 30-day and 60-day retention curves
 - B2B pilot with one university counseling center
 
 ---
 
 ## 10. Strategic Moats
 
-1. **Longitudinal emotional data graph.** Every session builds a personal model. No competitor can replicate 14 months of emotional history without those 14 months.
-2. **Pattern intelligence at scale.** Across millions of sessions: "73% of users who feel X in context Y find relief through Z." Proprietary intelligence.
-3. **Trust as brand.** First company synonymous with "safe emotional space" wins a position nearly impossible to displace.
-4. **AI prompt engineering as IP.** The articulation system prompts are the most valuable IP. Nuanced craft that compounds with iteration.
-5. **Network effects through the reflection pool.** More users contributing = better emotional matching = better "you're not alone" moments = more users.
+1. **Three complementary paths to emotional processing.** Mirror (articulation), Vent (ephemeral release), and Glimpses (human connection) together own a space no competitor occupies. Switching costs are high because the three paths work together, not as standalone features.
+2. **Longitudinal emotional data graph.** Every session builds a personal model. No competitor can replicate 14 months of emotional history without those 14 months.
+3. **Pattern intelligence at scale.** Across millions of sessions: "73% of users who feel X in context Y find relief through Z." Proprietary intelligence.
+4. **Trust as brand.** First company synonymous with "safe emotional space" — one where you can mirror articulation, ephemeral release, AND see real human faces recognizing your experience — wins a position nearly impossible to displace.
+5. **AI prompt engineering as IP.** The articulation system prompts are the most valuable IP. Nuanced craft that compounds with iteration. Vent box system prompts (affirming presence without advice/reflection) equally specialized.
+6. **Network effects through the reflection pool AND Glimpses.** More users = more vent/mirror contributions = better emotional matching = more Glimpses content candidates = better "you're not alone" moments = more users. Human connection compounds engagement.
 
 ---
 
 ## 11. Open Questions / Known Risks
 
-1. **Session frequency vs. daily habit.** The beta showed ~3.4 sessions per user in the first month. The relief of naming a feeling is real. But does it pull users back daily or weekly? Weekly-use apps are significantly harder to grow and monetize. The public beta will clarify this.
-2. **Voice mode changes the product.** Adding voice sessions isn't a feature — it may be a different product for a different emotional register. A user who vents verbally and hears a mirror read back to them has a qualitatively different experience than a text session. This needs its own retention measurement.
-3. **The $93M threat.** Ash has massive funding and could add peer features or pivot toward articulation if they recognized the gap. Speed to market matters.
-4. **Moderation at scale.** Even with AI scaffolding, human connection features (resonance matching, circles) introduce safety risks that grow non-linearly with user count.
+1. **Return behavior: compulsion vs. genuine value.** The beta showed ~3.4 sessions per user in the first month, with 50% unprompted return. This is genuine value, not compulsion. The key question isn't "daily vs. weekly" — it's "why are they coming back?" If they return because they consistently get understood (mirror), heard (vent), and recognized (glimpses), that's healthy. If they return because of streaks or phantom notifications, that's failure. Xolace should measure return quality, not just frequency. The anti-addiction design isn't a limit on growth — it's a competitive advantage that builds trust.
+2. **Voice mode changes the product.** Adding voice (Vent Box) isn't a feature — it's a different path for a different emotional register. A user who vents verbally and hears affirming presence has a qualitatively different experience than naming with text. This path may reach users who can't articulate and won't try, but value release. Vent-only cohort retention measurement is critical: does ephemeral release create its own usage habit independent of articulation?
+3. **The $93M threat.** Ash has massive funding and could add vent/voice features or pivot toward human connection if they recognized the gaps. Speed to market matters, especially for Glimpses content production (need 30-50 videos at launch).
+4. **Moderation at scale.** Human connection features (peer reflections, resonance matching, circles, Glimpses) introduce safety risks that grow non-linearly with user count. At 10k DAU, human review becomes expensive.
 5. **Clinical validation.** Flourish has a Harvard RCT. For institutional credibility and Series A fundraising, Xolace should plan for a study — even a small one — within 12-18 months. The counselor validation insight is qualitative right now; it needs to become quantitative.
-6. **The question that decides everything:** If Xolace disappeared tomorrow, would users say "I miss that place where I processed my feelings" or "I miss the people there"? The answer should eventually be both. Layer 1 proves the tool. Layers 2 and 3 build the home.
+6. **Glimpses supply-side risk.** How many videos needed at launch for the feature to feel alive? Estimate: 30-50 covering 8-10 core emotion clusters at 2-3 intensity levels each. This is a 2-3 week production sprint before launch. Rotation and freshness matter — stale Glimpses hurt trust faster than no Glimpses.
+7. **The question that decides everything:** If Xolace disappeared tomorrow, would users say "I miss that place where I processed my feelings" or "I miss the people there"? The answer should eventually be both. Mirror/Vent prove the tool. Glimpses/resonance/circles build the home.
 
 ---
 
-## 12. Monthly Cost Estimate (MVP, < 1,000 Users)
+## 12. Monthly Cost Estimate (MVP with Mirror + Vent + Glimpses, < 1,000 Users)
 
 | Service | Est. Monthly Cost |
 |---|---|
@@ -426,12 +491,14 @@ The beta proves the session works. What it doesn't prove yet:
 | Convex | Free tier |
 | Anthropic API (Sonnet 4.6 + Haiku 4.5) | $50-130 |
 | OpenAI API (omni-moderation-latest) | $5-10 |
+| ElevenLabs Conversational AI (Vent Box agent + voice streaming) | $30-60 |
+| Bunny.net Stream or Mux (Glimpses video hosting, 30-50 videos) | $20-40 |
 | Clerk | Free tier (up to 10k MAU) |
 | PostHog | Free tier |
 | Sentry | Free tier |
 | Apple Developer Account | $99/year |
 | Google Play Developer | $25 one-time |
-| **Total** | **~$70-160/month** |
+| **Total** | **~$155-270/month** |
 
 ---
 
