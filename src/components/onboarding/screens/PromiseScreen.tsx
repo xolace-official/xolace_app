@@ -83,7 +83,7 @@ export const PromiseScreen = () => {
             This is a space{'\n'}to be honest.
           </AppText>
           <AppText
-            className="text-white/50 text-[15px] leading-7"
+            className="text-white/50 text-[15px] leading-7 mb-2"
             style={{ fontWeight: '300' }}
           >
             What you share here is private.{'\n'}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Pressable } from 'react-native';
+import { View, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
@@ -15,6 +15,7 @@ import { FRAME_STEPS, STEP_BASE_DELAY, STEP_INTERVAL } from '@/src/constants/fra
 export const FrameScreen = () => {
   const [phase, setPhase] = useState<0 | 1 | 2>(0);
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   const setIntroSeen = useAppStore((s) => s.setIntroSeen);
   const router = useRouter();
   const posthog = usePostHog();
@@ -36,15 +37,12 @@ export const FrameScreen = () => {
   };
 
   return (
-    <View
-      className="flex-1 bg-neutral-950"
-      style={{ paddingBottom: insets.bottom }}
-    >
-      {/* Orb — top portion */}
+    <View className="flex-1 bg-neutral-950">
+      {/* Orb — capped height so it never crowds the content below */}
       <Animated.View
         entering={FadeIn.duration(1000)}
         style={{
-          flex: 4,
+          height: Math.min(height * 0.42, 320),
           alignItems: 'center',
           justifyContent: 'center',
           paddingTop: insets.top,
@@ -53,13 +51,17 @@ export const FrameScreen = () => {
         <EmberOrb phase={phase} />
       </Animated.View>
 
-      {/* Steps + CTA — bottom portion */}
-      <View
-        style={{
-          flex: 5,
+      {/* Steps + CTA — scrollable so the button is always reachable */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          flexGrow: 1,
           justifyContent: 'space-between',
           paddingHorizontal: 32,
+          paddingBottom: insets.bottom + 24,
         }}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
         <View style={{ gap: 8, paddingTop: 16 }}>
           {FRAME_STEPS.map((step, i) => (
@@ -73,10 +75,10 @@ export const FrameScreen = () => {
         >
           <AppText
             style={{
-              fontSize: 12,
               color: 'rgba(217, 171, 111, 0.5)',
               lineHeight: 18,
             }}
+            className='text-xs mb-5'
           >
             Xolace isn&apos;t a substitute for professional mental health care. If you&apos;re in crisis, please contact a professional.
           </AppText>
@@ -85,7 +87,6 @@ export const FrameScreen = () => {
         {/* CTA */}
         <Animated.View
           entering={FadeInDown.delay(STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL).duration(800).springify().damping(15)}
-          style={{ paddingBottom: 24 }}
         >
           <Pressable
             onPress={handlePress}
@@ -110,7 +111,7 @@ export const FrameScreen = () => {
             </AppText>
           </Pressable>
         </Animated.View>
-      </View>
+      </ScrollView>
     </View>
   );
 };
