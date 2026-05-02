@@ -2,19 +2,19 @@ import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useToast } from "heroui-native";
-import { SettingsSection } from "@/src/components/settings/settings-section";
-import { SettingsRow } from "@/src/components/settings/settings-row";
-import { ThemePickerDialog } from "@/src/components/settings/theme-picker-dialog";
-import { MirrorTonePickerDialog } from "@/src/components/settings/mirror-tone-picker-dialog";
-import { RetentionPickerDialog } from "@/src/components/settings/retention-picker-dialog";
-import { SpaceNameDialog } from "@/src/components/settings/space-name-dialog";
-import { ReachSelectorDialog } from "@/src/components/settings/reach-selector-dialog";
-import { QuietWindowDialog } from "@/src/components/settings/quiet-window-dialog";
+import { SettingsSection } from "@/src/features/settings/components/settings-section";
+import { SettingsRow } from "@/src/features/settings/components/settings-row";
+import { ThemePickerDialog } from "@/src/features/settings/components/theme-picker-dialog";
+import { MirrorTonePickerDialog } from "@/src/features/settings/components/mirror-tone-picker-dialog";
+import { RetentionPickerDialog } from "@/src/features/settings/components/retention-picker-dialog";
+import { SpaceNameDialog } from "@/src/features/settings/components/space-name-dialog";
+import { ReachSelectorDialog } from "@/src/features/settings/components/reach-selector-dialog";
+import { QuietWindowDialog } from "@/src/features/settings/components/quiet-window-dialog";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { useSettings } from "@/src/hooks/use-settings";
+import { useSettings } from "@/src/features/settings/hooks/use-settings";
 import { useConfirmAction } from "@/src/hooks/use-confirm-action";
 import { useAppStore } from "@/src/store/store";
-import type { ThemeMode } from "@/src/hooks/use-settings";
+import type { ThemeMode } from "@/src/features/settings/hooks/use-settings";
 
 /**
  * Settings screen — composes all preference sections.

@@ -1,10 +1,10 @@
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
-import { SettingsRow } from '@/src/components/settings/settings-row';
-import { ThemePreviewCard } from '@/src/components/settings/theme-preview-card';
+import { SettingsRow } from '@/src/features/settings/components/settings-row';
+import { ThemePreviewCard } from '@/src/features/settings/components/theme-preview-card';
 import { FREE_THEMES } from '@/src/constants/themes';
-import { useSettings } from '@/src/hooks/use-settings';
+import { useSettings } from '@/src/features/settings/hooks/use-settings';
 import { useAppStore } from '@/src/store/store';
 import { playSoftPress } from '@/src/lib/haptics';
 

@@ -1,4 +1,4 @@
-import { SettingsScreen } from "@/src/components/settings/screens/SettingsScreen"
+import { SettingsScreen } from "@/src/features/settings/components/screens/SettingsScreen"
 
 const Settings = () => {
   return (

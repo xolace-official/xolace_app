@@ -2,7 +2,7 @@ import { Dialog, RadioGroup, Radio, Separator } from "heroui-native";
 import { View } from "react-native";
 import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
 import { AppText } from "@/src/components/shared/app-text";
-import type { ThemeMode } from "@/src/hooks/use-settings";
+import type { ThemeMode } from "@/src/features/settings/hooks/use-settings";
 
 type ThemeOption = {
   value: ThemeMode;
