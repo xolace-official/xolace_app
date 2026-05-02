@@ -2,7 +2,7 @@ import { useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery } from 'convex/react';
 import { usePostHog } from 'posthog-react-native';
-import { api } from '../../convex/_generated/api';
+import { api } from '@/convex/_generated/api';
 import { usePathSession } from '@/src/hooks/use-path-session';
 
 /**

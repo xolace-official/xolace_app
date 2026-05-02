@@ -8,9 +8,9 @@ import { usePostHog } from 'posthog-react-native';
 import { useAppStore } from '@/src/store/store';
 import { playGentlePresence } from '@/src/lib/haptics';
 import { AppText } from '@/src/components/shared/app-text';
-import { EmberOrb } from '@/src/components/onboarding/ember-orb';
-import { StepReveal } from '@/src/components/onboarding/step-reveal';
-import { FRAME_STEPS, STEP_BASE_DELAY, STEP_INTERVAL } from '@/src/constants/frame-steps';
+import { EmberOrb } from '@/src/features/onboarding/components/ember-orb';
+import { StepReveal } from '@/src/features/onboarding/components/step-reveal';
+import { FRAME_STEPS, STEP_BASE_DELAY, STEP_INTERVAL } from '@/src/features/onboarding/frame-steps';
 
 export const FrameScreen = () => {
   const [phase, setPhase] = useState<0 | 1 | 2>(0);

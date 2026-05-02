@@ -2,8 +2,8 @@ import React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
-import { STEP_BASE_DELAY, STEP_DURATION, STEP_INTERVAL } from '@/src/constants/frame-steps';
-import type { FrameStep } from '@/src/constants/frame-steps';
+import { STEP_BASE_DELAY, STEP_DURATION, STEP_INTERVAL } from '@/src/features/onboarding/frame-steps';
+import type { FrameStep } from '@/src/features/onboarding/frame-steps';
 
 type Props = {
   step: FrameStep;

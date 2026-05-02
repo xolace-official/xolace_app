@@ -7,14 +7,14 @@ import { playSoftPress } from '@/src/lib/haptics';
 import { useSignInWithGoogle } from '@clerk/expo/google';
 import { useSignInWithApple } from '@clerk/expo/apple';
 import { useMutation } from 'convex/react';
-import { api } from '../../../../convex/_generated/api';
+import { api } from '@/convex/_generated/api';
 import { usePostHog } from 'posthog-react-native';
 
 import { AppText } from '@/src/components/shared/app-text';
-import { AuthBg } from '@/src/components/auth/auth-bg';
-import { AppleIcon } from '@/src/components/auth/apple-icon';
-import { GoogleIcon } from '@/src/components/auth/google-icon';
-import { LegalLinks } from '@/src/components/auth/legal-links';
+import { AuthBg } from '@/src/features/auth/components/auth-bg';
+import { AppleIcon } from '@/src/features/auth/components/apple-icon';
+import { GoogleIcon } from '@/src/features/auth/components/google-icon';
+import { LegalLinks } from '@/src/features/auth/components/legal-links';
 
 export const AuthScreen = () => {
   const insets = useSafeAreaInsets();

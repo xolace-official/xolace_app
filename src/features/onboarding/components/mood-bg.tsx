@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import type { MoodItem } from '@/src/components/onboarding/mood-card';
+import type { MoodItem } from '@/src/features/onboarding/components/mood-card';
 
 type Props = {
   mood: MoodItem;

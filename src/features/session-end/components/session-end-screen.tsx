@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { MorphLoader } from '@/src/components/shared/loader/morph/morph-loader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSessionEnd } from '@/src/hooks/use-session-end';
-import { ExitVariant } from '@/src/components/session-end/exit-variant';
-import { ActivityVariant } from '@/src/components/session-end/activity-variant';
-import { ReachFeedbackCard } from '@/src/components/session-end/reach-feedback-card';
+import { useSessionEnd } from '@/src/features/session-end/hooks/use-session-end';
+import { ExitVariant } from '@/src/features/session-end/components/exit-variant';
+import { ActivityVariant } from '@/src/features/session-end/components/activity-variant';
+import { ReachFeedbackCard } from '@/src/features/session-end/components/reach-feedback-card';
 import { playSessionComplete } from '@/src/lib/haptics';
 import { useSessionMode } from '@/src/context/session-mode-context';
 

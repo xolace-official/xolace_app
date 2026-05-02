@@ -11,11 +11,11 @@ import { useRouter } from 'expo-router';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { playGentlePresence, playOnboardingEntrance } from '@/src/lib/haptics';
-import { MoodMarquee } from '@/src/components/onboarding/mood-marquee';
-import { MoodBg } from '@/src/components/onboarding/mood-bg';
-import { getCardWidth } from '@/src/components/onboarding/mood-card';
+import { MoodMarquee } from '@/src/features/onboarding/components/mood-marquee';
+import { MoodBg } from '@/src/features/onboarding/components/mood-bg';
+import { getCardWidth } from '@/src/features/onboarding/components/mood-card';
 import { useDebounce } from '@/src/hooks/use-debounce';
-import { MOODS } from '@/src/constants/moods';
+import { MOODS } from '@/src/features/onboarding/moods';
 
 export const PromiseScreen = () => {
   const hasPlayedEntrance = useRef(false);

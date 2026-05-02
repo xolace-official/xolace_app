@@ -1,4 +1,4 @@
-import { PromiseScreen } from '@/src/components/onboarding/screens/PromiseScreen'
+import { PromiseScreen } from '@/src/features/onboarding/components/screens/PromiseScreen'
 
 const OnboardingPromise = () => {
   return (
