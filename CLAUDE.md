@@ -169,6 +169,7 @@ convex/
 - **Imports**: Always use `@/src/` path alias. Avoid barrel re-exports that pull in unused code.
 - **State**: Zustand for shared/form state. `useState` only for trivial local UI.
 - **Services**: Backend logic in `src/services/`, never directly in UI components.
+- **No new horizontal files**: Do not add new files to top-level horizontal directories (`hooks/`, `services/`, `interfaces/`, `types/`, `helpers/`). Instead, colocate new code with the feature it belongs to (e.g. a new hook for the reflect flow goes in `components/reflect/` or a dedicated `features/reflect/` directory, not `hooks/`). Exceptions: `shared/` design system primitives, cross-cutting infrastructure (`providers/`, `store/`, `lib/`), and `themes/`.
 - **Adding themes**: Create a new CSS file in `src/themes/`, define `@variant <name>-light` and `@variant <name>-dark` with all required CSS variables, import it in `global.css`, register both variants in `metro.config.js` `extraThemes`, add the names to the `ThemeName` union in `src/context/app-theme-context.tsx`, and add a `toggleTheme` case for the light/dark pair.
 
 ## Key Experiments Enabled

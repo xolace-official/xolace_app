@@ -2,7 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
-import { useLargeHeaderOptions } from "@/src/constants/navigation-options";
+import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
 
 /**
  * Settings stack layout with a large transparent header and a back button.

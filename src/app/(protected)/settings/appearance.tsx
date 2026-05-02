@@ -1,4 +1,4 @@
-import { AppearanceScreen } from '@/src/components/settings/screens/AppearanceScreen';
+import { AppearanceScreen } from '@/src/features/settings/components/screens/AppearanceScreen';
 
 export default function Appearance() {
   return <AppearanceScreen />;
