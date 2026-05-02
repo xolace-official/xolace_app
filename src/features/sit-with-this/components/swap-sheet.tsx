@@ -4,7 +4,7 @@ import { BottomSheet } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/reflect/pill-button';
 import { BottomSheetBlurOverlay } from '@/src/components/bottom-sheet-blur-overlay';
-import type { Id } from '../../../convex/_generated/dataModel';
+import type { Id } from '@/convex/_generated/dataModel';
 
 type Props = {
   isOpen: boolean;

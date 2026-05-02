@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from 'convex/react';
 import { usePostHog } from 'posthog-react-native';
 import { api } from '@/convex/_generated/api';
-import { usePathSession } from '@/src/hooks/use-path-session';
+import { usePathSession } from '@/src/features/sit-with-this/hooks/use-path-session';
 
 /**
  * Prepare and expose session completion and navigation utilities for the session-end screen.

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
-import { PacedOrb, type PacedOrbHandle, type BreathPattern } from '@/src/components/sit-with-this/paced-orb';
+import { PacedOrb, type PacedOrbHandle, type BreathPattern } from '@/src/features/sit-with-this/components/paced-orb';
 import { playBreathPhase } from '@/src/lib/haptics';
 
 type Props = {

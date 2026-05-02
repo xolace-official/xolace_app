@@ -4,14 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useToast } from 'heroui-native';
-import { api } from '../../../convex/_generated/api';
-import { usePathSession } from '@/src/hooks/use-path-session';
+import { api } from '@/convex/_generated/api';
+import { usePathSession } from '@/src/features/sit-with-this/hooks/use-path-session';
 import { usePostHog } from 'posthog-react-native';
 import { ExerciseRunner } from './runner/exercise-runner';
 import { SwapSheet } from './swap-sheet';
 import { AppText } from '@/src/components/shared/app-text';
 import type { ExerciseData } from './runner/exercise-runner.types';
-import type { Id } from '../../../convex/_generated/dataModel';
+import type { Id } from '@/convex/_generated/dataModel';
 
 export function SitWithThisScreen() {
   const insets = useSafeAreaInsets();

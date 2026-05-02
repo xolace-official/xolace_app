@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/reflect/pill-button';
-import { PreRollCard } from '@/src/components/sit-with-this/pre-roll-card';
+import { PreRollCard } from '@/src/features/sit-with-this/components/pre-roll-card';
 import { BeatRenderer } from './beat-renderer';
 import { runnerReducer } from './exercise-runner.reducer';
 import type { ExerciseData, RunnerPhase } from './exercise-runner.types';

@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import { api } from '@/convex/_generated/api';
+import type { Id } from '@/convex/_generated/dataModel';
 
 /**
  * Provides the active session and helpers to start and complete a path for path screens.

@@ -7,7 +7,7 @@ import {
   PacedOrb,
   type BreathPattern,
   type PacedOrbHandle,
-} from '@/src/components/sit-with-this/paced-orb';
+} from '@/src/features/sit-with-this/components/paced-orb';
 
 type Props = {
   content: string;

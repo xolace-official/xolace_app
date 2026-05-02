@@ -11,7 +11,7 @@ import { api } from "../../../../convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/reflect/pill-button";
 import { ReflectionCard } from "@/src/components/peer-reflection/reflection-card";
-import { usePathSession } from "@/src/hooks/use-path-session";
+import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
 import { ReportSheet } from "@/src/components/peer-reflection/report-sheet";
 import { Id } from "../../../../convex/_generated/dataModel";
 
