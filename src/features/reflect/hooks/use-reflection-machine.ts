@@ -1,8 +1,8 @@
 import { useReducer, useCallback, useEffect, useRef } from 'react';
 import { usePostHog } from 'posthog-react-native';
-import type { FeedbackType } from '@/src/interfaces/reflection';
-import { useSession } from '@/src/hooks/use-session';
-import { extractErrorMessage } from '@/src/services/session-service';
+import type { FeedbackType } from '@/src/features/reflect/types';
+import { useSession } from '@/src/features/reflect/hooks/use-session';
+import { extractErrorMessage } from '@/src/features/reflect/session-service';
 import { MAX_TURNS, initialState, reducer } from './reflection-reducer';
 
 /**

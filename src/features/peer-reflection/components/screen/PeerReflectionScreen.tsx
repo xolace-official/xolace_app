@@ -9,7 +9,7 @@ import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/reflect/pill-button";
+import { PillButton } from "@/src/components/shared/pill-button";
 import { ReflectionCard } from "@/src/features/peer-reflection/components/reflection-card";
 import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
 import { ReportSheet } from "@/src/features/peer-reflection/components/report-sheet";

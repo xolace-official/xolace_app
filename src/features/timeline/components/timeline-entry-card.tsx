@@ -6,7 +6,7 @@ import {
   getEmotionEmoji,
   getEmotionLabel,
   getPathLabel,
-} from '@/src/constants/emotions';
+} from '@/src/features/timeline/emotions';
 import type { TimelineEntry } from '@/src/features/timeline/types';
 
 type Props = {

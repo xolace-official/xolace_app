@@ -12,7 +12,7 @@ import {
   getEmotionEmoji,
   getEmotionLabel,
   getPathLabel,
-} from '@/src/constants/emotions';
+} from '@/src/features/timeline/emotions';
 
 const formatDate = (timestamp: number) => {
   const date = new Date(timestamp);

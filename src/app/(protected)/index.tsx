@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { View, Pressable } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ReflectScreen } from '@/src/components/reflect/reflect-screen';
+import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppStore } from '@/src/store/store';
 

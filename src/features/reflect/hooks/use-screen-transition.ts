@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Keyboard } from 'react-native';
-import type { ReflectionStateName } from '@/src/interfaces/reflection';
-import { normalizeScreen } from '@/src/constants/reflect-transitions';
+import type { ReflectionStateName } from '@/src/features/reflect/types';
+import { normalizeScreen } from '@/src/features/reflect/reflect-transitions';
 
 type TransitionState = {
   current: ReflectionStateName;

@@ -3,20 +3,20 @@ import { Pressable, View } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
 import { Separator, TagGroup, cn } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/reflect/pill-button";
-import { TimelineIcon } from "@/src/components/reflect/timeline-icon";
-import type { UserVariant, ReflectionAction } from "@/src/interfaces/reflection";
+import { PillButton } from "@/src/components/shared/pill-button";
+import { TimelineIcon } from "@/src/features/reflect/components/timeline-icon";
+import type { UserVariant, ReflectionAction } from "@/src/features/reflect/types";
 import { playTypingBegin, playTextureSelect, playHomeEntrance } from "@/src/lib/haptics";
 import { useSessionMode } from "@/src/context/session-mode-context";
 import {
   NIGHT_ENCOURAGEMENT,
   NIGHT_HEADLINE,
   NIGHT_TEXTURE_WORDS,
-} from "@/src/constants/night-copy";
+} from "@/src/features/reflect/night-copy";
 import {
   QUIET_RETURN_PROMPTS,
   type QuietReturnTier,
-} from "@/src/constants/quiet-return-copy";
+} from "@/src/features/reflect/quiet-return-copy";
 
 const DAY_TEXTURE_WORDS = [
   "heavy",

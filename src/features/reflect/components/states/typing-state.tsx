@@ -5,12 +5,12 @@ import { TextArea } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
-import { PresenceDot } from '@/src/components/reflect/presence-dot';
-import { PillButton } from '@/src/components/reflect/pill-button';
-import { useTypingPause } from '@/src/hooks/use-typing-pause';
-import type { ReflectionAction } from '@/src/interfaces/reflection';
+import { PresenceDot } from '@/src/features/reflect/components/presence-dot';
+import { PillButton } from '@/src/components/shared/pill-button';
+import { useTypingPause } from '@/src/features/reflect/hooks/use-typing-pause';
+import type { ReflectionAction } from '@/src/features/reflect/types';
 import { useSessionMode } from '@/src/context/session-mode-context';
-import { NIGHT_NUDGE_DELAY_MS, DAY_NUDGE_DELAY_MS } from '@/src/constants/night-copy';
+import { NIGHT_NUDGE_DELAY_MS, DAY_NUDGE_DELAY_MS } from '@/src/features/reflect/night-copy';
 
 type Props = {
   showNudge: boolean;

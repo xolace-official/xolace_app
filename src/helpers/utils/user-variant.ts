@@ -1,5 +1,5 @@
-import type { UserVariant } from '@/src/interfaces/reflection';
-import type { QuietReturnTier } from '@/src/constants/quiet-return-copy';
+import type { UserVariant } from '@/src/features/reflect/types';
+import type { QuietReturnTier } from '@/src/features/reflect/quiet-return-copy';
 
 type ProfileFields = {
   sessionCount: number;

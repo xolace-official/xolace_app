@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { TextArea, TextField } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
-import { PillButton } from '@/src/components/reflect/pill-button';
+import { PillButton } from '@/src/components/shared/pill-button';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 // Input never leaves the device. It is never stored, logged, or sent.

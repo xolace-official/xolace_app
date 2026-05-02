@@ -1,4 +1,4 @@
-import type { EntryType, ReflectionStateName } from '@/src/interfaces/reflection';
+import type { EntryType, ReflectionStateName } from '@/src/features/reflect/types';
 
 type ServerEntryType =
   | 'open_prompt'

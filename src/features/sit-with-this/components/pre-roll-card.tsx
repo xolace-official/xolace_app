@@ -1,7 +1,7 @@
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { View } from 'react-native';
 import { AppText } from '@/src/components/shared/app-text';
-import { PillButton } from '@/src/components/reflect/pill-button';
+import { PillButton } from '@/src/components/shared/pill-button';
 
 type Props = {
   onBegin: () => void;

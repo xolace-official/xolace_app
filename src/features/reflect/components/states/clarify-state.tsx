@@ -3,8 +3,8 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { TextArea } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { AppText } from '@/src/components/shared/app-text';
-import { PillButton } from '@/src/components/reflect/pill-button';
-import type { ReflectionAction } from '@/src/interfaces/reflection';
+import { PillButton } from '@/src/components/shared/pill-button';
+import type { ReflectionAction } from '@/src/features/reflect/types';
 
 type Props = {
   previousMirror: string;

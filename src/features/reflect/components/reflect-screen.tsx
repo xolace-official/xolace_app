@@ -4,22 +4,22 @@ import { MorphLoader } from '@/src/components/shared/loader/morph/morph-loader';
 import { EaseView } from 'react-native-ease';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
-import { useReflectionMachine } from '@/src/hooks/use-reflection-machine';
-import { useScreenTransition } from '@/src/hooks/use-screen-transition';
-import { SCREEN_TRANSITIONS, DEFAULT_SCREEN_TRANSITION } from '@/src/constants/reflect-transitions';
+import { api } from '@/convex/_generated/api';
+import { useReflectionMachine } from '@/src/features/reflect/hooks/use-reflection-machine';
+import { useScreenTransition } from '@/src/features/reflect/hooks/use-screen-transition';
+import { SCREEN_TRANSITIONS, DEFAULT_SCREEN_TRANSITION } from '@/src/features/reflect/reflect-transitions';
 import { computeUserVariant, computeQuietReturn } from '@/src/helpers/utils/user-variant';
-import type { ReflectionStateName } from '@/src/interfaces/reflection';
-import { IdleState } from '@/src/components/reflect/states/idle-state';
-import { TypingState } from '@/src/components/reflect/states/typing-state';
-import { ProcessingState } from '@/src/components/reflect/states/processing-state';
-import { MirrorState } from '@/src/components/reflect/states/mirror-state';
-import { ClarifyState } from '@/src/components/reflect/states/clarify-state';
-import { GaveUpState } from '@/src/components/reflect/states/gave-up-state';
-import { PathSelectionState } from '@/src/components/reflect/states/path-selection-state';
-import { EscalationState } from '@/src/components/reflect/states/escalation-state';
-import { ErrorState } from '@/src/components/reflect/states/error-state';
-import { SpaceNamePromptDialog } from '@/src/components/reflect/space-name-prompt-dialog';
+import type { ReflectionStateName } from '@/src/features/reflect/types';
+import { IdleState } from '@/src/features/reflect/components/states/idle-state';
+import { TypingState } from '@/src/features/reflect/components/states/typing-state';
+import { ProcessingState } from '@/src/features/reflect/components/states/processing-state';
+import { MirrorState } from '@/src/features/reflect/components/states/mirror-state';
+import { ClarifyState } from '@/src/features/reflect/components/states/clarify-state';
+import { GaveUpState } from '@/src/features/reflect/components/states/gave-up-state';
+import { PathSelectionState } from '@/src/features/reflect/components/states/path-selection-state';
+import { EscalationState } from '@/src/features/reflect/components/states/escalation-state';
+import { ErrorState } from '@/src/features/reflect/components/states/error-state';
+import { SpaceNamePromptDialog } from '@/src/features/reflect/components/space-name-prompt-dialog';
 
 export const ReflectScreen = () => {
   const {

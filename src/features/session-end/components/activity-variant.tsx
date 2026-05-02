@@ -6,7 +6,7 @@ import { LinkButton } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress, playTextureSelect } from '@/src/lib/haptics';
 import { ContributedConfirmation } from '@/src/features/session-end/components/contributed-confirmation';
-import { NIGHT_SESSION_END_ACTIVITY } from '@/src/constants/night-copy';
+import { NIGHT_SESSION_END_ACTIVITY } from '@/src/features/reflect/night-copy';
 
 type PostSessionMood = 'lighter' | 'same' | 'heavier' | 'unsure';
 

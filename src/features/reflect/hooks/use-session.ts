@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
-import type { EntryType } from '@/src/interfaces/reflection';
-import { mapEntryType } from '@/src/services/session-service';
+import { api } from '@/convex/_generated/api';
+import type { Id } from '@/convex/_generated/dataModel';
+import type { EntryType } from '@/src/features/reflect/types';
+import { mapEntryType } from '@/src/features/reflect/session-service';
 import { useSessionMode } from '@/src/context/session-mode-context';
 
 // States where turns are relevant (mirror has been delivered at least once)

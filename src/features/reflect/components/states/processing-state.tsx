@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { AppText } from '@/src/components/shared/app-text';
-import { BreathingOrb } from '@/src/components/reflect/breathing-orb';
+import { BreathingOrb } from '@/src/features/reflect/components/breathing-orb';
 import Shimmer from '@/src/components/shared/shimmer';
 import { SparkleStars } from '@/src/components/shared/sparkle-stars';
 import { playProcessingBreath } from '@/src/lib/haptics';

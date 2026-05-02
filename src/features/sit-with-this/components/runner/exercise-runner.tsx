@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
-import { PillButton } from '@/src/components/reflect/pill-button';
+import { PillButton } from '@/src/components/shared/pill-button';
 import { PreRollCard } from '@/src/features/sit-with-this/components/pre-roll-card';
 import { BeatRenderer } from './beat-renderer';
 import { runnerReducer } from './exercise-runner.reducer';
