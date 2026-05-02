@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { View, ColorValue, Pressable } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Card, Chip, cn } from "heroui-native";
-import { TruncatedText } from "@/src/components/peer-reflection/truncated-text";
+import { TruncatedText } from "@/src/features/peer-reflection/components/truncated-text";
 import { playResonanceToggle } from "@/src/lib/haptics";
 import { useCSSVariable, withUniwind } from "uniwind";
 

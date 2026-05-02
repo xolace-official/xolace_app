@@ -7,13 +7,13 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { useQuery, useMutation } from "convex/react";
 import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/reflect/pill-button";
-import { ReflectionCard } from "@/src/components/peer-reflection/reflection-card";
+import { ReflectionCard } from "@/src/features/peer-reflection/components/reflection-card";
 import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
-import { ReportSheet } from "@/src/components/peer-reflection/report-sheet";
-import { Id } from "../../../../convex/_generated/dataModel";
+import { ReportSheet } from "@/src/features/peer-reflection/components/report-sheet";
+import { Id } from "@/convex/_generated/dataModel";
 
 export const PeerReflectionScreen = () => {
   const insets = useSafeAreaInsets();
@@ -70,10 +70,11 @@ export const PeerReflectionScreen = () => {
     matchedReflections.length === 0 &&
     (recentReflections?.length ?? 0) > 0;
 
-  const reflections =
+  const reflections = (
     matchedReflections && matchedReflections.length > 0
       ? matchedReflections
-      : recentReflections ?? [];
+      : recentReflections ?? []
+  ) as NonNullable<typeof matchedReflections>;
 
   // Batch check resonance state from server
   const reflectionIds = reflections.map((r) => r._id);
