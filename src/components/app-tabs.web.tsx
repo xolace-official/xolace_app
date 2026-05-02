@@ -16,7 +16,7 @@ import { Pressable, View } from 'react-native';
 
 import { ExternalLink } from './external-link';
 import { AppText } from '@/src/components/shared/app-text';
-import { MaxContentWidth } from '@/src/constants/theme';
+import { MaxContentWidth } from '@/src/lib/theme';
 
 export default function AppTabs() {
   return (

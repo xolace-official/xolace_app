@@ -14,7 +14,7 @@ import { playGentlePresence, playOnboardingEntrance } from '@/src/lib/haptics';
 import { MoodMarquee } from '@/src/features/onboarding/components/mood-marquee';
 import { MoodBg } from '@/src/features/onboarding/components/mood-bg';
 import { getCardWidth } from '@/src/features/onboarding/components/mood-card';
-import { useDebounce } from '@/src/hooks/use-debounce';
+import { useDebounce } from '@/src/lib/use-debounce';
 import { MOODS } from '@/src/features/onboarding/moods';
 
 export const PromiseScreen = () => {

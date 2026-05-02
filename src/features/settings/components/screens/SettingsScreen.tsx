@@ -12,7 +12,7 @@ import { ReachSelectorDialog } from "@/src/features/settings/components/reach-se
 import { QuietWindowDialog } from "@/src/features/settings/components/quiet-window-dialog";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { useSettings } from "@/src/features/settings/hooks/use-settings";
-import { useConfirmAction } from "@/src/hooks/use-confirm-action";
+import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
 import { useAppStore } from "@/src/store/store";
 import type { ThemeMode } from "@/src/features/settings/hooks/use-settings";
 

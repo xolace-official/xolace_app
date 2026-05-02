@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { useNotifications } from '@/src/hooks/use-notifications';
+import { useNotifications } from '@/src/lib/use-notifications';
 
 /**
  * Provides the navigation layout used by protected routes.

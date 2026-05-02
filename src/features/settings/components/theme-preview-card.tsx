@@ -1,7 +1,7 @@
 import { Pressable, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
-import type { ThemeEntry } from '@/src/constants/themes';
+import type { ThemeEntry } from '@/src/lib/themes';
 
 type Props = {
   theme: ThemeEntry;

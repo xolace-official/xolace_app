@@ -10,7 +10,8 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useColorScheme } from 'react-native';
 
-import { Colors, TABS } from '@/src/constants';
+import { Colors } from '@/src/lib/theme';
+import { TABS } from '@/src/lib/tabs';
 import { playSoftPress } from '@/src/lib/haptics';
 
 export default function AppTabs() {

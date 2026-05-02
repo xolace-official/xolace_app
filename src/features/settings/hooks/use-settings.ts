@@ -8,7 +8,7 @@ import type { RetentionOption } from "@/src/features/settings/components/retenti
 import type { MirrorTone } from "@/src/features/settings/components/mirror-tone-picker-dialog";
 import { useAppStore } from "@/src/store/store";
 import { useAppTheme } from "@/src/context/app-theme-context";
-import { requestPushToken } from "@/src/hooks/use-notifications";
+import { requestPushToken } from "@/src/lib/use-notifications";
 
 export type ThemeMode = "system" | "light" | "dark";
 
