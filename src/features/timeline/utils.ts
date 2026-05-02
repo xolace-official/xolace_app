@@ -1,4 +1,4 @@
-import type { TimelineEntry, TimelineFlatItem } from '@/src/interfaces/timeline';
+import type { TimelineEntry, TimelineFlatItem } from '@/src/features/timeline/types';
 
 /**
  * Produce a human-friendly relative day label for a timestamp.

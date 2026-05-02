@@ -1,10 +1,10 @@
 import { ActivityIndicator, View } from 'react-native';
 import { LegendList } from '@legendapp/list/react-native';
-import { TimelineEntryCard } from '@/src/components/timeline/timeline-entry-card';
-import { TimelineSectionHeader } from '@/src/components/timeline/timeline-section-header';
+import { TimelineEntryCard } from '@/src/features/timeline/components/timeline-entry-card';
+import { TimelineSectionHeader } from '@/src/features/timeline/components/timeline-section-header';
 import { AppText } from '@/src/components/shared/app-text';
-import { useTimeline } from '@/src/hooks/use-timeline';
-import type { TimelineFlatItem } from '@/src/interfaces/timeline';
+import { useTimeline } from '@/src/features/timeline/hooks/use-timeline';
+import type { TimelineFlatItem } from '@/src/features/timeline/types';
 import { FullMorphLoader as ActiveLoader } from '@/src/components/shared/loader/morph/full-morph-loader';
 
 const renderItem = ({ item, index }: { item: TimelineFlatItem; index: number }) => {

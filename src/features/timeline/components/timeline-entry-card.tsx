@@ -7,7 +7,7 @@ import {
   getEmotionLabel,
   getPathLabel,
 } from '@/src/constants/emotions';
-import type { TimelineEntry } from '@/src/interfaces/timeline';
+import type { TimelineEntry } from '@/src/features/timeline/types';
 
 type Props = {
   entry: TimelineEntry;
