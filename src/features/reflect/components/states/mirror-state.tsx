@@ -1,15 +1,19 @@
 import { useEffect } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Chip, LinkButton } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import type { EntryType } from '@/src/features/reflect/types';
+import type { Id } from '@/convex/_generated/dataModel';
 import { playMirrorArrival, playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
+import { useMirrorAudio } from '@/src/features/reflect/hooks/use-mirror-audio';
+import { SpeakerIcon } from '@/src/components/icons/speaker-icon';
 
 type Props = {
   mirror: string;
   selectedTextures: string[];
   entryType: EntryType;
+  sessionId: Id<'sessions'> | null;
   onThatsIt: () => void;
   onNotQuite: () => void;
   onSayMore: () => void;
@@ -19,12 +23,16 @@ export const MirrorState = ({
   mirror,
   selectedTextures,
   entryType,
+  sessionId,
   onThatsIt,
   onNotQuite,
   onSayMore,
 }: Props) => {
+  const { isReady, isPlaying, toggle, stop } = useMirrorAudio(sessionId);
+
   useEffect(() => {
     playMirrorArrival();
+    return () => { stop(); };
   }, []);
 
   const showTextures =
@@ -53,10 +61,18 @@ export const MirrorState = ({
         </Animated.View>
       )}
 
-      <Animated.View entering={FadeIn.duration(600)}>
-        <AppText className="mb-3 text-xs uppercase tracking-widest text-accent">
+      <Animated.View entering={FadeIn.duration(600)} className="mb-3 flex-row items-center gap-3">
+        <AppText className="text-xs uppercase tracking-widest text-accent">
           The Mirror
         </AppText>
+        {isReady && (
+          <TouchableOpacity onPress={toggle} hitSlop={8}>
+            <SpeakerIcon
+              size={16}
+              playing={isPlaying}
+            />
+          </TouchableOpacity>
+        )}
       </Animated.View>
 
       <ScrollView

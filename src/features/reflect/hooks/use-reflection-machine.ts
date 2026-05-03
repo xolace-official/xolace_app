@@ -31,6 +31,7 @@ export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const posthog = usePostHog();
   const {
+    sessionId,
     session,
     serverState,
     mirrorText,
@@ -356,6 +357,7 @@ export function useReflectionMachine() {
     state,
     dispatch,
     isLoading,
+    sessionId,
     escalationResources: session?.escalationResources ?? null,
     submitReflection,
     submitScaffold,

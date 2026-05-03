@@ -26,6 +26,7 @@ export const ReflectScreen = () => {
     state,
     dispatch,
     isLoading,
+    sessionId,
     escalationResources,
     submitReflection,
     submitScaffold,
@@ -112,6 +113,7 @@ export const ReflectScreen = () => {
             mirror={state.mirrorResponse}
             selectedTextures={state.selectedTextures}
             entryType={state.entryType}
+            sessionId={sessionId}
             onThatsIt={handleThatsIt}
             onNotQuite={handleNotQuite}
             onSayMore={handleSayMore}

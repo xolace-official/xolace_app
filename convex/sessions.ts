@@ -3,6 +3,7 @@ import {
   mutation,
   query,
   internalMutation,
+  internalQuery,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { paginationOptsValidator } from "convex/server";
@@ -484,6 +485,47 @@ export const deliverMirror = internalMutation({
       ...(args.escalationResources ? { escalationResources: args.escalationResources } : {}),
       updatedAt: Date.now(),
     });
+  },
+});
+
+/**
+ * Internal read for TTS idempotency check — returns only the audio storage ID field.
+ */
+export const getMirrorAudioStorageId = internalQuery({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    return session?.mirrorAudioStorageId ?? null;
+  },
+});
+
+/**
+ * TTS action stores the generated audio storage ID on the session.
+ */
+export const storeMirrorAudio = internalMutation({
+  args: {
+    sessionId: v.id("sessions"),
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) return;
+    await ctx.db.patch(args.sessionId, {
+      mirrorAudioStorageId: args.storageId,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * Returns a signed URL for the session's mirror audio, or null if not yet ready.
+ */
+export const getMirrorAudioUrl = query({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const { session } = await requireSessionOwnership(ctx, args.sessionId);
+    if (!session.mirrorAudioStorageId) return null;
+    return ctx.storage.getUrl(session.mirrorAudioStorageId);
   },
 });
 
