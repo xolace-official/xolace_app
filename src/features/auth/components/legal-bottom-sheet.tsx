@@ -42,7 +42,7 @@ export const LegalBottomSheet = ({ document, onClose }: Props) => {
             {document && (
               <>
                 <AppText
-                  className="text-white/90 text-[22px] mb-6"
+                  className="text-[22px] mb-6"
                   style={{ fontFamily: 'Poppins-Medium' }}
                 >
                   {document.title}
@@ -51,13 +51,13 @@ export const LegalBottomSheet = ({ document, onClose }: Props) => {
                 {document.sections.map((section) => (
                   <View key={section.heading} style={{ marginBottom: 20 }}>
                     <AppText
-                      className="text-white/80 text-[14px] mb-1"
+                      className=" text-[14px] mb-1"
                       style={{ fontFamily: 'Poppins-Medium' }}
                     >
                       {section.heading}
                     </AppText>
                     <AppText
-                      className="text-white/50 text-[13px] leading-6"
+                      className="text-[13px] leading-6"
                       style={{ fontFamily: 'Poppins-Regular' }}
                     >
                       {section.body}
@@ -74,13 +74,13 @@ export const LegalBottomSheet = ({ document, onClose }: Props) => {
                   }}
                 >
                   <AppText
-                    className="text-white/30 text-[12px] text-center"
+                    className="text-[12px] text-center"
                     style={{ fontFamily: 'Poppins-Regular' }}
                     onPress={handleOpenFull}
                   >
                     This is a summary.{' '}
                     <AppText
-                      className="text-white/50 text-[12px]"
+                      className="text-[12px]"
                       style={{ textDecorationLine: 'underline' }}
                     >
                       Read the full version at xolaceinc.com
