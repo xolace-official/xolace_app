@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -31,12 +31,12 @@ export function useMirrorAudio(
     setIsReady(true);
   }, [audioUrl]);
 
-  const toggle = () => {
+  const toggle = async () => {
     if (!isReady || !audioUrl) return;
     if (status.playing) {
       player.pause();
     } else {
-      // Restart if finished
+      await setAudioModeAsync({ playsInSilentMode: true });
       if (status.didJustFinish) {
         player.seekTo(0);
       }

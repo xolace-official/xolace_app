@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
-import { ScrollView, TouchableOpacity, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Chip, LinkButton } from 'heroui-native';
+import { Chip, LinkButton, PressableFeedback, useThemeColor } from 'heroui-native';
+import { SymbolView } from 'expo-symbols';
 import { AppText } from '@/src/components/shared/app-text';
 import type { EntryType } from '@/src/features/reflect/types';
 import type { Id } from '@/convex/_generated/dataModel';
 import { playMirrorArrival, playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
 import { useMirrorAudio } from '@/src/features/reflect/hooks/use-mirror-audio';
-import { SpeakerIcon } from '@/src/components/icons/speaker-icon';
 
 type Props = {
   mirror: string;
@@ -29,6 +29,7 @@ export const MirrorState = ({
   onSayMore,
 }: Props) => {
   const { isReady, isPlaying, toggle, stop } = useMirrorAudio(sessionId);
+  const accent = useThemeColor('accent');
 
   useEffect(() => {
     playMirrorArrival();
@@ -66,12 +67,21 @@ export const MirrorState = ({
           The Mirror
         </AppText>
         {isReady && (
-          <TouchableOpacity onPress={toggle} hitSlop={8}>
-            <SpeakerIcon
+          <PressableFeedback
+            onPress={() => { playSoftPress(); toggle(); }}
+            animation={{ scale: { ignoreScaleCoefficient: true, value: 0.85 } }}
+            hitSlop={8}
+          >
+            <SymbolView
+              name={{
+                ios: isPlaying ? 'speaker.wave.2.fill' : 'speaker.fill',
+                android: isPlaying ? 'volume_up' : 'volume_off',
+                web: isPlaying ? 'volume_up' : 'volume_off',
+              }}
               size={16}
-              playing={isPlaying}
+              tintColor={accent}
             />
-          </TouchableOpacity>
+          </PressableFeedback>
         )}
       </Animated.View>
 

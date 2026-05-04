@@ -518,6 +518,21 @@ export const storeMirrorAudio = internalMutation({
 });
 
 /**
+ * Clears the mirror audio storage ID from the session (called before regenerating TTS on clarification).
+ */
+export const clearMirrorAudio = internalMutation({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) return;
+    await ctx.db.patch(args.sessionId, {
+      mirrorAudioStorageId: undefined,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/**
  * Returns a signed URL for the session's mirror audio, or null if not yet ready.
  */
 export const getMirrorAudioUrl = query({
