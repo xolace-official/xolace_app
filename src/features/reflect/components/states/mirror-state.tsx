@@ -34,7 +34,7 @@ export const MirrorState = ({
   useEffect(() => {
     playMirrorArrival();
     return () => { stop(); };
-  }, []);
+  }, [stop]);
 
   const showTextures =
     selectedTextures.length > 0 &&
