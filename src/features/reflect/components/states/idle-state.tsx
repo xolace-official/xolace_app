@@ -155,7 +155,6 @@ export const IdleState = ({
       <Separator className="mb-0" />
 
       <View className="flex-1 pt-4">
-        <View className="flex-row items-center gap-3">
           <Pressable
             onPress={handleTap}
             accessibilityRole="button"
@@ -166,7 +165,8 @@ export const IdleState = ({
             <AppText className="text-base text-foreground/30">
               Tap to begin writing...
             </AppText>
-          </Pressable>
+        </Pressable>
+        <View className="absolute right-2 top-1">
           <MicButton size="md" isRecording={isRecording} onPress={onVoiceTap} />
         </View>
       </View>
