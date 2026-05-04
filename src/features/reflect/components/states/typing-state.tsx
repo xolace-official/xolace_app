@@ -7,6 +7,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { PresenceDot } from '@/src/features/reflect/components/presence-dot';
 import { PillButton } from '@/src/components/shared/pill-button';
+import { MicButton } from '@/src/features/reflect/components/mic-button';
 import { useTypingPause } from '@/src/features/reflect/hooks/use-typing-pause';
 import type { ReflectionAction } from '@/src/features/reflect/types';
 import { useSessionMode } from '@/src/context/session-mode-context';
@@ -18,6 +19,8 @@ type Props = {
   dispatch: React.Dispatch<ReflectionAction>;
   onSubmit: () => void;
   onDismiss: () => void;
+  onVoiceTap: () => void;
+  isRecording: boolean;
   autoFocus?: boolean;
 };
 
@@ -27,7 +30,7 @@ const NUDGE_MESSAGES = [
   "You don't need to explain, just say what's there.",
 ];
 
-export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismiss, autoFocus = true }: Props) => {
+export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismiss, onVoiceTap, isRecording, autoFocus = true }: Props) => {
   const { isNight } = useSessionMode();
   const { resetTimer, clearTimer } = useTypingPause(
     () => dispatch({ type: 'PAUSE_TIMEOUT' }),
@@ -84,6 +87,7 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismis
               </AppText>
             </Animated.View>
           )}
+          <MicButton size="sm" isRecording={isRecording} onPress={onVoiceTap} />
           <Pressable
             onPress={() => {
               playSoftPress();

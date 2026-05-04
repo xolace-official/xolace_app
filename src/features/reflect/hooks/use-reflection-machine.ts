@@ -4,6 +4,7 @@ import type { FeedbackType } from '@/src/features/reflect/types';
 import { useSession } from '@/src/features/reflect/hooks/use-session';
 import { extractErrorMessage } from '@/src/features/reflect/session-service';
 import { MAX_TURNS, initialState, reducer } from './reflection-reducer';
+import { useVoiceInput } from '@/src/features/reflect/hooks/use-voice-input';
 
 /**
  * Manages the reflection UI state machine and bridges it to the session API.
@@ -30,6 +31,8 @@ import { MAX_TURNS, initialState, reducer } from './reflection-reducer';
 export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const posthog = usePostHog();
+  const { isRecording, partialTranscript, startRecording, stopRecording } = useVoiceInput();
+  const voicePrefixRef = useRef('');
   const {
     sessionId,
     session,
@@ -62,7 +65,16 @@ export function useReflectionMachine() {
     freezeStartRef.current = null;
     freezeDurationRef.current = undefined;
     busyRef.current = false;
+    voicePrefixRef.current = '';
   }, []);
+
+  // Forward live transcript to entryText
+  useEffect(() => {
+    if (!partialTranscript) return;
+    const prefix = voicePrefixRef.current;
+    const text = prefix ? `${prefix} ${partialTranscript}` : partialTranscript;
+    dispatch({ type: 'VOICE_TRANSCRIPT', text });
+  }, [partialTranscript]);
 
   // --- Bridge server state changes to UI dispatches ---
   useEffect(() => {
@@ -328,6 +340,22 @@ export function useReflectionMachine() {
     }
   }, [recordEscalationResponse, confirmMirror, turnsCount]);
 
+  const startVoiceFromIdle = async () => {
+    voicePrefixRef.current = '';
+    dispatch({ type: 'VOICE_START' });
+    await startRecording();
+  };
+
+  const startVoiceFromTyping = async () => {
+    voicePrefixRef.current = state.entryText.trim();
+    await startRecording();
+  };
+
+  const handleDismissTyping = () => {
+    if (isRecording) stopRecording();
+    dispatch({ type: 'DISMISS_TYPING' });
+  };
+
   const handleReset = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -359,6 +387,7 @@ export function useReflectionMachine() {
     isLoading,
     sessionId,
     escalationResources: session?.escalationResources ?? null,
+    isRecording,
     submitReflection,
     submitScaffold,
     submitClarification,
@@ -374,5 +403,8 @@ export function useReflectionMachine() {
     handleSelectPeers,
     handleReset,
     handleRetry,
+    startVoiceFromIdle,
+    startVoiceFromTyping,
+    handleDismissTyping,
   };
 }

@@ -28,6 +28,7 @@ export const ReflectScreen = () => {
     isLoading,
     sessionId,
     escalationResources,
+    isRecording,
     submitReflection,
     submitScaffold,
     submitClarification,
@@ -43,6 +44,9 @@ export const ReflectScreen = () => {
     handleSelectPeers,
     handleReset,
     handleRetry,
+    startVoiceFromIdle,
+    startVoiceFromTyping,
+    handleDismissTyping,
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
   const context = useQuery(api.users.getFullContext);
@@ -90,6 +94,8 @@ export const ReflectScreen = () => {
             dispatch={dispatch}
             onTap={() => dispatch({ type: 'TAP_INPUT' })}
             onScaffoldSubmit={submitScaffold}
+            onVoiceTap={startVoiceFromIdle}
+            isRecording={isRecording}
             spaceName={context?.preferences?.spaceName}
           />
         );
@@ -101,7 +107,9 @@ export const ReflectScreen = () => {
             entryText={state.entryText}
             dispatch={dispatch}
             onSubmit={submitReflection}
-            onDismiss={() => dispatch({ type: 'DISMISS_TYPING' })}
+            onDismiss={handleDismissTyping}
+            onVoiceTap={startVoiceFromTyping}
+            isRecording={isRecording}
             autoFocus={!isOutgoing}
           />
         );

@@ -5,6 +5,7 @@ import { Separator, TagGroup, cn } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/shared/pill-button";
 import { TimelineIcon } from "@/src/features/reflect/components/timeline-icon";
+import { MicButton } from "@/src/features/reflect/components/mic-button";
 import type { UserVariant, ReflectionAction } from "@/src/features/reflect/types";
 import { playTypingBegin, playTextureSelect, playHomeEntrance } from "@/src/lib/haptics";
 import { useSessionMode } from "@/src/context/session-mode-context";
@@ -36,6 +37,8 @@ type Props = {
   dispatch: React.Dispatch<ReflectionAction>;
   onTap: () => void;
   onScaffoldSubmit: () => void;
+  onVoiceTap: () => void;
+  isRecording: boolean;
   spaceName?: string;
 };
 
@@ -57,6 +60,8 @@ export const IdleState = ({
   dispatch,
   onTap,
   onScaffoldSubmit,
+  onVoiceTap,
+  isRecording,
   spaceName,
 }: Props) => {
   const { isNight } = useSessionMode();
@@ -149,17 +154,22 @@ export const IdleState = ({
       {/* Tap to type zone — takes up available space */}
       <Separator className="mb-0" />
 
-      <Pressable
-        onPress={handleTap}
-        accessibilityRole="button"
-        accessibilityLabel="Tap to begin writing"
-        accessibilityHint="Opens the editor to start typing"
-        className="flex-1 pt-4"
-      >
-        <AppText className="text-base text-foreground/30">
-          Tap to begin writing...
-        </AppText>
-      </Pressable>
+      <View className="flex-1 pt-4">
+        <View className="flex-row items-center gap-3">
+          <Pressable
+            onPress={handleTap}
+            accessibilityRole="button"
+            accessibilityLabel="Tap to begin writing"
+            accessibilityHint="Opens the editor to start typing"
+            className="flex-1"
+          >
+            <AppText className="text-base text-foreground/30">
+              Tap to begin writing...
+            </AppText>
+          </Pressable>
+          <MicButton size="md" isRecording={isRecording} onPress={onVoiceTap} />
+        </View>
+      </View>
 
       {/* Scaffold section */}
       <View className="border-t border-foreground/5 pt-6 pb-8">

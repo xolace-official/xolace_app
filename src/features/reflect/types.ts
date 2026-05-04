@@ -17,7 +17,7 @@ export type ReflectionStateName =
   | 'escalation'
   | 'error';
 
-export type EntryType = 'typed' | 'scaffold' | 'hybrid';
+export type EntryType = 'typed' | 'scaffold' | 'hybrid' | 'voice';
 
 export type FeedbackType = 'not_quite' | 'say_more';
 
@@ -40,7 +40,9 @@ export type ReflectionAction =
   | { type: 'RESET' }
   | { type: 'SESSION_ERROR'; message: string }
   | { type: 'SESSION_RESUMED'; screen: ReflectionStateName; mirrorResponse?: string }
-  | { type: 'ESCALATION_TRIGGERED'; mirror: string };
+  | { type: 'ESCALATION_TRIGGERED'; mirror: string }
+  | { type: 'VOICE_START' }
+  | { type: 'VOICE_TRANSCRIPT'; text: string };
 
 export interface ReflectionState {
   screen: ReflectionStateName;
