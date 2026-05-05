@@ -152,9 +152,7 @@ export const IdleState = ({
         )}
       </View>
 
-      <View className="absolute bottom-22 right-6">
-        <IdleMenu />
-      </View>
+      <IdleMenu />
     </View>
   );
 };

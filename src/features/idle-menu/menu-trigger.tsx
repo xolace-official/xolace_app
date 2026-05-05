@@ -21,7 +21,7 @@ export const MenuTrigger = ({ isOpen, onPress }: Props) => {
 
   const rStyle = useAnimatedStyle(() => ({
     opacity: withTiming(isOpen.value ? 0.5 : 1),
-    transform: [{ scale: withTiming(isOpen.value ? 0.5 : 1) }],
+    transform: [{ scale: withTiming(isOpen.value ? 0.6 : 1) }],
   }));
 
   return (

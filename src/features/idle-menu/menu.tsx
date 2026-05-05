@@ -1,15 +1,42 @@
-import { View } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { BlurView } from "expo-blur";
 import { MenuTrigger } from "@/src/features/idle-menu/menu-trigger";
 import { MenuButtonsWrapper } from "@/src/features/idle-menu/menu-buttons-wrapper";
 import { useMenuState } from "@/src/features/idle-menu/hooks/use-menu-state";
 
 export const IdleMenu = () => {
-  const { isOpen, toggle, close } = useMenuState();
+  const { isOpen, isOpenJS, toggle, close } = useMenuState();
 
   return (
-    <View className="items-end">
-      <MenuButtonsWrapper isOpen={isOpen} onClose={close} />
-      <MenuTrigger isOpen={isOpen} onPress={toggle} />
-    </View>
+    <Animated.View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+      {isOpenJS && (
+        <Animated.View
+          entering={FadeIn.duration(150)}
+          style={StyleSheet.absoluteFillObject}
+          pointerEvents="auto"
+        >
+          <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFillObject} />
+          <Pressable
+            style={StyleSheet.absoluteFillObject}
+            onPress={close}
+            accessible={false}
+          />
+        </Animated.View>
+      )}
+      <Animated.View style={styles.menuAnchor} pointerEvents="box-none">
+        <MenuButtonsWrapper isOpen={isOpen} onClose={close} />
+        <MenuTrigger isOpen={isOpen} onPress={toggle} />
+      </Animated.View>
+    </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  menuAnchor: {
+    position: "absolute",
+    bottom: 88,
+    right: 24,
+    alignItems: "flex-end",
+  },
+});
