@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "agents": {
+      "source": "elevenlabs/skills",
+      "sourceType": "github",
+      "skillPath": "agents/SKILL.md",
+      "computedHash": "5de87f3c5516e488c8ad71ff7d00cb2727a417b618d82d15498fba10f6bc9723"
+    },
     "apple-search-ads": {
       "source": "eronred/aso-skills",
       "sourceType": "github",

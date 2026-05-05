@@ -53,6 +53,7 @@ import type * as seed from "../seed.js";
 import type * as sessionTurns from "../sessionTurns.js";
 import type * as sessions from "../sessions.js";
 import type * as users from "../users.js";
+import type * as vent from "../vent.js";
 
 import type {
   ApiFromModules,
@@ -106,6 +107,7 @@ declare const fullApi: ApiFromModules<{
   sessionTurns: typeof sessionTurns;
   sessions: typeof sessions;
   users: typeof users;
+  vent: typeof vent;
 }>;
 
 /**
