@@ -178,7 +178,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-secure-store",
       "expo-apple-authentication",
       "expo-notifications",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow Xolace to use the microphone to capture what you're feeling.",
+          "speechRecognitionPermission": "Allow Xolace to use speech recognition to transcribe your voice."
+        }
+      ]
     ],
     experiments: {
       typedRoutes: true,

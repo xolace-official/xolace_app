@@ -23,6 +23,7 @@ const ENTRY_TYPE_MAP: Record<EntryType, ServerEntryType> = {
   typed: 'open_prompt',
   scaffold: 'word_cloud',
   hybrid: 'guided_entry',
+  voice: 'voice',
 };
 
 /**

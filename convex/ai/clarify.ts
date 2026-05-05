@@ -151,6 +151,25 @@ export const handleClarification = internalAction({
         mirrorText: revisedMirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
       });
+
+      // 7.5. Replace TTS: delete old audio file and schedule fresh generation.
+      const oldStorageId = await ctx.runQuery(
+        internal.sessions.getMirrorAudioStorageId,
+        { sessionId: args.sessionId },
+      );
+      if (oldStorageId) {
+        await ctx.storage.delete(oldStorageId);
+        await ctx.runMutation(internal.sessions.clearMirrorAudio, {
+          sessionId: args.sessionId,
+        });
+      }
+      if (revisedMirrorText !== FALLBACK_MIRROR) {
+        await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
+          sessionId: args.sessionId,
+          mirrorText: revisedMirrorText,
+          mirrorTone: mirrorTone as "poetic" | "gentle" | "direct" | "adaptive",
+        });
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error

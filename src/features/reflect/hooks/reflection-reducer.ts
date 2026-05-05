@@ -101,6 +101,12 @@ export function reducer(
         mirrorResponse: action.mirrorResponse ?? state.mirrorResponse,
       };
 
+    case 'VOICE_START':
+      return { ...state, screen: 'typing', entryType: 'voice' };
+
+    case 'VOICE_TRANSCRIPT':
+      return { ...state, screen: 'typing', entryText: action.text, entryType: 'voice' };
+
     case 'RESET':
       return { ...initialState, userVariant: state.userVariant };
 

@@ -1,15 +1,19 @@
 import { useEffect } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { Chip, LinkButton } from 'heroui-native';
+import { Chip, LinkButton, PressableFeedback, useThemeColor } from 'heroui-native';
+import { SymbolView } from 'expo-symbols';
 import { AppText } from '@/src/components/shared/app-text';
 import type { EntryType } from '@/src/features/reflect/types';
+import type { Id } from '@/convex/_generated/dataModel';
 import { playMirrorArrival, playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
+import { useMirrorAudio } from '@/src/features/reflect/hooks/use-mirror-audio';
 
 type Props = {
   mirror: string;
   selectedTextures: string[];
   entryType: EntryType;
+  sessionId: Id<'sessions'> | null;
   onThatsIt: () => void;
   onNotQuite: () => void;
   onSayMore: () => void;
@@ -19,13 +23,18 @@ export const MirrorState = ({
   mirror,
   selectedTextures,
   entryType,
+  sessionId,
   onThatsIt,
   onNotQuite,
   onSayMore,
 }: Props) => {
+  const { isReady, isPlaying, toggle, stop } = useMirrorAudio(sessionId);
+  const accent = useThemeColor('accent');
+
   useEffect(() => {
     playMirrorArrival();
-  }, []);
+    return () => { stop(); };
+  }, [stop]);
 
   const showTextures =
     selectedTextures.length > 0 &&
@@ -53,10 +62,31 @@ export const MirrorState = ({
         </Animated.View>
       )}
 
-      <Animated.View entering={FadeIn.duration(600)}>
-        <AppText className="mb-3 text-xs uppercase tracking-widest text-accent">
+      <Animated.View entering={FadeIn.duration(600)} className="mb-3 flex-row items-center gap-3">
+        <AppText className="text-xs uppercase tracking-widest text-accent">
           The Mirror
         </AppText>
+        {isReady && (
+          <PressableFeedback
+            onPress={() => { playSoftPress(); toggle(); }}
+            animation={{ scale: { ignoreScaleCoefficient: true, value: 0.85 } }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={isPlaying ? 'Pause mirror audio' : 'Play mirror audio'}
+            accessibilityHint="Toggles playback of the mirror response"
+            accessibilityState={{ selected: isPlaying }}
+          >
+            <SymbolView
+              name={{
+                ios: isPlaying ? 'speaker.wave.2.fill' : 'speaker.fill',
+                android: isPlaying ? 'volume_up' : 'volume_off',
+                web: isPlaying ? 'volume_up' : 'volume_off',
+              }}
+              size={16}
+              tintColor={accent}
+            />
+          </PressableFeedback>
+        )}
       </Animated.View>
 
       <ScrollView

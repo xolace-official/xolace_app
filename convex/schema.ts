@@ -362,6 +362,10 @@ export default defineSchema({
     // Optional: not set until mirror_delivered state.
     mirrorModelVersion: v.optional(v.string()),
 
+    // Convex file storage ID for the ElevenLabs TTS audio of the mirror text.
+    // Generated async after mirror delivery; null until ready.
+    mirrorAudioStorageId: v.optional(v.id("_storage")),
+
     // What happened after the mirror was shown.
     // Optional: not set until confirmed/abandoned.
     confirmationState: v.optional(v.union(

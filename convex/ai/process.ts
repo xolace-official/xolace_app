@@ -176,6 +176,16 @@ export const generateMirror = internalAction({
         } : {}),
       });
 
+      // 7.5. Schedule TTS generation (fire-and-forget, non-blocking)
+      //      Skipped for fallback mirrors — nothing meaningful to speak.
+      if (mirrorText !== FALLBACK_MIRROR) {
+        await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
+          sessionId: args.sessionId,
+          mirrorText,
+          mirrorTone: mirrorTone as "poetic" | "gentle" | "direct" | "adaptive",
+        });
+      }
+
       // 8. Store emotional metadata
       await ctx.runMutation(internal.emotionalMetadata.store, {
         sessionId: args.sessionId,
