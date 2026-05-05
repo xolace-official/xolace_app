@@ -4,12 +4,12 @@ import { MenuButtonsWrapper } from "@/src/features/idle-menu/menu-buttons-wrappe
 import { useMenuState } from "@/src/features/idle-menu/hooks/use-menu-state";
 
 export const IdleMenu = () => {
-  const { isOpen, open, close } = useMenuState();
+  const { isOpen, toggle, close } = useMenuState();
 
   return (
     <View className="items-end">
-      {isOpen && <MenuButtonsWrapper onClose={close} />}
-      <MenuTrigger onPress={isOpen ? close : open} />
+      <MenuButtonsWrapper isOpen={isOpen} onClose={close} />
+      <MenuTrigger isOpen={isOpen} onPress={toggle} />
     </View>
   );
 };

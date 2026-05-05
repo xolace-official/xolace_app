@@ -1,12 +1,14 @@
 import { View } from "react-native";
+import { SharedValue } from "react-native-reanimated";
 import { MenuButtons } from "@/src/features/idle-menu/menu-buttons";
 
 type Props = {
+  isOpen: SharedValue<boolean>;
   onClose: () => void;
 };
 
-export const MenuButtonsWrapper = ({ onClose }: Props) => (
+export const MenuButtonsWrapper = ({ isOpen, onClose }: Props) => (
   <View className="mb-2 min-w-40">
-    <MenuButtons onClose={onClose} />
+    <MenuButtons isOpen={isOpen} onClose={onClose} />
   </View>
 );

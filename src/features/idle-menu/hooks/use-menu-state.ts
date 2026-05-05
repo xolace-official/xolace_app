@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useSharedValue } from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
 
-export function useMenuState() {
-  const [isOpen, setIsOpen] = useState(false);
+type MenuState = {
+  isOpen: SharedValue<boolean>;
+  open: () => void;
+  close: () => void;
+  toggle: () => void;
+};
 
-  const open = () => setIsOpen(true);
-  const close = () => setIsOpen(false);
-  const toggle = () => setIsOpen((v) => !v);
-
-  return { isOpen, open, close, toggle };
+export function useMenuState(): MenuState {
+  const isOpen = useSharedValue(false);
+  return {
+    isOpen,
+    open: () => { isOpen.value = true; },
+    close: () => { isOpen.value = false; },
+    toggle: () => { isOpen.value = !isOpen.value; },
+  };
 }
