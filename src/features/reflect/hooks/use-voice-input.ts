@@ -60,14 +60,9 @@ export function useVoiceInput() {
     }
 
     if (consentStatus?.status !== 'granted') {
-      try {
-        await grantConsent({
-          consentType: 'voice_processing',
-          consentLanguageVersion: '1.0',
-        });
-      } catch {
-        // Non-blocking — consent failure should not prevent voice input
-      }
+      grantConsent({ consentType: 'voice_processing', consentLanguageVersion: '1.0' }).catch(
+        console.error
+      );
     }
 
     ExpoSpeechRecognitionModule.start({

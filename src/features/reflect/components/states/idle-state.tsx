@@ -154,7 +154,7 @@ export const IdleState = ({
       {/* Tap to type zone — takes up available space */}
       <Separator className="mb-0" />
 
-      <View className="flex-1 pt-4">
+      <View className="flex-1 pt-4"> 
           <Pressable
             onPress={handleTap}
             accessibilityRole="button"

@@ -71,6 +71,10 @@ export const MirrorState = ({
             onPress={() => { playSoftPress(); toggle(); }}
             animation={{ scale: { ignoreScaleCoefficient: true, value: 0.85 } }}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={isPlaying ? 'Pause mirror audio' : 'Play mirror audio'}
+            accessibilityHint="Toggles playback of the mirror response"
+            accessibilityState={{ selected: isPlaying }}
           >
             <SymbolView
               name={{

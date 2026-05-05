@@ -105,7 +105,7 @@ export function reducer(
       return { ...state, screen: 'typing', entryType: 'voice' };
 
     case 'VOICE_TRANSCRIPT':
-      return { ...state, screen: 'typing', entryText: action.text };
+      return { ...state, screen: 'typing', entryText: action.text, entryType: 'voice' };
 
     case 'RESET':
       return { ...initialState, userVariant: state.userVariant };

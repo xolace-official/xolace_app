@@ -341,12 +341,14 @@ export function useReflectionMachine() {
   }, [recordEscalationResponse, confirmMirror, turnsCount]);
 
   const startVoiceFromIdle = async () => {
+    if (isRecording) { stopRecording(); return; }
     voicePrefixRef.current = '';
     dispatch({ type: 'VOICE_START' });
     await startRecording();
   };
 
   const startVoiceFromTyping = async () => {
+    if (isRecording) { stopRecording(); return; }
     voicePrefixRef.current = state.entryText.trim();
     await startRecording();
   };
