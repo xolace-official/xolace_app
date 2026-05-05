@@ -33,14 +33,18 @@ export function useMirrorAudio(
 
   const toggle = async () => {
     if (!isReady || !audioUrl) return;
-    if (status.playing) {
-      player.pause();
-    } else {
-      await setAudioModeAsync({ playsInSilentMode: true });
-      if (status.didJustFinish) {
-        player.seekTo(0);
+    try {
+      if (status.playing) {
+        player.pause();
+      } else {
+        await setAudioModeAsync({ playsInSilentMode: true });
+        if (status.didJustFinish) {
+          player.seekTo(0);
+        }
+        player.play();
       }
-      player.play();
+    } catch (e) {
+      console.error('[useMirrorAudio] toggle failed:', e);
     }
   };
 
