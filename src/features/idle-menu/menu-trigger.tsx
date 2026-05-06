@@ -12,10 +12,11 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type Props = {
   isOpen: SharedValue<boolean>;
+  isOpenJS: boolean;
   onPress: () => void;
 };
 
-export const MenuTrigger = ({ isOpen, onPress }: Props) => {
+export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
   const foregroundColor = useThemeColor("foreground");
   const borderColor = useThemeColor("accent");
 
@@ -32,8 +33,8 @@ export const MenuTrigger = ({ isOpen, onPress }: Props) => {
       }}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel="Open menu"
-      accessibilityHint="Opens navigation options: Vent, Timeline, Settings"
+      accessibilityLabel={isOpenJS ? "Close menu" : "Open menu"}
+      accessibilityHint={isOpenJS ? "Closes navigation options" : "Opens navigation options: Vent, Timeline, Settings"}
       style={[styles.trigger, { borderColor }, rStyle]}
     >
       <SymbolView

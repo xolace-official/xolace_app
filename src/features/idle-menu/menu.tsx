@@ -25,8 +25,8 @@ export const IdleMenu = () => {
         </Animated.View>
       )}
       <Animated.View style={styles.menuAnchor} pointerEvents="box-none">
-        <MenuButtonsWrapper isOpen={isOpen} onClose={close} />
-        <MenuTrigger isOpen={isOpen} onPress={toggle} />
+        <MenuButtonsWrapper isOpen={isOpen} isOpenJS={isOpenJS} onClose={close} />
+        <MenuTrigger isOpen={isOpen} isOpenJS={isOpenJS} onPress={toggle} />
       </Animated.View>
     </Animated.View>
   );

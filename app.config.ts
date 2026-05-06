@@ -40,11 +40,23 @@ const getAppName = () => {
   return 'Xolace';
 };
 
+const getGoogleServicesPath = () => {
+  if (IS_DEV) {
+    return './google-services.json';
+  }
+
+  if (IS_PREVIEW) {
+    return './google-services-preview/google-services.json';
+  }
+
+  return './google-services.json';
+};
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
     name: getAppName(),
     slug: "xolace",
-    version: "1.0.0",
+    version: "1.1.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "xolace",
@@ -136,7 +148,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
       predictiveBackGestureEnabled: false,
       package: getUniqueIdentifier(),
-      googleServicesFile: "./google-services.json"
+      googleServicesFile: getGoogleServicesPath()
     },
     web: {
       output: "static",

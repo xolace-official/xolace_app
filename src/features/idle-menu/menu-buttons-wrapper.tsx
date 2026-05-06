@@ -4,11 +4,12 @@ import { MenuButtons } from "@/src/features/idle-menu/menu-buttons";
 
 type Props = {
   isOpen: SharedValue<boolean>;
+  isOpenJS: boolean;
   onClose: () => void;
 };
 
-export const MenuButtonsWrapper = ({ isOpen, onClose }: Props) => (
-  <View className="mb-2 min-w-40">
+export const MenuButtonsWrapper = ({ isOpen, isOpenJS, onClose }: Props) => (
+  <View className="mb-2 min-w-40" pointerEvents={isOpenJS ? "auto" : "none"}>
     <MenuButtons isOpen={isOpen} onClose={onClose} />
   </View>
 );

@@ -26,7 +26,8 @@ export const checkAndIncrementCap = mutation({
     const { profile } = await requireAuth(ctx);
 
     const todayStart = startOfTodayUTC();
-    const cap = Number(process.env.ELEVENLABS_DAILY_CAP_MINUTES ?? "2");
+    const capRaw = Number(process.env.ELEVENLABS_DAILY_CAP_MINUTES ?? "2");
+    const cap = Number.isFinite(capRaw) && capRaw >= 0 ? Math.floor(capRaw) : 2;
 
     const needsReset =
       !profile.ventDailyResetAt || profile.ventDailyResetAt < todayStart;
@@ -69,15 +70,22 @@ export const getVentSessionToken = action({
       throw new Error("ELEVENLABS_VENT_AGENT_ID not configured");
     }
 
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversations/get_signed_url?agent_id=${agentId}`,
-      {
-        method: "GET",
-        headers: {
-          "xi-api-key": apiKey,
-        },
-      }
-    );
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+
+    let response: Response;
+    try {
+      response = await fetch(
+        `https://api.elevenlabs.io/v1/convai/conversations/get_signed_url?agent_id=${encodeURIComponent(agentId)}`,
+        {
+          method: "GET",
+          headers: { "xi-api-key": apiKey },
+          signal: controller.signal,
+        }
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!response.ok) {
       const body = await response.text();
@@ -86,6 +94,9 @@ export const getVentSessionToken = action({
     }
 
     const data = await response.json();
+    if (!data || typeof data.signed_url !== "string") {
+      throw new Error("ElevenLabs response missing signed_url");
+    }
     return { signedUrl: data.signed_url };
   },
 });
