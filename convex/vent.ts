@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, action, internalAction } from "./_generated/server";
+import { api } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 
 // Pessimistic increment: assume a 3-minute session to avoid going over cap.
@@ -60,6 +61,9 @@ export const getVentSessionToken = action({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
+    const capResult: { allowed: boolean } = await ctx.runMutation(api.vent.checkAndIncrementCap, {});
+    if (!capResult.allowed) throw new Error("Daily voice cap reached");
+
     const apiKey = process.env.ELEVENLABS_AGENT_KEY;
     if (!apiKey) {
       throw new Error("ELEVENLABS_AGENT_KEY not configured");
@@ -76,7 +80,7 @@ export const getVentSessionToken = action({
     let response: Response;
     try {
       response = await fetch(
-        `https://api.elevenlabs.io/v1/convai/conversations/get_signed_url?agent_id=${encodeURIComponent(agentId)}`,
+        `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(agentId)}`,
         {
           method: "GET",
           headers: { "xi-api-key": apiKey },
