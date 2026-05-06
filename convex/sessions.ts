@@ -48,6 +48,7 @@ export const initiate = mutation({
       emotionalProfileId: profile._id,
       state: "initiated",
       entryType: args.entryType,
+      kept: true,
       ...(args.sessionMode ? { sessionMode: args.sessionMode } : {}),
       createdAt: now,
       updatedAt: now,
@@ -606,6 +607,18 @@ export const storeDistilledText = internalMutation({
       distilledText: args.distilledText,
       updatedAt: Date.now(),
     });
+  },
+});
+
+/**
+ * Read the `kept` flag for a session.
+ * Used by the distiller action (Node.js runtime) which cannot call ctx.db directly.
+ */
+export const getSessionKept = internalQuery({
+  args: { sessionId: v.id("sessions") },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    return session?.kept ?? null;
   },
 });
 

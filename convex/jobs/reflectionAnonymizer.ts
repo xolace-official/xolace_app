@@ -40,6 +40,7 @@ export const anonymize = internalAction({
     if (!result) return;
 
     const { session, metadata } = result;
+    if (session.kept !== true) return;
     if (!metadata) return;
 
     // Prefer distilled text (first-person, voice-preserving)

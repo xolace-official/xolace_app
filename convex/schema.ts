@@ -161,6 +161,13 @@ export default defineSchema({
       })
     ),
 
+    // --- Voice Vent Usage ---
+    // Rolling daily counter for ElevenLabs conversational AI minutes used.
+    // Lazy-reset to 0 when ventDailyResetAt < startOfTodayUTC.
+    ventDailyMinutesUsed: v.optional(v.number()),
+    // UTC midnight timestamp of the last reset. Used for lazy daily reset logic.
+    ventDailyResetAt: v.optional(v.number()),
+
     // --- Data Wipe ---
     // Set to true when a data wipe is in progress.
     // Prevents duplicate wipe jobs from being scheduled.
@@ -407,6 +414,12 @@ export default defineSchema({
     // Generated speculatively after mirror delivery.
     // Shown to user at contribution prompt for consent.
     distilledText: v.optional(v.string()),
+
+    // --- Burn / Keep ---
+    // Whether the user chose to keep this session in the system.
+    // undefined → Mirror session (always kept until toggle ships).
+    // false → ephemeral / vent-originated → distiller/anonymizer skip it.
+    kept: v.optional(v.boolean()),
 
     // --- Post-Session Mood ---
 

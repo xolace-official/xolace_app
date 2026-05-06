@@ -1,23 +1,17 @@
 import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
-import { Separator, TagGroup, cn } from "heroui-native";
+import { Separator, TagGroup } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/shared/pill-button";
-import { TimelineIcon } from "@/src/features/reflect/components/timeline-icon";
+import { IdleMenu } from "@/src/features/idle-menu/menu";
 import { MicButton } from "@/src/features/reflect/components/mic-button";
+import { QuietReturnHeader } from "@/src/features/reflect/components/quiet-return-header";
 import type { UserVariant, ReflectionAction } from "@/src/features/reflect/types";
 import { playTypingBegin, playTextureSelect, playHomeEntrance } from "@/src/lib/haptics";
 import { useSessionMode } from "@/src/context/session-mode-context";
-import {
-  NIGHT_ENCOURAGEMENT,
-  NIGHT_HEADLINE,
-  NIGHT_TEXTURE_WORDS,
-} from "@/src/features/reflect/night-copy";
-import {
-  QUIET_RETURN_PROMPTS,
-  type QuietReturnTier,
-} from "@/src/features/reflect/quiet-return-copy";
+import { NIGHT_TEXTURE_WORDS } from "@/src/features/reflect/night-copy";
+import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
 
 const DAY_TEXTURE_WORDS = [
   "heavy",
@@ -42,17 +36,6 @@ type Props = {
   spaceName?: string;
 };
 
-const encouragementText = (variant: UserVariant): string => {
-  switch (variant.kind) {
-    case "first-time":
-      return "You don't need to know what to say.";
-    case "returning":
-      return "It's been a little while.\nNo pressure. I'm here.";
-    case "active":
-      return `Day ${variant.dayCount}`;
-  }
-};
-
 export const IdleState = ({
   variant,
   quietReturn,
@@ -70,21 +53,6 @@ export const IdleState = ({
     : DAY_TEXTURE_WORDS;
 
   const activeQuietReturn = !isNight ? quietReturn : null;
-  const headline = isNight
-    ? NIGHT_HEADLINE
-    : activeQuietReturn
-      // TODO(space-name-greeting): "Your space, [Name], is still here" for quiet-return tier
-      ? QUIET_RETURN_PROMPTS[activeQuietReturn]
-      : "What\u2019s here right now... what are you feeling?";
-  const encouragement = isNight
-    ? NIGHT_ENCOURAGEMENT
-    : activeQuietReturn
-      ? null
-      : encouragementText(variant);
-
-  const isSpaceNameActive =
-    variant.kind === "active" && !!spaceName && !isNight && !activeQuietReturn;
-
   const hasPlayedEntrance = useRef(false);
 
   useEffect(() => {
@@ -109,10 +77,7 @@ export const IdleState = ({
     for (const word of TEXTURE_WORDS) {
       const isSelected = selectedTextures.includes(word);
       const shouldBeSelected = next.has(word);
-
-      if (isSelected !== shouldBeSelected) {
-        handleToggle(word);
-      }
+      if (isSelected !== shouldBeSelected) handleToggle(word);
     }
   };
 
@@ -120,58 +85,32 @@ export const IdleState = ({
 
   return (
     <View className="flex-1 px-6">
-      {/* Top section */}
-      <View className="pt-10 pb-4">
-        {isSpaceNameActive ? (
-          <View className="flex-row items-center gap-2">
-            <View className="rounded-full bg-accent/15 px-3 py-1">
-              <AppText className="text-xs font-semibold text-accent">
-                {spaceName}
-              </AppText>
-            </View>
-            <AppText className="text-sm text-foreground/40">{encouragement}</AppText>
-          </View>
-        ) : encouragement ? (
-          <AppText className={cn(
-            "text-sm italic leading-6 text-foreground/40",
-            variant.kind === "returning" && "text-warning",
-          )}>
-            {encouragement}
-          </AppText>
-        ) : null}
+      <QuietReturnHeader
+        variant={variant}
+        isNight={isNight}
+        activeQuietReturn={activeQuietReturn}
+        spaceName={spaceName}
+      />
 
-        <AppText
-          className={cn(
-            "font-semibold text-foreground",
-            activeQuietReturn ? "text-2xl leading-9" : "text-4xl",
-            encouragement && "mt-4",
-          )}
-        >
-          {headline}
-        </AppText>
-      </View>
-
-      {/* Tap to type zone — takes up available space */}
       <Separator className="mb-0" />
 
-      <View className="flex-1 pt-4"> 
-          <Pressable
-            onPress={handleTap}
-            accessibilityRole="button"
-            accessibilityLabel="Tap to begin writing"
-            accessibilityHint="Opens the editor to start typing"
-            className="flex-1"
-          >
-            <AppText className="text-base text-foreground/30">
-              Tap to begin writing...
-            </AppText>
+      <View className="flex-1 pt-4">
+        <Pressable
+          onPress={handleTap}
+          accessibilityRole="button"
+          accessibilityLabel="Tap to begin writing"
+          accessibilityHint="Opens the editor to start typing"
+          className="flex-1"
+        >
+          <AppText className="text-base text-foreground/30">
+            Tap to begin writing...
+          </AppText>
         </Pressable>
         <View className="absolute right-2 top-1">
           <MicButton size="md" isRecording={isRecording} onPress={onVoiceTap} />
         </View>
       </View>
 
-      {/* Scaffold section */}
       <View className="border-t border-foreground/5 pt-6 pb-8">
         <AppText className="mb-3 text-xs text-foreground/30">
           Or just tap what feels close:
@@ -191,9 +130,7 @@ export const IdleState = ({
                 {({ isSelected }) => (
                   <>
                     <TagGroup.ItemLabel
-                      className={
-                        isSelected ? "text-accent" : "text-foreground/80"
-                      }
+                      className={isSelected ? "text-accent" : "text-foreground/80"}
                     >
                       {word}
                     </TagGroup.ItemLabel>
@@ -204,7 +141,6 @@ export const IdleState = ({
           </TagGroup.List>
         </TagGroup>
 
-        {/* "Let it out" emerges after first selection */}
         {hasSelections && (
           <Animated.View
             entering={FadeInDown.duration(300)}
@@ -216,9 +152,7 @@ export const IdleState = ({
         )}
       </View>
 
-      <View className="absolute bottom-22 right-6">
-        <TimelineIcon />
-      </View>
+      <IdleMenu />
     </View>
   );
 };

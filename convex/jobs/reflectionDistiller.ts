@@ -26,6 +26,11 @@ export const distill = internalAction({
     userLanguageTags: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    const kept: boolean | null = await ctx.runQuery(internal.sessions.getSessionKept, {
+      sessionId: args.sessionId,
+    });
+    if (kept !== true) return;
+
     try {
       const prompt = buildDistillerPrompt({
         rawInput: args.rawText,
