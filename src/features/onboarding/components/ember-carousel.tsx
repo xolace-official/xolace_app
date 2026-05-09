@@ -26,13 +26,22 @@ export const EmberCarousel = ({ slides }: Props) => {
     const id = setInterval(() => {
       const next = currentIndex.get() + 1;
       if (next >= lengthRef.current - 2) {
+        // Drop invisible items from the front (items before currentIndex - 3 have opacity 0)
+        const dropCount = Math.max(0, currentIndex.get() - 3);
         setExtended((prev) => {
-          const updated = [...prev, ...slides];
+          const trimmed = dropCount > 0 ? prev.slice(dropCount) : prev;
+          const updated = [...trimmed, ...slides];
           lengthRef.current = updated.length;
           return updated;
         });
+        if (dropCount > 0) {
+          // Snap to rebased position so the spring starts from the right origin
+          animatedIndex.set(animatedIndex.get() - dropCount);
+        }
+        animatedIndex.set(withSpring(next - dropCount, SPRING_CONFIG));
+      } else {
+        animatedIndex.set(withSpring(next, SPRING_CONFIG));
       }
-      animatedIndex.set(withSpring(next, SPRING_CONFIG));
     }, INTERVAL_MS);
     return () => clearInterval(id);
   }, [slides, currentIndex, animatedIndex]);

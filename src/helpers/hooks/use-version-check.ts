@@ -15,7 +15,8 @@ export function useVersionCheck() {
 
     const check = async () => {
       try {
-        const result = await getAppInfoFromTheStore();
+        const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+        const result = await Promise.race([getAppInfoFromTheStore(), timeout]);
         const newestVersion = result?.version;
         const installedVersion = Constants.expoConfig?.version;
 
@@ -28,17 +29,21 @@ export function useVersionCheck() {
 
           const storeLink = Platform.select({ ios: APP_STORE_URL, android: PLAY_MARKET_URL });
 
-          Alert.alert(
-            'Update Available',
-            'Please update the app to get the latest features and improvements.',
-            [
-              {
-                text: 'Update Now',
-                isPreferred: true,
-                onPress: () => storeLink && Linking.openURL(storeLink),
-              },
-            ]
-          );
+          if (storeLink) {
+            Alert.alert(
+              'Update Available',
+              'Please update the app to get the latest features and improvements.',
+              [
+                { text: 'Later', style: 'cancel' },
+                {
+                  text: 'Update Now',
+                  isPreferred: true,
+                  onPress: () => Linking.openURL(storeLink),
+                },
+              ],
+              { cancelable: true }
+            );
+          }
         }
       } catch (error) {
         console.error('[useVersionCheck] Failed:', error);

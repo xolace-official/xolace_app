@@ -31,7 +31,7 @@ const EmberCarouselItemComponent = ({
   animatedIndex,
   radius,
 }: Props) => {
-  const accentColor = useThemeColor('accent') as string;
+  const accentColor = useThemeColor('accent') ?? 'oklch(62% 0.14 285)';
   const itemHeight = useSharedValue(0);
 
   const isInRange = useDerivedValue(

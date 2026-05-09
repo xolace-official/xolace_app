@@ -19,7 +19,7 @@ export const FrameScreenV2 = () => {
 
   const handlePress = () => {
     playGentlePresence();
-    posthog.capture('onboarding_completed');
+    posthog?.capture('onboarding_completed');
     setIntroSeen(true);
     router.replace('/(auth)/auth');
   };
