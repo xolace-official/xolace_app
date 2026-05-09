@@ -9,16 +9,16 @@ export const IdleMenu = () => {
   const { isOpen, isOpenJS, toggle, close } = useMenuState();
 
   return (
-    <Animated.View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+    <Animated.View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {isOpenJS && (
         <Animated.View
           entering={FadeIn.duration(150)}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
           pointerEvents="auto"
         >
-          <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFillObject} />
+          <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
           <Pressable
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
             onPress={close}
             accessible={false}
           />

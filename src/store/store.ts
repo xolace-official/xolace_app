@@ -31,6 +31,14 @@ type TogglesSlice = {
   setNightModeEnabled: (v: boolean) => void;
 };
 
+/** Ephemeral, not persisted. Tracks store version check state. */
+type UpdateCheckSlice = {
+  isVersionChecked: boolean;
+  setIsVersionChecked: (v: boolean) => void;
+  isNewVersionAvailable: boolean;
+  setIsNewVersionAvailable: (v: boolean) => void;
+};
+
 /** Ephemeral, not persisted. Set when user taps a notification to open the app. */
 type LastNotificationSlice = {
   lastNotification: { content: string; notificationId: Id<"notification_log"> } | null;
@@ -38,7 +46,7 @@ type LastNotificationSlice = {
   clearLastNotification: () => void;
 };
 
-export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & LastNotificationSlice;
+export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & UpdateCheckSlice & LastNotificationSlice;
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -58,6 +66,11 @@ export const useAppStore = create<AppState>()(
 
         nightModeEnabled: true,
         setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
+
+        isVersionChecked: false,
+        setIsVersionChecked: (v) => set({ isVersionChecked: v }),
+        isNewVersionAvailable: false,
+        setIsNewVersionAvailable: (v) => set({ isNewVersionAvailable: v }),
 
         lastNotification: null,
         setLastNotification: (n) => set({ lastNotification: n }),

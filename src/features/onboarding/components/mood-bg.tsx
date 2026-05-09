@@ -30,10 +30,10 @@ const MoodBgComponent = ({ mood }: Props) => {
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      {/* Dark warm overlay for depth */}
+      {/* Overlay for depth — adapts with theme */}
       <View
         style={StyleSheet.absoluteFill}
-        className="bg-neutral-900/60"
+        className="bg-background/60"
       />
     </View>
   );

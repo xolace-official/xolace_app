@@ -1,10 +1,6 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-/** App Store link for your app */
-export const APP_STORE_URL =
-  'https://apps.apple.com/us/app/your-app-name/id123456789';
-
 /** Resolved bundle/package identifier per platform */
 const bundleInfo = Platform.select({
   ios: {
@@ -54,14 +50,28 @@ export async function getInfoFromAppStore(
 
 /**
  * Fetches the latest app info from the Google Play Store by scraping the
- * store page. Currently a stub -- returns `null` until an Android build is
- * published and the scraping targets are verified.
- * @param _country - reserved for future use
+ * store page HTML. Tries two known layout patterns.
  */
 export async function getInfoFromPlayStore(
   _country = ''
 ): Promise<AppInfoFromStore | null> {
-  return null;
+  try {
+    const storeUrl = `https://play.google.com/store/apps/details?id=${bundleInfo?.id}&hl=en&gl=US`;
+    const response = await fetch(storeUrl, { cache: 'no-store' });
+    const html = await response.text();
+
+    const match =
+      html.match(/Current Version.+?>([\d.-]+)<\/span>/) ??
+      html.match(/\[\[\["([\d-.]+?)"\]\]/);
+
+    if (match) {
+      return { version: match[1].trim(), storeUrl };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 /**

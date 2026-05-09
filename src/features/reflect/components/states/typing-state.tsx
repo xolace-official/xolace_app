@@ -105,7 +105,7 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismis
         <View className="flex-1">
           <TextArea
             autoFocus={autoFocus}
-            placeholder="Start typing..."
+            placeholder={isRecording ? "I'm listening..." : "Start typing..."}
             value={entryText}
             onChangeText={handleChangeText}
             className="min-h-[200] flex-1 border-0 bg-transparent text-lg text-foreground"

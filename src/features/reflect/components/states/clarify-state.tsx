@@ -1,10 +1,11 @@
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { TextArea } from 'heroui-native';
+import { TextArea, LinkButton } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
 import type { ReflectionAction } from '@/src/features/reflect/types';
+import { playSoftPress } from '@/src/lib/haptics';
 
 type Props = {
   previousMirror: string;
@@ -30,6 +31,15 @@ export const ClarifyState = ({
         keyboardVerticalOffset={50}
         className="flex-1 px-6 pt-8"
       >
+        <Animated.View entering={FadeIn.duration(300)} className="mb-2">
+          <LinkButton
+            onPress={() => { playSoftPress(); dispatch({ type: 'BACK_TO_MIRROR' }); }}
+            size="sm"
+            className="self-start"
+          >
+            <LinkButton.Label className="text-foreground/40">← Back to mirror</LinkButton.Label>
+          </LinkButton>
+        </Animated.View>
         <Animated.View entering={FadeIn.duration(600)}>
           <AppText className="mb-6 text-center text-base italic leading-7 text-foreground/30">
             {previousMirror}

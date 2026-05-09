@@ -3,7 +3,7 @@ import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 
 const VOICE_MAP: Record<string, string> = {
-  gentle:   "EXAVITQu4vr4xnSDxMaL", // Sarah  — soft, warm
+  gentle:   "flHkNRp1BlvT73UL6gyz", // Jessica Anne Bogart - Eloquent Villain   old -> Sarah  — soft, warm EXAVITQu4vr4xnSDxMaL 
   poetic:   "XB0fDUnXU5powFXDhCwa", // Charlotte — expressive
   direct:   "onwK4e9ZLuTAKqWW03F9", // Daniel — clear, authoritative
   adaptive: "JBFqnCBsd6RMkjVDRZzb", // George — neutral, balanced

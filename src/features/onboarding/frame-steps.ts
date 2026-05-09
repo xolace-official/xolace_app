@@ -21,8 +21,8 @@ export const FRAME_STEPS: FrameStep[] = [
   },
   {
     id: 'clarity',
-    action: 'You understand it',
-    detail: 'a quiet mirror for your own thoughts',
+    action: "You choose what's next",
+    detail: 'sit with it, see others, or simply go',
   },
   {
     id: 'humanity',
