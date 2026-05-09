@@ -29,13 +29,19 @@ export const PreviewCarousel = ({ slides }: Props) => {
     const id = setInterval(() => {
       const next = currentIndex.get() + 1;
       if (next >= lengthRef.current - 2) {
+        const currentAnimated = animatedIndex.get();
+        const offset = Math.max(0, Math.floor(currentAnimated) - 1);
         setExtended((prev) => {
-          const updated = [...prev, ...slides];
-          lengthRef.current = updated.length;
-          return updated;
+          const newExtended = [...prev.slice(offset), ...slides];
+          lengthRef.current = newExtended.length;
+          return newExtended;
         });
+        // Snap to equivalent position in re-indexed buffer, then spring forward.
+        animatedIndex.set(currentAnimated - offset);
+        animatedIndex.set(withSpring(next - offset, SPRING_CONFIG));
+      } else {
+        animatedIndex.set(withSpring(next, SPRING_CONFIG));
       }
-      animatedIndex.set(withSpring(next, SPRING_CONFIG));
     }, INTERVAL_MS);
     return () => clearInterval(id);
   }, [slides, currentIndex, animatedIndex]);
