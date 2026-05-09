@@ -20,7 +20,7 @@ export const LegalLinks = () => {
         style={{ gap: 16 }}
       >
         <AppText
-          className="text-white/40 text-[13px] leading-6"
+          className="text-foreground/45 text-[13px] leading-6"
           style={{ textAlign: 'center', fontWeight: '300' }}
         >
           This just saves your reflections so you{'\n'}
@@ -29,7 +29,7 @@ export const LegalLinks = () => {
         </AppText>
 
         <AppText
-          className="text-white/25 text-[11px] leading-5"
+          className="text-foreground/30 text-[11px] leading-5"
           style={{ textAlign: 'center', fontWeight: '300' }}
         >
           Xolace is not designed for crisis situations or substitute for professional mental health care.{'\n'}If you feel unsafe, contact emergency services{'\n'}or a crisis line immediately.
@@ -43,21 +43,21 @@ export const LegalLinks = () => {
             alignItems: 'center',
           }}
         >
-          <AppText className="text-white/30 text-[12px]">
+          <AppText className="text-foreground/30 text-[12px]">
             By continuing you agree to the{' '}
           </AppText>
           <LinkButton size="sm" onPress={openTerms}>
             <LinkButton.Label
-              className="text-white/50 text-[12px]"
+              className="text-foreground/60 text-[12px]"
               style={{ textDecorationLine: 'underline' }}
             >
               Terms of Service
             </LinkButton.Label>
           </LinkButton>
-          <AppText className="text-white/30 text-[12px]">{' '}and{' '}</AppText>
+          <AppText className="text-foreground/30 text-[12px]">{' '}and{' '}</AppText>
           <LinkButton size="sm" onPress={openPrivacy}>
             <LinkButton.Label
-              className="text-white/50 text-[12px]"
+              className="text-foreground/60 text-[12px]"
               style={{ textDecorationLine: 'underline' }}
             >
               Privacy Policy

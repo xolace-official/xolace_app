@@ -11,7 +11,7 @@ import { api } from '@/convex/_generated/api';
 import { usePostHog } from 'posthog-react-native';
 
 import { AppText } from '@/src/components/shared/app-text';
-import { AuthBg } from '@/src/features/auth/components/auth-bg';
+import { DuskDriftBackdrop } from '@/src/features/onboarding/components/dusk-drift-backdrop';
 import { AppleIcon } from '@/src/features/auth/components/apple-icon';
 import { GoogleIcon } from '@/src/features/auth/components/google-icon';
 import { LegalLinks } from '@/src/features/auth/components/legal-links';
@@ -149,10 +149,10 @@ export const AuthScreen = () => {
 
   return (
     <View
-      className="flex-1 bg-neutral-950"
+      className="flex-1 bg-background"
       style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
     >
-      <AuthBg />
+      <DuskDriftBackdrop />
 
       <View
         style={{
@@ -168,7 +168,7 @@ export const AuthScreen = () => {
           entering={FadeInDown.delay(300).duration(800).springify().damping(20)}
         >
           <AppText
-            className="text-white/90 text-[22px] leading-9"
+            className="text-foreground/90 text-[22px] leading-9"
             style={{ fontFamily: 'Poppins-Medium' }}
           >
             Let&apos;s keep your{'\n'}reflections safe.
@@ -208,16 +208,12 @@ export const AuthScreen = () => {
               variant="outline"
               size="lg"
               isDisabled={loadingProvider !== null}
-              className="rounded-[14px] py-3.5 px-6"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.08)',
-                borderColor: 'rgba(217, 171, 111, 0.2)',
-              }}
+              className="rounded-[14px] py-3.5 px-6 bg-foreground/8 border-accent/20"
             >
               {loadingProvider === 'google' && <Spinner entering={FadeIn.delay(50)} color={themeColorAccentForeground} />}
               <GoogleIcon size={20} />
               <Button.Label
-                className="text-[15px] text-white/90"
+                className="text-[15px] text-foreground/90"
                 style={{ fontFamily: 'Poppins-Regular' }}
               >
                 Continue with Google
