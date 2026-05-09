@@ -6,6 +6,7 @@ import Animated, {
   SharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 import { AppText } from '@/src/components/shared/app-text';
 import { SharePreview } from '@/src/features/onboarding/components/previews/share-preview';
 import { ReflectPreview } from '@/src/features/onboarding/components/previews/reflect-preview';
@@ -21,6 +22,10 @@ type Props = {
   cardHeight: number;
   gap: number;
 };
+
+const WINDOW_INSET = 14;
+const WINDOW_RATIO = 0.62;
+const BLUR_INTENSITY = 70;
 
 const renderPreview = (id: string) => {
   switch (id) {
@@ -60,41 +65,87 @@ const Item = ({
     };
   });
 
+  const windowHeight = (cardHeight - WINDOW_INSET * 2) * WINDOW_RATIO;
+
   return (
     <Animated.View
       style={[
         {
           position: 'absolute',
           width: cardWidth,
+          height: cardHeight,
           alignItems: 'center',
         },
         rStyle,
       ]}
     >
-      <View
-        className="overflow-hidden bg-overlay border border-foreground/8"
+      <BlurView
+        intensity={BLUR_INTENSITY}
+        tint="default"
         style={{
           width: cardWidth,
           height: cardHeight,
           borderRadius: 28,
           borderCurve: 'continuous',
+          overflow: 'hidden',
         }}
       >
-        <View className="absolute top-0 left-0 right-0 h-12 bg-accent/4" />
-        {renderPreview(slide.id)}
-      </View>
+        {/* Hairline card border + soft tint to keep card readable on any backdrop */}
+        <View
+          pointerEvents="none"
+          className="bg-overlay/35 border border-foreground/10"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            borderRadius: 28,
+            borderCurve: 'continuous',
+          }}
+        />
 
-      <View className="mt-7 items-center px-3 gap-1">
-        <AppText
-          className="text-foreground text-[15px]"
-          style={{ fontFamily: 'Poppins-Medium' }}
+        {/* Live moment — clear window inset into the blurred frame */}
+        <View
+          className="bg-overlay border border-foreground/8 overflow-hidden"
+          style={{
+            position: 'absolute',
+            top: WINDOW_INSET,
+            left: WINDOW_INSET,
+            right: WINDOW_INSET,
+            height: windowHeight,
+            borderRadius: 18,
+            borderCurve: 'continuous',
+          }}
         >
-          {slide.action}
-        </AppText>
-        <AppText className="text-foreground/40 text-[12px] text-center leading-4">
-          {slide.detail}
-        </AppText>
-      </View>
+          {renderPreview(slide.id)}
+        </View>
+
+        {/* Caption sits directly on the blurred frame */}
+        <View
+          style={{
+            position: 'absolute',
+            top: WINDOW_INSET + windowHeight,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: 16,
+            gap: 4,
+          }}
+        >
+          <AppText
+            className="text-foreground text-[14px]"
+            style={{ fontFamily: 'Poppins-Medium' }}
+          >
+            {slide.action}
+          </AppText>
+          <AppText className="text-foreground/55 text-[11px] text-center leading-4">
+            {slide.detail}
+          </AppText>
+        </View>
+      </BlurView>
     </Animated.View>
   );
 };

@@ -6,9 +6,9 @@ import type { FrameStep } from '@/src/features/onboarding/frame-steps';
 
 const SPRING_CONFIG = { damping: 60, stiffness: 280, mass: 6 };
 const INTERVAL_MS = 3600;
-const CARD_WIDTH_RATIO = 0.66;
-const CARD_ASPECT = 9 / 15;
-const MAX_CARD_WIDTH = 280;
+const CARD_WIDTH_RATIO = 0.62;
+const CARD_ASPECT = 9 / 13;
+const MAX_CARD_WIDTH = 240;
 const GAP = 18;
 
 type Props = { slides: FrameStep[] };
