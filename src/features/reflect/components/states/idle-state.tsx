@@ -103,10 +103,10 @@ export const IdleState = ({
           className="flex-1"
         >
           <AppText className="text-base text-foreground/30">
-            Tap to begin writing...
+            Tap to begin writing or speaking...
           </AppText>
         </Pressable>
-        <View className="absolute right-2 top-1">
+        <View className="absolute right-2 top-2">
           <MicButton size="md" isRecording={isRecording} onPress={onVoiceTap} />
         </View>
       </View>
