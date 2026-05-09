@@ -65,7 +65,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       icon: "./assets/xolace-icon-sample.icon",
       bundleIdentifier: getUniqueIdentifier(),
       infoPlist: {
-        ITSAppUsesNonExemptEncryption: false
+        ITSAppUsesNonExemptEncryption: false,
+        NSPhotoLibraryUsageDescription: "Xolace does not access your photo library. This permission is required by included SDKs."
       },
       privacyManifests: {
         NSPrivacyCollectedDataTypes: [
