@@ -62,10 +62,10 @@ export const FrameScreenV2 = () => {
           zIndex: 10,
         }}
       >
-        <AppText className="text-accent/40 text-xs text-center leading-4.5">
+        {/*<AppText className="text-foreground/40 text-xs text-center leading-4.5">
           Not a substitute for professional mental health care.{'\n'}
           If you&apos;re in crisis, please reach out to a professional.
-        </AppText>
+        </AppText>*/}
 
         <Animated.View entering={FadeInDown.delay(1000).duration(600).springify().damping(28)}>
           <Pressable

@@ -32,7 +32,7 @@ export const LegalLinks = () => {
           className="text-white/25 text-[11px] leading-5"
           style={{ textAlign: 'center', fontWeight: '300' }}
         >
-          Xolace is not designed for crisis situations.{'\n'}If you feel unsafe, contact emergency services{'\n'}or a crisis line immediately.
+          Xolace is not designed for crisis situations or substitute for professional mental health care.{'\n'}If you feel unsafe, contact emergency services{'\n'}or a crisis line immediately.
         </AppText>
 
         <View
