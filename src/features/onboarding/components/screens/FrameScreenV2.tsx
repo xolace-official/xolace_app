@@ -1,23 +1,14 @@
-import { useEffect } from 'react';
 import { View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, {
-  Easing,
-  FadeIn,
-  FadeInDown,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
-import { useThemeColor } from 'heroui-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 
 import { useAppStore } from '@/src/store/store';
 import { playGentlePresence } from '@/src/lib/haptics';
 import { AppText } from '@/src/components/shared/app-text';
-import { EmberCarousel } from '@/src/features/onboarding/components/ember-carousel';
+import { DuskDriftBackdrop } from '@/src/features/onboarding/components/dusk-drift-backdrop';
+import { PreviewCarousel } from '@/src/features/onboarding/components/preview-carousel';
 import { FRAME_STEPS } from '@/src/features/onboarding/frame-steps';
 
 export const FrameScreenV2 = () => {
@@ -25,21 +16,6 @@ export const FrameScreenV2 = () => {
   const setIntroSeen = useAppStore((s) => s.setIntroSeen);
   const router = useRouter();
   const posthog = usePostHog();
-  const accentColor = useThemeColor('accent') as string;
-
-  const glowScale = useSharedValue(1);
-
-  useEffect(() => {
-    glowScale.value = withRepeat(
-      withTiming(1.22, { duration: 5200, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true
-    );
-  }, [glowScale]);
-
-  const rGlowStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: glowScale.value }],
-  }));
 
   const handlePress = () => {
     playGentlePresence();
@@ -50,37 +26,10 @@ export const FrameScreenV2 = () => {
 
   return (
     <View className="flex-1 bg-background">
-      {/* Breathing ambient glow behind the arc */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            alignItems: 'center',
-            justifyContent: 'center',
-          },
-          rGlowStyle,
-        ]}
-      >
-        <View
-          style={{
-            width: 400,
-            height: 400,
-            borderRadius: 200,
-            opacity: 0.12,
-            boxShadow: `0 0 140px 70px ${accentColor}`,
-          }}
-        />
-      </Animated.View>
+      <DuskDriftBackdrop />
 
-      {/* Principle cards orbiting in a semicircle */}
-      <EmberCarousel slides={FRAME_STEPS} />
+      <PreviewCarousel slides={FRAME_STEPS} />
 
-      {/* Header statement — sits above the carousel arc, zIndex keeps it in front */}
       <Animated.View
         entering={FadeIn.delay(400).duration(900)}
         style={{ paddingTop: insets.top + 28, paddingHorizontal: 32, zIndex: 10 }}
@@ -90,13 +39,15 @@ export const FrameScreenV2 = () => {
           style={{ fontFamily: 'Poppins-Medium' }}
         >
           Here&apos;s{'\n'}
-          <AppText className="text-accent text-[22px] leading-9" style={{ fontFamily: 'Poppins-Medium' }}>
+          <AppText
+            className="text-accent text-[22px] leading-9"
+            style={{ fontFamily: 'Poppins-Medium' }}
+          >
             what happens.
           </AppText>
         </AppText>
       </Animated.View>
 
-      {/* Bottom: disclaimer + CTA — shown from the start, no delay gating */}
       <Animated.View
         entering={FadeIn.delay(700).duration(900)}
         style={{
