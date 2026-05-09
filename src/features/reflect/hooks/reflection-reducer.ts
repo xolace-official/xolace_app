@@ -82,6 +82,9 @@ export function reducer(
     case 'SAY_MORE':
       return { ...state, screen: 'clarify', lastFeedbackType: 'say_more' };
 
+    case 'BACK_TO_MIRROR':
+      return { ...state, screen: 'mirror', clarifyText: '' };
+
     case 'CLARIFY_TEXT_CHANGE':
       return { ...state, clarifyText: action.text };
 

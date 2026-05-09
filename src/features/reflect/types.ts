@@ -42,7 +42,8 @@ export type ReflectionAction =
   | { type: 'SESSION_RESUMED'; screen: ReflectionStateName; mirrorResponse?: string }
   | { type: 'ESCALATION_TRIGGERED'; mirror: string }
   | { type: 'VOICE_START' }
-  | { type: 'VOICE_TRANSCRIPT'; text: string };
+  | { type: 'VOICE_TRANSCRIPT'; text: string }
+  | { type: 'BACK_TO_MIRROR' };
 
 export interface ReflectionState {
   screen: ReflectionStateName;
