@@ -197,7 +197,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           "microphonePermission": "Allow Xolace to use the microphone to capture what you're feeling.",
           "speechRecognitionPermission": "Allow Xolace to use speech recognition to transcribe your voice."
         }
-      ]
+      ],
+      "expo-image",
+      "expo-web-browser"
     ],
     experiments: {
       typedRoutes: true,

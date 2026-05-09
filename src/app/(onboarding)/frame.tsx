@@ -1,8 +1,8 @@
-import { FrameScreen } from '@/src/features/onboarding/components/screens/FrameScreen';
+import { FrameScreenV2 } from '@/src/features/onboarding/components/screens/FrameScreenV2';
 
 const OnboardingFrame = () => {
   return (
-      <FrameScreen />
+      <FrameScreenV2 />
   )
 }
 
