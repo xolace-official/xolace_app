@@ -5,6 +5,7 @@ import Animated, {
   interpolate,
   SharedValue,
   useAnimatedStyle,
+  useDerivedValue,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { AppText } from '@/src/components/shared/app-text';
@@ -27,16 +28,16 @@ const WINDOW_INSET = 14;
 const WINDOW_RATIO = 0.62;
 const BLUR_INTENSITY = 70;
 
-const renderPreview = (id: string) => {
+const renderPreview = (id: string, isActive: SharedValue<boolean>) => {
   switch (id) {
     case 'share':
-      return <SharePreview />;
+      return <SharePreview isActive={isActive} />;
     case 'reflect':
-      return <ReflectPreview />;
+      return <ReflectPreview isActive={isActive} />;
     case 'clarity':
-      return <PathsPreview />;
+      return <PathsPreview isActive={isActive} />;
     case 'humanity':
-      return <PeersPreview />;
+      return <PeersPreview isActive={isActive} />;
     default:
       return null;
   }
@@ -66,6 +67,8 @@ const Item = ({
   });
 
   const windowHeight = (cardHeight - WINDOW_INSET * 2) * WINDOW_RATIO;
+
+  const isActive = useDerivedValue(() => Math.round(animatedIndex.get()) === index);
 
   return (
     <Animated.View
@@ -118,7 +121,7 @@ const Item = ({
             borderCurve: 'continuous',
           }}
         >
-          {renderPreview(slide.id)}
+          {renderPreview(slide.id, isActive)}
         </View>
 
         {/* Caption sits directly on the blurred frame */}
