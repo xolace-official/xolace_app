@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppStore } from '@/src/store/store';
+import { FounderWelcomeSheet } from '@/src/features/founder-welcome/components/founder-welcome-sheet';
 
 function NotificationBanner({ content, onDismiss }: { content: string; onDismiss: () => void }) {
   const insets = useSafeAreaInsets();
@@ -50,6 +51,20 @@ function NotificationBanner({ content, onDismiss }: { content: string; onDismiss
 export default function ProtectedIndex() {
   const lastNotification = useAppStore((s) => s.lastNotification);
   const clearLastNotification = useAppStore((s) => s.clearLastNotification);
+  const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
+  const setFounderWelcomeSeen = useAppStore((s) => s.setFounderWelcomeSeen);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    if (founderWelcomeSeen) return;
+    const t = setTimeout(() => setShowWelcome(true), 400);
+    return () => clearTimeout(t);
+  }, [founderWelcomeSeen]);
+
+  const handleWelcomeDismiss = () => {
+    setFounderWelcomeSeen(true);
+    setShowWelcome(false);
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -60,6 +75,7 @@ export default function ProtectedIndex() {
           onDismiss={clearLastNotification}
         />
       )}
+      <FounderWelcomeSheet isOpen={showWelcome} onDismiss={handleWelcomeDismiss} />
     </View>
   );
 }
