@@ -1,6 +1,6 @@
 import { BottomSheet, PressableFeedback } from 'heroui-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
 import { FounderWelcomeBlurOverlay } from './founder-welcome-blur-overlay';
@@ -21,7 +21,6 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const { bottom: safeBottom } = useSafeAreaInsets();
   const SHEET_HEIGHT = Math.min(SCREEN_HEIGHT * 0.85, 660);
-  console.log("SHEET_HEIGHT ", SHEET_HEIGHT)
 
   return (
     <BottomSheet
@@ -40,116 +39,59 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
           contentContainerClassName="h-full"
           accessibilityViewIsModal
         >
-          {/* Founder photo placeholder — centered, overlapping top edge */}
+          {/* Founder photo — floats above the sheet top edge */}
           <View
-            style={{
-              position: 'absolute',
-              top: -36,
-              alignSelf: 'center',
-              width: 72,
-              height: 72,
-              borderRadius: 36,
-              backgroundColor: '#2a2a2a',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 10,
-              borderWidth: 2,
-              borderColor: 'rgba(255,255,255,0.08)',
-            }}
+            style={styles.photoWrapper}
+            className="bg-surface border-2 border-accent/50"
             accessibilityLabel="Nathaniel, Founder of Xolace"
           >
-            <AppText
-              style={{
-                fontFamily: 'Poppins-Medium',
-                fontSize: 24,
-              }}
-              className='text-foreground'
-            >
+            {/* Placeholder — swap for expo-image with founder-photo.jpg when asset is ready */}
+            <AppText style={styles.photoInitial} className="text-foreground">
               N
             </AppText>
           </View>
 
-          {/* Scrollable letter body */}
+          {/* Scrollable letter */}
           <BottomSheetScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 8,
-              paddingTop: 52,
-              paddingBottom: 24,
-            }}
+            contentContainerStyle={styles.scrollContent}
           >
-            <AppText
-              style={{
-                fontFamily: 'Poppins-Light',
-                marginBottom: 20,
-              }}
-              className="text-foreground text-2xl"
-            >
-              hey.
+            <AppText style={styles.greeting} className="text-foreground text-xl">
+              hey friend. I&apos;m Nathaniel — one of the four people who built this.
             </AppText>
 
             {PARAGRAPHS.map((text, i) => (
               <AppText
                 key={i}
-                style={{
-                  fontFamily: 'Poppins-Regular',
-                  fontSize: 15,
-                  lineHeight: 26,
-                  marginBottom: i < PARAGRAPHS.length - 1 ? 16 : 0,
-                }}
+                style={[styles.paragraph, i < PARAGRAPHS.length - 1 && styles.paragraphGap]}
                 className="text-foreground/80"
               >
                 {text}
               </AppText>
             ))}
 
-            {/* Signature area */}
-            <View style={{ paddingTop: 24 }}>
-              <AppText
-                style={{ fontFamily: 'Poppins-Italic', fontSize: 14 }}
-                className="text-foreground/60"
-              >
+            <View style={styles.signatureBlock}>
+              <AppText style={styles.signatureClosing} className="text-foreground/60">
                 with care,
               </AppText>
-              {/* Signature placeholder — replace with founder-signature.png asset */}
-              <AppText
-                style={{
-                  fontFamily: 'Poppins-Light',
-                  fontSize: 18,
-                  marginTop: 6,
-                  letterSpacing: 1,
-                }}
-                className="text-foreground/50"
-              >
+              {/* Placeholder — swap for expo-image with founder-signature.png when asset is ready */}
+              <AppText style={styles.signatureName} className="text-foreground/50">
                 Nathaniel ♡
               </AppText>
             </View>
           </BottomSheetScrollView>
 
-          {/* Pinned CTA — outside scroll zone */}
-          <View
-            style={{
-              paddingHorizontal: 24,
-              paddingTop: 12,
-              paddingBottom: Math.max(safeBottom, 24),
-            }}
-          >
+          {/* Pinned CTA */}
+          <View style={[styles.ctaContainer, { paddingBottom: Math.max(safeBottom, 24) }]}>
             <PressableFeedback
               onPress={onDismiss}
-              style={{
-                height: 52,
-                borderRadius: 16,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              className="bg-accent"
+              style={styles.ctaButton}
+              className="bg-accent rounded-2xl"
               accessibilityLabel="I'm ready"
               accessibilityRole="button"
             >
-              <AppText
-                style={{ fontFamily: 'Poppins-Medium', fontSize: 16, color: '#fff' }}
-              >
-                I'm ready
+              <AppText style={styles.ctaLabel} className="text-white">
+                I&apos;m ready
               </AppText>
             </PressableFeedback>
           </View>
@@ -158,3 +100,64 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
     </BottomSheet>
   );
 };
+
+const styles = StyleSheet.create({
+  photoWrapper: {
+    position: 'absolute',
+    top: 0,
+    alignSelf: 'center',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  photoInitial: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 24,
+  },
+  scrollContent: {
+    paddingHorizontal: 10,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  greeting: {
+    fontFamily: 'Poppins-Light',
+    marginBottom: 20,
+  },
+  paragraph: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 15,
+    lineHeight: 26,
+  },
+  paragraphGap: {
+    marginBottom: 16,
+  },
+  signatureBlock: {
+    paddingTop: 24,
+  },
+  signatureClosing: {
+    fontFamily: 'Poppins-Italic',
+    fontSize: 14,
+  },
+  signatureName: {
+    fontFamily: 'Poppins-Light',
+    fontSize: 18,
+    marginTop: 6,
+    letterSpacing: 1,
+  },
+  ctaContainer: {
+    paddingHorizontal: 10,
+    paddingTop: 12,
+  },
+  ctaButton: {
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ctaLabel: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 16,
+  },
+});
