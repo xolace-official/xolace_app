@@ -5,12 +5,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
 import { FounderWelcomeBlurOverlay } from './founder-welcome-blur-overlay';
 
-const PARAGRAPHS = [
-  `We built Xolace for the feeling most of us never talk about; that heavy, unnamed thing sitting in your chest that isn't bad enough for therapy but won't leave you alone either. This is the space we wished existed.`,
-  "When you open this, just write what's actually going on, raw, unfiltered, even if it doesn't make sense yet. The more honest, the clearer it gets.",
-  "We know how much it takes to trust something new with the feelings you've spent years burying or brushing past. We don't take that lightly. Earning that trust is the whole job.",
-  "And long term; we're not building AI to replace the people in your life. We're building it to help you get clear enough to actually reach them.",
-] as const;
+type Segment = { text: string; highlight?: true };
+
+const PARAGRAPHS: Segment[][] = [
+  [
+    { text: "We built Xolace for the feeling most of us never talk about; that heavy, unnamed thing sitting in your chest that isn't bad enough for therapy but won't leave you alone either. This is the space we wished existed." },
+  ],
+  [
+    { text: "When you open this, just write what's actually going on, raw, unfiltered, even if it doesn't make sense yet. " },
+    { text: "The more honest, the clearer it gets.", highlight: true },
+  ],
+  [
+    { text: "We know how much it takes to trust something new with the feelings you've spent years burying or brushing past. We don't take that lightly. " },
+    { text: "Earning that trust is the whole job.", highlight: true },
+  ],
+  [
+    { text: "And long term; we're not building AI to replace the people in your life. We're building it to help you get clear enough to actually reach them." },
+  ],
+];
 
 type Props = {
   isOpen: boolean;
@@ -60,13 +72,21 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
               hey friend, I&apos;m Nathaniel.
             </AppText>
 
-            {PARAGRAPHS.map((text, i) => (
+            {PARAGRAPHS.map((segments, i) => (
               <AppText
                 key={i}
                 style={[styles.paragraph, i < PARAGRAPHS.length - 1 && styles.paragraphGap]}
                 className="text-foreground/80 text-sm"
               >
-                {text}
+                {segments.map((seg, j) =>
+                  seg.highlight ? (
+                    <AppText key={j} style={styles.highlight} className="text-accent">
+                      {seg.text}
+                    </AppText>
+                  ) : (
+                    seg.text
+                  )
+                )}
               </AppText>
             ))}
 
@@ -132,6 +152,9 @@ const styles = StyleSheet.create({
   },
   paragraphGap: {
     marginBottom: 16,
+  },
+  highlight: {
+    fontFamily: 'Poppins-Medium',
   },
   signatureBlock: {
     paddingTop: 24,
