@@ -1,15 +1,15 @@
 import { BottomSheet, PressableFeedback } from 'heroui-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
 import { FounderWelcomeBlurOverlay } from './founder-welcome-blur-overlay';
 
 const PARAGRAPHS = [
-  "you found the space for feelings that don't have names yet.",
-  "this isn't a chatbot or a journal. it's infrastructure for your inner life — quiet, daily, no performance required.",
-  "your words are private. ephemeral. never stored, never seen, never trained on.",
-  "one question. write whatever is true. let it land here.",
+  `We built Xolace for the feeling most of us never talk about; that heavy, unnamed thing sitting in your chest that isn't bad enough for therapy but won't leave you alone either. This is the space we wished existed.`,
+  "When you open this, just write what's actually going on, raw, unfiltered, even if it doesn't make sense yet. The more honest, the clearer it gets.",
+  "We know how much it takes to trust something new with the feelings you've spent years burying or brushing past. We don't take that lightly. Earning that trust is the whole job.",
+  "And long term; we're not building AI to replace the people in your life. We're building it to help you get clear enough to actually reach them.",
 ] as const;
 
 type Props = {
@@ -18,9 +18,9 @@ type Props = {
 };
 
 export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
-  const { height: SCREEN_HEIGHT } = useWindowDimensions();
+  // const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const { bottom: safeBottom } = useSafeAreaInsets();
-  const SHEET_HEIGHT = Math.min(SCREEN_HEIGHT * 0.85, 660);
+  // const SHEET_HEIGHT = Math.min(SCREEN_HEIGHT * 0.85, 1660);
 
   return (
     <BottomSheet
@@ -30,7 +30,7 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
       <BottomSheet.Portal>
         <FounderWelcomeBlurOverlay />
         <BottomSheet.Content
-          snapPoints={[SHEET_HEIGHT]}
+          snapPoints={["90%"]}
           enablePanDownToClose={false}
           enableDynamicSizing={false}
           enableOverDrag={false}
@@ -56,15 +56,15 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            <AppText style={styles.greeting} className="text-foreground text-xl">
-              hey friend. I&apos;m Nathaniel — one of the four people who built this.
+            <AppText style={styles.greeting} className="text-foreground text-lg">
+              hey friend, I&apos;m Nathaniel.
             </AppText>
 
             {PARAGRAPHS.map((text, i) => (
               <AppText
                 key={i}
                 style={[styles.paragraph, i < PARAGRAPHS.length - 1 && styles.paragraphGap]}
-                className="text-foreground/80"
+                className="text-foreground/80 text-sm"
               >
                 {text}
               </AppText>
@@ -76,7 +76,7 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
               </AppText>
               {/* Placeholder — swap for expo-image with founder-signature.png when asset is ready */}
               <AppText style={styles.signatureName} className="text-foreground/50">
-                Nathaniel ♡
+                Nathaniel & the Xolace team ♡
               </AppText>
             </View>
           </BottomSheetScrollView>
@@ -119,16 +119,15 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 10,
-    paddingTop: 56,
+    paddingTop: 70,
     paddingBottom: 24,
   },
   greeting: {
     fontFamily: 'Poppins-Light',
-    marginBottom: 20,
+    marginBottom: 15,
   },
   paragraph: {
     fontFamily: 'Poppins-Regular',
-    fontSize: 15,
     lineHeight: 26,
   },
   paragraphGap: {
