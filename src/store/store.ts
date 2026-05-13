@@ -23,6 +23,8 @@ type ThemeSlice = {
 type OnboardingSlice = {
   introSeen: boolean;
   setIntroSeen: (v: boolean) => void;
+  founderWelcomeSeen: boolean;
+  setFounderWelcomeSeen: (v: boolean) => void;
 };
 
 type TogglesSlice = {
@@ -64,6 +66,9 @@ export const useAppStore = create<AppState>()(
         introSeen: false,
         setIntroSeen: (v) => set({ introSeen: v }),
 
+        founderWelcomeSeen: false,
+        setFounderWelcomeSeen: (v) => set({ founderWelcomeSeen: v }),
+
         nightModeEnabled: true,
         setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
 
@@ -84,6 +89,7 @@ export const useAppStore = create<AppState>()(
           colorThemeId: s.colorThemeId,
           previousTheme: s.previousTheme,
           introSeen: s.introSeen,
+          founderWelcomeSeen: s.founderWelcomeSeen,
           nightModeEnabled: s.nightModeEnabled,
         }),
       }
