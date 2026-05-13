@@ -75,7 +75,7 @@ export default function ProtectedIndex() {
           onDismiss={clearLastNotification}
         />
       )}
-      <FounderWelcomeSheet isOpen={showWelcome} onDismiss={handleWelcomeDismiss} />
+      <FounderWelcomeSheet isOpen={!showWelcome} onDismiss={handleWelcomeDismiss} />
     </View>
   );
 }

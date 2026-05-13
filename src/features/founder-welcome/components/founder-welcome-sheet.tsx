@@ -3,7 +3,9 @@ import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
-import { FounderWelcomeBlurOverlay } from './founder-welcome-blur-overlay';
+import { FounderWelcomeBlurOverlay } from '@/src/features/founder-welcome/components/founder-welcome-blur-overlay';
+import { Image } from 'expo-image';
+
 
 type Segment = { text: string; highlight?: true };
 
@@ -58,9 +60,12 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
             accessibilityLabel="Nathaniel, Founder of Xolace"
           >
             {/* Placeholder — swap for expo-image with founder-photo.jpg when asset is ready */}
-            <AppText style={styles.photoInitial} className="text-foreground">
-              N
-            </AppText>
+            <Image
+              source={require('@/assets/images/founder-images/Nathan-mini.jpeg')}
+              style={{ width: '100%', height: '100%' }}
+              contentFit="cover"
+              contentPosition={"top"}
+            />
           </View>
 
           {/* Scrollable letter */}
@@ -129,6 +134,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,

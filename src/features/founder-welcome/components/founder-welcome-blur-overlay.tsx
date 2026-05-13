@@ -18,7 +18,7 @@ export const FounderWelcomeBlurOverlay = () => {
   if (!isOpen) return null;
 
   return (
-    <AnimatedView style={StyleSheet.absoluteFill} pointerEvents="none">
+    <AnimatedView style={StyleSheet.absoluteFill} pointerEvents="auto">
       <AnimatedBlurView
         blurIntensity={blurIntensity}
         tint={isDark ? 'dark' : 'systemUltraThinMaterialDark'}
