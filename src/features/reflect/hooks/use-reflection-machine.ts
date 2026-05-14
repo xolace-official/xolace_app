@@ -388,6 +388,7 @@ export function useReflectionMachine() {
     dispatch,
     isLoading,
     sessionId,
+    turnsCount,
     escalationResources: session?.escalationResources ?? null,
     isRecording,
     submitReflection,

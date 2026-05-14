@@ -85,6 +85,15 @@ export const enforce = internalMutation({
 
         await ctx.db.delete(session._id);
       }
+
+      // Delete feedback records for this profile
+      const feedbackRecords = await ctx.db
+        .query("feedback")
+        .withIndex("by_profile", (q) => q.eq("emotionalProfileId", pref.emotionalProfileId))
+        .take(100);
+      for (const record of feedbackRecords) {
+        await ctx.db.delete(record._id);
+      }
     }
 
     if (!isDone) {

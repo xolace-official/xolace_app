@@ -1,7 +1,11 @@
-import { View } from 'react-native';
+import { useState } from 'react';
+import { View, TextInput } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { TextArea, LinkButton } from 'heroui-native';
+import { TextArea, LinkButton, useThemeColor } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
 import type { ReflectionAction } from '@/src/features/reflect/types';
@@ -13,6 +17,11 @@ type Props = {
   dispatch: React.Dispatch<ReflectionAction>;
   onSubmit: () => void;
   autoFocus?: boolean;
+  // sessionId is guaranteed non-null here: clarify state is only reachable after
+  // session initiation + mirror delivery. Typed as | undefined to satisfy the schema
+  // optional field, but in practice it will always be defined.
+  sessionId: Id<'sessions'> | undefined;
+  turnIndex: number;
 };
 
 export const ClarifyState = ({
@@ -21,8 +30,27 @@ export const ClarifyState = ({
   dispatch,
   onSubmit,
   autoFocus = true,
+  sessionId,
+  turnIndex,
 }: Props) => {
+  const [feedbackText, setFeedbackText] = useState('');
   const canSubmit = clarifyText.trim().length > 0;
+  const submitFeedback = useMutation(api.feedback.submit);
+  const foregroundColor = useThemeColor('foreground') as string;
+
+  const handleSubmit = () => {
+    const capturedFeedbackText = feedbackText.trim();
+    onSubmit();
+    if (capturedFeedbackText && sessionId) {
+      // Fire-and-forget — not awaited, PostHog not captured
+      submitFeedback({
+        type: 'mirror_miss',
+        sessionId,
+        turnIndex,
+        text: capturedFeedbackText,
+      }).catch((e) => console.error('mirror_miss feedback failed', e));
+    }
+  };
 
   return (
     <View className="flex-1">
@@ -63,12 +91,28 @@ export const ClarifyState = ({
             variant="secondary"
             className="min-h-[120] border-0 bg-transparent text-base text-foreground"
           />
+
+          <Animated.View entering={FadeIn.delay(200).duration(300)}>
+            <TextInput
+              placeholder="What was off? (optional)"
+              value={feedbackText}
+              onChangeText={setFeedbackText}
+              maxLength={100}
+              placeholderTextColor={`${foregroundColor}4D`}
+              style={{
+                fontSize: 14,
+                color: foregroundColor,
+                marginTop: 12,
+                paddingHorizontal: 4,
+              }}
+            />
+          </Animated.View>
         </View>
 
         <View className="items-center pb-4 pt-2">
           <PillButton
             label="Let it out"
-            onPress={onSubmit}
+            onPress={handleSubmit}
             disabled={!canSubmit}
           />
         </View>

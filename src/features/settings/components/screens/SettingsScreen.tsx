@@ -10,6 +10,7 @@ import { RetentionPickerDialog } from "@/src/features/settings/components/retent
 import { SpaceNameDialog } from "@/src/features/settings/components/space-name-dialog";
 import { ReachSelectorDialog } from "@/src/features/settings/components/reach-selector-dialog";
 import { QuietWindowDialog } from "@/src/features/settings/components/quiet-window-dialog";
+import { FeedbackDialog } from "@/src/features/settings/components/feedback-dialog";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { useSettings } from "@/src/features/settings/hooks/use-settings";
 import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
@@ -31,6 +32,7 @@ export const SettingsScreen = () => {
   const [reachDialogOpen, setReachDialogOpen] = useState(false);
   const [quietWindowDialogOpen, setQuietWindowDialogOpen] = useState(false);
   const [replayIntroOpen, setReplayIntroOpen] = useState(false);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
 
   const {
     signInMethod,
@@ -183,6 +185,16 @@ export const SettingsScreen = () => {
           />
         </SettingsSection>
 
+        {/* ── SUPPORT ──────────────────────────────────────────── */}
+        <SettingsSection title="Support">
+          <SettingsRow
+            variant="chevron"
+            label="Send feedback"
+            onPress={() => setFeedbackDialogOpen(true)}
+            isLast
+          />
+        </SettingsSection>
+
         {/* ── YOUR DATA ────────────────────────────────────────── */}
         <SettingsSection title="Your Data">
           {/* TODO: export data flow not yet implemented */}
@@ -271,6 +283,12 @@ export const SettingsScreen = () => {
         onOpenChange={setRetentionDialogOpen}
         currentValue={retention}
         onSelect={setRetention}
+      />
+
+      {/* ── FEEDBACK DIALOG ─────────────────────────────────── */}
+      <FeedbackDialog
+        isOpen={feedbackDialogOpen}
+        onOpenChange={setFeedbackDialogOpen}
       />
 
       {/* ── REPLAY INTRO DIALOG ──────────────────────────────── */}

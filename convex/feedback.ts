@@ -1,0 +1,120 @@
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { requireAuth } from "./lib/auth";
+
+const THROTTLE_MS = 24 * 60 * 60 * 1000;
+const GENERAL_RATE_LIMIT = 5;
+
+export const canAskContextual = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    const last = await ctx.db
+      .query("feedback")
+      .withIndex("by_profile_and_type_and_created", (q) =>
+        q.eq("emotionalProfileId", profile._id).eq("type", "mood_heavier")
+      )
+      .order("desc")
+      .first();
+    if (!last) return true;
+    return last.createdAt < Date.now() - THROTTLE_MS;
+  },
+});
+
+export const canSubmitGeneral = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    const recent = await ctx.db
+      .query("feedback")
+      .withIndex("by_profile_and_type_and_created", (q) =>
+        q
+          .eq("emotionalProfileId", profile._id)
+          .eq("type", "general")
+          .gte("createdAt", Date.now() - THROTTLE_MS)
+      )
+      .order("desc")
+      .take(GENERAL_RATE_LIMIT + 1);
+    return recent.length < GENERAL_RATE_LIMIT;
+  },
+});
+
+export const submit = mutation({
+  args: {
+    type: v.union(
+      v.literal("general"),
+      v.literal("mood_heavier"),
+      v.literal("mirror_miss"),
+      v.literal("gave_up"),
+    ),
+    sessionId: v.optional(v.id("sessions")),
+    turnIndex: v.optional(v.number()),
+    text: v.optional(v.string()),
+    selectedOption: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    // Per-type required field validation
+    if (args.type === "general") {
+      if (!args.text?.trim()) throw new Error("Text is required for general feedback");
+      if (args.text.length > 1000) throw new Error("Text exceeds 1000 character limit");
+    }
+    if (args.type === "mirror_miss") {
+      if (!args.sessionId) throw new Error("sessionId is required for mirror_miss feedback");
+      if (args.turnIndex === undefined) throw new Error("turnIndex is required for mirror_miss feedback");
+      if (!args.text?.trim()) throw new Error("Text is required for mirror_miss feedback");
+      if (args.text.length > 100) throw new Error("Text exceeds 100 character limit");
+    }
+    if (args.type === "gave_up") {
+      if (!args.sessionId) throw new Error("sessionId is required for gave_up feedback");
+      if (!args.selectedOption) throw new Error("selectedOption is required for gave_up feedback");
+    }
+    if (args.type === "mood_heavier" && args.text && args.text.length > 300) {
+      throw new Error("Text exceeds 300 character limit");
+    }
+
+    // Server-side throttle for mood_heavier — silent no-op on race condition
+    if (args.type === "mood_heavier") {
+      const last = await ctx.db
+        .query("feedback")
+        .withIndex("by_profile_and_type_and_created", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("type", "mood_heavier")
+        )
+        .order("desc")
+        .first();
+      if (last && last.createdAt >= Date.now() - THROTTLE_MS) {
+        return null;
+      }
+    }
+
+    // Server-side rate limit guard for general
+    if (args.type === "general") {
+      const recent = await ctx.db
+        .query("feedback")
+        .withIndex("by_profile_and_type_and_created", (q) =>
+          q
+            .eq("emotionalProfileId", profile._id)
+            .eq("type", "general")
+            .gte("createdAt", Date.now() - THROTTLE_MS)
+        )
+        .order("desc")
+        .take(GENERAL_RATE_LIMIT + 1);
+      if (recent.length >= GENERAL_RATE_LIMIT) {
+        throw new Error("Feedback rate limit reached");
+      }
+    }
+
+    await ctx.db.insert("feedback", {
+      emotionalProfileId: profile._id,
+      type: args.type,
+      sessionId: args.sessionId,
+      turnIndex: args.turnIndex,
+      text: args.text,
+      selectedOption: args.selectedOption,
+      createdAt: Date.now(),
+    });
+
+    return "ok";
+  },
+});

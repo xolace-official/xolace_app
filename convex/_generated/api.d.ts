@@ -31,6 +31,7 @@ import type * as emotionalMetadata from "../emotionalMetadata.js";
 import type * as escalation from "../escalation.js";
 import type * as exercises from "../exercises.js";
 import type * as exercises_match from "../exercises/match.js";
+import type * as feedback from "../feedback.js";
 import type * as jobs_accountDeletion from "../jobs/accountDeletion.js";
 import type * as jobs_dataRetention from "../jobs/dataRetention.js";
 import type * as jobs_dataWipe from "../jobs/dataWipe.js";
@@ -85,6 +86,7 @@ declare const fullApi: ApiFromModules<{
   escalation: typeof escalation;
   exercises: typeof exercises;
   "exercises/match": typeof exercises_match;
+  feedback: typeof feedback;
   "jobs/accountDeletion": typeof jobs_accountDeletion;
   "jobs/dataRetention": typeof jobs_dataRetention;
   "jobs/dataWipe": typeof jobs_dataWipe;

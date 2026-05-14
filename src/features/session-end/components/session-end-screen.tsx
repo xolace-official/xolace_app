@@ -18,7 +18,7 @@ type Props = {
 
 export const SessionEndScreen = ({ path }: Props) => {
   const insets = useSafeAreaInsets();
-  const { isLoading, distilledText, contributeByDefault, sessionCount, dismiss, haveMore } = useSessionEnd();
+  const { sessionId, isLoading, distilledText, contributeByDefault, sessionCount, dismiss, haveMore } = useSessionEnd();
   const { isNight } = useSessionMode();
 
   useEffect(() => {
@@ -47,6 +47,7 @@ export const SessionEndScreen = ({ path }: Props) => {
         <ExitVariant onHaveMore={() => haveMore()} isNight={isNight} />
       ) : (
         <ActivityVariant
+          sessionId={sessionId ?? undefined}
           distilledText={distilledText}
           contributeByDefault={contributeByDefault}
           onDismiss={(contributed?: boolean, mood?: PostSessionMood) =>

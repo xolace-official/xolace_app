@@ -89,6 +89,13 @@ export const purge = internalMutation({
         .take(100);
       for (const resonance of resonances) await ctx.db.delete(resonance._id);
 
+      // Delete feedback records
+      const feedbackRecords = await ctx.db
+        .query("feedback")
+        .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
+        .take(100);
+      for (const record of feedbackRecords) await ctx.db.delete(record._id);
+
       // Delete preferences
       const preferences = await ctx.db
         .query("preferences")

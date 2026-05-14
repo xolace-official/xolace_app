@@ -27,6 +27,7 @@ export const ReflectScreen = () => {
     dispatch,
     isLoading,
     sessionId,
+    turnsCount,
     escalationResources,
     isRecording,
     submitReflection,
@@ -135,6 +136,8 @@ export const ReflectScreen = () => {
             dispatch={dispatch}
             onSubmit={submitClarification}
             autoFocus={!isOutgoing}
+            sessionId={sessionId ?? undefined}
+            turnIndex={turnsCount}
           />
         );
       case 'gave-up':
@@ -142,6 +145,7 @@ export const ReflectScreen = () => {
           <GaveUpState
             onPathSelection={handleGaveUpPathSelection}
             onReset={handleReset}
+            sessionId={sessionId ?? undefined}
           />
         );
       case 'escalation':

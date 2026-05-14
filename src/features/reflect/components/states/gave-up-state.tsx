@@ -4,13 +4,16 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinkButton } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { playCompassionateHold } from '@/src/lib/haptics';
+import { GaveUpFeedbackCard } from '@/src/features/reflect/components/gave-up-feedback-card';
+import type { Id } from '@/convex/_generated/dataModel';
 
 type Props = {
   onPathSelection: () => void;
   onReset: () => void;
+  sessionId?: Id<'sessions'>;
 };
 
-export const GaveUpState = ({ onPathSelection, onReset }: Props) => {
+export const GaveUpState = ({ onPathSelection, onReset, sessionId }: Props) => {
   useEffect(() => {
     playCompassionateHold();
   }, []);
@@ -24,6 +27,8 @@ export const GaveUpState = ({ onPathSelection, onReset }: Props) => {
     <AppText className="mt-4 text-base leading-6 text-foreground/40">
       What you shared still matters, even if the mirror didn&apos;t reflect it perfectly.
     </AppText>
+
+    {sessionId && <GaveUpFeedbackCard sessionId={sessionId} />}
 
     <View className="mt-14 gap-6">
       <Animated.View entering={FadeInDown.delay(200).duration(400)}>
