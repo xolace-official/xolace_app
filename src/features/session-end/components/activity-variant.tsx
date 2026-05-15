@@ -200,7 +200,7 @@ export const ActivityVariant = ({
 
       <Animated.View entering={FadeIn.delay(700).duration(400)}>
         <LinkButton onPress={() => onHaveMore(undefined, selectedMood ?? undefined)} size="sm" className="self-start">
-          <LinkButton.Label className="font-light text-foreground/30">
+          <LinkButton.Label className="font-light text-accent/60">
             Have more? I&apos;m here.
           </LinkButton.Label>
         </LinkButton>
