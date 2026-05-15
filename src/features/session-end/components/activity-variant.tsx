@@ -77,7 +77,7 @@ export const ActivityVariant = ({
             </LinkButton.Label>
           </LinkButton>
           <AppText className="text-base font-light leading-7 text-foreground/40">
-            . Go live your life.
+            . You know what you&apos;re feeling now..
           </AppText>
         </View>
       </EaseView>
