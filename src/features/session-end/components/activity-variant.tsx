@@ -3,14 +3,19 @@ import { Pressable, View , ScrollView} from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { LinkButton } from 'heroui-native';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress, playTextureSelect } from '@/src/lib/haptics';
 import { ContributedConfirmation } from '@/src/features/session-end/components/contributed-confirmation';
+import { HeavierFeedbackPrompt } from '@/src/features/session-end/components/heavier-feedback-prompt';
 import { NIGHT_SESSION_END_ACTIVITY } from '@/src/features/reflect/night-copy';
 
 type PostSessionMood = 'lighter' | 'same' | 'heavier' | 'unsure';
 
 type Props = {
+  sessionId?: Id<'sessions'>;
   distilledText: string | null;
   contributeByDefault: boolean;
   onDismiss: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
@@ -21,6 +26,7 @@ type Props = {
 const MOODS = ['lighter', 'same', 'heavier', 'unsure'] as const;
 
 export const ActivityVariant = ({
+  sessionId,
   distilledText,
   contributeByDefault,
   onDismiss,
@@ -29,6 +35,7 @@ export const ActivityVariant = ({
 }: Props) => {
   const [phase, setPhase] = useState<'main' | 'contributed'>('main');
   const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(null);
+  const canAsk = useQuery(api.feedback.canAskContextual);
   // null = no explicit user choice yet, fall back to prop
   const [shareOverride, setShareOverride] = useState<boolean | null>(null);
   const shareToggled = shareOverride ?? contributeByDefault;
@@ -47,7 +54,11 @@ export const ActivityVariant = ({
   }
 
   return (
-    <View className="flex-1 justify-center px-7">
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ flexGrow: 1, paddingVertical: 24 }}
+    >
+    <View className="flex-1 px-7">
       <Animated.View entering={FadeIn.duration(600)}>
         <AppText className="mb-2 font-serif text-xl leading-8 text-foreground">
           {isNight ? NIGHT_SESSION_END_ACTIVITY : 'You showed up for\nyourself today.'}
@@ -67,7 +78,7 @@ export const ActivityVariant = ({
         </View>
       </Animated.View>
 
-      {/* Optional mood check — skipped for night sessions */}
+      {/* Optional mood check + heavier feedback prompt — skipped for night sessions */}
       {!isNight && (
         <Animated.View
           entering={FadeInDown.delay(300).duration(400)}
@@ -100,6 +111,11 @@ export const ActivityVariant = ({
             ))}
           </View>
         </Animated.View>
+      )}
+
+      {/* Heavier feedback prompt — only when heavier selected, not during night, and throttle allows */}
+      {!isNight && selectedMood === 'heavier' && canAsk === true && (
+        <HeavierFeedbackPrompt sessionId={sessionId} />
       )}
 
       {/* Contribution prompt — only when there's something to share */}
@@ -184,12 +200,13 @@ export const ActivityVariant = ({
 
       <Animated.View entering={FadeIn.delay(700).duration(400)}>
         <LinkButton onPress={() => onHaveMore(undefined, selectedMood ?? undefined)} size="sm" className="self-start">
-          <LinkButton.Label className="font-light text-foreground/30">
+          <LinkButton.Label className="font-light text-accent/60">
             Have more? I&apos;m here.
           </LinkButton.Label>
         </LinkButton>
       </Animated.View>
 
     </View>
+    </ScrollView>
   );
 };

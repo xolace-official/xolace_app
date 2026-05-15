@@ -992,7 +992,39 @@ export default defineSchema({
     .index("by_profile_reflection", ["reporterProfileId", "reflectionId"]),
 
   // ===========================================================
-  // 12. CONSENT RECORDS
+  // 12. FEEDBACK
+  // ===========================================================
+  //
+  // User feedback tied to emotional profile.
+  // Four types: general (settings), mood_heavier (session end),
+  // mirror_miss (clarify state), gave_up (gave-up state).
+  //
+  feedback: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    type: v.union(
+      v.literal("general"),
+      v.literal("mood_heavier"),
+      v.literal("mirror_miss"),
+      v.literal("gave_up"),
+    ),
+    // Required for mirror_miss and gave_up. Optional for general and mood_heavier.
+    sessionId: v.optional(v.id("sessions")),
+    // mirror_miss only: 0 = first clarify attempt, 1 = second (final).
+    // Range: 0..MAX_TURNS-1
+    turnIndex: v.optional(v.number()),
+    // general: max 1000 chars; mood_heavier: max 300 chars; mirror_miss: max 100 chars
+    text: v.optional(v.string()),
+    // gave_up: "mirror_kept_missing" | "figured_it_out" | "needed_to_vent"
+    // mood_heavier: "mirror_missed" | "life_is_heavy" | "something_else"
+    selectedOption: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_profile", ["emotionalProfileId"])
+    .index("by_profile_and_created", ["emotionalProfileId", "createdAt"])
+    .index("by_profile_and_type_and_created", ["emotionalProfileId", "type", "createdAt"]),
+
+  // ===========================================================
+  // 13. CONSENT RECORDS
   // ===========================================================
   //
   // Granular, auditable consent tracking.

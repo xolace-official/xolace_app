@@ -42,7 +42,7 @@ export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
 
       <Animated.View entering={FadeIn.delay(400).duration(400)}>
         <LinkButton onPress={onHaveMore} size="sm" className="self-start">
-          <LinkButton.Label className="font-light text-foreground/20">
+          <LinkButton.Label className="font-light text-accent/60">
             Have more? I&apos;m here.
           </LinkButton.Label>
         </LinkButton>

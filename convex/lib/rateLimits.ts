@@ -21,4 +21,7 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 
   // Reflection reports — 5 per day to prevent abuse
   reportReflection: { kind: "fixed window", rate: 5, period: DAY },
+
+  // General settings feedback — 5 per 24h per profile
+  generalFeedback: { kind: "fixed window", rate: 5, period: DAY },
 });
