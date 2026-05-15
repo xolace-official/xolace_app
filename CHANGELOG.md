@@ -4,7 +4,7 @@ All notable changes to Xolace are documented here.
 
 ---
 
-## [1.1.0.0] - 2026-05-15
+## [1.2.0.0] - 2026-05-15
 
 ### Added
 
@@ -22,6 +22,21 @@ All notable changes to Xolace are documented here.
 - `canSubmitGeneral` uses `@convex-dev/rate-limiter` component (`generalFeedback: fixed window, 5/day`) instead of a manual table scan
 - `activity-variant.tsx` wrapped in `ScrollView` to handle heavier feedback prompt without overflow
 - `use-reflection-machine.ts` now exposes `turnsCount` for use as `turnIndex` in mirror-miss feedback
+
+---
+
+## [1.1.0.0] - App Store release (3d ago)
+
+### Added
+
+- **Voice input** — speak your reflection instead of typing; voice is transcribed automatically
+- **Mirror read-aloud** — after the mirror is delivered, it can be heard in a voice that matches the tone you're in
+- **Mirror navigation during clarify** — users can navigate back to the previous mirror while clarifying so they're always working from what was said
+
+### Changed
+
+- **Onboarding rebuilt** — smoother animations and a clearer sense of what Xolace is before logging in
+- Bug fixes and polish
 
 ---
 
