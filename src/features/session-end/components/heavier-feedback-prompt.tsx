@@ -100,6 +100,7 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
           <Animated.View entering={FadeIn.duration(200)} className="mt-3">
             <TextInput
               placeholder="Anything you want us to know?"
+              accessibilityLabel="Describe what happened"
               value={somethingElseText}
               onChangeText={setSomethingElseText}
               maxLength={300}

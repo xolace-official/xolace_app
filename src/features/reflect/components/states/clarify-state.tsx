@@ -95,6 +95,7 @@ export const ClarifyState = ({
           <Animated.View entering={FadeIn.delay(200).duration(300)}>
             <TextInput
               placeholder="What was off? (optional)"
+              accessibilityLabel="Tell us what was off (optional)"
               value={feedbackText}
               onChangeText={setFeedbackText}
               maxLength={100}

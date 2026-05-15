@@ -6,6 +6,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
 import { PressableFeedback } from 'heroui-native';
+import { usePostHog } from 'posthog-react-native';
 
 const OPTIONS = [
   { key: 'mirror_kept_missing', label: 'The mirror kept missing' },
@@ -20,16 +21,22 @@ type Props = {
 export const GaveUpFeedbackCard = ({ sessionId }: Props) => {
   const [submitted, setSubmitted] = useState(false);
   const submitFeedback = useMutation(api.feedback.submit);
+  const posthog = usePostHog();
 
   if (submitted) return null;
 
   const handleOption = (key: string) => {
     setSubmitted(true);
-    // Fire-and-forget — card collapses immediately regardless of outcome
     submitFeedback({
       type: 'gave_up',
       sessionId,
       selectedOption: key,
+    }).then(() => {
+      posthog.capture('feedback_submitted', {
+        type: 'gave_up',
+        has_text: false,
+        has_option: true,
+      });
     }).catch((e) => console.error('gave_up feedback failed', e));
   };
 
