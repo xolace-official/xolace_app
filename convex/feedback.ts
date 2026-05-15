@@ -1,9 +1,9 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import { rateLimiter } from "./lib/rateLimits";
 
 const THROTTLE_MS = 24 * 60 * 60 * 1000;
-const GENERAL_RATE_LIMIT = 5;
 
 export const canAskContextual = query({
   args: {},
@@ -25,17 +25,10 @@ export const canSubmitGeneral = query({
   args: {},
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
-    const recent = await ctx.db
-      .query("feedback")
-      .withIndex("by_profile_and_type_and_created", (q) =>
-        q
-          .eq("emotionalProfileId", profile._id)
-          .eq("type", "general")
-          .gte("createdAt", Date.now() - THROTTLE_MS)
-      )
-      .order("desc")
-      .take(GENERAL_RATE_LIMIT + 1);
-    return recent.length < GENERAL_RATE_LIMIT;
+    const { ok } = await rateLimiter.check(ctx, "generalFeedback", {
+      key: profile._id,
+    });
+    return ok;
   },
 });
 
@@ -90,19 +83,10 @@ export const submit = mutation({
 
     // Server-side rate limit guard for general
     if (args.type === "general") {
-      const recent = await ctx.db
-        .query("feedback")
-        .withIndex("by_profile_and_type_and_created", (q) =>
-          q
-            .eq("emotionalProfileId", profile._id)
-            .eq("type", "general")
-            .gte("createdAt", Date.now() - THROTTLE_MS)
-        )
-        .order("desc")
-        .take(GENERAL_RATE_LIMIT + 1);
-      if (recent.length >= GENERAL_RATE_LIMIT) {
-        throw new Error("Feedback rate limit reached");
-      }
+      const { ok } = await rateLimiter.limit(ctx, "generalFeedback", {
+        key: profile._id,
+      });
+      if (!ok) throw new Error("Feedback rate limit reached");
     }
 
     await ctx.db.insert("feedback", {
