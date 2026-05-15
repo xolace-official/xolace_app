@@ -175,11 +175,16 @@ export const PeerReflectionScreen = () => {
           <AppText className="text-lg leading-7 text-foreground/50">
             Others have felt{"\n"}something like this.
           </AppText>
-          {isFallback && (
-            <AppText className="mt-2 text-sm leading-6 text-foreground/30">
-              We couldn&apos;t find a close match for what you&apos;re feeling right now.
-              {"\n"}These are recent reflections from others — and yours could be the first of its kind here.
-            </AppText>
+          {!isFallback && (
+            <View className="mt-3 rounded-xl border border-warning/20 bg-warning/10 px-4 py-3">
+              <AppText className="text-xs font-medium uppercase tracking-widest text-warning/70">
+                No close match found
+              </AppText>
+              <AppText className="mt-1 text-sm leading-6 text-foreground/50">
+                We couldn&apos;t find a close match for what you&apos;re feeling right now.
+                {"\n"}These are recent reflections from others; yours could be the first of its kind here.
+              </AppText>
+            </View>
           )}
         </EaseView>
 
