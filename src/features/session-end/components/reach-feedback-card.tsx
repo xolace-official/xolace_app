@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Pressable } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { EaseView } from "react-native-ease/uniwind";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -19,7 +19,8 @@ type Props = {
  * at least one delivered notification. Asks how the last notification landed.
  */
 export const ReachFeedbackCard = ({ sessionCount }: Props) => {
-  const [submitted, setSubmitted] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [mounted, setMounted] = useState(true);
   const [error, setError] = useState(false);
 
   const recordLanded = useMutation(api.notifications.recordLandedPublic);
@@ -32,7 +33,7 @@ export const ReachFeedbackCard = ({ sessionCount }: Props) => {
   // Don't show if this notification already has feedback
   if (lastDelivered.landed) return null;
 
-  if (submitted) return null;
+  if (!mounted) return null;
 
   const handleChoice = async (choice: LandedChoice) => {
     setError(false);
@@ -41,7 +42,7 @@ export const ReachFeedbackCard = ({ sessionCount }: Props) => {
         notificationId: lastDelivered._id as Id<"notification_log">,
         landed: choice,
       });
-      setSubmitted(true);
+      setVisible(false);
     } catch (err) {
       console.error("Failed to record notification feedback", err);
       setError(true);
@@ -49,7 +50,17 @@ export const ReachFeedbackCard = ({ sessionCount }: Props) => {
   };
 
   return (
-    <Animated.View entering={FadeIn.duration(400)} exiting={FadeOut.duration(200)}>
+    <EaseView
+      initialAnimate={{ opacity: 0 }}
+      animate={{ opacity: visible ? 1 : 0 }}
+      transition={visible
+        ? { type: 'timing', duration: 400, easing: [0.455, 0.03, 0.515, 0.955] }
+        : { type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }
+      }
+      onTransitionEnd={({ finished }) => {
+        if (finished && !visible) setMounted(false);
+      }}
+    >
       <View className="mx-5 mt-6 p-4 rounded-2xl bg-surface border border-overlay/20">
         <AppText className="text-sm text-foreground/60 mb-2">
           When I reached out, what landed?
@@ -85,6 +96,6 @@ export const ReachFeedbackCard = ({ sessionCount }: Props) => {
           </AppText>
         )}
       </View>
-    </Animated.View>
+    </EaseView>
   );
 };

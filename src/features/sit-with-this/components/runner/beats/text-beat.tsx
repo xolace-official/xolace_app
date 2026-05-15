@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import {
   BREATH_CYCLE_MS,
@@ -105,8 +105,10 @@ export function TextBeat({
 
   if (syncToBreath && breathPattern && breathCycles) {
     return (
-      <Animated.View
-        entering={FadeIn.duration(600)}
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
         className="items-center gap-10"
         accessibilityLiveRegion="polite"
       >
@@ -114,19 +116,21 @@ export function TextBeat({
         <AppText className="text-center text-base text-foreground/60">
           {content}
         </AppText>
-      </Animated.View>
+      </EaseView>
     );
   }
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(500)}
+    <EaseView
+      initialAnimate={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ type: 'timing', duration: 500, easing: [0.455, 0.03, 0.515, 0.955] }}
       className="items-center px-8"
       accessibilityLiveRegion="polite"
     >
       <AppText className="text-center text-xl font-medium leading-relaxed text-foreground">
         {content}
       </AppText>
-    </Animated.View>
+    </EaseView>
   );
 }

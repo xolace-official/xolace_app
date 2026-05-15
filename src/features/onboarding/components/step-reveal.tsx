@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { STEP_BASE_DELAY, STEP_DURATION, STEP_INTERVAL } from '@/src/features/onboarding/frame-steps';
 import type { FrameStep } from '@/src/features/onboarding/frame-steps';
@@ -12,11 +12,13 @@ type Props = {
 
 export const StepReveal = ({ step, index }: Props) => {
   return (
-    <Animated.View
-      entering={FadeInDown.delay(STEP_BASE_DELAY + index * STEP_INTERVAL)
-        .duration(STEP_DURATION)
-        .springify()
-        .damping(15)}
+    <EaseView
+      initialAnimate={{ opacity: 0, translateY: 20 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{
+        opacity: { type: 'timing', duration: 400, delay: STEP_BASE_DELAY + index * STEP_INTERVAL, easing: [0.455, 0.03, 0.515, 0.955] },
+        transform: { type: 'spring', damping: 15, stiffness: 120, mass: 1, delay: STEP_BASE_DELAY + index * STEP_INTERVAL },
+      }}
       style={{
         flexDirection: 'row',
         alignItems: 'flex-start',
@@ -52,6 +54,6 @@ export const StepReveal = ({ step, index }: Props) => {
           {step.detail}
         </AppText>
       </View>
-    </Animated.View>
+    </EaseView>
   );
 };

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { TextArea, TextField } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
@@ -30,8 +30,10 @@ export function PrivatePromptBeat({ content, placeholder, onComplete }: Props) {
       keyboardVerticalOffset={10}
       className="flex-1 w-full items-center justify-center"
     >
-      <Animated.View
-        entering={FadeIn.duration(500)}
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 500, easing: [0.455, 0.03, 0.515, 0.955] }}
         className="w-full items-center gap-6 px-8"
       >
       
@@ -53,7 +55,7 @@ export function PrivatePromptBeat({ content, placeholder, onComplete }: Props) {
         </AppText>
   
           <PillButton label="Done" onPress={handleDone} />
-      </Animated.View>
+      </EaseView>
     </KeyboardAvoidingView>
   );
 }

@@ -1,7 +1,7 @@
 import { SymbolView } from 'expo-symbols';
 import { PropsWithChildren, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 
 import { AppText } from '@/src/components/shared/app-text';
 
@@ -26,11 +26,15 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
         <AppText className="text-sm font-medium text-foreground">{title}</AppText>
       </Pressable>
       {isOpen && (
-        <Animated.View entering={FadeIn.duration(200)}>
+        <EaseView
+          initialAnimate={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <View className="mt-4 rounded-2xl ml-6 p-6 bg-background-element">
             {children}
           </View>
-        </Animated.View>
+        </EaseView>
       )}
     </View>
   );

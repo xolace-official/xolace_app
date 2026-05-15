@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, TextInput } from 'react-native';
-import Animated, { FadeInDown, FadeOut, FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -23,13 +23,14 @@ type Props = {
 export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
   const [showTextField, setShowTextField] = useState(false);
   const [somethingElseText, setSomethingElseText] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [mounted, setMounted] = useState(true);
 
   const submitFeedback = useMutation(api.feedback.submit);
   const posthog = usePostHog();
   const foregroundMuted = useThemeColor('foreground') as string;
 
-  if (submitted) return null;
+  if (!mounted) return null;
 
   const handleOption = async (key: OptionKey) => {
     if (key === 'something_else') {
@@ -48,7 +49,7 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         has_text: false,
         has_option: true,
       });
-      setSubmitted(true);
+      setVisible(false);
     } catch (e) {
       console.error('mood_heavier feedback failed', e);
     }
@@ -69,16 +70,23 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         has_text: !!text,
         has_option: true,
       });
-      setSubmitted(true);
+      setVisible(false);
     } catch (e) {
       console.error('mood_heavier feedback failed', e);
     }
   };
 
   return (
-    <Animated.View
-      entering={FadeInDown.delay(400).duration(400)}
-      exiting={FadeOut.duration(200)}
+    <EaseView
+      initialAnimate={{ opacity: 0, translateY: 20 }}
+      animate={{ opacity: visible ? 1 : 0, translateY: 0 }}
+      transition={visible
+        ? { type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }
+        : { type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }
+      }
+      onTransitionEnd={({ finished }) => {
+        if (finished && !visible) setMounted(false);
+      }}
     >
       <View className="mx-5 mt-4 p-4 rounded-2xl bg-surface border border-overlay/20">
         <AppText className="text-sm text-foreground/60 mb-3">
@@ -99,7 +107,12 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         </View>
 
         {showTextField && (
-          <Animated.View entering={FadeIn.duration(200)} className="mt-3">
+          <EaseView
+            initialAnimate={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+            className="mt-3"
+          >
             <TextInput
               placeholder="Anything you want us to know?"
               accessibilityLabel="Describe what happened"
@@ -123,9 +136,9 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
             >
               <AppText className="text-xs font-medium text-accent">Done</AppText>
             </PressableFeedback>
-          </Animated.View>
+          </EaseView>
         )}
       </View>
-    </Animated.View>
+    </EaseView>
   );
 };

@@ -1,6 +1,6 @@
 import { View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 
@@ -30,8 +30,10 @@ export const FrameScreenV2 = () => {
 
       <PreviewCarousel slides={FRAME_STEPS} />
 
-      <Animated.View
-        entering={FadeIn.delay(400).duration(900)}
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 900, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
         style={{ paddingTop: insets.top + 28, paddingHorizontal: 32, zIndex: 10 }}
       >
         <AppText
@@ -46,10 +48,9 @@ export const FrameScreenV2 = () => {
             what happens.
           </AppText>
         </AppText>
-      </Animated.View>
+      </EaseView>
 
-      <Animated.View
-        entering={FadeIn.delay(700).duration(900)}
+      <View
         style={{
           position: 'absolute',
           bottom: 0,
@@ -62,12 +63,14 @@ export const FrameScreenV2 = () => {
           zIndex: 10,
         }}
       >
-        {/*<AppText className="text-foreground/40 text-xs text-center leading-4.5">
-          Not a substitute for professional mental health care.{'\n'}
-          If you&apos;re in crisis, please reach out to a professional.
-        </AppText>*/}
-
-        <Animated.View entering={FadeInDown.delay(1000).duration(600).springify().damping(28)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{
+            opacity: { type: 'timing', duration: 400, delay: 1000, easing: [0.455, 0.03, 0.515, 0.955] },
+            transform: { type: 'spring', damping: 28, stiffness: 120, mass: 1, delay: 1000 },
+          }}
+        >
           <Pressable
             onPress={handlePress}
             className="border border-accent/30 rounded-full px-9 py-3.5"
@@ -80,8 +83,8 @@ export const FrameScreenV2 = () => {
               That makes sense
             </AppText>
           </Pressable>
-        </Animated.View>
-      </Animated.View>
+        </EaseView>
+      </View>
     </View>
   );
 };

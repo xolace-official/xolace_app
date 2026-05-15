@@ -1,6 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { View, ColorValue, Pressable } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import { EaseView } from "react-native-ease/uniwind";
 import { Card, Chip, cn } from "heroui-native";
 import { TruncatedText } from "@/src/features/peer-reflection/components/truncated-text";
 import { playResonanceToggle } from "@/src/lib/haptics";
@@ -34,7 +34,11 @@ export const ReflectionCard = ({
   };
 
   return (
-    <Animated.View entering={FadeInDown.delay(200 + index * 150).duration(500)}>
+    <EaseView
+      initialAnimate={{ opacity: 0, translateY: 20 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'timing', duration: 500, delay: 200 + index * 150, easing: [0.455, 0.03, 0.515, 0.955] }}
+    >
       <Pressable onLongPress={onRequestReport} delayLongPress={400}>
       <Card
         variant="tertiary"
@@ -86,6 +90,6 @@ export const ReflectionCard = ({
         </Card.Body>
       </Card>
       </Pressable>
-    </Animated.View>
+    </EaseView>
   );
 };

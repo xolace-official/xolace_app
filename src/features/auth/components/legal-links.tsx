@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { LinkButton } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
@@ -15,8 +15,10 @@ export const LegalLinks = () => {
 
   return (
     <>
-      <Animated.View
-        entering={FadeIn.delay(900).duration(800)}
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 800, delay: 900, easing: [0.455, 0.03, 0.515, 0.955] }}
         style={{ gap: 16 }}
       >
         <AppText
@@ -64,7 +66,7 @@ export const LegalLinks = () => {
             </LinkButton.Label>
           </LinkButton>
         </View>
-      </Animated.View>
+      </EaseView>
 
       <LegalBottomSheet
         document={activeDocument}

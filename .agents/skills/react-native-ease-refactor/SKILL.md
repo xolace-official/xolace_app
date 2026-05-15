@@ -16,12 +16,24 @@ Follow these 6 phases exactly. Do not skip phases or reorder them.
 
 Scan the user's project for animation code:
 
-1. Use Grep to find all files importing from `react-native-reanimated`:
+1. Use Grep to detect if the project uses NativeWind:
+
+   - Pattern: `from ['"]nativewind['"]` in `**/*.{ts,tsx,js,jsx}`
+   - Also check `package.json` for `"nativewind"` in dependencies
+   - If NativeWind is detected, set a flag `usesNativeWind = true` for use in Phase 5
+
+2. Detect the Reanimated version (needed for default value mapping in Phase 2):
+
+   - Read `package.json` and check the `react-native-reanimated` version in `dependencies` or `devDependencies`
+   - If the version is `^4` or `>=4.0.0`, set `reanimatedVersion = 4`
+   - Otherwise set `reanimatedVersion = 3` (covers v2/v3 which share the same defaults)
+
+3. Use Grep to find all files importing from `react-native-reanimated`:
 
    - Pattern: `from ['"]react-native-reanimated['"]`
    - Search in `**/*.{ts,tsx,js,jsx}`
 
-2. Use Grep to find all files using React Native's built-in `Animated` API:
+4. Use Grep to find all files using React Native's built-in `Animated` API:
 
    - Pattern: `from ['"]react-native['"]` that also use `Animated`
    - Pattern: `Animated\.View|Animated\.Text|Animated\.Image|Animated\.Value|Animated\.timing|Animated\.spring`
@@ -52,11 +64,13 @@ Apply these checks in order. The first match determines the result:
 2. **Uses scroll handler?** (`useAnimatedScrollHandler`, `onScroll` with `Animated.event`) → NOT migratable — "Scroll-driven animation"
 3. **Uses shared element transitions?** (`sharedTransitionTag`) → NOT migratable — "Shared element transition"
 4. **Uses `runOnUI` or worklet directives?** → NOT migratable — "Requires worklet runtime"
-5. **Uses `withSequence` or `withDelay`?** → NOT migratable — "Animation sequencing not supported"
+5. **Uses `withSequence`?** → NOT migratable — "Animation sequencing not supported"
+5b. **Uses `withDelay` wrapping a single animation (`withTiming`/`withSpring`)?** → MIGRATABLE — map to `delay` on the transition
+5c. **Uses `withDelay` wrapping `withSequence` or nested `withDelay`?** → NOT migratable — "Complex delay/sequencing not supported"
 6. **Uses complex `interpolate()`?** (more than 2 input/output values) → NOT migratable — "Complex interpolation"
 7. **Uses `layout={...}` prop?** → NOT migratable — "Layout animation"
-8. **Animates unsupported properties?** (anything besides: opacity, translateX, translateY, scale, scaleX, scaleY, rotate, rotateX, rotateY, borderRadius, backgroundColor) → NOT migratable — "Animates unsupported property: `<prop>`"
-9. **Uses different transition configs per property?** (e.g., opacity uses 200ms timing, scale uses spring) → NOT migratable — "Per-property transition configs"
+8. **Animates unsupported properties?** (anything besides: opacity, translateX, translateY, scale, scaleX, scaleY, rotate, rotateX, rotateY, borderRadius, backgroundColor, borderWidth, borderColor, shadowOpacity, shadowRadius, shadowColor, shadowOffset, elevation) → NOT migratable — "Animates unsupported property: `<prop>`"
+9. **Uses different transition configs per property?** (e.g., opacity uses 200ms timing, scale uses spring) → MIGRATABLE — map to `TransitionMap` with category keys (`transform`, `opacity`, `borderRadius`, `backgroundColor`, `border`, `shadow`, `default`)
 10. **Not driven by state?** (animation triggered by gesture/scroll value, not React state) → NOT migratable — "Not state-driven"
 11. **Otherwise** → MIGRATABLE
 
@@ -83,18 +97,35 @@ Use this table to convert Reanimated/Animated patterns to EaseView:
 | `Easing.bezier(x1, y1, x2, y2)`                                                                                           | `easing: [x1, y1, x2, y2]`                                                                                   |
 | `Animated.Value` + `Animated.timing`                                                                                      | Same `animate` + `transition` pattern — convert to state-driven                                              |
 | `Animated.Value` + `Animated.spring`                                                                                      | `animate` + `transition={{ type: 'spring' }}` — convert to state-driven                                      |
+| `withDelay(ms, withTiming(...))` or `withDelay(ms, withSpring(...))`                                                      | `transition={{ ..., delay: ms }}` — add `delay` to the transition config                                     |
+| `entering={FadeIn.delay(ms)}` / any entering preset with `.delay()`                                                      | `initialAnimate` + `animate` + `transition={{ ..., delay: ms }}`                                             |
+| Different `withTiming`/`withSpring` per property in `useAnimatedStyle`                                                    | `transition={{ opacity: { type: 'timing', ... }, transform: { type: 'spring', ... } }}` (per-property map)   |
 
 ### Default Value Mapping
 
 **CRITICAL: Reanimated and EaseView have different defaults. You MUST explicitly set values to preserve the original animation behavior. Do not rely on EaseView defaults matching Reanimated defaults.**
 
+**Use `reanimatedVersion` from Phase 1 to select the correct defaults.**
+
 #### `withSpring` → EaseView spring
 
-| Parameter | Reanimated default | EaseView default | Action |
+**Reanimated v2/v3 defaults:**
+
+| Parameter | Reanimated v2/v3 | EaseView default | Action |
 |---|---|---|---|
 | `damping` | `10` | `15` | **Must set `damping: 10`** |
 | `stiffness` | `100` | `120` | **Must set `stiffness: 100`** |
 | `mass` | `1` | `1` | Same — omit |
+
+**Reanimated v4 defaults:**
+
+| Parameter | Reanimated v4 | EaseView default | Action |
+|---|---|---|---|
+| `damping` | `120` | `15` | **Must set `damping: 120`** |
+| `stiffness` | `900` | `120` | **Must set `stiffness: 900`** |
+| `mass` | `4` | `1` | **Must set `mass: 4`** |
+
+Reanimated v4 changed to a critically damped, snappy spring (no bounce) as the default. The rationale was that the old physics-based defaults were too sensitive to start/end conditions. v4 recommends using `duration` + `dampingRatio` instead of raw physics params.
 
 If the source code explicitly sets any of these values, carry them over as-is. If the source relies on Reanimated defaults (no explicit value), set the Reanimated default explicitly on the EaseView transition.
 
@@ -103,11 +134,14 @@ Example — bare `withSpring(1)` with no config:
 // Before (Reanimated)
 scale.value = withSpring(1);
 
-// After (EaseView) — must set damping: 10, stiffness: 100 to match
+// After (EaseView) — v2/v3: set damping: 10, stiffness: 100
 transition={{ type: 'spring', damping: 10, stiffness: 100 }}
+
+// After (EaseView) — v4: set damping: 120, stiffness: 900, mass: 4
+transition={{ type: 'spring', damping: 120, stiffness: 900, mass: 4 }}
 ```
 
-**Note:** Reanimated v3+ uses duration-based spring by default (`duration: 550`, `dampingRatio: 1`) when no physics params are set. If migrating code that uses `withSpring` without any config, use `damping: 10, stiffness: 100` which matches the physics-based fallback. If the code explicitly sets `dampingRatio`/`duration`, convert using: `damping = dampingRatio * 2 * sqrt(stiffness * mass)`.
+**Duration-based spring:** Reanimated v3+ also supports `withSpring(target, { duration, dampingRatio })`. If the code explicitly sets `dampingRatio`/`duration`, convert using: `damping = dampingRatio * 2 * sqrt(stiffness * mass)`.
 
 #### `withTiming` → EaseView timing
 
@@ -246,6 +280,8 @@ For each confirmed component, apply the migration:
    import { EaseView } from 'react-native-ease';
    ```
 
+1b. **If `usesNativeWind` is true**, check if `import 'react-native-ease/nativewind'` already exists in the project (search all files). If not, add it to the app's root entry point (e.g., `_layout.tsx`, `App.tsx`, or `index.tsx` — whichever is the earliest entry). This only needs to be done once across all migrations, not per component.
+
 2. **Replace the animated view:**
 
    - `Animated.View` → `EaseView`
@@ -350,6 +386,13 @@ All properties in the `animate` prop:
 | `rotateY`         | `number`     | `0`             | Y-axis rotation in degrees (3D)      |
 | `borderRadius`    | `number`     | `0`             | In pixels                            |
 | `backgroundColor` | `ColorValue` | `'transparent'` | Any RN color value                   |
+| `borderWidth`     | `number`     | `0`             | In pixels                            |
+| `borderColor`     | `ColorValue` | `'black'`       | Any RN color value                   |
+| `shadowOpacity`   | `number`     | `0`             | 0–1 (iOS only)                       |
+| `shadowRadius`    | `number`     | `0`             | In pixels (iOS only)                 |
+| `shadowColor`     | `ColorValue` | `'black'`       | Any RN color value (iOS only)        |
+| `shadowOffset`    | `object`     | `{width:0,height:0}` | `{ width, height }` (iOS only) |
+| `elevation`       | `number`     | `0`             | Android material shadow              |
 
 ### Transition Types
 
@@ -360,6 +403,7 @@ transition={{
   type: 'timing',
   duration: 300,        // ms, default 300
   easing: 'easeInOut',  // 'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | [x1,y1,x2,y2]
+  delay: 0,             // ms, default 0
   loop: 'repeat',       // 'repeat' | 'reverse' — requires initialAnimate
 }}
 ```
@@ -372,6 +416,7 @@ transition={{
   damping: 15,      // default 15
   stiffness: 120,   // default 120
   mass: 1,          // default 1
+  delay: 0,         // ms, default 0
 }}
 ```
 
@@ -385,15 +430,16 @@ transition={{ type: 'none' }}
 
 - `animate` — target values for animated properties
 - `initialAnimate` — starting values (animates to `animate` on mount)
-- `transition` — animation config (timing or spring)
+- `transition` — animation config: a single `SingleTransition` (timing/spring/none) OR a `TransitionMap` with category keys (`default`, `transform`, `opacity`, `borderRadius`, `backgroundColor`, `border`, `shadow`)
 - `onTransitionEnd` — callback with `{ finished: boolean }`
 - `transformOrigin` — pivot point as `{ x: 0-1, y: 0-1 }`, default center
 - `useHardwareLayer` — Android GPU optimization (boolean, default false)
+- `className` — NativeWind / Tailwind CSS class string (requires NativeWind in the project)
 
 ### Important Constraints
 
 - **Loop requires timing** (not spring) and `initialAnimate` must define the start value
-- **No per-property transitions** — one transition config applies to all animated properties
-- **No animation sequencing** — no equivalent to `withSequence`/`withDelay`
+- **Per-property transitions supported** — pass a `TransitionMap` with category keys (`default`, `transform`, `opacity`, `borderRadius`, `backgroundColor`, `border`, `shadow`) to use different configs per property group
+- **No animation sequencing** — no equivalent to `withSequence`. Simple `withDelay` IS supported via the `delay` transition prop
 - **No gesture/scroll-driven animations** — EaseView is state-driven only
 - **Style/animate conflict** — if a property appears in both `style` and `animate`, the animated value wins

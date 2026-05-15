@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 
@@ -39,8 +39,10 @@ export const FrameScreen = () => {
   return (
     <View className="flex-1 bg-neutral-950">
       {/* Orb — capped height so it never crowds the content below */}
-      <Animated.View
-        entering={FadeIn.duration(1000)}
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 1000, easing: [0.455, 0.03, 0.515, 0.955] }}
         style={{
           height: Math.min(height * 0.42, 320),
           alignItems: 'center',
@@ -49,7 +51,7 @@ export const FrameScreen = () => {
         }}
       >
         <EmberOrb phase={phase} />
-      </Animated.View>
+      </EaseView>
 
       {/* Steps + CTA — scrollable so the button is always reachable */}
       <ScrollView
@@ -70,8 +72,10 @@ export const FrameScreen = () => {
         </View>
 
         {/* Disclaimer */}
-        <Animated.View
-          entering={FadeIn.delay(STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL - 200).duration(600)}
+        <EaseView
+          initialAnimate={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 600, delay: STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL - 200, easing: [0.455, 0.03, 0.515, 0.955] }}
         >
           <AppText
             style={{
@@ -82,11 +86,16 @@ export const FrameScreen = () => {
           >
             Xolace isn&apos;t a substitute for professional mental health care. If you&apos;re in crisis, please contact a professional.
           </AppText>
-        </Animated.View>
+        </EaseView>
 
         {/* CTA */}
-        <Animated.View
-          entering={FadeInDown.delay(STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL).duration(800).springify().damping(15)}
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{
+            opacity: { type: 'timing', duration: 400, delay: STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL, easing: [0.455, 0.03, 0.515, 0.955] },
+            transform: { type: 'spring', damping: 15, stiffness: 120, mass: 1, delay: STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL },
+          }}
         >
           <Pressable
             onPress={handlePress}
@@ -110,7 +119,7 @@ export const FrameScreen = () => {
               That makes sense
             </AppText>
           </Pressable>
-        </Animated.View>
+        </EaseView>
       </ScrollView>
     </View>
   );

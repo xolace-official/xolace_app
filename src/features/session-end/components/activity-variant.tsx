@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, View , ScrollView} from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
 import { LinkButton } from 'heroui-native';
 import { useQuery } from 'convex/react';
@@ -59,7 +59,11 @@ export const ActivityVariant = ({
       contentContainerStyle={{ flexGrow: 1, paddingVertical: 24 }}
     >
     <View className="flex-1 px-7">
-      <Animated.View entering={FadeIn.duration(600)}>
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+      >
         <AppText className="mb-2 font-serif text-xl leading-8 text-foreground">
           {isNight ? NIGHT_SESSION_END_ACTIVITY : 'You showed up for\nyourself today.'}
         </AppText>
@@ -76,12 +80,14 @@ export const ActivityVariant = ({
             . Go live your life.
           </AppText>
         </View>
-      </Animated.View>
+      </EaseView>
 
       {/* Optional mood check + heavier feedback prompt — skipped for night sessions */}
       {!isNight && (
-        <Animated.View
-          entering={FadeInDown.delay(300).duration(400)}
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 300, easing: [0.455, 0.03, 0.515, 0.955] }}
           className="my-6 border-t border-border pt-5"
         >
           <AppText className="mb-3 text-xs font-light text-muted">
@@ -110,7 +116,7 @@ export const ActivityVariant = ({
               </Pressable>
             ))}
           </View>
-        </Animated.View>
+        </EaseView>
       )}
 
       {/* Heavier feedback prompt — only when heavier selected, not during night, and throttle allows */}
@@ -120,8 +126,10 @@ export const ActivityVariant = ({
 
       {/* Contribution prompt — only when there's something to share */}
       {distilledText ? (
-        <Animated.View
-          entering={FadeInDown.delay(500).duration(400)}
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 500, easing: [0.455, 0.03, 0.515, 0.955] }}
           className="mb-8 border-t border-border pt-6"
         >
           <AppText className="mb-3 text-sm font-light leading-6 text-muted">
@@ -175,12 +183,17 @@ export const ActivityVariant = ({
               </Pressable>
             </View>
           )}
-        </Animated.View>
+        </EaseView>
       ): null}
 
       {/* Forward action — only in toggle mode */}
       {contributeByDefault && distilledText ? (
-        <Animated.View entering={FadeInDown.delay(600).duration(400)} className="mb-4">
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+          className="mb-4"
+        >
           <Pressable
             onPress={() => {
               if (shareToggled) {
@@ -195,16 +208,20 @@ export const ActivityVariant = ({
               Done
             </AppText>
           </Pressable>
-        </Animated.View>
+        </EaseView>
       ) : null}
 
-      <Animated.View entering={FadeIn.delay(700).duration(400)}>
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 400, delay: 700, easing: [0.455, 0.03, 0.515, 0.955] }}
+      >
         <LinkButton onPress={() => onHaveMore(undefined, selectedMood ?? undefined)} size="sm" className="self-start">
           <LinkButton.Label className="font-light text-accent/60">
             Have more? I&apos;m here.
           </LinkButton.Label>
         </LinkButton>
-      </Animated.View>
+      </EaseView>
 
     </View>
     </ScrollView>

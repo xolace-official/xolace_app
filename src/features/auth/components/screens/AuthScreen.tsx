@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
+import { FadeIn } from 'react-native-reanimated';
 import { Button , Spinner, useThemeColor} from 'heroui-native';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useSignInWithGoogle } from '@clerk/expo/google';
@@ -164,8 +165,13 @@ export const AuthScreen = () => {
         }}
       >
         {/* Title */}
-        <Animated.View
-          entering={FadeInDown.delay(300).duration(800).springify().damping(20)}
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{
+            opacity: { type: 'timing', duration: 400, delay: 300, easing: [0.455, 0.03, 0.515, 0.955] },
+            transform: { type: 'spring', damping: 20, stiffness: 120, mass: 1, delay: 300 },
+          }}
         >
           <AppText
             className="text-foreground/90 text-[22px] leading-9"
@@ -173,13 +179,18 @@ export const AuthScreen = () => {
           >
             Let&apos;s keep your{'\n'}reflections safe.
           </AppText>
-        </Animated.View>
+        </EaseView>
 
         {/* Auth buttons */}
         <View style={{ gap: 12 }}>
           {/* Apple */}
-          <Animated.View
-            entering={FadeInDown.delay(600).duration(800).springify().damping(30)}
+          <EaseView
+            initialAnimate={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{
+              opacity: { type: 'timing', duration: 400, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] },
+              transform: { type: 'spring', damping: 30, stiffness: 120, mass: 1, delay: 600 },
+            }}
           >
             <Button
               onPress={handleAppleAuth}
@@ -197,11 +208,16 @@ export const AuthScreen = () => {
                 Continue with Apple
               </Button.Label>
             </Button>
-          </Animated.View>
+          </EaseView>
 
           {/* Google */}
-          <Animated.View
-            entering={FadeInDown.delay(750).duration(800).springify().damping(30)}
+          <EaseView
+            initialAnimate={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{
+              opacity: { type: 'timing', duration: 400, delay: 750, easing: [0.455, 0.03, 0.515, 0.955] },
+              transform: { type: 'spring', damping: 30, stiffness: 120, mass: 1, delay: 750 },
+            }}
           >
             <Button
               onPress={handleGoogleAuth}
@@ -219,7 +235,7 @@ export const AuthScreen = () => {
                 Continue with Google
               </Button.Label>
             </Button>
-          </Animated.View>
+          </EaseView>
         </View>
 
         {/* Privacy reassurance + terms */}

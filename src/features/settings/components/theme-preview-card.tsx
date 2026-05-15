@@ -1,5 +1,5 @@
 import { Pressable, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import type { ThemeEntry } from '@/src/lib/themes';
 
@@ -145,13 +145,17 @@ export const ThemePreviewCard = ({ theme, isActive, onPress }: Props) => {
       >
         <AppText className="text-xs text-foreground/70">{theme.name}</AppText>
         {isActive && (
-          <Animated.View entering={FadeIn.duration(200)}>
+          <EaseView
+            initialAnimate={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+          >
             <AppText
               style={{ fontSize: 9, color: preview.accent }}
             >
               · Active
             </AppText>
-          </Animated.View>
+          </EaseView>
         )}
       </View>
     </Pressable>

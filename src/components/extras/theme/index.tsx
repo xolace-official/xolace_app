@@ -13,7 +13,7 @@ import { useThemeColor } from 'heroui-native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { useAppTheme } from '@/src/context/app-theme-context';
 
 import { CardContent } from '@/src/components/examples/themes-content/card-content';
@@ -77,8 +77,10 @@ const ThemeCircle: React.FC<{
       <View style={{ position: 'relative', padding: 4 }}>
         {/* Active ring */}
         {isActive && (
-          <Animated.View
-            entering={FadeIn.duration(200)}
+          <EaseView
+            initialAnimate={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
             style={{
               position: 'absolute',
               width: 68,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Pressable } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
 import { AppText } from '@/src/components/shared/app-text';
@@ -9,16 +9,28 @@ import { FounderWelcomeSheet } from '@/src/features/founder-welcome/components/f
 
 function NotificationBanner({ content, onDismiss }: { content: string; onDismiss: () => void }) {
   const insets = useSafeAreaInsets();
+  const [visible, setVisible] = useState(true);
+
+  const handleDismiss = () => {
+    setVisible(false);
+  };
 
   useEffect(() => {
-    const timer = setTimeout(onDismiss, 8_000);
+    const timer = setTimeout(handleDismiss, 8_000);
     return () => clearTimeout(timer);
-  }, [onDismiss]);
+  }, []);
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(400)}
-      exiting={FadeOut.duration(300)}
+    <EaseView
+      initialAnimate={{ opacity: 0 }}
+      animate={{ opacity: visible ? 1 : 0 }}
+      transition={visible
+        ? { type: 'timing', duration: 400, easing: [0.455, 0.03, 0.515, 0.955] }
+        : { type: 'timing', duration: 300, easing: [0.455, 0.03, 0.515, 0.955] }
+      }
+      onTransitionEnd={({ finished }) => {
+        if (finished && !visible) onDismiss();
+      }}
       style={{
         position: 'absolute',
         top: insets.top + 8,
@@ -31,7 +43,7 @@ function NotificationBanner({ content, onDismiss }: { content: string; onDismiss
       className={"rounded-2xl"}
     >
       <Pressable
-        onPress={onDismiss}
+        onPress={handleDismiss}
         className="bg-surface border border-border/40 rounded-2xl px-4 py-3"
       >
         <AppText className="text-[11px] uppercase tracking-wide text-foreground/40 mb-0.5">
@@ -44,7 +56,7 @@ function NotificationBanner({ content, onDismiss }: { content: string; onDismiss
           tap to dismiss
         </AppText>
       </Pressable>
-    </Animated.View>
+    </EaseView>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
 import { AppText } from '@/src/components/shared/app-text';
 import { playPathChoice } from '@/src/lib/haptics';
@@ -100,16 +100,24 @@ export const PathSelectionState = ({
       </AppText>
 
       <View className="gap-8">
-        <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <Pressable onPress={handleSolo}>
             <AppText className="text-lg text-foreground">Sit with this</AppText>
             <AppText className="mt-1 text-sm text-foreground/30">
               A quiet space to breathe
             </AppText>
           </Pressable>
-        </Animated.View>
+        </EaseView>
 
-        <Animated.View entering={FadeInDown.delay(400).duration(400)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <Pressable onPress={handlePeers}>
             <AppText className="text-lg text-foreground">
               You&apos;re not alone
@@ -118,9 +126,13 @@ export const PathSelectionState = ({
               See what others have shared
             </AppText>
           </Pressable>
-        </Animated.View>
+        </EaseView>
 
-        <Animated.View entering={FadeInDown.delay(600).duration(400)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <Pressable onPress={handleExit}>
             <AppText className="text-lg text-foreground">
               I just needed to say it
@@ -129,7 +141,7 @@ export const PathSelectionState = ({
               Return to the beginning
             </AppText>
           </Pressable>
-        </Animated.View>
+        </EaseView>
       </View>
     </View>
   );

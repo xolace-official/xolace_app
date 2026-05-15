@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { BottomSheet } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
@@ -51,8 +51,10 @@ export function SwapSheet({
           backgroundClassName="bg-background"
           handleIndicatorClassName="bg-foreground/30"
         >
-          <Animated.View
-            entering={FadeIn.duration(300)}
+          <EaseView
+            initialAnimate={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 300, easing: [0.455, 0.03, 0.515, 0.955] }}
             className="gap-4 px-6 pb-8 pt-2"
           >
             <AppText className="text-center text-base font-medium text-foreground/60">
@@ -78,7 +80,7 @@ export function SwapSheet({
                 className="border border-accent/20 bg-transparent"
               />
             )}
-          </Animated.View>
+          </EaseView>
         </BottomSheet.Content>
       </BottomSheet.Portal>
     </BottomSheet>

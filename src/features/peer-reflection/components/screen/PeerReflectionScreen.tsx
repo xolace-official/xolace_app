@@ -3,7 +3,7 @@ import { ScrollView, View } from "react-native";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { EaseView } from "react-native-ease/uniwind";
 import { useQuery, useMutation } from "convex/react";
 import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
@@ -145,12 +145,14 @@ export const PeerReflectionScreen = () => {
         <AppText className="text-center text-base text-foreground/40">
           No reflections yet. You&apos;re among the first.
         </AppText>
-        <Animated.View
-          entering={FadeIn.delay(400).duration(400)}
+        <EaseView
+          initialAnimate={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
           className="mt-8"
         >
           <PillButton label="Done" onPress={handleDone} />
-        </Animated.View>
+        </EaseView>
       </View>
     );
   }
@@ -164,7 +166,12 @@ export const PeerReflectionScreen = () => {
         contentContainerStyle={{ padding: 24, paddingBottom: 40, gap: 12 }}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeIn.duration(500)} className="mb-4">
+        <EaseView
+          initialAnimate={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 500, easing: [0.455, 0.03, 0.515, 0.955] }}
+          className="mb-4"
+        >
           <AppText className="text-lg leading-7 text-foreground/50">
             Others have felt{"\n"}something like this.
           </AppText>
@@ -174,7 +181,7 @@ export const PeerReflectionScreen = () => {
               {"\n"}These are recent reflections from others — and yours could be the first of its kind here.
             </AppText>
           )}
-        </Animated.View>
+        </EaseView>
 
         {reflections.map((reflection, i) => (
           <ReflectionCard
@@ -213,15 +220,17 @@ export const PeerReflectionScreen = () => {
         ))}
       </ScrollView>
 
-      <Animated.View
-        entering={FadeIn.delay(800).duration(400)}
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 400, delay: 800, easing: [0.455, 0.03, 0.515, 0.955] }}
         className="items-center gap-3 pb-2 pt-1"
       >
         <PillButton label="Done" onPress={handleDone} />
         <AppText className="text-xs text-foreground/25 text-center pb-2">
           Long press any card to report
         </AppText>
-      </Animated.View>
+      </EaseView>
 
       <ReportSheet
         isOpen={!!reportTarget}
