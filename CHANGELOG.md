@@ -25,7 +25,7 @@ All notable changes to Xolace are documented here.
 
 ---
 
-## [1.1.0.0] - App Store release (3d ago)
+## [1.1.0.0] - App Store release (2026-05-12)
 
 ### Added
 

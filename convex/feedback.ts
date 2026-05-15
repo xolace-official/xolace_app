@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuth } from "./lib/auth";
+import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
 
 const THROTTLE_MS = 24 * 60 * 60 * 1000;
@@ -46,15 +46,9 @@ export const submit = mutation({
     selectedOption: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
-
-    // Verify session ownership when a sessionId is supplied
-    if (args.sessionId) {
-      const session = await ctx.db.get(args.sessionId);
-      if (!session || session.emotionalProfileId !== profile._id) {
-        throw new Error("Session does not belong to this user");
-      }
-    }
+    const { profile } = args.sessionId
+      ? await requireSessionOwnership(ctx, args.sessionId)
+      : await requireAuth(ctx);
 
     // Per-type required field validation
     if (args.type === "general") {

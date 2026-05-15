@@ -1020,6 +1020,7 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_profile", ["emotionalProfileId"])
+    .index("by_profile_and_created", ["emotionalProfileId", "createdAt"])
     .index("by_profile_and_type_and_created", ["emotionalProfileId", "type", "createdAt"]),
 
   // ===========================================================

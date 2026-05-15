@@ -26,12 +26,12 @@ export const GaveUpFeedbackCard = ({ sessionId }: Props) => {
   if (submitted) return null;
 
   const handleOption = (key: string) => {
-    setSubmitted(true);
     submitFeedback({
       type: 'gave_up',
       sessionId,
       selectedOption: key,
     }).then(() => {
+      setSubmitted(true);
       posthog.capture('feedback_submitted', {
         type: 'gave_up',
         has_text: false,

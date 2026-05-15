@@ -36,7 +36,7 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
       setShowTextField(true);
       return;
     }
-    setSubmitted(true);
+    if (!sessionId) return;
     try {
       await submitFeedback({
         type: 'mood_heavier',
@@ -48,13 +48,14 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         has_text: false,
         has_option: true,
       });
+      setSubmitted(true);
     } catch (e) {
       console.error('mood_heavier feedback failed', e);
     }
   };
 
   const handleSomethingElseSubmit = async () => {
-    setSubmitted(true);
+    if (!sessionId) return;
     const text = somethingElseText.trim();
     try {
       await submitFeedback({
@@ -68,6 +69,7 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         has_text: !!text,
         has_option: true,
       });
+      setSubmitted(true);
     } catch (e) {
       console.error('mood_heavier feedback failed', e);
     }

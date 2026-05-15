@@ -81,7 +81,7 @@ export const FeedbackDialog = ({ isOpen, onOpenChange }: Props) => {
               placeholder="Tell us what you think..."
               maxLength={MAX_LENGTH}
               isDisabled={isSaving || sent}
-              className="min-h-[120] mb-1"
+              className="min-h-30 mb-1"
               accessibilityHint="Up to 1000 characters"
             />
 
