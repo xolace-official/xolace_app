@@ -48,6 +48,14 @@ export const submit = mutation({
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
+    // Verify session ownership when a sessionId is supplied
+    if (args.sessionId) {
+      const session = await ctx.db.get(args.sessionId);
+      if (!session || session.emotionalProfileId !== profile._id) {
+        throw new Error("Session does not belong to this user");
+      }
+    }
+
     // Per-type required field validation
     if (args.type === "general") {
       if (!args.text?.trim()) throw new Error("Text is required for general feedback");

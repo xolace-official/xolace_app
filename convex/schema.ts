@@ -1015,7 +1015,7 @@ export default defineSchema({
     // general: max 1000 chars; mood_heavier: max 300 chars; mirror_miss: max 100 chars
     text: v.optional(v.string()),
     // gave_up: "mirror_kept_missing" | "figured_it_out" | "needed_to_vent"
-    // mood_heavier "Something else": "something_else"
+    // mood_heavier: "mirror_missed" | "life_is_heavy" | "something_else"
     selectedOption: v.optional(v.string()),
     createdAt: v.number(),
   })
