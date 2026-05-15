@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
-import { STEP_BASE_DELAY, STEP_DURATION, STEP_INTERVAL } from '@/src/features/onboarding/frame-steps';
+import { STEP_BASE_DELAY, STEP_INTERVAL } from '@/src/features/onboarding/frame-steps';
 import type { FrameStep } from '@/src/features/onboarding/frame-steps';
 
 type Props = {
