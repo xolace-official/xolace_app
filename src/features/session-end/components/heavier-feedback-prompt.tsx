@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, TextInput } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
+import type { TransitionEndEvent } from 'react-native-ease';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -35,9 +36,13 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
 
   if (!mounted) return null;
 
-  const dismiss = () => {
-    setExiting(true);
-    setTimeout(() => setMounted(false), EXIT_DURATION + 50);
+  const dismiss = () => setExiting(true);
+
+  const handleTransitionEnd = ({ finished }: TransitionEndEvent) => {
+    if (finished) {
+      setMounted(false);
+      setExiting(false);
+    }
   };
 
   const handleOption = async (key: OptionKey) => {
@@ -94,6 +99,7 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         ? { type: 'timing', duration: EXIT_DURATION, easing: 'easeIn' }
         : { type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }
       }
+      onTransitionEnd={exiting ? handleTransitionEnd : undefined}
     >
       <View className="mx-5 mt-4 p-4 rounded-2xl bg-surface border border-overlay/20">
         <AppText className="text-sm text-foreground/60 mb-3">
