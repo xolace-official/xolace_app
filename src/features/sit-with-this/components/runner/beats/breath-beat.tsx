@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { PacedOrb, type PacedOrbHandle, type BreathPattern } from '@/src/features/sit-with-this/components/paced-orb';
 import { playBreathPhase } from '@/src/lib/haptics';
@@ -42,8 +42,10 @@ export function BreathBeat({
   }, []);
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(600)}
+    <EaseView
+      initialAnimate={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ type: 'timing', duration: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
       className="items-center gap-10"
     >
       <PacedOrb ref={orbRef} reducedMotion={reducedMotion} />
@@ -53,6 +55,6 @@ export function BreathBeat({
       >
         {content}
       </AppText>
-    </Animated.View>
+    </EaseView>
   );
 }

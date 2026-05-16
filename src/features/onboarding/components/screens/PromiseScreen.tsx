@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeInDown, useSharedValue } from 'react-native-reanimated';
+import { useSharedValue } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
 
 import { AppText } from '@/src/components/shared/app-text';
@@ -42,8 +43,13 @@ export const PromiseScreen = () => {
 
       {/* Promise content — bottom portion */}
       <View style={{ flex: 4, justifyContent: 'space-between', paddingHorizontal: 32 }}>
-        <Animated.View
-          entering={FadeInDown.delay(300).duration(800).springify().damping(20)}
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{
+            opacity: { type: 'timing', duration: 400, delay: 300, easing: [0.455, 0.03, 0.515, 0.955] },
+            transform: { type: 'spring', damping: 20, stiffness: 120, mass: 1, delay: 300 },
+          }}
           style={{ gap: 20, paddingTop: 32 }}
         >
           <AppText
@@ -60,10 +66,15 @@ export const PromiseScreen = () => {
             No one sees it. No one judges it.{'\n'}
             It&apos;s yours.
           </AppText>
-        </Animated.View>
+        </EaseView>
 
-        <Animated.View
-          entering={FadeInDown.delay(600).duration(800).springify().damping(20)}
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{
+            opacity: { type: 'timing', duration: 400, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] },
+            transform: { type: 'spring', damping: 20, stiffness: 120, mass: 1, delay: 600 },
+          }}
           style={{ paddingBottom: 24 }}
         >
           <Pressable
@@ -83,7 +94,7 @@ export const PromiseScreen = () => {
               I&apos;d like that
             </AppText>
           </Pressable>
-        </Animated.View>
+        </EaseView>
       </View>
     </View>
   );

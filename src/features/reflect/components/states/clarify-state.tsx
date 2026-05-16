@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, TextInput } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { TextArea, LinkButton, useThemeColor } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useMutation } from 'convex/react';
@@ -59,7 +59,12 @@ export const ClarifyState = ({
         keyboardVerticalOffset={50}
         className="flex-1 px-6 pt-8"
       >
-        <Animated.View entering={FadeIn.duration(300)} className="mb-2">
+        <EaseView
+          initialAnimate={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 300, easing: [0.455, 0.03, 0.515, 0.955] }}
+          className="mb-2"
+        >
           <LinkButton
             onPress={() => { playSoftPress(); dispatch({ type: 'BACK_TO_MIRROR' }); }}
             size="sm"
@@ -67,18 +72,26 @@ export const ClarifyState = ({
           >
             <LinkButton.Label className="text-foreground/40">← Back to mirror</LinkButton.Label>
           </LinkButton>
-        </Animated.View>
-        <Animated.View entering={FadeIn.duration(600)}>
+        </EaseView>
+        <EaseView
+          initialAnimate={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <AppText className="mb-6 text-center text-base italic leading-7 text-foreground/30">
             {previousMirror}
           </AppText>
-        </Animated.View>
+        </EaseView>
 
-        <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <AppText className="mb-4 text-center text-lg text-foreground">
             What didn&apos;t land right?
           </AppText>
-        </Animated.View>
+        </EaseView>
 
         <View className="flex-1">
           <TextArea
@@ -92,7 +105,11 @@ export const ClarifyState = ({
             className="min-h-[120] border-0 bg-transparent text-base text-foreground"
           />
 
-          <Animated.View entering={FadeIn.delay(200).duration(300)}>
+          <EaseView
+            initialAnimate={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 300, delay: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+          >
             <TextInput
               placeholder="What was off? (optional)"
               accessibilityLabel="Tell us what was off (optional)"
@@ -107,7 +124,7 @@ export const ClarifyState = ({
                 paddingHorizontal: 4,
               }}
             />
-          </Animated.View>
+          </EaseView>
         </View>
 
         <View className="items-center pb-4 pt-2">

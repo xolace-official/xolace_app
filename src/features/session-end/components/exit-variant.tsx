@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
 import { LinkButton } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
@@ -21,7 +21,11 @@ export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
 
   return (
     <View className="flex-1 justify-center px-8">
-      <Animated.View entering={FadeIn.duration(600)}>
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+      >
         <AppText className="mb-2 font-serif text-xl text-foreground">
           {isNight ? NIGHT_SESSION_END_EXIT : 'Heard.'}
         </AppText>
@@ -38,15 +42,19 @@ export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
             {'\n'}whenever you want to come back to it.
           </AppText>
         </View>
-      </Animated.View>
+      </EaseView>
 
-      <Animated.View entering={FadeIn.delay(400).duration(400)}>
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+      >
         <LinkButton onPress={onHaveMore} size="sm" className="self-start">
           <LinkButton.Label className="font-light text-accent/60">
             Have more? I&apos;m here.
           </LinkButton.Label>
         </LinkButton>
-      </Animated.View>
+      </EaseView>
     </View>
   );
 };

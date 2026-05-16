@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { ScrollView, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { Chip, LinkButton, PressableFeedback, useThemeColor } from 'heroui-native';
 import { SymbolView } from 'expo-symbols';
 import { AppText } from '@/src/components/shared/app-text';
@@ -44,8 +44,10 @@ export const MirrorState = ({
     <View className="flex-1 justify-center px-6">
       {/* Texture pills from scaffold */}
       {showTextures && (
-        <Animated.View
-          entering={FadeIn.duration(400)}
+        <EaseView
+          initialAnimate={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
           className="mb-5 flex-row flex-wrap gap-1.5"
         >
           {selectedTextures.map((word) => (
@@ -59,10 +61,15 @@ export const MirrorState = ({
               <Chip.Label>{word}</Chip.Label>
             </Chip>
           ))}
-        </Animated.View>
+        </EaseView>
       )}
 
-      <Animated.View entering={FadeIn.duration(600)} className="mb-3 flex-row items-center gap-3">
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+        className="mb-3 flex-row items-center gap-3"
+      >
         <AppText className="text-xs uppercase tracking-widest text-accent">
           The Mirror
         </AppText>
@@ -87,7 +94,7 @@ export const MirrorState = ({
             />
           </PressableFeedback>
         )}
-      </Animated.View>
+      </EaseView>
 
       <ScrollView
         style={{ flexGrow: 0, maxHeight: '60%' }}
@@ -100,29 +107,41 @@ export const MirrorState = ({
       </ScrollView>
 
       <View className="mt-14 gap-6">
-        <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <LinkButton onPress={() => { playAffirmativePress(); onThatsIt(); }} size="lg" className="self-start">
             <LinkButton.Label className="font-semibold text-accent">
               That&apos;s it
             </LinkButton.Label>
           </LinkButton>
-        </Animated.View>
+        </EaseView>
 
-        <Animated.View entering={FadeInDown.delay(400).duration(400)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <LinkButton onPress={() => { playSoftPress(); onNotQuite(); }} size="md" className="self-start">
             <LinkButton.Label className="text-foreground/50">
               Not quite
             </LinkButton.Label>
           </LinkButton>
-        </Animated.View>
+        </EaseView>
 
-        <Animated.View entering={FadeInDown.delay(600).duration(400)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <LinkButton onPress={() => { playSoftPress(); onSayMore(); }} size="md" className="self-start">
             <LinkButton.Label className="text-foreground/50">
               Say more
             </LinkButton.Label>
           </LinkButton>
-        </Animated.View>
+        </EaseView>
       </View>
     </View>
   );

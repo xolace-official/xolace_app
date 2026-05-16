@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
-import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
+import { EaseView } from "react-native-ease/uniwind";
 import { Separator, TagGroup } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/shared/pill-button";
@@ -82,6 +82,17 @@ export const IdleState = ({
   };
 
   const hasSelections = selectedTextures.length > 0;
+  const [buttonVisible, setButtonVisible] = useState(hasSelections);
+  const [buttonMounted, setButtonMounted] = useState(hasSelections);
+
+  useEffect(() => {
+    if (hasSelections) {
+      setButtonMounted(true);
+      setButtonVisible(true);
+    } else {
+      setButtonVisible(false);
+    }
+  }, [hasSelections]);
 
   return (
     <View className="flex-1 px-6">
@@ -141,14 +152,21 @@ export const IdleState = ({
           </TagGroup.List>
         </TagGroup>
 
-        {hasSelections && (
-          <Animated.View
-            entering={FadeInDown.duration(300)}
-            exiting={FadeOut.duration(200)}
+        {buttonMounted && (
+          <EaseView
+            initialAnimate={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: buttonVisible ? 1 : 0, translateY: buttonVisible ? 0 : 20 }}
+            transition={buttonVisible
+              ? { type: 'timing', duration: 300, easing: [0.455, 0.03, 0.515, 0.955] }
+              : { type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }
+            }
+            onTransitionEnd={({ finished }) => {
+              if (finished && !buttonVisible) setButtonMounted(false);
+            }}
             className="mt-5"
           >
             <PillButton label="Let it out" onPress={onScaffoldSubmit} />
-          </Animated.View>
+          </EaseView>
         )}
       </View>
 

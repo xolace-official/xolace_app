@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeOut } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -19,11 +19,12 @@ type Props = {
 };
 
 export const GaveUpFeedbackCard = ({ sessionId }: Props) => {
-  const [submitted, setSubmitted] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [mounted, setMounted] = useState(true);
   const submitFeedback = useMutation(api.feedback.submit);
   const posthog = usePostHog();
 
-  if (submitted) return null;
+  if (!mounted) return null;
 
   const handleOption = (key: string) => {
     submitFeedback({
@@ -31,7 +32,7 @@ export const GaveUpFeedbackCard = ({ sessionId }: Props) => {
       sessionId,
       selectedOption: key,
     }).then(() => {
-      setSubmitted(true);
+      setVisible(false);
       posthog.capture('feedback_submitted', {
         type: 'gave_up',
         has_text: false,
@@ -41,7 +42,13 @@ export const GaveUpFeedbackCard = ({ sessionId }: Props) => {
   };
 
   return (
-    <Animated.View exiting={FadeOut.duration(200)}>
+    <EaseView
+      animate={{ opacity: visible ? 1 : 0 }}
+      transition={{ type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+      onTransitionEnd={({ finished }) => {
+        if (finished && !visible) setMounted(false);
+      }}
+    >
       <View className="mx-5 mt-4 p-4 rounded-2xl bg-surface border border-overlay/20">
         <AppText className="text-sm text-foreground/60 mb-3">
           What happened?
@@ -60,6 +67,6 @@ export const GaveUpFeedbackCard = ({ sessionId }: Props) => {
           ))}
         </View>
       </View>
-    </Animated.View>
+    </EaseView>
   );
 };

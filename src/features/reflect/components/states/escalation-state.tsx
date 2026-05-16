@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Linking, Pressable, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
 
@@ -26,11 +26,15 @@ function ResourceItem({ resource, index }: { resource: string | Resource; index:
 
   if (typeof resource === 'string') {
     return (
-      <Animated.View entering={FadeInDown.delay(delay).duration(500)}>
+      <EaseView
+        initialAnimate={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 500, delay, easing: [0.455, 0.03, 0.515, 0.955] }}
+      >
         <View className="rounded-xl border border-foreground/10 bg-surface px-4 py-3.5">
           <AppText className="text-sm font-light text-foreground/70">{resource}</AppText>
         </View>
-      </Animated.View>
+      </EaseView>
     );
   }
 
@@ -73,7 +77,11 @@ function ResourceItem({ resource, index }: { resource: string | Resource; index:
   );
 
   return (
-    <Animated.View entering={FadeInDown.delay(delay).duration(500)}>
+    <EaseView
+      initialAnimate={{ opacity: 0, translateY: 20 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'timing', duration: 500, delay, easing: [0.455, 0.03, 0.515, 0.955] }}
+    >
       {isTappable ? (
         <Pressable onPress={handlePress} accessibilityRole="button" accessibilityLabel={resource.label}>
           {inner}
@@ -81,7 +89,7 @@ function ResourceItem({ resource, index }: { resource: string | Resource; index:
       ) : (
         inner
       )}
-    </Animated.View>
+    </EaseView>
   );
 }
 
@@ -91,14 +99,19 @@ export const EscalationState = ({ mirror, resources, onEngage, onDismiss, onCont
   if (phase === 'resources') {
     return (
       <View className="flex-1 justify-center px-7">
-        <Animated.View entering={FadeIn.duration(400)} className="mb-5">
+        <EaseView
+          initialAnimate={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+          className="mb-5"
+        >
           <AppText className="mb-1 text-xs uppercase tracking-widest text-foreground/20">
             Support resources
           </AppText>
           <AppText className="text-base font-light leading-7 text-foreground/60">
             These are here whenever you need them.
           </AppText>
-        </Animated.View>
+        </EaseView>
 
         <View className="mb-6 gap-2.5">
           {(resources ?? []).map((resource, i) => (
@@ -106,7 +119,11 @@ export const EscalationState = ({ mirror, resources, onEngage, onDismiss, onCont
           ))}
         </View>
 
-        <Animated.View entering={FadeInDown.delay(400 + (resources?.length ?? 0) * 150).duration(500)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 500, delay: 400 + (resources?.length ?? 0) * 150, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <Pressable
             onPress={async () => { playAffirmativePress(); await onContinue(); }}
             accessibilityRole="button"
@@ -115,24 +132,30 @@ export const EscalationState = ({ mirror, resources, onEngage, onDismiss, onCont
           >
             <AppText className="text-sm text-warning">I&apos;ve seen these</AppText>
           </Pressable>
-        </Animated.View>
+        </EaseView>
       </View>
     );
   }
 
   return (
     <View className="flex-1 justify-center px-7">
-      <Animated.View entering={FadeIn.delay(200).duration(600)}>
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 600, delay: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+      >
         <AppText className="mb-2 text-xs uppercase tracking-widest text-foreground/20">
           Your mirror
         </AppText>
         <AppText className="mb-6 text-base italic leading-7 text-foreground/30" selectable>
           &ldquo;{mirror}&rdquo;
         </AppText>
-      </Animated.View>
+      </EaseView>
 
-      <Animated.View
-        entering={FadeIn.delay(600).duration(800)}
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 800, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
         className="mb-8 border-l-2 border-warning pl-4"
       >
         <AppText className="mb-3 text-base font-light leading-7 text-foreground">
@@ -142,10 +165,14 @@ export const EscalationState = ({ mirror, resources, onEngage, onDismiss, onCont
           There are people who are trained specifically for moments like this.
           Would you like me to help you find the right support?
         </AppText>
-      </Animated.View>
+      </EaseView>
 
       <View className="gap-3">
-        <Animated.View entering={FadeInDown.delay(1200).duration(500)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 500, delay: 1200, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <Pressable
             onPress={async () => {
               playAffirmativePress();
@@ -158,9 +185,13 @@ export const EscalationState = ({ mirror, resources, onEngage, onDismiss, onCont
           >
             <AppText className="text-sm text-warning">Yes, show me some resources</AppText>
           </Pressable>
-        </Animated.View>
+        </EaseView>
 
-        <Animated.View entering={FadeInDown.delay(1400).duration(500)}>
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 500, delay: 1400, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <Pressable
             onPress={async () => { playSoftPress(); await onDismiss(); }}
             accessibilityRole="button"
@@ -171,7 +202,7 @@ export const EscalationState = ({ mirror, resources, onEngage, onDismiss, onCont
               Not right now, but thank you
             </AppText>
           </Pressable>
-        </Animated.View>
+        </EaseView>
       </View>
     </View>
   );

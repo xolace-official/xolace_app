@@ -1,5 +1,5 @@
 import { ScrollView, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { SettingsRow } from '@/src/features/settings/components/settings-row';
 import { ThemePreviewCard } from '@/src/features/settings/components/theme-preview-card';
@@ -42,7 +42,12 @@ export const AppearanceScreen = () => {
       contentContainerStyle={{ paddingTop: 16, paddingBottom: 48 }}
     >
       {/* ── FREE THEMES ─────────────────────────────────────────── */}
-      <Animated.View entering={FadeInDown.duration(300)} className="mb-8">
+      <EaseView
+        initialAnimate={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 300, easing: [0.455, 0.03, 0.515, 0.955] }}
+        className="mb-8"
+      >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -57,7 +62,7 @@ export const AppearanceScreen = () => {
             />
           ))}
         </ScrollView>
-      </Animated.View>
+      </EaseView>
 
       {/* ── THE MIRROR (premium) ─────────────────────────────────── */}
       {/*<Animated.View entering={FadeInDown.delay(80).duration(300)} className="mb-8">
@@ -88,8 +93,10 @@ export const AppearanceScreen = () => {
       </Animated.View>*/}
 
       {/* ── NIGHT MODE ───────────────────────────────────────────── */}
-      <Animated.View
-        entering={FadeInDown.delay(160).duration(300)}
+      <EaseView
+        initialAnimate={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 300, delay: 160, easing: [0.455, 0.03, 0.515, 0.955] }}
         className="mx-5 rounded-2xl bg-surface overflow-hidden"
       >
         <SettingsRow
@@ -104,7 +111,7 @@ export const AppearanceScreen = () => {
             Shifts the theme and words to match the rawer emotional register of late-night sessions.
           </AppText>
         </View>
-      </Animated.View>
+      </EaseView>
     </ScrollView>
   );
 };

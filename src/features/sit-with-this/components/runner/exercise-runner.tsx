@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
 import { PreRollCard } from '@/src/features/sit-with-this/components/pre-roll-card';
@@ -85,8 +85,10 @@ export function ExerciseRunner({
           onComplete={handleBeatComplete}
         />
         {onSwap && (
-          <Animated.View
-            entering={FadeIn.delay(3000).duration(600)}
+          <EaseView
+            initialAnimate={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 600, delay: 3000, easing: [0.455, 0.03, 0.515, 0.955] }}
             className="absolute bottom-8"
           >
             <AppText
@@ -95,7 +97,7 @@ export function ExerciseRunner({
             >
               Something different
             </AppText>
-          </Animated.View>
+          </EaseView>
         )}
       </View>
     );
@@ -103,31 +105,41 @@ export function ExerciseRunner({
 
   if (phase.kind === 'close') {
     return (
-      <Animated.View
-        entering={FadeIn.duration(600)}
+      <EaseView
+        initialAnimate={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
         className="flex-1 items-center justify-center gap-8 px-8"
       >
         <AppText className="text-center text-2xl font-semibold text-foreground">
           You stayed.
         </AppText>
         {phase.doneEnabled ? (
-          <Animated.View entering={FadeIn.duration(400)}>
+          <EaseView
+            initialAnimate={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+          >
             <PillButton label="Done" onPress={() => dispatch({ type: 'DONE' })} />
-          </Animated.View>
+          </EaseView>
         ) : (
           <View style={{ opacity: 0 }}>
             <PillButton label="Done" onPress={() => {}} disabled />
           </View>
         )}
-        <Animated.View entering={FadeIn.delay(400).duration(400)}>
+        <EaseView
+          initialAnimate={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+        >
           <AppText
             className="text-center text-sm text-foreground/40"
             onPress={onExitEarly}
           >
             Leave early
           </AppText>
-        </Animated.View>
-      </Animated.View>
+        </EaseView>
+      </EaseView>
     );
   }
 

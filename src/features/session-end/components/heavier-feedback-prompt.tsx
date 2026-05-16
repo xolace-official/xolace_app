@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { View, TextInput } from 'react-native';
-import Animated, { FadeInDown, FadeOut, FadeIn } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease/uniwind';
+import type { TransitionEndEvent } from 'react-native-ease';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
 import { usePostHog } from 'posthog-react-native';
-import { useThemeColor, PressableFeedback } from 'heroui-native';
+import { useThemeColor, PressableFeedback, useToast } from 'heroui-native';
 
 const OPTIONS = [
   { key: 'mirror_missed', label: 'The mirror missed' },
@@ -20,16 +21,29 @@ type Props = {
   sessionId?: Id<'sessions'>;
 };
 
+const EXIT_DURATION = 250;
+
 export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
   const [showTextField, setShowTextField] = useState(false);
   const [somethingElseText, setSomethingElseText] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [mounted, setMounted] = useState(true);
+  const [exiting, setExiting] = useState(false);
 
   const submitFeedback = useMutation(api.feedback.submit);
   const posthog = usePostHog();
+  const { toast } = useToast();
   const foregroundMuted = useThemeColor('foreground') as string;
 
-  if (submitted) return null;
+  if (!mounted) return null;
+
+  const dismiss = () => setExiting(true);
+
+  const handleTransitionEnd = ({ finished }: TransitionEndEvent) => {
+    if (finished) {
+      setMounted(false);
+      setExiting(false);
+    }
+  };
 
   const handleOption = async (key: OptionKey) => {
     if (key === 'something_else') {
@@ -48,9 +62,10 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         has_text: false,
         has_option: true,
       });
-      setSubmitted(true);
-    } catch (e) {
-      console.error('mood_heavier feedback failed', e);
+      toast.show({ label: 'Thank you for sharing', description: 'We hear you.', variant: 'default' });
+      dismiss();
+    } catch {
+      toast.show({ label: 'Something went wrong', description: 'Your response wasn\'t saved.', variant: 'default' });
     }
   };
 
@@ -69,16 +84,22 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         has_text: !!text,
         has_option: true,
       });
-      setSubmitted(true);
-    } catch (e) {
-      console.error('mood_heavier feedback failed', e);
+      toast.show({ label: 'Thank you for sharing', description: 'We hear you.', variant: 'default' });
+      dismiss();
+    } catch {
+      toast.show({ label: 'Something went wrong', description: 'Your response wasn\'t saved.', variant: 'default' });
     }
   };
 
   return (
-    <Animated.View
-      entering={FadeInDown.delay(400).duration(400)}
-      exiting={FadeOut.duration(200)}
+    <EaseView
+      initialAnimate={{ opacity: 0, translateY: 20 }}
+      animate={{ opacity: exiting ? 0 : 1, translateY: exiting ? 10 : 0 }}
+      transition={exiting
+        ? { type: 'timing', duration: EXIT_DURATION, easing: 'easeIn' }
+        : { type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }
+      }
+      onTransitionEnd={exiting ? handleTransitionEnd : undefined}
     >
       <View className="mx-5 mt-4 p-4 rounded-2xl bg-surface border border-overlay/20">
         <AppText className="text-sm text-foreground/60 mb-3">
@@ -99,7 +120,12 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         </View>
 
         {showTextField && (
-          <Animated.View entering={FadeIn.duration(200)} className="mt-3">
+          <EaseView
+            initialAnimate={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+            className="mt-3"
+          >
             <TextInput
               placeholder="Anything you want us to know?"
               accessibilityLabel="Describe what happened"
@@ -123,9 +149,9 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
             >
               <AppText className="text-xs font-medium text-accent">Done</AppText>
             </PressableFeedback>
-          </Animated.View>
+          </EaseView>
         )}
       </View>
-    </Animated.View>
+    </EaseView>
   );
 };
