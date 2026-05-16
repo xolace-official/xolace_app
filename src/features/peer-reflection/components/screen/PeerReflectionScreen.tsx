@@ -175,7 +175,7 @@ export const PeerReflectionScreen = () => {
           <AppText className="text-lg leading-7 text-foreground/50">
             Others have felt{"\n"}something like this.
           </AppText>
-          {!isFallback && (
+          {isFallback && (
             <View className="mt-3 rounded-xl border border-warning/20 bg-warning/10 px-4 py-3">
               <AppText className="text-xs font-medium uppercase tracking-widest text-warning/70">
                 No close match found

@@ -6,7 +6,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
 import { usePostHog } from 'posthog-react-native';
-import { useThemeColor, PressableFeedback } from 'heroui-native';
+import { useThemeColor, PressableFeedback, useToast } from 'heroui-native';
 
 const OPTIONS = [
   { key: 'mirror_missed', label: 'The mirror missed' },
@@ -20,17 +20,25 @@ type Props = {
   sessionId?: Id<'sessions'>;
 };
 
+const EXIT_DURATION = 250;
+
 export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
   const [showTextField, setShowTextField] = useState(false);
   const [somethingElseText, setSomethingElseText] = useState('');
-  const [visible, setVisible] = useState(true);
   const [mounted, setMounted] = useState(true);
+  const [exiting, setExiting] = useState(false);
 
   const submitFeedback = useMutation(api.feedback.submit);
   const posthog = usePostHog();
+  const { toast } = useToast();
   const foregroundMuted = useThemeColor('foreground') as string;
 
   if (!mounted) return null;
+
+  const dismiss = () => {
+    setExiting(true);
+    setTimeout(() => setMounted(false), EXIT_DURATION + 50);
+  };
 
   const handleOption = async (key: OptionKey) => {
     if (key === 'something_else') {
@@ -49,9 +57,10 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         has_text: false,
         has_option: true,
       });
-      setVisible(false);
-    } catch (e) {
-      console.error('mood_heavier feedback failed', e);
+      toast.show({ label: 'Thank you for sharing', description: 'We hear you.', variant: 'default' });
+      dismiss();
+    } catch {
+      toast.show({ label: 'Something went wrong', description: 'Your response wasn\'t saved.', variant: 'default' });
     }
   };
 
@@ -70,23 +79,21 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
         has_text: !!text,
         has_option: true,
       });
-      setVisible(false);
-    } catch (e) {
-      console.error('mood_heavier feedback failed', e);
+      toast.show({ label: 'Thank you for sharing', description: 'We hear you.', variant: 'default' });
+      dismiss();
+    } catch {
+      toast.show({ label: 'Something went wrong', description: 'Your response wasn\'t saved.', variant: 'default' });
     }
   };
 
   return (
     <EaseView
       initialAnimate={{ opacity: 0, translateY: 20 }}
-      animate={{ opacity: visible ? 1 : 0, translateY: 0 }}
-      transition={visible
-        ? { type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }
-        : { type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }
+      animate={{ opacity: exiting ? 0 : 1, translateY: exiting ? 10 : 0 }}
+      transition={exiting
+        ? { type: 'timing', duration: EXIT_DURATION, easing: 'easeIn' }
+        : { type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }
       }
-      onTransitionEnd={({ finished }) => {
-        if (finished && !visible) setMounted(false);
-      }}
     >
       <View className="mx-5 mt-4 p-4 rounded-2xl bg-surface border border-overlay/20">
         <AppText className="text-sm text-foreground/60 mb-3">

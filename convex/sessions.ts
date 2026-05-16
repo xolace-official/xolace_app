@@ -190,15 +190,21 @@ export const completePath = mutation({
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
-    if (session.state !== "path_in_progress" && session.state !== "path_selected") {
+    if (
+      session.state !== "path_in_progress" &&
+      session.state !== "path_selected" &&
+      session.state !== "confirmed"
+    ) {
       throw new Error(`Cannot complete path in state "${session.state}"`);
     }
 
     const now = Date.now();
+    // A confirmed session was never path-selected, so the path was not completed.
+    const pathCompleted = session.state === "confirmed" ? false : args.pathCompleted;
 
     await ctx.db.patch(args.sessionId, {
       state: "completed",
-      pathCompleted: args.pathCompleted,
+      pathCompleted,
       contributedReflection: args.contributedReflection,
       ...(args.postSessionMood ? { postSessionMood: args.postSessionMood } : {}),
       completedAt: now,
