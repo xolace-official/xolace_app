@@ -66,7 +66,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       bundleIdentifier: getUniqueIdentifier(),
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        NSPhotoLibraryUsageDescription: "Xolace does not access your photo library. This permission is required by included SDKs."
+        NSPhotoLibraryUsageDescription: "Xolace does not access your photo library. This permission is required by included SDKs.",
+        LSApplicationQueriesSchemes: ['tel', 'mailto'],
       },
       privacyManifests: {
         NSPrivacyCollectedDataTypes: [
