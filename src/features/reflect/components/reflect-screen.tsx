@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, type ViewStyle, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { MorphLoader } from '@/src/components/shared/loader/morph/morph-loader';
 import { EaseView } from 'react-native-ease';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +23,7 @@ import { ErrorState } from '@/src/features/reflect/components/states/error-state
 import { SpaceNamePromptDialog } from '@/src/features/reflect/components/space-name-prompt-dialog';
 
 export const ReflectScreen = () => {
+  const router = useRouter();
   const {
     state,
     dispatch,
@@ -98,6 +100,7 @@ export const ReflectScreen = () => {
             onVoiceTap={startVoiceFromIdle}
             isRecording={isRecording}
             spaceName={context?.preferences?.spaceName}
+            onCrisisTap={() => router.push('/crisis-resources?from=idle_button')}
           />
         );
       case 'typing':

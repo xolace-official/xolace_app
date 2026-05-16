@@ -1,0 +1,91 @@
+import type { CountryCode, CountryData } from './types';
+
+export const LAST_UPDATED = '2026-05-16';
+
+// Resources are in display order; priority field documents the rank. Keep sorted when adding new entries.
+export const COUNTRY_RESOURCES: Record<CountryCode, CountryData> = {
+  GH: {
+    name: 'Ghana',
+    flag: '🇬🇭',
+    emergencyNumber: '112',
+    resources: [
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Suicide Hotline', value: '2332-444-71279' },
+      { type: 'phone', source: 'local_service', priority: 2, label: 'Police', value: '191' },
+      { type: 'phone', source: 'local_service', priority: 2, label: 'Ambulance', value: '193' },
+      { type: 'phone', source: 'local_service', priority: 3, label: 'DOVVSU (Domestic Violence)', value: '18555', description: 'Toll Free. Also: 055-100-0900' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'Stop Abuse Ghana', value: '0243-381-040' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'The Ark Foundation', value: '0243-777-773' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'GSHRDC', value: '0302-760-688', description: 'Gender Studies & Human Rights. Also: 0302-760-687' },
+      { type: 'phone', source: 'local_service', priority: 5, label: 'Ministry of Gender, Children & Social Protection', value: '0302-688-181', description: 'Also: 0302-688-187, 0302-688-184' },
+    ],
+  },
+  US: {
+    name: 'United States',
+    flag: '🇺🇸',
+    emergencyNumber: '911',
+    resources: [
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Suicide & Crisis Lifeline', value: '988' },
+      { type: 'text', source: 'text_support', priority: 1, label: 'Crisis Text Line', value: 'Text HOME to 741741' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'National Domestic Violence Hotline', value: '1-800-799-7233' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'Self-Harm Hotline', value: '1-800-366-8288' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'LGBT National Hotline', value: '1-888-843-4564' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'Trans Lifeline', value: '877-565-8860' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'TREVOR Crisis Hotline', value: '1-866-221-7044' },
+      { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Eating Disorders (NEDA)', value: '866-662-1235' },
+      { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Crisis Line — Anorexia & Bulimia', value: '1-800-233-4357' },
+      { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Alcohol & Drug Dependency Hope Line', value: '1-800-622-2255' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'Essential Local & Community Services', value: '211' },
+      { type: 'url', source: 'online_resource', priority: 5, label: 'Veterans Crisis Line', value: 'https://www.veteranscrisisline.net' },
+      { type: 'url', source: 'online_resource', priority: 5, label: 'Lifeline Crisis Chat (Live Messaging)', value: 'https://chat.988lifeline.org' },
+    ],
+  },
+  GB: {
+    name: 'United Kingdom',
+    flag: '🇬🇧',
+    emergencyNumber: '999',
+    resources: [
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Suicide Helpline UK', value: '0800-689-5652' },
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'CALM (Campaign Against Living Miserably)', value: '0800-58-58-58' },
+      { type: 'text', source: 'text_support', priority: 1, label: 'Crisis Text Line', value: 'Text SHOUT to 85258' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Self-Harm Hotline (Samaritans)', value: '116-123' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'NHS (Non-Emergency Help)', value: '111' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'National Domestic Abuse Helpline (24/7)', value: '0808-2000-247' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'Eating Disorder Adult Helpline', value: '0808-801-0677' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'ADFAM', value: '020-3817-9410', description: 'Families affected by drugs or alcohol' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'National Advice Service', value: '0300-5000-927' },
+    ],
+  },
+  AU: {
+    name: 'Australia',
+    flag: '🇦🇺',
+    emergencyNumber: '000',
+    resources: [
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Lifeline Australia', value: '13-11-14' },
+      { type: 'text', source: 'text_support', priority: 1, label: 'Lifeline Australia (SMS)', value: 'Text 0477-13-11-14' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Beyond Blue', value: '1300-224-636' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Suicide Callback Service', value: '1300-659-467' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: '1800RESPECT (Domestic Violence)', value: '1800-737-732' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'Kids Helpline', value: '1800-551-800' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'LGBTQ+ Crisis Hotline (QLife)', value: '1800-184-527' },
+      { type: 'phone', source: 'crisis_line', priority: 4, label: 'MensLine Australia', value: '1300-789-978' },
+      { type: 'phone', source: 'local_service', priority: 4, label: '13YARN (Indigenous Support)', value: '13-92-76', description: 'Culturally safe crisis support' },
+      { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Alcohol & Other Drugs Hotline', value: '1800-250-015' },
+    ],
+  },
+  CA: {
+    name: 'Canada',
+    flag: '🇨🇦',
+    emergencyNumber: '911',
+    resources: [
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Suicide Crisis Helpline', value: '988' },
+      { type: 'url', source: 'online_resource', priority: 1, label: 'Crisis Services Canada', value: 'https://www.crisisservicescanada.ca/en/' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Domestic Violence Helpline (Victim Link)', value: '604-875-0885', description: 'BC/Yukon. Toll Free TTY: 1-800-563-0808' },
+      { type: 'url', source: 'online_resource', priority: 2, label: 'Domestic Violence BC', value: 'https://www.domesticviolencebc.ca' },
+      { type: 'text', source: 'text_support', priority: 3, label: 'Kids Help Phone', value: 'Text 686868', description: 'Available 24/7 for youth' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'Trans Lifeline', value: '1-877-330-6366' },
+      { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Overdose Response Service', value: '1-888-688-6677' },
+      { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Eating Disorders (NEDA)', value: '866-662-1235' },
+      { type: 'url', source: 'online_resource', priority: 5, label: 'Canada Association for Suicide Prevention', value: 'https://suicideprevention.ca/resources/' },
+    ],
+  },
+};

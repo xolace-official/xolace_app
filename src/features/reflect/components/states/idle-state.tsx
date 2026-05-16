@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
+import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
-import { Separator, TagGroup } from "heroui-native";
+import { PressableFeedback, Separator, TagGroup, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/shared/pill-button";
 import { IdleMenu } from "@/src/features/idle-menu/menu";
@@ -34,6 +35,7 @@ type Props = {
   onVoiceTap: () => void;
   isRecording: boolean;
   spaceName?: string;
+  onCrisisTap: () => void;
 };
 
 export const IdleState = ({
@@ -46,8 +48,10 @@ export const IdleState = ({
   onVoiceTap,
   isRecording,
   spaceName,
+  onCrisisTap,
 }: Props) => {
   const { isNight } = useSessionMode();
+  const warningColor = useThemeColor('warning') as string;
   const TEXTURE_WORDS: readonly string[] = isNight
     ? NIGHT_TEXTURE_WORDS
     : DAY_TEXTURE_WORDS;
@@ -96,12 +100,29 @@ export const IdleState = ({
 
   return (
     <View className="flex-1 px-6">
-      <QuietReturnHeader
-        variant={variant}
-        isNight={isNight}
-        activeQuietReturn={activeQuietReturn}
-        spaceName={spaceName}
-      />
+      <View className="flex-row items-start justify-between pt-10 pb-4">
+        <QuietReturnHeader
+          variant={variant}
+          isNight={isNight}
+          activeQuietReturn={activeQuietReturn}
+          spaceName={spaceName}
+          className="flex-1 pt-0 pb-0"
+        />
+        <PressableFeedback
+          onPress={onCrisisTap}
+          accessibilityLabel="Open crisis resources"
+          hitSlop={8}
+        >
+          <View className="bg-warning/10 border border-warning/20 rounded-full px-3 py-1.5 flex-row items-center gap-1.5">
+            <SymbolView
+              name={{ ios: 'lifepreserver', android: 'sos', web: 'sos' }}
+              size={16}
+              tintColor={warningColor}
+            />
+            <AppText className="text-xs text-warning">Help</AppText>
+          </View>
+        </PressableFeedback>
+      </View>
 
       <Separator className="mb-0" />
 

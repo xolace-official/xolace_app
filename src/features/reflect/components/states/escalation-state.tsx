@@ -3,15 +3,7 @@ import { Linking, Pressable, View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
-
-type Resource = {
-  type: 'phone' | 'url' | 'text' | 'email';
-  source: 'crisis_line' | 'xolace_support' | 'text_support' | 'local_service' | 'online_resource';
-  priority: number;
-  label: string;
-  value: string;
-  description?: string;
-};
+import type { Resource } from '@/src/features/crisis-resources/types';
 
 type Props = {
   mirror: string;

@@ -16,6 +16,7 @@ type Props = {
   isNight: boolean;
   activeQuietReturn: QuietReturnTier | null;
   spaceName?: string;
+  className?: string;
 };
 
 function encouragementText(variant: UserVariant): string {
@@ -34,6 +35,7 @@ export const QuietReturnHeader = ({
   isNight,
   activeQuietReturn,
   spaceName,
+  className,
 }: Props) => {
   const headline = isNight
     ? NIGHT_HEADLINE
@@ -51,7 +53,7 @@ export const QuietReturnHeader = ({
     variant.kind === "active" && !!spaceName && !isNight && !activeQuietReturn;
 
   return (
-    <View className="pt-10 pb-4">
+    <View className={cn('pt-10 pb-4', className)}>
       {isSpaceNameActive ? (
         <View className="flex-row items-center gap-2">
           <View className="rounded-full bg-accent/15 px-3 py-1">
