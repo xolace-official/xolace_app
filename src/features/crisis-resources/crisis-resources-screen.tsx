@@ -34,7 +34,13 @@ export function CrisisResourcesScreen() {
   const handleEmergencyCall = async () => {
     if (!countryData) return;
     const url = `tel:${countryData.emergencyNumber}`;
-    const canOpen = await Linking.canOpenURL(url);
+    let canOpen: boolean;
+    try {
+      canOpen = await Linking.canOpenURL(url);
+    } catch {
+      toast.show({ label: 'Phone calls not supported on this device', variant: 'default' });
+      return;
+    }
     if (!canOpen) {
       toast.show({ label: 'Phone calls not supported on this device', variant: 'default' });
       return;
@@ -57,7 +63,13 @@ export function CrisisResourcesScreen() {
 
   const handleDisclaimerEmail = async () => {
     const url = 'mailto:support@xolaceinc.com';
-    const canOpen = await Linking.canOpenURL(url);
+    let canOpen: boolean;
+    try {
+      canOpen = await Linking.canOpenURL(url);
+    } catch {
+      toast.show({ label: 'No mail app found', variant: 'default' });
+      return;
+    }
     if (!canOpen) {
       toast.show({ label: 'No mail app found', variant: 'default' });
       return;
@@ -98,7 +110,7 @@ export function CrisisResourcesScreen() {
                 <AppText className="text-xs text-warning/70 uppercase tracking-wider">Emergency</AppText>
                 <AppText className="text-xl font-medium text-warning">{countryData.emergencyNumber}</AppText>
               </View>
-              <AppText className="text-xs text-warning/50">Call →</AppText>
+              <AppText className="text-xs text-warning/80">Call →</AppText>
             </View>
           </PressableFeedback>
         ) : (

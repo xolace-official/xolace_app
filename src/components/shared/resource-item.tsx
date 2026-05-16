@@ -83,7 +83,7 @@ export function ResourceItem({ resource, index, onTap }: Props) {
           onPress={handlePress}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={resource.label}
+          accessibilityLabel={resource.type === 'phone' || resource.type === 'email' ? `${resource.label}, ${resource.value}` : resource.label}
         >
           {inner}
         </PressableFeedback>

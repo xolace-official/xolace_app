@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
-import { COUNTRY_RESOURCES, LAST_UPDATED } from './data';
-import type { CountryCode, Resource } from './types';
+import { COUNTRY_RESOURCES, LAST_UPDATED } from '@/src/features/crisis-resources/data';
+import type { CountryCode, Resource } from '@/src/features/crisis-resources/types';
 
 const VALID_TYPES = new Set<Resource['type']>(['phone', 'url', 'text', 'email']);
 const VALID_SOURCES = new Set<Resource['source']>(['crisis_line', 'xolace_support', 'text_support', 'local_service', 'online_resource']);

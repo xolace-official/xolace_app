@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import * as Localization from 'expo-localization';
 import { usePostHog } from 'posthog-react-native';
-import { COUNTRY_RESOURCES } from './data';
-import type { CountryCode, CountryData } from './types';
+import { COUNTRY_RESOURCES } from '@/src/features/crisis-resources/data';
+import type { CountryCode, CountryData } from '@/src/features/crisis-resources/types';
 
 type UseCrisisResourcesResult = {
   selectedCountry: CountryCode | null;
