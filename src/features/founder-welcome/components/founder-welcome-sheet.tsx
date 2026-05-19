@@ -24,6 +24,11 @@ const PARAGRAPHS: Segment[][] = [
   [
     { text: "And long term; we're not building AI to replace the people in your life. We're building it to help you get clear enough to actually reach them." },
   ],
+  [
+    { text: "We will love to walk this journey with you. You can reach me anytime on " },
+    { text: "feedback@xolaceinc.com or 0558218741 ", highlight: true },
+    { text: "via email or dm on WhatsApp/SMS." },
+  ],
 ];
 
 type Props = {
@@ -74,7 +79,7 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
             contentContainerStyle={styles.scrollContent}
           >
             <AppText style={styles.greeting} className="text-foreground text-lg">
-              hey friend, I&apos;m Nathaniel.
+              hey friend, I&apos;m Nathaniel; Xolace&apos;s CEO.
             </AppText>
 
             {PARAGRAPHS.map((segments, i) => (
