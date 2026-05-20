@@ -25,9 +25,9 @@ const PARAGRAPHS: Segment[][] = [
     { text: "And long term; we're not building AI to replace the people in your life. We're building it to help you get clear enough to actually reach them." },
   ],
   [
-    { text: "We will love to walk this journey with you. You can reach me anytime on " },
-    { text: "feedback@xolaceinc.com or 0558218741 ", highlight: true },
-    { text: "via email or dm on WhatsApp/SMS." },
+    { text: "We'd love to walk this journey with you. You can reach me anytime at " },
+    { text: "feedback@xolaceinc.com or +233-55-821-8741", highlight: true },
+    { text: " via email or WhatsApp/SMS." },
   ],
 ];
 

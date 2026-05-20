@@ -10,7 +10,7 @@ export const COUNTRY_RESOURCES: Record<CountryCode, CountryData> = {
     emergencyNumber: '112',
     resources: [
       { type: 'phone', source: 'crisis_line', priority: 1, label: 'Lifeline Ghana', value: '233-244-846-701', description: '24-hour counselling for people in distress' },
-      { type: 'phone', source: 'crisis_line', priority: 1, label: 'National Lifeline', value: '2332-444-71279' },
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'National Lifeline', value: '233-2-444-71279' },
       { type: 'phone', source: 'local_service', priority: 2, label: 'Police', value: '191' },
       { type: 'phone', source: 'local_service', priority: 2, label: 'Ambulance', value: '193' },
       { type: 'phone', source: 'local_service', priority: 3, label: 'DOVVSU (Domestic Violence)', value: '18555', description: 'Toll Free. Also: 055-100-0900' },

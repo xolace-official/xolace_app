@@ -170,7 +170,7 @@ export function CrisisResourcesScreen() {
           Xolace Inc assumes no responsibility or liability for the professional ability, reputation, or
           quality of services provided by the entities or individuals listed above. Inclusion on this list does
           not constitute an endorsement by Xolace Inc. The order does not imply any ranking or evaluation.
-          BetterHelp cannot vouch for the contact information&apos;s accuracy;
+          Xolace Inc cannot vouch for the contact information&apos;s accuracy;
         </AppText>
         <PressableFeedback
           onPress={handleDisclaimerEmail}

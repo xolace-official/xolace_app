@@ -37,10 +37,10 @@ export const MirrorState = ({
   const toneLabel = mirrorTone.charAt(0).toUpperCase() + mirrorTone.slice(1);
 
   const TONE_BADGE: Partial<Record<string, { text: string; border: string }>> = {
-    poetic:   { text: 'text-purple-400',  border: 'border-purple-400/40' },
-    gentle:   { text: 'text-rose-400',    border: 'border-rose-400/40' },
-    direct:   { text: 'text-sky-400',     border: 'border-sky-400/40' },
-    witnessed:{ text: 'text-amber-400',   border: 'border-amber-400/40' },
+    poetic:    { text: 'text-tone-poetic',    border: 'border-tone-poetic/40' },
+    gentle:    { text: 'text-tone-gentle',    border: 'border-tone-gentle/40' },
+    direct:    { text: 'text-tone-direct',    border: 'border-tone-direct/40' },
+    witnessed: { text: 'text-tone-witnessed', border: 'border-tone-witnessed/40' },
   };
   const badgeStyle = TONE_BADGE[mirrorTone] ?? { text: 'text-foreground/40', border: 'border-foreground/20' };
 
