@@ -1,7 +1,7 @@
 import { BottomSheet, PressableFeedback } from 'heroui-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+//import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
 import { FounderWelcomeBlurOverlay } from '@/src/features/founder-welcome/components/founder-welcome-blur-overlay';
 import { Image } from 'expo-image';
@@ -24,6 +24,11 @@ const PARAGRAPHS: Segment[][] = [
   [
     { text: "And long term; we're not building AI to replace the people in your life. We're building it to help you get clear enough to actually reach them." },
   ],
+  [
+    { text: "We'd love to walk this journey with you. You can reach me anytime at " },
+    { text: "feedback@xolaceinc.com or +233-55-821-8741", highlight: true },
+    { text: " via email or WhatsApp/SMS." },
+  ],
 ];
 
 type Props = {
@@ -33,7 +38,7 @@ type Props = {
 
 export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
   // const { height: SCREEN_HEIGHT } = useWindowDimensions();
-  const { bottom: safeBottom } = useSafeAreaInsets();
+  //const { bottom: safeBottom } = useSafeAreaInsets();
   // const SHEET_HEIGHT = Math.min(SCREEN_HEIGHT * 0.85, 1660);
 
   return (
@@ -74,7 +79,7 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
             contentContainerStyle={styles.scrollContent}
           >
             <AppText style={styles.greeting} className="text-foreground text-lg">
-              hey friend, I&apos;m Nathaniel.
+              hey friend, I&apos;m Nathaniel, Xolace&apos;s CEO.
             </AppText>
 
             {PARAGRAPHS.map((segments, i) => (
@@ -107,7 +112,7 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
           </BottomSheetScrollView>
 
           {/* Pinned CTA */}
-          <View style={[styles.ctaContainer, { paddingBottom: Math.max(safeBottom, 24) }]}>
+          <View style={[styles.ctaContainer, { paddingBottom: 10 }]}>
             <PressableFeedback
               onPress={onDismiss}
               style={styles.ctaButton}

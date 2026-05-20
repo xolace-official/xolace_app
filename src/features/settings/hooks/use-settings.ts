@@ -276,9 +276,10 @@ export const useSettings = () => {
 
   const setMirrorTone = useCallback(
     (tone: MirrorTone) => {
+      posthog.capture('tone_changed', { tone });
       updatePreferences({ mirrorTone: tone });
     },
-    [updatePreferences],
+    [updatePreferences, posthog],
   );
 
   // ─── Data retention ──────────────────────────────────────────────────

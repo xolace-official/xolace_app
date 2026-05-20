@@ -8,6 +8,8 @@ import type { EntryType } from '@/src/features/reflect/types';
 import type { Id } from '@/convex/_generated/dataModel';
 import { playMirrorArrival, playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
 import { useMirrorAudio } from '@/src/features/reflect/hooks/use-mirror-audio';
+import { useSettings } from '@/src/features/settings/hooks/use-settings';
+import { ToneTipBanner } from '@/src/features/reflect/components/tone-tip-banner';
 
 type Props = {
   mirror: string;
@@ -30,6 +32,17 @@ export const MirrorState = ({
 }: Props) => {
   const { isReady, isPlaying, toggle, stop } = useMirrorAudio(sessionId);
   const accent = useThemeColor('accent');
+  const { mirrorTone } = useSettings();
+  const showToneBadge = mirrorTone !== 'adaptive';
+  const toneLabel = mirrorTone.charAt(0).toUpperCase() + mirrorTone.slice(1);
+
+  const TONE_BADGE: Partial<Record<string, { text: string; border: string }>> = {
+    poetic:    { text: 'text-tone-poetic',    border: 'border-tone-poetic/40' },
+    gentle:    { text: 'text-tone-gentle',    border: 'border-tone-gentle/40' },
+    direct:    { text: 'text-tone-direct',    border: 'border-tone-direct/40' },
+    witnessed: { text: 'text-tone-witnessed', border: 'border-tone-witnessed/40' },
+  };
+  const badgeStyle = TONE_BADGE[mirrorTone] ?? { text: 'text-foreground/40', border: 'border-foreground/20' };
 
   useEffect(() => {
     playMirrorArrival();
@@ -42,6 +55,11 @@ export const MirrorState = ({
 
   return (
     <View className="flex-1 justify-center px-6">
+      {/* Banner floats above content — absolute so it doesn't shift the mirror */}
+      <View style={{ position: 'absolute', top: 8, left: 24, right: 24, zIndex: 1 }}>
+        <ToneTipBanner />
+      </View>
+
       {/* Texture pills from scaffold */}
       {showTextures && (
         <EaseView
@@ -95,6 +113,14 @@ export const MirrorState = ({
           </PressableFeedback>
         )}
       </EaseView>
+
+      {showToneBadge && (
+        <View className="mb-3 flex-row">
+          <View className={`rounded-full border px-2.5 py-0.5 ${badgeStyle.border}`}>
+            <AppText className={`text-xs ${badgeStyle.text}`}>{toneLabel}</AppText>
+          </View>
+        </View>
+      )}
 
       <ScrollView
         style={{ flexGrow: 0, maxHeight: '60%' }}

@@ -64,7 +64,8 @@ export const mirrorToneValidator = v.union(
   v.literal("poetic"),
   v.literal("gentle"),
   v.literal("direct"),
-  v.literal("adaptive")
+  v.literal("adaptive"),
+  v.literal("witnessed")
 );
 
 export const triggerTypeValidator = v.union(

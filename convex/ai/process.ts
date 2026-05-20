@@ -285,8 +285,8 @@ export const generateMirror = internalAction({
     } catch (error) {
       const errorMessage =
         error instanceof Error
-          ? error.message
-          : "Unknown error during AI processing";
+          ? sanitizeAiError(error)
+          : "Something interrupted this moment. You can try again when you're ready.";
 
       await ctx.runMutation(internal.sessions.failSession, {
         sessionId: args.sessionId,
@@ -295,3 +295,14 @@ export const generateMirror = internalAction({
     }
   },
 });
+
+function sanitizeAiError(error: Error): string {
+  const msg = error.message;
+  if (msg.includes("overloaded_error") || msg.startsWith("529")) {
+    return "The space is a little full right now. Take a breath and try again in a moment.";
+  }
+  if (msg.includes("rate_limit") || msg.startsWith("429")) {
+    return "The space is a little full right now. Take a breath and try again in a moment.";
+  }
+  return "Something interrupted this moment. You can try again when you're ready.";
+}

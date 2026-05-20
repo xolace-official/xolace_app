@@ -1,6 +1,6 @@
 import type { CountryCode, CountryData } from './types';
 
-export const LAST_UPDATED = '2026-05-16';
+export const LAST_UPDATED = '2026-05-19';
 
 // Resources are in display order; priority field documents the rank. Keep sorted when adding new entries.
 export const COUNTRY_RESOURCES: Record<CountryCode, CountryData> = {
@@ -9,7 +9,8 @@ export const COUNTRY_RESOURCES: Record<CountryCode, CountryData> = {
     flag: '🇬🇭',
     emergencyNumber: '112',
     resources: [
-      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Suicide Hotline', value: '2332-444-71279' },
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Lifeline Ghana', value: '233-244-846-701', description: '24-hour counselling for people in distress' },
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'National Lifeline', value: '233-2-444-71279' },
       { type: 'phone', source: 'local_service', priority: 2, label: 'Police', value: '191' },
       { type: 'phone', source: 'local_service', priority: 2, label: 'Ambulance', value: '193' },
       { type: 'phone', source: 'local_service', priority: 3, label: 'DOVVSU (Domestic Violence)', value: '18555', description: 'Toll Free. Also: 055-100-0900' },
@@ -78,6 +79,8 @@ export const COUNTRY_RESOURCES: Record<CountryCode, CountryData> = {
     emergencyNumber: '911',
     resources: [
       { type: 'phone', source: 'crisis_line', priority: 1, label: 'Suicide Crisis Helpline', value: '988' },
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Talk Suicide Canada', value: '1-833-456-4566', description: '24/7' },
+      { type: 'text', source: 'text_support', priority: 1, label: 'Talk Suicide Canada (SMS)', value: 'Text 45645', description: '24/7' },
       { type: 'url', source: 'online_resource', priority: 1, label: 'Crisis Services Canada', value: 'https://www.crisisservicescanada.ca/en/' },
       { type: 'phone', source: 'crisis_line', priority: 2, label: 'Domestic Violence Helpline (Victim Link)', value: '604-875-0885', description: 'BC/Yukon. Toll Free TTY: 1-800-563-0808' },
       { type: 'url', source: 'online_resource', priority: 2, label: 'Domestic Violence BC', value: 'https://www.domesticviolencebc.ca' },
@@ -86,6 +89,73 @@ export const COUNTRY_RESOURCES: Record<CountryCode, CountryData> = {
       { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Overdose Response Service', value: '1-888-688-6677' },
       { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Eating Disorders (NEDA)', value: '866-662-1235' },
       { type: 'url', source: 'online_resource', priority: 5, label: 'Canada Association for Suicide Prevention', value: 'https://suicideprevention.ca/resources/' },
+    ],
+  },
+  NG: {
+    name: 'Nigeria',
+    flag: '🇳🇬',
+    emergencyNumber: '112',
+    resources: [
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Nigeria Suicide Prevention Hotline', value: '002341-912-5106' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Mentally Aware Nigeria Initiative (MANI)', value: '809-111-6264' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Domestic & Sexual Violence Response Team', value: '0800-033-3333' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'Emergency Response Africa', value: '808-530-9007' },
+      { type: 'phone', source: 'local_service', priority: 3, label: 'Child Helpline (HDI)', value: '0808-055-1376', description: 'Also: 0809-092-7555' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'National Human Rights Commission (NHRC)', value: '080-7709-1123', description: 'Also: 080-7709-1124' },
+    ],
+  },
+  DE: {
+    name: 'Germany',
+    flag: '🇩🇪',
+    emergencyNumber: '112',
+    resources: [
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Suicide Prevention Helpline', value: '0800-111-0111', description: 'Also: 0800-111-0222. Free, 24/7' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Violence Against Women Helpline', value: '116-016' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Children, Young People & Parents', value: '116-111' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'Child & Adolescent Emergency (Assault/DV)', value: '+49-40-428490' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'Young People in Crisis (krisenchat)', value: '+49-157-35998143' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'Substance Abuse Helpline', value: '0180-365-2407' },
+    ],
+  },
+  KE: {
+    name: 'Kenya',
+    flag: '🇰🇪',
+    emergencyNumber: '999',
+    resources: [
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Suicide Prevention & Crisis Helpline', value: '0800-723-253', description: 'Toll free' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Gender-Based Violence Hotline', value: '1195' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'GVRC 24hr Emergency Line', value: '254-709-667-000', description: 'Gender Violence Recovery Centre. Also: 719-638-006' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'one2one Helpline', value: '1190', description: 'Call or chat' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'NACADA (Substance Abuse)', value: '1192', description: 'National Agency for Campaign Against Drug Abuse. Toll free.' },
+    ],
+  },
+  FR: {
+    name: 'France',
+    flag: '🇫🇷',
+    emergencyNumber: '112',
+    resources: [
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Suicide Prevention Hotline', value: '3114', description: 'Free, 24/7' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Violence Against Women', value: '3919' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Suicide Ecoute', value: '01-45-39-40-00' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'SOS Help (English speakers)', value: '01-46-21-46-46', description: '3pm–11pm daily' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'Fil Santé Jeunes (Youth)', value: '0800-235-236', description: 'Free, for youth' },
+      { type: 'phone', source: 'local_service', priority: 3, label: 'SAMU (Medical Emergency)', value: '15' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'SOS Amitié', value: '+33-1-40-09-15-22' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'Emergency (Deaf/Hard-of-Hearing)', value: '114' },
+    ],
+  },
+  ZA: {
+    name: 'South Africa',
+    flag: '🇿🇦',
+    emergencyNumber: '10111',
+    resources: [
+      { type: 'phone', source: 'crisis_line', priority: 1, label: 'Suicide Crisis Helpline (SADAG)', value: '0800-567-567', description: 'Free, 24/7' },
+      { type: 'phone', source: 'crisis_line', priority: 1, label: '24hr Helpline', value: '0800-12-13-14', description: 'Also SMS 31393 for callback' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Depression & Anxiety Helpline', value: '0800-70-80-90' },
+      { type: 'phone', source: 'crisis_line', priority: 2, label: 'Life Line National Counselling', value: '0861-322-322' },
+      { type: 'phone', source: 'crisis_line', priority: 3, label: 'Mental Health Line', value: '011-234-4837' },
+      { type: 'phone', source: 'local_service', priority: 3, label: 'Substance Abuse Helpline (DSD)', value: '0800-12-13-14', description: 'Department of Social Development. SMS 32312.' },
+      { type: 'phone', source: 'local_service', priority: 4, label: 'SA Federation for Mental Health', value: '011-781-1852' },
     ],
   },
 };

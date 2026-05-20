@@ -165,14 +165,20 @@ export function CrisisResourcesScreen() {
       )}
 
       <View className="mt-8">
-        <AppText className="text-xs text-foreground/30">Last updated: {LAST_UPDATED}</AppText>
+        <AppText className="text-xs text-foreground/40">Last updated: {LAST_UPDATED}</AppText>
+        <AppText className="text-xs text-foreground/40 mt-0.5">
+          Xolace Inc assumes no responsibility or liability for the professional ability, reputation, or
+          quality of services provided by the entities or individuals listed above. Inclusion on this list does
+          not constitute an endorsement by Xolace Inc. The order does not imply any ranking or evaluation.
+          Xolace Inc cannot vouch for the contact information&apos;s accuracy;
+        </AppText>
         <PressableFeedback
           onPress={handleDisclaimerEmail}
           accessibilityRole="link"
           accessibilityLabel="Email support@xolaceinc.com to report an error"
           hitSlop={8}
         >
-          <AppText className="text-xs text-foreground/30 mt-0.5">
+          <AppText className="text-xs text-foreground/40 mt-0.5">
             Found an error? support@xolaceinc.com
           </AppText>
         </PressableFeedback>

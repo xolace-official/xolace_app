@@ -48,6 +48,38 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P3 — Adaptive Tone Learning (Mirror Tone Phase 2)
+
+**What:** Make the "Adaptive" tone genuinely adaptive to the individual user over time, not just to their writing style in the current session. Track which tone users manually switch to and feed that signal back into the adaptive prompt so the mirror drifts toward their preferred register without them having to think about it.
+
+**Why:** The current "Adaptive" tone reads the user's writing style within the session. But if a user consistently switches to "Witnessed" after their first few sessions, the adaptive mode should pick that up. This closes the loop between explicit tone preference and the default experience. Deferred because it requires storing per-session tone signals and deciding the averaging/drift algorithm — a design problem that needs more usage data from the new "Witnessed" tone first.
+
+**How to start:** After `feat(mirror-tone-witnessed)` has shipped and you have 2-4 weeks of `tone_changed` PostHog data — look at the distribution. If >30% of users switch to "Witnessed", that's signal the default should shift. The technical implementation: store `toneUsed` on each session in Convex, then in `context.ts` (which builds the `patternSummary`) include the tone distribution, and update the "adaptive" prompt case in `getToneInstructions()` to accept a `preferredToneSignal` parameter.
+
+**Key files:** `convex/sessions.ts` (add `toneUsed` field), `convex/ai/context.ts` (include tone signal in pattern summary), `convex/ai/prompts/articulator.ts` (adaptive case reads signal)
+
+**Effort:** L (human ~1 week / CC ~2h)
+**Priority:** P3 (data-dependent — needs usage data from Witnessed tone first)
+**Depends on:** `feat(mirror-tone-witnessed)` shipped + 2-4 weeks of PostHog data on tone adoption
+
+---
+
+## P3 — Tone Shown in Session Timeline
+
+**What:** When users review past sessions in the timeline, show which mirror tone was active for that session. A small chip or label — "Witnessed", "Poetic" — next to the session entry or inside the session detail view.
+
+**Why:** Closes the discoverability loop: tone is visible in settings, visible on the mirror screen (indicator badge), and visible in history. Users who want to understand why a session felt different can see the tone was different. Also useful for the team to correlate tone with session completion and mood outcomes.
+
+**How to start:** Add `toneUsed: v.optional(v.string())` to the sessions table in `convex/schema.ts`. Write `toneUsed` when the session's mirror is generated (`convex/sessions.ts` or `convex/ai/process.ts`). Display in `src/features/timeline/` session list and `timeline/session/[id]` detail view.
+
+**Key files:** `convex/schema.ts`, `convex/sessions.ts`, `convex/ai/process.ts`, `src/features/timeline/` (list + detail)
+
+**Effort:** S (human ~3h / CC ~20min)
+**Priority:** P3 (nice-to-have, low urgency)
+**Depends on:** `feat(mirror-tone-witnessed)` shipped
+
+---
+
 ## P3 — Reduce-motion support (crisis screen priority)
 
 **What:** Honor the iOS/Android "reduce motion" accessibility setting on EaseView animations throughout the app. The crisis resources screen is the highest-priority candidate because it's the most emotionally loaded screen — animated entrances that feel calming at normal settings could feel overwhelming for a user who has reduce motion enabled.

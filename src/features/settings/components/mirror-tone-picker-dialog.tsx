@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
 import { AppText } from "@/src/components/shared/app-text";
 
-export type MirrorTone = "adaptive" | "poetic" | "gentle" | "direct";
+export type MirrorTone = "adaptive" | "poetic" | "gentle" | "direct" | "witnessed";
 
 type ToneOption = {
   value: MirrorTone;
@@ -31,6 +31,11 @@ const TONE_OPTIONS: ToneOption[] = [
     value: "direct",
     label: "Direct",
     description: "Clear, minimal — no metaphors",
+  },
+  {
+    value: "witnessed",
+    label: "Witnessed",
+    description: "Begins with a moment of recognition, then mirrors",
   },
 ];
 

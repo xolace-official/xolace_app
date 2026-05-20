@@ -4,7 +4,19 @@ All notable changes to Xolace are documented here.
 
 ---
 
-## [1.2.0.0] - 2026-05-15
+## [1.2.0.0] - OTA Update (2026-05-20)
+
+### Fixed
+
+- **Error state heading** — replaced "Something didn't go as expected." with "Take a breath." across all error types (rate limit, generic, session expired); better fits the app's emotional tone
+- **Crisis resources disclaimer** — corrected "BetterHelp cannot vouch…" to "Xolace Inc cannot vouch…"
+- **Ghana phone number format** — fixed malformed `2332-444-71279` to correctly split country code as `233-2-444-71279`
+- **Founder welcome copy** — "We will love to walk this journey" → "We'd love to walk this journey"; "on" → "at"; added `+233` country code to WhatsApp/SMS number for international users
+- **Mirror tone badge colors** — replaced hardcoded Tailwind color classes (`text-purple-400`, etc.) with theme-aware CSS variables (`text-tone-poetic`, etc.); tone colors now adapt correctly across all 6 themes (alpha, quiet, reverie, human, nightly, and base)
+
+---
+
+## [1.2.0.0] - App Store release (2026-05-15)
 
 ### Added
 

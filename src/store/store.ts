@@ -31,6 +31,9 @@ type TogglesSlice = {
   /** When true, SessionModeProvider auto-activates 3am Mode between 10pm–4am. */
   nightModeEnabled: boolean;
   setNightModeEnabled: (v: boolean) => void;
+  /** One-time flag — once true, tone tip banner never shows again on this device. */
+  toneTipSeen: boolean;
+  setToneTipSeen: (v: boolean) => void;
 };
 
 /** Ephemeral, not persisted. Tracks store version check state. */
@@ -72,6 +75,9 @@ export const useAppStore = create<AppState>()(
         nightModeEnabled: true,
         setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
 
+        toneTipSeen: false,
+        setToneTipSeen: (v) => set({ toneTipSeen: v }),
+
         isVersionChecked: false,
         setIsVersionChecked: (v) => set({ isVersionChecked: v }),
         isNewVersionAvailable: false,
@@ -91,6 +97,7 @@ export const useAppStore = create<AppState>()(
           introSeen: s.introSeen,
           founderWelcomeSeen: s.founderWelcomeSeen,
           nightModeEnabled: s.nightModeEnabled,
+          toneTipSeen: s.toneTipSeen,
         }),
       }
     )

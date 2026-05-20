@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { LinkButton } from 'heroui-native';
+import { useRouter } from 'expo-router';
 import { AppText } from '@/src/components/shared/app-text';
 import { playCompassionateHold } from '@/src/lib/haptics';
 import { GaveUpFeedbackCard } from '@/src/features/reflect/components/gave-up-feedback-card';
@@ -14,6 +15,8 @@ type Props = {
 };
 
 export const GaveUpState = ({ onPathSelection, onReset, sessionId }: Props) => {
+  const router = useRouter();
+
   useEffect(() => {
     playCompassionateHold();
   }, []);
@@ -51,6 +54,23 @@ export const GaveUpState = ({ onPathSelection, onReset, sessionId }: Props) => {
         <LinkButton accessibilityLabel="Start fresh" onPress={onReset} size="md" className="self-start">
           <LinkButton.Label className="text-foreground/50">
             Start fresh
+          </LinkButton.Label>
+        </LinkButton>
+      </EaseView>
+
+      <EaseView
+        initialAnimate={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 400, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+      >
+        <LinkButton
+          accessibilityLabel="Explore different mirror tones"
+          onPress={() => router.push('/settings')}
+          size="sm"
+          className="self-start"
+        >
+          <LinkButton.Label className="text-foreground/30">
+            Explore different mirror tones →
           </LinkButton.Label>
         </LinkButton>
       </EaseView>

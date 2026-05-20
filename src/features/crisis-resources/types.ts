@@ -7,7 +7,7 @@ export type Resource = {
   description?: string;
 };
 
-export type CountryCode = 'GH' | 'US' | 'GB' | 'AU' | 'CA';
+export type CountryCode = 'GH' | 'US' | 'GB' | 'AU' | 'CA' | 'NG' | 'DE' | 'KE' | 'FR' | 'ZA';
 
 export type CountryData = {
   name: string;

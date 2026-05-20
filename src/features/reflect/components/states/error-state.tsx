@@ -19,7 +19,7 @@ export const ErrorState = ({ errorMessage, onRetry, onReset }: Props) => {
   return (
   <View className="flex-1 justify-center px-6">
     <AppText className="text-xl leading-8 text-foreground">
-      Something didn&apos;t go as expected.
+      Take a breath.
     </AppText>
 
     <AppText className="mt-4 text-base leading-6 text-foreground/40">
