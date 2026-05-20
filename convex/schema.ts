@@ -241,7 +241,8 @@ export default defineSchema({
       v.literal("poetic"),
       v.literal("gentle"),
       v.literal("direct"),
-      v.literal("adaptive")
+      v.literal("adaptive"),
+      v.literal("witnessed")
     ),
 
     // --- Privacy ---

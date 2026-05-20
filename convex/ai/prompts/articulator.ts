@@ -153,6 +153,19 @@ function getToneInstructions(tone: string): string {
       return "Use warm, simple, everyday language. Be soft without being vague, and avoid counselor cadence. Example register: \"This one's sitting heavy.\"";
     case "direct":
       return "Use clear, minimal language. No metaphors. Say it plainly. Example register: \"You're angry, and it's about feeling unseen.\"";
+    case "witnessed":
+      return `Begin with one brief line of recognition that names the emotional weight the user is carrying — before mirroring it back. The recognition should feel like a human noticing, not a therapist validating. It names the weight, not the content.
+
+  Good recognition lines: "That's a lot to carry." / "Something heavy landed." / "That kind of tired goes deeper than sleep." / "That took something out of you."
+  Bad recognition lines: "I hear you." / "I understand." / "That must be hard." / "I see you." (too direct, clinical, or clichéd)
+
+  After the recognition line, deliver the precision mirror exactly as the other tones do (1-3 sentences). Total response: 2-4 sentences.
+
+  Rules:
+  - Recognition must NOT repeat the user's words — it names the weight, the mirror captures the shape
+  - Do not moralize or comfort ("it'll get better", "you're not alone")
+  - Recognition line is always first, always one sentence
+  - If the user's input is short (1-2 sentences), the recognition + mirror together should still be 2-3 sentences max`;
     case "adaptive":
     default:
       return "Read the register of the user's input and match it. If they write plainly, mirror plainly. If they write with imagery, mirror with imagery. Meet them where they are.";

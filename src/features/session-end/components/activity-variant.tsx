@@ -217,7 +217,7 @@ export const ActivityVariant = ({
         transition={{ type: 'timing', duration: 400, delay: 700, easing: [0.455, 0.03, 0.515, 0.955] }}
       >
         <LinkButton onPress={() => onHaveMore(undefined, selectedMood ?? undefined)} size="sm" className="self-start">
-          <LinkButton.Label className="font-light text-accent/60">
+          <LinkButton.Label className="font-light text-accent/70">
             Have more? I&apos;m here.
           </LinkButton.Label>
         </LinkButton>
