@@ -80,6 +80,68 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P2 — Mirror Reflection Sharing (acquisition growth loop)
+
+**What:** Add a share button to the mirror state and session end screen. Generate a shareable deep link that shows the AI reflection to anyone — no account required to view. Recipients get a 3-session trial and are prompted to create an account after session 1.
+
+**Why:** The highest-leverage acquisition action available. Users already share feelings on WhatsApp — giving them a way to share what Xolace said about their feeling brings a receiver directly into the product experience. One shared mirror is more convincing than any ad. Sequenced after quotes because quotes have proven WhatsApp demand now; mirror sharing has higher acquisition impact but larger build.
+
+**How to start:** (a) Add a shareable URL/deep-link route (unauthenticated mirror view). (b) Implement a guest-session token system — receiver views shared reflection with no account. (c) After completing session 1 as guest, prompt to create account for remaining 2 trial sessions. (d) Add share button to mirror state and session-end screen in `src/features/reflect/components/states/`.
+
+**Key files:** `src/features/reflect/components/states/mirror-state.tsx`, `src/app/(protected)/session-end/`, `convex/sessions.ts` (guest token), `src/app/share/[id].tsx` (new unauthenticated route)
+
+**Effort:** L (human ~1 week / CC ~3h)
+**Priority:** P2
+**Depends on:** daily-quotes PR shipped (deliberate sequencing — quotes first)
+
+---
+
+## P3 — Home Screen Widget (WidgetKit + AppWidget)
+
+**What:** iOS WidgetKit + Android AppWidget showing today's session-derived quote (or preference-curated fallback) on the home screen. The quotes PR writes the session-derived quote to an iOS shared app group container (`group.com.xolaceincorg.xolace`) as forward-compatibility — the widget reads from there without a network call.
+
+**Why:** Home screen presence turns a passive install into a daily ambient touchpoint. Deferred because WidgetKit/AppWidget require native code (Swift/Kotlin) that can't be done in JavaScript — needs a custom native module or Expo config plugin. Right idea, wrong time to build relative to core quotes feature.
+
+**How to start:** iOS: Add a Widget Extension target in Xcode reading from the shared app group container written by the quotes PR. Android: AppWidget reading from SharedPreferences. Both display quote text + Xolace logo + "Open app" tap target. The data layer is already in place from the quotes PR — only the widget UI shell needs building.
+
+**Key files:** iOS: `ios/XolaceWidget/` (new WidgetKit extension). Android: `android/app/src/main/java/.../XolaceWidget.kt` (new AppWidget receiver). Data: written by `convex/jobs/quotesDistiller.ts` → iOS shared app group / Android SharedPreferences.
+
+**Effort:** L (human ~1 week / CC: not applicable — requires native IDE build)
+**Priority:** P3
+**Depends on:** daily-quotes PR shipped (widget reads data written by that PR)
+
+---
+
+## P2 — Quotes Cron: Anthropic Cost Ceiling (add at 500+ MAU)
+
+**What:** Add an env-var gate (`QUOTES_MAX_DAILY_CALLS`) to the nightly quotes cron. Before dispatching per-user Anthropic calls, check a counter. If the daily ceiling would be exceeded, stop scheduling session-derived generation for remaining users (preference-curated still runs — no AI cost). Log when ceiling is hit.
+
+**Why:** The nightly cron makes 1 Anthropic call per active user with sessions in the last 7 days. At 75 users it's negligible. At 500-1,000 MAU, it becomes a predictable nightly cost. The Anthropic SDK's built-in retry behavior (`maxRetries: 4` in this project) could amplify failures. Without a ceiling, a spike in active users or a partial retry storm could 4x expected API spend overnight.
+
+**How to start:** In `convex/jobs/quotesDistiller.ts`, before dispatching `generateForUser`: check a daily counter document in a `quoteCronStats` or `system` collection, increment per dispatch, short-circuit if over `parseInt(process.env.QUOTES_MAX_DAILY_CALLS ?? "9999")`. Reset counter at midnight in the same cron. Set `QUOTES_MAX_DAILY_CALLS` to a comfortable multiple of current active users.
+
+**Effort:** S (human ~2h / CC ~15min)
+**Priority:** P2 — not blocking at 75 users; activate before 500+ MAU
+**Depends on:** daily-quotes PR shipped
+
+---
+
+## P2 — Notification Permission Refactor (contextual ask, not at sign-in)
+
+**What:** Move the notification permission request away from the immediate post-sign-in flow. Instead, ask for notification permission in two contextual moments: (1) after preference setup on the quotes screen ("Get your daily quote at the right time"), and (2) after a session completes ("Want a reminder the next time you need this?"). Remove the current sign-in-time ask.
+
+**Why:** Asking for notification permission immediately at sign-in is a dark pattern — the user has no context for why the app would notify them. Cold-asks see 20-40% acceptance; contextual asks see 60-80%. The quotes feature introduces the first genuinely meaningful notification (daily quote at chosen time) — that's the right moment to ask.
+
+**How to start:** Find the current notification permission call in the auth/onboarding flow. Remove it. The quotes preference setup flow (2-step mini-onboarding sheet) handles the new ask at step 2. Ensure the post-session notification ask (if implemented separately from quotes) uses `expo-notifications`' `requestPermissionsAsync()` only at those moments.
+
+**Key files:** Auth/onboarding flow (find current permission ask), `src/features/quotes/components/preference-setup-sheet.tsx` (new, step 2), `src/app/(protected)/session-end/` (optional: post-session nudge)
+
+**Effort:** S (human ~2h / CC ~15min)
+**Priority:** P2
+**Depends on:** daily-quotes PR shipped (preference setup flow is the primary new ask location)
+
+---
+
 ## P3 — Reduce-motion support (crisis screen priority)
 
 **What:** Honor the iOS/Android "reduce motion" accessibility setting on EaseView animations throughout the app. The crisis resources screen is the highest-priority candidate because it's the most emotionally loaded screen — animated entrances that feel calming at normal settings could feel overwhelming for a user who has reduce motion enabled.

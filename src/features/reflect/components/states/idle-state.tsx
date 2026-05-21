@@ -3,13 +3,16 @@ import { Pressable, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
 import { PressableFeedback, Separator, TagGroup, useThemeColor } from "heroui-native";
+import { useRouter } from "expo-router";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/shared/pill-button";
 import { IdleMenu } from "@/src/features/idle-menu/menu";
 import { MicButton } from "@/src/features/reflect/components/mic-button";
 import { QuietReturnHeader } from "@/src/features/reflect/components/quiet-return-header";
 import type { UserVariant, ReflectionAction } from "@/src/features/reflect/types";
-import { playTypingBegin, playTextureSelect, playHomeEntrance } from "@/src/lib/haptics";
+import { playTypingBegin, playTextureSelect, playHomeEntrance, playSoftPress } from "@/src/lib/haptics";
 import { useSessionMode } from "@/src/context/session-mode-context";
 import { NIGHT_TEXTURE_WORDS } from "@/src/features/reflect/night-copy";
 import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
@@ -51,7 +54,14 @@ export const IdleState = ({
   onCrisisTap,
 }: Props) => {
   const { isNight } = useSessionMode();
+  const router = useRouter();
   const warningColor = useThemeColor('warning') as string;
+
+  const todayQuotes = useQuery(api.dailyQuotes.getToday);
+  const todayQuote = todayQuotes?.session ?? todayQuotes?.curated ?? null;
+  const quotePreview = todayQuote
+    ? todayQuote.text.split(" ").slice(0, 8).join(" ") + "… →"
+    : null;
   const TEXTURE_WORDS: readonly string[] = isNight
     ? NIGHT_TEXTURE_WORDS
     : DAY_TEXTURE_WORDS;
@@ -125,6 +135,23 @@ export const IdleState = ({
       </View>
 
       <Separator className="mb-0" />
+
+      {/* Daily quote pill — left-aligned, subtle, navigates to quotes screen */}
+      {quotePreview && (
+        <PressableFeedback
+          onPress={() => {
+            playSoftPress();
+            router.push("/(protected)/quotes" as any);
+          }}
+          accessibilityLabel={`Today's quote: ${quotePreview}`}
+          hitSlop={8}
+          className="pt-3 pb-1"
+        >
+          <AppText className="text-sm text-foreground/40">
+            {quotePreview}
+          </AppText>
+        </PressableFeedback>
+      )}
 
       <View className="flex-1 pt-4">
         <Pressable

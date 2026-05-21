@@ -54,4 +54,12 @@ crons.interval(
   {}
 );
 
+// Nightly daily quotes generation (midnight UTC)
+crons.cron(
+  "nightly daily quotes",
+  "0 0 * * *",
+  internal.jobs.quotesGenerator.generateForNextBatch,
+  { cursor: null }
+);
+
 export default crons;

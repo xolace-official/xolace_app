@@ -35,6 +35,15 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
     //   },
     // },
     {
+      label: "Today",
+      icon: { ios: "quote.bubble", android: "format_quote" },
+      accessibilityLabel: "Open your daily quote",
+      onPress: () => {
+        onClose();
+        router.push("/(protected)/quotes" as any);
+      },
+    },
+    {
       label: "Timeline",
       icon: { ios: "clock", android: "history" },
       accessibilityLabel: "Open your session timeline",

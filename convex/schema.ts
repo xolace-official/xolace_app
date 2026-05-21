@@ -277,6 +277,23 @@ export default defineSchema({
     // True once the naming dialog has been shown and the user tapped "Not now".
     // Prevents re-prompting; settings entry is the only other path.
     spaceNamePromptDismissed: v.optional(v.boolean()),
+
+    // Daily Quotes feature preferences.
+    // Undefined until the user first visits the quotes screen.
+    // Nightly cron only processes users where this is defined OR
+    // they have at least 1 session in the last 30 days.
+    quotes: v.optional(
+      v.object({
+        // 2-4 theme slugs selected during preference setup.
+        themes: v.array(v.string()),
+        // Whether the user opted into daily quote notifications.
+        notificationEnabled: v.boolean(),
+        // "morning" | "afternoon" | "evening" | "none"
+        notificationTime: v.optional(v.string()),
+        // IDs of curated quotes already shown — avoids repeats for 6+ months.
+        shownQuoteIds: v.array(v.id("quotes")),
+      })
+    ),
   })
     .index("by_profile", ["emotionalProfileId"])
     .index("by_retention", ["dataRetentionPreference"]),
@@ -1025,7 +1042,68 @@ export default defineSchema({
     .index("by_profile_and_type_and_created", ["emotionalProfileId", "type", "createdAt"]),
 
   // ===========================================================
-  // 13. CONSENT RECORDS
+  // 13. QUOTES LIBRARY
+  // ===========================================================
+  //
+  // Curated quote library. Authored content, not user-generated.
+  // 180+ quotes at launch. Themed with 1-2 slugs each.
+  // Each quote is tagged so the nightly cron can serve
+  // preference-matching content.
+  //
+  quotes: defineTable({
+    text: v.string(),
+    // Theme slugs: "resilience", "self-compassion", "relationships",
+    // "grief-and-loss", "change", "anxiety", "identity", "loneliness"
+    themes: v.array(v.string()),
+    // Optional source credit (author name). Not displayed in sharing card.
+    source: v.optional(v.string()),
+    language: v.optional(v.string()),
+  })
+    .index("by_theme_0", ["themes"])
+    .searchIndex("search_text", { searchField: "text" }),
+
+  // ===========================================================
+  // 14. DAILY QUOTES
+  // ===========================================================
+  //
+  // Daily log of quotes assigned to each user.
+  // One curated + optionally one session-derived per user per day.
+  // The client shows ONE quote: session-derived if available,
+  // curated otherwise (Design Decision D2).
+  //
+  daily_quotes: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+
+    // UTC ISO date string "YYYY-MM-DD". Always UTC (Ghana = UTC+0).
+    date: v.string(),
+
+    // "session" = generated from emotional context. "curated" = library pick.
+    type: v.union(v.literal("session"), v.literal("curated")),
+
+    // The quote text.
+    text: v.string(),
+
+    // Which sessions were used as context (session-derived only).
+    sessionContextIds: v.optional(v.array(v.id("sessions"))),
+
+    // Reserved for future premium enforcement. Always false at MVP.
+    isPremium: v.boolean(),
+
+    // User reaction. Null until the user reacts.
+    reaction: v.optional(
+      v.union(v.literal("resonates"), v.literal("not_today"))
+    ),
+
+    createdAt: v.number(),
+  })
+    // Primary client query: "what are today's quotes for this user?"
+    .index("by_profile_date", ["emotionalProfileId", "date"])
+
+    // Cron idempotency: "has this user already got a quote today?"
+    .index("by_profile_date_type", ["emotionalProfileId", "date", "type"]),
+
+  // ===========================================================
+  // 16. CONSENT RECORDS
   // ===========================================================
   //
   // Granular, auditable consent tracking.
