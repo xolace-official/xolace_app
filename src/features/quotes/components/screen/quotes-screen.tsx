@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { ScrollView, Share, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { captureRef } from "react-native-view-shot";
-import { PressableFeedback, Separator, SkeletonGroup, useThemeColor } from "heroui-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { PressableFeedback, SkeletonGroup, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
 import { api } from "@/convex/_generated/api";
@@ -12,19 +20,18 @@ import { AppText } from "@/src/components/shared/app-text";
 import { QuoteCard } from "@/src/features/quotes/components/quote-card";
 import { SharingCard } from "@/src/features/quotes/components/sharing-card";
 import { PreferenceSetupSheet } from "@/src/features/quotes/components/preference-setup-sheet";
+import { QuoteShareSheet } from "@/src/features/quotes/components/quote-share-sheet";
 import { useQuoteNotifications } from "@/src/features/quotes/hooks/use-quote-notifications";
+import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 import { Presets } from "react-native-pulsar";
+import { StatusBar } from "expo-status-bar";
 
-const ENTRANCE = {
-  type: "timing" as const,
-  duration: 400,
-  easing: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
-};
 
 export function QuotesScreen() {
-  const { top } = useSafeAreaInsets();
+  const { top, bottom } = useSafeAreaInsets();
   const router = useRouter();
   const foregroundColor = useThemeColor("foreground") as string;
+  const accentColor = useThemeColor("accent") as string;
 
   const todayQuotes = useQuery(api.dailyQuotes.getToday);
   const quotePrefs = useQuery(api.preferences.getQuotePreferences);
@@ -37,6 +44,8 @@ export function QuotesScreen() {
   const sharingCardRef = useRef<View>(null);
   const [isSharingLoading, setIsSharingLoading] = useState(false);
   const [showSharingCard, setShowSharingCard] = useState(false);
+  const [shareImageUri, setShareImageUri] = useState<string | null>(null);
+  const [showShareSheet, setShowShareSheet] = useState(false);
 
   const [isColdStarting, setIsColdStarting] = useState(false);
   const [coldStartError, setColdStartError] = useState(false);
@@ -48,12 +57,35 @@ export function QuotesScreen() {
   const needsColdStart =
     !isLoading && !isFirstVisit && displayedQuote === null && !isColdStarting && !coldStartError;
 
+  // Heart burst animation
+  const heartScale = useSharedValue(0);
+  const heartOpacity = useSharedValue(0);
+  const heartStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+    opacity: heartOpacity.value,
+  }));
+
+  const triggerHeartBurst = () => {
+    heartScale.value = 0;
+    heartOpacity.value = 1;
+    heartScale.value = withSequence(
+      withSpring(1.5, { damping: 6, stiffness: 200 }),
+      withDelay(180, withTiming(0, { duration: 320 }))
+    );
+    heartOpacity.value = withSequence(
+      withTiming(1, { duration: 40 }),
+      withDelay(350, withTiming(0, { duration: 270 }))
+    );
+  };
+
   useEffect(() => {
     if (!needsColdStart) return;
     setIsColdStarting(true);
     coldStart()
       .catch(() => setColdStartError(true))
       .finally(() => setIsColdStarting(false));
+    // coldStart is a stable Convex action ref — safe to omit
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needsColdStart]);
 
   const handlePrefsComplete = async (
@@ -84,9 +116,10 @@ export function QuotesScreen() {
     await new Promise((r) => setTimeout(r, 120));
     try {
       const uri = await captureRef(sharingCardRef, { format: "png", quality: 1 });
-      await Share.share({ url: uri });
+      setShareImageUri(uri);
+      setShowShareSheet(true);
     } catch {
-      // User dismissed share sheet — silent
+      // silent
     } finally {
       setIsSharingLoading(false);
       setShowSharingCard(false);
@@ -94,10 +127,39 @@ export function QuotesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: top }}>
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-6 pb-4 pt-2">
-        <AppText className="text-base font-medium text-foreground/60">Today</AppText>
+
+    <>
+    <StatusBar hidden />  
+    <View className="flex-1 bg-background">
+      {/* Heart burst overlay */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 20,
+          },
+          heartStyle,
+        ]}
+      >
+        <SymbolView
+          name={{ ios: "heart.fill", android: "favorite" }}
+          size={96}
+          tintColor={accentColor}
+        />
+      </Animated.View>
+
+      {/* Close button */}
+      <View
+        className="absolute top-0 right-3 z-10 p-4"
+        style={{ paddingTop: top + 8 }}
+      >
         <PressableFeedback
           onPress={() => {
             Presets.flick();
@@ -109,85 +171,79 @@ export function QuotesScreen() {
           <SymbolView
             name={{ ios: "xmark", android: "close" }}
             size={18}
-            tintColor={`${foregroundColor}60`}
+            tintColor={`${foregroundColor}50`}
           />
         </PressableFeedback>
       </View>
 
-      <Separator />
-
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ padding: 24, gap: 16 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* First-visit: preference setup takes whole screen */}
-        {isFirstVisit && (
+      {/* First visit — preference setup */}
+      {isFirstVisit && (
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ padding: 24, paddingTop: top + 24, gap: 16 }}
+          showsVerticalScrollIndicator={false}
+        >
           <EaseView
             initialAnimate={{ opacity: 0, translateY: 20 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={ENTRANCE}
-            className="min-h-96"
+            transition={{ type: "timing", duration: 400, easing: [0.25, 0.1, 0.25, 1] }}
           >
             <PreferenceSetupSheet
               onComplete={handlePrefsComplete}
               isLoading={notifState === "requesting" || isColdStarting}
             />
           </EaseView>
-        )}
+        </ScrollView>
+      )}
 
-        {/* Loading skeleton */}
-        {!isFirstVisit && (isLoading || isColdStarting) && (
+      {/* Loading skeleton */}
+      {!isFirstVisit && (isLoading || isColdStarting) && (
+        <View className="flex-1 justify-center px-8" style={{ paddingTop: top + 46 }}>
           <SkeletonGroup isLoading isSkeletonOnly>
-            <View className="gap-4">
-              <SkeletonGroup.Item className="h-4 w-32 rounded-full" />
-              <SkeletonGroup.Item className="h-32 rounded-2xl" />
-              <View className="flex-row gap-3">
-                <SkeletonGroup.Item className="h-11 w-32 rounded-full" />
-                <SkeletonGroup.Item className="h-11 w-28 rounded-full" />
-              </View>
+            <View className="gap-5">
+              <SkeletonGroup.Item className="h-1.5 w-8 rounded-full" />
+              <SkeletonGroup.Item className="h-10 rounded-xl" />
+              <SkeletonGroup.Item className="h-10 w-4/5 rounded-xl" />
+              <SkeletonGroup.Item className="h-10 w-2/3 rounded-xl" />
             </View>
           </SkeletonGroup>
-        )}
+        </View>
+      )}
 
-        {/* Inline error */}
-        {coldStartError && !isColdStarting && (
-          <AppText className="text-xs text-foreground/40 mt-2">
+      {/* Inline error */}
+      {coldStartError && !isColdStarting && (
+        <View className="flex-1 items-center justify-center">
+          <AppText className="text-xs text-foreground/40">
             Something went wrong. Pull to refresh.
           </AppText>
-        )}
+        </View>
+      )}
 
-        {/* Quote card */}
-        {!isFirstVisit && !isLoading && !isColdStarting && displayedQuote && (
-          <EaseView
-            initialAnimate={{ opacity: 0, translateY: 16 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={ENTRANCE}
-          >
-            <QuoteCard
-              quoteId={displayedQuote._id}
-              text={displayedQuote.text}
-              type={displayedQuote.type}
-              reaction={displayedQuote.reaction}
-              onReact={handleReact}
-              onShare={handleShare}
-              isSharingLoading={isSharingLoading}
-            />
-            {showNudge && (
-              <AppText className="text-xs text-foreground/40 mt-4">
-                Try a session for a more personal quote.
-              </AppText>
-            )}
-          </EaseView>
-        )}
+      {/* Immersive quote display */}
+      {!isFirstVisit && !isLoading && !isColdStarting && displayedQuote && (
+        <QuoteCard
+          text={removeEmDash(displayedQuote.text)}
+          type={displayedQuote.type}
+          reaction={displayedQuote.reaction}
+          onReact={handleReact}
+          onShare={handleShare}
+          onHeartBurst={triggerHeartBurst}
+          isSharingLoading={isSharingLoading}
+          showNudge={showNudge}
+          top={top}
+          bottom={bottom}
+        />
+      )}
 
-        {/* Notification denied */}
-        {notifState === "denied" && (
-          <AppText className="text-xs text-foreground/40 mt-2">
-            You can enable notifications in Settings anytime.
-          </AppText>
-        )}
-      </ScrollView>
+      {/* Share sheet */}
+      <QuoteShareSheet
+        visible={showShareSheet}
+        imageUri={shareImageUri}
+        onClose={() => {
+          setShowShareSheet(false);
+          setShareImageUri(null);
+        }}
+      />
 
       {/* Off-screen sharing card for capture */}
       {showSharingCard && displayedQuote && (
@@ -199,9 +255,10 @@ export function QuotesScreen() {
             pointerEvents: "none",
           }}
         >
-          <SharingCard ref={sharingCardRef} text={displayedQuote.text} />
+          <SharingCard ref={sharingCardRef} text={removeEmDash(displayedQuote.text)} />
         </View>
       )}
     </View>
+    </>
   );
 }

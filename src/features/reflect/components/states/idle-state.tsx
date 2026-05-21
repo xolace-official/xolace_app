@@ -56,12 +56,10 @@ export const IdleState = ({
   const { isNight } = useSessionMode();
   const router = useRouter();
   const warningColor = useThemeColor('warning') as string;
+  const accentColor = useThemeColor('accent') as string;
 
   const todayQuotes = useQuery(api.dailyQuotes.getToday);
-  const todayQuote = todayQuotes?.session ?? todayQuotes?.curated ?? null;
-  const quotePreview = todayQuote
-    ? todayQuote.text.split(" ").slice(0, 8).join(" ") + "… →"
-    : null;
+  const hasQuote = !!(todayQuotes?.session ?? todayQuotes?.curated);
   const TEXTURE_WORDS: readonly string[] = isNight
     ? NIGHT_TEXTURE_WORDS
     : DAY_TEXTURE_WORDS;
@@ -110,7 +108,7 @@ export const IdleState = ({
 
   return (
     <View className="flex-1 px-6">
-      <View className="flex-row items-start justify-between pt-10 pb-4">
+      <View className="flex-row items-start justify-between pt-5 pb-4">
         <QuietReturnHeader
           variant={variant}
           isNight={isNight}
@@ -134,24 +132,30 @@ export const IdleState = ({
         </PressableFeedback>
       </View>
 
-      <Separator className="mb-0" />
-
-      {/* Daily quote pill — left-aligned, subtle, navigates to quotes screen */}
-      {quotePreview && (
+      {hasQuote && (
         <PressableFeedback
           onPress={() => {
             playSoftPress();
             router.push("/(protected)/quotes" as any);
           }}
-          accessibilityLabel={`Today's quote: ${quotePreview}`}
+          accessibilityLabel="Open today's reflection"
           hitSlop={8}
-          className="pt-3 pb-1"
+          className="items-center pb-3"
         >
-          <AppText className="text-sm text-foreground/40">
-            {quotePreview}
-          </AppText>
+          <View className="flex-row items-center gap-1.5 rounded-full border px-3 py-1.5" style={{ borderColor: `${accentColor}35`, backgroundColor: `${accentColor}10` }}>
+            <SymbolView
+              name={{ ios: "sparkles", android: "auto_awesome" }}
+              size={11}
+              tintColor={accentColor}
+            />
+            <AppText className="text-xs font-medium" style={{ color: `${accentColor}CC` }}>
+              A word for today
+            </AppText>
+          </View>
         </PressableFeedback>
       )}
+
+      <Separator className="mb-0" />
 
       <View className="flex-1 pt-4">
         <Pressable

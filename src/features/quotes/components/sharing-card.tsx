@@ -1,11 +1,9 @@
 import { forwardRef } from "react";
 import { Platform, useWindowDimensions, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-
-const IOS_STORE_URL = "https://apps.apple.com/app/xolace/id6741088509";
-const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.xolaceincorg.xolace";
 
 type Props = {
   text: string;
@@ -13,12 +11,9 @@ type Props = {
 
 /**
  * Branded sharing card for react-native-view-shot capture.
- * Dimensions: 9:16 (WhatsApp status compatible).
+ * Dimensions: 9:16 (WhatsApp status / IG Stories compatible).
  */
-export const SharingCard = forwardRef<View, Props>(function SharingCard(
-  { text },
-  ref
-) {
+export const SharingCard = forwardRef<View, Props>(function SharingCard({ text }, ref) {
   const { width } = useWindowDimensions();
   const cardWidth = width;
   const cardHeight = width * (16 / 9);
@@ -26,7 +21,6 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
   const backgroundColor = useThemeColor("background") as string;
   const accentColor = useThemeColor("accent") as string;
   const foregroundColor = useThemeColor("foreground") as string;
-
   const storeLinkLabel = Platform.OS === "ios" ? "App Store" : "Google Play";
 
   return (
@@ -34,13 +28,44 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
       ref={ref}
       style={{ width: cardWidth, height: cardHeight, backgroundColor, overflow: "hidden" }}
     >
-      {/* Quote — centered vertically */}
-      <View className="flex-1 justify-center px-9" style={{ paddingBottom: 80 }}>
+      {/* Diagonal accent gradient — top-left warm glow */}
+      <LinearGradient
+        colors={[`${accentColor}22`, "transparent"]}
+        start={[0, 0]}
+        end={[1, 1]}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, height: cardHeight * 0.55 }}
+        pointerEvents="none"
+      />
+
+      {/* Bottom warm gradient */}
+      <LinearGradient
+        colors={["transparent", `${accentColor}18`]}
+        style={{ position: "absolute", top: "50%", left: 0, right: 0, bottom: 0 }}
+        pointerEvents="none"
+      />
+
+      {/* Decorative accent line — top left */}
+      <View
+        style={{
+          position: "absolute",
+          top: 56,
+          left: 40,
+          width: 32,
+          height: 2,
+          backgroundColor: `${accentColor}60`,
+        }}
+      />
+
+      {/* Quote text — centered */}
+      <View
+        className="flex-1 justify-center"
+        style={{ paddingHorizontal: 40, paddingBottom: 80 }}
+      >
         <AppText
           style={{
-            fontSize: 28,
-            fontFamily: "Poppins_600SemiBold",
-            lineHeight: 40,
+            fontSize: 30,
+            fontFamily: "Poppins-SemiBold",
+            lineHeight: 44,
             color: foregroundColor,
           }}
         >
@@ -48,33 +73,38 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
         </AppText>
       </View>
 
-      {/* Bottom gradient */}
-      <LinearGradient
-        colors={["transparent", `${accentColor}1A`]}
-        style={{ position: "absolute", top: "60%", left: 0, right: 0, bottom: 0 }}
-        pointerEvents="none"
-      />
-
-      {/* Wordmark + store link strip */}
+      {/* Wordmark strip */}
       <View
-        className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between px-9"
-        style={{ paddingBottom: 40 }}
+        className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between"
+        style={{ paddingHorizontal: 40, paddingBottom: 44 }}
       >
-        <AppText
-          style={{
-            fontSize: 12,
-            fontFamily: "Poppins_400Regular",
-            letterSpacing: 1,
-            color: `${foregroundColor}99`,
-          }}
+        {/* Badge */}
+        <View
+          className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
+          style={{ backgroundColor: `${accentColor}18`, borderWidth: 1, borderColor: `${accentColor}30` }}
         >
-          Xolace
-        </AppText>
+          <SymbolView
+            name={{ ios: "sparkles", android: "auto_awesome" }}
+            size={10}
+            tintColor={`${accentColor}CC`}
+          />
+          <AppText
+            style={{
+              fontSize: 11,
+              fontFamily: "Poppins-Medium",
+              letterSpacing: 0.5,
+              color: `${accentColor}CC`,
+            }}
+          >
+            Xolace
+          </AppText>
+        </View>
+
         <AppText
           style={{
-            fontSize: 12,
-            fontFamily: "Poppins_400Regular",
-            color: `${foregroundColor}66`,
+            fontSize: 11,
+            fontFamily: "Poppins-Regular",
+            color: `${foregroundColor}40`,
           }}
         >
           {storeLinkLabel}
