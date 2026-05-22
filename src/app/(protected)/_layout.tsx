@@ -20,6 +20,7 @@ export default function ProtectedLayout() {
       <Stack.Screen name="peer-reflections" options={{ gestureEnabled: false }} />
       <Stack.Screen name="session-end" options={{ gestureEnabled: false }} />
       <Stack.Screen name="crisis-resources" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="quotes/index" />
     </Stack>
   );
 }

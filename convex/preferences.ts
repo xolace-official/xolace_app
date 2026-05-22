@@ -6,6 +6,56 @@ import { validateSpaceName } from "./lib/spaceName";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
 
 /**
+ * Get the user's quote preferences (themes, notification settings).
+ * Returns null if the user hasn't set up quotes preferences yet.
+ */
+export const getQuotePreferences = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    const prefs = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+      .unique();
+    return prefs?.quotes ?? null;
+  },
+});
+
+/**
+ * Save quote preferences (themes + notification settings).
+ * Called from PreferenceSetupSheet when the user completes setup.
+ */
+export const updateQuotePreferences = mutation({
+  args: {
+    themes: v.array(v.string()),
+    notificationEnabled: v.boolean(),
+    notificationTime: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    const prefs = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+      .unique();
+
+    if (!prefs) throw new Error("Preferences not found");
+
+    const existing = prefs.quotes;
+    await ctx.db.patch(prefs._id, {
+      quotes: {
+        themes: args.themes,
+        notificationEnabled: args.notificationEnabled,
+        notificationTime: args.notificationTime,
+        shownQuoteIds: existing?.shownQuoteIds ?? [],
+      },
+    });
+
+    return null;
+  },
+});
+
+/**
  * Fetch preferences for the current user's profile.
  */
 export const get = query({

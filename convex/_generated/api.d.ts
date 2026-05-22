@@ -22,11 +22,13 @@ import type * as ai_prompts_notificationTemplates from "../ai/prompts/notificati
 import type * as ai_prompts_notificationWriter from "../ai/prompts/notificationWriter.js";
 import type * as ai_providers_anthropic from "../ai/providers/anthropic.js";
 import type * as ai_providers_moderation from "../ai/providers/moderation.js";
+import type * as ai_quotesDistiller from "../ai/quotesDistiller.js";
 import type * as ai_safeguard from "../ai/safeguard.js";
 import type * as ai_slotFill from "../ai/slotFill.js";
 import type * as ai_tts from "../ai/tts.js";
 import type * as consent from "../consent.js";
 import type * as crons from "../crons.js";
+import type * as dailyQuotes from "../dailyQuotes.js";
 import type * as emotionalMetadata from "../emotionalMetadata.js";
 import type * as escalation from "../escalation.js";
 import type * as exercises from "../exercises.js";
@@ -37,6 +39,7 @@ import type * as jobs_dataRetention from "../jobs/dataRetention.js";
 import type * as jobs_dataWipe from "../jobs/dataWipe.js";
 import type * as jobs_notificationTriggers from "../jobs/notificationTriggers.js";
 import type * as jobs_profileStats from "../jobs/profileStats.js";
+import type * as jobs_quotesGenerator from "../jobs/quotesGenerator.js";
 import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js";
 import type * as jobs_reflectionDistiller from "../jobs/reflectionDistiller.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -49,6 +52,7 @@ import type * as lib_validators from "../lib/validators.js";
 import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
 import type * as preferences from "../preferences.js";
+import type * as quotes from "../quotes.js";
 import type * as reflections from "../reflections.js";
 import type * as seed from "../seed.js";
 import type * as sessionTurns from "../sessionTurns.js";
@@ -77,11 +81,13 @@ declare const fullApi: ApiFromModules<{
   "ai/prompts/notificationWriter": typeof ai_prompts_notificationWriter;
   "ai/providers/anthropic": typeof ai_providers_anthropic;
   "ai/providers/moderation": typeof ai_providers_moderation;
+  "ai/quotesDistiller": typeof ai_quotesDistiller;
   "ai/safeguard": typeof ai_safeguard;
   "ai/slotFill": typeof ai_slotFill;
   "ai/tts": typeof ai_tts;
   consent: typeof consent;
   crons: typeof crons;
+  dailyQuotes: typeof dailyQuotes;
   emotionalMetadata: typeof emotionalMetadata;
   escalation: typeof escalation;
   exercises: typeof exercises;
@@ -92,6 +98,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/dataWipe": typeof jobs_dataWipe;
   "jobs/notificationTriggers": typeof jobs_notificationTriggers;
   "jobs/profileStats": typeof jobs_profileStats;
+  "jobs/quotesGenerator": typeof jobs_quotesGenerator;
   "jobs/reflectionAnonymizer": typeof jobs_reflectionAnonymizer;
   "jobs/reflectionDistiller": typeof jobs_reflectionDistiller;
   "lib/auth": typeof lib_auth;
@@ -104,6 +111,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   notifications: typeof notifications;
   preferences: typeof preferences;
+  quotes: typeof quotes;
   reflections: typeof reflections;
   seed: typeof seed;
   sessionTurns: typeof sessionTurns;
@@ -139,460 +147,8 @@ export declare const internal: FilterApi<
 >;
 
 export declare const components: {
-  rateLimiter: {
-    lib: {
-      checkRateLimit: FunctionReference<
-        "query",
-        "internal",
-        {
-          config:
-            | {
-                capacity?: number;
-                kind: "token bucket";
-                maxReserved?: number;
-                period: number;
-                rate: number;
-                shards?: number;
-                start?: null;
-              }
-            | {
-                capacity?: number;
-                kind: "fixed window";
-                maxReserved?: number;
-                period: number;
-                rate: number;
-                shards?: number;
-                start?: number;
-              };
-          count?: number;
-          key?: string;
-          name: string;
-          reserve?: boolean;
-          throws?: boolean;
-        },
-        { ok: true; retryAfter?: number } | { ok: false; retryAfter: number }
-      >;
-      clearAll: FunctionReference<
-        "mutation",
-        "internal",
-        { before?: number },
-        null
-      >;
-      getServerTime: FunctionReference<"mutation", "internal", {}, number>;
-      getValue: FunctionReference<
-        "query",
-        "internal",
-        {
-          config:
-            | {
-                capacity?: number;
-                kind: "token bucket";
-                maxReserved?: number;
-                period: number;
-                rate: number;
-                shards?: number;
-                start?: null;
-              }
-            | {
-                capacity?: number;
-                kind: "fixed window";
-                maxReserved?: number;
-                period: number;
-                rate: number;
-                shards?: number;
-                start?: number;
-              };
-          key?: string;
-          name: string;
-          sampleShards?: number;
-        },
-        {
-          config:
-            | {
-                capacity?: number;
-                kind: "token bucket";
-                maxReserved?: number;
-                period: number;
-                rate: number;
-                shards?: number;
-                start?: null;
-              }
-            | {
-                capacity?: number;
-                kind: "fixed window";
-                maxReserved?: number;
-                period: number;
-                rate: number;
-                shards?: number;
-                start?: number;
-              };
-          shard: number;
-          ts: number;
-          value: number;
-        }
-      >;
-      rateLimit: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          config:
-            | {
-                capacity?: number;
-                kind: "token bucket";
-                maxReserved?: number;
-                period: number;
-                rate: number;
-                shards?: number;
-                start?: null;
-              }
-            | {
-                capacity?: number;
-                kind: "fixed window";
-                maxReserved?: number;
-                period: number;
-                rate: number;
-                shards?: number;
-                start?: number;
-              };
-          count?: number;
-          key?: string;
-          name: string;
-          reserve?: boolean;
-          throws?: boolean;
-        },
-        { ok: true; retryAfter?: number } | { ok: false; retryAfter: number }
-      >;
-      resetRateLimit: FunctionReference<
-        "mutation",
-        "internal",
-        { key?: string; name: string },
-        null
-      >;
-    };
-    time: {
-      getServerTime: FunctionReference<"mutation", "internal", {}, number>;
-    };
-  };
-  actionCache: {
-    crons: {
-      purge: FunctionReference<
-        "mutation",
-        "internal",
-        { expiresAt?: number },
-        null
-      >;
-    };
-    lib: {
-      get: FunctionReference<
-        "query",
-        "internal",
-        { args: any; name: string; ttl: number | null },
-        { kind: "hit"; value: any } | { expiredEntry?: string; kind: "miss" }
-      >;
-      put: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          args: any;
-          expiredEntry?: string;
-          name: string;
-          ttl: number | null;
-          value: any;
-        },
-        { cacheHit: boolean; deletedExpiredEntry: boolean }
-      >;
-      remove: FunctionReference<
-        "mutation",
-        "internal",
-        { args: any; name: string },
-        null
-      >;
-      removeAll: FunctionReference<
-        "mutation",
-        "internal",
-        { batchSize?: number; before?: number; name?: string },
-        null
-      >;
-    };
-  };
-  migrations: {
-    lib: {
-      cancel: FunctionReference<
-        "mutation",
-        "internal",
-        { name: string },
-        {
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }
-      >;
-      cancelAll: FunctionReference<
-        "mutation",
-        "internal",
-        { sinceTs?: number },
-        Array<{
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }>
-      >;
-      clearAll: FunctionReference<
-        "mutation",
-        "internal",
-        { before?: number },
-        null
-      >;
-      getStatus: FunctionReference<
-        "query",
-        "internal",
-        { limit?: number; names?: Array<string> },
-        Array<{
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }>
-      >;
-      migrate: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          batchSize?: number;
-          cursor?: string | null;
-          dryRun: boolean;
-          fnHandle: string;
-          name: string;
-          next?: Array<{ fnHandle: string; name: string }>;
-          oneBatchOnly?: boolean;
-          reset?: boolean;
-        },
-        {
-          batchSize?: number;
-          cursor?: string | null;
-          error?: string;
-          isDone: boolean;
-          latestEnd?: number;
-          latestStart: number;
-          name: string;
-          next?: Array<string>;
-          processed: number;
-          state: "inProgress" | "success" | "failed" | "canceled" | "unknown";
-        }
-      >;
-    };
-  };
-  pushNotifications: {
-    public: {
-      deleteNotificationsForUser: FunctionReference<
-        "mutation",
-        "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; userId: string },
-        null
-      >;
-      getNotification: FunctionReference<
-        "query",
-        "internal",
-        { id: string; logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
-        null | {
-          _contentAvailable?: boolean;
-          _creationTime: number;
-          badge?: number;
-          body?: string;
-          categoryId?: string;
-          channelId?: string;
-          data?: any;
-          expiration?: number;
-          interruptionLevel?:
-            | "active"
-            | "critical"
-            | "passive"
-            | "time-sensitive";
-          mutableContent?: boolean;
-          numPreviousFailures: number;
-          priority?: "default" | "normal" | "high";
-          sound?: string | null;
-          state:
-            | "awaiting_delivery"
-            | "in_progress"
-            | "delivered"
-            | "needs_retry"
-            | "failed"
-            | "maybe_delivered"
-            | "unable_to_deliver";
-          subtitle?: string;
-          title?: string;
-          ttl?: number;
-        }
-      >;
-      getNotificationsForUser: FunctionReference<
-        "query",
-        "internal",
-        {
-          limit?: number;
-          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
-          userId: string;
-        },
-        Array<{
-          _contentAvailable?: boolean;
-          _creationTime: number;
-          badge?: number;
-          body?: string;
-          categoryId?: string;
-          channelId?: string;
-          data?: any;
-          expiration?: number;
-          id: string;
-          interruptionLevel?:
-            | "active"
-            | "critical"
-            | "passive"
-            | "time-sensitive";
-          mutableContent?: boolean;
-          numPreviousFailures: number;
-          priority?: "default" | "normal" | "high";
-          sound?: string | null;
-          state:
-            | "awaiting_delivery"
-            | "in_progress"
-            | "delivered"
-            | "needs_retry"
-            | "failed"
-            | "maybe_delivered"
-            | "unable_to_deliver";
-          subtitle?: string;
-          title?: string;
-          ttl?: number;
-        }>
-      >;
-      getStatusForUser: FunctionReference<
-        "query",
-        "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; userId: string },
-        { hasToken: boolean; paused: boolean }
-      >;
-      pauseNotificationsForUser: FunctionReference<
-        "mutation",
-        "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; userId: string },
-        null
-      >;
-      recordPushNotificationToken: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
-          pushToken: string;
-          userId: string;
-        },
-        null
-      >;
-      removePushNotificationToken: FunctionReference<
-        "mutation",
-        "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; userId: string },
-        null
-      >;
-      restart: FunctionReference<
-        "mutation",
-        "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
-        boolean
-      >;
-      sendPushNotification: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          allowUnregisteredTokens?: boolean;
-          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
-          notification: {
-            _contentAvailable?: boolean;
-            badge?: number;
-            body?: string;
-            categoryId?: string;
-            channelId?: string;
-            data?: any;
-            expiration?: number;
-            interruptionLevel?:
-              | "active"
-              | "critical"
-              | "passive"
-              | "time-sensitive";
-            mutableContent?: boolean;
-            priority?: "default" | "normal" | "high";
-            sound?: string | null;
-            subtitle?: string;
-            title?: string;
-            ttl?: number;
-          };
-          userId: string;
-        },
-        string | null
-      >;
-      sendPushNotificationBatch: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          allowUnregisteredTokens?: boolean;
-          logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR";
-          notifications: Array<{
-            notification: {
-              _contentAvailable?: boolean;
-              badge?: number;
-              body?: string;
-              categoryId?: string;
-              channelId?: string;
-              data?: any;
-              expiration?: number;
-              interruptionLevel?:
-                | "active"
-                | "critical"
-                | "passive"
-                | "time-sensitive";
-              mutableContent?: boolean;
-              priority?: "default" | "normal" | "high";
-              sound?: string | null;
-              subtitle?: string;
-              title?: string;
-              ttl?: number;
-            };
-            userId: string;
-          }>;
-        },
-        Array<string | null>
-      >;
-      shutdown: FunctionReference<
-        "mutation",
-        "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR" },
-        { data?: any; message: string }
-      >;
-      unpauseNotificationsForUser: FunctionReference<
-        "mutation",
-        "internal",
-        { logLevel: "DEBUG" | "INFO" | "WARN" | "ERROR"; userId: string },
-        null
-      >;
-    };
-  };
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+  actionCache: import("@convex-dev/action-cache/_generated/component.js").ComponentApi<"actionCache">;
+  migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
+  pushNotifications: import("@convex-dev/expo-push-notifications/_generated/component.js").ComponentApi<"pushNotifications">;
 };

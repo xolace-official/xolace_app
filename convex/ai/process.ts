@@ -231,7 +231,7 @@ export const generateMirror = internalAction({
         // 8.7: Slot-fill — fire-and-forget so it doesn't block mirror delivery.
         const slotKeys = [
           ...new Set(
-            matched.steps.flatMap((s) => s.slotKeys ?? [])
+            matched.steps.flatMap((s: { slotKeys?: string[] }) => s.slotKeys ?? [])
           ),
         ];
         if (slotKeys.length > 0) {

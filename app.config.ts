@@ -201,7 +201,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         }
       ],
       "expo-image",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-sharing"
     ],
     experiments: {
       typedRoutes: true,
