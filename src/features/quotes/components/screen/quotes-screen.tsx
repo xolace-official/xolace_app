@@ -12,6 +12,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { GlassView } from "expo-glass-effect";
+import { LinearGradient } from "expo-linear-gradient";
 import { PressableFeedback, SkeletonGroup, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
@@ -131,6 +133,20 @@ export function QuotesScreen() {
     <>
     <StatusBar hidden />  
     <View className="flex-1 bg-background">
+      {/* Gradient layers — give GlassView something to refract */}
+      <LinearGradient
+        colors={["transparent", `${accentColor}28`]}
+        style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 220 }}
+        pointerEvents="none"
+      />
+      <LinearGradient
+        colors={[`${accentColor}20`, "transparent"]}
+        start={[1, 0]}
+        end={[0.4, 0.3]}
+        style={{ position: "absolute", top: 0, right: 0, width: 140, height: 140 }}
+        pointerEvents="none"
+      />
+
       {/* Heart burst overlay */}
       <Animated.View
         pointerEvents="none"
@@ -157,8 +173,8 @@ export function QuotesScreen() {
 
       {/* Close button */}
       <View
-        className="absolute top-0 right-3 z-10 p-4"
-        style={{ paddingTop: top + 8 }}
+        className="absolute top-0 right-5 z-10"
+        style={{ paddingTop: top + 12 }}
       >
         <PressableFeedback
           onPress={() => {
@@ -168,11 +184,22 @@ export function QuotesScreen() {
           accessibilityLabel="Close"
           hitSlop={8}
         >
-          <SymbolView
-            name={{ ios: "xmark", android: "close" }}
-            size={18}
-            tintColor={`${foregroundColor}50`}
-          />
+          <GlassView
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 17,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            glassEffectStyle="clear"
+          >
+            <SymbolView
+              name={{ ios: "xmark", android: "close" }}
+              size={14}
+              tintColor={`${foregroundColor}70`}
+            />
+          </GlassView>
         </PressableFeedback>
       </View>
 

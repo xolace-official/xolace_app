@@ -1,4 +1,5 @@
 import { View } from "react-native";
+import { GlassView } from "expo-glass-effect";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
@@ -106,8 +107,8 @@ export function QuoteCard({
 
         {/* Not today */}
         <ActionButton
-          iosIcon="face.expressionless"
-          androidIcon="sentiment_neutral"
+          iosIcon={reaction === "not_today" ? "moon.fill" : "moon"}
+          androidIcon={reaction === "not_today" ? "bedtime" : "bedtime_off"}
           label="Not today"
           color={foregroundColor}
           accentColor={accentColor}
@@ -160,20 +161,24 @@ function ActionButton({
       accessibilityRole="button"
     >
       <View className="items-center gap-2">
-        <View
-          className="w-12 h-12 rounded-full items-center justify-center"
+        <GlassView
           style={{
-            backgroundColor: isActive ? `${accentColor}18` : `${color}08`,
-            borderWidth: 1,
-            borderColor: isActive ? `${accentColor}35` : `${color}10`,
+            width: 52,
+            height: 52,
+            borderRadius: 26,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: isActive ? 1.5 : 1,
+            borderColor: isActive ? `${accentColor}60` : `${color}12`,
           }}
+          glassEffectStyle="clear"
         >
           <SymbolView
             name={{ ios: iosIcon as any, android: androidIcon as any }}
             size={20}
             tintColor={isActive ? accentColor : `${color}50`}
           />
-        </View>
+        </GlassView>
         <AppText
           className="text-xs"
           style={{ color: isActive ? accentColor : `${color}30` }}
