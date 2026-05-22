@@ -168,6 +168,7 @@ function ActionButton({
             borderRadius: 26,
             alignItems: "center",
             justifyContent: "center",
+            backgroundColor: isActive ? `${accentColor}18` : `${color}08`,
             borderWidth: isActive ? 1.5 : 1,
             borderColor: isActive ? `${accentColor}60` : `${color}12`,
           }}

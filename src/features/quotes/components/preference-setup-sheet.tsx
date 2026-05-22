@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
-import { TagGroup, PressableFeedback, useThemeColor } from "heroui-native";
+import { TagGroup, PressableFeedback } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/shared/pill-button";
@@ -54,8 +54,8 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
   const [selectedThemes, setSelectedThemes] = useState<Set<string>>(new Set());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  const accentColor = useThemeColor("accent") as string;
-  const foregroundColor = useThemeColor("foreground") as string;
+  // const accentColor = useThemeColor("accent") as string;
+  // const foregroundColor = useThemeColor("foreground") as string;
 
   const canAdvanceStep0 = selectedThemes.size >= 2 && selectedThemes.size <= 4;
   const canAdvanceStep1 = selectedTime !== null;

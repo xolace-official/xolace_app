@@ -1,5 +1,7 @@
 import { Image, Modal, Share, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { GlassView } from "expo-glass-effect";
+import { LinearGradient } from "expo-linear-gradient";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
@@ -24,6 +26,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
   const foregroundColor = useThemeColor("foreground") as string;
   const backgroundColor = useThemeColor("background") as string;
   const surfaceColor = useThemeColor("surface") as string;
+  const accentColor = useThemeColor("accent") as string;
 
   const previewWidth = width * 0.72;
   const previewHeight = previewWidth * (16 / 9);
@@ -47,22 +50,43 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
       onRequestClose={onClose}
     >
       <View className="flex-1" style={{ backgroundColor: `${backgroundColor}F2` }}>
+        {/* Gradient layers — give GlassView content to refract */}
+        <LinearGradient
+          colors={[`${accentColor}18`, "transparent"]}
+          start={[0, 0]}
+          end={[1, 0.4]}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, height: 160 }}
+          pointerEvents="none"
+        />
+        <LinearGradient
+          colors={["transparent", `${accentColor}22`]}
+          style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 260 }}
+          pointerEvents="none"
+        />
+
         {/* Header */}
         <View
           className="flex-row items-center justify-between px-6"
           style={{ paddingTop: top + 16, paddingBottom: 20 }}
         >
           <PressableFeedback onPress={onClose} hitSlop={12} accessibilityLabel="Close">
-            <View
-              className="w-10 h-10 rounded-full items-center justify-center"
-              style={{ backgroundColor: `${foregroundColor}0D` }}
+            <GlassView
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: `${foregroundColor}0D`,
+              }}
+              glassEffectStyle="clear"
             >
               <SymbolView
                 name={{ ios: "xmark", android: "close" }}
                 size={15}
                 tintColor={`${foregroundColor}70`}
               />
-            </View>
+            </GlassView>
           </PressableFeedback>
           <AppText className="text-sm font-medium" style={{ color: `${foregroundColor}60` }}>
             Share
@@ -104,7 +128,6 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
             androidIcon="save_alt"
             label="Save"
             foregroundColor={foregroundColor}
-            surfaceColor={surfaceColor}
             onPress={handleShare}
           />
           <QuickAction
@@ -112,7 +135,6 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
             androidIcon="share"
             label="Share"
             foregroundColor={foregroundColor}
-            surfaceColor={surfaceColor}
             onPress={handleShare}
           />
         </View>
@@ -129,7 +151,6 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
               ios={item.ios}
               android={item.android}
               foregroundColor={foregroundColor}
-              surfaceColor={surfaceColor}
               onPress={handleShare}
             />
           ))}
@@ -144,29 +165,34 @@ function QuickAction({
   androidIcon,
   label,
   foregroundColor,
-  surfaceColor,
   onPress,
 }: {
   iosIcon: string;
   androidIcon: string;
   label: string;
   foregroundColor: string;
-  surfaceColor: string;
   onPress: () => void;
 }) {
   return (
     <PressableFeedback onPress={onPress} accessibilityLabel={label} hitSlop={8}>
       <View className="items-center gap-2">
-        <View
-          className="w-14 h-14 rounded-2xl items-center justify-center"
-          style={{ backgroundColor: surfaceColor }}
+        <GlassView
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: `${foregroundColor}08`,
+          }}
+          glassEffectStyle="clear"
         >
           <SymbolView
             name={{ ios: iosIcon as any, android: androidIcon as any }}
             size={22}
             tintColor={`${foregroundColor}70`}
           />
-        </View>
+        </GlassView>
         <AppText className="text-xs" style={{ color: `${foregroundColor}50` }}>
           {label}
         </AppText>
@@ -180,30 +206,37 @@ function SocialIcon({
   ios,
   android,
   foregroundColor,
-  surfaceColor,
   onPress,
 }: {
   label: string;
   ios: string;
   android: string;
   foregroundColor: string;
-  surfaceColor: string;
   onPress: () => void;
 }) {
   return (
     <PressableFeedback onPress={onPress} accessibilityLabel={`Share via ${label}`} hitSlop={8}>
       <View className="items-center gap-2">
-        <View
-          className="w-12 h-12 rounded-full items-center justify-center"
-          style={{ backgroundColor: `${foregroundColor}08`, borderWidth: 1, borderColor: `${foregroundColor}10` }}
+        <GlassView
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: `${foregroundColor}08`,
+            borderWidth: 1,
+            borderColor: `${foregroundColor}10`,
+          }}
+          glassEffectStyle="clear"
         >
           <SymbolView
             name={{ ios: ios as any, android: android as any }}
             size={18}
             tintColor={`${foregroundColor}50`}
           />
-        </View>
-        <AppText className="text-xs" style={{ color: `${foregroundColor}40`, fontSize: 10 }}>
+        </GlassView>
+        <AppText style={{ color: `${foregroundColor}40`, fontSize: 10 }}>
           {label}
         </AppText>
       </View>

@@ -191,6 +191,7 @@ export function QuotesScreen() {
               borderRadius: 17,
               alignItems: "center",
               justifyContent: "center",
+              backgroundColor: `${foregroundColor}10`,
             }}
             glassEffectStyle="clear"
           >
