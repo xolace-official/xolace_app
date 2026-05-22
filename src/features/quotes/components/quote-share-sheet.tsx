@@ -1,9 +1,11 @@
-import { Image, Modal, Share, View, useWindowDimensions } from "react-native";
+import { Image, Modal, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
+import * as Sharing from "expo-sharing";
+import * as SMS from "expo-sms";
 import { AppText } from "@/src/components/shared/app-text";
 import { Presets } from "react-native-pulsar";
 
@@ -31,11 +33,31 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
   const previewWidth = width * 0.72;
   const previewHeight = previewWidth * (16 / 9);
 
-  const handleShare = async () => {
+  const shareImage = async () => {
     if (!imageUri) return;
     Presets.flick();
     try {
-      await Share.share({ url: imageUri });
+      const available = await Sharing.isAvailableAsync();
+      if (available) {
+        await Sharing.shareAsync(imageUri, { mimeType: "image/png", UTI: "public.png" });
+      }
+    } catch {
+      // dismissed
+    }
+  };
+
+  const shareViaMessages = async () => {
+    if (!imageUri) return;
+    Presets.flick();
+    try {
+      const available = await SMS.isAvailableAsync();
+      if (available) {
+        await SMS.sendSMSAsync([], "", {
+          attachments: { uri: imageUri, mimeType: "image/png", filename: "quote.png" },
+        });
+      } else {
+        await shareImage();
+      }
     } catch {
       // dismissed
     }
@@ -128,14 +150,14 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
             androidIcon="save_alt"
             label="Save"
             foregroundColor={foregroundColor}
-            onPress={handleShare}
+            onPress={shareImage}
           />
           <QuickAction
             iosIcon="square.and.arrow.up"
             androidIcon="share"
             label="Share"
             foregroundColor={foregroundColor}
-            onPress={handleShare}
+            onPress={shareImage}
           />
         </View>
 
@@ -151,7 +173,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
               ios={item.ios}
               android={item.android}
               foregroundColor={foregroundColor}
-              onPress={handleShare}
+              onPress={item.label === "Messages" ? shareViaMessages : shareImage}
             />
           ))}
         </View>

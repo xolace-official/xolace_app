@@ -56,10 +56,10 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard({ text }
         }}
       />
 
-      {/* Quote text — centered */}
+      {/* Quote text + branding — centered as one block */}
       <View
         className="flex-1 justify-center"
-        style={{ paddingHorizontal: 40, paddingBottom: 80 }}
+        style={{ paddingHorizontal: 40 }}
       >
         <AppText
           style={{
@@ -71,44 +71,40 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard({ text }
         >
           {text}
         </AppText>
-      </View>
 
-      {/* Wordmark strip */}
-      <View
-        className="absolute bottom-0 left-0 right-0 flex-row items-center justify-between"
-        style={{ paddingHorizontal: 40, paddingBottom: 44 }}
-      >
-        {/* Badge */}
-        <View
-          className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
-          style={{ backgroundColor: `${accentColor}18`, borderWidth: 1, borderColor: `${accentColor}30` }}
-        >
-          <SymbolView
-            name={{ ios: "sparkles", android: "auto_awesome" }}
-            size={10}
-            tintColor={`${accentColor}CC`}
-          />
+        {/* Branding sits directly below the quote — hard to crop out */}
+        <View className="flex-row items-center gap-3 mt-6">
+          <View
+            className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
+            style={{ backgroundColor: `${accentColor}18`, borderWidth: 1, borderColor: `${accentColor}30` }}
+          >
+            <SymbolView
+              name={{ ios: "sparkles", android: "auto_awesome" }}
+              size={10}
+              tintColor={`${accentColor}CC`}
+            />
+            <AppText
+              style={{
+                fontSize: 11,
+                fontFamily: "Poppins-Medium",
+                letterSpacing: 0.5,
+                color: `${accentColor}CC`,
+              }}
+            >
+              Xolace
+            </AppText>
+          </View>
+
           <AppText
             style={{
               fontSize: 11,
-              fontFamily: "Poppins-Medium",
-              letterSpacing: 0.5,
-              color: `${accentColor}CC`,
+              fontFamily: "Poppins-Regular",
+              color: `${foregroundColor}30`,
             }}
           >
-            Xolace
+            {storeLinkLabel}
           </AppText>
         </View>
-
-        <AppText
-          style={{
-            fontSize: 11,
-            fontFamily: "Poppins-Regular",
-            color: `${foregroundColor}40`,
-          }}
-        >
-          {storeLinkLabel}
-        </AppText>
       </View>
     </View>
   );
