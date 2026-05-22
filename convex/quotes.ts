@@ -37,10 +37,10 @@ export const pickCuratedQuote = internalQuery({
   },
   handler: async (ctx, args) => {
     const shownSet = new Set<string>(args.shownQuoteIds);
+    const allQuotes = await ctx.db.query("quotes").collect();
 
     // Try preference-matching quotes first
     if (args.themes.length > 0) {
-      const allQuotes = await ctx.db.query("quotes").collect();
       const matching = allQuotes.filter(
         (q) =>
           !shownSet.has(q._id) &&
@@ -52,7 +52,6 @@ export const pickCuratedQuote = internalQuery({
     }
 
     // Fallback: any unseen quote
-    const allQuotes = await ctx.db.query("quotes").collect();
     const unseen = allQuotes.filter((q) => !shownSet.has(q._id));
     if (unseen.length > 0) {
       return unseen[Math.floor(Math.random() * unseen.length)];

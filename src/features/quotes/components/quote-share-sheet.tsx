@@ -1,13 +1,16 @@
-import { Image, Modal, View, useWindowDimensions } from "react-native";
+import { Modal, View, useWindowDimensions } from "react-native";
+import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
-import { PressableFeedback, useThemeColor } from "heroui-native";
+import { PressableFeedback, useThemeColor, useToast } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import * as Sharing from "expo-sharing";
 import * as SMS from "expo-sms";
 import { AppText } from "@/src/components/shared/app-text";
 import { Presets } from "react-native-pulsar";
+import { QuickAction } from "./quick-action";
+import { SocialIcon } from "./social-icon";
 
 type Props = {
   visible: boolean;
@@ -29,26 +32,29 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
   const backgroundColor = useThemeColor("background") as string;
   const surfaceColor = useThemeColor("surface") as string;
   const accentColor = useThemeColor("accent") as string;
+  const { toast } = useToast();
 
   const previewWidth = width * 0.72;
   const previewHeight = previewWidth * (16 / 9);
 
   const shareImage = async () => {
-    if (!imageUri) return;
     Presets.flick();
+    if (!imageUri) return;
     try {
       const available = await Sharing.isAvailableAsync();
       if (available) {
         await Sharing.shareAsync(imageUri, { mimeType: "image/png", UTI: "public.png" });
+      } else {
+        toast.show({ label: "Sharing not available", variant: "default" });
       }
     } catch {
-      // dismissed
+      // user dismissed native sheet — no feedback needed
     }
   };
 
   const shareViaMessages = async () => {
-    if (!imageUri) return;
     Presets.flick();
+    if (!imageUri) return;
     try {
       const available = await SMS.isAvailableAsync();
       if (available) {
@@ -59,7 +65,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
         await shareImage();
       }
     } catch {
-      // dismissed
+      toast.show({ label: "Couldn't open Messages", description: "Try sharing another way.", variant: "default" });
     }
   };
 
@@ -131,7 +137,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
               <Image
                 source={{ uri: imageUri }}
                 style={{ width: "100%", height: "100%" }}
-                resizeMode="cover"
+                contentFit="cover"
               />
             ) : (
               <View className="flex-1 items-center justify-center">
@@ -179,89 +185,5 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
         </View>
       </View>
     </Modal>
-  );
-}
-
-function QuickAction({
-  iosIcon,
-  androidIcon,
-  label,
-  foregroundColor,
-  onPress,
-}: {
-  iosIcon: string;
-  androidIcon: string;
-  label: string;
-  foregroundColor: string;
-  onPress: () => void;
-}) {
-  return (
-    <PressableFeedback onPress={onPress} accessibilityLabel={label} hitSlop={8}>
-      <View className="items-center gap-2">
-        <GlassView
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 16,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: `${foregroundColor}08`,
-          }}
-          glassEffectStyle="clear"
-        >
-          <SymbolView
-            name={{ ios: iosIcon as any, android: androidIcon as any }}
-            size={22}
-            tintColor={`${foregroundColor}70`}
-          />
-        </GlassView>
-        <AppText className="text-xs" style={{ color: `${foregroundColor}50` }}>
-          {label}
-        </AppText>
-      </View>
-    </PressableFeedback>
-  );
-}
-
-function SocialIcon({
-  label,
-  ios,
-  android,
-  foregroundColor,
-  onPress,
-}: {
-  label: string;
-  ios: string;
-  android: string;
-  foregroundColor: string;
-  onPress: () => void;
-}) {
-  return (
-    <PressableFeedback onPress={onPress} accessibilityLabel={`Share via ${label}`} hitSlop={8}>
-      <View className="items-center gap-2">
-        <GlassView
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 24,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: `${foregroundColor}08`,
-            borderWidth: 1,
-            borderColor: `${foregroundColor}10`,
-          }}
-          glassEffectStyle="clear"
-        >
-          <SymbolView
-            name={{ ios: ios as any, android: android as any }}
-            size={18}
-            tintColor={`${foregroundColor}50`}
-          />
-        </GlassView>
-        <AppText style={{ color: `${foregroundColor}40`, fontSize: 10 }}>
-          {label}
-        </AppText>
-      </View>
-    </PressableFeedback>
   );
 }

@@ -36,15 +36,19 @@ export const getProfileStatus = internalQuery({
     date: v.string(),
   },
   handler: async (ctx, args) => {
-    // Idempotency check
+    // Idempotency check — only consider fully done when a curated quote exists
+    // (curated is always the last step in processUser, so its presence means both types ran)
     const existing = await ctx.db
       .query("daily_quotes")
-      .withIndex("by_profile_date", (q) =>
-        q.eq("emotionalProfileId", args.emotionalProfileId).eq("date", args.date)
+      .withIndex("by_profile_date_type", (q) =>
+        q
+          .eq("emotionalProfileId", args.emotionalProfileId)
+          .eq("date", args.date)
+          .eq("type", "curated")
       )
-      .take(2);
+      .unique();
 
-    if (existing.length > 0) return { alreadyDone: true, active: false, prefs: null };
+    if (existing) return { alreadyDone: true, active: false, prefs: null };
 
     // Prefs check
     const prefs = await ctx.db

@@ -15,7 +15,7 @@ const PROPER_NOUN_RE = /(?<!\. |\? |! |^)[A-Z][a-z]{2,}/g;
 const MEDICAL_BLOCKLIST = [
   "depression",
   "anxiety disorder",
-  "PTSD",
+  "ptsd",
   "bipolar",
   "schizophrenia",
   "diagnosis",
@@ -91,7 +91,7 @@ export const loadEmotionalContext = internalQuery({
     }
 
     return contextItems.length > 0
-      ? { sessions: contextItems, sessionIds: recentSessions.map((s) => s._id) }
+      ? { sessions: contextItems, sessionIds: contextItems.map((c) => c.sessionId) }
       : null;
   },
 });
@@ -178,12 +178,12 @@ Rules:
       const validation = validateQuote(rawText);
       if (!validation.ok) {
         console.error(
-          `[quotesDistiller] Quote failed validation for ${args.emotionalProfileId}: ${validation.reason} — "${rawText}"`
+          `[quotesDistiller] Quote failed validation for ${args.emotionalProfileId}: ${validation.reason}`
         );
         return null;
       }
 
-      await ctx.runMutation(internal.dailyQuotes.store, {
+      const quoteId = await ctx.runMutation(internal.dailyQuotes.store, {
         emotionalProfileId: args.emotionalProfileId,
         date: args.date,
         type: "session",
@@ -192,7 +192,7 @@ Rules:
       });
 
       console.log(
-        `[quotesDistiller] Stored session-derived quote for ${args.emotionalProfileId}: "${rawText.substring(0, 60)}..."`
+        `[quotesDistiller] Stored session-derived quote ${quoteId} for ${args.emotionalProfileId} (${args.date})`
       );
       return rawText;
     } catch (err) {

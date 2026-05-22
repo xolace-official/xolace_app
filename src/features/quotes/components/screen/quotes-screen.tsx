@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { captureRef } from "react-native-view-shot";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -14,16 +13,17 @@ import Animated, {
 } from "react-native-reanimated";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
-import { PressableFeedback, SkeletonGroup, useThemeColor } from "heroui-native";
+import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
 import { api } from "@/convex/_generated/api";
-import { AppText } from "@/src/components/shared/app-text";
 import { QuoteCard } from "@/src/features/quotes/components/quote-card";
 import { SharingCard } from "@/src/features/quotes/components/sharing-card";
 import { PreferenceSetupSheet } from "@/src/features/quotes/components/preference-setup-sheet";
 import { QuoteShareSheet } from "@/src/features/quotes/components/quote-share-sheet";
+import { QuoteLoadingAndError } from "@/src/features/quotes/components/quote-loading-and-error";
 import { useQuoteNotifications } from "@/src/features/quotes/hooks/use-quote-notifications";
+import { useQuoteSharing } from "@/src/features/quotes/hooks/use-quote-sharing";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 import { Presets } from "react-native-pulsar";
 import { StatusBar } from "expo-status-bar";
@@ -43,12 +43,6 @@ export function QuotesScreen() {
 
   const { state: notifState, scheduleNotification } = useQuoteNotifications();
 
-  const sharingCardRef = useRef<View>(null);
-  const [isSharingLoading, setIsSharingLoading] = useState(false);
-  const [showSharingCard, setShowSharingCard] = useState(false);
-  const [shareImageUri, setShareImageUri] = useState<string | null>(null);
-  const [showShareSheet, setShowShareSheet] = useState(false);
-
   const [isColdStarting, setIsColdStarting] = useState(false);
   const [coldStartError, setColdStartError] = useState(false);
 
@@ -60,7 +54,18 @@ export function QuotesScreen() {
     !isLoading && !isFirstVisit && displayedQuote === null && !isColdStarting && !coldStartError;
 
   console.log(`[quotesScreen:needsColdStart] needsColdStart=${needsColdStart}`);
-  
+
+  const {
+    handleShare,
+    onSharingCardLayout,
+    sharingCardRef,
+    isSharingLoading,
+    showSharingCard,
+    showShareSheet,
+    setShowShareSheet,
+    shareImageUri,
+    setShareImageUri,
+  } = useQuoteSharing(displayedQuote);
 
   // Heart burst animation
   const heartScale = useSharedValue(0);
@@ -95,7 +100,6 @@ export function QuotesScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needsColdStart]);
 
-  // Clear loading once the reactive query delivers a quote
   useEffect(() => {
     if (displayedQuote && isColdStarting) {
       setIsColdStarting(false);
@@ -115,6 +119,16 @@ export function QuotesScreen() {
     });
   };
 
+  const handleRetry = () => {
+    setColdStartError(false);
+    setIsColdStarting(true);
+    coldStart().catch((e) => {
+      console.error(e);
+      setColdStartError(true);
+      setIsColdStarting(false);
+    });
+  };
+
   const handleReact = async (reaction: "resonates" | "not_today" | null | undefined) => {
     if (!displayedQuote) return;
     if (!reaction) {
@@ -124,29 +138,10 @@ export function QuotesScreen() {
     }
   };
 
-  const handleShare = async () => {
-    if (!displayedQuote || isSharingLoading) return;
-    setIsSharingLoading(true);
-    setShowSharingCard(true);
-    await new Promise((r) => setTimeout(r, 120));
-    try {
-      const uri = await captureRef(sharingCardRef, { format: "png", quality: 1 });
-      setShareImageUri(uri);
-      setShowShareSheet(true);
-    } catch {
-      // silent
-    } finally {
-      setIsSharingLoading(false);
-      setShowSharingCard(false);
-    }
-  };
-
   return (
-
     <>
-    <StatusBar hidden />  
+    <StatusBar hidden />
     <View className="flex-1 bg-background">
-      {/* Gradient layers — give GlassView something to refract */}
       <LinearGradient
         colors={["transparent", `${accentColor}28`]}
         style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 220 }}
@@ -164,55 +159,21 @@ export function QuotesScreen() {
       <Animated.View
         pointerEvents="none"
         style={[
-          {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 20,
-          },
+          { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, justifyContent: "center", alignItems: "center", zIndex: 20 },
           heartStyle,
         ]}
       >
-        <SymbolView
-          name={{ ios: "heart.fill", android: "favorite" }}
-          size={96}
-          tintColor={accentColor}
-        />
+        <SymbolView name={{ ios: "heart.fill", android: "favorite" }} size={96} tintColor={accentColor} />
       </Animated.View>
 
       {/* Close button */}
-      <View
-        className="absolute top-0 right-5 z-10"
-        style={{ paddingTop: top + 12 }}
-      >
-        <PressableFeedback
-          onPress={() => {
-            Presets.flick();
-            router.back();
-          }}
-          accessibilityLabel="Close"
-          hitSlop={8}
-        >
+      <View className="absolute top-0 right-5 z-10" style={{ paddingTop: top + 12 }}>
+        <PressableFeedback onPress={() => { Presets.flick(); router.back(); }} accessibilityLabel="Close" hitSlop={8}>
           <GlassView
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: `${foregroundColor}10`,
-            }}
+            style={{ width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: `${foregroundColor}10` }}
             glassEffectStyle="clear"
           >
-            <SymbolView
-              name={{ ios: "xmark", android: "close" }}
-              size={14}
-              tintColor={`${foregroundColor}70`}
-            />
+            <SymbolView name={{ ios: "xmark", android: "close" }} size={14} tintColor={`${foregroundColor}70`} />
           </GlassView>
         </PressableFeedback>
       </View>
@@ -237,28 +198,14 @@ export function QuotesScreen() {
         </ScrollView>
       )}
 
-      {/* Loading skeleton */}
-      {!isFirstVisit && (isLoading || isColdStarting) && (
-        <View className="flex-1 justify-center px-8" style={{ paddingTop: top + 36 }}>
-          <SkeletonGroup isLoading isSkeletonOnly>
-            <View className="gap-5">
-              <SkeletonGroup.Item className="h-1.5 w-8 rounded-full" />
-              <SkeletonGroup.Item className="h-10 rounded-xl" />
-              <SkeletonGroup.Item className="h-10 w-4/5 rounded-xl" />
-              <SkeletonGroup.Item className="h-10 w-2/3 rounded-xl" />
-            </View>
-          </SkeletonGroup>
-        </View>
-      )}
-
-      {/* Inline error */}
-      {coldStartError && !isColdStarting && (
-        <View className="flex-1 items-center justify-center">
-          <AppText className="text-xs text-foreground/40">
-            Something went wrong. Pull to refresh.
-          </AppText>
-        </View>
-      )}
+      <QuoteLoadingAndError
+        isFirstVisit={isFirstVisit}
+        isLoading={isLoading}
+        isColdStarting={isColdStarting}
+        coldStartError={coldStartError}
+        top={top}
+        onRetry={handleRetry}
+      />
 
       {/* Immersive quote display */}
       {!isFirstVisit && !isLoading && !isColdStarting && displayedQuote && (
@@ -276,26 +223,15 @@ export function QuotesScreen() {
         />
       )}
 
-      {/* Share sheet */}
       <QuoteShareSheet
         visible={showShareSheet}
         imageUri={shareImageUri}
-        onClose={() => {
-          setShowShareSheet(false);
-          setShareImageUri(null);
-        }}
+        onClose={() => { setShowShareSheet(false); setShareImageUri(null); }}
       />
 
       {/* Off-screen sharing card for capture */}
       {showSharingCard && displayedQuote && (
-        <View
-          style={{
-            position: "absolute",
-            top: -10000,
-            left: 0,
-            pointerEvents: "none",
-          }}
-        >
+        <View style={{ position: "absolute", top: -10000, left: 0, pointerEvents: "none" }} onLayout={onSharingCardLayout}>
           <SharingCard ref={sharingCardRef} text={removeEmDash(displayedQuote.text)} />
         </View>
       )}
