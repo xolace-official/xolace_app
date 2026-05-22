@@ -59,6 +59,9 @@ export function QuotesScreen() {
   const needsColdStart =
     !isLoading && !isFirstVisit && displayedQuote === null && !isColdStarting && !coldStartError;
 
+  console.log(`[quotesScreen:needsColdStart] needsColdStart=${needsColdStart}`);
+  
+
   // Heart burst animation
   const heartScale = useSharedValue(0);
   const heartOpacity = useSharedValue(0);
@@ -83,12 +86,21 @@ export function QuotesScreen() {
   useEffect(() => {
     if (!needsColdStart) return;
     setIsColdStarting(true);
-    coldStart()
-      .catch(() => setColdStartError(true))
-      .finally(() => setIsColdStarting(false));
+    coldStart().catch((e) => {
+      console.error(e);
+      setColdStartError(true);
+      setIsColdStarting(false);
+    });
     // coldStart is a stable Convex action ref — safe to omit
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needsColdStart]);
+
+  // Clear loading once the reactive query delivers a quote
+  useEffect(() => {
+    if (displayedQuote && isColdStarting) {
+      setIsColdStarting(false);
+    }
+  }, [displayedQuote, isColdStarting]);
 
   const handlePrefsComplete = async (
     themes: string[],
@@ -97,9 +109,10 @@ export function QuotesScreen() {
   ) => {
     await scheduleNotification(themes, notifEnabled, notifTime);
     setIsColdStarting(true);
-    coldStart()
-      .catch(() => setColdStartError(true))
-      .finally(() => setIsColdStarting(false));
+    coldStart().catch(() => {
+      setColdStartError(true);
+      setIsColdStarting(false);
+    });
   };
 
   const handleReact = async (reaction: "resonates" | "not_today" | null | undefined) => {
@@ -226,7 +239,7 @@ export function QuotesScreen() {
 
       {/* Loading skeleton */}
       {!isFirstVisit && (isLoading || isColdStarting) && (
-        <View className="flex-1 justify-center px-8" style={{ paddingTop: top + 46 }}>
+        <View className="flex-1 justify-center px-8" style={{ paddingTop: top + 36 }}>
           <SkeletonGroup isLoading isSkeletonOnly>
             <View className="gap-5">
               <SkeletonGroup.Item className="h-1.5 w-8 rounded-full" />

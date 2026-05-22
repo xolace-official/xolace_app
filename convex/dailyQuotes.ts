@@ -130,13 +130,18 @@ export const store = internalMutation({
 export const coldStart = action({
   args: {},
   handler: async (ctx) => {
+    console.log(`[dailyQuotes:coldStart] Starting cold start`);
+    
     const profile: { _id: string } | null = await ctx.runQuery(
       internal.dailyQuotes.getMyProfile,
       {}
     );
     if (!profile) throw new Error("Not authenticated");
 
-    await ctx.runAction(internal.jobs.quotesGenerator.processUser, {
+    // Schedule instead of awaiting — processUser calls Anthropic and can take
+    // 30s+, which drops the WebSocket. The reactive getToday query pushes the
+    // update to the client automatically when quotes land.
+    await ctx.scheduler.runAfter(0, internal.jobs.quotesGenerator.processUser, {
       emotionalProfileId: profile._id as any,
     });
     return null;

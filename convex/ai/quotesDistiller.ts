@@ -1,8 +1,9 @@
 // V8 runtime — Anthropic SDK uses fetch, no Node built-ins needed.
 
 import { v } from "convex/values";
-import { internalAction, internalQuery } from "../_generated/server";
+import { ActionCtx, internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { Id } from "../_generated/dataModel";
 import { getAnthropicClient } from "./providers/anthropic";
 
 const DISTILLER_MODEL = "claude-haiku-4-5-20251001";
@@ -110,14 +111,15 @@ type EmotionalContext = {
   sessionIds: string[];
 } | null;
 
-export const generateForUser = internalAction({
-  args: {
-    emotionalProfileId: v.id("emotional_profiles"),
-    date: v.string(),
-    preferredThemes: v.array(v.string()),
-  },
-  handler: async (ctx, args): Promise<string | null> => {
-    try {
+/**
+ * Plain helper — call directly from actions in the same V8 runtime
+ * to avoid ctx.runAction overhead and an extra Convex function round-trip.
+ */
+export async function distillQuoteForUser(
+  ctx: ActionCtx,
+  args: { emotionalProfileId: Id<"emotional_profiles">; date: string; preferredThemes: string[] }
+): Promise<string | null> {
+  try {
       const context = (await ctx.runQuery(
         internal.ai.quotesDistiller.loadEmotionalContext,
         { emotionalProfileId: args.emotionalProfileId }
@@ -200,5 +202,13 @@ Rules:
       );
       return null;
     }
+}
+
+export const generateForUser = internalAction({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+    date: v.string(),
+    preferredThemes: v.array(v.string()),
   },
+  handler: (ctx, args) => distillQuoteForUser(ctx, args),
 });

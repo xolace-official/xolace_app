@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalAction, internalMutation, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { distillQuoteForUser } from "../ai/quotesDistiller";
 
 const BATCH_SIZE = 20;
 
@@ -8,10 +9,6 @@ function utcDateString(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-/**
- * Load the next batch of emotional profiles to process for daily quotes.
- * "Active" = has quotes preferences set OR at least 1 session in last 30 days.
- */
 export const getNextBatch = internalQuery({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -30,14 +27,26 @@ export const getNextBatch = internalQuery({
 });
 
 /**
- * Check if a profile qualifies for daily quote generation.
- * Must have quotes prefs set OR session in last 30 days.
+ * Single-transaction check: combines hasQuotesForToday + isProfileActive.
+ * Avoids two sequential ctx.runQuery calls from the action.
  */
-export const isProfileActive = internalQuery({
+export const getProfileStatus = internalQuery({
   args: {
     emotionalProfileId: v.id("emotional_profiles"),
+    date: v.string(),
   },
   handler: async (ctx, args) => {
+    // Idempotency check
+    const existing = await ctx.db
+      .query("daily_quotes")
+      .withIndex("by_profile_date", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId).eq("date", args.date)
+      )
+      .take(2);
+
+    if (existing.length > 0) return { alreadyDone: true, active: false, prefs: null };
+
+    // Prefs check
     const prefs = await ctx.db
       .query("preferences")
       .withIndex("by_profile", (q) =>
@@ -45,21 +54,68 @@ export const isProfileActive = internalQuery({
       )
       .unique();
 
-    // Has quotes preferences → always active for generation
-    if (prefs?.quotes !== undefined) return { active: true, prefs };
+    if (prefs?.quotes !== undefined) return { alreadyDone: false, active: true, prefs };
 
-    // No prefs — check for recent session
+    // Fall back to recent-session check
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const recentSession = await ctx.db
       .query("sessions")
       .withIndex("by_profile_time", (q) =>
-        q
-          .eq("emotionalProfileId", args.emotionalProfileId)
-          .gte("createdAt", thirtyDaysAgo)
+        q.eq("emotionalProfileId", args.emotionalProfileId).gte("createdAt", thirtyDaysAgo)
       )
       .first();
 
-    return { active: !!recentSession, prefs };
+    return { alreadyDone: false, active: !!recentSession, prefs };
+  },
+});
+
+/**
+ * Single-transaction mutation: store curated quote + mark it shown.
+ * Avoids two sequential ctx.runMutation calls from the action.
+ */
+export const storeCuratedAndMarkShown = internalMutation({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+    date: v.string(),
+    text: v.string(),
+    quoteId: v.id("quotes"),
+  },
+  handler: async (ctx, args) => {
+    // Idempotency — skip if curated already stored
+    const existing = await ctx.db
+      .query("daily_quotes")
+      .withIndex("by_profile_date_type", (q) =>
+        q
+          .eq("emotionalProfileId", args.emotionalProfileId)
+          .eq("date", args.date)
+          .eq("type", "curated")
+      )
+      .unique();
+
+    if (!existing) {
+      await ctx.db.insert("daily_quotes", {
+        emotionalProfileId: args.emotionalProfileId,
+        date: args.date,
+        type: "curated",
+        text: args.text,
+        isPremium: false,
+        reaction: undefined,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Mark shown in prefs (cap at 500)
+    const prefs = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId)
+      )
+      .unique();
+
+    if (prefs?.quotes) {
+      const updated = [...(prefs.quotes.shownQuoteIds ?? []), args.quoteId].slice(-500);
+      await ctx.db.patch(prefs._id, { quotes: { ...prefs.quotes, shownQuoteIds: updated } });
+    }
   },
 });
 
@@ -73,101 +129,52 @@ export const processUser = internalAction({
   handler: async (ctx, args) => {
     const date = utcDateString();
 
-    // Skip if already has quotes today (idempotency)
-    const alreadyDone: boolean = await ctx.runQuery(
-      internal.dailyQuotes.hasQuotesForToday,
-      { emotionalProfileId: args.emotionalProfileId, date }
-    );
+    // Single query: idempotency + active check + prefs — avoids two round-trips
+    const { alreadyDone, active, prefs }: {
+      alreadyDone: boolean;
+      active: boolean;
+      prefs: { quotes?: { themes: string[]; notificationEnabled: boolean; notificationTime?: string; shownQuoteIds: string[] } } | null;
+    } = await ctx.runQuery(internal.jobs.quotesGenerator.getProfileStatus, {
+      emotionalProfileId: args.emotionalProfileId,
+      date,
+    });
+
     if (alreadyDone) {
-      console.log(
-        `[quotesGenerator:processUser] Already has quotes for ${args.emotionalProfileId} on ${date}, skipping`
-      );
+      console.log(`[quotesGenerator:processUser] Already done for ${args.emotionalProfileId} on ${date}`);
       return;
     }
-
-    const { active, prefs }: { active: boolean; prefs: { quotes?: { themes: string[]; notificationEnabled: boolean; notificationTime?: string; shownQuoteIds: string[] } } | null } =
-      await ctx.runQuery(internal.jobs.quotesGenerator.isProfileActive, {
-        emotionalProfileId: args.emotionalProfileId,
-      });
-
     if (!active) return;
 
     const themes = prefs?.quotes?.themes ?? [];
+    const shownQuoteIds = (prefs?.quotes?.shownQuoteIds ?? []) as any[];
 
-    // 1. Attempt session-derived quote (best-effort, no retry)
-    await ctx.runAction(internal.ai.quotesDistiller.generateForUser, {
+    // 1. Session-derived quote — direct helper call (same V8 runtime, no ctx.runAction overhead)
+    await distillQuoteForUser(ctx, {
       emotionalProfileId: args.emotionalProfileId,
       date,
       preferredThemes: themes,
     });
 
-    // 2. Always generate curated quote
-    const shownQuoteIds = (prefs?.quotes?.shownQuoteIds ?? []) as any[];
-
+    // 2. Curated quote
     const curatedQuote: { _id: string; text: string } | null = await ctx.runQuery(
       internal.quotes.pickCuratedQuote,
-      {
-        emotionalProfileId: args.emotionalProfileId,
-        themes,
-        shownQuoteIds,
-      }
+      { emotionalProfileId: args.emotionalProfileId, themes, shownQuoteIds }
     );
 
     if (curatedQuote) {
-      await ctx.runMutation(internal.dailyQuotes.store, {
+      // Single mutation: store + mark shown atomically
+      await ctx.runMutation(internal.jobs.quotesGenerator.storeCuratedAndMarkShown, {
         emotionalProfileId: args.emotionalProfileId,
         date,
-        type: "curated",
         text: curatedQuote.text,
+        quoteId: curatedQuote._id as any,
       });
-
-      // Track shown quote ID in preferences to avoid repeats
-      if (prefs?.quotes !== undefined) {
-        await ctx.runMutation(internal.jobs.quotesGenerator.markQuoteShown, {
-          emotionalProfileId: args.emotionalProfileId,
-          quoteId: curatedQuote._id as any,
-        });
-      }
     }
 
-    console.log(
-      `[quotesGenerator:processUser] Done for ${args.emotionalProfileId} on ${date}`
-    );
+    console.log(`[quotesGenerator:processUser] Done for ${args.emotionalProfileId} on ${date}`);
   },
 });
 
-/**
- * Append a curated quote ID to the shown list in preferences.
- */
-export const markQuoteShown = internalMutation({
-  args: {
-    emotionalProfileId: v.id("emotional_profiles"),
-    quoteId: v.id("quotes"),
-  },
-  handler: async (ctx, args) => {
-    const prefs = await ctx.db
-      .query("preferences")
-      .withIndex("by_profile", (q) =>
-        q.eq("emotionalProfileId", args.emotionalProfileId)
-      )
-      .unique();
-
-    if (!prefs?.quotes) return;
-
-    const currentShown = prefs.quotes.shownQuoteIds ?? [];
-    // Cap at 500 to stay well under document size limit
-    const updated = [...currentShown, args.quoteId].slice(-500);
-
-    await ctx.db.patch(prefs._id, {
-      quotes: { ...prefs.quotes, shownQuoteIds: updated },
-    });
-  },
-});
-
-/**
- * Nightly cron entry point. Paginates through all profiles,
- * dispatching processUser per user. Loops until isDone.
- */
 export const generateForNextBatch = internalAction({
   args: {
     cursor: v.union(v.string(), v.null()),
@@ -187,7 +194,6 @@ export const generateForNextBatch = internalAction({
       cursor: args.cursor,
     });
 
-    // Dispatch one action per user (avoids single-action timeout)
     for (const profileId of page) {
       await ctx.scheduler.runAfter(
         0,
@@ -196,11 +202,8 @@ export const generateForNextBatch = internalAction({
       );
     }
 
-    console.log(
-      `[quotesGenerator] Dispatched ${page.length} users, isDone=${isDone}`
-    );
+    console.log(`[quotesGenerator] Dispatched ${page.length} users, isDone=${isDone}`);
 
-    // Continue pagination if not done
     if (!isDone) {
       await ctx.scheduler.runAfter(
         0,
