@@ -114,6 +114,7 @@ export const generateForUser = internalAction({
   args: {
     emotionalProfileId: v.id("emotional_profiles"),
     date: v.string(),
+    preferredThemes: v.array(v.string()),
   },
   handler: async (ctx, args): Promise<string | null> => {
     try {
@@ -137,11 +138,11 @@ export const generateForUser = internalAction({
         })
         .join("\n");
 
-      const systemPrompt = `You are given the emotional themes from a user's recent reflections. Generate one beautiful, honest sentence (or two short sentences) that captures the emotional experience without being specific. It should feel like something a thoughtful writer found for themselves and wanted to keep. Not advice. Not affirmation. An observation.
+      const systemPrompt = `You are given the emotional themes from a user's recent reflections. Generate one beautiful, honest sentence (or two short sentences); more like a quote that captures the emotional experience without being specific. It should feel like something a thoughtful writer found for themselves and wanted to keep.
 
 Rules:
 - 1-2 sentences maximum
-- Poetic but grounded — not therapy-speak, not a motivational poster
+- Poetic but grounded — not therapy-speak.
 - Second person ("You've been carrying something...") or first person ("There's a weight I'm starting to name.")
 - No specific details from the session (the quote will be shared publicly)
 - No platitudes ("Everything happens for a reason", "You've got this")
@@ -149,7 +150,12 @@ Rules:
 - Must be able to stand alone without any context
 - Pass the "would someone screenshot this?" test`;
 
-      const userPrompt: string = `Recent emotional themes:\n${emotionalSummary}\n\nGenerate a quote:`;
+      const themesLine =
+        args.preferredThemes.length > 0
+          ? `\nUser's preferred themes (let the quote naturally align with one if fitting): ${args.preferredThemes.join(", ")}`
+          : "";
+
+      const userPrompt: string = `Recent emotional themes:\n${emotionalSummary}${themesLine}\n\nGenerate a quote:`;
 
       const client = getAnthropicClient();
       const response = await client.messages.create({

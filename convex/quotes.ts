@@ -12,6 +12,16 @@ export const THEME_SLUGS = [
   "anxiety",
   "identity",
   "loneliness",
+  "healing",
+  "acceptance",
+  "purpose",
+  "self-worth",
+  "burnout",
+  "hope",
+  "growth",
+  "fear",
+  "motivation",
+  "inspiration",
 ] as const;
 
 /**

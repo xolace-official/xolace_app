@@ -92,14 +92,16 @@ export const processUser = internalAction({
 
     if (!active) return;
 
+    const themes = prefs?.quotes?.themes ?? [];
+
     // 1. Attempt session-derived quote (best-effort, no retry)
     await ctx.runAction(internal.ai.quotesDistiller.generateForUser, {
       emotionalProfileId: args.emotionalProfileId,
       date,
+      preferredThemes: themes,
     });
 
     // 2. Always generate curated quote
-    const themes = prefs?.quotes?.themes ?? [];
     const shownQuoteIds = (prefs?.quotes?.shownQuoteIds ?? []) as any[];
 
     const curatedQuote: { _id: string; text: string } | null = await ctx.runQuery(
