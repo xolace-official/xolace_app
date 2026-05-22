@@ -26,7 +26,7 @@ const PARAGRAPHS: Segment[][] = [
   ],
   [
     { text: "We'd love to walk this journey with you. You can reach me anytime at " },
-    { text: "feedback@xolaceinc.com or +233-55-821-8741", highlight: true },
+    { text: "nathan@xolaceinc.com or +233-55-821-8741", highlight: true },
     { text: " via email or WhatsApp/SMS." },
   ],
 ];

@@ -45,6 +45,11 @@ export function useNotifications() {
     let cancelled = false;
 
     async function register() {
+      // Only register if the user has already granted permission.
+      // Contextual moments (session end, quote setup) handle the initial ask.
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') return;
+
       const token = await requestPushToken();
       if (token && !cancelled) {
         setExpoPushToken(token);

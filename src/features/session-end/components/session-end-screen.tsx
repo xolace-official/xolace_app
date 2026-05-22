@@ -6,6 +6,7 @@ import { useSessionEnd } from '@/src/features/session-end/hooks/use-session-end'
 import { ExitVariant } from '@/src/features/session-end/components/exit-variant';
 import { ActivityVariant } from '@/src/features/session-end/components/activity-variant';
 import { ReachFeedbackCard } from '@/src/features/session-end/components/reach-feedback-card';
+import { SessionEndNotifNudge } from '@/src/features/session-end/components/session-end-notif-nudge';
 import { playSessionComplete } from '@/src/lib/haptics';
 import { useSessionMode } from '@/src/context/session-mode-context';
 
@@ -60,6 +61,7 @@ export const SessionEndScreen = ({ path }: Props) => {
         />
       )}
 
+      <SessionEndNotifNudge />
       <ReachFeedbackCard sessionCount={sessionCount} />
     </View>
   );

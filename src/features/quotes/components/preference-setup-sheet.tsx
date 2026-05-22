@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
+import { Image } from "expo-image";
 import { TagGroup, PressableFeedback } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
@@ -234,11 +235,19 @@ function Step1({
 }) {
   return (
     <View>
+      <View className="items-center mb-6">
+        <Image
+          source={require('@/assets/images/flux/flux-look-mini-bg.png')}
+          style={{ width: 180, height: 180 }}
+          contentFit="contain"
+        />
+      </View>
+
       <AppText className="text-3xl font-semibold text-foreground mb-2">
-        When should we reach you?
+        When should Flux reach you?
       </AppText>
       <AppText className="text-base text-foreground/50 mb-8">
-        An optional nudge when your quote is ready.
+        A gentle nudge when your daily quote is ready.
       </AppText>
 
       <TagGroup
