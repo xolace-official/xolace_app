@@ -48,7 +48,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
         toast.show({ label: "Sharing not available", variant: "default" });
       }
     } catch {
-      // user dismissed native sheet — no feedback needed
+      toast.show({ label: "Couldn't share image", description: "Something went wrong. Try again.", variant: "default" });
     }
   };
 
