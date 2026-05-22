@@ -34,6 +34,21 @@ import { FullRippleLoader } from '@/src/components/shared/loader/ripple/full-rip
 SplashScreen.preventAutoHideAsync();
 
 Settings.enableSound(false);
+Settings.preloadPresets([
+  'Herald',    // mirrorArrival — peak haptic, must be instant
+  'Bloom',     // sessionComplete
+  'Feather',   // gentlePresence, onboarding transitions
+  'Propel',    // form submit
+  'Strike',    // affirmativePress
+  'Cascade',   // onboardingEntrance
+  'Wobble',    // errorNotice, clarifyState mount
+  'Peal',      // escalationState mount
+  'Flick',     // carousel advance, textureSelect
+  'Thud',      // menu open, homeEntrance
+  'Chirp',     // resonanceToggle, lighter mood
+  'Murmur',    // peerReflections mount, unsure mood
+  'Breath',    // processingBreath fallback
+]);
 
 const AppContent = () => {
   const introSeen = useAppStore((s) => s.introSeen);

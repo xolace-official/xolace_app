@@ -1,8 +1,51 @@
 import { useEffect, useRef } from 'react';
 import { EaseView } from 'react-native-ease/uniwind';
+import { usePatternComposer } from 'react-native-pulsar';
+import type { Pattern } from 'react-native-pulsar';
 import { AppText } from '@/src/components/shared/app-text';
-import { PacedOrb, type PacedOrbHandle, type BreathPattern } from '@/src/features/sit-with-this/components/paced-orb';
-import { playBreathPhase } from '@/src/lib/haptics';
+import { PacedOrb, type PacedOrbHandle, type BreathPattern, TIMINGS } from '@/src/features/sit-with-this/components/paced-orb';
+import type { BreathPhase } from '@/src/lib/haptics';
+
+const isWeb = process.env.EXPO_OS === 'web';
+
+function buildInhalePattern(ms: number): Pattern {
+  return {
+    discretePattern: [],
+    continuousPattern: {
+      amplitude: [
+        { time: 0, value: 0.35 },
+        { time: ms * 0.7, value: 0.9 },
+        { time: ms, value: 1.0 },
+      ],
+      frequency: [
+        { time: 0, value: 0.15 },
+        { time: ms, value: 0.15 },
+      ],
+    },
+  };
+}
+
+function buildExhalePattern(ms: number): Pattern {
+  return {
+    discretePattern: [],
+    continuousPattern: {
+      amplitude: [
+        { time: 0, value: 1.0 },
+        { time: ms * 0.5, value: 0.5 },
+        { time: ms, value: 0.0 },
+      ],
+      frequency: [
+        { time: 0, value: 0.12 },
+        { time: ms, value: 0.12 },
+      ],
+    },
+  };
+}
+
+const TOP_HOLD_PATTERN: Pattern = {
+  discretePattern: [{ time: 0, amplitude: 0.5, frequency: 0.3 }],
+  continuousPattern: { amplitude: [], frequency: [] },
+};
 
 type Props = {
   content: string;
@@ -22,10 +65,33 @@ export function BreathBeat({
   const orbRef = useRef<PacedOrbHandle>(null);
   const doneRef = useRef(false);
 
+  const steps = TIMINGS[breathPattern];
+  const inhaleMs = steps.find((s) => s.phase === 'inhale')?.duration ?? 4000;
+  const exhaleMs = steps.find((s) => s.phase === 'exhale')?.duration ?? 8000;
+
+  const inhaleComposer = usePatternComposer(buildInhalePattern(inhaleMs));
+  const topComposer = usePatternComposer(TOP_HOLD_PATTERN);
+  const exhaleComposer = usePatternComposer(buildExhalePattern(exhaleMs));
+
   useEffect(() => {
     let cancelled = false;
 
-    const onPhaseTransition = reducedMotion ? undefined : playBreathPhase;
+    const onPhaseTransition =
+      reducedMotion || isWeb
+        ? undefined
+        : (phase: BreathPhase, _durationMs: number) => {
+            switch (phase) {
+              case 'inhale':
+                inhaleComposer.play();
+                break;
+              case 'top':
+                topComposer.play();
+                break;
+              case 'exhale':
+                exhaleComposer.play();
+                break;
+            }
+          };
 
     orbRef.current?.playCycle(breathPattern, breathCycles, onPhaseTransition).then(() => {
       if (!cancelled && !doneRef.current) {

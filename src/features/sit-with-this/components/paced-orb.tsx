@@ -23,7 +23,7 @@ export type PacedOrbHandle = {
 
 type StepTiming = { to: number; duration: number; phase: BreathPhase };
 
-const TIMINGS: Record<BreathPattern, StepTiming[]> = {
+export const TIMINGS: Record<BreathPattern, StepTiming[]> = {
   physiological_sigh: [
     { to: 1.3, duration: 4000, phase: 'inhale' },
     { to: 1.35, duration: 1000, phase: 'top' },
