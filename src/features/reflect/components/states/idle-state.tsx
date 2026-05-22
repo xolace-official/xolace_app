@@ -136,7 +136,7 @@ export const IdleState = ({
         <PressableFeedback
           onPress={() => {
             playSoftPress();
-            router.push("/(protected)/quotes" as any);
+            router.push("/(protected)/quotes");
           }}
           accessibilityLabel="Open today's reflection"
           hitSlop={8}

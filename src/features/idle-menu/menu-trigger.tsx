@@ -6,7 +6,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
-import { playSoftPress } from "@/src/lib/haptics";
+import { Presets } from "react-native-pulsar";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -28,7 +28,11 @@ export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
   return (
     <AnimatedPressable
       onPress={() => {
-        playSoftPress();
+        if (isOpenJS) {
+          Presets.flick();
+        } else {
+          Presets.thud();
+        }
         onPress();
       }}
       hitSlop={8}

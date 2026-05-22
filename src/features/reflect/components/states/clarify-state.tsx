@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, TextInput } from 'react-native';
+import { Presets } from 'react-native-pulsar';
 import { EaseView } from 'react-native-ease/uniwind';
 import { TextArea, LinkButton, useThemeColor } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -34,6 +35,10 @@ export const ClarifyState = ({
   turnIndex,
 }: Props) => {
   const [feedbackText, setFeedbackText] = useState('');
+
+  useEffect(() => {
+    Presets.wobble();
+  }, []);
   const canSubmit = clarifyText.trim().length > 0;
   const submitFeedback = useMutation(api.feedback.submit);
   const foregroundColor = useThemeColor('foreground') as string;
@@ -130,7 +135,7 @@ export const ClarifyState = ({
         <View className="items-center pb-4 pt-2">
           <PillButton
             label="Let it out"
-            onPress={handleSubmit}
+            onPress={() => { Presets.propel(); handleSubmit(); }}
             disabled={!canSubmit}
           />
         </View>

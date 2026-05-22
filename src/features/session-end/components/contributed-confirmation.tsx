@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
+import { Presets } from 'react-native-pulsar';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
 
@@ -8,6 +10,10 @@ type Props = {
 };
 
 export const ContributedConfirmation = ({ onDone }: Props) => {
+  useEffect(() => {
+    Presets.dewdrop();
+  }, []);
+
   return (
     <View className="flex-1 items-center justify-center px-8">
       <EaseView

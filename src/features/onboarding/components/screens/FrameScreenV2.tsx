@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
+import { Presets } from 'react-native-pulsar';
 
 import { useAppStore } from '@/src/store/store';
 import { playGentlePresence } from '@/src/lib/haptics';
@@ -16,6 +18,10 @@ export const FrameScreenV2 = () => {
   const setIntroSeen = useAppStore((s) => s.setIntroSeen);
   const router = useRouter();
   const posthog = usePostHog();
+
+  useEffect(() => {
+    Presets.feather();
+  }, []);
 
   const handlePress = () => {
     playGentlePresence();

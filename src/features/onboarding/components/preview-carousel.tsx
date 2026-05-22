@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { useDerivedValue, useSharedValue, withSpring } from 'react-native-reanimated';
+import { Presets } from 'react-native-pulsar';
 import { PreviewCarouselItem } from '@/src/features/onboarding/components/preview-carousel-item';
 import type { FrameStep } from '@/src/features/onboarding/frame-steps';
 
@@ -27,6 +28,7 @@ export const PreviewCarousel = ({ slides }: Props) => {
 
   useEffect(() => {
     const id = setInterval(() => {
+      Presets.flick();
       const next = currentIndex.get() + 1;
       if (next >= lengthRef.current - 2) {
         const currentAnimated = animatedIndex.get();

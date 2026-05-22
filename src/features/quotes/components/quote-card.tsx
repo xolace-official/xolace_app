@@ -47,12 +47,12 @@ export function QuoteCard({
   const handleHeart = () => {
     const next: Reaction = reaction === "resonates" ? null : "resonates";
     if (next === "resonates") onHeartBurst();
-    Presets.ping();
+    Presets.chirp();
     onReact(next);
   };
 
   const handleNotToday = () => {
-    Presets.ping();
+    Presets.wane();
     onReact(reaction === "not_today" ? null : "not_today");
   };
 

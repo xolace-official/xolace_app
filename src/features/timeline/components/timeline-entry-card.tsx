@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { PressableFeedback, Card, cn } from 'heroui-native';
+import { Presets } from 'react-native-pulsar';
 import { View } from 'react-native';
 import { AppText } from '@/src/components/shared/app-text';
 import {
@@ -18,6 +19,7 @@ export const TimelineEntryCard = ({ entry, className }: Props) => {
   const router = useRouter();
 
   const handlePress = () => {
+    Presets.ping();
     router.push({
       pathname: '/(protected)/timeline/session/[id]',
       params: { id: entry.id },

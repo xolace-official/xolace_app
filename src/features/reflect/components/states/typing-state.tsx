@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { TextArea } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { Presets } from 'react-native-pulsar';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { PresenceDot } from '@/src/features/reflect/components/presence-dot';
@@ -115,7 +116,7 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismis
         <View className="items-center pb-4 pt-2">
           <PillButton
             label="Let it out"
-            onPress={onSubmit}
+            onPress={() => { Presets.propel(); onSubmit(); }}
             disabled={!canSubmit}
           />
         </View>

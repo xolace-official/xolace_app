@@ -7,6 +7,9 @@
 import '@/src/global.css';
 import '@/src/lib/theme-bootstrap';
 
+import { Settings } from 'react-native-pulsar';
+
+
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useEffect, useRef } from 'react';
 import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
@@ -29,6 +32,8 @@ import { useVersionCheck } from '@/src/helpers/hooks/use-version-check';
 import { FullRippleLoader } from '@/src/components/shared/loader/ripple/full-ripple-loader';
 
 SplashScreen.preventAutoHideAsync();
+
+Settings.enableSound(false);
 
 const AppContent = () => {
   const introSeen = useAppStore((s) => s.introSeen);

@@ -1,165 +1,102 @@
-// Fallback haptics for non-iOS platforms (Android, web) using expo-haptics.
-// The iOS implementation lives in haptics.ios.ts (Expo platform resolution)
-// and uses CoreHaptics for richer patterns.
-//
-// On Android we prefer performAndroidHapticsAsync (uses the native haptics
-// engine, no VIBRATE permission needed). On web we fall back to impactAsync
-// which uses the Web Vibration API.
-
-import * as Haptics from 'expo-haptics';
-
+// Cross-platform haptics via react-native-pulsar (Android + web).
+// iOS uses CoreHaptics via haptics.ios.ts (Expo platform extension).
+import { Presets } from 'react-native-pulsar';
 import type { BreathPhase, HapticName } from './haptics.types';
 export type { BreathPhase, HapticName };
 
-const isAndroid = process.env.EXPO_OS === 'android';
+const isWeb = process.env.EXPO_OS === 'web';
 
-// ── Helpers ──────────────────────────────────────────────────────────
-
-function androidHaptic(type: Haptics.AndroidHaptics): void {
-  Haptics.performAndroidHapticsAsync(type).catch(() => {});
-}
-
-function impact(style: Haptics.ImpactFeedbackStyle): void {
-  Haptics.impactAsync(style).catch(() => {});
-}
-
-function notification(type: Haptics.NotificationFeedbackType): void {
-  Haptics.notificationAsync(type).catch(() => {});
+function run(fn: () => void): void {
+  if (!isWeb) fn();
 }
 
 // ── Generic tap ──────────────────────────────────────────────────────
 
 export function tap(_intensity?: number, _sharpness?: number): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Context_Click);
-  } else {
-    impact(Haptics.ImpactFeedbackStyle.Light);
-  }
+  run(() => Presets.flick());
 }
 
 // ── Named pattern functions ──────────────────────────────────────────
-// Complex iOS CoreHaptics patterns are approximated with the closest
-// equivalent. Ambient/atmospheric patterns (processingBreath,
-// gentlePresence, compassionateHold) are left as no-ops since neither
-// expo-haptics nor Android haptics can produce subtle sustained effects.
 
-export function playProcessingBreath(): void {}
+export function playProcessingBreath(): void {
+  run(() => Presets.breath());
+}
 
-export function playGentlePresence(): void {}
+export function playGentlePresence(): void {
+  run(() => Presets.feather());
+}
 
 export function playMirrorArrival(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Confirm);
-  } else {
-    notification(Haptics.NotificationFeedbackType.Success);
-  }
+  run(() => Presets.herald());
 }
 
 export function playSessionComplete(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Confirm);
-  } else {
-    notification(Haptics.NotificationFeedbackType.Success);
-  }
+  run(() => Presets.bloom());
 }
 
 export function playResonanceToggle(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Toggle_On);
-  } else {
-    Haptics.selectionAsync().catch(() => {});
-  }
+  run(() => Presets.chirp());
 }
 
 export function playPathChoice(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Segment_Tick);
-  } else {
-    impact(Haptics.ImpactFeedbackStyle.Medium);
-  }
+  run(() => Presets.cadence());
 }
 
 export function playTextureSelect(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Segment_Tick);
-  } else {
-    Haptics.selectionAsync().catch(() => {});
-  }
+  run(() => Presets.flick());
 }
 
 export function playTypingBegin(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Keyboard_Press);
-  } else {
-    impact(Haptics.ImpactFeedbackStyle.Light);
-  }
+  run(() => Presets.thud());
 }
 
 export function playSoftPress(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Virtual_Key);
-  } else {
-    impact(Haptics.ImpactFeedbackStyle.Light);
-  }
+  run(() => Presets.push());
 }
 
 export function playAffirmativePress(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Confirm);
-  } else {
-    impact(Haptics.ImpactFeedbackStyle.Medium);
-  }
+  run(() => Presets.strike());
 }
 
 export function playErrorNotice(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Reject);
-  } else {
-    notification(Haptics.NotificationFeedbackType.Error);
-  }
+  run(() => Presets.wobble());
 }
 
-export function playCompassionateHold(): void {}
+export function playCompassionateHold(): void {
+  run(() => Presets.pendulum());
+}
 
 export function playSoftenPulse(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Context_Click);
-  } else {
-    impact(Haptics.ImpactFeedbackStyle.Medium);
-  }
+  run(() => Presets.sway());
 }
 
 export function playOnboardingEntrance(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Gesture_Start);
-  } else {
-    impact(Haptics.ImpactFeedbackStyle.Soft);
-  }
+  run(() => Presets.cascade());
 }
 
 export function playHomeEntrance(): void {
-  if (isAndroid) {
-    androidHaptic(Haptics.AndroidHaptics.Gesture_Start);
-  } else {
-    impact(Haptics.ImpactFeedbackStyle.Soft);
-  }
+  run(() => Presets.thud());
 }
 
 // ── Breath phase haptics ─────────────────────────────────────────────
-// expo-haptics can't produce duration-scaled continuous patterns, so
-// this is a best-effort boundary tick. The iOS override provides the
-// real swell/release curves.
+// Best-effort preset approximations. Duration-matched continuous envelopes
+// (matching the iOS CoreHaptics implementation) are a planned Phase 2 upgrade
+// using usePatternComposer inside BreathBeat.
 
 export function playBreathPhase(phase: BreathPhase, _durationMs: number): void {
-  if (isAndroid) {
-    androidHaptic(
-      phase === 'top'
-        ? Haptics.AndroidHaptics.Segment_Tick
-        : Haptics.AndroidHaptics.Context_Click,
-    );
-  } else {
-    impact(Haptics.ImpactFeedbackStyle.Light);
-  }
+  run(() => {
+    switch (phase) {
+      case 'inhale':
+        Presets.breath();
+        return;
+      case 'top':
+        Presets.pip();
+        return;
+      case 'exhale':
+        Presets.wave();
+        return;
+    }
+  });
 }
 
 // ── Dynamic play-by-name ─────────────────────────────────────────────

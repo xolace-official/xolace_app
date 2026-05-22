@@ -6,7 +6,7 @@ import { ThemePreviewCard } from '@/src/features/settings/components/theme-previ
 import { FREE_THEMES } from '@/src/lib/themes';
 import { useSettings } from '@/src/features/settings/hooks/use-settings';
 import { useAppStore } from '@/src/store/store';
-import { playSoftPress } from '@/src/lib/haptics';
+import { Presets } from 'react-native-pulsar';
 
 /**
  * Appearance settings screen.
@@ -22,8 +22,13 @@ export const AppearanceScreen = () => {
   const setNightModeEnabled = useAppStore((s) => s.setNightModeEnabled);
 
   const handleFreeThemePress = (themeId: string) => {
-    playSoftPress();
+    Presets.sonar();
     setColorTheme(themeId);
+  };
+
+  const handleNightModeToggle = (v: boolean) => {
+    Presets.snap();
+    setNightModeEnabled(v);
   };
 
   // const handlePremiumThemePress = () => {
@@ -103,7 +108,7 @@ export const AppearanceScreen = () => {
           variant="toggle"
           label="Night mode (10pm–4am)"
           isSelected={nightModeEnabled}
-          onToggle={setNightModeEnabled}
+          onToggle={handleNightModeToggle}
           isLast
         />
         <View className="px-5 pb-4">

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Linking, Pressable, View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
+import { Presets } from 'react-native-pulsar';
 import { AppText } from '@/src/components/shared/app-text';
 import { playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
 import type { Resource } from '@/src/features/crisis-resources/types';
@@ -87,6 +88,10 @@ function ResourceItem({ resource, index }: { resource: string | Resource; index:
 
 export const EscalationState = ({ mirror, resources, onEngage, onDismiss, onContinue }: Props) => {
   const [phase, setPhase] = useState<'prompt' | 'resources'>('prompt');
+
+  useEffect(() => {
+    Presets.peal();
+  }, []);
 
   if (phase === 'resources') {
     return (

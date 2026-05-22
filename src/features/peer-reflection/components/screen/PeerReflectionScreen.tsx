@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
+import { Presets } from "react-native-pulsar";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -23,6 +24,10 @@ export const PeerReflectionScreen = () => {
 
   const { sessionId, session, isLoading, startPath } = usePathSession();
   const posthog = usePostHog();
+
+  useEffect(() => {
+    Presets.murmur();
+  }, []);
 
   // Start the path on mount
   useEffect(() => {

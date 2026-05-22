@@ -1,6 +1,7 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
+import { Presets } from 'react-native-pulsar';
 import { AppText } from '@/src/components/shared/app-text';
 import { STEP_BASE_DELAY, STEP_INTERVAL } from '@/src/features/onboarding/frame-steps';
 import type { FrameStep } from '@/src/features/onboarding/frame-steps';
@@ -11,6 +12,14 @@ type Props = {
 };
 
 export const StepReveal = ({ step, index }: Props) => {
+  useEffect(() => {
+    const delay = STEP_BASE_DELAY + index * STEP_INTERVAL;
+    const timer = setTimeout(() => { Presets.feather(); }, delay);
+    return () => clearTimeout(timer);
+  // index is fixed for a step's lifetime
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <EaseView
       initialAnimate={{ opacity: 0, translateY: 20 }}

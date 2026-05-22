@@ -7,7 +7,8 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
-import { playSoftPress, playTextureSelect } from '@/src/lib/haptics';
+import { Presets } from 'react-native-pulsar';
+import { playSoftPress } from '@/src/lib/haptics';
 import { ContributedConfirmation } from '@/src/features/session-end/components/contributed-confirmation';
 import { HeavierFeedbackPrompt } from '@/src/features/session-end/components/heavier-feedback-prompt';
 import { NIGHT_SESSION_END_ACTIVITY } from '@/src/features/reflect/night-copy';
@@ -97,7 +98,16 @@ export const ActivityVariant = ({
             {MOODS.map((mood) => (
               <Pressable
                 key={mood}
-                onPress={() => { playTextureSelect(); setSelectedMood(mood); }}
+                onPress={() => {
+                  const haptics: Record<typeof mood, () => void> = {
+                    lighter: () => Presets.chirp(),
+                    same: () => Presets.plink(),
+                    heavier: () => Presets.plunk(),
+                    unsure: () => Presets.murmur(),
+                  };
+                  haptics[mood]();
+                  setSelectedMood(mood);
+                }}
                 className={`rounded-full border px-3 py-1.5 ${
                   selectedMood === mood
                     ? 'border-accent/30 bg-accent/10'
