@@ -1,5 +1,6 @@
 import RNShare, { Social } from "react-native-share";
 import * as Sharing from "expo-sharing";
+import * as MediaLibrary from "expo-media-library";
 import { useToast } from "heroui-native";
 import { Presets } from "react-native-pulsar";
 
@@ -87,5 +88,21 @@ export function useQuoteShareActions(imageUri: string | null) {
     await shareGeneric();
   };
 
-  return { shareViaWhatsApp, shareViaTelegram, shareViaInstagram, shareMore };
+  const saveToLibrary = async () => {
+    if (!imageUri) return;
+    Presets.flick();
+    const { status } = await MediaLibrary.requestPermissionsAsync(false);
+    if (status !== "granted") {
+      toast.show({ label: "Permission denied", description: "Allow photo access in Settings to save images.", variant: "default" });
+      return;
+    }
+    try {
+      await MediaLibrary.saveToLibraryAsync(imageUri);
+      toast.show({ label: "Saved to Photos", variant: "default" });
+    } catch {
+      toast.show({ label: "Couldn't save image", description: "Something went wrong. Try again.", variant: "default" });
+    }
+  };
+
+  return { shareViaWhatsApp, shareViaTelegram, shareViaInstagram, shareMore, saveToLibrary };
 }

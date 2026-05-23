@@ -34,7 +34,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
   const backgroundColor = useThemeColor("background") as string;
   const surfaceColor = useThemeColor("surface") as string;
   const accentColor = useThemeColor("accent") as string;
-  const { shareViaWhatsApp, shareViaTelegram, shareViaInstagram, shareMore } =
+  const { shareViaWhatsApp, shareViaTelegram, shareViaInstagram, shareMore, saveToLibrary } =
     useQuoteShareActions(imageUri);
 
   const previewWidth = width * 0.72;
@@ -157,7 +157,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
             androidIcon="save_alt"
             label="Save"
             foregroundColor={foregroundColor}
-            onPress={shareMore}
+            onPress={saveToLibrary}
           />
           <QuickAction
             iosIcon="square.and.arrow.up"

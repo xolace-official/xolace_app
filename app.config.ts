@@ -66,7 +66,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       bundleIdentifier: getUniqueIdentifier(),
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        NSPhotoLibraryUsageDescription: "Xolace does not access your photo library. This permission is required by included SDKs.",
+        NSPhotoLibraryUsageDescription: "Allow $(PRODUCT_NAME) to access your photos.",
+        NSPhotoLibraryAddUsageDescription: "Allow $(PRODUCT_NAME) to save quote images to your photos.",
         LSApplicationQueriesSchemes: ['tel', 'mailto', 'whatsapp', 'instagram', 'instagram-stories', 'fb', 'facebook-stories', 'tg', 'twitter'],
       },
       privacyManifests: {
@@ -203,6 +204,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-image",
       "expo-web-browser",
       "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save quote images to your photos.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
       [
         "react-native-share",
         {
