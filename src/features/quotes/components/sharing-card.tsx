@@ -1,5 +1,13 @@
 import { forwardRef } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import {
+  StyleProp,
+  StyleSheet,
+  TextStyle,
+  ImageStyle,
+  ViewStyle,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
@@ -30,11 +38,10 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
   const foregroundColor = useThemeColor("foreground") as string;
   const accentColor = useThemeColor("accent") as string;
 
-  const cardStyle = {
+  const cardDynamicStyle = {
     width: cardWidth,
     height: cardHeight,
     backgroundColor,
-    overflow: "hidden" as const,
   };
 
   // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
@@ -46,9 +53,6 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
   ];
 
   const quoteTextStyle = {
-    fontSize: 30,
-    lineHeight: 44,
-    fontFamily: "Poppins-SemiBold",
     color: foregroundColor,
   };
 
@@ -89,8 +93,45 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
     color: `${accentColor}D9`,
   };
 
+  const cardCombinedStyle = StyleSheet.compose(
+    styles.card,
+    cardDynamicStyle,
+  ) as StyleProp<ViewStyle>;
+  const mascotHaloCombinedStyle = StyleSheet.compose(
+    styles.mascotHalo,
+    mascotHaloStyle,
+  ) as StyleProp<ViewStyle>;
+  const mascotCombinedStyle = StyleSheet.compose(
+    styles.mascot,
+    mascotStyle,
+  ) as StyleProp<ImageStyle>;
+  const accentLineCombinedStyle = StyleSheet.compose(
+    styles.accentLine,
+    accentLineStyle,
+  ) as StyleProp<ViewStyle>;
+  const reminderChipCombinedStyle = StyleSheet.compose(
+    styles.reminderChip,
+    reminderChipStyle,
+  ) as StyleProp<ViewStyle>;
+  const reminderChipTextCombinedStyle = StyleSheet.compose(
+    styles.reminderChipText,
+    reminderChipTextStyle,
+  ) as StyleProp<TextStyle>;
+  const brandChipCombinedStyle = StyleSheet.compose(
+    styles.brandChip,
+    brandChipStyle,
+  ) as StyleProp<ViewStyle>;
+  const brandTextCombinedStyle = StyleSheet.compose(
+    styles.brandText,
+    brandTextStyle,
+  ) as StyleProp<TextStyle>;
+  const quoteTextCombinedStyle = StyleSheet.compose(
+    styles.quoteText,
+    quoteTextStyle,
+  ) as StyleProp<TextStyle>;
+
   return (
-    <View ref={ref} style={cardStyle}>
+    <View ref={ref} style={cardCombinedStyle}>
       <LinearGradient
         colors={topGlowColors}
         start={GRADIENT_START}
@@ -106,34 +147,34 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
         pointerEvents="none"
       />
 
-      <View style={[styles.mascotHalo, mascotHaloStyle]} pointerEvents="none">
+      <View style={mascotHaloCombinedStyle} pointerEvents="none">
         <Image
           source={require("@/assets/images/flux/campfire-mini.jpeg")}
-          style={[styles.mascot, mascotStyle]}
+          style={mascotCombinedStyle}
           contentFit="cover"
           pointerEvents="none"
           onLoadEnd={onMascotLoadEnd}
         />
       </View>
 
-
+      <View style={accentLineCombinedStyle} />
 
       <View className="flex-1 justify-center" style={styles.contentPadding}>
-        <View style={[styles.reminderChip, reminderChipStyle]}>
+        <View style={reminderChipCombinedStyle}>
           <SymbolView
             name={SPARKLE_ICON}
             size={10}
             tintColor={`${accentColor}D6`}
           />
-          <AppText style={[styles.reminderChipText, reminderChipTextStyle]}>
+          <AppText style={reminderChipTextCombinedStyle}>
             QUIET REMINDER
           </AppText>
         </View>
 
-        <AppText style={quoteTextStyle}>{text}</AppText>
+        <AppText style={quoteTextCombinedStyle}>{text}</AppText>
 
-        <View style={[styles.brandChip, brandChipStyle]}>
-          <AppText style={[styles.brandText, brandTextStyle]}>~ xolace</AppText>
+        <View style={brandChipCombinedStyle}>
+          <AppText style={brandTextCombinedStyle}>— xolace</AppText>
         </View>
       </View>
     </View>
@@ -141,6 +182,14 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
 });
 
 const styles = StyleSheet.create({
+  card: {
+    overflow: "hidden",
+  },
+  quoteText: {
+    fontSize: 30,
+    lineHeight: 44,
+    fontFamily: "Poppins-SemiBold",
+  },
   gradientTop: {
     position: "absolute",
     top: 0,
