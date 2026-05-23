@@ -56,9 +56,6 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
     color: foregroundColor,
   };
 
-  const accentLineStyle = {
-    backgroundColor: `${accentColor}66`,
-  };
 
   const reminderChipStyle = {
     backgroundColor: `${accentColor}14`,
@@ -105,10 +102,6 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
     styles.mascot,
     mascotStyle,
   ) as StyleProp<ImageStyle>;
-  const accentLineCombinedStyle = StyleSheet.compose(
-    styles.accentLine,
-    accentLineStyle,
-  ) as StyleProp<ViewStyle>;
   const reminderChipCombinedStyle = StyleSheet.compose(
     styles.reminderChip,
     reminderChipStyle,
@@ -157,7 +150,6 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
         />
       </View>
 
-      <View style={accentLineCombinedStyle} />
 
       <View className="flex-1 justify-center" style={styles.contentPadding}>
         <View style={reminderChipCombinedStyle}>
@@ -174,7 +166,7 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
         <AppText style={quoteTextCombinedStyle}>{text}</AppText>
 
         <View style={brandChipCombinedStyle}>
-          <AppText style={brandTextCombinedStyle}>— xolace</AppText>
+          <AppText style={brandTextCombinedStyle}>~ xolace</AppText>
         </View>
       </View>
     </View>
