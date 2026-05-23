@@ -79,13 +79,13 @@ export const TimelineEntryCard = ({ entry, className }: Props) => {
           </AppText>
 
           <View className="flex-row items-center justify-between gap-3">
-            <View className="flex-row flex-1 items-center gap-2">
+            <View className="flex-row flex-1 items-center gap-2 overflow-hidden">
               <AppText className="text-base">{emoji}</AppText>
-              <AppText className="text-sm text-foreground/60">
+              <AppText className="shrink text-sm text-foreground/60" numberOfLines={1}>
                 {emotionLabel}
               </AppText>
               <AppText className="text-sm text-foreground/25">&middot;</AppText>
-              <AppText className="text-sm text-foreground/40">
+              <AppText className="shrink text-sm text-foreground/40" numberOfLines={1}>
                 {pathLabel}
               </AppText>
             </View>
