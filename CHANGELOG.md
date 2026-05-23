@@ -25,6 +25,7 @@ All notable changes to Xolace are documented here.
 ### Changed
 
 - `react-native-pulsar` replaces `expo-haptics` as the Android/web haptic layer; iOS continues to use CoreHaptics for non-breath patterns
+- Updated breathing animation in exercises to be more natural
 
 ---
 
