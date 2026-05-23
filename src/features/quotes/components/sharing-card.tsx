@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
-import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
@@ -7,91 +8,132 @@ import { AppText } from "@/src/components/shared/app-text";
 
 type Props = {
   text: string;
+  onMascotLoadEnd?: () => void;
 };
 
 const GRADIENT_START: [number, number] = [0, 0];
-const GRADIENT_TOP_END: [number, number] = [1, 1];
-const SPARKLE_ICON = { ios: "sparkles" as const, android: "auto_awesome" as const };
+const GRADIENT_END: [number, number] = [1, 1];
+const SPARKLE_ICON = {
+  ios: "sparkles" as const,
+  android: "auto_awesome" as const,
+};
 
-/**
- * Branded sharing card for react-native-view-shot capture.
- * Dimensions: 9:16 (WhatsApp status / IG Stories compatible).
- */
-export const SharingCard = forwardRef<View, Props>(function SharingCard({ text }, ref) {
+export const SharingCard = forwardRef<View, Props>(function SharingCard(
+  { text, onMascotLoadEnd },
+  ref,
+) {
   const { width } = useWindowDimensions();
   const cardWidth = width;
   const cardHeight = width * (16 / 9);
 
   const backgroundColor = useThemeColor("background") as string;
-  const accentColor = useThemeColor("accent") as string;
   const foregroundColor = useThemeColor("foreground") as string;
-  const storeLinkLabel = Platform.OS === "ios" ? "App Store" : "Google Play";
+  const accentColor = useThemeColor("accent") as string;
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const cardStyle = { width: cardWidth, height: cardHeight, backgroundColor, overflow: "hidden" as const };
+  const cardStyle = {
+    width: cardWidth,
+    height: cardHeight,
+    backgroundColor,
+    overflow: "hidden" as const,
+  };
+
   // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
-  const gradientTopColors: [string, string] = [`${accentColor}22`, "transparent"];
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const gradientTopStyle = { position: "absolute" as const, top: 0, left: 0, right: 0, height: cardHeight * 0.55 };
+  const topGlowColors: [string, string] = [`${accentColor}20`, "transparent"];
   // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
-  const gradientBottomColors: [string, string] = ["transparent", `${accentColor}18`];
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const accentLineStyle = { position: "absolute" as const, top: 56, left: 40, width: 32, height: 2, backgroundColor: `${accentColor}60` };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const quoteTextStyle = { fontSize: 30, fontFamily: "Poppins-SemiBold", lineHeight: 44, color: foregroundColor };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const brandingChipStyle = { backgroundColor: `${accentColor}18`, borderWidth: 1, borderColor: `${accentColor}30` };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const brandingLabelStyle = { fontSize: 11, fontFamily: "Poppins-Medium", letterSpacing: 0.5, color: `${accentColor}CC` };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const storeLinkStyle = { fontSize: 11, fontFamily: "Poppins-Regular", color: `${foregroundColor}30` };
+  const bottomGlowColors: [string, string] = [
+    "transparent",
+    `${accentColor}18`,
+  ];
+
+  const quoteTextStyle = {
+    fontSize: 30,
+    lineHeight: 44,
+    fontFamily: "Poppins-SemiBold",
+    color: foregroundColor,
+  };
+
+  const accentLineStyle = {
+    backgroundColor: `${accentColor}66`,
+  };
+
+  const reminderChipStyle = {
+    backgroundColor: `${accentColor}14`,
+    borderColor: `${accentColor}2E`,
+  };
+
+  const reminderChipTextStyle = {
+    color: `${accentColor}D6`,
+  };
+
+  const mascotHaloStyle = {
+    width: cardWidth * 0.34,
+    height: cardWidth * 0.34,
+    right: cardWidth * 0.06,
+    bottom: cardHeight * 0.12,
+    backgroundColor: `${accentColor}14`,
+    borderColor: `${accentColor}22`,
+  };
+
+  const mascotStyle = {
+    width: "100%" as const,
+    height: "100%" as const,
+    opacity: 0.52,
+  };
+
+  const brandChipStyle = {
+    backgroundColor: `${accentColor}16`,
+    borderColor: `${accentColor}2E`,
+  };
+
+  const brandTextStyle = {
+    color: `${accentColor}D9`,
+  };
 
   return (
     <View ref={ref} style={cardStyle}>
-      {/* Diagonal accent gradient — top-left warm glow */}
       <LinearGradient
-        colors={gradientTopColors}
+        colors={topGlowColors}
         start={GRADIENT_START}
-        end={GRADIENT_TOP_END}
-        style={gradientTopStyle}
+        end={GRADIENT_END}
+        style={styles.gradientTop}
         pointerEvents="none"
       />
-
-      {/* Bottom warm gradient */}
       <LinearGradient
-        colors={gradientBottomColors}
+        colors={bottomGlowColors}
+        start={GRADIENT_START}
+        end={GRADIENT_END}
         style={styles.gradientBottom}
         pointerEvents="none"
       />
 
-      {/* Decorative accent line — top left */}
-      <View style={accentLineStyle} />
+      <View style={[styles.mascotHalo, mascotHaloStyle]} pointerEvents="none">
+        <Image
+          source={require("@/assets/images/flux/campfire-mini.jpeg")}
+          style={[styles.mascot, mascotStyle]}
+          contentFit="cover"
+          pointerEvents="none"
+          onLoadEnd={onMascotLoadEnd}
+        />
+      </View>
 
-      {/* Quote text + branding — centered as one block */}
+
+
       <View className="flex-1 justify-center" style={styles.contentPadding}>
-        <AppText style={quoteTextStyle}>
-          {text}
-        </AppText>
-
-        {/* Branding sits directly below the quote — hard to crop out */}
-        <View className="flex-row items-center gap-3 mt-6">
-          <View
-            className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
-            style={brandingChipStyle}
-          >
-            <SymbolView
-              name={SPARKLE_ICON}
-              size={10}
-              tintColor={`${accentColor}CC`}
-            />
-            <AppText style={brandingLabelStyle}>
-              Xolace
-            </AppText>
-          </View>
-
-          <AppText style={storeLinkStyle}>
-            {storeLinkLabel}
+        <View style={[styles.reminderChip, reminderChipStyle]}>
+          <SymbolView
+            name={SPARKLE_ICON}
+            size={10}
+            tintColor={`${accentColor}D6`}
+          />
+          <AppText style={[styles.reminderChipText, reminderChipTextStyle]}>
+            QUIET REMINDER
           </AppText>
+        </View>
+
+        <AppText style={quoteTextStyle}>{text}</AppText>
+
+        <View style={[styles.brandChip, brandChipStyle]}>
+          <AppText style={[styles.brandText, brandTextStyle]}>~ xolace</AppText>
         </View>
       </View>
     </View>
@@ -99,6 +141,70 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard({ text }
 });
 
 const styles = StyleSheet.create({
-  gradientBottom: { position: 'absolute', top: '50%', left: 0, right: 0, bottom: 0 },
-  contentPadding: { paddingHorizontal: 40 },
+  gradientTop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "55%",
+  },
+  gradientBottom: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: "50%",
+  },
+  mascotHalo: {
+    position: "absolute",
+    borderRadius: 999,
+    borderWidth: 1,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  mascot: {
+    width: "100%",
+    height: "100%",
+  },
+  accentLine: {
+    position: "absolute",
+    top: 56,
+    left: 40,
+    width: 36,
+    height: 2,
+  },
+  contentPadding: {
+    paddingHorizontal: 40,
+    gap: 18,
+  },
+  reminderChip: {
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 6,
+  },
+  reminderChipText: {
+    fontSize: 10,
+    letterSpacing: 1.1,
+    fontFamily: "Poppins-Medium",
+  },
+  brandChip: {
+    alignSelf: "flex-start",
+    marginTop: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  brandText: {
+    fontSize: 12,
+    fontFamily: "Poppins-Medium",
+    letterSpacing: 0.3,
+  },
 });
