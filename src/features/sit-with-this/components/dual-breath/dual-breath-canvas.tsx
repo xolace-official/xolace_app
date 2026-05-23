@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import Animated, {
   cancelAnimation,
@@ -46,6 +46,12 @@ export const DualBreathCanvas = forwardRef<PacedOrbHandle, Props>(
         height: rect.height,
       }
     })
+
+    const labelContainerStyle = useMemo(
+      () => [labelPositionStyle, styles.labelCenter],
+      [labelPositionStyle],
+    )
+
 
     const labelFadeStyle = useAnimatedStyle(() => ({ opacity: labelOpacity.get() }))
 
@@ -159,7 +165,7 @@ export const DualBreathCanvas = forwardRef<PacedOrbHandle, Props>(
         </Canvas>
 
         {/* Phase label — floats inside the bottom shape, tracks it in real time */}
-        <Animated.View style={[labelPositionStyle, styles.labelCenter]}>
+        <Animated.View style={labelContainerStyle}>
           <Animated.View style={labelFadeStyle}>
             {phaseLabel !== null && (
               <AppText className="text-center text-sm font-medium text-background">
