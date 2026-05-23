@@ -19,18 +19,30 @@ export const getToday = query({
 
     console.log("today ", today)
 
-    const quotes = await ctx.db
-      .query("daily_quotes")
-      .withIndex("by_profile_date", (q) =>
-        q.eq("emotionalProfileId", profile._id).eq("date", today)
-      )
-      .collect();
+    const [quotes, sessionToday] = await Promise.all([
+      ctx.db
+        .query("daily_quotes")
+        .withIndex("by_profile_date", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("date", today)
+        )
+        .collect(),
+      ctx.db
+        .query("sessions")
+        .withIndex("by_profile_time", (q) =>
+          q
+            .eq("emotionalProfileId", profile._id)
+            .gte("createdAt", new Date(today + "T00:00:00Z").getTime())
+        )
+        .filter((q) => q.eq(q.field("state"), "completed"))
+        .first(),
+    ]);
 
     console.log("quotes ", quotes)
 
     return {
       session: quotes.find((q) => q.type === "session") ?? null,
       curated: quotes.find((q) => q.type === "curated") ?? null,
+      hasSessionToday: sessionToday !== null,
     };
   },
 });
