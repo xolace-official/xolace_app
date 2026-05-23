@@ -15,21 +15,22 @@ export const SHAPE = {
   },
 } as const
 
-// Per-corner radius multipliers — slight asymmetry gives each shape an organic stone quality.
-// The bottom corners of the top shape and top corners of the bottom shape are slightly
-// less rounded, making the "gap" feel like two stones resting against each other.
+// Per-corner radius multipliers.
+// Outer corners (away from the gap) are large and organic.
+// Inner corners (facing the gap) are dramatically tighter — like two stones pressing together.
+// Left/right values differ slightly on each corner for the imperfect stone quality.
 export const TOP_CORNERS = {
-  topLeft:     { x: 0.95, y: 1.05 },
-  topRight:    { x: 1.08, y: 0.95 },
-  bottomRight: { x: 0.86, y: 0.88 },
-  bottomLeft:  { x: 0.90, y: 0.86 },
+  topLeft:     { x: 1.02, y: 1.08 },  // outer — large
+  topRight:    { x: 1.10, y: 0.98 },  // outer — large, slightly wide
+  bottomRight: { x: 0.30, y: 0.26 },  // inner — very tight
+  bottomLeft:  { x: 0.26, y: 0.32 },  // inner — very tight, slightly different
 } as const
 
 export const BOT_CORNERS = {
-  topLeft:     { x: 0.88, y: 0.86 },
-  topRight:    { x: 0.86, y: 0.90 },
-  bottomRight: { x: 1.08, y: 1.05 },
-  bottomLeft:  { x: 1.05, y: 1.10 },
+  topLeft:     { x: 0.28, y: 0.30 },  // inner — very tight
+  topRight:    { x: 0.32, y: 0.26 },  // inner — very tight, slightly different
+  bottomRight: { x: 1.08, y: 1.02 },  // outer — large
+  bottomLeft:  { x: 0.98, y: 1.10 },  // outer — large, slightly tall
 } as const
 
 // Corner wobble during hold phase
