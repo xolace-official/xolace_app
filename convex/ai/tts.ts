@@ -44,6 +44,8 @@ export const generateMirrorAudio = internalAction({
     const voiceId = VOICE_MAP[args.mirrorTone] ?? VOICE_MAP.adaptive;
 
     let audioBuffer: ArrayBuffer;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
     try {
       const response = await fetch(
         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
@@ -62,6 +64,7 @@ export const generateMirrorAudio = internalAction({
               use_speaker_boost: true,
             },
           }),
+          signal: controller.signal,
         },
       );
 
@@ -73,8 +76,14 @@ export const generateMirrorAudio = internalAction({
 
       audioBuffer = await response.arrayBuffer();
     } catch (err) {
-      console.error("[tts] Fetch failed:", err);
+      if (err instanceof Error && err.name === "AbortError") {
+        console.error("[tts] ElevenLabs request timed out after 30s");
+      } else {
+        console.error("[tts] Fetch failed:", err);
+      }
       return;
+    } finally {
+      clearTimeout(timeout);
     }
 
     const blob = new Blob([audioBuffer], { type: "audio/mpeg" });
