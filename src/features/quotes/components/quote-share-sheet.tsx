@@ -3,14 +3,12 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
-import { PressableFeedback, useThemeColor, useToast } from "heroui-native";
+import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
-import * as Sharing from "expo-sharing";
-import * as SMS from "expo-sms";
 import { AppText } from "@/src/components/shared/app-text";
-import { Presets } from "react-native-pulsar";
 import { QuickAction } from "./quick-action";
 import { SocialIcon } from "./social-icon";
+import { useQuoteShareActions } from "@/src/features/quotes/hooks/use-quote-share-actions";
 
 type Props = {
   visible: boolean;
@@ -20,7 +18,7 @@ type Props = {
 
 const SOCIAL_ITEMS = [
   { label: "WhatsApp", ios: "bubble.left.fill", android: "chat" },
-  { label: "Messages", ios: "message.fill", android: "sms" },
+  { label: "Telegram", ios: "paperplane.fill", android: "send" },
   { label: "Instagram", ios: "camera.fill", android: "photo_camera" },
   { label: "More", ios: "ellipsis", android: "more_horiz" },
 ] as const;
@@ -36,7 +34,8 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
   const backgroundColor = useThemeColor("background") as string;
   const surfaceColor = useThemeColor("surface") as string;
   const accentColor = useThemeColor("accent") as string;
-  const { toast } = useToast();
+  const { shareViaWhatsApp, shareViaTelegram, shareViaInstagram, shareMore } =
+    useQuoteShareActions(imageUri);
 
   const previewWidth = width * 0.72;
   const previewHeight = previewWidth * (16 / 9);
@@ -81,52 +80,6 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const socialRowStyle = { marginTop: 28, paddingBottom: bottom + 40 };
 
-  const shareImage = async () => {
-    Presets.flick();
-    if (!imageUri) return;
-    try {
-      const available = await Sharing.isAvailableAsync();
-      if (available) {
-        await Sharing.shareAsync(imageUri, {
-          mimeType: "image/png",
-          UTI: "public.png",
-        });
-      } else {
-        toast.show({ label: "Sharing not available", variant: "default" });
-      }
-    } catch {
-      toast.show({
-        label: "Couldn't share image",
-        description: "Something went wrong. Try again.",
-        variant: "default",
-      });
-    }
-  };
-
-  const shareViaMessages = async () => {
-    Presets.flick();
-    if (!imageUri) return;
-    try {
-      const available = await SMS.isAvailableAsync();
-      if (available) {
-        await SMS.sendSMSAsync([], "", {
-          attachments: {
-            uri: imageUri,
-            mimeType: "image/png",
-            filename: "quote.png",
-          },
-        });
-      } else {
-        await shareImage();
-      }
-    } catch {
-      toast.show({
-        label: "Couldn't open Messages",
-        description: "Try sharing another way.",
-        variant: "default",
-      });
-    }
-  };
 
   return (
     <Modal
@@ -204,14 +157,14 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
             androidIcon="save_alt"
             label="Save"
             foregroundColor={foregroundColor}
-            onPress={shareImage}
+            onPress={shareMore}
           />
           <QuickAction
             iosIcon="square.and.arrow.up"
             androidIcon="share"
             label="Share"
             foregroundColor={foregroundColor}
-            onPress={shareImage}
+            onPress={shareMore}
           />
         </View>
 
@@ -225,7 +178,10 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
               android={item.android}
               foregroundColor={foregroundColor}
               onPress={
-                item.label === "Messages" ? shareViaMessages : shareImage
+                item.label === "WhatsApp" ? shareViaWhatsApp :
+                item.label === "Telegram" ? shareViaTelegram :
+                item.label === "Instagram" ? shareViaInstagram :
+                shareMore
               }
             />
           ))}

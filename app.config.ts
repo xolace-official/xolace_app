@@ -67,7 +67,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSPhotoLibraryUsageDescription: "Xolace does not access your photo library. This permission is required by included SDKs.",
-        LSApplicationQueriesSchemes: ['tel', 'mailto'],
+        LSApplicationQueriesSchemes: ['tel', 'mailto', 'whatsapp', 'instagram', 'instagram-stories', 'fb', 'facebook-stories', 'tg', 'twitter'],
       },
       privacyManifests: {
         NSPrivacyCollectedDataTypes: [
@@ -202,7 +202,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ],
       "expo-image",
       "expo-web-browser",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "react-native-share",
+        {
+          "ios": ["whatsapp", "instagram", "instagram-stories", "fb", "facebook-stories", "tg", "twitter"],
+          "android": [
+            "com.whatsapp",
+            "com.instagram.android",
+            "com.facebook.katana",
+            "org.telegram.messenger",
+            "com.twitter.android"
+          ]
+        }
+      ]
     ],
     experiments: {
       typedRoutes: true,
