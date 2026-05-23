@@ -1,8 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
-import { PressableFeedback, Separator, TagGroup, useThemeColor } from "heroui-native";
+import {
+  PressableFeedback,
+  Separator,
+  TagGroup,
+  useThemeColor,
+} from "heroui-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -11,8 +16,16 @@ import { PillButton } from "@/src/components/shared/pill-button";
 import { IdleMenu } from "@/src/features/idle-menu/menu";
 import { MicButton } from "@/src/features/reflect/components/mic-button";
 import { QuietReturnHeader } from "@/src/features/reflect/components/quiet-return-header";
-import type { UserVariant, ReflectionAction } from "@/src/features/reflect/types";
-import { playTypingBegin, playTextureSelect, playHomeEntrance, playSoftPress } from "@/src/lib/haptics";
+import type {
+  UserVariant,
+  ReflectionAction,
+} from "@/src/features/reflect/types";
+import {
+  playTypingBegin,
+  playTextureSelect,
+  playHomeEntrance,
+  playSoftPress,
+} from "@/src/lib/haptics";
 import { useSessionMode } from "@/src/context/session-mode-context";
 import { NIGHT_TEXTURE_WORDS } from "@/src/features/reflect/night-copy";
 import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
@@ -27,6 +40,29 @@ const DAY_TEXTURE_WORDS = [
   "numb",
   "raw",
 ];
+
+const HELP_ICON_NAME = {
+  ios: "lifepreserver",
+  android: "sos",
+  web: "sos",
+} as const;
+const QUOTE_ICON_NAME = { ios: "sparkles", android: "auto_awesome" } as const;
+const BUTTON_INITIAL_ANIMATE = { opacity: 0, translateY: 20 } as const;
+const BUTTON_VISIBLE_ANIMATE = { opacity: 1, translateY: 0 } as const;
+const BUTTON_HIDDEN_ANIMATE = { opacity: 0, translateY: 20 } as const;
+const BUTTON_EASING: [number, number, number, number] = [
+  0.455, 0.03, 0.515, 0.955,
+];
+const BUTTON_TRANSITION_IN = {
+  type: "timing" as const,
+  duration: 300,
+  easing: BUTTON_EASING,
+};
+const BUTTON_TRANSITION_OUT = {
+  type: "timing" as const,
+  duration: 200,
+  easing: BUTTON_EASING,
+};
 
 type Props = {
   variant: UserVariant;
@@ -55,8 +91,8 @@ export const IdleState = ({
 }: Props) => {
   const { isNight } = useSessionMode();
   const router = useRouter();
-  const warningColor = useThemeColor('warning') as string;
-  const accentColor = useThemeColor('accent') as string;
+  const warningColor = useThemeColor("warning") as string;
+  const accentColor = useThemeColor("accent") as string;
 
   const todayQuotes = useQuery(api.dailyQuotes.getToday);
   const hasQuote = !!(todayQuotes?.session ?? todayQuotes?.curated);
@@ -66,6 +102,11 @@ export const IdleState = ({
 
   const activeQuietReturn = !isNight ? quietReturn : null;
   const hasPlayedEntrance = useRef(false);
+
+  const selectedTextureKeys = useMemo(
+    () => new Set(selectedTextures),
+    [selectedTextures],
+  );
 
   useEffect(() => {
     if (!hasPlayedEntrance.current) {
@@ -123,7 +164,7 @@ export const IdleState = ({
         >
           <View className="bg-warning/10 border border-warning/20 rounded-full px-3 py-1.5 flex-row items-center gap-1.5">
             <SymbolView
-              name={{ ios: 'lifepreserver', android: 'sos', web: 'sos' }}
+              name={HELP_ICON_NAME}
               size={16}
               tintColor={warningColor}
             />
@@ -142,13 +183,13 @@ export const IdleState = ({
           hitSlop={8}
           className="items-center pb-3"
         >
-          <View className="flex-row items-center gap-1.5 rounded-full border px-3 py-1.5" style={{ borderColor: `${accentColor}35`, backgroundColor: `${accentColor}10` }}>
+          <View className="flex-row items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1.5">
             <SymbolView
-              name={{ ios: "sparkles", android: "auto_awesome" }}
+              name={QUOTE_ICON_NAME}
               size={11}
               tintColor={accentColor}
             />
-            <AppText className="text-xs font-medium" style={{ color: `${accentColor}CC` }}>
+            <AppText className="text-xs font-medium text-accent/80">
               A word for today
             </AppText>
           </View>
@@ -183,7 +224,7 @@ export const IdleState = ({
           selectionMode="multiple"
           size="sm"
           variant="surface"
-          selectedKeys={new Set(selectedTextures)}
+          selectedKeys={selectedTextureKeys}
           onSelectionChange={handleSelectionChange}
           animation="disable-all"
         >
@@ -193,7 +234,9 @@ export const IdleState = ({
                 {({ isSelected }) => (
                   <>
                     <TagGroup.ItemLabel
-                      className={isSelected ? "text-accent" : "text-foreground/80"}
+                      className={
+                        isSelected ? "text-accent" : "text-foreground/80"
+                      }
                     >
                       {word}
                     </TagGroup.ItemLabel>
@@ -206,11 +249,12 @@ export const IdleState = ({
 
         {buttonMounted && (
           <EaseView
-            initialAnimate={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: buttonVisible ? 1 : 0, translateY: buttonVisible ? 0 : 20 }}
-            transition={buttonVisible
-              ? { type: 'timing', duration: 300, easing: [0.455, 0.03, 0.515, 0.955] }
-              : { type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }
+            initialAnimate={BUTTON_INITIAL_ANIMATE}
+            animate={
+              buttonVisible ? BUTTON_VISIBLE_ANIMATE : BUTTON_HIDDEN_ANIMATE
+            }
+            transition={
+              buttonVisible ? BUTTON_TRANSITION_IN : BUTTON_TRANSITION_OUT
             }
             onTransitionEnd={({ finished }) => {
               if (finished && !buttonVisible) setButtonMounted(false);

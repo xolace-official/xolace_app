@@ -1,5 +1,5 @@
-import { memo, useEffect } from 'react';
-import { View } from 'react-native';
+import { memo, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,14 +9,14 @@ import Animated, {
   cancelAnimation,
   Easing,
   FadeIn,
-} from 'react-native-reanimated';
-import { useThemeColor } from 'heroui-native';
+} from "react-native-reanimated";
+import { useThemeColor } from "heroui-native";
 
 const HALO_SIZE = 240;
 const CORE_SIZE = 150;
 
 const BreathingOrbComponent = () => {
-  const accentColor = useThemeColor('accent');
+  const accentColor = useThemeColor("accent");
   const reduceMotion = useReducedMotion();
   const scale = useSharedValue(1);
   const coreOpacity = useSharedValue(0.4);
@@ -57,12 +57,21 @@ const BreathingOrbComponent = () => {
     transform: [{ scale: scale.value }],
   }));
 
-  const coreOpacityStyle = useAnimatedStyle(() => ({
-    opacity: coreOpacity.value,
+  const haloStyle = useAnimatedStyle(() => ({
+    position: "absolute",
+    width: HALO_SIZE,
+    height: HALO_SIZE,
+    borderRadius: HALO_SIZE / 2,
+    backgroundColor: accentColor,
+    opacity: haloOpacity.value,
   }));
 
-  const haloOpacityStyle = useAnimatedStyle(() => ({
-    opacity: haloOpacity.value,
+  const coreStyle = useAnimatedStyle(() => ({
+    width: CORE_SIZE,
+    height: CORE_SIZE,
+    borderRadius: CORE_SIZE / 2,
+    backgroundColor: accentColor,
+    opacity: coreOpacity.value,
   }));
 
   return (
@@ -71,32 +80,9 @@ const BreathingOrbComponent = () => {
       className="items-center justify-center"
     >
       <Animated.View style={breathStyle}>
-        <View
-          style={{ width: HALO_SIZE, height: HALO_SIZE, alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Animated.View
-            style={[
-              {
-                position: 'absolute',
-                width: HALO_SIZE,
-                height: HALO_SIZE,
-                borderRadius: HALO_SIZE / 2,
-                backgroundColor: accentColor,
-              },
-              haloOpacityStyle,
-            ]}
-          />
-          <Animated.View
-            style={[
-              {
-                width: CORE_SIZE,
-                height: CORE_SIZE,
-                borderRadius: CORE_SIZE / 2,
-                backgroundColor: accentColor,
-              },
-              coreOpacityStyle,
-            ]}
-          />
+        <View style={styles.orbContainer}>
+          <Animated.View style={haloStyle} />
+          <Animated.View style={coreStyle} />
         </View>
       </Animated.View>
     </Animated.View>
@@ -104,3 +90,12 @@ const BreathingOrbComponent = () => {
 };
 
 export const BreathingOrb = memo(BreathingOrbComponent);
+
+const styles = StyleSheet.create({
+  orbContainer: {
+    width: HALO_SIZE,
+    height: HALO_SIZE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

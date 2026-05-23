@@ -4,6 +4,14 @@ import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
 
+const CHEVRON_NAME = {
+  ios: "chevron.right",
+  android: "chevron_right",
+  web: "chevron_right",
+} as const;
+
+const ANDROID_RIPPLE = { color: "rgba(255,255,255,0.05)" };
+
 type BaseProps = {
   label: string;
   danger?: boolean;
@@ -80,15 +88,7 @@ export const SettingsRow = (props: SettingsRowProps) => {
 
     if (props.variant === "chevron") {
       return (
-        <SymbolView
-          name={{
-            ios: "chevron.right",
-            android: "chevron_right",
-            web: "chevron_right",
-          }}
-          size={14}
-          tintColor={mutedColor}
-        />
+        <SymbolView name={CHEVRON_NAME} size={14} tintColor={mutedColor} />
       );
     }
 
@@ -125,7 +125,7 @@ export const SettingsRow = (props: SettingsRowProps) => {
               ? props.onPress
               : undefined
           }
-          android_ripple={{ color: "rgba(255,255,255,0.05)" }}
+          android_ripple={ANDROID_RIPPLE}
         >
           {rowContent}
         </Pressable>

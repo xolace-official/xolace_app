@@ -50,6 +50,8 @@ Settings.preloadPresets([
   'Breath',    // processingBreath fallback
 ]);
 
+const NO_HEADER = { headerShown: false };
+
 const AppContent = () => {
   const introSeen = useAppStore((s) => s.introSeen);
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
@@ -70,21 +72,16 @@ const AppContent = () => {
 
   if (isAuthLoading) return <FullRippleLoader />;
   return (
-        <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
+        <Stack screenOptions={NO_HEADER}>
       <Stack.Protected guard={!introSeen}>
-        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+        <Stack.Screen name="(onboarding)" options={NO_HEADER} />
       </Stack.Protected>
       <Stack.Protected guard={introSeen && !isAuthenticated}>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={NO_HEADER} />
       </Stack.Protected>
       <Stack.Protected guard={introSeen && isAuthenticated}>
-        <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+        <Stack.Screen name="(protected)" options={NO_HEADER} />
       </Stack.Protected>
-
     </Stack>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAction, useMutation, useQuery } from "convex/react";
@@ -28,6 +28,13 @@ import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 import { Presets } from "react-native-pulsar";
 import { StatusBar } from "expo-status-bar";
 
+const GRADIENT_START: [number, number] = [1, 0];
+const GRADIENT_END: [number, number] = [0.4, 0.3];
+const HEART_ICON = { ios: "heart.fill", android: "favorite" } as const;
+const CLOSE_ICON = { ios: "xmark", android: "close" } as const;
+const EASE_INITIAL = { opacity: 0, translateY: 20 };
+const EASE_ANIMATE = { opacity: 1, translateY: 0 };
+const EASE_TRANSITION = { type: "timing" as const, duration: 400, easing: [0.25, 0.1, 0.25, 1] as [number, number, number, number] };
 
 export function QuotesScreen() {
   const { top, bottom } = useSafeAreaInsets();
@@ -138,42 +145,51 @@ export function QuotesScreen() {
     }
   };
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const closeButtonStyle = { paddingTop: top + 12 };
+  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+  const gradientBottomColors: [string, string] = ["transparent", `${accentColor}28`];
+  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+  const gradientTopRightColors: [string, string] = [`${accentColor}20`, "transparent"];
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const glassStyle = { width: 34, height: 34, borderRadius: 17, alignItems: "center" as const, justifyContent: "center" as const, backgroundColor: `${foregroundColor}10` };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const prefContentStyle = { padding: 24, paddingTop: top + 24, gap: 16 };
+
   return (
     <>
     <StatusBar hidden />
     <View className="flex-1 bg-background">
       <LinearGradient
-        colors={["transparent", `${accentColor}28`]}
-        style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 220 }}
+        colors={gradientBottomColors}
+        style={styles.gradientBottom}
         pointerEvents="none"
       />
       <LinearGradient
-        colors={[`${accentColor}20`, "transparent"]}
-        start={[1, 0]}
-        end={[0.4, 0.3]}
-        style={{ position: "absolute", top: 0, right: 0, width: 140, height: 140 }}
+        colors={gradientTopRightColors}
+        start={GRADIENT_START}
+        end={GRADIENT_END}
+        style={styles.gradientTopRight}
         pointerEvents="none"
       />
 
       {/* Heart burst overlay */}
       <Animated.View
         pointerEvents="none"
-        style={[
-          { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, justifyContent: "center", alignItems: "center", zIndex: 20 },
-          heartStyle,
-        ]}
+        // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+        style={[styles.heartBurst, heartStyle]}
       >
-        <SymbolView name={{ ios: "heart.fill", android: "favorite" }} size={96} tintColor={accentColor} />
+        <SymbolView name={HEART_ICON} size={96} tintColor={accentColor} />
       </Animated.View>
 
       {/* Close button */}
-      <View className="absolute top-0 right-5 z-10" style={{ paddingTop: top + 12 }}>
+      <View className="absolute top-0 right-5 z-10" style={closeButtonStyle}>
         <PressableFeedback onPress={() => { Presets.flick(); router.back(); }} accessibilityLabel="Close" hitSlop={8}>
           <GlassView
-            style={{ width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: `${foregroundColor}10` }}
+            style={glassStyle}
             glassEffectStyle="clear"
           >
-            <SymbolView name={{ ios: "xmark", android: "close" }} size={14} tintColor={`${foregroundColor}70`} />
+            <SymbolView name={CLOSE_ICON} size={14} tintColor={`${foregroundColor}70`} />
           </GlassView>
         </PressableFeedback>
       </View>
@@ -182,13 +198,13 @@ export function QuotesScreen() {
       {isFirstVisit && (
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ padding: 24, paddingTop: top + 24, gap: 16 }}
+          contentContainerStyle={prefContentStyle}
           showsVerticalScrollIndicator={false}
         >
           <EaseView
-            initialAnimate={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "timing", duration: 400, easing: [0.25, 0.1, 0.25, 1] }}
+            initialAnimate={EASE_INITIAL}
+            animate={EASE_ANIMATE}
+            transition={EASE_TRANSITION}
           >
             <PreferenceSetupSheet
               onComplete={handlePrefsComplete}
@@ -231,7 +247,7 @@ export function QuotesScreen() {
 
       {/* Off-screen sharing card for capture */}
       {showSharingCard && displayedQuote && (
-        <View style={{ position: "absolute", top: -10000, left: 0, pointerEvents: "none" }} onLayout={onSharingCardLayout}>
+        <View style={styles.offscreen} pointerEvents="none" onLayout={onSharingCardLayout}>
           <SharingCard ref={sharingCardRef} text={removeEmDash(displayedQuote.text)} />
         </View>
       )}
@@ -239,3 +255,35 @@ export function QuotesScreen() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  gradientBottom: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 220,
+  },
+  gradientTopRight: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 140,
+    height: 140,
+  },
+  heartBurst: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 20,
+  },
+  offscreen: {
+    position: "absolute",
+    top: -10000,
+    left: 0,
+  },
+});

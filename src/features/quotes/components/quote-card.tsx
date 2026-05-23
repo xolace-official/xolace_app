@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { GlassView } from "expo-glass-effect";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
@@ -21,11 +21,10 @@ type Props = {
   showNudge?: boolean;
 };
 
-const ENTRANCE = {
-  type: "timing" as const,
-  duration: 500,
-  easing: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
-};
+const EASING: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
+const EASE_INITIAL = { opacity: 0, translateY: 24 };
+const EASE_ANIMATE = { opacity: 1, translateY: 0 };
+const ENTRANCE = { type: "timing" as const, duration: 500, easing: EASING };
 
 export function QuoteCard({
   text,
@@ -56,33 +55,44 @@ export function QuoteCard({
     onReact(reaction === "not_today" ? null : "not_today");
   };
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const topBarStyle = { paddingTop: top + 56, paddingBottom: 120 };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const accentLineStyle = { height: 1.5, backgroundColor: `${accentColor}50` };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const labelStyle = { color: `${foregroundColor}40` };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const nudgeStyle = { color: `${foregroundColor}30` };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const bottomBarStyle = { paddingBottom: bottom + 32 };
+
   return (
     <EaseView
-      initialAnimate={{ opacity: 0, translateY: 24 }}
-      animate={{ opacity: 1, translateY: 0 }}
+      initialAnimate={EASE_INITIAL}
+      animate={EASE_ANIMATE}
       transition={ENTRANCE}
       className="flex-1"
     >
       {/* Quote text — vertically centered */}
       <View
         className="flex-1 justify-center px-8"
-        style={{ paddingTop: top + 56, paddingBottom: 120 }}
+        style={topBarStyle}
       >
-        <View className="w-8 mb-6" style={{ height: 1.5, backgroundColor: `${accentColor}50` }} />
+        <View className="w-8 mb-6" style={accentLineStyle} />
         <AppText
           className="text-3xl font-semibold text-foreground"
-          style={{ lineHeight: 42 }}
+          style={styles.quoteLine}
         >
           {text}
         </AppText>
         <AppText
           className="text-xs mt-5 tracking-widest uppercase"
-          style={{ color: `${foregroundColor}40` }}
+          style={labelStyle}
         >
           {label}
         </AppText>
         {showNudge && (
-          <AppText className="text-xs mt-3" style={{ color: `${foregroundColor}30` }}>
+          <AppText className="text-xs mt-3" style={nudgeStyle}>
             Try a session for a more personal quote.
           </AppText>
         )}
@@ -91,7 +101,7 @@ export function QuoteCard({
       {/* Bottom action bar */}
       <View
         className="flex-row items-end justify-between px-10"
-        style={{ paddingBottom: bottom + 32 }}
+        style={bottomBarStyle}
       >
         {/* Share */}
         <ActionButton
@@ -152,6 +162,13 @@ function ActionButton({
   isDisabled,
   onPress,
 }: ActionButtonProps) {
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const glassStyle = { width: 52, height: 52, borderRadius: 26, alignItems: "center" as const, justifyContent: "center" as const, backgroundColor: isActive ? `${accentColor}18` : `${color}08`, borderWidth: isActive ? 1.5 : 1, borderColor: isActive ? `${accentColor}60` : `${color}12` };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const symbolName = { ios: iosIcon as any, android: androidIcon as any };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const labelStyle = { color: isActive ? accentColor : `${color}30` };
+
   return (
     <PressableFeedback
       onPress={onPress}
@@ -161,32 +178,21 @@ function ActionButton({
       accessibilityRole="button"
     >
       <View className="items-center gap-2">
-        <GlassView
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: 26,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: isActive ? `${accentColor}18` : `${color}08`,
-            borderWidth: isActive ? 1.5 : 1,
-            borderColor: isActive ? `${accentColor}60` : `${color}12`,
-          }}
-          glassEffectStyle="clear"
-        >
+        <GlassView style={glassStyle} glassEffectStyle="clear">
           <SymbolView
-            name={{ ios: iosIcon as any, android: androidIcon as any }}
+            name={symbolName}
             size={20}
             tintColor={isActive ? accentColor : `${color}50`}
           />
         </GlassView>
-        <AppText
-          className="text-xs"
-          style={{ color: isActive ? accentColor : `${color}30` }}
-        >
+        <AppText className="text-xs" style={labelStyle}>
           {label}
         </AppText>
       </View>
     </PressableFeedback>
   );
 }
+
+const styles = StyleSheet.create({
+  quoteLine: { lineHeight: 42 },
+});

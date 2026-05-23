@@ -7,6 +7,8 @@ import { AppText } from '@/src/components/shared/app-text';
 import { useAppStore } from '@/src/store/store';
 import { FounderWelcomeSheet } from '@/src/features/founder-welcome/components/founder-welcome-sheet';
 
+const BANNER_INITIAL = { opacity: 0 };
+
 function NotificationBanner({ content, onDismiss }: { content: string; onDismiss: () => void }) {
   const insets = useSafeAreaInsets();
   const [visible, setVisible] = useState(true);
@@ -20,26 +22,30 @@ function NotificationBanner({ content, onDismiss }: { content: string; onDismiss
     return () => clearTimeout(timer);
   }, []);
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const animate = { opacity: visible ? 1 : 0 };
+  const transition = visible
+    ? { type: 'timing' as const, duration: 400, easing: [0.455, 0.03, 0.515, 0.955] as [number, number, number, number] }
+    : { type: 'timing' as const, duration: 300, easing: [0.455, 0.03, 0.515, 0.955] as [number, number, number, number] };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const bannerStyle = {
+    position: 'absolute' as const,
+    top: insets.top + 8,
+    left: 20,
+    right: 20,
+    zIndex: 10,
+    boxShadow: '0 2px 6px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.10)',
+  };
+
   return (
     <EaseView
-      initialAnimate={{ opacity: 0 }}
-      animate={{ opacity: visible ? 1 : 0 }}
-      transition={visible
-        ? { type: 'timing', duration: 400, easing: [0.455, 0.03, 0.515, 0.955] }
-        : { type: 'timing', duration: 300, easing: [0.455, 0.03, 0.515, 0.955] }
-      }
+      initialAnimate={BANNER_INITIAL}
+      animate={animate}
+      transition={transition}
       onTransitionEnd={({ finished }) => {
         if (finished && !visible) onDismiss();
       }}
-      style={{
-        position: 'absolute',
-        top: insets.top + 8,
-        left: 20,
-        right: 20,
-        zIndex: 10,
-        boxShadow:
-          '0 2px 6px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.10)',
-      }}
+      style={bannerStyle}
       className={"rounded-2xl"}
     >
       <Pressable
@@ -79,7 +85,7 @@ export default function ProtectedIndex() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1">
       <ReflectScreen />
       {lastNotification && (
         <NotificationBanner

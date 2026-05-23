@@ -7,6 +7,10 @@ import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
 /**
  * Settings stack layout with a large transparent header and a back button.
  */
+const BACK_ICON_NAME = { ios: "chevron.left", android: "arrow_back", web: "arrow_back" } as const;
+const SETTINGS_OPTIONS = { title: "Settings" };
+const APPEARANCE_OPTIONS = { title: "Appearance" };
+
 export default function SettingsLayout() {
   const router = useRouter();
   const largeHeaderOptions = useLargeHeaderOptions();
@@ -15,38 +19,25 @@ export default function SettingsLayout() {
   const renderBackButton = () => (
     <Pressable onPress={() => router.back()} hitSlop={8}>
       <SymbolView
-        name={{
-          ios: "chevron.left",
-          android: "arrow_back",
-          web: "arrow_back",
-        }}
+        name={BACK_ICON_NAME}
         size={20}
         tintColor={tintColor}
       />
     </Pressable>
   );
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const screenOptions = {
+    ...largeHeaderOptions,
+    headerLeft: renderBackButton,
+    contentStyle: { backgroundColor: "transparent" },
+  };
+
   return (
     <View className="flex-1 bg-background">
-      <Stack
-        screenOptions={{
-          ...largeHeaderOptions,
-          headerLeft: renderBackButton,
-          contentStyle: { backgroundColor: "transparent" },
-        }}
-      >
-        <Stack.Screen
-          name="index"
-          options={{
-            title: "Settings",
-          }}
-        />
-        <Stack.Screen
-          name="appearance"
-          options={{
-            title: "Appearance",
-          }}
-        />
+      <Stack screenOptions={screenOptions}>
+        <Stack.Screen name="index" options={SETTINGS_OPTIONS} />
+        <Stack.Screen name="appearance" options={APPEARANCE_OPTIONS} />
       </Stack>
     </View>
   );

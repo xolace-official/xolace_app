@@ -85,6 +85,8 @@
     "@types/react": "~19.2.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~55.0.0",
+    "eslint-plugin-react-native": "^5.0.0",
+    "eslint-plugin-react-perf": "^3.3.3",
     "typescript": "~5.9.2"
   },
   "private": true,

@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from "react-native";
+import { useMemo } from "react";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -12,11 +13,11 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
-} from 'react-native-reanimated';
-import { useThemeColor } from 'heroui-native';
-import { AppText } from '@/src/components/shared/app-text';
+} from "react-native-reanimated";
+import { useThemeColor } from "heroui-native";
+import { AppText } from "@/src/components/shared/app-text";
 
-const CHIPS = ['heavy', 'foggy', 'tight', 'raw', 'numb', 'scattered'];
+const CHIPS = ["heavy", "foggy", "tight", "raw", "numb", "scattered"];
 const DWELL_MS = 1000;
 
 type ChipProps = {
@@ -26,7 +27,12 @@ type ChipProps = {
   accentColor: string;
 };
 
-const AnimatedChip = ({ word, chipIndex, activeChip, accentColor }: ChipProps) => {
+const AnimatedChip = ({
+  word,
+  chipIndex,
+  activeChip,
+  accentColor,
+}: ChipProps) => {
   const press = useSharedValue(0);
 
   useAnimatedReaction(
@@ -44,28 +50,43 @@ const AnimatedChip = ({ word, chipIndex, activeChip, accentColor }: ChipProps) =
 
   const rContainer = useAnimatedStyle(() => ({
     transform: [
-      { scale: interpolate(press.value, [0, 0.5, 1], [1, 0.88, 1], Extrapolation.CLAMP) },
+      {
+        scale: interpolate(
+          press.value,
+          [0, 0.5, 1],
+          [1, 0.88, 1],
+          Extrapolation.CLAMP,
+        ),
+      },
     ],
   }));
 
   const rOverlay = useAnimatedStyle(() => ({
-    opacity: interpolate(press.value, [0, 0.2, 0.65, 1], [0, 1, 0.8, 0], Extrapolation.CLAMP),
+    opacity: interpolate(
+      press.value,
+      [0, 0.2, 0.65, 1],
+      [0, 1, 0.8, 0],
+      Extrapolation.CLAMP,
+    ),
   }));
+
+  const overlayStyle = useMemo(
+    () => [
+      StyleSheet.absoluteFill,
+      styles.chipOverlay,
+      { borderColor: accentColor + "99", backgroundColor: accentColor + "1A" },
+      rOverlay,
+    ],
+    [accentColor, rOverlay],
+  );
 
   return (
     <Animated.View style={rContainer}>
-      <View style={styles.chip}>
+      <View className="border-foreground/55" style={styles.chip}>
         <AppText className="text-foreground/55 text-[9px]">{word}</AppText>
       </View>
       {/* Accent overlay — fades in on tap, fades out before next chip */}
-      <Animated.View
-        style={[
-          StyleSheet.absoluteFill,
-          styles.chipOverlay,
-          { borderColor: accentColor + '99', backgroundColor: accentColor + '1A' },
-          rOverlay,
-        ]}
-      />
+      <Animated.View style={overlayStyle} />
     </Animated.View>
   );
 };
@@ -73,10 +94,12 @@ const AnimatedChip = ({ word, chipIndex, activeChip, accentColor }: ChipProps) =
 type Props = { isActive: SharedValue<boolean> };
 
 export const SharePreview = ({ isActive }: Props) => {
-  const accentColor = useThemeColor('accent');
+  const accentColor = useThemeColor("accent");
   const progress = useSharedValue(0);
 
-  const activeChip = useDerivedValue(() => Math.floor(progress.value) % CHIPS.length);
+  const activeChip = useDerivedValue(
+    () => Math.floor(progress.value) % CHIPS.length,
+  );
 
   useAnimatedReaction(
     () => isActive.value,
@@ -134,7 +157,7 @@ export const SharePreview = ({ isActive }: Props) => {
 const styles = StyleSheet.create({
   chip: {
     borderWidth: 1,
-    borderColor: 'rgba(128,128,128,0.12)',
+    opacity: 0.55,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 2,

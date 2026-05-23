@@ -9,14 +9,21 @@ import {
   TabSlot,
   TabTriggerSlotProps,
   TabListProps,
-} from 'expo-router/ui';
-import { SymbolView } from 'expo-symbols';
-import React from 'react';
-import { Pressable, View } from 'react-native';
+} from "expo-router/ui";
+import { SymbolView } from "expo-symbols";
+import React, { useMemo } from "react";
+import { Pressable, View } from "react-native";
+import { useThemeColor } from "heroui-native";
 
-import { ExternalLink } from './external-link';
-import { AppText } from '@/src/components/shared/app-text';
-import { MaxContentWidth } from '@/src/lib/theme';
+import { ExternalLink } from "./external-link";
+import { AppText } from "@/src/components/shared/app-text";
+import { MaxContentWidth } from "@/src/lib/theme";
+
+const TAB_CONTAINER_STYLE = { maxWidth: MaxContentWidth };
+const EXTERNAL_ICON_NAME = {
+  ios: "arrow.up.right.square",
+  web: "link",
+} as const;
 
 export default function AppTabs() {
   return (
@@ -33,17 +40,23 @@ export default function AppTabs() {
   );
 }
 
-export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+export function TabButton({
+  children,
+  isFocused,
+  ...props
+}: TabTriggerSlotProps) {
   return (
     <Pressable {...props} className="active:opacity-70">
       <View
         className={`py-1 px-4 rounded-2xl ${
-          isFocused ? 'bg-default' : 'bg-surface'
+          isFocused ? "bg-default" : "bg-surface"
         }`}
       >
         <AppText
           className={`text-sm ${
-            isFocused ? 'font-semibold text-foreground' : 'font-normal text-muted'
+            isFocused
+              ? "font-semibold text-foreground"
+              : "font-normal text-muted"
           }`}
         >
           {children}
@@ -54,11 +67,18 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
 }
 
 export function CustomTabList(props: TabListProps) {
+  const accentColor = useThemeColor("accent");
+
+  const iconName = useMemo(() => EXTERNAL_ICON_NAME, []);
+
   return (
-    <View {...props} className="absolute w-full p-4 justify-center items-center flex-row">
+    <View
+      {...props}
+      className="absolute w-full p-4 justify-center items-center flex-row"
+    >
       <View
         className="py-2 px-8 rounded-4xl flex-row items-center grow gap-2 bg-surface"
-        style={{ maxWidth: MaxContentWidth }}
+        style={TAB_CONTAINER_STYLE}
       >
         <AppText className="text-sm font-bold text-foreground mr-auto">
           Expo Forge
@@ -69,11 +89,7 @@ export function CustomTabList(props: TabListProps) {
         <ExternalLink href="https://docs.expo.dev" asChild>
           <Pressable className="flex-row justify-center items-center gap-1 ml-4">
             <AppText className="text-sm text-accent">Docs</AppText>
-            <SymbolView
-              tintColor="var(--accent)"
-              name={{ ios: 'arrow.up.right.square', web: 'link' }}
-              size={12}
-            />
+            <SymbolView tintColor={accentColor} name={iconName} size={12} />
           </Pressable>
         </ExternalLink>
       </View>

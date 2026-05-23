@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { View } from "react-native";
 import { GlassView } from "expo-glass-effect";
 import { PressableFeedback } from "heroui-native";
@@ -12,28 +13,46 @@ type Props = {
   onPress: () => void;
 };
 
-export function QuickAction({ iosIcon, androidIcon, label, foregroundColor, onPress }: Props) {
+export function QuickAction({
+  iosIcon,
+  androidIcon,
+  label,
+  foregroundColor,
+  onPress,
+}: Props) {
+  const glassStyle = useMemo(
+    () => ({
+      width: 56,
+      height: 56,
+      borderRadius: 16,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      backgroundColor: `${foregroundColor}08`,
+    }),
+    [foregroundColor],
+  );
+
+  const iconName = useMemo(
+    () => ({ ios: iosIcon as any, android: androidIcon as any }),
+    [iosIcon, androidIcon],
+  );
+
+  const labelStyle = useMemo(
+    () => ({ color: `${foregroundColor}50` }),
+    [foregroundColor],
+  );
+
   return (
     <PressableFeedback onPress={onPress} accessibilityLabel={label} hitSlop={8}>
       <View className="items-center gap-2">
-        <GlassView
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 16,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: `${foregroundColor}08`,
-          }}
-          glassEffectStyle="clear"
-        >
+        <GlassView style={glassStyle} glassEffectStyle="clear">
           <SymbolView
-            name={{ ios: iosIcon as any, android: androidIcon as any }}
+            name={iconName}
             size={22}
             tintColor={`${foregroundColor}70`}
           />
         </GlassView>
-        <AppText className="text-xs" style={{ color: `${foregroundColor}50` }}>
+        <AppText className="text-xs" style={labelStyle}>
           {label}
         </AppText>
       </View>

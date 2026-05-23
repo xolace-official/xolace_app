@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { StyleSheet } from "react-native";
 import { Easing } from "react-native-reanimated";
 import { useThemeColor } from "heroui-native";
 import Loader from "../index";
@@ -8,6 +9,11 @@ import type { LoaderKeyframes } from "../types";
  * Square that morphs to a circle and back across a full 360° rotation,
  * color-shifting between accent and foreground via keyframe interpolation.
  */
+const styles = StyleSheet.create({
+  container: { alignItems: "center", justifyContent: "center" },
+  block: { width: 44, height: 44 },
+});
+
 export const MorphLoader = () => {
   const accentColor = useThemeColor("accent");
   const foregroundColor = useThemeColor("foreground");
@@ -37,9 +43,9 @@ export const MorphLoader = () => {
     <Loader
       duration={2200}
       easing={Easing.inOut(Easing.ease)}
-      style={{ alignItems: "center", justifyContent: "center" }}
+      style={styles.container}
     >
-      <Loader.KeyframeView keyframes={keyframes} style={{ width: 44, height: 44 }} />
+      <Loader.KeyframeView keyframes={keyframes} style={styles.block} />
     </Loader>
   );
 };

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Dialog, RadioGroup, Radio, Separator, Button } from "heroui-native";
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, StyleSheet } from "react-native";
 import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
 import { AppText } from "@/src/components/shared/app-text";
 
@@ -23,6 +23,10 @@ const AFTER_OPTIONS = [
 
 type QuietWindow = { dontReachBefore: number; dontReachAfter: number };
 
+const styles = StyleSheet.create({
+  hoursList: { maxHeight: 180 },
+});
+
 type Props = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,7 +34,12 @@ type Props = {
   onSave: (window: QuietWindow | null) => void;
 };
 
-export const QuietWindowDialog = ({ isOpen, onOpenChange, current, onSave }: Props) => {
+export const QuietWindowDialog = ({
+  isOpen,
+  onOpenChange,
+  current,
+  onSave,
+}: Props) => {
   const [beforeHour, setBeforeHour] = useState(current?.dontReachBefore ?? 8);
   const [afterHour, setAfterHour] = useState(current?.dontReachAfter ?? 21);
 
@@ -70,12 +79,20 @@ export const QuietWindowDialog = ({ isOpen, onOpenChange, current, onSave }: Pro
           <AppText className="text-sm font-semibold text-foreground/60 uppercase tracking-wider mb-2">
             Not before
           </AppText>
-          <ScrollView style={{ maxHeight: 180 }} showsVerticalScrollIndicator={false}>
-            <RadioGroup value={String(beforeHour)} onValueChange={(v) => setBeforeHour(Number(v))}>
+          <ScrollView
+            style={styles.hoursList}
+            showsVerticalScrollIndicator={false}
+          >
+            <RadioGroup
+              value={String(beforeHour)}
+              onValueChange={(v) => setBeforeHour(Number(v))}
+            >
               {BEFORE_OPTIONS.map((opt, index) => (
                 <View key={opt.value}>
                   <RadioGroup.Item value={String(opt.value)} className="py-2.5">
-                    <AppText className="flex-1 text-base text-foreground">{opt.label}</AppText>
+                    <AppText className="flex-1 text-base text-foreground">
+                      {opt.label}
+                    </AppText>
                     <Radio />
                   </RadioGroup.Item>
                   {index < BEFORE_OPTIONS.length - 1 && <Separator />}
@@ -87,12 +104,20 @@ export const QuietWindowDialog = ({ isOpen, onOpenChange, current, onSave }: Pro
           <AppText className="text-sm font-semibold text-foreground/60 uppercase tracking-wider mt-5 mb-2">
             Not after
           </AppText>
-          <ScrollView style={{ maxHeight: 180 }} showsVerticalScrollIndicator={false}>
-            <RadioGroup value={String(afterHour)} onValueChange={(v) => setAfterHour(Number(v))}>
+          <ScrollView
+            style={styles.hoursList}
+            showsVerticalScrollIndicator={false}
+          >
+            <RadioGroup
+              value={String(afterHour)}
+              onValueChange={(v) => setAfterHour(Number(v))}
+            >
               {AFTER_OPTIONS.map((opt, index) => (
                 <View key={opt.value}>
                   <RadioGroup.Item value={String(opt.value)} className="py-2.5">
-                    <AppText className="flex-1 text-base text-foreground">{opt.label}</AppText>
+                    <AppText className="flex-1 text-base text-foreground">
+                      {opt.label}
+                    </AppText>
                     <Radio />
                   </RadioGroup.Item>
                   {index < AFTER_OPTIONS.length - 1 && <Separator />}

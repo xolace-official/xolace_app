@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useToast } from "heroui-native";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
@@ -16,6 +16,10 @@ import { useSettings } from "@/src/features/settings/hooks/use-settings";
 import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
 import { useAppStore } from "@/src/store/store";
 import type { ThemeMode } from "@/src/features/settings/hooks/use-settings";
+
+const styles = StyleSheet.create({
+  contentContainer: { paddingTop: 20, paddingBottom: 48 },
+});
 
 /**
  * Settings screen — composes all preference sections.
@@ -62,29 +66,26 @@ export const SettingsScreen = () => {
     performDeleteAccount,
   } = useSettings();
 
-  const reachDisplay = reach === "warm" ? "Warm" : reach === "direct" ? "Direct" : "Quiet";
+  const reachDisplay =
+    reach === "warm" ? "Warm" : reach === "direct" ? "Direct" : "Quiet";
   const quietWindowDisplay = quietWindow
     ? `${quietWindow.dontReachBefore}–${quietWindow.dontReachAfter}h`
     : "Off";
 
-  const {
-    setConfirmAction,
-    isConfirmLoading,
-    activeConfig,
-    handleConfirm,
-  } = useConfirmAction({
-    performLogout,
-    performDeleteData,
-    performDeleteAccount,
-    toast,
-  });
+  const { setConfirmAction, isConfirmLoading, activeConfig, handleConfirm } =
+    useConfirmAction({
+      performLogout,
+      performDeleteData,
+      performDeleteAccount,
+      toast,
+    });
 
   return (
     <>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 20, paddingBottom: 48 }}
+        contentContainerStyle={styles.contentContainer}
       >
         {/* ── ACCOUNT ─────────────────────────────────────────── */}
         <SettingsSection title="Account">
@@ -95,7 +96,7 @@ export const SettingsScreen = () => {
             isLast
           />
         </SettingsSection>
-        
+
         {/* ── YOUR SPACE ──────────────────────────────────────── */}
         <SettingsSection title="Your space">
           <SettingsRow
@@ -118,7 +119,7 @@ export const SettingsScreen = () => {
           <SettingsRow
             variant="chevron"
             label="Appearance"
-            onPress={() => router.push('/(protected)/settings/appearance')}
+            onPress={() => router.push("/(protected)/settings/appearance")}
           />
           <SettingsRow
             variant="toggle"
@@ -144,7 +145,6 @@ export const SettingsScreen = () => {
             isLast
           />
         </SettingsSection>
-
 
         {/* ── NOTIFICATIONS ────────────────────────────────────── */}
         <SettingsSection title="Notifications">
@@ -257,8 +257,12 @@ export const SettingsScreen = () => {
         isOpen={spaceNameDialogOpen}
         currentName={spaceName}
         onOpenChange={setSpaceNameDialogOpen}
-        onSave={async (name) => { await setSpaceName(name); }}
-        onClear={async () => { await setSpaceName(null); }}
+        onSave={async (name) => {
+          await setSpaceName(name);
+        }}
+        onClear={async () => {
+          await setSpaceName(null);
+        }}
       />
 
       {/* ── REACH SELECTOR DIALOG ───────────────────────────── */}

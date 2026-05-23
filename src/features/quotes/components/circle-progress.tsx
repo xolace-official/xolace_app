@@ -8,7 +8,7 @@ import {
 import { useThemeColor } from "heroui-native";
 
 interface CircleProgressProps {
-  progress: number; // 0 to 1
+  progress: number;
   size?: number;
   strokeWidth?: number;
 }
@@ -44,13 +44,15 @@ export function CircleProgress({
         height: size - strokeWidth,
       },
       -90,
-      animatedProgress.value * 360
+      animatedProgress.value * 360,
     );
     return path;
   }, [animatedProgress, size, strokeWidth]);
 
+  const canvasStyle = useMemo(() => ({ width: size, height: size }), [size]);
+
   return (
-    <Canvas style={{ width: size, height: size }}>
+    <Canvas style={canvasStyle}>
       <Path
         path={backgroundPath}
         style="stroke"

@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { StyleSheet } from "react-native";
 import { Easing } from "react-native-reanimated";
 import { useThemeColor } from "heroui-native";
 import Loader from "../index";
@@ -14,24 +15,30 @@ const SQUISH_KEYFRAMES: LoaderKeyframes = {
 };
 
 /** Squash-and-stretch bounce block — physical, snappy, full secondary motion. */
+const styles = StyleSheet.create({
+  container: { alignItems: "center", justifyContent: "center" },
+  block: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+  },
+});
+
 export const SquishLoader = () => {
   const accentColor = useThemeColor("accent");
+
+  const blockStyle = useMemo(
+    () => [styles.block, { backgroundColor: accentColor }],
+    [accentColor],
+  );
 
   return (
     <Loader
       duration={1100}
       easing={Easing.out(Easing.ease)}
-      style={{ alignItems: "center", justifyContent: "center" }}
+      style={styles.container}
     >
-      <Loader.KeyframeView
-        keyframes={SQUISH_KEYFRAMES}
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: 8,
-          backgroundColor: accentColor,
-        }}
-      />
+      <Loader.KeyframeView keyframes={SQUISH_KEYFRAMES} style={blockStyle} />
     </Loader>
   );
 };

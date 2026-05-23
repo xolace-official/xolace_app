@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -101,51 +101,45 @@ const EmberCarouselItemComponent = ({
     opacity: withSpring(isCurrent.get() ? 0.45 : 0, SPRING),
   }));
 
+  const haloStyle = {
+    position: 'absolute' as const,
+    top: -18, left: -18, right: -18, bottom: -18,
+    borderRadius: 52,
+    borderCurve: 'continuous' as const,
+    opacity: 0,
+    boxShadow: `0 0 52px 18px ${accentColor}`,
+  };
+  const ringStyle = {
+    position: 'absolute' as const,
+    top: -1, left: -1, right: -1, bottom: -1,
+    borderRadius: 33,
+    borderCurve: 'continuous' as const,
+    borderWidth: 1,
+    borderColor: accentColor,
+  };
+
   return (
     <Animated.View
-      style={[{ position: 'absolute', width: '58%', aspectRatio: 1 / 0.72 }, rContainerStyle]}
+      // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+      style={[styles.container, rContainerStyle]}
       onLayout={(e) => itemHeight.set(e.nativeEvent.layout.height)}
     >
       {/* Soft ambient halo — opacity-controlled so it works with any accent color format */}
       <Animated.View
-        style={[
-          {
-            position: 'absolute',
-            top: -18,
-            left: -18,
-            right: -18,
-            bottom: -18,
-            borderRadius: 52,
-            borderCurve: 'continuous',
-            opacity: 0,
-            boxShadow: `0 0 52px 18px ${accentColor}`,
-          },
-          rHaloStyle,
-        ]}
+        // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+        style={[haloStyle, rHaloStyle]}
       />
 
       {/* Active border ring */}
       <Animated.View
-        style={[
-          {
-            position: 'absolute',
-            top: -1,
-            left: -1,
-            right: -1,
-            bottom: -1,
-            borderRadius: 33,
-            borderCurve: 'continuous',
-            borderWidth: 1,
-            borderColor: accentColor,
-          },
-          rRingStyle,
-        ]}
+        // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+        style={[ringStyle, rRingStyle]}
       />
 
       {/* Card — clean surface, no decorative shapes */}
       <View
         className="flex-1 overflow-hidden bg-overlay border border-accent/10"
-        style={{ borderRadius: 32, borderCurve: 'continuous' }}
+        style={styles.card}
       >
         {/* Subtle top accent wash */}
         <View className="absolute top-0 left-0 right-0 h-10 bg-accent/6" />
@@ -153,7 +147,7 @@ const EmberCarouselItemComponent = ({
         <View className="flex-1 justify-center items-center px-5 py-4 gap-1">
           <AppText
             className="text-accent text-[15px] text-center"
-            style={{  letterSpacing: 0.3 }}
+            style={styles.letterSpacing}
           >
             {slide.action}
           </AppText>
@@ -168,3 +162,9 @@ const EmberCarouselItemComponent = ({
 
 EmberCarouselItemComponent.displayName = 'EmberCarouselItem';
 export const EmberCarouselItem = memo(EmberCarouselItemComponent);
+
+const styles = StyleSheet.create({
+  container: { position: 'absolute', width: '58%', aspectRatio: 1 / 0.72 },
+  card: { borderRadius: 32, borderCurve: 'continuous' },
+  letterSpacing: { letterSpacing: 0.3 },
+});

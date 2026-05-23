@@ -1,12 +1,32 @@
-import { ScrollView, View } from 'react-native';
-import { EaseView } from 'react-native-ease/uniwind';
-import { AppText } from '@/src/components/shared/app-text';
-import { SettingsRow } from '@/src/features/settings/components/settings-row';
-import { ThemePreviewCard } from '@/src/features/settings/components/theme-preview-card';
-import { FREE_THEMES } from '@/src/lib/themes';
-import { useSettings } from '@/src/features/settings/hooks/use-settings';
-import { useAppStore } from '@/src/store/store';
-import { Presets } from 'react-native-pulsar';
+import { ScrollView, StyleSheet, View } from "react-native";
+import { EaseView } from "react-native-ease/uniwind";
+import { AppText } from "@/src/components/shared/app-text";
+import { SettingsRow } from "@/src/features/settings/components/settings-row";
+import { ThemePreviewCard } from "@/src/features/settings/components/theme-preview-card";
+import { FREE_THEMES } from "@/src/lib/themes";
+import { useSettings } from "@/src/features/settings/hooks/use-settings";
+import { useAppStore } from "@/src/store/store";
+import { Presets } from "react-native-pulsar";
+
+const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const INITIAL_REVEAL = { opacity: 0, translateY: 20 };
+const FINAL_REVEAL = { opacity: 1, translateY: 0 };
+const FREE_THEMES_TRANSITION = {
+  type: "timing",
+  duration: 300,
+  easing: EASE,
+} as const;
+const NIGHT_MODE_TRANSITION = {
+  type: "timing",
+  duration: 300,
+  delay: 160,
+  easing: EASE,
+} as const;
+
+const styles = StyleSheet.create({
+  contentContainer: { paddingTop: 16, paddingBottom: 48 },
+  themeScrollerContent: { paddingHorizontal: 20, gap: 12 },
+});
 
 /**
  * Appearance settings screen.
@@ -44,19 +64,19 @@ export const AppearanceScreen = () => {
       className="flex-1 bg-background"
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingTop: 16, paddingBottom: 48 }}
+      contentContainerStyle={styles.contentContainer}
     >
       {/* ── FREE THEMES ─────────────────────────────────────────── */}
       <EaseView
-        initialAnimate={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 300, easing: [0.455, 0.03, 0.515, 0.955] }}
+        initialAnimate={INITIAL_REVEAL}
+        animate={FINAL_REVEAL}
+        transition={FREE_THEMES_TRANSITION}
         className="mb-8"
       >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+          contentContainerStyle={styles.themeScrollerContent}
         >
           {FREE_THEMES.map((theme) => (
             <ThemePreviewCard
@@ -71,7 +91,7 @@ export const AppearanceScreen = () => {
 
       {/* ── THE MIRROR (premium) ─────────────────────────────────── */}
       {/*<Animated.View entering={FadeInDown.delay(80).duration(300)} className="mb-8">
-         Section header 
+         Section header
         <View className="flex-row items-center gap-2 px-5 mb-4">
           <AppText className="text-sm font-semibold text-foreground/80">
             The Mirror
@@ -99,9 +119,9 @@ export const AppearanceScreen = () => {
 
       {/* ── NIGHT MODE ───────────────────────────────────────────── */}
       <EaseView
-        initialAnimate={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 300, delay: 160, easing: [0.455, 0.03, 0.515, 0.955] }}
+        initialAnimate={INITIAL_REVEAL}
+        animate={FINAL_REVEAL}
+        transition={NIGHT_MODE_TRANSITION}
         className="mx-5 rounded-2xl bg-surface overflow-hidden"
       >
         <SettingsRow
@@ -113,7 +133,8 @@ export const AppearanceScreen = () => {
         />
         <View className="px-5 pb-4">
           <AppText className="text-xs text-foreground/30 leading-5">
-            Shifts the theme and words to match the rawer emotional register of late-night sessions.
+            Shifts the theme and words to match the rawer emotional register of
+            late-night sessions.
           </AppText>
         </View>
       </EaseView>

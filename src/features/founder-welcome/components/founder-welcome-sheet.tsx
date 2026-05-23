@@ -31,6 +31,8 @@ const PARAGRAPHS: Segment[][] = [
   ],
 ];
 
+const SNAP_POINTS = ["90%"];
+
 type Props = {
   isOpen: boolean;
   onDismiss: () => void;
@@ -49,7 +51,7 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
       <BottomSheet.Portal>
         <FounderWelcomeBlurOverlay />
         <BottomSheet.Content
-          snapPoints={["90%"]}
+          snapPoints={SNAP_POINTS}
           enablePanDownToClose={false}
           enableDynamicSizing={false}
           enableOverDrag={false}
@@ -67,7 +69,7 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
             {/* Placeholder — swap for expo-image with founder-photo.jpg when asset is ready */}
             <Image
               source={require('@/assets/images/founder-images/Nathan-mini.jpeg')}
-              style={{ width: '100%', height: '100%' }}
+              style={styles.founderImage}
               contentFit="cover"
               contentPosition={"top"}
             />
@@ -84,13 +86,13 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
 
             {PARAGRAPHS.map((segments, i) => (
               <AppText
-                key={i}
-                style={[styles.paragraph, i < PARAGRAPHS.length - 1 && styles.paragraphGap]}
+                key={segments[0].text}
+                style={i < PARAGRAPHS.length - 1 ? styles.paragraphWithGap : styles.paragraph}
                 className="text-foreground/80 text-sm"
               >
-                {segments.map((seg, j) =>
+                {segments.map((seg) =>
                   seg.highlight ? (
-                    <AppText key={j} style={styles.highlight} className="text-accent">
+                    <AppText key={seg.text} style={styles.highlight} className="text-accent">
                       {seg.text}
                     </AppText>
                   ) : (
@@ -112,7 +114,7 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
           </BottomSheetScrollView>
 
           {/* Pinned CTA */}
-          <View style={[styles.ctaContainer, { paddingBottom: 10 }]}>
+          <View style={styles.ctaContainer}>
             <PressableFeedback
               onPress={onDismiss}
               style={styles.ctaButton}
@@ -144,9 +146,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 10,
   },
-  photoInitial: {
-    fontFamily: 'Poppins-Medium',
-    fontSize: 24,
+  founderImage: {
+    width: '100%',
+    height: '100%',
   },
   scrollContent: {
     paddingHorizontal: 10,
@@ -161,7 +163,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
     lineHeight: 26,
   },
-  paragraphGap: {
+  paragraphWithGap: {
+    fontFamily: 'Poppins-Regular',
+    lineHeight: 26,
     marginBottom: 16,
   },
   highlight: {
@@ -183,6 +187,7 @@ const styles = StyleSheet.create({
   ctaContainer: {
     paddingHorizontal: 10,
     paddingTop: 12,
+    paddingBottom: 10,
   },
   ctaButton: {
     height: 52,

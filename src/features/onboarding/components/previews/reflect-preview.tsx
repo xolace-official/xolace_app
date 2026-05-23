@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { View, StyleSheet } from "react-native";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -10,18 +10,23 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withTiming,
-} from 'react-native-reanimated';
-import { AppText } from '@/src/components/shared/app-text';
+} from "react-native-reanimated";
+import { AppText } from "@/src/components/shared/app-text";
 
-const FADE_IN_MS  = 900;
-const HOLD_MS     = 3000;
+const FADE_IN_MS = 900;
+const HOLD_MS = 3000;
 const FADE_OUT_MS = 600;
-const PAUSE_MS    = 300;
-const CYCLE       = FADE_IN_MS + HOLD_MS + FADE_OUT_MS + PAUSE_MS;
+const PAUSE_MS = 300;
+const CYCLE = FADE_IN_MS + HOLD_MS + FADE_OUT_MS + PAUSE_MS;
 
-const FADE_IN_END   = FADE_IN_MS / CYCLE;
+const FADE_IN_END = FADE_IN_MS / CYCLE;
 const FADE_OUT_START = (FADE_IN_MS + HOLD_MS) / CYCLE;
-const FADE_OUT_END   = (FADE_IN_MS + HOLD_MS + FADE_OUT_MS) / CYCLE;
+const FADE_OUT_END = (FADE_IN_MS + HOLD_MS + FADE_OUT_MS) / CYCLE;
+
+const mirrorLabelStyle = StyleSheet.create({
+  letterSpaced: { letterSpacing: 2 },
+  mediumFont: { fontFamily: "Poppins-Medium" },
+});
 
 type Props = { isActive: SharedValue<boolean> };
 
@@ -49,25 +54,35 @@ export const ReflectPreview = ({ isActive }: Props) => {
     opacity: interpolate(
       progress.value,
       [0, FADE_IN_END, FADE_OUT_START, FADE_OUT_END],
-      [0,           1,             1,            0],
+      [0, 1, 1, 0],
       Extrapolation.CLAMP,
     ),
   }));
 
   return (
     <View className="flex-1 px-4 py-5 justify-center gap-3.5">
-      <AppText className="text-accent text-[8px]" style={{ letterSpacing: 2 }}>
+      <AppText
+        className="text-accent text-[8px]"
+        style={mirrorLabelStyle.letterSpaced}
+      >
         THE MIRROR
       </AppText>
 
-      <Animated.View className="border-l-2 border-accent/40 pl-3" style={rMirror}>
+      <Animated.View
+        className="border-l-2 border-accent/40 pl-3"
+        style={rMirror}
+      >
         <AppText className="text-foreground italic text-[12px] leading-5">
-          Something heavy you can&apos;t put down. Like the day already pressed in before it began.
+          Something heavy you can&apos;t put down. Like the day already pressed
+          in before it began.
         </AppText>
       </Animated.View>
 
       <View className="mt-4 gap-2">
-        <AppText className="text-accent text-[11px]" style={{ fontFamily: 'Poppins-Medium' }}>
+        <AppText
+          className="text-accent text-[11px]"
+          style={mirrorLabelStyle.mediumFont}
+        >
           That&apos;s it
         </AppText>
         <AppText className="text-foreground/40 text-[10px]">Not quite</AppText>

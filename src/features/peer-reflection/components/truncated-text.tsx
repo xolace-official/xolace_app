@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Pressable, View, type NativeSyntheticEvent, type TextLayoutEventData } from "react-native";
+import {
+  Pressable,
+  View,
+  StyleSheet,
+  type NativeSyntheticEvent,
+  type TextLayoutEventData,
+} from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 import { AppText } from "@/src/components/shared/app-text";
 
@@ -14,20 +20,17 @@ export const TruncatedText = ({ text, className }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const [clipped, setClipped] = useState(false);
 
-  // Measure the full (uncapped) line count to know if truncation is actually needed.
-  // onTextLayout on the visible text fires with lines capped at numberOfLines,
-  // so a 4-line text that fits perfectly would incorrectly appear "clipped".
-  const handleFullTextLayout = (e: NativeSyntheticEvent<TextLayoutEventData>) => {
+  const handleFullTextLayout = (
+    e: NativeSyntheticEvent<TextLayoutEventData>,
+  ) => {
     setClipped(e.nativeEvent.lines.length > MAX_LINES);
   };
 
   return (
-    <Animated.View layout={LinearTransition.springify().damping(18).stiffness(120)}>
-      {/* Hidden render with no line cap to get the true line count */}
-      <View
-        pointerEvents="none"
-        style={{ position: 'absolute', left: 0, right: 0, opacity: 0 }}
-      >
+    <Animated.View
+      layout={LinearTransition.springify().damping(18).stiffness(120)}
+    >
+      <View pointerEvents="none" style={styles.hiddenMeasure}>
         <AppText
           className={className}
           numberOfLines={undefined}
@@ -46,12 +49,20 @@ export const TruncatedText = ({ text, className }: Props) => {
         </AppText>
 
         {clipped && !expanded && (
-          <AppText className="text-sm text-foreground/30 mt-1">read more</AppText>
+          <AppText className="text-sm text-foreground/30 mt-1">
+            read more
+          </AppText>
         )}
         {clipped && expanded && (
-          <AppText className="text-sm text-foreground/30 mt-1">show less</AppText>
+          <AppText className="text-sm text-foreground/30 mt-1">
+            show less
+          </AppText>
         )}
       </Pressable>
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  hiddenMeasure: { position: "absolute", left: 0, right: 0, opacity: 0 },
+});

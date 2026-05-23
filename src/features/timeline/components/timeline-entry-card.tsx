@@ -1,19 +1,25 @@
-import { useRouter } from 'expo-router';
-import { PressableFeedback, Card, cn } from 'heroui-native';
-import { Presets } from 'react-native-pulsar';
-import { View } from 'react-native';
-import { AppText } from '@/src/components/shared/app-text';
+import { useRouter } from "expo-router";
+import { PressableFeedback, Card, cn } from "heroui-native";
+import { Presets } from "react-native-pulsar";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/src/components/shared/app-text";
 import {
   getEmotionEmoji,
   getEmotionLabel,
   getPathLabel,
-} from '@/src/features/timeline/emotions';
-import type { TimelineEntry } from '@/src/features/timeline/types';
+} from "@/src/features/timeline/emotions";
+import type { TimelineEntry } from "@/src/features/timeline/types";
 
 type Props = {
   entry: TimelineEntry;
   className?: string;
 };
+
+const styles = StyleSheet.create({
+  continuousCurve: { borderCurve: "continuous" },
+});
+
+const PRESS_ANIMATION = { scale: { value: 0.98 } };
 
 export const TimelineEntryCard = ({ entry, className }: Props) => {
   const router = useRouter();
@@ -21,7 +27,7 @@ export const TimelineEntryCard = ({ entry, className }: Props) => {
   const handlePress = () => {
     Presets.ping();
     router.push({
-      pathname: '/(protected)/timeline/session/[id]',
+      pathname: "/(protected)/timeline/session/[id]",
       params: { id: entry.id },
     });
   };
@@ -35,13 +41,13 @@ export const TimelineEntryCard = ({ entry, className }: Props) => {
   return (
     <PressableFeedback
       onPress={handlePress}
-      animation={{ scale: { value: 0.98 } }}
-      className={cn('mx-5 mb-3', className)}
+      animation={PRESS_ANIMATION}
+      className={cn("mx-5 mb-3", className)}
     >
       <Card
         variant="tertiary"
         className="rounded-2xl border border-foreground/10"
-        style={{ borderCurve: 'continuous' }}
+        style={styles.continuousCurve}
       >
         <Card.Body className="gap-4 px-3 py-3">
           <AppText

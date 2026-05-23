@@ -14,6 +14,21 @@ type Props = {
   sessionCount: number;
 };
 
+const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const INITIAL_FADE = { opacity: 0 };
+const VISIBLE_FADE = { opacity: 1 };
+const HIDDEN_FADE = { opacity: 0 };
+const SHOW_TRANSITION = {
+  type: "timing",
+  duration: 400,
+  easing: EASE,
+} as const;
+const HIDE_TRANSITION = {
+  type: "timing",
+  duration: 200,
+  easing: EASE,
+} as const;
+
 /**
  * Shown after milestone sessions (5, 15, 30) if the user has received
  * at least one delivered notification. Asks how the last notification landed.
@@ -51,12 +66,9 @@ export const ReachFeedbackCard = ({ sessionCount }: Props) => {
 
   return (
     <EaseView
-      initialAnimate={{ opacity: 0 }}
-      animate={{ opacity: visible ? 1 : 0 }}
-      transition={visible
-        ? { type: 'timing', duration: 400, easing: [0.455, 0.03, 0.515, 0.955] }
-        : { type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }
-      }
+      initialAnimate={INITIAL_FADE}
+      animate={visible ? VISIBLE_FADE : HIDDEN_FADE}
+      transition={visible ? SHOW_TRANSITION : HIDE_TRANSITION}
       onTransitionEnd={({ finished }) => {
         if (finished && !visible) setMounted(false);
       }}
@@ -85,7 +97,9 @@ export const ReachFeedbackCard = ({ sessionCount }: Props) => {
               onPress={() => handleChoice(key)}
               className="flex-1 py-2 rounded-xl bg-accent/10 items-center active:opacity-70"
             >
-              <AppText className="text-xs font-medium text-accent">{label}</AppText>
+              <AppText className="text-xs font-medium text-accent">
+                {label}
+              </AppText>
             </Pressable>
           ))}
         </View>

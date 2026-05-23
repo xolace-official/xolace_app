@@ -1,9 +1,12 @@
 import { View } from "react-native";
 import { useRouter } from "expo-router";
+import { useMemo } from "react";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import { playSoftPress } from "@/src/lib/haptics";
+
+const CLOSE_ICON_NAME = { ios: "xmark", android: "close" } as const;
 
 export default function VoiceVentScreen() {
   const router = useRouter();
@@ -13,6 +16,8 @@ export default function VoiceVentScreen() {
     playSoftPress();
     router.back();
   };
+
+  const closeIconStyle = useMemo(() => ({ opacity: 0.6 }), []);
 
   return (
     <View className="flex-1 bg-background">
@@ -26,10 +31,10 @@ export default function VoiceVentScreen() {
         >
           <View className="h-9 w-9 items-center justify-center rounded-full bg-surface">
             <SymbolView
-              name={{ ios: "xmark", android: "close" }}
+              name={CLOSE_ICON_NAME}
               size={16}
               tintColor={foregroundColor}
-              style={{ opacity: 0.6 }}
+              style={closeIconStyle}
             />
           </View>
         </PressableFeedback>

@@ -1,5 +1,5 @@
-import React from "react";
-import { View } from "react-native";
+import React, { useMemo } from "react";
+import { View, StyleSheet } from "react-native";
 import { Easing } from "react-native-reanimated";
 import { useThemeColor } from "heroui-native";
 import Loader from "../index";
@@ -12,39 +12,48 @@ const RING_KEYFRAMES: LoaderKeyframes = {
 
 const DELAYS = [0, 550, 1100];
 
+const RIPPLE_SIZE = 80;
+const RING_RADIUS = RIPPLE_SIZE / 2;
+
+const styles = StyleSheet.create({
+  container: { width: RIPPLE_SIZE, height: RIPPLE_SIZE },
+  loader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: RIPPLE_SIZE,
+    height: RIPPLE_SIZE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ring: {
+    width: RIPPLE_SIZE,
+    height: RIPPLE_SIZE,
+    borderRadius: RING_RADIUS,
+    borderWidth: 1.5,
+  },
+});
+
 /** Three concentric rings that expand outward like ripples, staggered 550ms apart. */
 export const RippleLoader = () => {
   const accentColor = useThemeColor("accent");
 
+  const ringStyle = useMemo(
+    () => [styles.ring, { borderColor: accentColor }],
+    [accentColor],
+  );
+
   return (
-    <View style={{ width: 80, height: 80 }}>
+    <View style={styles.container}>
       {DELAYS.map((delay) => (
         <Loader
           key={delay}
           duration={1800}
           initialDelay={delay}
           easing={Easing.out(Easing.ease)}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: 80,
-            height: 80,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          style={styles.loader}
         >
-          <Loader.KeyframeView
-            keyframes={RING_KEYFRAMES}
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              borderWidth: 1.5,
-              borderColor: accentColor,
-              backgroundColor: "transparent",
-            }}
-          />
+          <Loader.KeyframeView keyframes={RING_KEYFRAMES} style={ringStyle} />
         </Loader>
       ))}
     </View>

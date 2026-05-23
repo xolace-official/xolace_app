@@ -1,26 +1,36 @@
-import React, { createContext, useContext, useCallback } from 'react';
-import { View, type LayoutChangeEvent, StyleSheet } from 'react-native';
+import React, { createContext, useContext, useCallback, useMemo } from "react";
+import {
+  View,
+  type LayoutChangeEvent,
+  StyleSheet,
+  type ViewStyle,
+} from "react-native";
 import Animated, {
   useDerivedValue,
   useSharedValue,
   useAnimatedReaction,
-} from 'react-native-reanimated';
-import MaskedView from '@react-native-masked-view/masked-view';
+} from "react-native-reanimated";
+import MaskedView from "@react-native-masked-view/masked-view";
 import type {
   ShimmerContextValue,
   ShimmerProps,
   ShimmerOverlayProps,
   ShimmerMaskProps,
-} from './types';
-import { styles } from './styles';
-import { useShimmerAnimation } from './use-shimmer-animation';
-import { useTrackDistance } from './use-track-distance';
+} from "./types";
+import { styles } from "./styles";
+import { useShimmerAnimation } from "./use-shimmer-animation";
+import { useTrackDistance } from "./use-track-distance";
+
+const TRACK_CONTAINER_BASE_STYLE: ViewStyle = {
+  alignItems: "center",
+  justifyContent: "center",
+};
 
 const ShimmerContext = createContext<ShimmerContextValue | null>(null);
 
 const useShimmer = (): ShimmerContextValue => {
   const ctx = useContext(ShimmerContext);
-  if (!ctx) throw new Error('useShimmer must be used within Shimmer');
+  if (!ctx) throw new Error("useShimmer must be used within Shimmer");
   return ctx;
 };
 
@@ -47,22 +57,32 @@ const ShimmerRoot = React.forwardRef<View, ShimmerProps>(
       [containerWidth, containerHeight, onLayout],
     );
 
+    const contextValue = useMemo<ShimmerContextValue>(
+      () => ({ containerWidth, containerHeight, containerDiagonal, debug }),
+      [containerWidth, containerHeight, containerDiagonal, debug],
+    );
+
+    const containerStyle = useMemo(
+      () => [styles.container, style, debug && styles.containerDebug],
+      [style, debug],
+    );
+
     return (
-      <ShimmerContext value={{ containerWidth, containerHeight, containerDiagonal, debug }}>
+      <ShimmerContext.Provider value={contextValue}>
         <View
           ref={ref}
-          style={[styles.container, style, debug && styles.containerDebug]}
+          style={containerStyle}
           onLayout={handleLayout}
           {...props}
         >
           {children}
         </View>
-      </ShimmerContext>
+      </ShimmerContext.Provider>
     );
   },
 );
 
-ShimmerRoot.displayName = 'Shimmer';
+ShimmerRoot.displayName = "Shimmer";
 
 // ── Overlay ─────────────────────────────────────────────────────────────
 
@@ -85,14 +105,18 @@ const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
     const { containerWidth, containerHeight, debug } = useShimmer();
 
     const overlayWidth = useDerivedValue(() => {
-      if (typeof width === 'number') return width;
+      if (typeof width === "number") return width;
       return (containerWidth.get() * parseFloat(width)) / 100;
     });
 
     const internalProgress = useSharedValue(0);
     const activeProgress = externalProgress ?? internalProgress;
 
-    const trackDistance = useTrackDistance({ containerWidth, containerHeight, trackAngle });
+    const trackDistance = useTrackDistance({
+      containerWidth,
+      containerHeight,
+      trackAngle,
+    });
 
     const { animatedStyle, rotateContainerHeight } = useShimmerAnimation({
       trackAngle,
@@ -111,33 +135,48 @@ const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
 
     useAnimatedReaction(
       () => activeProgress.get(),
-      (v) => { if (onProgress) onProgress.set(v); },
+      (v) => {
+        if (onProgress) onProgress.set(v);
+      },
+    );
+
+    const trackContainerStyle = useMemo(
+      () => [
+        StyleSheet.absoluteFill,
+        TRACK_CONTAINER_BASE_STYLE,
+        { transform: [{ rotate: `${trackAngle}deg` }] },
+      ],
+      [trackAngle],
+    );
+
+    const rotateContainerStyle = useMemo(
+      () => [
+        styles.rotateContainer,
+        { width: overlayWidth, height: rotateContainerHeight },
+        { transform: [{ rotate: `${overlayAngle}deg` }] },
+      ],
+      [overlayWidth, rotateContainerHeight, overlayAngle],
+    );
+
+    const trackStyle = useMemo(
+      () => [{ width: trackDistance }, debug && styles.trackDebug],
+      [trackDistance, debug],
+    );
+
+    const translateStyle = useMemo(
+      () => [
+        styles.translateContainer,
+        animatedStyle,
+        debug && styles.overlayDebug,
+      ],
+      [animatedStyle, debug],
     );
 
     return (
-      <View
-        style={[
-          StyleSheet.absoluteFill,
-          {
-            alignItems: 'center',
-            justifyContent: 'center',
-            transform: [{ rotate: `${trackAngle}deg` }],
-          },
-        ]}
-        pointerEvents="none"
-      >
-        <Animated.View style={[{ width: trackDistance }, debug && styles.trackDebug]}>
-          <Animated.View
-            ref={ref}
-            style={[styles.translateContainer, animatedStyle, debug && styles.overlayDebug]}
-          >
-            <Animated.View
-              style={[
-                styles.rotateContainer,
-                { width: overlayWidth, height: rotateContainerHeight },
-                { transform: [{ rotate: `${overlayAngle}deg` }] },
-              ]}
-            >
+      <View style={trackContainerStyle} pointerEvents="none">
+        <Animated.View style={trackStyle}>
+          <Animated.View ref={ref} style={translateStyle}>
+            <Animated.View style={rotateContainerStyle}>
               {children}
             </Animated.View>
           </Animated.View>
@@ -147,7 +186,7 @@ const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
   },
 );
 
-ShimmerOverlay.displayName = 'Shimmer.Overlay';
+ShimmerOverlay.displayName = "Shimmer.Overlay";
 
 // ── Mask ────────────────────────────────────────────────────────────────
 
@@ -166,7 +205,9 @@ const ShimmerMask = ({ children, overlay, background }: ShimmerMaskProps) => {
         >
           {children}
         </View>
-        {background !== undefined && <View style={StyleSheet.absoluteFill}>{background}</View>}
+        {background !== undefined && (
+          <View style={StyleSheet.absoluteFill}>{background}</View>
+        )}
         {!debug && overlay}
       </MaskedView>
       {debug && overlay}
@@ -174,7 +215,7 @@ const ShimmerMask = ({ children, overlay, background }: ShimmerMaskProps) => {
   );
 };
 
-ShimmerMask.displayName = 'Shimmer.Mask';
+ShimmerMask.displayName = "Shimmer.Mask";
 
 // ── Export ───────────────────────────────────────────────────────────────
 

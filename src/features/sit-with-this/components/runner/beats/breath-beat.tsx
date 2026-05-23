@@ -1,12 +1,26 @@
-import { useEffect, useRef } from 'react';
-import { EaseView } from 'react-native-ease/uniwind';
-import { usePatternComposer } from 'react-native-pulsar';
-import type { Pattern } from 'react-native-pulsar';
-import { AppText } from '@/src/components/shared/app-text';
-import { PacedOrb, type PacedOrbHandle, type BreathPattern, TIMINGS } from '@/src/features/sit-with-this/components/paced-orb';
-import type { BreathPhase } from '@/src/lib/haptics';
+import { useEffect, useRef } from "react";
+import { EaseView } from "react-native-ease/uniwind";
+import { usePatternComposer } from "react-native-pulsar";
+import type { Pattern } from "react-native-pulsar";
+import { AppText } from "@/src/components/shared/app-text";
+import {
+  PacedOrb,
+  type PacedOrbHandle,
+  type BreathPattern,
+  TIMINGS,
+} from "@/src/features/sit-with-this/components/paced-orb";
+import type { BreathPhase } from "@/src/lib/haptics";
 
-const isWeb = process.env.EXPO_OS === 'web';
+const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const INITIAL_FADE = { opacity: 0 };
+const VISIBLE_FADE = { opacity: 1 };
+const CONTENT_TRANSITION = {
+  type: "timing",
+  duration: 600,
+  easing: EASE,
+} as const;
+
+const isWeb = process.env.EXPO_OS === "web";
 
 function buildInhalePattern(ms: number): Pattern {
   return {
@@ -66,8 +80,8 @@ export function BreathBeat({
   const doneRef = useRef(false);
 
   const steps = TIMINGS[breathPattern];
-  const inhaleMs = steps.find((s) => s.phase === 'inhale')?.duration ?? 4000;
-  const exhaleMs = steps.find((s) => s.phase === 'exhale')?.duration ?? 8000;
+  const inhaleMs = steps.find((s) => s.phase === "inhale")?.duration ?? 4000;
+  const exhaleMs = steps.find((s) => s.phase === "exhale")?.duration ?? 8000;
 
   const inhaleComposer = usePatternComposer(buildInhalePattern(inhaleMs));
   const topComposer = usePatternComposer(TOP_HOLD_PATTERN);
@@ -81,24 +95,26 @@ export function BreathBeat({
         ? undefined
         : (phase: BreathPhase, _durationMs: number) => {
             switch (phase) {
-              case 'inhale':
+              case "inhale":
                 inhaleComposer.play();
                 break;
-              case 'top':
+              case "top":
                 topComposer.play();
                 break;
-              case 'exhale':
+              case "exhale":
                 exhaleComposer.play();
                 break;
             }
           };
 
-    orbRef.current?.playCycle(breathPattern, breathCycles, onPhaseTransition).then(() => {
-      if (!cancelled && !doneRef.current) {
-        doneRef.current = true;
-        onComplete();
-      }
-    });
+    orbRef.current
+      ?.playCycle(breathPattern, breathCycles, onPhaseTransition)
+      .then(() => {
+        if (!cancelled && !doneRef.current) {
+          doneRef.current = true;
+          onComplete();
+        }
+      });
 
     return () => {
       cancelled = true;
@@ -109,9 +125,9 @@ export function BreathBeat({
 
   return (
     <EaseView
-      initialAnimate={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ type: 'timing', duration: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+      initialAnimate={INITIAL_FADE}
+      animate={VISIBLE_FADE}
+      transition={CONTENT_TRANSITION}
       className="items-center gap-10"
     >
       <PacedOrb ref={orbRef} reducedMotion={reducedMotion} />

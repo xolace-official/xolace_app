@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Pressable, ScrollView, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, Pressable, ScrollView, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
@@ -11,6 +11,37 @@ import { AppText } from '@/src/components/shared/app-text';
 import { EmberOrb } from '@/src/features/onboarding/components/ember-orb';
 import { StepReveal } from '@/src/features/onboarding/components/step-reveal';
 import { FRAME_STEPS, STEP_BASE_DELAY, STEP_INTERVAL } from '@/src/features/onboarding/frame-steps';
+
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_INITIAL_FADE = { opacity: 0 };
+const EASE_ANIMATE_FADE = { opacity: 1 };
+const EASE_ORB_TRANSITION = { type: 'timing' as const, duration: 1000, easing: EASING };
+const EASE_INITIAL_SLIDE = { opacity: 0, translateY: 20 };
+const EASE_ANIMATE_SLIDE = { opacity: 1, translateY: 0 };
+
+// Ember amber color — onboarding-specific, predates theme system
+const EMBER_50 = 'rgba(217, 171, 111, 0.5)';
+const EMBER_30 = 'rgba(217, 171, 111, 0.3)';
+const EMBER_80 = 'rgba(217, 171, 111, 0.8)';
+
+const DISCLAIMER_DELAY = STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL - 200;
+const EASE_DISCLAIMER_TRANSITION = { type: 'timing' as const, duration: 600, delay: DISCLAIMER_DELAY, easing: EASING };
+
+const CTA_DELAY = STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL;
+const EASE_CTA_TRANSITION = {
+  opacity: { type: 'timing' as const, duration: 400, delay: CTA_DELAY, easing: EASING },
+  transform: { type: 'spring' as const, damping: 15, stiffness: 120, mass: 1, delay: CTA_DELAY },
+};
+
+const getCtaStyle = ({ pressed }: { pressed: boolean }) => ({
+  alignSelf: 'flex-start' as const,
+  borderWidth: 1,
+  borderColor: EMBER_30,
+  borderRadius: 100,
+  paddingVertical: 14,
+  paddingHorizontal: 32,
+  opacity: pressed ? 0.7 : 1,
+});
 
 export const FrameScreen = () => {
   const [phase, setPhase] = useState<0 | 1 | 2>(0);
@@ -36,36 +67,35 @@ export const FrameScreen = () => {
     router.replace('/(auth)/auth');
   };
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const orbContainerStyle = { height: Math.min(height * 0.42, 320), alignItems: 'center' as const, justifyContent: 'center' as const, paddingTop: insets.top };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const scrollContentStyle = { flexGrow: 1, justifyContent: 'space-between' as const, paddingHorizontal: 32, paddingBottom: insets.bottom + 24 };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const disclaimerStyle = { color: EMBER_50, lineHeight: 18 };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const ctaTextStyle = { color: EMBER_80, letterSpacing: 0.5 };
+
   return (
     <View className="flex-1 bg-neutral-950">
       {/* Orb — capped height so it never crowds the content below */}
       <EaseView
-        initialAnimate={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ type: 'timing', duration: 1000, easing: [0.455, 0.03, 0.515, 0.955] }}
-        style={{
-          height: Math.min(height * 0.42, 320),
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingTop: insets.top,
-        }}
+        initialAnimate={EASE_INITIAL_FADE}
+        animate={EASE_ANIMATE_FADE}
+        transition={EASE_ORB_TRANSITION}
+        style={orbContainerStyle}
       >
         <EmberOrb phase={phase} />
       </EaseView>
 
       {/* Steps + CTA — scrollable so the button is always reachable */}
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: 'space-between',
-          paddingHorizontal: 32,
-          paddingBottom: insets.bottom + 24,
-        }}
+        style={styles.scrollFlex}
+        contentContainerStyle={scrollContentStyle}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        <View style={{ gap: 8, paddingTop: 16 }}>
+        <View style={styles.stepsContainer}>
           {FRAME_STEPS.map((step, i) => (
             <StepReveal key={step.id} step={step} index={i} />
           ))}
@@ -73,15 +103,12 @@ export const FrameScreen = () => {
 
         {/* Disclaimer */}
         <EaseView
-          initialAnimate={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: 'timing', duration: 600, delay: STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL - 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+          initialAnimate={EASE_INITIAL_FADE}
+          animate={EASE_ANIMATE_FADE}
+          transition={EASE_DISCLAIMER_TRANSITION}
         >
           <AppText
-            style={{
-              color: 'rgba(217, 171, 111, 0.5)',
-              lineHeight: 18,
-            }}
+            style={disclaimerStyle}
             className='text-xs mb-5'
           >
             Xolace isn&apos;t a substitute for professional mental health care. If you&apos;re in crisis, please contact a professional.
@@ -90,31 +117,17 @@ export const FrameScreen = () => {
 
         {/* CTA */}
         <EaseView
-          initialAnimate={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{
-            opacity: { type: 'timing', duration: 400, delay: STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL, easing: [0.455, 0.03, 0.515, 0.955] },
-            transform: { type: 'spring', damping: 15, stiffness: 120, mass: 1, delay: STEP_BASE_DELAY + FRAME_STEPS.length * STEP_INTERVAL },
-          }}
+          initialAnimate={EASE_INITIAL_SLIDE}
+          animate={EASE_ANIMATE_SLIDE}
+          transition={EASE_CTA_TRANSITION}
         >
           <Pressable
             onPress={handlePress}
-            style={({ pressed }) => ({
-              alignSelf: 'flex-start',
-              borderWidth: 1,
-              borderColor: 'rgba(217, 171, 111, 0.3)',
-              borderRadius: 100,
-              paddingVertical: 14,
-              paddingHorizontal: 32,
-              opacity: pressed ? 0.7 : 1,
-            })}
+            style={getCtaStyle}
           >
             <AppText
               className="text-[15px]"
-              style={{
-                color: 'rgba(217, 171, 111, 0.8)',
-                letterSpacing: 0.5,
-              }}
+              style={ctaTextStyle}
             >
               That makes sense
             </AppText>
@@ -124,3 +137,8 @@ export const FrameScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  scrollFlex: { flex: 1 },
+  stepsContainer: { gap: 8, paddingTop: 16 },
+});

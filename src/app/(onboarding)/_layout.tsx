@@ -8,15 +8,15 @@ import { Stack } from 'expo-router';
  *
  * @returns A React element containing the configured onboarding Stack
  */
+const SCREEN_OPTIONS = {
+  headerShown: false,
+  animation: 'fade' as const,
+  contentStyle: { backgroundColor: 'transparent' },
+};
+
 export default function OnboardingLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: 'fade',
-        contentStyle: { backgroundColor: 'transparent' },
-      }}
-    >
+    <Stack screenOptions={SCREEN_OPTIONS}>
       <Stack.Screen name="index" />
       <Stack.Screen name="frame" />
     </Stack>

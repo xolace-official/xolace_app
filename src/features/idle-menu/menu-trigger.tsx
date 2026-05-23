@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet } from "react-native";
+import { useMemo } from "react";
 import Animated, {
   SharedValue,
   useAnimatedStyle,
@@ -16,6 +17,8 @@ type Props = {
   onPress: () => void;
 };
 
+const ICON_DIM_STYLE = { opacity: 0.5 };
+
 export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
   const foregroundColor = useThemeColor("foreground");
   const borderColor = useThemeColor("accent");
@@ -24,6 +27,12 @@ export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
     opacity: withTiming(isOpen.value ? 0.5 : 1),
     transform: [{ scale: withTiming(isOpen.value ? 0.6 : 1) }],
   }));
+
+  const triggerStyle = useMemo(
+    () => [styles.trigger, { borderColor }, rStyle],
+    [borderColor, rStyle],
+  );
+  const iconStyle = useMemo(() => ICON_DIM_STYLE, []);
 
   return (
     <AnimatedPressable
@@ -38,14 +47,18 @@ export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={isOpenJS ? "Close menu" : "Open menu"}
-      accessibilityHint={isOpenJS ? "Closes navigation options" : "Opens navigation options: Vent, Timeline, Settings"}
-      style={[styles.trigger, { borderColor }, rStyle]}
+      accessibilityHint={
+        isOpenJS
+          ? "Closes navigation options"
+          : "Opens navigation options: Vent, Timeline, Settings"
+      }
+      style={triggerStyle}
     >
       <SymbolView
         name={{ ios: "ellipsis", android: "more_horiz" } as any}
         size={20}
         tintColor={foregroundColor}
-        style={{ opacity: 0.5 }}
+        style={iconStyle}
       />
     </AnimatedPressable>
   );

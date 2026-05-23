@@ -1,4 +1,5 @@
 import { View } from "react-native";
+import { useMemo } from "react";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { useRouter } from "expo-router";
 import { SymbolView, SFSymbol } from "expo-symbols";
@@ -10,6 +11,7 @@ import { playSoftPress } from "@/src/lib/haptics";
 type MenuButtonItem = {
   label: string;
   icon: { ios: SFSymbol; android: string };
+  iconName: { ios: SFSymbol; android: string };
   onPress: () => void;
   accessibilityLabel: string;
 };
@@ -18,6 +20,8 @@ type Props = {
   isOpen: SharedValue<boolean>;
   onClose: () => void;
 };
+
+const ICON_DIM_STYLE = { opacity: 0.6 };
 
 export const MenuButtons = ({ isOpen, onClose }: Props) => {
   const router = useRouter();
@@ -37,6 +41,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
     {
       label: "Today",
       icon: { ios: "quote.bubble", android: "format_quote" },
+      iconName: { ios: "quote.bubble", android: "format_quote" },
       accessibilityLabel: "Open your daily quote",
       onPress: () => {
         onClose();
@@ -46,6 +51,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
     {
       label: "Timeline",
       icon: { ios: "clock", android: "history" },
+      iconName: { ios: "clock", android: "history" },
       accessibilityLabel: "Open your session timeline",
       onPress: () => {
         onClose();
@@ -55,6 +61,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
     {
       label: "Settings",
       icon: { ios: "gearshape", android: "settings" },
+      iconName: { ios: "gearshape", android: "settings" },
       accessibilityLabel: "Open settings",
       onPress: () => {
         onClose();
@@ -63,13 +70,16 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
     },
   ];
 
+  const itemIconStyle = useMemo(() => ICON_DIM_STYLE, []);
+
+  const onContainerLayout = (e: {
+    nativeEvent: { layout: { height: number } };
+  }) => {
+    containerHeight.value = e.nativeEvent.layout.height;
+  };
+
   return (
-    <View
-      className="gap-1"
-      onLayout={(e) => {
-        containerHeight.value = e.nativeEvent.layout.height;
-      }}
-    >
+    <View className="gap-1" onLayout={onContainerLayout}>
       {items.map((item, index) => (
         <AnimatedRow
           key={item.label}
@@ -88,10 +98,10 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
           >
             <View className="flex-row items-center gap-3 rounded-xl bg-surface px-4 py-3">
               <SymbolView
-                name={{ ios: item.icon.ios, android: item.icon.android as any }}
+                name={item.iconName as any}
                 size={16}
                 tintColor={foregroundColor}
-                style={{ opacity: 0.6 }}
+                style={itemIconStyle}
               />
               <AppText className="text-sm font-medium text-foreground">
                 {item.label}

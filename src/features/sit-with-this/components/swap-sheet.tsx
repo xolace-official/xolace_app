@@ -1,20 +1,30 @@
-import { useState } from 'react';
-import { EaseView } from 'react-native-ease/uniwind';
-import { BottomSheet } from 'heroui-native';
-import { AppText } from '@/src/components/shared/app-text';
-import { PillButton } from '@/src/components/shared/pill-button';
-import { BottomSheetBlurOverlay } from '@/src/components/bottom-sheet-blur-overlay';
-import type { Id } from '@/convex/_generated/dataModel';
+import { useState } from "react";
+import { EaseView } from "react-native-ease/uniwind";
+import { BottomSheet } from "heroui-native";
+import { AppText } from "@/src/components/shared/app-text";
+import { PillButton } from "@/src/components/shared/pill-button";
+import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
+import type { Id } from "@/convex/_generated/dataModel";
 
 type Props = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   swapsUsed: number;
-  resetId: Id<'exercises'> | null;
-  nextBestId: Id<'exercises'> | null;
+  resetId: Id<"exercises"> | null;
+  nextBestId: Id<"exercises"> | null;
   onKeepGoing: () => void;
-  onSwap: (exerciseId: Id<'exercises'>) => void | Promise<void>;
+  onSwap: (exerciseId: Id<"exercises">) => void | Promise<void>;
 };
+
+const SNAP_POINTS = ["40%"];
+const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const INITIAL_FADE = { opacity: 0 };
+const VISIBLE_FADE = { opacity: 1 };
+const CONTENT_TRANSITION = {
+  type: "timing",
+  duration: 300,
+  easing: EASE,
+} as const;
 
 export function SwapSheet({
   isOpen,
@@ -28,7 +38,7 @@ export function SwapSheet({
   const canSwap = swapsUsed < 2;
   const [isSwapping, setIsSwapping] = useState(false);
 
-  const handleSwapPress = async (exerciseId: Id<'exercises'>) => {
+  const handleSwapPress = async (exerciseId: Id<"exercises">) => {
     if (isSwapping) return;
     setIsSwapping(true);
     try {
@@ -45,16 +55,16 @@ export function SwapSheet({
       <BottomSheet.Portal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
-          snapPoints={['40%']}
+          snapPoints={SNAP_POINTS}
           enableOverDrag={false}
           enableDynamicSizing={false}
           backgroundClassName="bg-background"
           handleIndicatorClassName="bg-foreground/30"
         >
           <EaseView
-            initialAnimate={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', duration: 300, easing: [0.455, 0.03, 0.515, 0.955] }}
+            initialAnimate={INITIAL_FADE}
+            animate={VISIBLE_FADE}
+            transition={CONTENT_TRANSITION}
             className="gap-4 px-6 pb-8 pt-2"
           >
             <AppText className="text-center text-base font-medium text-foreground/60">

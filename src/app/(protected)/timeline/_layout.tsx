@@ -11,6 +11,10 @@ import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
  *
  * @returns The layout's JSX element rendering the configured Stack and its child screen.
  */
+const BACK_ICON_NAME = { ios: "chevron.left", android: "arrow_back", web: "arrow_back" } as const;
+const SETTINGS_ICON_NAME = { ios: "gearshape", android: "settings", web: "settings" } as const;
+const TIMELINE_OPTIONS = { title: "Your Timeline" };
+
 export default function TimelineLayout() {
   const router = useRouter();
   const largeHeaderOptions = useLargeHeaderOptions();
@@ -18,47 +22,28 @@ export default function TimelineLayout() {
 
   const renderBackButton = () => (
     <Pressable onPress={() => router.back()} hitSlop={8}>
-      <SymbolView
-        name={{
-          ios: "chevron.left",
-          android: "arrow_back",
-          web: "arrow_back",
-        }}
-        size={20}
-        tintColor={tintColor}
-      />
+      <SymbolView name={BACK_ICON_NAME} size={20} tintColor={tintColor} />
     </Pressable>
   );
 
   const renderSettingsButton = () => (
-    <Pressable
-      onPress={() => router.push("/settings")}
-      hitSlop={8}
-    >
-      <SymbolView
-        name={{ ios: "gearshape", android: "settings", web: "settings" }}
-        size={20}
-        tintColor={tintColor}
-      />
+    <Pressable onPress={() => router.push("/settings")} hitSlop={8}>
+      <SymbolView name={SETTINGS_ICON_NAME} size={20} tintColor={tintColor} />
     </Pressable>
   );
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const screenOptions = {
+    ...largeHeaderOptions,
+    headerLeft: renderBackButton,
+    headerRight: renderSettingsButton,
+    contentStyle: { backgroundColor: "transparent" },
+  };
+
   return (
     <View className="flex-1 bg-background">
-      <Stack
-        screenOptions={{
-          ...largeHeaderOptions,
-          headerLeft: renderBackButton,
-          headerRight: renderSettingsButton,
-          contentStyle: { backgroundColor: "transparent" },
-        }}
-      >
-        <Stack.Screen
-          name="index"
-          options={{
-            title: "Your Timeline",
-          }}
-        />
+      <Stack screenOptions={screenOptions}>
+        <Stack.Screen name="index" options={TIMELINE_OPTIONS} />
       </Stack>
     </View>
   );

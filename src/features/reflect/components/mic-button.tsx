@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -7,19 +7,22 @@ import Animated, {
   withTiming,
   cancelAnimation,
   Easing,
-} from 'react-native-reanimated';
-import { SymbolView } from 'expo-symbols';
-import { PressableFeedback, useThemeColor } from 'heroui-native';
-import { playSoftPress } from '@/src/lib/haptics';
+} from "react-native-reanimated";
+import { SymbolView } from "expo-symbols";
+import { PressableFeedback, useThemeColor } from "heroui-native";
+import { playSoftPress } from "@/src/lib/haptics";
 
 type Props = {
-  size: 'sm' | 'md';
+  size: "sm" | "md";
   isRecording: boolean;
   onPress: () => void;
 };
 
+const MIC_NAME = { ios: "mic", android: "mic", web: "mic" } as const;
+const PRESS_ANIMATION = { scale: { ignoreScaleCoefficient: true, value: 0.9 } };
+
 export const MicButton = ({ size, isRecording, onPress }: Props) => {
-  const accentColor = useThemeColor('accent');
+  const accentColor = useThemeColor("accent");
   const reduceMotion = useReducedMotion();
   const scale = useSharedValue(1);
   const bgOpacity = useSharedValue(0);
@@ -48,16 +51,31 @@ export const MicButton = ({ size, isRecording, onPress }: Props) => {
     };
   }, [isRecording, reduceMotion, scale, bgOpacity]);
 
-  const animatedContainerStyle = useAnimatedStyle(() => ({
+  const iconSize = size === "md" ? 20 : 14;
+  const containerSize = size === "md" ? 38 : 26;
+
+  const containerStyle = useAnimatedStyle(() => ({
+    width: containerSize,
+    height: containerSize,
+    borderRadius: containerSize / 2,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
     transform: [{ scale: scale.value }],
   }));
 
-  const animatedBgStyle = useAnimatedStyle(() => ({
+  const bgStyle = useAnimatedStyle(() => ({
+    position: "absolute",
+    width: containerSize,
+    height: containerSize,
+    borderRadius: containerSize / 2,
+    backgroundColor: accentColor,
     opacity: bgOpacity.value,
   }));
 
-  const iconSize = size === 'md' ? 20 : 14;
-  const containerSize = size === 'md' ? 38 : 26;
+  const iconWrapperStyle = useAnimatedStyle(() => ({
+    opacity: isRecording ? 1 : 0.4,
+  }));
 
   const handlePress = () => {
     playSoftPress();
@@ -68,41 +86,16 @@ export const MicButton = ({ size, isRecording, onPress }: Props) => {
     <PressableFeedback
       onPress={handlePress}
       hitSlop={10}
-      animation={{ scale: { ignoreScaleCoefficient: true, value: 0.9 } }}
+      animation={PRESS_ANIMATION}
       accessibilityRole="button"
-      accessibilityLabel={isRecording ? 'Stop voice input' : 'Start voice input'}
+      accessibilityLabel={
+        isRecording ? "Stop voice input" : "Start voice input"
+      }
     >
-      <Animated.View
-        style={[
-          {
-            width: containerSize,
-            height: containerSize,
-            borderRadius: containerSize / 2,
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-          },
-          animatedContainerStyle,
-        ]}
-      >
-        <Animated.View
-          style={[
-            {
-              position: 'absolute',
-              width: containerSize,
-              height: containerSize,
-              borderRadius: containerSize / 2,
-              backgroundColor: accentColor,
-            },
-            animatedBgStyle,
-          ]}
-        />
-        <Animated.View style={{ opacity: isRecording ? 1 : 0.4 }}>
-          <SymbolView
-            name={{ ios: 'mic', android: 'mic', web: 'mic' }}
-            size={iconSize}
-            tintColor={accentColor}
-          />
+      <Animated.View style={containerStyle}>
+        <Animated.View style={bgStyle} />
+        <Animated.View style={iconWrapperStyle}>
+          <SymbolView name={MIC_NAME} size={iconSize} tintColor={accentColor} />
         </Animated.View>
       </Animated.View>
     </PressableFeedback>

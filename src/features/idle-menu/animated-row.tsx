@@ -1,4 +1,4 @@
-import React, { FC, PropsWithChildren } from "react";
+import React, { FC, PropsWithChildren, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
   SharedValue,
@@ -30,7 +30,8 @@ export const AnimatedRow: FC<PropsWithChildren<Props>> = ({
     const exitDelay = numberOfRows * BASE_DELAY - index * BASE_DELAY * 1.5;
     const delay = open ? enterDelay : exitDelay;
     const exitY =
-      (containerHeight.value - (index * containerHeight.value) / numberOfRows) / 1.5;
+      (containerHeight.value - (index * containerHeight.value) / numberOfRows) /
+      1.5;
 
     return {
       opacity: withDelay(delay, withTiming(open ? 1 : 0)),
@@ -38,7 +39,10 @@ export const AnimatedRow: FC<PropsWithChildren<Props>> = ({
         {
           translateY: withDelay(
             delay,
-            withSpring(open ? 0 : exitY, { duration: 1500, dampingRatio: 0.75 })
+            withSpring(open ? 0 : exitY, {
+              duration: 1500,
+              dampingRatio: 0.75,
+            }),
           ),
         },
         { scale: withDelay(delay, withTiming(open ? 1 : 0.75)) },
@@ -46,11 +50,9 @@ export const AnimatedRow: FC<PropsWithChildren<Props>> = ({
     };
   });
 
-  return (
-    <Animated.View style={[rStyle, styles.container]}>
-      {children}
-    </Animated.View>
-  );
+  const containerStyle = useMemo(() => [rStyle, styles.container], [rStyle]);
+
+  return <Animated.View style={containerStyle}>{children}</Animated.View>;
 };
 
 const styles = StyleSheet.create({
