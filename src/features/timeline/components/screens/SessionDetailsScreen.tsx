@@ -15,6 +15,8 @@ import {
   getEmotionLabel,
   getPathLabel,
 } from "@/src/features/timeline/emotions";
+import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+
 
 const formatDate = (timestamp: number) => {
   const date = new Date(timestamp);
@@ -235,7 +237,7 @@ export const SessionDetailsScreen = () => {
                 className="mb-8 text-xl font-light italic leading-9 text-foreground"
                 selectable
               >
-                &ldquo;{details.mirrorText}&rdquo;
+                &ldquo;{removeEmDash(details.mirrorText)}&rdquo;
               </AppText>
             </>
           )}

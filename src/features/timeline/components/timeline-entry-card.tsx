@@ -9,6 +9,8 @@ import {
   getPathLabel,
 } from "@/src/features/timeline/emotions";
 import type { TimelineEntry } from "@/src/features/timeline/types";
+import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+
 
 type Props = {
   entry: TimelineEntry;
@@ -73,7 +75,7 @@ export const TimelineEntryCard = ({ entry, className }: Props) => {
             className="text-base italic leading-7 text-foreground"
             numberOfLines={3}
           >
-            &ldquo;{entry.mirrorText}&rdquo;
+            &ldquo;{removeEmDash(entry.mirrorText)}&rdquo;
           </AppText>
 
           <View className="flex-row items-center justify-between gap-3">
