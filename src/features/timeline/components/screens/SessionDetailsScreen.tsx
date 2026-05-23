@@ -1,36 +1,67 @@
-import { ScrollView, StyleSheet, View, Pressable } from 'react-native';
-import { MorphLoader } from '@/src/components/shared/loader/morph/morph-loader';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SymbolView } from 'expo-symbols';
-import { Card, useThemeColor } from 'heroui-native';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
-import { AppText } from '@/src/components/shared/app-text';
+import { useEffect } from "react";
+import { ScrollView, StyleSheet, View, Pressable } from "react-native";
+import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SymbolView } from "expo-symbols";
+import { Card, PressableFeedback, useThemeColor } from "heroui-native";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { AppText } from "@/src/components/shared/app-text";
+import { useMirrorAudio } from "@/src/features/reflect/hooks/use-mirror-audio";
 import {
   getEmotionEmoji,
   getEmotionLabel,
   getPathLabel,
-} from '@/src/features/timeline/emotions';
+} from "@/src/features/timeline/emotions";
 
 const formatDate = (timestamp: number) => {
   const date = new Date(timestamp);
   return {
-    day: new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      month: 'short',
-      day: 'numeric',
+    day: new Intl.DateTimeFormat("en-US", {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
     }).format(date),
-    time: new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
+    time: new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
     }).format(date),
   };
 };
 
-const BACK_ICON = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
+const BACK_ICON = {
+  ios: "chevron.left",
+  android: "arrow_back",
+  web: "arrow_back",
+} as const;
+const SPEAKER_PLAYING = {
+  ios: "speaker.wave.2.fill",
+  android: "volume_up",
+  web: "volume_up",
+} as const;
+const SPEAKER_MUTED = {
+  ios: "speaker.fill",
+  android: "volume_off",
+  web: "volume_off",
+} as const;
+const AUDIO_ANIMATION = {
+  scale: { ignoreScaleCoefficient: true, value: 0.85 },
+};
+const A11Y_SELECTED = { selected: true };
+const A11Y_UNSELECTED = { selected: false };
+
+const TONE_BADGE: Partial<Record<string, { text: string; border: string }>> = {
+  poetic: { text: "text-tone-poetic", border: "border-tone-poetic/40" },
+  gentle: { text: "text-tone-gentle", border: "border-tone-gentle/40" },
+  direct: { text: "text-tone-direct", border: "border-tone-direct/40" },
+  witnessed: {
+    text: "text-tone-witnessed",
+    border: "border-tone-witnessed/40",
+  },
+};
 
 const SectionLabel = ({ children }: { children: string }) => (
   <AppText className="mb-3 text-xs uppercase tracking-widest text-foreground/35">
@@ -42,27 +73,44 @@ export const SessionDetailsScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const tintColor = useThemeColor('foreground') as string;
+  const tintColor = useThemeColor("foreground") as string;
+
+  const sessionId = id ? (id as Id<"sessions">) : null;
 
   const details = useQuery(
     api.sessions.getSessionDetails,
-    id ? { sessionId: id as Id<'sessions'> } : 'skip',
+    sessionId ? { sessionId } : "skip",
   );
+  const { isReady, isPlaying, toggle, stop } = useMirrorAudio(sessionId);
 
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const topInsetStyle = { paddingTop: insets.top };
 
+  useEffect(() => {
+    return () => {
+      stop();
+    };
+  }, [stop]);
+
   if (!id) {
     return (
-      <View className="flex-1 items-center justify-center bg-background" style={topInsetStyle}>
-        <AppText className="text-foreground/40">No session ID provided.</AppText>
+      <View
+        className="flex-1 items-center justify-center bg-background"
+        style={topInsetStyle}
+      >
+        <AppText className="text-foreground/40">
+          No session ID provided.
+        </AppText>
       </View>
     );
   }
 
   if (details === undefined) {
     return (
-      <View className="flex-1 items-center justify-center bg-background" style={topInsetStyle}>
+      <View
+        className="flex-1 items-center justify-center bg-background"
+        style={topInsetStyle}
+      >
         <MorphLoader />
       </View>
     );
@@ -70,7 +118,10 @@ export const SessionDetailsScreen = () => {
 
   if (!details) {
     return (
-      <View className="flex-1 items-center justify-center bg-background" style={topInsetStyle}>
+      <View
+        className="flex-1 items-center justify-center bg-background"
+        style={topInsetStyle}
+      >
         <AppText className="text-foreground/40">Session not found.</AppText>
       </View>
     );
@@ -81,6 +132,16 @@ export const SessionDetailsScreen = () => {
   const emoji = getEmotionEmoji(emotion);
   const emotionLabel = getEmotionLabel(emotion);
   const pathLabel = getPathLabel(details.pathChosen ?? null);
+  const toneLabel = details.toneUsed
+    ? details.toneUsed.charAt(0).toUpperCase() + details.toneUsed.slice(1)
+    : null;
+  const toneBadge = details.toneUsed
+    ? (TONE_BADGE[details.toneUsed] ?? {
+        text: "text-foreground/40",
+        border: "border-foreground/20",
+      })
+    : null;
+  const speakerName = isPlaying ? SPEAKER_PLAYING : SPEAKER_MUTED;
 
   return (
     <View className="flex-1 bg-background" style={topInsetStyle}>
@@ -97,11 +158,7 @@ export const SessionDetailsScreen = () => {
             accessibilityLabel="Go back"
             className="self-start"
           >
-            <SymbolView
-              name={BACK_ICON}
-              size={20}
-              tintColor={tintColor}
-            />
+            <SymbolView name={BACK_ICON} size={20} tintColor={tintColor} />
           </Pressable>
         </View>
 
@@ -126,7 +183,10 @@ export const SessionDetailsScreen = () => {
                 style={styles.continuousBorder}
               >
                 <Card.Body className="px-5 py-4">
-                  <AppText className="text-sm font-light leading-6 text-foreground/55" selectable>
+                  <AppText
+                    className="text-sm font-light leading-6 text-foreground/55"
+                    selectable
+                  >
                     &ldquo;{details.rawInput}&rdquo;
                   </AppText>
                 </Card.Body>
@@ -137,8 +197,44 @@ export const SessionDetailsScreen = () => {
           {/* Mirror */}
           {details.mirrorText && (
             <>
-              <SectionLabel>The mirror</SectionLabel>
-              <AppText className="mb-8 text-xl font-light italic leading-9 text-foreground" selectable>
+              <View className="mb-3 flex-row items-center gap-3">
+                <SectionLabel>The mirror</SectionLabel>
+                {isReady ? (
+                  <PressableFeedback
+                    onPress={toggle}
+                    animation={AUDIO_ANIMATION}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      isPlaying ? "Pause mirror audio" : "Play mirror audio"
+                    }
+                    accessibilityHint="Toggles playback of the mirror response"
+                    accessibilityState={
+                      isPlaying ? A11Y_SELECTED : A11Y_UNSELECTED
+                    }
+                    className="-mt-3"
+                  >
+                    <SymbolView
+                      name={speakerName}
+                      size={16}
+                      tintColor={tintColor}
+                    />
+                  </PressableFeedback>
+                ) : null}
+                {toneLabel && toneBadge ? (
+                  <View
+                    className={`-mt-3 rounded-full border px-2.5 py-0.5 ${toneBadge.border}`}
+                  >
+                    <AppText className={`text-xs ${toneBadge.text}`}>
+                      {toneLabel}
+                    </AppText>
+                  </View>
+                ) : null}
+              </View>
+              <AppText
+                className="mb-8 text-xl font-light italic leading-9 text-foreground"
+                selectable
+              >
                 &ldquo;{details.mirrorText}&rdquo;
               </AppText>
             </>
@@ -169,5 +265,5 @@ export const SessionDetailsScreen = () => {
 
 const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 60 },
-  continuousBorder: { borderCurve: 'continuous' },
+  continuousBorder: { borderCurve: "continuous" },
 });

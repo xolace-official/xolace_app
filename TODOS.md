@@ -126,7 +126,7 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
-## P2 — Notification Permission Refactor (contextual ask, not at sign-in)
+## P2 — Notification Permission Refactor (contextual ask, not at sign-in) ✅
 
 **What:** Move the notification permission request away from the immediate post-sign-in flow. Instead, ask for notification permission in two contextual moments: (1) after preference setup on the quotes screen ("Get your daily quote at the right time"), and (2) after a session completes ("Want a reminder the next time you need this?"). Remove the current sign-in-time ask.
 

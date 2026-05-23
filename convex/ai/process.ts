@@ -176,6 +176,12 @@ export const generateMirror = internalAction({
         sessionId: args.sessionId,
         mirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
+        toneUsed: mirrorTone as
+          | "poetic"
+          | "gentle"
+          | "direct"
+          | "adaptive"
+          | "witnessed",
         ...(isEscalation
           ? {
               escalationTriggered: true,

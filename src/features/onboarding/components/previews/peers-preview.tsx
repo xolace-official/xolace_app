@@ -240,7 +240,7 @@ export const PeersPreview = ({ isActive }: Props) => {
         className="bg-overlay border border-foreground/10 rounded-2xl px-3 py-3 gap-2"
         style={rCard1}
       >
-        <AppText className="text-foreground italic text-[10px] leading-[15px]">
+        <AppText className="text-foreground italic text-[10px] leading-3.75">
           I keep waiting for the day to start, but I&apos;m already in it.
         </AppText>
         <View style={styles.badgeRow}>
@@ -252,7 +252,7 @@ export const PeersPreview = ({ isActive }: Props) => {
         className="bg-overlay border border-foreground/10 rounded-2xl px-3 py-3 gap-2"
         style={rCard2}
       >
-        <AppText className="text-foreground italic text-[10px] leading-[15px]">
+        <AppText className="text-foreground italic text-[10px] leading-3.75">
           Tired before anything happened. Bracing for nothing in particular.
         </AppText>
         <View style={styles.badgeRow}>

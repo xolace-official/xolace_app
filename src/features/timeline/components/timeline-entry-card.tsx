@@ -21,6 +21,16 @@ const styles = StyleSheet.create({
 
 const PRESS_ANIMATION = { scale: { value: 0.98 } };
 
+const TONE_BADGE: Partial<Record<string, { text: string; border: string }>> = {
+  poetic: { text: "text-tone-poetic", border: "border-tone-poetic/40" },
+  gentle: { text: "text-tone-gentle", border: "border-tone-gentle/40" },
+  direct: { text: "text-tone-direct", border: "border-tone-direct/40" },
+  witnessed: {
+    text: "text-tone-witnessed",
+    border: "border-tone-witnessed/40",
+  },
+};
+
 export const TimelineEntryCard = ({ entry, className }: Props) => {
   const router = useRouter();
 
@@ -37,6 +47,15 @@ export const TimelineEntryCard = ({ entry, className }: Props) => {
     entry.granularLabel ?? entry.primaryEmotion,
   );
   const pathLabel = getPathLabel(entry.pathChosen);
+  const toneLabel = entry.toneUsed
+    ? entry.toneUsed.charAt(0).toUpperCase() + entry.toneUsed.slice(1)
+    : null;
+  const toneBadge = entry.toneUsed
+    ? (TONE_BADGE[entry.toneUsed] ?? {
+        text: "text-foreground/40",
+        border: "border-foreground/20",
+      })
+    : null;
 
   return (
     <PressableFeedback
@@ -57,15 +76,27 @@ export const TimelineEntryCard = ({ entry, className }: Props) => {
             &ldquo;{entry.mirrorText}&rdquo;
           </AppText>
 
-          <View className="flex-row items-center gap-2">
-            <AppText className="text-base">{emoji}</AppText>
-            <AppText className="text-sm text-foreground/60">
-              {emotionLabel}
-            </AppText>
-            <AppText className="text-sm text-foreground/25">&middot;</AppText>
-            <AppText className="text-sm text-foreground/40">
-              {pathLabel}
-            </AppText>
+          <View className="flex-row items-center justify-between gap-3">
+            <View className="flex-row flex-1 items-center gap-2">
+              <AppText className="text-base">{emoji}</AppText>
+              <AppText className="text-sm text-foreground/60">
+                {emotionLabel}
+              </AppText>
+              <AppText className="text-sm text-foreground/25">&middot;</AppText>
+              <AppText className="text-sm text-foreground/40">
+                {pathLabel}
+              </AppText>
+            </View>
+
+            {toneLabel && toneBadge ? (
+              <View
+                className={`rounded-full border px-2.5 py-0.5 ${toneBadge.border}`}
+              >
+                <AppText className={`text-xs ${toneBadge.text}`}>
+                  {toneLabel}
+                </AppText>
+              </View>
+            ) : null}
           </View>
         </Card.Body>
       </Card>

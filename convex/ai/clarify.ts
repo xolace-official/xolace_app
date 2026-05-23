@@ -153,6 +153,12 @@ export const handleClarification = internalAction({
         sessionId: args.sessionId,
         mirrorText: revisedMirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
+        toneUsed: mirrorTone as
+          | "poetic"
+          | "gentle"
+          | "direct"
+          | "adaptive"
+          | "witnessed",
       });
 
       // 7.5. Replace TTS: delete old audio file and schedule fresh generation.
