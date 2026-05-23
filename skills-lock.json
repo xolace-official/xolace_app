@@ -268,6 +268,12 @@
       "skillPath": "skills/react-native-ease-refactor/SKILL.md",
       "computedHash": "ff150edd2851a0d8bbddf30d07045e61431350f2c2459576bd0fd6f4b331dbb5"
     },
+    "reanimated-skia-performance": {
+      "source": "andreev-danila/skills",
+      "sourceType": "github",
+      "skillPath": "skills/reanimated-skia-performance/SKILL.md",
+      "computedHash": "14ab8be93ebb822d4f9c6ebdce0204f0b5e3837b15b43cdb061a06973751364e"
+    },
     "referral-program": {
       "source": "eronred/aso-skills",
       "sourceType": "github",
