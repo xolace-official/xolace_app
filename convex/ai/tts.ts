@@ -3,11 +3,11 @@ import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 
 const VOICE_MAP: Record<string, string> = {
-  gentle: "flHkNRp1BlvT73UL6gyz", // Jessica Anne Bogart - Eloquent Villain   old -> Sarah  — soft, warm EXAVITQu4vr4xnSDxMaL
-  poetic: "XB0fDUnXU5powFXDhCwa", // Charlotte — expressive
-  direct: "onwK4e9ZLuTAKqWW03F9", // Daniel — clear, authoritative
-  adaptive: "JBFqnCBsd6RMkjVDRZzb", // George — neutral, balanced
-  witnessed: "JBFqnCBsd6RMkjVDRZzb", // Reuse adaptive voice for witnessed tone
+  gentle: "BpjGufoPiobT79j2vtj4", // Priyanka — calm, soothing, late-night warmth
+  poetic: "Z3R5wn05IrDiVCyEkUrK", // Arabella — mysterious, emotive
+  direct: "EkK5I93UQWFDigLMpZcX", // James — modulated, controlled, direct
+  adaptive: "c6SfcYrb2t09NHXiT80T", // Jarnathan — versatile, wide emotional range
+  witnessed: "NOpBlnGInO9m6vDvFkFC", // Spuds Oxley — wise, approachable
 };
 
 /**
@@ -44,6 +44,8 @@ export const generateMirrorAudio = internalAction({
     const voiceId = VOICE_MAP[args.mirrorTone] ?? VOICE_MAP.adaptive;
 
     let audioBuffer: ArrayBuffer;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
     try {
       const response = await fetch(
         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
@@ -56,14 +58,13 @@ export const generateMirrorAudio = internalAction({
           },
           body: JSON.stringify({
             text: args.mirrorText,
-            model_id: "eleven_flash_v2_5",
+            model_id: "eleven_v3",
             voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: 0.2,
+              stability: 0.3,
               use_speaker_boost: true,
             },
           }),
+          signal: controller.signal,
         },
       );
 
@@ -75,8 +76,14 @@ export const generateMirrorAudio = internalAction({
 
       audioBuffer = await response.arrayBuffer();
     } catch (err) {
-      console.error("[tts] Fetch failed:", err);
+      if (err instanceof Error && err.name === "AbortError") {
+        console.error("[tts] ElevenLabs request timed out after 30s");
+      } else {
+        console.error("[tts] Fetch failed:", err);
+      }
       return;
+    } finally {
+      clearTimeout(timeout);
     }
 
     const blob = new Blob([audioBuffer], { type: "audio/mpeg" });

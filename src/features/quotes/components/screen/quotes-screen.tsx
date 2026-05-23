@@ -60,7 +60,7 @@ export function QuotesScreen() {
   const isLoading = todayQuotes === undefined || quotePrefs === undefined;
   const displayedQuote = todayQuotes?.session ?? todayQuotes?.curated ?? null;
   const showNudge =
-    !isLoading && todayQuotes?.session === null && displayedQuote !== null;
+    !isLoading && displayedQuote !== null && todayQuotes?.hasSessionToday === false;
   const isFirstVisit = !isLoading && quotePrefs === null;
   const needsColdStart =
     !isLoading &&

@@ -21,6 +21,7 @@ type Props = {
   showNudge?: boolean;
 };
 
+const NUDGE_ICON = { ios: "wand.and.stars" as const, android: "auto_fix_high" as const };
 const EASING: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 const EASE_INITIAL = { opacity: 0, translateY: 24 };
 const EASE_ANIMATE = { opacity: 1, translateY: 0 };
@@ -62,7 +63,9 @@ export function QuoteCard({
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const labelStyle = { color: `${foregroundColor}40` };
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const nudgeStyle = { color: `${foregroundColor}30` };
+  const nudgePillStyle = { backgroundColor: `${accentColor}18`, borderWidth: 1, borderColor: `${accentColor}35`, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 12, flexDirection: "row" as const, alignItems: "center" as const, alignSelf: "flex-start" as const, gap: 6 };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const nudgeTextStyle = { color: `${accentColor}CC` };
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const bottomBarStyle = { paddingBottom: bottom + 32 };
 
@@ -92,9 +95,12 @@ export function QuoteCard({
           {label}
         </AppText>
         {showNudge && (
-          <AppText className="text-xs mt-3" style={nudgeStyle}>
-            Try a session for a more personal quote.
-          </AppText>
+          <View className="mt-5" style={nudgePillStyle}>
+            <SymbolView name={NUDGE_ICON} size={12} tintColor={`${accentColor}CC`} />
+            <AppText className="text-xs font-medium" style={nudgeTextStyle}>
+              Reflect today; get a quote made just for you
+            </AppText>
+          </View>
         )}
       </View>
 

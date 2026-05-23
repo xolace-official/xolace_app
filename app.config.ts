@@ -56,7 +56,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
     name: getAppName(),
     slug: "xolace",
-    version: "1.2.0",
+    version: "1.3.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "xolace",
@@ -66,8 +66,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       bundleIdentifier: getUniqueIdentifier(),
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        NSPhotoLibraryUsageDescription: "Xolace does not access your photo library. This permission is required by included SDKs.",
-        LSApplicationQueriesSchemes: ['tel', 'mailto'],
+        NSPhotoLibraryUsageDescription: "Allow $(PRODUCT_NAME) to access your photos.",
+        NSPhotoLibraryAddUsageDescription: "Allow $(PRODUCT_NAME) to save quote images to your photos.",
+        LSApplicationQueriesSchemes: ['tel', 'mailto', 'whatsapp', 'instagram', 'instagram-stories', 'fb', 'facebook-stories', 'tg', 'twitter'],
       },
       privacyManifests: {
         NSPrivacyCollectedDataTypes: [
@@ -202,7 +203,28 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ],
       "expo-image",
       "expo-web-browser",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save quote images to your photos.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
+        "react-native-share",
+        {
+          "ios": ["whatsapp", "instagram", "instagram-stories", "fb", "facebook-stories", "tg", "twitter"],
+          "android": [
+            "com.whatsapp",
+            "com.instagram.android",
+            "com.facebook.katana",
+            "org.telegram.messenger",
+            "com.twitter.android"
+          ]
+        }
+      ]
     ],
     experiments: {
       typedRoutes: true,
