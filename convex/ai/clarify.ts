@@ -10,7 +10,10 @@ import {
   ARTICULATOR_VERSION,
 } from "./providers/anthropic";
 import { buildArticulatorPrompt } from "./prompts/articulator";
-import { buildPatternSummary, collectRecentMirrors } from "./helpers/patternSummary";
+import {
+  buildPatternSummary,
+  collectRecentMirrors,
+} from "./helpers/patternSummary";
 
 const FALLBACK_MIRROR =
   "I hear you more clearly now. What you're feeling deserves to be seen.";
@@ -32,7 +35,7 @@ export const handleClarification = internalAction({
       // 1. Load full context (includes turns + current mirror)
       const context = await ctx.runQuery(
         internal.ai.context.buildSessionContext,
-        { sessionId: args.sessionId }
+        { sessionId: args.sessionId },
       );
 
       const session = context.session as {
@@ -59,7 +62,7 @@ export const handleClarification = internalAction({
 
       const metadata: MetadataType = await ctx.runQuery(
         internal.emotionalMetadata.getBySessionInternal,
-        { sessionId: args.sessionId }
+        { sessionId: args.sessionId },
       );
 
       // If no metadata exists (edge case), we can't refine properly
@@ -73,7 +76,7 @@ export const handleClarification = internalAction({
 
       // 3. Find the current turn's feedback type
       const currentTurn = context.turns.find(
-        (t: { turnNumber?: number }) => t.turnNumber === args.turnNumber
+        (t: { turnNumber?: number }) => t.turnNumber === args.turnNumber,
       ) as { userFeedback?: string } | undefined;
 
       const userFeedback = currentTurn?.userFeedback as string | undefined;
@@ -150,6 +153,12 @@ export const handleClarification = internalAction({
         sessionId: args.sessionId,
         mirrorText: revisedMirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
+        toneUsed: mirrorTone as
+          | "poetic"
+          | "gentle"
+          | "direct"
+          | "adaptive"
+          | "witnessed",
       });
 
       // 7.5. Replace TTS: delete old audio file and schedule fresh generation.
@@ -167,7 +176,12 @@ export const handleClarification = internalAction({
         await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
           sessionId: args.sessionId,
           mirrorText: revisedMirrorText,
-          mirrorTone: mirrorTone as "poetic" | "gentle" | "direct" | "adaptive",
+          mirrorTone: mirrorTone as
+            | "poetic"
+            | "gentle"
+            | "direct"
+            | "adaptive"
+            | "witnessed",
         });
       }
     } catch (error) {

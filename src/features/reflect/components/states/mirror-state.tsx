@@ -19,6 +19,7 @@ import {
 import { useMirrorAudio } from "@/src/features/reflect/hooks/use-mirror-audio";
 import { useSettings } from "@/src/features/settings/hooks/use-settings";
 import { ToneTipBanner } from "@/src/features/reflect/components/tone-tip-banner";
+import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 
 type Props = {
   mirror: string;
@@ -201,7 +202,7 @@ export const MirrorState = ({
           className="text-xl italic leading-8 text-foreground"
           selectable
         >
-          {mirror}
+          {removeEmDash(mirror)}
         </AppText>
       </ScrollView>
 

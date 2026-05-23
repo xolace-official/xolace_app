@@ -14,6 +14,7 @@ import {
   pathChosenValidator,
   postSessionMoodValidator,
   resourceValidator,
+  mirrorToneValidator,
 } from "./lib/validators";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
 import { rateLimiter } from "./lib/rateLimits";
@@ -200,27 +201,38 @@ export const completePath = mutation({
 
     const now = Date.now();
     // A confirmed session was never path-selected, so the path was not completed.
-    const pathCompleted = session.state === "confirmed" ? false : args.pathCompleted;
+    const pathCompleted =
+      session.state === "confirmed" ? false : args.pathCompleted;
 
     await ctx.db.patch(args.sessionId, {
       state: "completed",
       pathCompleted,
       contributedReflection: args.contributedReflection,
-      ...(args.postSessionMood ? { postSessionMood: args.postSessionMood } : {}),
+      ...(args.postSessionMood
+        ? { postSessionMood: args.postSessionMood }
+        : {}),
       completedAt: now,
       sessionDuration: now - session.createdAt,
       updatedAt: now,
     });
 
     // Schedule post-session jobs
-    await ctx.scheduler.runAfter(0, internal.jobs.profileStats.updateAfterSession, {
-      emotionalProfileId: session.emotionalProfileId,
-      sessionId: args.sessionId,
-    });
-    if (args.contributedReflection) {
-      await ctx.scheduler.runAfter(0, internal.jobs.reflectionAnonymizer.anonymize, {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.jobs.profileStats.updateAfterSession,
+      {
+        emotionalProfileId: session.emotionalProfileId,
         sessionId: args.sessionId,
-      });
+      },
+    );
+    if (args.contributedReflection) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.jobs.reflectionAnonymizer.anonymize,
+        {
+          sessionId: args.sessionId,
+        },
+      );
     }
 
     return null;
@@ -252,10 +264,14 @@ export const completeSession = mutation({
       updatedAt: now,
     });
 
-    await ctx.scheduler.runAfter(0, internal.jobs.profileStats.updateAfterSession, {
-      emotionalProfileId: session.emotionalProfileId,
-      sessionId: args.sessionId,
-    });
+    await ctx.scheduler.runAfter(
+      0,
+      internal.jobs.profileStats.updateAfterSession,
+      {
+        emotionalProfileId: session.emotionalProfileId,
+        sessionId: args.sessionId,
+      },
+    );
 
     return null;
   },
@@ -303,7 +319,9 @@ export const abandon = mutation({
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
     if (TERMINAL_STATES.has(session.state)) {
-      throw new Error(`Cannot abandon session in terminal state "${session.state}"`);
+      throw new Error(
+        `Cannot abandon session in terminal state "${session.state}"`,
+      );
     }
 
     await ctx.db.patch(args.sessionId, {
@@ -344,12 +362,15 @@ export const getActive = query({
       const session = await ctx.db
         .query("sessions")
         .withIndex("by_profile_state", (q) =>
-          q.eq("emotionalProfileId", profile._id).eq("state", state)
+          q.eq("emotionalProfileId", profile._id).eq("state", state),
         )
         .order("desc")
         .first();
 
-      if (session && (!latest || session._creationTime > latest._creationTime)) {
+      if (
+        session &&
+        (!latest || session._creationTime > latest._creationTime)
+      ) {
         latest = session;
       }
     }
@@ -385,7 +406,7 @@ export const listByProfile = query({
     return await ctx.db
       .query("sessions")
       .withIndex("by_profile_time", (q) =>
-        q.eq("emotionalProfileId", profile._id)
+        q.eq("emotionalProfileId", profile._id),
       )
       .order("desc")
       .paginate(args.paginationOpts);
@@ -406,7 +427,7 @@ export const listForTimeline = query({
     const result = await ctx.db
       .query("sessions")
       .withIndex("by_profile_time", (q) =>
-        q.eq("emotionalProfileId", profile._id)
+        q.eq("emotionalProfileId", profile._id),
       )
       .order("desc")
       .paginate(args.paginationOpts);
@@ -425,11 +446,12 @@ export const listForTimeline = query({
             mirrorText: session.mirrorText!,
             confirmationState: session.confirmationState ?? null,
             pathChosen: session.pathChosen ?? null,
+            toneUsed: session.toneUsed ?? null,
             primaryEmotion: metadata?.primaryEmotion ?? null,
             granularLabel: metadata?.granularLabel ?? null,
             createdAt: session.createdAt,
           };
-        })
+        }),
     );
 
     return { ...result, page: enrichedPage };
@@ -470,6 +492,7 @@ export const deliverMirror = internalMutation({
     sessionId: v.id("sessions"),
     mirrorText: v.string(),
     mirrorModelVersion: v.string(),
+    toneUsed: mirrorToneValidator,
     escalationTriggered: v.optional(v.boolean()),
     escalationResources: v.optional(v.array(resourceValidator)),
   },
@@ -488,8 +511,11 @@ export const deliverMirror = internalMutation({
       state: "mirror_delivered",
       mirrorText: args.mirrorText,
       mirrorModelVersion: args.mirrorModelVersion,
+      toneUsed: args.toneUsed,
       ...(args.escalationTriggered ? { escalationTriggered: true } : {}),
-      ...(args.escalationResources ? { escalationResources: args.escalationResources } : {}),
+      ...(args.escalationResources
+        ? { escalationResources: args.escalationResources }
+        : {}),
       updatedAt: Date.now(),
     });
   },

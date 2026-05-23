@@ -6,28 +6,63 @@ import { useToast } from "heroui-native";
 export function useQuoteSharing(displayedQuote: { text: string } | null) {
   const sharingCardRef = useRef<View>(null);
   const layoutResolverRef = useRef<(() => void) | null>(null);
+  const imageResolverRef = useRef<(() => void) | null>(null);
+  const imageLoadedRef = useRef(false);
   const [isSharingLoading, setIsSharingLoading] = useState(false);
   const [showSharingCard, setShowSharingCard] = useState(false);
   const [shareImageUri, setShareImageUri] = useState<string | null>(null);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const { toast } = useToast();
 
+  const layoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Called from the off-screen wrapper's onLayout — signals the card is ready to capture.
   const onSharingCardLayout = () => {
+    if (layoutTimeoutRef.current !== null) {
+      clearTimeout(layoutTimeoutRef.current);
+      layoutTimeoutRef.current = null;
+    }
     layoutResolverRef.current?.();
     layoutResolverRef.current = null;
+  };
+
+  const onSharingCardImageLoadEnd = () => {
+    imageLoadedRef.current = true;
+    imageResolverRef.current?.();
+    imageResolverRef.current = null;
   };
 
   const handleShare = async () => {
     if (!displayedQuote || isSharingLoading) return;
     setIsSharingLoading(true);
+    imageLoadedRef.current = false;
     setShowSharingCard(true);
     try {
       // Wait until the off-screen card reports its layout before capturing.
       await new Promise<void>((resolve) => {
         layoutResolverRef.current = resolve;
+        layoutTimeoutRef.current = setTimeout(() => {
+          layoutTimeoutRef.current = null;
+          layoutResolverRef.current = null;
+          resolve();
+        }, 4000);
       });
-      const uri = await captureRef(sharingCardRef, { format: "png", quality: 1 });
+
+      // Ensure expo-image has finished rendering before capture.
+      if (!imageLoadedRef.current) {
+        await new Promise<void>((resolve) => {
+          const timeoutId = setTimeout(resolve, 180);
+          imageResolverRef.current = () => {
+            clearTimeout(timeoutId);
+            resolve();
+          };
+        });
+      }
+
+      const uri = await captureRef(sharingCardRef, {
+        format: "png",
+        quality: 1,
+      });
       setShareImageUri(uri);
       setShowShareSheet(true);
     } catch {
@@ -37,6 +72,12 @@ export function useQuoteSharing(displayedQuote: { text: string } | null) {
         variant: "default",
       });
     } finally {
+      if (layoutTimeoutRef.current !== null) {
+        clearTimeout(layoutTimeoutRef.current);
+        layoutTimeoutRef.current = null;
+      }
+      layoutResolverRef.current = null;
+      imageResolverRef.current = null;
       setIsSharingLoading(false);
       setShowSharingCard(false);
     }
@@ -45,6 +86,7 @@ export function useQuoteSharing(displayedQuote: { text: string } | null) {
   return {
     handleShare,
     onSharingCardLayout,
+    onSharingCardImageLoadEnd,
     sharingCardRef,
     isSharingLoading,
     showSharingCard,

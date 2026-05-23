@@ -73,7 +73,7 @@ export default defineSchema({
     accountStatus: v.union(
       v.literal("active"),
       v.literal("suspended"),
-      v.literal("deleted")
+      v.literal("deleted"),
     ),
 
     // When the user requested account deletion.
@@ -158,7 +158,7 @@ export default defineSchema({
       v.object({
         dayOfWeek: v.number(), // 0-6, Sunday = 0
         hourOfDay: v.number(), // 0-23
-      })
+      }),
     ),
 
     // --- Voice Vent Usage ---
@@ -195,11 +195,7 @@ export default defineSchema({
 
     // --- Display ---
 
-    theme: v.union(
-      v.literal("light"),
-      v.literal("dark"),
-      v.literal("system")
-    ),
+    theme: v.union(v.literal("light"), v.literal("dark"), v.literal("system")),
 
     // Selected color palette (e.g. "default", "lavender", "mint", "sky").
     // Stored separately from light/dark mode so both can change independently.
@@ -212,17 +208,21 @@ export default defineSchema({
     // All default false. Permission requested after 3rd session.
     notifications: v.object({
       enabled: v.boolean(),
-      gentleReturn: v.boolean(),  // "It's been a while..."
-      patternNudge: v.boolean(),  // "Sunday evening..."
-      milestone: v.boolean(),     // "30 days of showing up"
+      gentleReturn: v.boolean(), // "It's been a while..."
+      patternNudge: v.boolean(), // "Sunday evening..."
+      milestone: v.boolean(), // "30 days of showing up"
       // Reach preset: how the AI sounds when it reaches out.
       // Defaults to "warm" on first enable. User-adjustable in Settings.
-      reach: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
+      reach: v.optional(
+        v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet")),
+      ),
       // Quiet Window: suppress notifications outside these local hours (0–23).
-      quietWindow: v.optional(v.object({
-        dontReachBefore: v.number(),
-        dontReachAfter: v.number(),
-      })),
+      quietWindow: v.optional(
+        v.object({
+          dontReachBefore: v.number(),
+          dontReachAfter: v.number(),
+        }),
+      ),
       // IANA timezone captured client-side so the server can gate by local hour.
       timezone: v.optional(v.string()),
     }),
@@ -242,7 +242,7 @@ export default defineSchema({
       v.literal("gentle"),
       v.literal("direct"),
       v.literal("adaptive"),
-      v.literal("witnessed")
+      v.literal("witnessed"),
     ),
 
     // --- Privacy ---
@@ -256,17 +256,14 @@ export default defineSchema({
     dataRetentionPreference: v.union(
       v.literal("indefinite"),
       v.literal("6_months"),
-      v.literal("1_year")
+      v.literal("1_year"),
     ),
 
     // --- Input ---
 
     // Default input mode. "text" for MVP.
     // "voice" becomes available in Phase 2.
-    preferredInputType: v.union(
-      v.literal("text"),
-      v.literal("voice")
-    ),
+    preferredInputType: v.union(v.literal("text"), v.literal("voice")),
 
     // Name the user chose for their processing space. Undefined = unnamed.
     // Passed to the articulator so identity questions ("who are you / what
@@ -292,7 +289,7 @@ export default defineSchema({
         notificationTime: v.optional(v.string()),
         // IDs of curated quotes already shown — avoids repeats for 6+ months.
         shownQuoteIds: v.array(v.id("quotes")),
-      })
+      }),
     ),
   })
     .index("by_profile", ["emotionalProfileId"])
@@ -324,16 +321,16 @@ export default defineSchema({
     // "Where do users drop off?" is answered by querying
     // the distribution of terminal states.
     state: v.union(
-      v.literal("initiated"),       // App opened input screen
-      v.literal("input_received"),  // User tapped "Let it out"
-      v.literal("processing"),      // Breath animation, AI working
-      v.literal("mirror_delivered"),// Mirror shown, awaiting response
-      v.literal("confirmed"),       // User tapped "That's it"
-      v.literal("path_selected"),   // User chose a path
-      v.literal("path_in_progress"),// Doing exercise / viewing reflections
-      v.literal("completed"),       // Session fully closed
-      v.literal("abandoned"),       // User left before completing
-      v.literal("error")           // AI processing failed, user can retry
+      v.literal("initiated"), // App opened input screen
+      v.literal("input_received"), // User tapped "Let it out"
+      v.literal("processing"), // Breath animation, AI working
+      v.literal("mirror_delivered"), // Mirror shown, awaiting response
+      v.literal("confirmed"), // User tapped "That's it"
+      v.literal("path_selected"), // User chose a path
+      v.literal("path_in_progress"), // Doing exercise / viewing reflections
+      v.literal("completed"), // Session fully closed
+      v.literal("abandoned"), // User left before completing
+      v.literal("error"), // AI processing failed, user can retry
     ),
 
     // --- Input ---
@@ -347,7 +344,7 @@ export default defineSchema({
       v.literal("guided_entry"),
       v.literal("body_scan"),
       v.literal("word_cloud"),
-      v.literal("voice")
+      v.literal("voice"),
     ),
 
     // The user's raw text. Optional: not set until input_received state.
@@ -387,27 +384,41 @@ export default defineSchema({
     // Optional: not set until mirror_delivered state.
     mirrorModelVersion: v.optional(v.string()),
 
+    // Tone used to generate this session's mirror.
+    // Optional for historical sessions created before this field existed.
+    toneUsed: v.optional(
+      v.union(
+        v.literal("poetic"),
+        v.literal("gentle"),
+        v.literal("direct"),
+        v.literal("adaptive"),
+        v.literal("witnessed"),
+      ),
+    ),
+
     // Convex file storage ID for the ElevenLabs TTS audio of the mirror text.
     // Generated async after mirror delivery; null until ready.
     mirrorAudioStorageId: v.optional(v.id("_storage")),
 
     // What happened after the mirror was shown.
     // Optional: not set until confirmed/abandoned.
-    confirmationState: v.optional(v.union(
-      v.literal("confirmed"),   // "That's it" on first try
-      v.literal("refined"),     // Confirmed after 1-2 "Not quite" loops
-      v.literal("gave_up"),     // AI couldn't get it right, user proceeded anyway
-      v.literal("abandoned")    // User left during mirror stage
-    )),
+    confirmationState: v.optional(
+      v.union(
+        v.literal("confirmed"), // "That's it" on first try
+        v.literal("refined"), // Confirmed after 1-2 "Not quite" loops
+        v.literal("gave_up"), // AI couldn't get it right, user proceeded anyway
+        v.literal("abandoned"), // User left during mirror stage
+      ),
+    ),
 
     // --- Path ---
 
     pathChosen: v.optional(
       v.union(
-        v.literal("solo"),   // Sit with this
-        v.literal("peers"),  // You're not alone
-        v.literal("exit")    // I just needed to say it
-      )
+        v.literal("solo"), // Sit with this
+        v.literal("peers"), // You're not alone
+        v.literal("exit"), // I just needed to say it
+      ),
     ),
 
     // Whether they finished the chosen path.
@@ -448,8 +459,8 @@ export default defineSchema({
         v.literal("lighter"),
         v.literal("same"),
         v.literal("heavier"),
-        v.literal("unsure")
-      )
+        v.literal("unsure"),
+      ),
     ),
 
     // --- Safety ---
@@ -468,13 +479,15 @@ export default defineSchema({
     // needing to compute from timestamps every time.
 
     // Optional: set when input is submitted.
-    timeOfDay: v.optional(v.union(
-      v.literal("early_morning"), // 5am-8am
-      v.literal("morning"),       // 8am-12pm
-      v.literal("afternoon"),     // 12pm-5pm
-      v.literal("evening"),       // 5pm-9pm
-      v.literal("late_night")     // 9pm-5am
-    )),
+    timeOfDay: v.optional(
+      v.union(
+        v.literal("early_morning"), // 5am-8am
+        v.literal("morning"), // 8am-12pm
+        v.literal("afternoon"), // 12pm-5pm
+        v.literal("evening"), // 5pm-9pm
+        v.literal("late_night"), // 9pm-5am
+      ),
+    ),
 
     // Optional: set when input is submitted.
     dayOfWeek: v.optional(v.number()), // 0-6, Sunday = 0
@@ -497,9 +510,9 @@ export default defineSchema({
     errorMessage: v.optional(v.string()),
 
     // --- Timestamps ---
-    createdAt: v.number(),  // Session initiated
+    createdAt: v.number(), // Session initiated
     completedAt: v.optional(v.number()), // Session closed
-    updatedAt: v.number(),  // Last state transition
+    updatedAt: v.number(), // Last state transition
   })
     // Timeline screen: user's sessions, newest first.
     .index("by_profile_time", ["emotionalProfileId", "createdAt"])
@@ -537,8 +550,8 @@ export default defineSchema({
 
     // What the user indicated.
     userFeedback: v.union(
-      v.literal("not_quite"),  // Mirror didn't land
-      v.literal("say_more")    // User wants to add more input
+      v.literal("not_quite"), // Mirror didn't land
+      v.literal("say_more"), // User wants to add more input
     ),
 
     // Additional text the user provided to guide the AI.
@@ -636,8 +649,8 @@ export default defineSchema({
       v.union(
         v.literal("past_focused"),
         v.literal("present_focused"),
-        v.literal("future_focused")
-      )
+        v.literal("future_focused"),
+      ),
     ),
 
     // --- Safety ---
@@ -650,10 +663,7 @@ export default defineSchema({
     reclassifiedAt: v.optional(v.number()),
   })
     // Pattern queries: "how often does this user feel X?"
-    .index("by_profile_emotion", [
-      "emotionalProfileId",
-      "primaryEmotion",
-    ])
+    .index("by_profile_emotion", ["emotionalProfileId", "primaryEmotion"])
 
     // Theme analysis: "which life domains keep appearing?"
     .index("by_profile_theme", ["emotionalProfileId"])
@@ -712,9 +722,9 @@ export default defineSchema({
     // --- Moderation ---
 
     status: v.union(
-      v.literal("active"),   // Visible in the pool
-      v.literal("flagged"),  // Pulled for review
-      v.literal("removed")   // Permanently removed
+      v.literal("active"), // Visible in the pool
+      v.literal("flagged"), // Pulled for review
+      v.literal("removed"), // Permanently removed
     ),
 
     // Whether this was part of the manually curated launch pool.
@@ -772,7 +782,7 @@ export default defineSchema({
       v.literal("self_compassion"),
       v.literal("cognitive_reframe"),
       v.literal("visualization"),
-      v.literal("journaling_prompt")
+      v.literal("journaling_prompt"),
     ),
 
     // Which emotions this exercise is suited for.
@@ -801,22 +811,22 @@ export default defineSchema({
           v.literal("haptic"),
           v.literal("private_prompt"),
         ),
-        breathPattern: v.optional(v.union(
-          v.literal("physiological_sigh"),
-          v.literal("extended_exhale"),
-          v.literal("slow_exhale"),
-        )),
+        breathPattern: v.optional(
+          v.union(
+            v.literal("physiological_sigh"),
+            v.literal("extended_exhale"),
+            v.literal("slow_exhale"),
+          ),
+        ),
         breathCycles: v.optional(v.number()),
-        hapticIntensity: v.optional(v.union(
-          v.literal("light"),
-          v.literal("medium"),
-          v.literal("heavy"),
-        )),
+        hapticIntensity: v.optional(
+          v.union(v.literal("light"), v.literal("medium"), v.literal("heavy")),
+        ),
         slotKeys: v.optional(v.array(v.string())),
         promptPlaceholder: v.optional(v.string()),
         promptMaxSeconds: v.optional(v.number()),
         syncToBreath: v.optional(v.boolean()),
-      })
+      }),
     ),
 
     // Estimated total duration in minutes.
@@ -852,10 +862,10 @@ export default defineSchema({
     // What triggered the escalation.
     triggerType: v.union(
       v.literal("explicit_crisis_language"), // Direct self-harm references
-      v.literal("implicit_risk_language"),   // "I can't do this anymore" in context
-      v.literal("pattern_escalation"),       // Cumulative intensity trend across sessions
-      v.literal("crisis_keywords"),          // Keyword/phrase match
-      v.literal("user_requested")            // User asked for help directly
+      v.literal("implicit_risk_language"), // "I can't do this anymore" in context
+      v.literal("pattern_escalation"), // Cumulative intensity trend across sessions
+      v.literal("crisis_keywords"), // Keyword/phrase match
+      v.literal("user_requested"), // User asked for help directly
     ),
 
     // 0.0-1.0. AI's confidence in the risk assessment.
@@ -869,19 +879,19 @@ export default defineSchema({
 
     // What the system did.
     actionTaken: v.union(
-      v.literal("resources_shown"),       // Showed support resources
-      v.literal("warm_handoff_offered"),  // Offered to connect to help
+      v.literal("resources_shown"), // Showed support resources
+      v.literal("warm_handoff_offered"), // Offered to connect to help
       v.literal("crisis_line_presented"), // Presented crisis hotline
-      v.literal("session_redirected")     // Redirected session flow
+      v.literal("session_redirected"), // Redirected session flow
     ),
 
     // How the user responded to the escalation.
     userResponse: v.optional(
       v.union(
-        v.literal("engaged"),      // Interacted with resources
-        v.literal("dismissed"),    // Closed/skipped
-        v.literal("no_response")   // Didn't interact
-      )
+        v.literal("engaged"), // Interacted with resources
+        v.literal("dismissed"), // Closed/skipped
+        v.literal("no_response"), // Didn't interact
+      ),
     ),
 
     // Which specific resources were presented.
@@ -920,10 +930,10 @@ export default defineSchema({
     emotionalProfileId: v.id("emotional_profiles"),
 
     type: v.union(
-      v.literal("gentle_return"),  // "It's been a while..."
-      v.literal("pattern_nudge"),  // "Sunday evening..."
-      v.literal("milestone"),      // "30 days of showing up"
-      v.literal("affirmation")     // "Being tired doesn't mean you're failing."
+      v.literal("gentle_return"), // "It's been a while..."
+      v.literal("pattern_nudge"), // "Sunday evening..."
+      v.literal("milestone"), // "30 days of showing up"
+      v.literal("affirmation"), // "Being tired doesn't mean you're failing."
     ),
 
     // AI-generated, contextual notification text.
@@ -942,10 +952,10 @@ export default defineSchema({
     // If suppressed before delivery, why.
     suppressedReason: v.optional(
       v.union(
-        v.literal("rate_limit"),        // Too many recent nudges
-        v.literal("user_inactive"),     // User hasn't opened app in 30+ days
-        v.literal("escalation_active")  // Active escalation event, don't nudge
-      )
+        v.literal("rate_limit"), // Too many recent nudges
+        v.literal("user_inactive"), // User hasn't opened app in 30+ days
+        v.literal("escalation_active"), // Active escalation event, don't nudge
+      ),
     ),
 
     scheduledFor: v.number(),
@@ -953,24 +963,30 @@ export default defineSchema({
     createdAt: v.number(),
 
     // Which Reach variant produced this notification.
-    reachUsed: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
+    reachUsed: v.optional(
+      v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet")),
+    ),
 
     // Whether session/pattern data was available at generation time.
     patternContextUsed: v.optional(v.boolean()),
 
     // How the content was produced (for debugging + future analytics).
-    generatedBy: v.optional(v.union(
-      v.literal("haiku_personalized"),
-      v.literal("template_cold_start"),
-      v.literal("template_fallback")
-    )),
+    generatedBy: v.optional(
+      v.union(
+        v.literal("haiku_personalized"),
+        v.literal("template_cold_start"),
+        v.literal("template_fallback"),
+      ),
+    ),
 
     // Feedback-loop answer from the "What landed?" card.
-    landed: v.optional(v.union(
-      v.literal("felt_right"),
-      v.literal("too_much"),
-      v.literal("not_enough")
-    )),
+    landed: v.optional(
+      v.union(
+        v.literal("felt_right"),
+        v.literal("too_much"),
+        v.literal("not_enough"),
+      ),
+    ),
   })
     // Check: have we already nudged this user recently?
     .index("by_profile", ["emotionalProfileId", "sentAt"])
@@ -1039,7 +1055,11 @@ export default defineSchema({
   })
     .index("by_profile", ["emotionalProfileId"])
     .index("by_profile_and_created", ["emotionalProfileId", "createdAt"])
-    .index("by_profile_and_type_and_created", ["emotionalProfileId", "type", "createdAt"]),
+    .index("by_profile_and_type_and_created", [
+      "emotionalProfileId",
+      "type",
+      "createdAt",
+    ]),
 
   // ===========================================================
   // 13. QUOTES LIBRARY
@@ -1091,7 +1111,7 @@ export default defineSchema({
 
     // User reaction. Null until the user reacts.
     reaction: v.optional(
-      v.union(v.literal("resonates"), v.literal("not_today"))
+      v.union(v.literal("resonates"), v.literal("not_today")),
     ),
 
     createdAt: v.number(),
@@ -1130,8 +1150,8 @@ export default defineSchema({
       v.literal("nudge_delivery"),
       v.literal("pattern_analysis"),
       v.literal("anonymized_research"),
-      v.literal("voice_processing"),      // Phase 2
-      v.literal("therapy_summary_sharing") // Phase 3
+      v.literal("voice_processing"), // Phase 2
+      v.literal("therapy_summary_sharing"), // Phase 3
     ),
 
     // Current status from this action.
@@ -1149,5 +1169,9 @@ export default defineSchema({
     createdAt: v.number(),
   })
     // Check current consent status for a specific type.
-    .index("by_profile_type", ["emotionalProfileId", "consentType", "createdAt"]),
+    .index("by_profile_type", [
+      "emotionalProfileId",
+      "consentType",
+      "createdAt",
+    ]),
 });

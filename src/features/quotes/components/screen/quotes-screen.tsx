@@ -34,7 +34,11 @@ const HEART_ICON = { ios: "heart.fill", android: "favorite" } as const;
 const CLOSE_ICON = { ios: "xmark", android: "close" } as const;
 const EASE_INITIAL = { opacity: 0, translateY: 20 };
 const EASE_ANIMATE = { opacity: 1, translateY: 0 };
-const EASE_TRANSITION = { type: "timing" as const, duration: 400, easing: [0.25, 0.1, 0.25, 1] as [number, number, number, number] };
+const EASE_TRANSITION = {
+  type: "timing" as const,
+  duration: 400,
+  easing: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
+};
 
 export function QuotesScreen() {
   const { top, bottom } = useSafeAreaInsets();
@@ -55,16 +59,22 @@ export function QuotesScreen() {
 
   const isLoading = todayQuotes === undefined || quotePrefs === undefined;
   const displayedQuote = todayQuotes?.session ?? todayQuotes?.curated ?? null;
-  const showNudge = !isLoading && todayQuotes?.session === null && displayedQuote !== null;
+  const showNudge =
+    !isLoading && todayQuotes?.session === null && displayedQuote !== null;
   const isFirstVisit = !isLoading && quotePrefs === null;
   const needsColdStart =
-    !isLoading && !isFirstVisit && displayedQuote === null && !isColdStarting && !coldStartError;
+    !isLoading &&
+    !isFirstVisit &&
+    displayedQuote === null &&
+    !isColdStarting &&
+    !coldStartError;
 
   console.log(`[quotesScreen:needsColdStart] needsColdStart=${needsColdStart}`);
 
   const {
     handleShare,
     onSharingCardLayout,
+    onSharingCardImageLoadEnd,
     sharingCardRef,
     isSharingLoading,
     showSharingCard,
@@ -87,11 +97,11 @@ export function QuotesScreen() {
     heartOpacity.value = 1;
     heartScale.value = withSequence(
       withSpring(1.5, { damping: 6, stiffness: 200 }),
-      withDelay(180, withTiming(0, { duration: 320 }))
+      withDelay(180, withTiming(0, { duration: 320 })),
     );
     heartOpacity.value = withSequence(
       withTiming(1, { duration: 40 }),
-      withDelay(350, withTiming(0, { duration: 270 }))
+      withDelay(350, withTiming(0, { duration: 270 })),
     );
   };
 
@@ -116,7 +126,7 @@ export function QuotesScreen() {
   const handlePrefsComplete = async (
     themes: string[],
     notifEnabled: boolean,
-    notifTime?: string
+    notifTime?: string,
   ) => {
     await scheduleNotification(themes, notifEnabled, notifTime);
     setIsColdStarting(true);
@@ -136,7 +146,9 @@ export function QuotesScreen() {
     });
   };
 
-  const handleReact = async (reaction: "resonates" | "not_today" | null | undefined) => {
+  const handleReact = async (
+    reaction: "resonates" | "not_today" | null | undefined,
+  ) => {
     if (!displayedQuote) return;
     if (!reaction) {
       await clearReaction({ quoteId: displayedQuote._id });
@@ -148,110 +160,142 @@ export function QuotesScreen() {
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const closeButtonStyle = { paddingTop: top + 12 };
   // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
-  const gradientBottomColors: [string, string] = ["transparent", `${accentColor}28`];
+  const gradientBottomColors: [string, string] = [
+    "transparent",
+    `${accentColor}28`,
+  ];
   // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
-  const gradientTopRightColors: [string, string] = [`${accentColor}20`, "transparent"];
+  const gradientTopRightColors: [string, string] = [
+    `${accentColor}20`,
+    "transparent",
+  ];
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const glassStyle = { width: 34, height: 34, borderRadius: 17, alignItems: "center" as const, justifyContent: "center" as const, backgroundColor: `${foregroundColor}10` };
+  const glassStyle = {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: `${foregroundColor}10`,
+  };
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const prefContentStyle = { padding: 24, paddingTop: top + 24, gap: 16 };
 
   return (
     <>
-    <StatusBar hidden />
-    <View className="flex-1 bg-background">
-      <LinearGradient
-        colors={gradientBottomColors}
-        style={styles.gradientBottom}
-        pointerEvents="none"
-      />
-      <LinearGradient
-        colors={gradientTopRightColors}
-        start={GRADIENT_START}
-        end={GRADIENT_END}
-        style={styles.gradientTopRight}
-        pointerEvents="none"
-      />
-
-      {/* Heart burst overlay */}
-      <Animated.View
-        pointerEvents="none"
-        // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
-        style={[styles.heartBurst, heartStyle]}
-      >
-        <SymbolView name={HEART_ICON} size={96} tintColor={accentColor} />
-      </Animated.View>
-
-      {/* Close button */}
-      <View className="absolute top-0 right-5 z-10" style={closeButtonStyle}>
-        <PressableFeedback onPress={() => { Presets.flick(); router.back(); }} accessibilityLabel="Close" hitSlop={8}>
-          <GlassView
-            style={glassStyle}
-            glassEffectStyle="clear"
-          >
-            <SymbolView name={CLOSE_ICON} size={14} tintColor={`${foregroundColor}70`} />
-          </GlassView>
-        </PressableFeedback>
-      </View>
-
-      {/* First visit — preference setup */}
-      {isFirstVisit && (
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={prefContentStyle}
-          showsVerticalScrollIndicator={false}
-        >
-          <EaseView
-            initialAnimate={EASE_INITIAL}
-            animate={EASE_ANIMATE}
-            transition={EASE_TRANSITION}
-          >
-            <PreferenceSetupSheet
-              onComplete={handlePrefsComplete}
-              isLoading={notifState === "requesting" || isColdStarting}
-            />
-          </EaseView>
-        </ScrollView>
-      )}
-
-      <QuoteLoadingAndError
-        isFirstVisit={isFirstVisit}
-        isLoading={isLoading}
-        isColdStarting={isColdStarting}
-        coldStartError={coldStartError}
-        top={top}
-        onRetry={handleRetry}
-      />
-
-      {/* Immersive quote display */}
-      {!isFirstVisit && !isLoading && !isColdStarting && displayedQuote && (
-        <QuoteCard
-          text={removeEmDash(displayedQuote.text)}
-          type={displayedQuote.type}
-          reaction={displayedQuote.reaction}
-          onReact={handleReact}
-          onShare={handleShare}
-          onHeartBurst={triggerHeartBurst}
-          isSharingLoading={isSharingLoading}
-          showNudge={showNudge}
-          top={top}
-          bottom={bottom}
+      <StatusBar hidden />
+      <View className="flex-1 bg-background">
+        <LinearGradient
+          colors={gradientBottomColors}
+          style={styles.gradientBottom}
+          pointerEvents="none"
         />
-      )}
+        <LinearGradient
+          colors={gradientTopRightColors}
+          start={GRADIENT_START}
+          end={GRADIENT_END}
+          style={styles.gradientTopRight}
+          pointerEvents="none"
+        />
 
-      <QuoteShareSheet
-        visible={showShareSheet}
-        imageUri={shareImageUri}
-        onClose={() => { setShowShareSheet(false); setShareImageUri(null); }}
-      />
+        {/* Heart burst overlay */}
+        <Animated.View
+          pointerEvents="none"
+          // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+          style={[styles.heartBurst, heartStyle]}
+        >
+          <SymbolView name={HEART_ICON} size={96} tintColor={accentColor} />
+        </Animated.View>
 
-      {/* Off-screen sharing card for capture */}
-      {showSharingCard && displayedQuote && (
-        <View style={styles.offscreen} pointerEvents="none" onLayout={onSharingCardLayout}>
-          <SharingCard ref={sharingCardRef} text={removeEmDash(displayedQuote.text)} />
+        {/* Close button */}
+        <View className="absolute top-0 right-5 z-10" style={closeButtonStyle}>
+          <PressableFeedback
+            onPress={() => {
+              Presets.flick();
+              router.back();
+            }}
+            accessibilityLabel="Close"
+            hitSlop={8}
+          >
+            <GlassView style={glassStyle} glassEffectStyle="clear">
+              <SymbolView
+                name={CLOSE_ICON}
+                size={14}
+                tintColor={`${foregroundColor}70`}
+              />
+            </GlassView>
+          </PressableFeedback>
         </View>
-      )}
-    </View>
+
+        {/* First visit — preference setup */}
+        {isFirstVisit && (
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={prefContentStyle}
+            showsVerticalScrollIndicator={false}
+          >
+            <EaseView
+              initialAnimate={EASE_INITIAL}
+              animate={EASE_ANIMATE}
+              transition={EASE_TRANSITION}
+            >
+              <PreferenceSetupSheet
+                onComplete={handlePrefsComplete}
+                isLoading={notifState === "requesting" || isColdStarting}
+              />
+            </EaseView>
+          </ScrollView>
+        )}
+
+        <QuoteLoadingAndError
+          isFirstVisit={isFirstVisit}
+          isLoading={isLoading}
+          isColdStarting={isColdStarting}
+          coldStartError={coldStartError}
+          top={top}
+          onRetry={handleRetry}
+        />
+
+        {/* Immersive quote display */}
+        {!isFirstVisit && !isLoading && !isColdStarting && displayedQuote && (
+          <QuoteCard
+            text={removeEmDash(displayedQuote.text)}
+            type={displayedQuote.type}
+            reaction={displayedQuote.reaction}
+            onReact={handleReact}
+            onShare={handleShare}
+            onHeartBurst={triggerHeartBurst}
+            isSharingLoading={isSharingLoading}
+            showNudge={showNudge}
+            top={top}
+            bottom={bottom}
+          />
+        )}
+
+        <QuoteShareSheet
+          visible={showShareSheet}
+          imageUri={shareImageUri}
+          onClose={() => {
+            setShowShareSheet(false);
+            setShareImageUri(null);
+          }}
+        />
+
+        {/* Off-screen sharing card for capture */}
+        {showSharingCard && displayedQuote && (
+          <View
+            style={styles.offscreen}
+            pointerEvents="none"
+            onLayout={onSharingCardLayout}
+          >
+            <SharingCard
+              ref={sharingCardRef}
+              text={removeEmDash(displayedQuote.text)}
+              onMascotLoadEnd={onSharingCardImageLoadEnd}
+            />
+          </View>
+        )}
+      </View>
     </>
   );
 }

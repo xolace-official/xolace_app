@@ -42,19 +42,38 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
   const previewHeight = previewWidth * (16 / 9);
 
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const backdropStyle = { backgroundColor: `${backgroundColor}F2` };
+  const backdropStyle = { backgroundColor };
   // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
-  const gradientTopColors: [string, string] = [`${accentColor}18`, "transparent"];
+  const gradientTopColors: [string, string] = [
+    `${accentColor}18`,
+    "transparent",
+  ];
   // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
-  const gradientBottomColors: [string, string] = ["transparent", `${accentColor}22`];
+  const gradientBottomColors: [string, string] = [
+    "transparent",
+    `${accentColor}22`,
+  ];
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const headerStyle = { paddingTop: top + 16, paddingBottom: 20 };
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const glassStyle = { width: 40, height: 40, borderRadius: 20, alignItems: "center" as const, justifyContent: "center" as const, backgroundColor: `${foregroundColor}0D` };
+  const glassStyle = {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: `${foregroundColor}0D`,
+  };
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const shareLabelStyle = { color: `${foregroundColor}60` };
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const previewContainerStyle = { width: previewWidth, height: previewHeight, borderRadius: 20, overflow: "hidden" as const, backgroundColor: surfaceColor };
+  const previewContainerStyle = {
+    width: previewWidth,
+    height: previewHeight,
+    borderRadius: 20,
+    overflow: "hidden" as const,
+    backgroundColor: surfaceColor,
+  };
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const preparingTextStyle = { color: `${foregroundColor}40` };
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
@@ -68,12 +87,19 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
     try {
       const available = await Sharing.isAvailableAsync();
       if (available) {
-        await Sharing.shareAsync(imageUri, { mimeType: "image/png", UTI: "public.png" });
+        await Sharing.shareAsync(imageUri, {
+          mimeType: "image/png",
+          UTI: "public.png",
+        });
       } else {
         toast.show({ label: "Sharing not available", variant: "default" });
       }
     } catch {
-      toast.show({ label: "Couldn't share image", description: "Something went wrong. Try again.", variant: "default" });
+      toast.show({
+        label: "Couldn't share image",
+        description: "Something went wrong. Try again.",
+        variant: "default",
+      });
     }
   };
 
@@ -84,13 +110,21 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
       const available = await SMS.isAvailableAsync();
       if (available) {
         await SMS.sendSMSAsync([], "", {
-          attachments: { uri: imageUri, mimeType: "image/png", filename: "quote.png" },
+          attachments: {
+            uri: imageUri,
+            mimeType: "image/png",
+            filename: "quote.png",
+          },
         });
       } else {
         await shareImage();
       }
     } catch {
-      toast.show({ label: "Couldn't open Messages", description: "Try sharing another way.", variant: "default" });
+      toast.show({
+        label: "Couldn't open Messages",
+        description: "Try sharing another way.",
+        variant: "default",
+      });
     }
   };
 
@@ -122,7 +156,11 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
           className="flex-row items-center justify-between px-6"
           style={headerStyle}
         >
-          <PressableFeedback onPress={onClose} hitSlop={12} accessibilityLabel="Close">
+          <PressableFeedback
+            onPress={onClose}
+            hitSlop={12}
+            accessibilityLabel="Close"
+          >
             <GlassView style={glassStyle} glassEffectStyle="clear">
               <SymbolView
                 name={CLOSE_ICON}
@@ -157,7 +195,10 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
         </View>
 
         {/* Quick actions */}
-        <View className="flex-row justify-center gap-8" style={styles.quickActionsRow}>
+        <View
+          className="flex-row justify-center gap-8"
+          style={styles.quickActionsRow}
+        >
           <QuickAction
             iosIcon="square.and.arrow.down"
             androidIcon="save_alt"
@@ -175,10 +216,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
         </View>
 
         {/* Social row */}
-        <View
-          className="flex-row justify-center gap-6"
-          style={socialRowStyle}
-        >
+        <View className="flex-row justify-center gap-6" style={socialRowStyle}>
           {SOCIAL_ITEMS.map((item) => (
             <SocialIcon
               key={item.label}
@@ -186,7 +224,9 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
               ios={item.ios}
               android={item.android}
               foregroundColor={foregroundColor}
-              onPress={item.label === "Messages" ? shareViaMessages : shareImage}
+              onPress={
+                item.label === "Messages" ? shareViaMessages : shareImage
+              }
             />
           ))}
         </View>
@@ -196,9 +236,15 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  gradientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 160 },
-  gradientBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 260 },
+  gradientTop: { position: "absolute", top: 0, left: 0, right: 0, height: 160 },
+  gradientBottom: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 260,
+  },
   spacer: { width: 40 },
   quickActionsRow: { marginTop: 28 },
-  previewImage: { width: '100%', height: '100%' },
+  previewImage: { width: "100%", height: "100%" },
 });

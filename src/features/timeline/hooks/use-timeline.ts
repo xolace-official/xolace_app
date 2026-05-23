@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
-import { usePaginatedQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { buildTimelineSections } from '@/src/features/timeline/utils';
-import type { TimelineEntry } from '@/src/features/timeline/types';
+import { useMemo } from "react";
+import { usePaginatedQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { buildTimelineSections } from "@/src/features/timeline/utils";
+import type { TimelineEntry } from "@/src/features/timeline/types";
 
 const PAGE_SIZE = 15;
 
@@ -24,7 +24,7 @@ export function useTimeline() {
     { initialNumItems: PAGE_SIZE },
   );
 
-  const isLoading = status === 'LoadingFirstPage';
+  const isLoading = status === "LoadingFirstPage";
 
   const entries: TimelineEntry[] = useMemo(
     () =>
@@ -34,6 +34,7 @@ export function useTimeline() {
         primaryEmotion: s.primaryEmotion,
         granularLabel: s.granularLabel,
         pathChosen: s.pathChosen,
+        toneUsed: s.toneUsed,
         confirmationState: s.confirmationState,
         createdAt: s.createdAt,
       })),
@@ -46,8 +47,8 @@ export function useTimeline() {
     sections,
     isEmpty: !isLoading && entries.length === 0,
     isLoading,
-    canLoadMore: status === 'CanLoadMore',
-    isLoadingMore: status === 'LoadingMore',
+    canLoadMore: status === "CanLoadMore",
+    isLoadingMore: status === "LoadingMore",
     loadMore: () => loadMore(PAGE_SIZE),
   };
 }
