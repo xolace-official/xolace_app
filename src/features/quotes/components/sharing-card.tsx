@@ -208,13 +208,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  accentLine: {
-    position: "absolute",
-    top: 56,
-    left: 40,
-    width: 36,
-    height: 2,
-  },
   contentPadding: {
     paddingHorizontal: 40,
     gap: 18,

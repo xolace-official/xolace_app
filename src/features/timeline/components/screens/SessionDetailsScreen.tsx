@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, View, Pressable } from "react-native";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -84,15 +84,17 @@ export const SessionDetailsScreen = () => {
     sessionId ? { sessionId } : "skip",
   );
   const { isReady, isPlaying, toggle, stop } = useMirrorAudio(sessionId);
+  const stopRef = useRef(stop);
+  stopRef.current = stop;
 
   // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const topInsetStyle = { paddingTop: insets.top };
 
   useEffect(() => {
     return () => {
-      stop();
+      stopRef.current();
     };
-  }, [stop]);
+  }, []);
 
   if (!id) {
     return (

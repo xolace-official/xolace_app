@@ -15,7 +15,7 @@ All notable changes to Xolace are documented here.
 - **Session-end notification nudge** — lightweight prompt at session end to enable notifications so quotes land reliably
 - **Quote preference setup** — onboarding sheet to configure quote delivery preferences
 - **Mirror tone tracking** — tone is tracked across the session and displayed as a badge on the mirror; "witnessed" added as a new mirror tone
-- **"Witnessed" TTS voice** — dedicated read-aloud voice for the witnessed mirror tone
+- **"Witnessed" TTS support** — read-aloud is now available for the witnessed mirror tone using the same voice as the adaptive tone
 
 - **Android haptics** — Android now has full premium haptic feedback via `react-native-pulsar`. Previously Android had no haptics (expo-haptics was a no-op on the devices we support); every emotional moment in the app now has a distinct, intentional feel on both platforms
 - **Haptic identity across 13+ moments** — each key interaction has a unique pattern: mirror arrival (`herald` — 3-beat crescendo), session complete (`bloom`), processing breath (`breath`), form submit (`propel`), error state (`wobble`), escalation/crisis mount (`peal`), peer reflections mount (`murmur`), quote reactions differentiated (`chirp` for resonates, `wane` for not today), per-mood session-end feedback (`chirp`/`plink`/`plunk`/`murmur`), anonymous contribution confirmation (`dewdrop`), carousel slide advance (`flick`), theme selection (`sonar`), menu open/close differentiated (`thud`/`flick`)
