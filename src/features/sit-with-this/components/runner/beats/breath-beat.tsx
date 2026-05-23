@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react";
+import { StyleSheet } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { usePatternComposer } from "react-native-pulsar";
 import type { Pattern } from "react-native-pulsar";
 import { AppText } from "@/src/components/shared/app-text";
 import {
-  PacedOrb,
   type PacedOrbHandle,
   type BreathPattern,
   TIMINGS,
 } from "@/src/features/sit-with-this/components/paced-orb";
+import { DualBreathCanvas } from "@/src/features/sit-with-this/components/dual-breath/dual-breath-canvas";
 import type { BreathPhase } from "@/src/lib/haptics";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -128,11 +129,11 @@ export function BreathBeat({
       initialAnimate={INITIAL_FADE}
       animate={VISIBLE_FADE}
       transition={CONTENT_TRANSITION}
-      className="items-center gap-10"
+      style={styles.root}
     >
-      <PacedOrb ref={orbRef} reducedMotion={reducedMotion} />
+      <DualBreathCanvas ref={orbRef} reducedMotion={reducedMotion} />
       <AppText
-        className="text-center text-base text-foreground/60"
+        className="text-center text-sm text-foreground/50 px-8 py-4"
         accessibilityLiveRegion="polite"
       >
         {content}
@@ -140,3 +141,7 @@ export function BreathBeat({
     </EaseView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, width: '100%' },
+})
