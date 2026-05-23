@@ -3,10 +3,11 @@ import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 
 const VOICE_MAP: Record<string, string> = {
-  gentle:   "flHkNRp1BlvT73UL6gyz", // Jessica Anne Bogart - Eloquent Villain   old -> Sarah  — soft, warm EXAVITQu4vr4xnSDxMaL 
-  poetic:   "XB0fDUnXU5powFXDhCwa", // Charlotte — expressive
-  direct:   "onwK4e9ZLuTAKqWW03F9", // Daniel — clear, authoritative
+  gentle: "flHkNRp1BlvT73UL6gyz", // Jessica Anne Bogart - Eloquent Villain   old -> Sarah  — soft, warm EXAVITQu4vr4xnSDxMaL
+  poetic: "XB0fDUnXU5powFXDhCwa", // Charlotte — expressive
+  direct: "onwK4e9ZLuTAKqWW03F9", // Daniel — clear, authoritative
   adaptive: "JBFqnCBsd6RMkjVDRZzb", // George — neutral, balanced
+  witnessed: "JBFqnCBsd6RMkjVDRZzb", // Reuse adaptive voice for witnessed tone
 };
 
 /**
@@ -23,6 +24,7 @@ export const generateMirrorAudio = internalAction({
       v.literal("gentle"),
       v.literal("direct"),
       v.literal("adaptive"),
+      v.literal("witnessed"),
     ),
   },
   handler: async (ctx, args) => {

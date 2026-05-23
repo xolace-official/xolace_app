@@ -25,8 +25,7 @@ import { rateLimiter } from "../lib/rateLimits";
 import type { SessionContext } from "./context";
 import { matchExercise } from "../exercises/match";
 
-const FALLBACK_MIRROR =
-  "I hear you, and what you're feeling matters.";
+const FALLBACK_MIRROR = "I hear you, and what you're feeling matters.";
 
 /**
  * Main AI orchestrator for mirror generation.
@@ -44,19 +43,24 @@ export const generateMirror = internalAction({
       // 1. Load full context (single DB transaction)
       const context: SessionContext = await ctx.runQuery(
         internal.ai.context.buildSessionContext,
-        { sessionId: args.sessionId }
+        { sessionId: args.sessionId },
       );
 
       // 1a. Rate limit AI requests (main cost control)
-      const { ok, retryAfter } = await rateLimiter.limit(ctx, "aiMirrorRequest", {
-        key: context.session.emotionalProfileId as string,
-      });
+      const { ok, retryAfter } = await rateLimiter.limit(
+        ctx,
+        "aiMirrorRequest",
+        {
+          key: context.session.emotionalProfileId as string,
+        },
+      );
 
       if (!ok) {
         const minutes = Math.ceil((retryAfter ?? 0) / 60000);
-        const retryText = minutes > 0
-          ? `Try again in ${minutes} ${minutes === 1 ? "minute" : "minutes"}.`
-          : "Try again in a few minutes.";
+        const retryText =
+          minutes > 0
+            ? `Try again in ${minutes} ${minutes === 1 ? "minute" : "minutes"}.`
+            : "Try again in a few minutes.";
 
         await ctx.runMutation(internal.sessions.failSession, {
           sessionId: args.sessionId,
@@ -74,7 +78,7 @@ export const generateMirror = internalAction({
         isFirstSession: context.isFirstSession,
         mirrorTone,
       });
-      console.log("pattern Summary ", patternSummary)
+      console.log("pattern Summary ", patternSummary);
 
       // 3. Parallel: moderation + classification (both cached)
       const anthropic = getAnthropicClient();
@@ -92,13 +96,15 @@ export const generateMirror = internalAction({
         patternSummary,
         context.isFirstSession,
         session.entryType ?? "open_prompt",
-        session.timeOfDay
+        session.timeOfDay,
       );
-      console.log("classifier prompt ", classifierPrompt)
+      console.log("classifier prompt ", classifierPrompt);
 
       // 4. Fetch moderation + classification in parallel (cache-backed)
       const [moderationResult, classification] = await Promise.all([
-        moderationCache.fetch(ctx, { text: args.rawText }).catch(() => MODERATION_UNAVAILABLE),
+        moderationCache
+          .fetch(ctx, { text: args.rawText })
+          .catch(() => MODERATION_UNAVAILABLE),
         classifierCache.fetch(ctx, {
           systemPrompt: classifierPrompt.system,
           userPrompt: classifierPrompt.user,
@@ -109,9 +115,9 @@ export const generateMirror = internalAction({
       const safeguard = evaluateSafeguard(
         classification,
         moderationResult,
-        context.recentMetadata
+        context.recentMetadata,
       );
-      console.log("safeguard ", safeguard)
+      console.log("safeguard ", safeguard);
 
       // 5a. If content should be rejected, fail the session
       if (safeguard.shouldReject) {
@@ -170,10 +176,12 @@ export const generateMirror = internalAction({
         sessionId: args.sessionId,
         mirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
-        ...(isEscalation ? {
-          escalationTriggered: true,
-          escalationResources: safeguard.resourcesPresented,
-        } : {}),
+        ...(isEscalation
+          ? {
+              escalationTriggered: true,
+              escalationResources: safeguard.resourcesPresented,
+            }
+          : {}),
       });
 
       // 7.5. Schedule TTS generation (fire-and-forget, non-blocking)
@@ -182,7 +190,12 @@ export const generateMirror = internalAction({
         await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
           sessionId: args.sessionId,
           mirrorText,
-          mirrorTone: mirrorTone as "poetic" | "gentle" | "direct" | "adaptive",
+          mirrorTone: mirrorTone as
+            | "poetic"
+            | "gentle"
+            | "direct"
+            | "adaptive"
+            | "witnessed",
         });
       }
 
@@ -218,7 +231,9 @@ export const generateMirror = internalAction({
         confirmationState: "confirmed",
       });
       const primaryTitle =
-        classification.primaryEmotionConfidence < 0.6 ? "reset" : rankedTitles[0];
+        classification.primaryEmotionConfidence < 0.6
+          ? "reset"
+          : rankedTitles[0];
       const matched = await ctx.runQuery(internal.exercises.getByTitle, {
         title: primaryTitle,
       });
@@ -231,7 +246,9 @@ export const generateMirror = internalAction({
         // 8.7: Slot-fill — fire-and-forget so it doesn't block mirror delivery.
         const slotKeys = [
           ...new Set(
-            matched.steps.flatMap((s: { slotKeys?: string[] }) => s.slotKeys ?? [])
+            matched.steps.flatMap(
+              (s: { slotKeys?: string[] }) => s.slotKeys ?? [],
+            ),
           ),
         ];
         if (slotKeys.length > 0) {
@@ -261,7 +278,7 @@ export const generateMirror = internalAction({
             intensity: classification.intensity,
             thematicTags: classification.thematicTags,
             userLanguageTags: classification.userLanguageTags,
-          }
+          },
         );
       }
 
