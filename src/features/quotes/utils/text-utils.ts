@@ -1,5 +1,5 @@
 export function removeEmDash(text: string): string {
-  return text.replace(/—/g, "");
+  return text.replace(/—/g, " ").replace(/ {2}/g, " ").trim();
 }
 
 export function removeEmDashWithSpaces(text: string): string {

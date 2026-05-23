@@ -11,10 +11,10 @@ import Animated, {
 import { Canvas, RoundedRect } from '@shopify/react-native-skia'
 import { useThemeColor } from 'heroui-native'
 import { AppText } from '@/src/components/shared/app-text'
-import { useDualBreathAnimation } from './use-dual-breath-animation'
-import { PHASE_LABELS, WOBBLE_AMPLITUDE, WOBBLE_DURATION_MS } from './dual-breath.constants'
-import { TIMINGS } from '../paced-orb'
-import type { BreathPattern, PacedOrbHandle } from '../paced-orb'
+import { useDualBreathAnimation } from '@/src/features/sit-with-this/components/dual-breath/use-dual-breath-animation'
+import { PHASE_LABELS, WOBBLE_AMPLITUDE, WOBBLE_DURATION_MS } from '@/src/features/sit-with-this/components/dual-breath/dual-breath.constants'
+import { TIMINGS } from '@/src/features/sit-with-this/components/paced-orb'
+import type { BreathPattern, PacedOrbHandle } from '@/src/features/sit-with-this/components/paced-orb'
 import type { BreathPhase } from '@/src/lib/haptics'
 
 const INHALE_EASE = Easing.bezier(0.4, 0, 0.2, 1)

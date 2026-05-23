@@ -14,8 +14,14 @@ export function useQuoteSharing(displayedQuote: { text: string } | null) {
   const [showShareSheet, setShowShareSheet] = useState(false);
   const { toast } = useToast();
 
+  const layoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Called from the off-screen wrapper's onLayout — signals the card is ready to capture.
   const onSharingCardLayout = () => {
+    if (layoutTimeoutRef.current !== null) {
+      clearTimeout(layoutTimeoutRef.current);
+      layoutTimeoutRef.current = null;
+    }
     layoutResolverRef.current?.();
     layoutResolverRef.current = null;
   };
@@ -35,6 +41,11 @@ export function useQuoteSharing(displayedQuote: { text: string } | null) {
       // Wait until the off-screen card reports its layout before capturing.
       await new Promise<void>((resolve) => {
         layoutResolverRef.current = resolve;
+        layoutTimeoutRef.current = setTimeout(() => {
+          layoutTimeoutRef.current = null;
+          layoutResolverRef.current = null;
+          resolve();
+        }, 4000);
       });
 
       // Ensure expo-image has finished rendering before capture.
@@ -61,6 +72,10 @@ export function useQuoteSharing(displayedQuote: { text: string } | null) {
         variant: "default",
       });
     } finally {
+      if (layoutTimeoutRef.current !== null) {
+        clearTimeout(layoutTimeoutRef.current);
+        layoutTimeoutRef.current = null;
+      }
       layoutResolverRef.current = null;
       imageResolverRef.current = null;
       setIsSharingLoading(false);

@@ -1,5 +1,5 @@
 import { useDerivedValue, useSharedValue } from 'react-native-reanimated'
-import { GAP, SHAPE, TOP_CORNERS, BOT_CORNERS } from './dual-breath.constants'
+import { GAP, SHAPE, TOP_CORNERS, BOT_CORNERS } from '@/src/features/sit-with-this/components/dual-breath/dual-breath.constants'
 
 function lerp(a: number, b: number, t: number): number {
   'worklet'
