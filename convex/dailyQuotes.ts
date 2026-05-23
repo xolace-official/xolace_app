@@ -37,8 +37,6 @@ export const getToday = query({
         .first(),
     ]);
 
-    console.log("quotes ", quotes)
-
     return {
       session: quotes.find((q) => q.type === "session") ?? null,
       curated: quotes.find((q) => q.type === "curated") ?? null,

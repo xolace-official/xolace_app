@@ -3,11 +3,11 @@ import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 
 const VOICE_MAP: Record<string, string> = {
-  gentle: "flHkNRp1BlvT73UL6gyz", // Jessica Anne Bogart - Eloquent Villain   old -> Sarah  — soft, warm EXAVITQu4vr4xnSDxMaL
-  poetic: "XB0fDUnXU5powFXDhCwa", // Charlotte — expressive
-  direct: "onwK4e9ZLuTAKqWW03F9", // Daniel — clear, authoritative
-  adaptive: "JBFqnCBsd6RMkjVDRZzb", // George — neutral, balanced
-  witnessed: "JBFqnCBsd6RMkjVDRZzb", // Reuse adaptive voice for witnessed tone
+  gentle: "BpjGufoPiobT79j2vtj4", // Priyanka — calm, soothing, late-night warmth
+  poetic: "Z3R5wn05IrDiVCyEkUrK", // Arabella — mysterious, emotive
+  direct: "EkK5I93UQWFDigLMpZcX", // James — modulated, controlled, direct
+  adaptive: "c6SfcYrb2t09NHXiT80T", // Jarnathan — versatile, wide emotional range
+  witnessed: "NOpBlnGInO9m6vDvFkFC", // Spuds Oxley — wise, approachable
 };
 
 /**
@@ -56,11 +56,9 @@ export const generateMirrorAudio = internalAction({
           },
           body: JSON.stringify({
             text: args.mirrorText,
-            model_id: "eleven_flash_v2_5",
+            model_id: "eleven_v3",
             voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: 0.2,
+              stability: 0.3,
               use_speaker_boost: true,
             },
           }),
