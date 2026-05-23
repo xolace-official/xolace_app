@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useReducer } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
@@ -7,6 +7,14 @@ import { PreRollCard } from '@/src/features/sit-with-this/components/pre-roll-ca
 import { BeatRenderer } from './beat-renderer';
 import { runnerReducer } from './exercise-runner.reducer';
 import type { ExerciseData, RunnerPhase } from './exercise-runner.types';
+
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_FADE_INITIAL = { opacity: 0 };
+const EASE_FADE_ANIMATE = { opacity: 1 };
+const EASE_SWAP_TRANSITION = { type: 'timing' as const, duration: 600, delay: 3000, easing: EASING };
+const EASE_CLOSE_TRANSITION = { type: 'timing' as const, duration: 600, easing: EASING };
+const EASE_DONE_TRANSITION = { type: 'timing' as const, duration: 400, easing: EASING };
+const EASE_LEAVE_TRANSITION = { type: 'timing' as const, duration: 400, delay: 400, easing: EASING };
 
 type Props = {
   exercise: ExerciseData;
@@ -86,9 +94,9 @@ export function ExerciseRunner({
         />
         {onSwap && (
           <EaseView
-            initialAnimate={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', duration: 600, delay: 3000, easing: [0.455, 0.03, 0.515, 0.955] }}
+            initialAnimate={EASE_FADE_INITIAL}
+            animate={EASE_FADE_ANIMATE}
+            transition={EASE_SWAP_TRANSITION}
             className="absolute bottom-8"
           >
             <AppText
@@ -106,9 +114,9 @@ export function ExerciseRunner({
   if (phase.kind === 'close') {
     return (
       <EaseView
-        initialAnimate={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ type: 'timing', duration: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+        initialAnimate={EASE_FADE_INITIAL}
+        animate={EASE_FADE_ANIMATE}
+        transition={EASE_CLOSE_TRANSITION}
         className="flex-1 items-center justify-center gap-8 px-8"
       >
         <AppText className="text-center text-2xl font-semibold text-foreground">
@@ -116,21 +124,21 @@ export function ExerciseRunner({
         </AppText>
         {phase.doneEnabled ? (
           <EaseView
-            initialAnimate={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', duration: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+            initialAnimate={EASE_FADE_INITIAL}
+            animate={EASE_FADE_ANIMATE}
+            transition={EASE_DONE_TRANSITION}
           >
             <PillButton label="Done" onPress={() => dispatch({ type: 'DONE' })} />
           </EaseView>
         ) : (
-          <View style={{ opacity: 0 }}>
+          <View style={styles.invisible}>
             <PillButton label="Done" onPress={() => {}} disabled />
           </View>
         )}
         <EaseView
-          initialAnimate={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+          initialAnimate={EASE_FADE_INITIAL}
+          animate={EASE_FADE_ANIMATE}
+          transition={EASE_LEAVE_TRANSITION}
         >
           <AppText
             className="text-center text-sm text-foreground/40"
@@ -145,3 +153,7 @@ export function ExerciseRunner({
 
   return null;
 }
+
+const styles = StyleSheet.create({
+  invisible: { opacity: 0 },
+});

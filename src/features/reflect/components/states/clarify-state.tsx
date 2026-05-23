@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, TextInput } from 'react-native';
+import { Presets } from 'react-native-pulsar';
 import { EaseView } from 'react-native-ease/uniwind';
 import { TextArea, LinkButton, useThemeColor } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -24,6 +25,16 @@ type Props = {
   turnIndex: number;
 };
 
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_INITIAL_FADE = { opacity: 0 };
+const EASE_ANIMATE_FADE = { opacity: 1 };
+const EASE_INITIAL_SLIDE = { opacity: 0, translateY: 20 };
+const EASE_ANIMATE_SLIDE = { opacity: 1, translateY: 0 };
+const EASE_BACK_TRANSITION = { type: 'timing' as const, duration: 300, easing: EASING };
+const EASE_MIRROR_TRANSITION = { type: 'timing' as const, duration: 600, easing: EASING };
+const EASE_PROMPT_TRANSITION = { type: 'timing' as const, duration: 400, delay: 200, easing: EASING };
+const EASE_FEEDBACK_TRANSITION = { type: 'timing' as const, duration: 300, delay: 200, easing: EASING };
+
 export const ClarifyState = ({
   previousMirror,
   clarifyText,
@@ -34,6 +45,10 @@ export const ClarifyState = ({
   turnIndex,
 }: Props) => {
   const [feedbackText, setFeedbackText] = useState('');
+
+  useEffect(() => {
+    Presets.wobble();
+  }, []);
   const canSubmit = clarifyText.trim().length > 0;
   const submitFeedback = useMutation(api.feedback.submit);
   const foregroundColor = useThemeColor('foreground') as string;
@@ -52,6 +67,9 @@ export const ClarifyState = ({
     }
   };
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const textInputStyle = { fontSize: 14, color: foregroundColor, marginTop: 12, paddingHorizontal: 4 };
+
   return (
     <View className="flex-1">
       <KeyboardAvoidingView
@@ -60,9 +78,9 @@ export const ClarifyState = ({
         className="flex-1 px-6 pt-8"
       >
         <EaseView
-          initialAnimate={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: 'timing', duration: 300, easing: [0.455, 0.03, 0.515, 0.955] }}
+          initialAnimate={EASE_INITIAL_FADE}
+          animate={EASE_ANIMATE_FADE}
+          transition={EASE_BACK_TRANSITION}
           className="mb-2"
         >
           <LinkButton
@@ -74,9 +92,9 @@ export const ClarifyState = ({
           </LinkButton>
         </EaseView>
         <EaseView
-          initialAnimate={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: 'timing', duration: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+          initialAnimate={EASE_INITIAL_FADE}
+          animate={EASE_ANIMATE_FADE}
+          transition={EASE_MIRROR_TRANSITION}
         >
           <AppText className="mb-6 text-center text-base italic leading-7 text-foreground/30">
             {previousMirror}
@@ -84,9 +102,9 @@ export const ClarifyState = ({
         </EaseView>
 
         <EaseView
-          initialAnimate={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 400, delay: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+          initialAnimate={EASE_INITIAL_SLIDE}
+          animate={EASE_ANIMATE_SLIDE}
+          transition={EASE_PROMPT_TRANSITION}
         >
           <AppText className="mb-4 text-center text-lg text-foreground">
             What didn&apos;t land right?
@@ -106,9 +124,9 @@ export const ClarifyState = ({
           />
 
           <EaseView
-            initialAnimate={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', duration: 300, delay: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+            initialAnimate={EASE_INITIAL_FADE}
+            animate={EASE_ANIMATE_FADE}
+            transition={EASE_FEEDBACK_TRANSITION}
           >
             <TextInput
               placeholder="What was off? (optional)"
@@ -117,12 +135,7 @@ export const ClarifyState = ({
               onChangeText={setFeedbackText}
               maxLength={100}
               placeholderTextColor={`${foregroundColor}4D`}
-              style={{
-                fontSize: 14,
-                color: foregroundColor,
-                marginTop: 12,
-                paddingHorizontal: 4,
-              }}
+              style={textInputStyle}
             />
           </EaseView>
         </View>
@@ -130,7 +143,7 @@ export const ClarifyState = ({
         <View className="items-center pb-4 pt-2">
           <PillButton
             label="Let it out"
-            onPress={handleSubmit}
+            onPress={() => { Presets.propel(); handleSubmit(); }}
             disabled={!canSubmit}
           />
         </View>

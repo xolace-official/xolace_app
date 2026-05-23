@@ -1,4 +1,4 @@
-import { View, Pressable } from "react-native";
+import { View, Pressable, StyleSheet } from "react-native";
 import { BottomSheet } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
@@ -18,6 +18,8 @@ const REASONS: { label: string; value: ReportReason }[] = [
   { label: "Something else", value: "other" },
 ];
 
+const SNAP_POINTS = ["40%"];
+
 export const ReportSheet = ({ isOpen, onClose, onSubmit }: Props) => {
   const handleSelect = (reason: ReportReason) => {
     onSubmit(reason);
@@ -25,21 +27,23 @@ export const ReportSheet = ({ isOpen, onClose, onSubmit }: Props) => {
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <BottomSheet
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <BottomSheet.Portal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
-          snapPoints={["40%"]}
+          snapPoints={SNAP_POINTS}
           enableOverDrag={false}
           enableDynamicSizing={false}
           backgroundClassName="bg-background"
           handleIndicatorClassName="bg-foreground/30"
         >
-          <View style={{ gap: 4, paddingTop: 8, paddingBottom: 16 }}>
-            <AppText
-              style={{ fontSize: 13, paddingHorizontal: 20, paddingBottom: 8 }}
-              className="text-foreground/40"
-            >
+          <View style={styles.container}>
+            <AppText style={styles.prompt} className="text-foreground/40">
               Why are you reporting this?
             </AppText>
 
@@ -57,14 +61,7 @@ export const ReportSheet = ({ isOpen, onClose, onSubmit }: Props) => {
               </Pressable>
             ))}
 
-            <View
-              style={{
-                height: 1,
-                marginHorizontal: 20,
-                marginVertical: 6,
-                backgroundColor: "rgba(255,255,255,0.08)",
-              }}
-            />
+            <View className="h-px mx-5 my-1.5 bg-foreground/10" />
 
             <Pressable
               onPress={onClose}
@@ -82,3 +79,16 @@ export const ReportSheet = ({ isOpen, onClose, onSubmit }: Props) => {
     </BottomSheet>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 4,
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  prompt: {
+    fontSize: 13,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+});

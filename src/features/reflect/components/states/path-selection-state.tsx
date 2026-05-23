@@ -12,6 +12,14 @@ type Props = {
   onSelectExit: () => Promise<void>;
 };
 
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_INITIAL = { opacity: 0, translateY: 20 };
+const EASE_ANIMATE = { opacity: 1, translateY: 0 };
+const EASE_T1 = { type: 'timing' as const, duration: 400, delay: 200, easing: EASING };
+const EASE_T2 = { type: 'timing' as const, duration: 400, delay: 400, easing: EASING };
+const EASE_T3 = { type: 'timing' as const, duration: 400, delay: 600, easing: EASING };
+const SCROLL_STYLE = { flexGrow: 0, maxHeight: '40%' as const };
+
 export const PathSelectionState = ({
   mirror,
   onSelectSolo,
@@ -84,7 +92,7 @@ export const PathSelectionState = ({
   return (
     <View className="flex-1 justify-center px-6">
       <ScrollView
-        style={{ flexGrow: 0, maxHeight: '40%' }}
+        style={SCROLL_STYLE}
         showsVerticalScrollIndicator={false}
       >
         <AppText className="text-base italic leading-7 text-foreground/30">
@@ -101,9 +109,9 @@ export const PathSelectionState = ({
 
       <View className="gap-8">
         <EaseView
-          initialAnimate={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 400, delay: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+          initialAnimate={EASE_INITIAL}
+          animate={EASE_ANIMATE}
+          transition={EASE_T1}
         >
           <Pressable onPress={handleSolo}>
             <AppText className="text-lg text-foreground">Sit with this</AppText>
@@ -114,9 +122,9 @@ export const PathSelectionState = ({
         </EaseView>
 
         <EaseView
-          initialAnimate={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+          initialAnimate={EASE_INITIAL}
+          animate={EASE_ANIMATE}
+          transition={EASE_T2}
         >
           <Pressable onPress={handlePeers}>
             <AppText className="text-lg text-foreground">
@@ -129,9 +137,9 @@ export const PathSelectionState = ({
         </EaseView>
 
         <EaseView
-          initialAnimate={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 400, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+          initialAnimate={EASE_INITIAL}
+          animate={EASE_ANIMATE}
+          transition={EASE_T3}
         >
           <Pressable onPress={handleExit}>
             <AppText className="text-lg text-foreground">

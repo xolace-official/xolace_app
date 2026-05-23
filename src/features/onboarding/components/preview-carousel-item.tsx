@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -70,77 +70,45 @@ const Item = ({
 
   const isActive = useDerivedValue(() => Math.round(animatedIndex.get()) === index);
 
+   
+  const cardSizeStyle = { position: 'absolute' as const, width: cardWidth, height: cardHeight, alignItems: 'center' as const };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const blurStyle = { width: cardWidth, height: cardHeight, borderRadius: 28, borderCurve: 'continuous' as const, overflow: 'hidden' as const };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const windowStyle = { position: 'absolute' as const, top: WINDOW_INSET, left: WINDOW_INSET, right: WINDOW_INSET, height: windowHeight, borderRadius: 18, borderCurve: 'continuous' as const };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const captionStyle = { position: 'absolute' as const, top: WINDOW_INSET + windowHeight, left: 0, right: 0, bottom: 0, alignItems: 'center' as const, justifyContent: 'center' as const, paddingHorizontal: 16, gap: 4 };
+
   return (
     <Animated.View
-      style={[
-        {
-          position: 'absolute',
-          width: cardWidth,
-          height: cardHeight,
-          alignItems: 'center',
-        },
-        rStyle,
-      ]}
+      // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+      style={[cardSizeStyle, rStyle]}
     >
       <BlurView
         intensity={BLUR_INTENSITY}
         tint="default"
-        style={{
-          width: cardWidth,
-          height: cardHeight,
-          borderRadius: 28,
-          borderCurve: 'continuous',
-          overflow: 'hidden',
-        }}
+        style={blurStyle}
       >
         {/* Hairline card border + soft tint to keep card readable on any backdrop */}
         <View
           pointerEvents="none"
           className="bg-overlay/35 border border-foreground/10"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            borderRadius: 28,
-            borderCurve: 'continuous',
-          }}
+          style={styles.absoluteOverlay}
         />
 
         {/* Live moment — clear window inset into the blurred frame */}
         <View
           className="bg-overlay border border-foreground/8 overflow-hidden"
-          style={{
-            position: 'absolute',
-            top: WINDOW_INSET,
-            left: WINDOW_INSET,
-            right: WINDOW_INSET,
-            height: windowHeight,
-            borderRadius: 18,
-            borderCurve: 'continuous',
-          }}
+          style={windowStyle}
         >
           {renderPreview(slide.id, isActive)}
         </View>
 
         {/* Caption sits directly on the blurred frame */}
-        <View
-          style={{
-            position: 'absolute',
-            top: WINDOW_INSET + windowHeight,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingHorizontal: 16,
-            gap: 4,
-          }}
-        >
+        <View style={captionStyle}>
           <AppText
             className="text-foreground text-[14px]"
-            style={{ fontFamily: 'Poppins-Medium' }}
+            style={styles.fontMedium}
           >
             {slide.action}
           </AppText>
@@ -155,3 +123,8 @@ const Item = ({
 
 Item.displayName = 'PreviewCarouselItem';
 export const PreviewCarouselItem = memo(Item);
+
+const styles = StyleSheet.create({
+  absoluteOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 28, borderCurve: 'continuous' },
+  fontMedium: { fontFamily: 'Poppins-Medium' },
+});

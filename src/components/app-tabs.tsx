@@ -7,41 +7,53 @@
  *
  * To customize: edit TABS in constants/tabs.ts to add/remove/reorder tabs.
  */
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useColorScheme } from 'react-native';
+import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { useColorScheme } from "react-native";
+import { useMemo } from "react";
 
-import { Colors } from '@/src/lib/theme';
-import { TABS } from '@/src/lib/tabs';
-import { playSoftPress } from '@/src/lib/haptics';
+import { Colors } from "@/src/lib/theme";
+import { TABS } from "@/src/lib/tabs";
+import { playSoftPress } from "@/src/lib/haptics";
+
+const TABS_WITH_NATIVE_ICONS = TABS.map((tab) => ({
+  ...tab,
+  nativeSfIcon: { default: tab.icon.sf, selected: tab.icon.selected },
+}));
 
 export default function AppTabs() {
   const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const colors = Colors[scheme === "unspecified" ? "light" : scheme];
+
+  const labelStyle = useMemo(
+    () => ({ selected: { color: colors.text } }),
+    [colors.text],
+  );
+
+  const screenListeners = useMemo(
+    () => ({
+      tabPress: () => {
+        playSoftPress();
+      },
+    }),
+    [],
+  );
 
   return (
     <NativeTabs
       backgroundColor={colors.background}
       indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}
-      screenListeners={{
-        tabPress: () => {
-          playSoftPress();
-        },
-      }}
+      labelStyle={labelStyle}
+      screenListeners={screenListeners}
     >
-      {TABS.map((tab) => (
+      {TABS_WITH_NATIVE_ICONS.map((tab) => (
         <NativeTabs.Trigger key={tab.name} name={tab.name}>
           <NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon
-            sf={{ default: tab.icon.sf, selected: tab.icon.selected }}
-            md={tab.icon.md}
-          />
+          <NativeTabs.Trigger.Icon sf={tab.nativeSfIcon} md={tab.icon.md} />
         </NativeTabs.Trigger>
       ))}
     </NativeTabs>
   );
 }
-
 
 /*
 Note: If you want to use an image for the tab icon, you can use the following code:

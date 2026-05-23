@@ -1,4 +1,4 @@
-import { Modal, View, useWindowDimensions } from "react-native";
+import { Modal, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassView } from "expo-glass-effect";
@@ -25,6 +25,10 @@ const SOCIAL_ITEMS = [
   { label: "More", ios: "ellipsis", android: "more_horiz" },
 ] as const;
 
+const GRADIENT_TOP_START: [number, number] = [0, 0];
+const GRADIENT_TOP_END: [number, number] = [1, 0.4];
+const CLOSE_ICON = { ios: "xmark" as const, android: "close" as const };
+
 export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
   const { top, bottom } = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -36,6 +40,27 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
 
   const previewWidth = width * 0.72;
   const previewHeight = previewWidth * (16 / 9);
+
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const backdropStyle = { backgroundColor: `${backgroundColor}F2` };
+  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+  const gradientTopColors: [string, string] = [`${accentColor}18`, "transparent"];
+  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+  const gradientBottomColors: [string, string] = ["transparent", `${accentColor}22`];
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const headerStyle = { paddingTop: top + 16, paddingBottom: 20 };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const glassStyle = { width: 40, height: 40, borderRadius: 20, alignItems: "center" as const, justifyContent: "center" as const, backgroundColor: `${foregroundColor}0D` };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const shareLabelStyle = { color: `${foregroundColor}60` };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const previewContainerStyle = { width: previewWidth, height: previewHeight, borderRadius: 20, overflow: "hidden" as const, backgroundColor: surfaceColor };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const preparingTextStyle = { color: `${foregroundColor}40` };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const imageSource = { uri: imageUri ?? "" };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const socialRowStyle = { marginTop: 28, paddingBottom: bottom + 40 };
 
   const shareImage = async () => {
     Presets.flick();
@@ -77,71 +102,53 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View className="flex-1" style={{ backgroundColor: `${backgroundColor}F2` }}>
+      <View className="flex-1" style={backdropStyle}>
         {/* Gradient layers — give GlassView content to refract */}
         <LinearGradient
-          colors={[`${accentColor}18`, "transparent"]}
-          start={[0, 0]}
-          end={[1, 0.4]}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, height: 160 }}
+          colors={gradientTopColors}
+          start={GRADIENT_TOP_START}
+          end={GRADIENT_TOP_END}
+          style={styles.gradientTop}
           pointerEvents="none"
         />
         <LinearGradient
-          colors={["transparent", `${accentColor}22`]}
-          style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 260 }}
+          colors={gradientBottomColors}
+          style={styles.gradientBottom}
           pointerEvents="none"
         />
 
         {/* Header */}
         <View
           className="flex-row items-center justify-between px-6"
-          style={{ paddingTop: top + 16, paddingBottom: 20 }}
+          style={headerStyle}
         >
           <PressableFeedback onPress={onClose} hitSlop={12} accessibilityLabel="Close">
-            <GlassView
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: `${foregroundColor}0D`,
-              }}
-              glassEffectStyle="clear"
-            >
+            <GlassView style={glassStyle} glassEffectStyle="clear">
               <SymbolView
-                name={{ ios: "xmark", android: "close" }}
+                name={CLOSE_ICON}
                 size={15}
                 tintColor={`${foregroundColor}70`}
               />
             </GlassView>
           </PressableFeedback>
-          <AppText className="text-sm font-medium" style={{ color: `${foregroundColor}60` }}>
+          <AppText className="text-sm font-medium" style={shareLabelStyle}>
             Share
           </AppText>
-          <View style={{ width: 40 }} />
+          <View style={styles.spacer} />
         </View>
 
         {/* Image preview */}
         <View className="items-center">
-          <View
-            style={{
-              width: previewWidth,
-              height: previewHeight,
-              borderRadius: 20,
-              overflow: "hidden",
-              backgroundColor: surfaceColor,
-            }}
-          >
+          <View style={previewContainerStyle}>
             {imageUri ? (
               <Image
-                source={{ uri: imageUri }}
-                style={{ width: "100%", height: "100%" }}
+                source={imageSource}
+                style={styles.previewImage}
                 contentFit="cover"
               />
             ) : (
               <View className="flex-1 items-center justify-center">
-                <AppText className="text-xs" style={{ color: `${foregroundColor}40` }}>
+                <AppText className="text-xs" style={preparingTextStyle}>
                   Preparing…
                 </AppText>
               </View>
@@ -150,7 +157,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
         </View>
 
         {/* Quick actions */}
-        <View className="flex-row justify-center gap-8" style={{ marginTop: 28 }}>
+        <View className="flex-row justify-center gap-8" style={styles.quickActionsRow}>
           <QuickAction
             iosIcon="square.and.arrow.down"
             androidIcon="save_alt"
@@ -170,7 +177,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
         {/* Social row */}
         <View
           className="flex-row justify-center gap-6"
-          style={{ marginTop: 28, paddingBottom: bottom + 40 }}
+          style={socialRowStyle}
         >
           {SOCIAL_ITEMS.map((item) => (
             <SocialIcon
@@ -187,3 +194,11 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  gradientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 160 },
+  gradientBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 260 },
+  spacer: { width: 40 },
+  quickActionsRow: { marginTop: 28 },
+  previewImage: { width: '100%', height: '100%' },
+});

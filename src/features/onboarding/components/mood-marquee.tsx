@@ -1,17 +1,21 @@
-import React, { memo } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import React, { memo } from "react";
+import { View, useWindowDimensions } from "react-native";
 import {
   Easing,
   SharedValue,
   useFrameCallback,
   useSharedValue,
   withTiming,
-} from 'react-native-reanimated';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { MoodCard, MoodItem, getCardWidth } from '@/src/features/onboarding/components/mood-card';
+} from "react-native-reanimated";
+import { GestureDetector, Gesture } from "react-native-gesture-handler";
+import {
+  MoodCard,
+  MoodItem,
+  getCardWidth,
+} from "@/src/features/onboarding/components/mood-card";
 
-/** Slow, contemplative scroll — like thoughts drifting */
 const AUTO_SCROLL_SPEED = 18;
+const ROW_STYLE = { height: "100%" as const, flexDirection: "row" as const };
 
 type Props = {
   moods: MoodItem[];
@@ -47,7 +51,7 @@ const MoodMarqueeComponent = ({ moods, scrollOffsetX }: Props) => {
 
   return (
     <GestureDetector gesture={gesture}>
-      <View style={{ height: '100%', flexDirection: 'row' }}>
+      <View style={ROW_STYLE}>
         {moods.map((mood, index) => (
           <MoodCard
             key={mood.id}

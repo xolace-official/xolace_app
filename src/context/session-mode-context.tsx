@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useReducer,
   useRef,
 } from 'react';
@@ -48,9 +49,6 @@ export function SessionModeProvider({
   children: React.ReactNode;
 }) {
   const nightModeEnabled = useAppStore((s) => s.nightModeEnabled);
-  const storedTheme = useAppStore((s) => s.theme);
-  const colorThemeId = useAppStore((s) => s.colorThemeId);
-  const previousTheme = useAppStore((s) => s.previousTheme);
   const setPreviousTheme = useAppStore((s) => s.setPreviousTheme);
 
   // mode is derived during render — nightModeEnabled from the store already
@@ -73,11 +71,11 @@ export function SessionModeProvider({
   const restoreDayTheme = useCallback(() => {
     if (!nightAppliedRef.current) return;
     nightAppliedRef.current = false;
-    const restore = previousTheme;
+    const { previousTheme, theme: storedTheme, colorThemeId } = useAppStore.getState();
     setPreviousTheme(null);
 
-    if (restore) {
-      Uniwind.setTheme(restore as never);
+    if (previousTheme) {
+      Uniwind.setTheme(previousTheme as never);
       return;
     }
 
@@ -87,7 +85,7 @@ export function SessionModeProvider({
         ? modeStr
         : (`${colorThemeId}-${modeStr}` as never);
     Uniwind.setTheme(nextTheme);
-  }, [previousTheme, setPreviousTheme, storedTheme, colorThemeId]);
+  }, [setPreviousTheme]);
 
   // Sync Uniwind theme whenever mode changes
   useEffect(() => {
@@ -107,8 +105,13 @@ export function SessionModeProvider({
     return () => sub.remove();
   }, []);
 
+  const value = useMemo(
+    () => ({ mode, isNight: mode === 'night' }),
+    [mode],
+  );
+
   return (
-    <SessionModeContext.Provider value={{ mode, isNight: mode === 'night' }}>
+    <SessionModeContext.Provider value={value}>
       {children}
     </SessionModeContext.Provider>
   );

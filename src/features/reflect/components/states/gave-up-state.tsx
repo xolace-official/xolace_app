@@ -14,6 +14,13 @@ type Props = {
   sessionId?: Id<'sessions'>;
 };
 
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_INITIAL = { opacity: 0, translateY: 20 };
+const EASE_ANIMATE = { opacity: 1, translateY: 0 };
+const EASE_T1 = { type: 'timing' as const, duration: 400, delay: 200, easing: EASING };
+const EASE_T2 = { type: 'timing' as const, duration: 400, delay: 400, easing: EASING };
+const EASE_T3 = { type: 'timing' as const, duration: 400, delay: 600, easing: EASING };
+
 export const GaveUpState = ({ onPathSelection, onReset, sessionId }: Props) => {
   const router = useRouter();
 
@@ -35,9 +42,9 @@ export const GaveUpState = ({ onPathSelection, onReset, sessionId }: Props) => {
 
     <View className="mt-14 gap-6">
       <EaseView
-        initialAnimate={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 400, delay: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+        initialAnimate={EASE_INITIAL}
+        animate={EASE_ANIMATE}
+        transition={EASE_T1}
       >
         <LinkButton accessibilityLabel="See my options" onPress={onPathSelection} size="md" className="self-start">
           <LinkButton.Label className="font-semibold text-accent">
@@ -47,9 +54,9 @@ export const GaveUpState = ({ onPathSelection, onReset, sessionId }: Props) => {
       </EaseView>
 
       <EaseView
-        initialAnimate={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+        initialAnimate={EASE_INITIAL}
+        animate={EASE_ANIMATE}
+        transition={EASE_T2}
       >
         <LinkButton accessibilityLabel="Start fresh" onPress={onReset} size="md" className="self-start">
           <LinkButton.Label className="text-foreground/50">
@@ -59,9 +66,9 @@ export const GaveUpState = ({ onPathSelection, onReset, sessionId }: Props) => {
       </EaseView>
 
       <EaseView
-        initialAnimate={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 400, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] }}
+        initialAnimate={EASE_INITIAL}
+        animate={EASE_ANIMATE}
+        transition={EASE_T3}
       >
         <LinkButton
           accessibilityLabel="Explore different mirror tones"

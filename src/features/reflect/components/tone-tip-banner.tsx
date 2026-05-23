@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react';
-import { View } from 'react-native';
-import { PressableFeedback, useThemeColor } from 'heroui-native';
-import { SymbolView } from 'expo-symbols';
-import { usePostHog } from 'posthog-react-native';
-import { AppText } from '@/src/components/shared/app-text';
-import { MirrorTonePickerDialog, type MirrorTone } from '@/src/features/settings/components/mirror-tone-picker-dialog';
-import { useSettings } from '@/src/features/settings/hooks/use-settings';
-import { useAppStore } from '@/src/store/store';
+import { useState, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
+import { PressableFeedback, useThemeColor } from "heroui-native";
+import { SymbolView } from "expo-symbols";
+import { usePostHog } from "posthog-react-native";
+import { AppText } from "@/src/components/shared/app-text";
+import {
+  MirrorTonePickerDialog,
+  type MirrorTone,
+} from "@/src/features/settings/components/mirror-tone-picker-dialog";
+import { useSettings } from "@/src/features/settings/hooks/use-settings";
+import { useAppStore } from "@/src/store/store";
+
+const CLOSE_ICON = { ios: "xmark", android: "close", web: "close" } as const;
 
 export const ToneTipBanner = () => {
   const { toneTipSeen, setToneTipSeen } = useAppStore();
@@ -14,15 +19,14 @@ export const ToneTipBanner = () => {
   const posthog = usePostHog();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmedLabel, setConfirmedLabel] = useState<string | null>(null);
-  const foregroundColor = useThemeColor('foreground');
+  const foregroundColor = useThemeColor("foreground");
 
   useEffect(() => {
     if (!toneTipSeen) {
-      posthog.capture('tone_tip_shown');
+      posthog.capture("tone_tip_shown");
     }
   }, [toneTipSeen, posthog]);
 
-  // Auto-dismiss 2 seconds after user picks a tone
   useEffect(() => {
     if (!confirmedLabel) return;
     const t = setTimeout(() => setToneTipSeen(true), 3000);
@@ -32,12 +36,12 @@ export const ToneTipBanner = () => {
   if (toneTipSeen) return null;
 
   const handleDismiss = () => {
-    posthog.capture('tone_tip_dismissed');
+    posthog.capture("tone_tip_dismissed");
     setToneTipSeen(true);
   };
 
   const handleToneSelect = (tone: MirrorTone) => {
-    posthog.capture('tone_tip_tone_selected', { tone });
+    posthog.capture("tone_tip_tone_selected", { tone });
     setMirrorTone(tone);
     setPickerOpen(false);
     setConfirmedLabel(tone.charAt(0).toUpperCase() + tone.slice(1));
@@ -62,7 +66,9 @@ export const ToneTipBanner = () => {
                 accessibilityRole="button"
                 accessibilityLabel="Adjust tone"
               >
-                <AppText className="text-sm font-medium text-accent">Adjust tone</AppText>
+                <AppText className="text-sm font-medium text-accent">
+                  Adjust tone
+                </AppText>
               </PressableFeedback>
               <PressableFeedback
                 onPress={handleDismiss}
@@ -71,10 +77,10 @@ export const ToneTipBanner = () => {
                 accessibilityLabel="Dismiss tip"
               >
                 <SymbolView
-                  name={{ ios: 'xmark', android: 'close', web: 'close' }}
+                  name={CLOSE_ICON}
                   size={14}
                   tintColor={foregroundColor}
-                  style={{ opacity: 0.4 }}
+                  style={styles.closeIcon}
                 />
               </PressableFeedback>
             </View>
@@ -90,3 +96,7 @@ export const ToneTipBanner = () => {
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  closeIcon: { opacity: 0.4 },
+});

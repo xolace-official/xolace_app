@@ -22,6 +22,8 @@ import { EscalationState } from '@/src/features/reflect/components/states/escala
 import { ErrorState } from '@/src/features/reflect/components/states/error-state';
 import { SpaceNamePromptDialog } from '@/src/features/reflect/components/space-name-prompt-dialog';
 
+const EASE_ANIMATE_OUT = { opacity: 0 };
+
 export const ReflectScreen = () => {
   const router = useRouter();
   const {
@@ -52,6 +54,8 @@ export const ReflectScreen = () => {
     handleDismissTyping,
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
   const context = useQuery(api.users.getFullContext);
   const updatePreferences = useMutation(api.preferences.update);
   const { current, previous, isTransitioning, onOutgoingComplete } =
@@ -79,7 +83,7 @@ export const ReflectScreen = () => {
     return (
       <View
         className="flex-1 items-center justify-center bg-background"
-        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+        style={safeAreaStyle}
       >
         <MorphLoader />
       </View>
@@ -186,6 +190,7 @@ export const ReflectScreen = () => {
     ? (SCREEN_TRANSITIONS[previous] ?? DEFAULT_SCREEN_TRANSITION)
     : null;
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const absoluteWithInsets: ViewStyle = {
     position: 'absolute',
     top: insets.top,
@@ -197,12 +202,12 @@ export const ReflectScreen = () => {
   return (
     <View
       className="flex-1 bg-background"
-      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      style={safeAreaStyle}
     >
       {/* Outgoing screen — fades out then unmounts */}
       {previous && previousConfig && (
         <EaseView
-          animate={{ opacity: 0 }}
+          animate={EASE_ANIMATE_OUT}
           transition={previousConfig.exit.transition}
           onTransitionEnd={onOutgoingComplete}
           style={absoluteWithInsets}

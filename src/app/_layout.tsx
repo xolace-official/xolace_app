@@ -7,6 +7,9 @@
 import '@/src/global.css';
 import '@/src/lib/theme-bootstrap';
 
+import { Settings } from 'react-native-pulsar';
+
+
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useEffect, useRef } from 'react';
 import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
@@ -30,6 +33,25 @@ import { FullRippleLoader } from '@/src/components/shared/loader/ripple/full-rip
 
 SplashScreen.preventAutoHideAsync();
 
+Settings.enableSound(false);
+Settings.preloadPresets([
+  'Herald',    // mirrorArrival — peak haptic, must be instant
+  'Bloom',     // sessionComplete
+  'Feather',   // gentlePresence, onboarding transitions
+  'Propel',    // form submit
+  'Strike',    // affirmativePress
+  'Cascade',   // onboardingEntrance
+  'Wobble',    // errorNotice, clarifyState mount
+  'Peal',      // escalationState mount
+  'Flick',     // carousel advance, textureSelect
+  'Thud',      // menu open, homeEntrance
+  'Chirp',     // resonanceToggle, lighter mood
+  'Murmur',    // peerReflections mount, unsure mood
+  'Breath',    // processingBreath fallback
+]);
+
+const NO_HEADER = { headerShown: false };
+
 const AppContent = () => {
   const introSeen = useAppStore((s) => s.introSeen);
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
@@ -50,21 +72,16 @@ const AppContent = () => {
 
   if (isAuthLoading) return <FullRippleLoader />;
   return (
-        <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
+        <Stack screenOptions={NO_HEADER}>
       <Stack.Protected guard={!introSeen}>
-        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+        <Stack.Screen name="(onboarding)" options={NO_HEADER} />
       </Stack.Protected>
       <Stack.Protected guard={introSeen && !isAuthenticated}>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={NO_HEADER} />
       </Stack.Protected>
       <Stack.Protected guard={introSeen && isAuthenticated}>
-        <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+        <Stack.Screen name="(protected)" options={NO_HEADER} />
       </Stack.Protected>
-
     </Stack>
   )
 }

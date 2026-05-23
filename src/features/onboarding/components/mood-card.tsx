@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   interpolate,
   SharedValue,
@@ -35,6 +35,13 @@ type Props = {
   cardWidth: number;
   screenWidth: number;
 };
+
+const GRADIENT_IMAGE_START = { x: 0, y: 0.4 };
+const GRADIENT_IMAGE_END = { x: 0, y: 1 };
+const GRADIENT_PLAIN_START = { x: 0, y: 0 };
+const GRADIENT_PLAIN_END = { x: 1, y: 1 };
+ 
+const GRADIENT_IMAGE_COLORS: [string, string] = ['transparent', 'rgba(0,0,0,0.55)'];
 
 const MoodCardComponent = ({
   item,
@@ -84,38 +91,29 @@ const MoodCardComponent = ({
     };
   });
 
+   
+  const cardSizeStyle = { width: cardWidth };
+
   return (
-    <Animated.View
-      style={[
-        animatedStyle,
-        {
-          position: 'absolute',
-          height: '100%',
-          width: cardWidth,
-          padding: 6,
-          transformOrigin: 'bottom',
-        },
-      ]}
-    >
-      <View
-        style={{ flex: 1, borderRadius: 24, overflow: 'hidden', borderCurve: 'continuous' }}
-      >
+    // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
+    <Animated.View style={[animatedStyle, styles.cardContainer, cardSizeStyle]}>
+      <View style={styles.cardInner}>
         {item.image ? (
-          <View style={{ flex: 1 }}>
+          <View style={styles.imageWrapper}>
             <Image
               source={item.image}
-              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+              style={styles.imageAbsolute}
               contentFit="cover"
             />
             <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.55)']}
-              start={{ x: 0, y: 0.4 }}
-              end={{ x: 0, y: 1 }}
-              style={{ flex: 1, justifyContent: 'flex-end', padding: 24 }}
+              colors={GRADIENT_IMAGE_COLORS}
+              start={GRADIENT_IMAGE_START}
+              end={GRADIENT_IMAGE_END}
+              style={styles.gradientFlex}
             >
               <AppText
                 className="text-white/80 text-lg font-medium"
-                style={{ letterSpacing: 1 }}
+                style={styles.letterSpacing}
               >
                 {item.word}
               </AppText>
@@ -124,13 +122,13 @@ const MoodCardComponent = ({
         ) : (
           <LinearGradient
             colors={item.colors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ flex: 1, justifyContent: 'flex-end', padding: 24 }}
+            start={GRADIENT_PLAIN_START}
+            end={GRADIENT_PLAIN_END}
+            style={styles.gradientFlex}
           >
             <AppText
               className="text-white/70 text-lg font-medium"
-              style={{ letterSpacing: 1 }}
+              style={styles.letterSpacing}
             >
               {item.word}
             </AppText>
@@ -142,3 +140,12 @@ const MoodCardComponent = ({
 };
 
 export const MoodCard = memo(MoodCardComponent);
+
+const styles = StyleSheet.create({
+  cardContainer: { position: 'absolute', height: '100%', padding: 6, transformOrigin: 'bottom' as const },
+  cardInner: { flex: 1, borderRadius: 24, overflow: 'hidden', borderCurve: 'continuous' as const },
+  imageWrapper: { flex: 1 },
+  imageAbsolute: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  gradientFlex: { flex: 1, justifyContent: 'flex-end', padding: 24 },
+  letterSpacing: { letterSpacing: 1 },
+});

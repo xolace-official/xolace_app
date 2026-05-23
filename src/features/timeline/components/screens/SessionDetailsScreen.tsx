@@ -1,4 +1,4 @@
-import { ScrollView, View, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, View, Pressable } from 'react-native';
 import { MorphLoader } from '@/src/components/shared/loader/morph/morph-loader';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,6 +30,8 @@ const formatDate = (timestamp: number) => {
   };
 };
 
+const BACK_ICON = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
+
 const SectionLabel = ({ children }: { children: string }) => (
   <AppText className="mb-3 text-xs uppercase tracking-widest text-foreground/35">
     {children}
@@ -47,12 +49,12 @@ export const SessionDetailsScreen = () => {
     id ? { sessionId: id as Id<'sessions'> } : 'skip',
   );
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const topInsetStyle = { paddingTop: insets.top };
+
   if (!id) {
     return (
-      <View
-        className="flex-1 items-center justify-center bg-background"
-        style={{ paddingTop: insets.top }}
-      >
+      <View className="flex-1 items-center justify-center bg-background" style={topInsetStyle}>
         <AppText className="text-foreground/40">No session ID provided.</AppText>
       </View>
     );
@@ -60,10 +62,7 @@ export const SessionDetailsScreen = () => {
 
   if (details === undefined) {
     return (
-      <View
-        className="flex-1 items-center justify-center bg-background"
-        style={{ paddingTop: insets.top }}
-      >
+      <View className="flex-1 items-center justify-center bg-background" style={topInsetStyle}>
         <MorphLoader />
       </View>
     );
@@ -71,10 +70,7 @@ export const SessionDetailsScreen = () => {
 
   if (!details) {
     return (
-      <View
-        className="flex-1 items-center justify-center bg-background"
-        style={{ paddingTop: insets.top }}
-      >
+      <View className="flex-1 items-center justify-center bg-background" style={topInsetStyle}>
         <AppText className="text-foreground/40">Session not found.</AppText>
       </View>
     );
@@ -87,10 +83,10 @@ export const SessionDetailsScreen = () => {
   const pathLabel = getPathLabel(details.pathChosen ?? null);
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-background" style={topInsetStyle}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 60 }}
+        contentContainerStyle={styles.scrollContent}
       >
         {/* Back button */}
         <View className="px-6 pb-1 pt-3">
@@ -102,11 +98,7 @@ export const SessionDetailsScreen = () => {
             className="self-start"
           >
             <SymbolView
-              name={{
-                ios: 'chevron.left',
-                android: 'arrow_back',
-                web: 'arrow_back',
-              }}
+              name={BACK_ICON}
               size={20}
               tintColor={tintColor}
             />
@@ -131,7 +123,7 @@ export const SessionDetailsScreen = () => {
               <Card
                 variant="tertiary"
                 className="mb-8 rounded-2xl border border-foreground/10"
-                style={{ borderCurve: 'continuous' }}
+                style={styles.continuousBorder}
               >
                 <Card.Body className="px-5 py-4">
                   <AppText className="text-sm font-light leading-6 text-foreground/55" selectable>
@@ -174,3 +166,8 @@ export const SessionDetailsScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  scrollContent: { paddingBottom: 60 },
+  continuousBorder: { borderCurve: 'continuous' },
+});

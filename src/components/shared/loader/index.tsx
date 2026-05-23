@@ -14,7 +14,10 @@ import type {
   LoaderProps,
 } from "@/src/components/shared/loader/types";
 import { useLoaderAnimation } from "@/src/components/shared/loader/use-loader-animation";
-import { ANGLE_TRANSFORM_KEYS, parseKeyframes } from "@/src/components/shared/loader/utils";
+import {
+  ANGLE_TRANSFORM_KEYS,
+  parseKeyframes,
+} from "@/src/components/shared/loader/utils";
 
 export const LoaderContext = createContext<LoaderContextValue | null>(null);
 
@@ -72,9 +75,12 @@ const LoaderRoot = React.forwardRef<View, LoaderProps>(
       },
     );
 
-    const contextValue: LoaderContextValue = {
-      progress: activeProgress,
-    };
+    const contextValue = useMemo<LoaderContextValue>(
+      () => ({
+        progress: activeProgress,
+      }),
+      [activeProgress],
+    );
 
     return (
       <LoaderContext.Provider value={contextValue}>
@@ -91,50 +97,65 @@ LoaderRoot.displayName = "Loader";
 // ------------------------------------------
 
 /** Animated.View driven by loader progress and keyframes. Keys 0-1 or 0-100. */
-const LoaderKeyframeView = React.forwardRef<Animated.View, LoaderKeyframeViewProps>(
-  ({ keyframes, style, ...viewProps }, ref) => {
-    const { progress } = useLoader();
+const LoaderKeyframeView = React.forwardRef<
+  Animated.View,
+  LoaderKeyframeViewProps
+>(({ keyframes, style, ...viewProps }, ref) => {
+  const { progress } = useLoader();
 
-    const parsed = useMemo(() => parseKeyframes(keyframes), [keyframes]);
+  const parsed = useMemo(() => parseKeyframes(keyframes), [keyframes]);
 
-    const numericKeys = useMemo(() => Object.keys(parsed.numericRanges), [parsed]);
-    const colorKeys = useMemo(() => Object.keys(parsed.colorRanges), [parsed]);
+  const numericKeys = useMemo(
+    () => Object.keys(parsed.numericRanges),
+    [parsed],
+  );
+  const colorKeys = useMemo(() => Object.keys(parsed.colorRanges), [parsed]);
 
-    const animatedStyle = useAnimatedStyle(() => {
-      const p = progress.get();
-      const result: Record<string, unknown> = {};
+  const animatedStyle = useAnimatedStyle(() => {
+    const p = progress.get();
+    const result: Record<string, unknown> = {};
 
-      for (const key of numericKeys) {
-        result[key] = interpolate(
+    for (const key of numericKeys) {
+      result[key] = interpolate(
+        p,
+        parsed.inputRange,
+        parsed.numericRanges[key],
+        Extrapolation.CLAMP,
+      );
+    }
+
+    for (const key of colorKeys) {
+      result[key] = interpolateColor(
+        p,
+        parsed.inputRange,
+        parsed.colorRanges[key],
+      );
+    }
+
+    if (parsed.transformOrder.length > 0) {
+      result.transform = parsed.transformOrder.map((key) => {
+        const value = interpolate(
           p,
           parsed.inputRange,
-          parsed.numericRanges[key],
+          parsed.transformRanges[key],
           Extrapolation.CLAMP,
         );
-      }
+        return ANGLE_TRANSFORM_KEYS.has(key)
+          ? { [key]: `${value}deg` }
+          : { [key]: value };
+      });
+    }
 
-      for (const key of colorKeys) {
-        result[key] = interpolateColor(p, parsed.inputRange, parsed.colorRanges[key]);
-      }
+    return result;
+  });
 
-      if (parsed.transformOrder.length > 0) {
-        result.transform = parsed.transformOrder.map((key) => {
-          const value = interpolate(
-            p,
-            parsed.inputRange,
-            parsed.transformRanges[key],
-            Extrapolation.CLAMP,
-          );
-          return ANGLE_TRANSFORM_KEYS.has(key) ? { [key]: `${value}deg` } : { [key]: value };
-        });
-      }
+  const keyframeStyle = useMemo(
+    () => [animatedStyle, style],
+    [animatedStyle, style],
+  );
 
-      return result;
-    });
-
-    return <Animated.View ref={ref} style={[animatedStyle, style]} {...viewProps} />;
-  },
-);
+  return <Animated.View ref={ref} style={keyframeStyle} {...viewProps} />;
+});
 
 LoaderKeyframeView.displayName = "Loader.KeyframeView";
 

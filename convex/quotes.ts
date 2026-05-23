@@ -1,7 +1,5 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery } from "./_generated/server";
-import { requireAuth } from "./lib/auth";
-import { Id } from "./_generated/dataModel";
 
 export const THEME_SLUGS = [
   "resilience",
@@ -43,8 +41,7 @@ export const pickCuratedQuote = internalQuery({
     if (args.themes.length > 0) {
       const matching = allQuotes.filter(
         (q) =>
-          !shownSet.has(q._id) &&
-          q.themes.some((t) => args.themes.includes(t))
+          !shownSet.has(q._id) && q.themes.some((t) => args.themes.includes(t)),
       );
       if (matching.length > 0) {
         return matching[Math.floor(Math.random() * matching.length)];
@@ -89,7 +86,7 @@ export const seed = internalMutation({
         themes: v.array(v.string()),
         source: v.optional(v.string()),
         language: v.optional(v.string()),
-      })
+      }),
     ),
     force: v.optional(v.boolean()),
   },
@@ -97,7 +94,9 @@ export const seed = internalMutation({
     if (!args.force) {
       const existing = await ctx.db.query("quotes").take(1);
       if (existing.length > 0) {
-        console.log("[quotes:seed] Library not empty, skipping. Pass force=true to override.");
+        console.log(
+          "[quotes:seed] Library not empty, skipping. Pass force=true to override.",
+        );
         return { skipped: true };
       }
     }

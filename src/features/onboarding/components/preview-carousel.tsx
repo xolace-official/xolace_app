@@ -1,8 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
-import { useDerivedValue, useSharedValue, withSpring } from 'react-native-reanimated';
-import { PreviewCarouselItem } from '@/src/features/onboarding/components/preview-carousel-item';
-import type { FrameStep } from '@/src/features/onboarding/frame-steps';
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
+import {
+  useDerivedValue,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+import { Presets } from "react-native-pulsar";
+import { PreviewCarouselItem } from "@/src/features/onboarding/components/preview-carousel-item";
+import type { FrameStep } from "@/src/features/onboarding/frame-steps";
 
 const SPRING_CONFIG = { damping: 60, stiffness: 280, mass: 6 };
 const INTERVAL_MS = 3600;
@@ -10,33 +15,52 @@ const CARD_WIDTH_RATIO = 0.62;
 const CARD_ASPECT = 9 / 13;
 const MAX_CARD_WIDTH = 240;
 const GAP = 18;
+const ABSOLUTE_FILL = StyleSheet.absoluteFill;
 
 type Props = { slides: FrameStep[] };
+type CarouselItem = { key: string; slide: FrameStep };
+
+const mapWithKeys = (
+  slides: FrameStep[],
+  keySeedRef: React.MutableRefObject<number>,
+): CarouselItem[] =>
+  slides.map((slide) => {
+    const seed = keySeedRef.current;
+    keySeedRef.current += 1;
+    return { key: `${slide.id}-${seed}`, slide };
+  });
 
 export const PreviewCarousel = ({ slides }: Props) => {
   const { width } = useWindowDimensions();
-  const [extended, setExtended] = useState<FrameStep[]>(slides);
+  const keySeedRef = useRef(0);
+  const [extended, setExtended] = useState<CarouselItem[]>(() =>
+    mapWithKeys(slides, keySeedRef),
+  );
   const animatedIndex = useSharedValue(0);
   const currentIndex = useDerivedValue(() => Math.round(animatedIndex.get()));
   const lengthRef = useRef(slides.length);
 
   useEffect(() => {
-    setExtended(slides);
+    keySeedRef.current = 0;
+    setExtended(mapWithKeys(slides, keySeedRef));
     lengthRef.current = slides.length;
   }, [slides]);
 
   useEffect(() => {
     const id = setInterval(() => {
+      Presets.flick();
       const next = currentIndex.get() + 1;
       if (next >= lengthRef.current - 2) {
         const currentAnimated = animatedIndex.get();
         const offset = Math.max(0, Math.floor(currentAnimated) - 1);
         setExtended((prev) => {
-          const newExtended = [...prev.slice(offset), ...slides];
+          const newExtended = [
+            ...prev.slice(offset),
+            ...mapWithKeys(slides, keySeedRef),
+          ];
           lengthRef.current = newExtended.length;
           return newExtended;
         });
-        // Snap to equivalent position in re-indexed buffer, then spring forward.
         animatedIndex.set(currentAnimated - offset);
         animatedIndex.set(withSpring(next - offset, SPRING_CONFIG));
       } else {
@@ -50,16 +74,13 @@ export const PreviewCarousel = ({ slides }: Props) => {
   const cardHeight = cardWidth / CARD_ASPECT;
 
   return (
-    <View
-      pointerEvents="none"
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-    >
+    <View pointerEvents="none" style={ABSOLUTE_FILL}>
       <View className="flex-1 items-center justify-center">
-        {extended.map((slide, i) => (
+        {extended.map((item, i) => (
           <PreviewCarouselItem
-            key={`${slide.id}-${i}`}
+            key={item.key}
             index={i}
-            slide={slide}
+            slide={item.slide}
             animatedIndex={animatedIndex}
             cardWidth={cardWidth}
             cardHeight={cardHeight}

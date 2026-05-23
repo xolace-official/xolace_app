@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { useMutation } from "convex/react";
@@ -10,6 +9,17 @@ const TIME_MAP: Record<string, { hour: number; minute: number }> = {
   afternoon: { hour: 13, minute: 0 },
   evening: { hour: 19, minute: 0 },
 };
+
+// weekday: 1=Sunday … 7=Saturday (Expo / iOS convention)
+const WEEKLY_MESSAGES: { title: string; body: string }[] = [
+  { title: "Your quote is ready.",        body: "A reflection picked for today. Open when you're ready." },
+  { title: "Something's waiting.",        body: "Today's quote might be exactly what you need." },
+  { title: "A moment for yourself.",      body: "Your daily reflection is here. Take it slow." },
+  { title: "Today's reflection.",         body: "Open Xolace when you have a quiet moment." },
+  { title: "Something to sit with.",      body: "A quote picked just for you is waiting." },
+  { title: "Words for today.",            body: "Your quote is here whenever you need it." },
+  { title: "A thought is waiting.",       body: "Today's reflection — open it when the time feels right." },
+];
 
 export type NotifSetupState =
   | "idle"
@@ -81,19 +91,25 @@ export function useQuoteNotifications() {
 
       const timeConfig = TIME_MAP[notificationTime] ?? { hour: 8, minute: 0 };
 
-      await Notifications.scheduleNotificationAsync({
-        identifier: `daily-quote-${notificationTime}`,
-        content: {
-          title: "Your quote is waiting.",
-          body: "Open Xolace to see today's reflection.",
-          data: { screen: "quotes" },
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour: timeConfig.hour,
-          minute: timeConfig.minute,
-        },
-      });
+      // Schedule one notification per weekday (1=Sun…7=Sat), each with distinct copy.
+      await Promise.all(
+        WEEKLY_MESSAGES.map((msg, i) =>
+          Notifications.scheduleNotificationAsync({
+            identifier: `daily-quote-${notificationTime}-${i + 1}`,
+            content: {
+              title: msg.title,
+              body: msg.body,
+              data: { screen: "quotes" },
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+              weekday: i + 1,
+              hour: timeConfig.hour,
+              minute: timeConfig.minute,
+            },
+          })
+        )
+      );
 
       setState("scheduled");
       return { granted: true };

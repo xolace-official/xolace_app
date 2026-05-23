@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EaseView } from 'react-native-ease/uniwind';
 import { FadeIn } from 'react-native-reanimated';
@@ -16,6 +16,23 @@ import { DuskDriftBackdrop } from '@/src/features/onboarding/components/dusk-dri
 import { AppleIcon } from '@/src/features/auth/components/apple-icon';
 import { GoogleIcon } from '@/src/features/auth/components/google-icon';
 import { LegalLinks } from '@/src/features/auth/components/legal-links';
+
+const AUTH_EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_SLIDE_INITIAL = { opacity: 0, translateY: 20 };
+const EASE_SLIDE_ANIMATE = { opacity: 1, translateY: 0 };
+const EASE_TITLE_TRANSITION = {
+  opacity: { type: 'timing' as const, duration: 400, delay: 300, easing: AUTH_EASING },
+  transform: { type: 'spring' as const, damping: 20, stiffness: 120, mass: 1, delay: 300 },
+};
+const EASE_APPLE_TRANSITION = {
+  opacity: { type: 'timing' as const, duration: 400, delay: 600, easing: AUTH_EASING },
+  transform: { type: 'spring' as const, damping: 30, stiffness: 120, mass: 1, delay: 600 },
+};
+const EASE_GOOGLE_TRANSITION = {
+  opacity: { type: 'timing' as const, duration: 400, delay: 750, easing: AUTH_EASING },
+  transform: { type: 'spring' as const, damping: 30, stiffness: 120, mass: 1, delay: 750 },
+};
+const SPINNER_ENTERING = FadeIn.delay(50);
 
 export const AuthScreen = () => {
   const insets = useSafeAreaInsets();
@@ -148,49 +165,39 @@ export const AuthScreen = () => {
     }
   }, [startGoogleAuthenticationFlow, getOrCreate, posthog]);
 
+
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
+
   return (
     <View
       className="flex-1 bg-background"
-      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      style={safeAreaStyle}
     >
       <DuskDriftBackdrop />
 
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'flex-end',
-          paddingHorizontal: 32,
-          paddingBottom: 24,
-          gap: 40,
-        }}
-      >
+      <View style={styles.content}>
         {/* Title */}
         <EaseView
-          initialAnimate={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{
-            opacity: { type: 'timing', duration: 400, delay: 300, easing: [0.455, 0.03, 0.515, 0.955] },
-            transform: { type: 'spring', damping: 20, stiffness: 120, mass: 1, delay: 300 },
-          }}
+          initialAnimate={EASE_SLIDE_INITIAL}
+          animate={EASE_SLIDE_ANIMATE}
+          transition={EASE_TITLE_TRANSITION}
         >
           <AppText
             className="text-foreground/90 text-[22px] leading-9"
-            style={{ fontFamily: 'Poppins-Medium' }}
+            style={styles.fontMedium}
           >
             Let&apos;s keep your{'\n'}reflections safe.
           </AppText>
         </EaseView>
 
         {/* Auth buttons */}
-        <View style={{ gap: 12 }}>
+        <View style={styles.buttonRow}>
           {/* Apple */}
           <EaseView
-            initialAnimate={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{
-              opacity: { type: 'timing', duration: 400, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] },
-              transform: { type: 'spring', damping: 30, stiffness: 120, mass: 1, delay: 600 },
-            }}
+            initialAnimate={EASE_SLIDE_INITIAL}
+            animate={EASE_SLIDE_ANIMATE}
+            transition={EASE_APPLE_TRANSITION}
           >
             <Button
               onPress={handleAppleAuth}
@@ -199,11 +206,11 @@ export const AuthScreen = () => {
               isDisabled={loadingProvider !== null}
               className="bg-white rounded-[14px] py-3.5 px-6"
             >
-              {loadingProvider === 'apple' && <Spinner entering={FadeIn.delay(50)} color="#000" />}
+              {loadingProvider === 'apple' && <Spinner entering={SPINNER_ENTERING} color="#000" />}
               <AppleIcon size={20} color="#000" />
               <Button.Label
                 className="text-[15px] text-black"
-                style={{ fontFamily: 'Poppins-Medium' }}
+                style={styles.fontMedium}
               >
                 Continue with Apple
               </Button.Label>
@@ -212,12 +219,9 @@ export const AuthScreen = () => {
 
           {/* Google */}
           <EaseView
-            initialAnimate={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{
-              opacity: { type: 'timing', duration: 400, delay: 750, easing: [0.455, 0.03, 0.515, 0.955] },
-              transform: { type: 'spring', damping: 30, stiffness: 120, mass: 1, delay: 750 },
-            }}
+            initialAnimate={EASE_SLIDE_INITIAL}
+            animate={EASE_SLIDE_ANIMATE}
+            transition={EASE_GOOGLE_TRANSITION}
           >
             <Button
               onPress={handleGoogleAuth}
@@ -226,11 +230,11 @@ export const AuthScreen = () => {
               isDisabled={loadingProvider !== null}
               className="rounded-[14px] py-3.5 px-6 bg-foreground/8 border-accent/20"
             >
-              {loadingProvider === 'google' && <Spinner entering={FadeIn.delay(50)} color={themeColorAccentForeground} />}
+              {loadingProvider === 'google' && <Spinner entering={SPINNER_ENTERING} color={themeColorAccentForeground} />}
               <GoogleIcon size={20} />
               <Button.Label
                 className="text-[15px] text-foreground/90"
-                style={{ fontFamily: 'Poppins-Regular' }}
+                style={styles.fontRegular}
               >
                 Continue with Google
               </Button.Label>
@@ -244,3 +248,10 @@ export const AuthScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  content: { flex: 1, justifyContent: 'flex-end', paddingHorizontal: 32, paddingBottom: 24, gap: 40 },
+  buttonRow: { gap: 12 },
+  fontMedium: { fontFamily: 'Poppins-Medium' },
+  fontRegular: { fontFamily: 'Poppins-Regular' },
+});

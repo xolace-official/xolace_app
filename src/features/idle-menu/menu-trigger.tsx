@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet } from "react-native";
+import { useMemo } from "react";
 import Animated, {
   SharedValue,
   useAnimatedStyle,
@@ -6,7 +7,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
-import { playSoftPress } from "@/src/lib/haptics";
+import { Presets } from "react-native-pulsar";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -15,6 +16,8 @@ type Props = {
   isOpenJS: boolean;
   onPress: () => void;
 };
+
+const ICON_DIM_STYLE = { opacity: 0.5 };
 
 export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
   const foregroundColor = useThemeColor("foreground");
@@ -25,23 +28,37 @@ export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
     transform: [{ scale: withTiming(isOpen.value ? 0.6 : 1) }],
   }));
 
+  const triggerStyle = useMemo(
+    () => [styles.trigger, { borderColor }, rStyle],
+    [borderColor, rStyle],
+  );
+  const iconStyle = useMemo(() => ICON_DIM_STYLE, []);
+
   return (
     <AnimatedPressable
       onPress={() => {
-        playSoftPress();
+        if (isOpenJS) {
+          Presets.flick();
+        } else {
+          Presets.thud();
+        }
         onPress();
       }}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={isOpenJS ? "Close menu" : "Open menu"}
-      accessibilityHint={isOpenJS ? "Closes navigation options" : "Opens navigation options: Vent, Timeline, Settings"}
-      style={[styles.trigger, { borderColor }, rStyle]}
+      accessibilityHint={
+        isOpenJS
+          ? "Closes navigation options"
+          : "Opens navigation options: Vent, Timeline, Settings"
+      }
+      style={triggerStyle}
     >
       <SymbolView
         name={{ ios: "ellipsis", android: "more_horiz" } as any}
         size={20}
         tintColor={foregroundColor}
-        style={{ opacity: 0.5 }}
+        style={iconStyle}
       />
     </AnimatedPressable>
   );

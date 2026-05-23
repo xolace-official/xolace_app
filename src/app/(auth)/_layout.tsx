@@ -5,15 +5,15 @@ import { Stack } from 'expo-router';
  *
  * @returns The Stack layout containing the "auth" screen.
  */
+const SCREEN_OPTIONS = {
+  headerShown: false,
+  animation: 'fade' as const,
+  contentStyle: { backgroundColor: 'transparent' },
+};
+
 export default function AuthLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: 'fade',
-        contentStyle: { backgroundColor: 'transparent' },
-      }}
-    >
+    <Stack screenOptions={SCREEN_OPTIONS}>
       <Stack.Screen name="auth" />
     </Stack>
   );

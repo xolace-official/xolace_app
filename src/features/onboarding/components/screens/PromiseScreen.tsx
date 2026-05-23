@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { View, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSharedValue } from 'react-native-reanimated';
 import { EaseView } from 'react-native-ease/uniwind';
@@ -10,6 +10,25 @@ import { playGentlePresence, playOnboardingEntrance } from '@/src/lib/haptics';
 import { MoodMarquee } from '@/src/features/onboarding/components/mood-marquee';
 import { DuskDriftBackdrop } from '@/src/features/onboarding/components/dusk-drift-backdrop';
 import { MOODS } from '@/src/features/onboarding/moods';
+
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_INITIAL_SLIDE = { opacity: 0, translateY: 20 };
+const EASE_ANIMATE_SLIDE = { opacity: 1, translateY: 0 };
+const EASE_CONTENT_TRANSITION = {
+  opacity: { type: 'timing' as const, duration: 400, delay: 300, easing: EASING },
+  transform: { type: 'spring' as const, damping: 20, stiffness: 120, mass: 1, delay: 300 },
+};
+const EASE_CTA_TRANSITION = {
+  opacity: { type: 'timing' as const, duration: 400, delay: 600, easing: EASING },
+  transform: { type: 'spring' as const, damping: 20, stiffness: 120, mass: 1, delay: 600 },
+};
+
+const getCtaStyle = ({ pressed }: { pressed: boolean }) => ({
+  alignSelf: 'flex-start' as const,
+  paddingVertical: 14,
+  paddingHorizontal: 32,
+  opacity: pressed ? 0.7 : 1,
+});
 
 export const PromiseScreen = () => {
   const hasPlayedEntrance = useRef(false);
@@ -29,38 +48,40 @@ export const PromiseScreen = () => {
     router.push('/frame');
   };
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const rootStyle = { paddingBottom: insets.bottom };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const marqueeStyle = { flex: 5, paddingTop: insets.top + 40 };
+
   return (
     <View
       className="flex-1 bg-background"
-      style={{ paddingBottom: insets.bottom }}
+      style={rootStyle}
     >
       <DuskDriftBackdrop />
 
       {/* Marquee — top portion */}
-      <View style={{ flex: 5, paddingTop: insets.top + 40 }}>
+      <View style={marqueeStyle}>
         <MoodMarquee moods={MOODS} scrollOffsetX={scrollOffsetX} />
       </View>
 
       {/* Promise content — bottom portion */}
-      <View style={{ flex: 4, justifyContent: 'space-between', paddingHorizontal: 32 }}>
+      <View style={styles.contentArea}>
         <EaseView
-          initialAnimate={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{
-            opacity: { type: 'timing', duration: 400, delay: 300, easing: [0.455, 0.03, 0.515, 0.955] },
-            transform: { type: 'spring', damping: 20, stiffness: 120, mass: 1, delay: 300 },
-          }}
-          style={{ gap: 20, paddingTop: 32 }}
+          initialAnimate={EASE_INITIAL_SLIDE}
+          animate={EASE_ANIMATE_SLIDE}
+          transition={EASE_CONTENT_TRANSITION}
+          style={styles.contentBlock}
         >
           <AppText
             className="text-foreground/90 text-[22px] leading-9"
-            style={{ fontFamily: 'Poppins-Medium' }}
+            style={styles.fontMedium}
           >
             This is a space{'\n'}to be honest.
           </AppText>
           <AppText
             className="text-foreground/50 text-[15px] leading-7 mb-2"
-            style={{ fontWeight: '300' }}
+            style={styles.fontLight}
           >
             What you share here is private.{'\n'}
             No one sees it. No one judges it.{'\n'}
@@ -69,27 +90,19 @@ export const PromiseScreen = () => {
         </EaseView>
 
         <EaseView
-          initialAnimate={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{
-            opacity: { type: 'timing', duration: 400, delay: 600, easing: [0.455, 0.03, 0.515, 0.955] },
-            transform: { type: 'spring', damping: 20, stiffness: 120, mass: 1, delay: 600 },
-          }}
-          style={{ paddingBottom: 24 }}
+          initialAnimate={EASE_INITIAL_SLIDE}
+          animate={EASE_ANIMATE_SLIDE}
+          transition={EASE_CTA_TRANSITION}
+          style={styles.ctaBlock}
         >
           <Pressable
             onPress={handlePress}
             className="border border-accent/30 rounded-full"
-            style={({ pressed }) => ({
-              alignSelf: 'flex-start',
-              paddingVertical: 14,
-              paddingHorizontal: 32,
-              opacity: pressed ? 0.7 : 1,
-            })}
+            style={getCtaStyle}
           >
             <AppText
               className="text-accent/80 text-[15px]"
-              style={{ letterSpacing: 0.5 }}
+              style={styles.letterSpacing}
             >
               I&apos;d like that
             </AppText>
@@ -99,3 +112,12 @@ export const PromiseScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  contentArea: { flex: 4, justifyContent: 'space-between', paddingHorizontal: 32 },
+  contentBlock: { gap: 20, paddingTop: 32 },
+  ctaBlock: { paddingBottom: 24 },
+  fontMedium: { fontFamily: 'Poppins-Medium' },
+  fontLight: { fontWeight: '300' as const },
+  letterSpacing: { letterSpacing: 0.5 },
+});

@@ -9,6 +9,13 @@ import { AppText } from '@/src/components/shared/app-text';
 import { usePostHog } from 'posthog-react-native';
 import { useThemeColor, PressableFeedback, useToast } from 'heroui-native';
 
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_FAST_INITIAL = { opacity: 0 };
+const EASE_FAST_ANIMATE = { opacity: 1 };
+const EASE_FAST_TRANSITION = { type: 'timing' as const, duration: 200, easing: EASING };
+const EASE_EXIT_TRANSITION = { type: 'timing' as const, duration: 250, easing: 'easeIn' as const };
+const EASE_ENTER_TRANSITION = { type: 'timing' as const, duration: 400, delay: 400, easing: EASING };
+
 const OPTIONS = [
   { key: 'mirror_missed', label: 'The mirror missed' },
   { key: 'life_is_heavy', label: 'Life is just heavy right now' },
@@ -21,7 +28,6 @@ type Props = {
   sessionId?: Id<'sessions'>;
 };
 
-const EXIT_DURATION = 250;
 
 export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
   const [showTextField, setShowTextField] = useState(false);
@@ -91,14 +97,19 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
     }
   };
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const outerInitial = { opacity: 0, translateY: 20 };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const textInputStyle = { fontSize: 14, color: foregroundMuted, paddingHorizontal: 4, paddingVertical: 8 };
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const outerAnimate = { opacity: exiting ? 0 : 1, translateY: exiting ? 10 : 0 };
+  const outerTransition = exiting ? EASE_EXIT_TRANSITION : EASE_ENTER_TRANSITION;
+
   return (
     <EaseView
-      initialAnimate={{ opacity: 0, translateY: 20 }}
-      animate={{ opacity: exiting ? 0 : 1, translateY: exiting ? 10 : 0 }}
-      transition={exiting
-        ? { type: 'timing', duration: EXIT_DURATION, easing: 'easeIn' }
-        : { type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }
-      }
+      initialAnimate={outerInitial}
+      animate={outerAnimate}
+      transition={outerTransition}
       onTransitionEnd={exiting ? handleTransitionEnd : undefined}
     >
       <View className="mx-5 mt-4 p-4 rounded-2xl bg-surface border border-overlay/20">
@@ -121,9 +132,9 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
 
         {showTextField && (
           <EaseView
-            initialAnimate={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
+            initialAnimate={EASE_FAST_INITIAL}
+            animate={EASE_FAST_ANIMATE}
+            transition={EASE_FAST_TRANSITION}
             className="mt-3"
           >
             <TextInput
@@ -135,12 +146,7 @@ export const HeavierFeedbackPrompt = ({ sessionId }: Props) => {
               placeholderTextColor={`${foregroundMuted}4D`}
               onSubmitEditing={handleSomethingElseSubmit}
               returnKeyType="send"
-              style={{
-                fontSize: 14,
-                color: foregroundMuted,
-                paddingHorizontal: 4,
-                paddingVertical: 8,
-              }}
+              style={textInputStyle}
             />
             <PressableFeedback
               onPress={handleSomethingElseSubmit}

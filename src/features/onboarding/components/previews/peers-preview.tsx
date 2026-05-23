@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { useMemo } from "react";
+import { StyleSheet, View } from "react-native";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -12,21 +13,20 @@ import Animated, {
   withSequence,
   withSpring,
   withTiming,
-} from 'react-native-reanimated';
-import { useThemeColor } from 'heroui-native';
-import { AppText } from '@/src/components/shared/app-text';
+} from "react-native-reanimated";
+import { useThemeColor } from "heroui-native";
+import { AppText } from "@/src/components/shared/app-text";
 
 const CYCLE = 5200;
 const CARD_START_Y = 90;
 const SPRING = { damping: 20, stiffness: 180, mass: 0.9 };
 
-// Timeline thresholds (normalized 0→1 over CYCLE ms)
 const T = {
-  card1In: 0.015, // ~75ms: card 1 slides up
-  tap1:    0.20,  // ~1040ms: card 1 resonance tap
-  card2In: 0.32,  // ~1660ms: card 2 slides up
-  tap2:    0.52,  // ~2700ms: card 2 resonance tap
-  slideOut: 0.70, // ~3640ms: both slide out
+  card1In: 0.015,
+  tap1: 0.2,
+  card2In: 0.32,
+  tap2: 0.52,
+  slideOut: 0.7,
 };
 
 const PRESS_SEQ = [
@@ -34,48 +34,123 @@ const PRESS_SEQ = [
   withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) }),
 ] as const;
 
-// Card 1: already resonated — pulse the badge on tap
-const ResonatedBadge = ({ press, accent }: { press: SharedValue<number>; accent: string }) => {
+const ResonatedBadge = ({
+  press,
+  accent,
+}: {
+  press: SharedValue<number>;
+  accent: string;
+}) => {
   const rStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: interpolate(press.value, [0, 0.5, 1], [1, 0.86, 1], Extrapolation.CLAMP) }],
-    opacity: interpolate(press.value, [0, 0.2, 0.5, 1], [1, 0.6, 1, 1], Extrapolation.CLAMP),
+    transform: [
+      {
+        scale: interpolate(
+          press.value,
+          [0, 0.5, 1],
+          [1, 0.86, 1],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+    opacity: interpolate(
+      press.value,
+      [0, 0.2, 0.5, 1],
+      [1, 0.6, 1, 1],
+      Extrapolation.CLAMP,
+    ),
   }));
 
+  const badgeStyle = useMemo(
+    () => [
+      styles.badge,
+      { borderColor: accent + "4D", backgroundColor: accent + "1A" },
+      rStyle,
+    ],
+    [accent, rStyle],
+  );
+
+  const badgeTextStyle = useMemo(
+    () => [styles.badgeText, { color: accent }],
+    [accent],
+  );
+
   return (
-    <Animated.View style={[styles.badge, { borderColor: accent + '4D', backgroundColor: accent + '1A' }, rStyle]}>
-      <AppText style={[styles.badgeText, { color: accent }]}>♥ 12 resonated</AppText>
+    <Animated.View style={badgeStyle}>
+      <AppText style={badgeTextStyle}>♥ 12 resonated</AppText>
     </Animated.View>
   );
 };
 
-// Card 2: unselected → taps → crossfades to selected
-const ResonanceTapButton = ({ press, accent }: { press: SharedValue<number>; accent: string }) => {
+const ResonanceTapButton = ({
+  press,
+  accent,
+}: {
+  press: SharedValue<number>;
+  accent: string;
+}) => {
   const rContainer = useAnimatedStyle(() => ({
-    transform: [{ scale: interpolate(press.value, [0, 0.5, 1], [1, 0.86, 1], Extrapolation.CLAMP) }],
+    transform: [
+      {
+        scale: interpolate(
+          press.value,
+          [0, 0.5, 1],
+          [1, 0.86, 1],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
   }));
 
   const rUnselected = useAnimatedStyle(() => ({
-    opacity: interpolate(press.value, [0, 0.4, 0.55, 1], [1, 1, 0, 0], Extrapolation.CLAMP),
+    opacity: interpolate(
+      press.value,
+      [0, 0.4, 0.55, 1],
+      [1, 1, 0, 0],
+      Extrapolation.CLAMP,
+    ),
   }));
 
   const rSelected = useAnimatedStyle(() => ({
-    opacity: interpolate(press.value, [0, 0.4, 0.55, 1], [0, 0, 1, 1], Extrapolation.CLAMP),
+    opacity: interpolate(
+      press.value,
+      [0, 0.4, 0.55, 1],
+      [0, 0, 1, 1],
+      Extrapolation.CLAMP,
+    ),
   }));
 
+  const selectedBadgeStyle = useMemo(
+    () => [
+      styles.badge,
+      styles.badgeSelected,
+      { borderColor: accent + "4D", backgroundColor: accent + "1A" },
+      rSelected,
+    ],
+    [accent, rSelected],
+  );
+
+  const tapContainerStyle = useMemo(
+    () => [styles.tapContainer, rContainer],
+    [rContainer],
+  );
+  const unselectedBadgeStyle = useMemo(
+    () => [styles.badge, styles.badgeUnselected, rUnselected],
+    [rUnselected],
+  );
+  const selectedTextStyle = useMemo(
+    () => [styles.badgeText, { color: accent }],
+    [accent],
+  );
+
   return (
-    <Animated.View style={[styles.tapContainer, rContainer]}>
-      <Animated.View style={[styles.badge, styles.badgeUnselected, rUnselected]}>
-        <AppText style={styles.badgeUnselectedText}>♡ This resonates</AppText>
+    <Animated.View style={tapContainerStyle}>
+      <Animated.View style={unselectedBadgeStyle}>
+        <AppText className="text-foreground" style={styles.badgeUnselectedText}>
+          ♡ This resonates
+        </AppText>
       </Animated.View>
-      <Animated.View
-        style={[
-          styles.badge,
-          styles.badgeSelected,
-          { borderColor: accent + '4D', backgroundColor: accent + '1A' },
-          rSelected,
-        ]}
-      >
-        <AppText style={[styles.badgeText, { color: accent }]}>♥ resonated</AppText>
+      <Animated.View style={selectedBadgeStyle}>
+        <AppText style={selectedTextStyle}>♥ resonated</AppText>
       </Animated.View>
     </Animated.View>
   );
@@ -84,7 +159,7 @@ const ResonanceTapButton = ({ press, accent }: { press: SharedValue<number>; acc
 type Props = { isActive: SharedValue<boolean> };
 
 export const PeersPreview = ({ isActive }: Props) => {
-  const accent = useThemeColor('accent');
+  const accent = useThemeColor("accent");
 
   const card1Y = useSharedValue(CARD_START_Y);
   const card2Y = useSharedValue(CARD_START_Y);
@@ -122,7 +197,7 @@ export const PeersPreview = ({ isActive }: Props) => {
   useAnimatedReaction(
     () => progress.value,
     (p, prev) => {
-      if (prev !== null && p < prev) return; // loop reset
+      if (prev !== null && p < prev) return;
 
       if (prev !== null && prev < T.card1In && p >= T.card1In) {
         card1Y.value = withSpring(0, SPRING);
@@ -148,8 +223,12 @@ export const PeersPreview = ({ isActive }: Props) => {
     },
   );
 
-  const rCard1 = useAnimatedStyle(() => ({ transform: [{ translateY: card1Y.value }] }));
-  const rCard2 = useAnimatedStyle(() => ({ transform: [{ translateY: card2Y.value }] }));
+  const rCard1 = useAnimatedStyle(() => ({
+    transform: [{ translateY: card1Y.value }],
+  }));
+  const rCard2 = useAnimatedStyle(() => ({
+    transform: [{ translateY: card2Y.value }],
+  }));
 
   return (
     <View className="flex-1 px-3.5 py-5 justify-center gap-2.5 overflow-hidden">
@@ -157,7 +236,10 @@ export const PeersPreview = ({ isActive }: Props) => {
         Others have felt this too
       </AppText>
 
-      <Animated.View className="bg-overlay border border-foreground/10 rounded-2xl px-3 py-3 gap-2" style={rCard1}>
+      <Animated.View
+        className="bg-overlay border border-foreground/10 rounded-2xl px-3 py-3 gap-2"
+        style={rCard1}
+      >
         <AppText className="text-foreground italic text-[10px] leading-[15px]">
           I keep waiting for the day to start, but I&apos;m already in it.
         </AppText>
@@ -166,7 +248,10 @@ export const PeersPreview = ({ isActive }: Props) => {
         </View>
       </Animated.View>
 
-      <Animated.View className="bg-overlay border border-foreground/10 rounded-2xl px-3 py-3 gap-2" style={rCard2}>
+      <Animated.View
+        className="bg-overlay border border-foreground/10 rounded-2xl px-3 py-3 gap-2"
+        style={rCard2}
+      >
         <AppText className="text-foreground italic text-[10px] leading-[15px]">
           Tired before anything happened. Bracing for nothing in particular.
         </AppText>
@@ -179,16 +264,16 @@ export const PeersPreview = ({ isActive }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  badgeRow: { alignSelf: 'flex-end' },
-  tapContainer: { position: 'relative' },
+  badgeRow: { alignSelf: "flex-end" },
+  tapContainer: { position: "relative" },
   badge: {
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  badgeUnselected: { borderColor: 'rgba(128,128,128,0.10)' },
-  badgeSelected: { position: 'absolute', top: 0, right: 0 },
+  badgeUnselected: { opacity: 0.35 },
+  badgeSelected: { position: "absolute", top: 0, right: 0 },
   badgeText: { fontSize: 8 },
-  badgeUnselectedText: { fontSize: 8, color: 'rgba(128,128,128,0.35)' },
+  badgeUnselectedText: { fontSize: 8 },
 });

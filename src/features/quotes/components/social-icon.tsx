@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { View } from "react-native";
 import { GlassView } from "expo-glass-effect";
 import { PressableFeedback } from "heroui-native";
@@ -12,32 +13,52 @@ type Props = {
   onPress: () => void;
 };
 
-export function SocialIcon({ label, ios, android, foregroundColor, onPress }: Props) {
+export function SocialIcon({
+  label,
+  ios,
+  android,
+  foregroundColor,
+  onPress,
+}: Props) {
+  const glassStyle = useMemo(
+    () => ({
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      backgroundColor: `${foregroundColor}08`,
+      borderWidth: 1,
+      borderColor: `${foregroundColor}10`,
+    }),
+    [foregroundColor],
+  );
+
+  const iconName = useMemo(
+    () => ({ ios: ios as any, android: android as any }),
+    [ios, android],
+  );
+
+  const labelStyle = useMemo(
+    () => ({ color: `${foregroundColor}40`, fontSize: 10 }),
+    [foregroundColor],
+  );
+
   return (
-    <PressableFeedback onPress={onPress} accessibilityLabel={`Share via ${label}`} hitSlop={8}>
+    <PressableFeedback
+      onPress={onPress}
+      accessibilityLabel={`Share via ${label}`}
+      hitSlop={8}
+    >
       <View className="items-center gap-2">
-        <GlassView
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 24,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: `${foregroundColor}08`,
-            borderWidth: 1,
-            borderColor: `${foregroundColor}10`,
-          }}
-          glassEffectStyle="clear"
-        >
+        <GlassView style={glassStyle} glassEffectStyle="clear">
           <SymbolView
-            name={{ ios: ios as any, android: android as any }}
+            name={iconName}
             size={18}
             tintColor={`${foregroundColor}50`}
           />
         </GlassView>
-        <AppText style={{ color: `${foregroundColor}40`, fontSize: 10 }}>
-          {label}
-        </AppText>
+        <AppText style={labelStyle}>{label}</AppText>
       </View>
     </PressableFeedback>
   );

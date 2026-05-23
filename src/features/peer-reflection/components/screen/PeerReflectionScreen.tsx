@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Presets } from "react-native-pulsar";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -15,6 +16,13 @@ import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-sess
 import { ReportSheet } from "@/src/features/peer-reflection/components/report-sheet";
 import { Id } from "@/convex/_generated/dataModel";
 
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_INITIAL_FADE = { opacity: 0 };
+const EASE_ANIMATE_FADE = { opacity: 1 };
+const EASE_EMPTY_TRANSITION = { type: 'timing' as const, duration: 400, delay: 400, easing: EASING };
+const EASE_HEADER_TRANSITION = { type: 'timing' as const, duration: 500, easing: EASING };
+const EASE_DONE_TRANSITION = { type: 'timing' as const, duration: 400, delay: 800, easing: EASING };
+
 export const PeerReflectionScreen = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -23,6 +31,10 @@ export const PeerReflectionScreen = () => {
 
   const { sessionId, session, isLoading, startPath } = usePathSession();
   const posthog = usePostHog();
+
+  useEffect(() => {
+    Presets.murmur();
+  }, []);
 
   // Start the path on mount
   useEffect(() => {
@@ -125,11 +137,14 @@ export const PeerReflectionScreen = () => {
     router.replace('/session-end?path=peers');
   };
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
+
   if (isLoading || matchedReflections === undefined || awaitingFallback) {
     return (
       <View
         className="flex-1 items-center justify-center bg-background"
-        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+        style={safeAreaStyle}
       >
         <MorphLoader />
       </View>
@@ -140,15 +155,15 @@ export const PeerReflectionScreen = () => {
     return (
       <View
         className="flex-1 items-center justify-center bg-background px-8"
-        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+        style={safeAreaStyle}
       >
         <AppText className="text-center text-base text-foreground/40">
           No reflections yet. You&apos;re among the first.
         </AppText>
         <EaseView
-          initialAnimate={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: 'timing', duration: 400, delay: 400, easing: [0.455, 0.03, 0.515, 0.955] }}
+          initialAnimate={EASE_INITIAL_FADE}
+          animate={EASE_ANIMATE_FADE}
+          transition={EASE_EMPTY_TRANSITION}
           className="mt-8"
         >
           <PillButton label="Done" onPress={handleDone} />
@@ -160,16 +175,16 @@ export const PeerReflectionScreen = () => {
   return (
     <View
       className="flex-1 bg-background"
-      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      style={safeAreaStyle}
     >
       <ScrollView
-        contentContainerStyle={{ padding: 24, paddingBottom: 40, gap: 12 }}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <EaseView
-          initialAnimate={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: 'timing', duration: 500, easing: [0.455, 0.03, 0.515, 0.955] }}
+          initialAnimate={EASE_INITIAL_FADE}
+          animate={EASE_ANIMATE_FADE}
+          transition={EASE_HEADER_TRANSITION}
           className="mb-4"
         >
           <AppText className="text-lg leading-7 text-foreground/50">
@@ -226,9 +241,9 @@ export const PeerReflectionScreen = () => {
       </ScrollView>
 
       <EaseView
-        initialAnimate={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ type: 'timing', duration: 400, delay: 800, easing: [0.455, 0.03, 0.515, 0.955] }}
+        initialAnimate={EASE_INITIAL_FADE}
+        animate={EASE_ANIMATE_FADE}
+        transition={EASE_DONE_TRANSITION}
         className="items-center gap-3 pb-2 pt-1"
       >
         <PillButton label="Done" onPress={handleDone} />
@@ -245,3 +260,7 @@ export const PeerReflectionScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  scrollContent: { padding: 24, paddingBottom: 40, gap: 12 },
+});

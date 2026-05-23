@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useThemeColor } from 'heroui-native';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useAppTheme } from '@/src/context/app-theme-context';
@@ -62,6 +62,13 @@ const themeGradients = {
   sky: ['#5DD6E7', '#0062FF'] as [string, string],
 } as const satisfies Record<string, [string, string]>;
 
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_INITIAL = { opacity: 0 };
+const EASE_ANIMATE = { opacity: 1 };
+const EASE_RING_TRANSITION = { type: 'timing' as const, duration: 200, easing: EASING };
+const GRADIENT_START = { x: 0, y: 0 };
+const GRADIENT_END = { x: 1, y: 1 };
+
 const ThemeCircle: React.FC<{
   theme: ThemeOption;
   isActive: boolean;
@@ -72,45 +79,28 @@ const ThemeCircle: React.FC<{
     themeGradients[theme.id as keyof typeof themeGradients] ??
     themeGradients.default;
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const activeRingStyle = { position: 'absolute' as const, width: 68, height: 68, borderRadius: 34, borderWidth: 2, borderColor: themeColorAccent, top: 0, left: 0 };
+
   return (
     <Pressable onPress={onPress} className="items-center">
-      <View style={{ position: 'relative', padding: 4 }}>
+      <View style={styles.relativeWrapper}>
         {/* Active ring */}
         {isActive && (
           <EaseView
-            initialAnimate={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', duration: 200, easing: [0.455, 0.03, 0.515, 0.955] }}
-            style={{
-              position: 'absolute',
-              width: 68,
-              height: 68,
-              borderRadius: 34,
-              borderWidth: 2,
-              borderColor: themeColorAccent,
-              top: 0,
-              left: 0,
-            }}
+            initialAnimate={EASE_INITIAL}
+            animate={EASE_ANIMATE}
+            transition={EASE_RING_TRANSITION}
+            style={activeRingStyle}
           />
         )}
         {/* Theme circle */}
-        <View
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: 30,
-            overflow: 'hidden',
-            position: 'relative',
-          }}
-        >
+        <View style={styles.circle}>
           <LinearGradient
             colors={gradientColors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              width: '100%',
-              height: '100%',
-            }}
+            start={GRADIENT_START}
+            end={GRADIENT_END}
+            style={styles.gradientFill}
           />
         </View>
       </View>
@@ -139,14 +129,14 @@ export default function Themes() {
     playSoftPress();
   };
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const scrollContentStyle = { paddingTop: headerHeight, paddingBottom: 12 };
+
   return (
     <KeyboardAwareScrollView
       className="flex-1 bg-background"
       contentContainerClassName="gap-12 px-5"
-      contentContainerStyle={{
-        paddingTop: headerHeight,
-        paddingBottom: 12,
-      }}
+      contentContainerStyle={scrollContentStyle}
       bottomOffset={60}
     >
       <View className="flex-row justify-around pt-6">
@@ -167,3 +157,9 @@ export default function Themes() {
     </KeyboardAwareScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  relativeWrapper: { position: 'relative', padding: 4 },
+  circle: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', position: 'relative' },
+  gradientFill: { width: '100%', height: '100%' },
+});

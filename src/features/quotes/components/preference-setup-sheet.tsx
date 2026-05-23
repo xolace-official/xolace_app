@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { View } from "react-native";
+import { Image } from "expo-image";
 import { TagGroup, PressableFeedback } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
@@ -41,8 +42,23 @@ const ENTRANCE = {
   easing: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
 };
 
+const STEP_FADE_EASING: [number, number, number, number] = [0.4, 0, 0.6, 1];
+const STEP_FADE_TRANSITION = {
+  type: "timing" as const,
+  duration: 220,
+  easing: STEP_FADE_EASING,
+};
+const PROGRESS_INITIAL_ANIMATE = { opacity: 0 } as const;
+const PROGRESS_ANIMATE = { opacity: 1 } as const;
+const FLUX_SETUP_IMAGE_STYLE = { width: 180, height: 180 } as const;
+const EMPTY_SELECTED_KEYS = new Set<string>();
+
 type Props = {
-  onComplete: (themes: string[], notificationEnabled: boolean, notificationTime?: string) => void;
+  onComplete: (
+    themes: string[],
+    notificationEnabled: boolean,
+    notificationTime?: string,
+  ) => void;
   isLoading?: boolean;
 };
 
@@ -61,6 +77,11 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
   const canAdvanceStep1 = selectedTime !== null;
 
   const progress = step === 0 ? 0.5 : 1;
+  const stepAccessibilityLabel = `Step ${step + 1} of 2`;
+  const stepContentAnimate = useMemo(
+    () => ({ opacity: visible ? 1 : 0 }),
+    [visible],
+  );
 
   const navigateTo = (target: 0 | 1) => {
     setVisible(false);
@@ -96,7 +117,7 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
     onComplete(
       Array.from(selectedThemes),
       notifEnabled,
-      notifEnabled ? selectedTime! : undefined
+      notifEnabled ? selectedTime! : undefined,
     );
   };
 
@@ -105,10 +126,10 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
       {/* Progress indicator */}
       <View className="items-end mb-6">
         <EaseView
-          initialAnimate={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initialAnimate={PROGRESS_INITIAL_ANIMATE}
+          animate={PROGRESS_ANIMATE}
           transition={ENTRANCE}
-          accessibilityLabel={`Step ${step + 1} of 2`}
+          accessibilityLabel={stepAccessibilityLabel}
         >
           <CircleProgress progress={progress} size={36} strokeWidth={4} />
         </EaseView>
@@ -116,8 +137,8 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
 
       {/* Step content */}
       <EaseView
-        animate={{ opacity: visible ? 1 : 0 }}
-        transition={{ type: "timing", duration: 220, easing: [0.4, 0, 0.6, 1] }}
+        animate={stepContentAnimate}
+        transition={STEP_FADE_TRANSITION}
         onTransitionEnd={handleFadeComplete}
         className="flex-1"
       >
@@ -127,10 +148,7 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
             onSelectionChange={handleThemeToggle}
           />
         ) : (
-          <Step1
-            selectedTime={selectedTime}
-            onTimeSelect={handleTimeSelect}
-          />
+          <Step1 selectedTime={selectedTime} onTimeSelect={handleTimeSelect} />
         )}
       </EaseView>
 
@@ -211,7 +229,9 @@ function Step0({
               >
                 {() => (
                   <TagGroup.ItemLabel
-                    className={isSelected ? "text-accent" : "text-foreground/60"}
+                    className={
+                      isSelected ? "text-accent" : "text-foreground/60"
+                    }
                   >
                     {slug}
                   </TagGroup.ItemLabel>
@@ -232,20 +252,33 @@ function Step1({
   selectedTime: string | null;
   onTimeSelect: (keys: Set<string | number>) => void;
 }) {
+  const selectedTimeKeys = useMemo(
+    () => (selectedTime ? new Set([selectedTime]) : EMPTY_SELECTED_KEYS),
+    [selectedTime],
+  );
+
   return (
     <View>
+      <View className="items-center mb-6">
+        <Image
+          source={require("@/assets/images/flux/flux-look-mini-bg.png")}
+          style={FLUX_SETUP_IMAGE_STYLE}
+          contentFit="contain"
+        />
+      </View>
+
       <AppText className="text-3xl font-semibold text-foreground mb-2">
-        When should we reach you?
+        When should Flux reach you?
       </AppText>
       <AppText className="text-base text-foreground/50 mb-8">
-        An optional nudge when your quote is ready.
+        A gentle nudge when your daily quote is ready.
       </AppText>
 
       <TagGroup
         selectionMode="single"
         size="md"
         variant="surface"
-        selectedKeys={selectedTime ? new Set([selectedTime]) : new Set()}
+        selectedKeys={selectedTimeKeys}
         onSelectionChange={onTimeSelect}
         animation="disable-all"
       >
@@ -261,7 +294,9 @@ function Step1({
               >
                 {() => (
                   <TagGroup.ItemLabel
-                    className={isSelected ? "text-accent" : "text-foreground/60"}
+                    className={
+                      isSelected ? "text-accent" : "text-foreground/60"
+                    }
                   >
                     {label}
                   </TagGroup.ItemLabel>

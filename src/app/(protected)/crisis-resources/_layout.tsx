@@ -4,6 +4,9 @@ import { SymbolView } from 'expo-symbols';
 import { PressableFeedback, useThemeColor } from 'heroui-native';
 import { useLargeHeaderOptions } from '@/src/lib/navigation-options';
 
+const BACK_ICON_NAME = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
+const INDEX_OPTIONS = { title: 'Get Help Now' };
+
 export default function CrisisResourcesLayout() {
   const router = useRouter();
   const largeHeaderOptions = useLargeHeaderOptions();
@@ -12,23 +15,24 @@ export default function CrisisResourcesLayout() {
   const renderBackButton = () => (
     <PressableFeedback onPress={() => router.back()} hitSlop={8}>
       <SymbolView
-        name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
+        name={BACK_ICON_NAME}
         size={20}
         tintColor={tintColor}
       />
     </PressableFeedback>
   );
 
+  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+  const screenOptions = {
+    ...largeHeaderOptions,
+    headerLeft: renderBackButton,
+    contentStyle: { backgroundColor: 'transparent' },
+  };
+
   return (
     <View className="flex-1 bg-background">
-      <Stack
-        screenOptions={{
-          ...largeHeaderOptions,
-          headerLeft: renderBackButton,
-          contentStyle: { backgroundColor: 'transparent' },
-        }}
-      >
-        <Stack.Screen name="index" options={{ title: 'Get Help Now' }} />
+      <Stack screenOptions={screenOptions}>
+        <Stack.Screen name="index" options={INDEX_OPTIONS} />
       </Stack>
     </View>
   );
