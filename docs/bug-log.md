@@ -15,6 +15,44 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-05-24 — `react-native-share` `shareSingle` to WhatsApp / Telegram / Instagram broken on iOS (TestFlight)
+
+**Symptom**
+- Quote share sheet → tap **WhatsApp** on iOS: nothing happens, no error, no log.
+- Quote share sheet → tap **Telegram** on iOS: Telegram opens with the raw file path (`/private/var/.../tmp/ReactNative/<uuid>.png`) and a trailing `(null)` pasted into the chat as a text message — no image attached.
+- Quote share sheet → tap **Instagram** on iOS: Instagram opens its "Share to Instagram" sheet but the preview shows whatever the user's most-recent camera roll item is (in our repro, a screenshot of the Telegram chat) — not our quote image.
+- Android (all three apps) worked fine. Native share sheet ("More") worked fine on both platforms.
+
+**Where it appeared**
+- iOS only. All build variants. TestFlight (v1.3.0).
+- Code path: `src/features/quotes/hooks/use-quote-share-actions.ts` calling `RNShare.shareSingle({ social: Social.{Whatsapp|Telegram|Instagram}, url: <localPngPath>, type: "image/png" })`.
+
+**Root cause**
+`shareSingle` on iOS deep-links via app URL schemes; the URL schemes for these apps do not accept file/image payloads:
+- **WhatsApp iOS** scheme is `whatsapp://send?text=...` — text only. Passing `url:` is silently dropped, hence the no-op.
+- **Telegram iOS** scheme is `tg://msg_url?url=<value>&text=<message>` — the library URL-encodes our local file path into the `url=` query param as a string, and the missing `message` becomes the literal `(null)` Telegram renders.
+- **Instagram Feed iOS** uses `instagram://library?LocalIdentifier=...` semantics — the lib doesn't pass our image to Instagram at all; per the upstream docs, "Instagram tries to select the very last file of the cameraroll", so it picks whatever the user most recently added to Photos.
+
+Android works because it uses `Intent.ACTION_SEND` with a content URI — a totally different mechanism that actually accepts the file.
+
+**How we diagnosed it**
+- Confirmed `imageUri` was a valid file path by reading the screenshot of the Telegram message — it's our generated PNG path.
+- Recognized `(null)` as a Swift `Optional<String>.description` stringification → message arg unset → the lib is building a text-only URL.
+- Cross-checked against `react-native-share` docs (`research/rn-share.md` §Share Instagram, §Supported Applications) which explicitly call out the camera-roll-latest behavior for Instagram and don't list image support for WhatsApp/Telegram on iOS.
+
+**Fix**
+- `src/features/quotes/hooks/use-quote-share-actions.ts`: branch on `Platform.OS === "ios"`.
+  - WhatsApp / Telegram iOS → fall back to `shareGeneric` (`expo-sharing` system share sheet) defensively.
+  - Instagram iOS (Feed path, no `EXPO_PUBLIC_FB_APP_ID`) → `MediaLibrary.saveToLibraryAsync(imageUri)` first so our PNG is the newest camera-roll item, then `shareSingle(Social.Instagram)`. Toast the user ("Saved to Photos · Opening Instagram…") so the gallery growth isn't surprising. Fall back to system share sheet if photo permission is denied.
+- `src/features/quotes/components/quote-share-sheet.tsx`: drop the WhatsApp and Telegram tiles on iOS via a `Platform.OS` switch on `SOCIAL_ITEMS`. iOS users reach WhatsApp/Telegram via the **More** tile (system share sheet — which actually sends the image, because the apps' Share Extensions handle files even though their URL schemes don't).
+
+**Prevention / future reference**
+- Before wiring any `shareSingle` social target, check `research/rn-share.md` for the iOS column and re-read the per-app section. iOS image deep-links are the exception, not the rule.
+- If a TestFlight share button "does nothing" on iOS, first hypothesis: the target app's URL scheme is text-only. Confirm by passing a `message` and watching whether *that* is delivered (it will be).
+- If you ever turn on `EXPO_PUBLIC_FB_APP_ID` to enable Instagram Stories, re-test the Stories path on iOS — `backgroundImage` accepts URL or base64 per docs; a `file://` path may need conversion.
+
+---
+
 ## 2026-05-24 — Android Google Sign-In silently fails after account pick (dev + preview + prod)
 
 **Symptom**

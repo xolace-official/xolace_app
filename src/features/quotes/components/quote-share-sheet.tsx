@@ -1,4 +1,4 @@
-import { Modal, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Modal, Platform, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassView } from "expo-glass-effect";
@@ -16,12 +16,22 @@ type Props = {
   onClose: () => void;
 };
 
-const SOCIAL_ITEMS = [
-  { label: "WhatsApp", ios: "bubble.left.fill", android: "chat" },
-  { label: "Telegram", ios: "paperplane.fill", android: "send" },
-  { label: "Instagram", ios: "camera.fill", android: "photo_camera" },
-  { label: "More", ios: "ellipsis", android: "more_horiz" },
-] as const;
+// WhatsApp / Telegram deep-link image sharing is broken on iOS at the OS level
+// (their URL schemes only accept text). On iOS we surface Instagram + More,
+// and users can reach WhatsApp/Telegram from the system share sheet via More.
+const SOCIAL_ITEMS = (
+  Platform.OS === "ios"
+    ? [
+        { label: "Instagram", ios: "camera.fill", android: "photo_camera" },
+        { label: "More", ios: "ellipsis", android: "more_horiz" },
+      ]
+    : [
+        { label: "WhatsApp", ios: "bubble.left.fill", android: "chat" },
+        { label: "Telegram", ios: "paperplane.fill", android: "send" },
+        { label: "Instagram", ios: "camera.fill", android: "photo_camera" },
+        { label: "More", ios: "ellipsis", android: "more_horiz" },
+      ]
+) as readonly { label: string; ios: string; android: string }[];
 
 const GRADIENT_TOP_START: [number, number] = [0, 0];
 const GRADIENT_TOP_END: [number, number] = [1, 0.4];
