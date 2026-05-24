@@ -98,7 +98,7 @@ export function QuoteCard({
           <View className="mt-5" style={nudgePillStyle}>
             <SymbolView name={NUDGE_ICON} size={12} tintColor={`${accentColor}CC`} />
             <AppText className="text-xs font-medium" style={nudgeTextStyle}>
-              Reflect today; get a quote made just for you
+              Reflect often, your quotes get more personal
             </AppText>
           </View>
         )}
