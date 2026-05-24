@@ -3,7 +3,6 @@ import { EaseView } from "react-native-ease/uniwind";
 import { useRouter } from "expo-router";
 import { LinkButton } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
 import { NIGHT_SESSION_END_EXIT } from "@/src/features/reflect/night-copy";
 
 type Props = {
@@ -30,7 +29,6 @@ export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
   const router = useRouter();
 
   const handleTimelinePress = () => {
-    playSoftPress();
     router.push("/(protected)/timeline");
   };
 

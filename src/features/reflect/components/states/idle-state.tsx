@@ -24,7 +24,6 @@ import {
   playTypingBegin,
   playTextureSelect,
   playHomeEntrance,
-  playSoftPress,
 } from "@/src/lib/haptics";
 import { useSessionMode } from "@/src/context/session-mode-context";
 import { NIGHT_TEXTURE_WORDS } from "@/src/features/reflect/night-copy";

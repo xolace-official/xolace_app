@@ -14,7 +14,6 @@ import type { Id } from "@/convex/_generated/dataModel";
 import {
   playMirrorArrival,
   playAffirmativePress,
-  playSoftPress,
 } from "@/src/lib/haptics";
 import { useMirrorAudio } from "@/src/features/reflect/hooks/use-mirror-audio";
 import { useSettings } from "@/src/features/settings/hooks/use-settings";
@@ -164,7 +163,6 @@ export const MirrorState = ({
         {isReady && (
           <PressableFeedback
             onPress={() => {
-              playSoftPress();
               toggle();
             }}
             animation={AUDIO_ANIMATION}
@@ -232,10 +230,7 @@ export const MirrorState = ({
           transition={EASE_NOTQUITE_TRANSITION}
         >
           <LinkButton
-            onPress={() => {
-              playSoftPress();
-              onNotQuite();
-            }}
+            onPress={onNotQuite}
             size="md"
             className="self-start"
           >
@@ -251,10 +246,7 @@ export const MirrorState = ({
           transition={EASE_SAYMORE_TRANSITION}
         >
           <LinkButton
-            onPress={() => {
-              playSoftPress();
-              onSayMore();
-            }}
+            onPress={onSayMore}
             size="md"
             className="self-start"
           >
