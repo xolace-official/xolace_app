@@ -89,7 +89,9 @@ export function useNotifications() {
           }
         }
 
-        if (
+        if (data?.screen === "quotes") {
+          router.push("/(protected)/quotes");
+        } else if (
           data?.type === "gentle_return" ||
           data?.type === "pattern_nudge" ||
           data?.type === "milestone"

@@ -36,7 +36,14 @@ A digital campfire. You sit by the fire alone. The flames help you see what you'
 - **Lint**: `bun expo lint`
 - **Install Expo packages**: `npx expo install <package>` (ensures SDK-compatible versions)
 - **Dev build (iOS)**: `bunx expo run:ios` (required when adding native modules)
+- **Variant local builds**: `bun android:dev` / `bun android:preview` / `bun ios:dev` / `bun ios:preview` — these set `APP_VARIANT` so the right package id (`com.xolaceincorg.xolace.dev` / `.preview` / base) is baked in. Plain `bun android` / `bun ios` falls through to the production package.
 - **EAS build**: `eas build --profile development|preview|production`
+
+## Debugging
+
+Before diagnosing a tricky bug from scratch, **check `docs/bug-log.md`**. It's a running record of non-obvious bugs we've already solved (env mismatches, signing-cert issues, build-variant gotchas, etc.) along with the diagnostic chain that found each one. If the current symptom rhymes with a past entry, follow that entry's "Prevention / future reference" steps first — it's almost always faster than rederiving.
+
+When solving a new bug that took more than ~30 min to diagnose, or whose fix touched something outside the codebase (cloud console, certificates, build infra), add a new entry at the top of `docs/bug-log.md` following the existing six-section shape.
 
 ## App Flow
 

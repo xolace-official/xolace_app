@@ -34,7 +34,6 @@ export function SessionEndNotifNudge() {
     if (notifNudgeDismissed) return;
 
     Notifications.getPermissionsAsync().then(({ status }) => {
-      console.log("Notification status: ", status);
       if (status === "undetermined") {
         setMounted(true);
         const t = setTimeout(() => setShow(true), 900);

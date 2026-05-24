@@ -128,6 +128,8 @@ export const AuthScreen = () => {
           auth_provider: 'google',
           is_new_user: !!signUp?.createdUserId,
         });
+      } else {
+        console.warn('[GoogleAuth] no session created — createdSessionId:', createdSessionId);
       }
     } catch (error: unknown) {
       const code =
@@ -135,8 +137,10 @@ export const AuthScreen = () => {
           ? (error as { code: string | number }).code
           : undefined;
 
-      // Silently handle user cancellation
-      if (code === 'SIGN_IN_CANCELLED' || code === -5) return;
+      if (code === 'SIGN_IN_CANCELLED' || code === -5) {
+        console.log('[GoogleAuth] cancelled by user, code:', code);
+        return;
+      }
 
       // TEMP: extract all error details for debugging
       let msg = 'Unknown';
