@@ -151,7 +151,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
       predictiveBackGestureEnabled: false,
       package: getUniqueIdentifier(),
-      googleServicesFile: getGoogleServicesPath()
+      googleServicesFile: getGoogleServicesPath(),
+      blockedPermissions: [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+      ]
     },
     web: {
       output: "static",
