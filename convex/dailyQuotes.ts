@@ -140,7 +140,6 @@ export const store = internalMutation({
 export const coldStart = action({
   args: {},
   handler: async (ctx) => {
-    console.log(`[dailyQuotes:coldStart] Starting cold start`);
     
     const profile: { _id: string } | null = await ctx.runQuery(
       internal.dailyQuotes.getMyProfile,

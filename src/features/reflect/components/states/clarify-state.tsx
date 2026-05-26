@@ -10,7 +10,6 @@ import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
 import type { ReflectionAction } from '@/src/features/reflect/types';
-import { playSoftPress } from '@/src/lib/haptics';
 
 type Props = {
   previousMirror: string;
@@ -84,7 +83,7 @@ export const ClarifyState = ({
           className="mb-2"
         >
           <LinkButton
-            onPress={() => { playSoftPress(); dispatch({ type: 'BACK_TO_MIRROR' }); }}
+            onPress={() => { dispatch({ type: 'BACK_TO_MIRROR' }); }}
             size="sm"
             className="self-start"
           >

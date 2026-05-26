@@ -1493,3 +1493,773 @@ export const seedExercises = internalAction({
     return { seeded: true, count: EXERCISES.length };
   },
 });
+
+// ---------------------------------------------------------------------------
+// Quotes seed — 130+ curated quotes across 18 emotional themes.
+//
+// Run: bunx convex run seed:seedQuotes
+// Safe to re-run — quotes:seed skips if library is not empty.
+// Pass force=true to override: bunx convex run seed:seedQuotes '{"force":true}'
+// ---------------------------------------------------------------------------
+
+const QUOTES: {
+  text: string;
+  themes: string[];
+  source?: string;
+  language: string;
+}[] = [
+  // ── Assist 1: resilience · self-compassion · relationships · grief-and-loss · change · anxiety ──
+  {
+    text: "You may encounter many defeats, but you must not be defeated. In fact, it may be necessary to encounter the defeats, so you can know who you are.",
+    themes: ["resilience"],
+    source: "Maya Angelou",
+    language: "en",
+  },
+  {
+    text: "There is a crack in everything. That's how the light gets in.",
+    themes: ["resilience", "change"],
+    source: "Leonard Cohen",
+    language: "en",
+  },
+  {
+    text: "Talk to yourself like you would to someone you love.",
+    themes: ["self-compassion"],
+    source: "Brené Brown",
+    language: "en",
+  },
+  {
+    text: "What is to give light must endure burning.",
+    themes: ["resilience"],
+    source: "Viktor E. Frankl",
+    language: "en",
+  },
+  {
+    text: "The wound is the place where the Light enters you.",
+    themes: ["grief-and-loss", "resilience"],
+    source: "Rumi",
+    language: "en",
+  },
+  {
+    text: "Do not feel lonely, the entire universe is inside you.",
+    themes: ["self-compassion"],
+    source: "Rumi",
+    language: "en",
+  },
+  {
+    text: "Anxiety is the dizziness of freedom.",
+    themes: ["anxiety"],
+    source: "Søren Kierkegaard",
+    language: "en",
+  },
+  {
+    text: "Grief is the price we pay for love.",
+    themes: ["grief-and-loss", "relationships"],
+    source: "Queen Elizabeth II",
+    language: "en",
+  },
+  {
+    text: "Love after love, the person you will greet again is yourself.",
+    themes: ["self-compassion", "change"],
+    source: "Derek Walcott",
+    language: "en",
+  },
+  {
+    text: "The only way to make sense out of change is to plunge into it, move with it, and join the dance.",
+    themes: ["change"],
+    source: "Alan Watts",
+    language: "en",
+  },
+  {
+    text: "We are healed from suffering only by experiencing it to the full.",
+    themes: ["grief-and-loss"],
+    source: "Marcel Proust",
+    language: "en",
+  },
+  {
+    text: "You do not have to be good. You only have to let the soft animal of your body love what it loves.",
+    themes: ["self-compassion"],
+    source: "Mary Oliver",
+    language: "en",
+  },
+  {
+    text: "No feeling is final.",
+    themes: ["resilience", "anxiety"],
+    source: "Rainer Maria Rilke",
+    language: "en",
+  },
+  {
+    text: "The meeting of two personalities is like the contact of two chemical substances: if there is any reaction, both are transformed.",
+    themes: ["relationships", "change"],
+    source: "Carl Jung",
+    language: "en",
+  },
+  {
+    text: "To love at all is to be vulnerable.",
+    themes: ["relationships"],
+    source: "C. S. Lewis",
+    language: "en",
+  },
+  {
+    text: "Feelings come and go like clouds in a windy sky. Conscious breathing is my anchor.",
+    themes: ["anxiety", "self-compassion"],
+    source: "Thich Nhat Hanh",
+    language: "en",
+  },
+  {
+    text: "Life is a balance of holding on and letting go.",
+    themes: ["change", "grief-and-loss"],
+    source: "Rumi",
+    language: "en",
+  },
+  {
+    text: "Out of suffering have emerged the strongest souls; the most massive characters are seared with scars.",
+    themes: ["resilience"],
+    source: "Khalil Gibran",
+    language: "en",
+  },
+  {
+    text: "Sometimes the bravest and most important thing you can do is just show up.",
+    themes: ["resilience"],
+    source: "Brené Brown",
+    language: "en",
+  },
+  {
+    text: "The best way out is always through.",
+    themes: ["grief-and-loss", "resilience"],
+    source: "Robert Frost",
+    language: "en",
+  },
+  {
+    text: "You yourself, as much as anybody in the entire universe, deserve your love and affection.",
+    themes: ["self-compassion"],
+    source: "Buddha",
+    language: "en",
+  },
+  {
+    text: "Friendship marks a life even more deeply than love. Love risks degenerating into obsession, friendship is never anything but sharing.",
+    themes: ["relationships"],
+    source: "Elie Wiesel",
+    language: "en",
+  },
+  {
+    text: "Nothing is so painful to the human mind as a great and sudden change.",
+    themes: ["change", "anxiety"],
+    source: "Mary Shelley",
+    language: "en",
+  },
+  {
+    text: "Grief can be a burden, but also an anchor. You get used to the weight, how it holds you in place.",
+    themes: ["grief-and-loss"],
+    source: "Sarah Dessen",
+    language: "en",
+  },
+  {
+    text: "Do not anticipate trouble, or worry about what may never happen. Keep in the sunlight.",
+    themes: ["anxiety"],
+    source: "Benjamin Franklin",
+    language: "en",
+  },
+  {
+    text: "When we are no longer able to change a situation, we are challenged to change ourselves.",
+    themes: ["change", "resilience"],
+    source: "Viktor E. Frankl",
+    language: "en",
+  },
+  {
+    text: "The emotion that can break your heart is sometimes the very one that heals it.",
+    themes: ["relationships", "grief-and-loss"],
+    source: "Nicholas Sparks",
+    language: "en",
+  },
+  {
+    text: "Be patient toward all that is unsolved in your heart and try to love the questions themselves.",
+    themes: ["anxiety", "self-compassion"],
+    source: "Rainer Maria Rilke",
+    language: "en",
+  },
+  {
+    text: "What breaks us apart also has the power to put us back together again.",
+    themes: ["relationships", "resilience"],
+    source: "bell hooks",
+    language: "en",
+  },
+  {
+    text: "Tears are words that need to be written.",
+    themes: ["grief-and-loss"],
+    source: "Paulo Coelho",
+    language: "en",
+  },
+
+  // ── Assist 2: identity · loneliness · healing · acceptance · purpose · self-worth ──
+  {
+    text: "I took a deep breath and listened to the old brag of my heart: I am, I am, I am.",
+    themes: ["identity", "self-worth"],
+    source: "Sylvia Plath",
+    language: "en",
+  },
+  {
+    text: "To be nobody but yourself in a world which is doing its best, night and day, to make you everybody else means to fight the hardest battle which any human being can fight; and never stop fighting.",
+    themes: ["identity"],
+    source: "E.E. Cummings",
+    language: "en",
+  },
+  {
+    text: "I am large, I contain multitudes.",
+    themes: ["identity"],
+    source: "Walt Whitman",
+    language: "en",
+  },
+  {
+    text: "Not until we are lost do we begin to find ourselves.",
+    themes: ["identity"],
+    source: "Henry David Thoreau",
+    language: "en",
+  },
+  {
+    text: "Knowing yourself is the beginning of all wisdom.",
+    themes: ["identity", "purpose"],
+    source: "Aristotle",
+    language: "en",
+  },
+  {
+    text: "You are not a drop in the ocean. You are the entire ocean in a drop.",
+    themes: ["identity", "self-worth"],
+    source: "Rumi",
+    language: "en",
+  },
+  {
+    text: "We know what we are, but know not what we may be.",
+    themes: ["identity"],
+    source: "William Shakespeare",
+    language: "en",
+  },
+  {
+    text: "Perhaps all the dragons in our lives are princesses who are only waiting to see us act, just once, with beauty and courage.",
+    themes: ["identity", "healing"],
+    source: "Rainer Maria Rilke",
+    language: "en",
+  },
+  {
+    text: "The unexamined life is not worth living.",
+    themes: ["identity", "purpose"],
+    source: "Socrates",
+    language: "en",
+  },
+  {
+    text: "What I am is good enough if I would only be it openly.",
+    themes: ["identity", "self-worth"],
+    source: "Carl Rogers",
+    language: "en",
+  },
+  {
+    text: "Loneliness is the poverty of self; solitude is the richness of self.",
+    themes: ["loneliness"],
+    source: "May Sarton",
+    language: "en",
+  },
+  {
+    text: "Language has created the word loneliness to express the pain of being alone, and it has created the word solitude to express the glory of being alone.",
+    themes: ["loneliness"],
+    source: "Paul Tillich",
+    language: "en",
+  },
+  {
+    text: "All great and precious things are lonely.",
+    themes: ["loneliness"],
+    source: "John Steinbeck",
+    language: "en",
+  },
+  {
+    text: "I exist as I am, that is enough.",
+    themes: ["loneliness", "self-worth"],
+    source: "Walt Whitman",
+    language: "en",
+  },
+  {
+    text: "The worst loneliness is not to be comfortable with yourself.",
+    themes: ["loneliness", "self-worth"],
+    source: "Mark Twain",
+    language: "en",
+  },
+  {
+    text: "Inside myself is a place where I live all alone and that is where you renew your springs that never dry up.",
+    themes: ["loneliness"],
+    source: "Pearl S. Buck",
+    language: "en",
+  },
+  {
+    text: "What a lovely surprise to finally discover how unlonely being alone can be.",
+    themes: ["loneliness", "acceptance"],
+    source: "Ellen Burstyn",
+    language: "en",
+  },
+  {
+    text: "The soul that sees beauty may sometimes walk alone.",
+    themes: ["loneliness"],
+    source: "Johann Wolfgang von Goethe",
+    language: "en",
+  },
+  {
+    text: "In solitude the mind gains strength and learns to lean upon itself.",
+    themes: ["loneliness"],
+    source: "Laurence Sterne",
+    language: "en",
+  },
+  {
+    text: "There is a loneliness that can be rocked. Arms crossed, knees drawn up, holding, holding on.",
+    themes: ["loneliness"],
+    source: "Toni Morrison",
+    language: "en",
+  },
+  {
+    text: "Give sorrow words; the grief that does not speak knits up the o'erwrought heart and bids it break.",
+    themes: ["healing"],
+    source: "William Shakespeare",
+    language: "en",
+  },
+  {
+    text: "Although the world is full of suffering, it is also full of the overcoming of it.",
+    themes: ["healing", "acceptance"],
+    source: "Helen Keller",
+    language: "en",
+  },
+  {
+    text: "One does not become enlightened by imagining figures of light, but by making the darkness conscious.",
+    themes: ["healing"],
+    source: "Carl Jung",
+    language: "en",
+  },
+  {
+    text: "Sometimes the most important thing in a whole day is the rest we take between two deep breaths.",
+    themes: ["healing"],
+    source: "Etty Hillesum",
+    language: "en",
+  },
+  {
+    text: "In three words I can sum up everything I've learned about life: it goes on.",
+    themes: ["healing", "acceptance"],
+    source: "Robert Frost",
+    language: "en",
+  },
+  {
+    text: "We cannot change anything unless we accept it.",
+    themes: ["acceptance"],
+    source: "Carl Jung",
+    language: "en",
+  },
+  {
+    text: "The curious paradox is that when I accept myself just as I am, then I can change.",
+    themes: ["acceptance", "self-worth"],
+    source: "Carl Rogers",
+    language: "en",
+  },
+  {
+    text: "Not everything that is faced can be changed, but nothing can be changed until it is faced.",
+    themes: ["acceptance"],
+    source: "James Baldwin",
+    language: "en",
+  },
+  {
+    text: "You must give up the life you planned in order to have the life that is waiting for you.",
+    themes: ["acceptance"],
+    source: "Joseph Campbell",
+    language: "en",
+  },
+  {
+    text: "Accept the things to which fate binds you, and love the people with whom fate brings you together, and do so with all your heart.",
+    themes: ["acceptance"],
+    source: "Marcus Aurelius",
+    language: "en",
+  },
+  {
+    text: "You can't stop the waves, but you can learn to surf.",
+    themes: ["acceptance"],
+    source: "Jon Kabat-Zinn",
+    language: "en",
+  },
+  {
+    text: "Be yourself; everyone else is already taken.",
+    themes: ["acceptance", "identity"],
+    source: "Oscar Wilde",
+    language: "en",
+  },
+  {
+    text: "Life can only be understood backwards; but it must be lived forwards.",
+    themes: ["acceptance"],
+    source: "Søren Kierkegaard",
+    language: "en",
+  },
+  {
+    text: "He who has a why to live for can bear almost any how.",
+    themes: ["purpose"],
+    source: "Friedrich Nietzsche",
+    language: "en",
+  },
+  {
+    text: "The purpose of life is not to be happy. It is to be useful, to be honorable, to be compassionate, to have it make some difference that you have lived and lived well.",
+    themes: ["purpose"],
+    source: "Ralph Waldo Emerson",
+    language: "en",
+  },
+  {
+    text: "Many people die with their music still in them. Too often it is because they are always getting ready to live. Before they know it, time runs out.",
+    themes: ["purpose"],
+    source: "Oliver Wendell Holmes Sr.",
+    language: "en",
+  },
+  {
+    text: "What man actually needs is not a tensionless state but rather the striving and struggling for a worthwhile goal, a freely chosen task.",
+    themes: ["purpose"],
+    source: "Viktor Frankl",
+    language: "en",
+  },
+  {
+    text: "Don't ask what the world needs. Ask what makes you come alive, and go do it. Because what the world needs is people who have come alive.",
+    themes: ["purpose"],
+    source: "Howard Thurman",
+    language: "en",
+  },
+  {
+    text: "It is not enough to be busy. So are the ants. The question is: What are we busy about?",
+    themes: ["purpose"],
+    source: "Henry David Thoreau",
+    language: "en",
+  },
+  {
+    text: "Tell me, what is it you plan to do with your one wild and precious life?",
+    themes: ["purpose"],
+    source: "Mary Oliver",
+    language: "en",
+  },
+  {
+    text: "Efforts and courage are not enough without purpose and direction.",
+    themes: ["purpose"],
+    source: "John F. Kennedy",
+    language: "en",
+  },
+  {
+    text: "The place God calls you to is the place where your deep gladness and the world's deep hunger meet.",
+    themes: ["purpose"],
+    source: "Frederick Buechner",
+    language: "en",
+  },
+  {
+    text: "No one can make you feel inferior without your consent.",
+    themes: ["self-worth"],
+    source: "Eleanor Roosevelt",
+    language: "en",
+  },
+  {
+    text: "Owning our story and loving ourselves through that process is the bravest thing that we will ever do.",
+    themes: ["self-worth"],
+    source: "Brené Brown",
+    language: "en",
+  },
+  {
+    text: "You alone are enough. You have nothing to prove to anybody.",
+    themes: ["self-worth"],
+    source: "Maya Angelou",
+    language: "en",
+  },
+  {
+    text: "If only you could sense how important you are to the lives of those you meet; how important you can be to people you may never even dream of.",
+    themes: ["self-worth"],
+    source: "Fred Rogers",
+    language: "en",
+  },
+
+  // ── Assist 3: burnout · hope · growth · fear · motivation · inspiration ──
+  {
+    text: "I have found that if you love life, life will love you back.",
+    themes: ["hope", "inspiration"],
+    source: "Arthur Rubinstein",
+    language: "en",
+  },
+  {
+    text: "The only way to deal with an unfree world is to become so absolutely free that your very existence is an act of rebellion.",
+    themes: ["motivation", "inspiration"],
+    source: "Albert Camus",
+    language: "en",
+  },
+  {
+    text: "I will not rescue you. For you are not powerless.",
+    themes: ["motivation"],
+    source: "Audre Lorde",
+    language: "en",
+  },
+  {
+    text: "It is worth being forcefully reminded that the world is larger than our anxieties about it.",
+    themes: ["fear"],
+    source: "Alain de Botton",
+    language: "en",
+  },
+  {
+    text: "May your choices reflect your hopes, not your fears.",
+    themes: ["hope", "fear"],
+    source: "Nelson Mandela",
+    language: "en",
+  },
+  {
+    text: "I am not afraid of storms, for I am learning how to sail my ship.",
+    themes: ["fear", "growth"],
+    source: "Louisa May Alcott",
+    language: "en",
+  },
+  {
+    text: "The oak fought the wind and was broken, the willow bent when it must and survived.",
+    themes: ["burnout", "growth"],
+    source: "Robert Jordan",
+    language: "en",
+  },
+  {
+    text: "There is a stubbornness about me that never can bear to be frightened at the will of others. My courage always rises at every attempt to intimidate me.",
+    themes: ["fear", "motivation"],
+    source: "Jane Austen",
+    language: "en",
+  },
+  {
+    text: "We are all in the gutter, but some of us are looking at the stars.",
+    themes: ["hope", "inspiration"],
+    source: "Oscar Wilde",
+    language: "en",
+  },
+  {
+    text: "You must rest. A field that has rested gives a bountiful crop.",
+    themes: ["burnout"],
+    source: "Ovid",
+    language: "en",
+  },
+  {
+    text: "It is during our darkest moments that we must focus to see the light.",
+    themes: ["hope"],
+    source: "Aristotle",
+    language: "en",
+  },
+  {
+    text: "Do not let your grand ambitions stand in the way of small, meaningful steps.",
+    themes: ["motivation", "growth"],
+    source: "Thomas Carlyle",
+    language: "en",
+  },
+  {
+    text: "The completely clear individual is a myth. We are all messy, and that is where the growth happens.",
+    themes: ["growth"],
+    source: "Carl Rogers",
+    language: "en",
+  },
+  {
+    text: "There are years that ask questions and years that answer.",
+    themes: ["growth"],
+    source: "Zora Neale Hurston",
+    language: "en",
+  },
+  {
+    text: "The cure for anything is salt water: sweat, tears or the sea.",
+    themes: ["burnout"],
+    source: "Isak Dinesen",
+    language: "en",
+  },
+  {
+    text: "It is not the mountain we conquer, but ourselves.",
+    themes: ["growth", "motivation"],
+    source: "Edmund Hillary",
+    language: "en",
+  },
+  {
+    text: "Fear is a habit; I am not afraid.",
+    themes: ["fear"],
+    source: "Ayn Rand",
+    language: "en",
+  },
+  {
+    text: "You must build your own world, or be crushed by the one others construct for you.",
+    themes: ["motivation"],
+    source: "Anaïs Nin",
+    language: "en",
+  },
+  {
+    text: "We must be willing to let go of the life we planned so as to have the life that is waiting for us.",
+    themes: ["growth", "fear"],
+    source: "Joseph Campbell",
+    language: "en",
+  },
+  {
+    text: "The weight of the world is too heavy to carry alone, and you were never meant to.",
+    themes: ["burnout"],
+    source: "James Baldwin",
+    language: "en",
+  },
+  {
+    text: "Everything you have ever wanted is on the other side of fear.",
+    themes: ["fear", "inspiration"],
+    source: "George Addair",
+    language: "en",
+  },
+  {
+    text: "What is necessary is to look at things as they are, and to move forward without false illusions.",
+    themes: ["motivation"],
+    source: "Simone de Beauvoir",
+    language: "en",
+  },
+  {
+    text: "I have run out of words, run out of juice, run out of everything but the sheer will to keep existing.",
+    themes: ["burnout"],
+    source: "Sylvia Plath",
+    language: "en",
+  },
+  {
+    text: "To be creative means to be in love with life. You can be creative only if you love life enough that you want to enhance its beauty.",
+    themes: ["inspiration"],
+    source: "Osho",
+    language: "en",
+  },
+  {
+    text: "In the midst of winter, I found there was, within me, an invincible summer.",
+    themes: ["hope", "burnout"],
+    source: "Albert Camus",
+    language: "en",
+  },
+  {
+    text: "We do not heal the past by dwelling there; we heal the past by living fully in the present.",
+    themes: ["growth"],
+    source: "Marianne Williamson",
+    language: "en",
+  },
+  {
+    text: "Fear is only as deep as the mind allows.",
+    themes: ["fear"],
+    source: "Japanese Proverb",
+    language: "en",
+  },
+  {
+    text: "The soul usually knows what to do to heal itself. The challenge is to silence the mind.",
+    themes: ["burnout"],
+    source: "Caroline Myss",
+    language: "en",
+  },
+  {
+    text: "Go to the edge of the cliff and jump off. Build your wings on the way down.",
+    themes: ["motivation", "inspiration"],
+    source: "Ray Bradbury",
+    language: "en",
+  },
+  {
+    text: "Hope is the thing with feathers that perches in the soul and sings the tune without the words.",
+    themes: ["hope"],
+    source: "Emily Dickinson",
+    language: "en",
+  },
+  {
+    text: "It takes courage to grow up and become who you really are.",
+    themes: ["growth", "fear"],
+    source: "E.E. Cummings",
+    language: "en",
+  },
+  {
+    text: "I have been tired for so long that I have forgotten what it feels like to be alive without a weight on my chest.",
+    themes: ["burnout"],
+    source: "Virginia Woolf",
+    language: "en",
+  },
+  {
+    text: "Do not desire to be clean of all your stains; they are the maps of where you have been.",
+    themes: ["growth"],
+    source: "Leo Tolstoy",
+    language: "en",
+  },
+  {
+    text: "One can choose to go back toward safety or forward toward growth. Growth must be chosen again and again; fear must be overcome again and again.",
+    themes: ["growth", "fear"],
+    source: "Abraham Maslow",
+    language: "en",
+  },
+  {
+    text: "Action is a great restorer and builder of confidence. Inaction is not only the result, but the cause, of fear.",
+    themes: ["fear", "motivation"],
+    source: "Norman Vincent Peale",
+    language: "en",
+  },
+  {
+    text: "The greatest thing in the world is not so much where we stand, as in what direction we are moving.",
+    themes: ["growth", "inspiration"],
+    source: "Oliver Wendell Holmes Jr.",
+    language: "en",
+  },
+  {
+    text: "I am dripping with exhaustion, yet my mind refuses to sleep. It feels like a machine that forgot how to turn off.",
+    themes: ["burnout"],
+    source: "Franz Kafka",
+    language: "en",
+  },
+  {
+    text: "I dwell in possibility.",
+    themes: ["hope", "inspiration"],
+    source: "Emily Dickinson",
+    language: "en",
+  },
+  {
+    text: "Even a happy life cannot be without a measure of darkness, and the word happy would lose its meaning if it were not balanced by sadness.",
+    themes: ["hope"],
+    source: "Carl Jung",
+    language: "en",
+  },
+  {
+    text: "The world breaks everyone and afterward many are strong at the broken places.",
+    themes: ["growth", "burnout"],
+    source: "Ernest Hemingway",
+    language: "en",
+  },
+  {
+    text: "The question isn't who is going to let me; it's who is going to stop me.",
+    themes: ["motivation"],
+    source: "Ayn Rand",
+    language: "en",
+  },
+  {
+    text: "A genuine text or piece of art allows us to see ourselves clearly, even the parts we hide.",
+    themes: ["inspiration"],
+    source: "bell hooks",
+    language: "en",
+  },
+  {
+    text: "The light is not at the end of the tunnel. The light is within you, and you must carry it through.",
+    themes: ["hope"],
+    source: "Kahlil Gibran",
+    language: "en",
+  },
+  {
+    text: "Tension is who you think you should be. Relaxation is who you are.",
+    themes: ["burnout"],
+    source: "Chinese Proverb",
+    language: "en",
+  },
+  {
+    text: "The most beautiful things in the world cannot be seen or even touched, they must be felt with the heart.",
+    themes: ["inspiration"],
+    source: "Helen Keller",
+    language: "en",
+  },
+];
+
+/**
+ * Seed the quote library from the curated 130+ pool.
+ *
+ * Run once: bunx convex run seed:seedQuotes
+ * Force re-seed: bunx convex run seed:seedQuotes '{"force":true}'
+ */
+export const seedQuotes = internalAction({
+  args: { force: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
+    const result: { inserted?: number; skipped?: boolean } =
+      await ctx.runMutation(internal.quotes.seed, {
+        quotes: QUOTES,
+        force: args.force,
+      });
+    if (result.skipped) {
+      console.log("[seed] Quote library already populated — pass force=true to override.");
+    } else {
+      console.log(`[seed] ${result.inserted} quotes seeded.`);
+    }
+    return result;
+  },
+});
