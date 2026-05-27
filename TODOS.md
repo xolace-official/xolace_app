@@ -4,6 +4,22 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P2 — Trusted Bridge: "Save without sending" (AsyncStorage, unsent letters)
+
+**What:** When the user taps "Save without sending" on Screen 2 of the Trusted Bridge, persist the draft to `AsyncStorage` locally on-device instead of discarding it. Surface saved drafts as an "unsent letters" list — accessible from the timeline or a dedicated entry point.
+
+**Why:** Stage 1 of the Bridge (branch: `chore-trusted-human-bridge`) ships "Save without sending" as a dismiss-only action (no persistence) to keep Stage 1 minimal for demand validation. If Stage 1 data shows high save-button usage (or qualitative signals that users wanted to revisit drafts), the AsyncStorage architecture belongs in Stage 2. The therapeutic value of an unsent-letters collection is standalone — separate from whether the user eventually sends the message.
+
+**How to start:** After Stage 1 ships and data validates: add `AsyncStorage.setItem` in the "Save without sending" handler in `TrustedBridgeScreen`. Key format: `trusted_bridge_drafts` → JSON array of `{ id, mirrorText, draft, recipientName, recipientRelationship, savedAt }`. Build a minimal "Unsent letters" view in `src/features/trusted-bridge/`. No Convex writes — this is intentionally device-local per the privacy constraint in the design doc.
+
+**Key files:** `src/features/trusted-bridge/components/screen/trusted-bridge-screen.tsx` (save handler), `src/features/trusted-bridge/components/unsent-letters/` (new), `src/app/(protected)/trusted-bridge-saved.tsx` (new route, optional)
+
+**Effort:** M (human ~1 day / CC ~45min)
+**Priority:** P2 — gated on Stage 1 validation. Do NOT build until bridge_saved/bridge_shared rates from Stage 1 confirm demand.
+**Depends on:** `chore-trusted-human-bridge` Stage 1 shipped + 2 weeks of analytics data (bridge_dismissed { step: "draft" } rate as proxy for save-intent)
+
+---
+
 ## P2 — Feedback Analytics Dashboard
 
 **What:** Build a PostHog dashboard tracking gave_up rate (gave_up events / total sessions), mirror_miss rate (mirror_miss events / clarification attempts), and top selectedOption distributions for gave_up and mood_heavier.
