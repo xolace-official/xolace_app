@@ -80,7 +80,7 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
-## P3 — Tone Shown in Session Timeline
+## P3 — Tone Shown in Session Timeline ✅
 
 **What:** When users review past sessions in the timeline, show which mirror tone was active for that session. A small chip or label — "Witnessed", "Poetic" — next to the session entry or inside the session detail view.
 
