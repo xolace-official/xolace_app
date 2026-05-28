@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
-import { LinkButton } from 'heroui-native';
+import { LinkButton, PressableFeedback } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { NIGHT_SESSION_END_EXIT } from '@/src/features/reflect/night-copy';
 
@@ -63,17 +63,27 @@ export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
       )}
 
       {phase === 'close' && (
-        <View className="flex-1 px-8 justify-center">
+        <View className="flex-1 justify-center items-center px-8">
+          {/* Ambient ember glow */}
+          <View className="absolute inset-0 items-center justify-center">
+            <View className="rounded-full bg-accent/[0.08]" style={{ width: 240, height: 240 }} />
+          </View>
+
           <EaseView
             initialAnimate={{ opacity: 0, translateY: 20 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={EASE_IN}
+            className="w-full items-center"
           >
-            <LinkButton onPress={onHaveMore} size="sm" className="self-start">
-              <LinkButton.Label className="font-light text-accent/60">
+            <PressableFeedback
+              onPress={onHaveMore}
+              accessibilityLabel="Have more? I'm here."
+              className="w-full rounded-2xl border border-accent/20 bg-accent/[0.06] px-5 py-4"
+            >
+              <AppText className="text-sm text-center font-light text-accent/60">
                 Have more? I&apos;m here.
-              </LinkButton.Label>
-            </LinkButton>
+              </AppText>
+            </PressableFeedback>
           </EaseView>
         </View>
       )}

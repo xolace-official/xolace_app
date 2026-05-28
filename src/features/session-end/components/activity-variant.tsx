@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
-import { BottomSheet, LinkButton, PressableFeedback } from 'heroui-native';
+import { BottomSheet, PressableFeedback } from 'heroui-native';
 import { useQuery } from 'convex/react';
 import { BottomSheetBlurOverlay } from '@/src/components/bottom-sheet-blur-overlay';
 import { api } from '@/convex/_generated/api';
@@ -194,11 +194,11 @@ export const ActivityVariant = ({
           >
             {/* Header */}
             <View className="px-8 pt-14 pb-8">
-              <AppText className="font-serif text-2xl text-foreground mb-2">
+              <AppText className="font-serif text-3xl text-foreground mb-2">
                 Leave it for someone.
               </AppText>
               <AppText className="text-sm font-light leading-5 text-foreground/40">
-                Your words might help someone who feels exactly this.
+                Someone out there might be carrying something just like this.
               </AppText>
             </View>
 
@@ -248,24 +248,35 @@ export const ActivityVariant = ({
 
       {/* ── Phase 4: Close ── */}
       {phase === 'close' && (
-        <View className="flex-1 px-8 justify-center">
-          <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_IN}>
-            <View className="gap-5 items-start">
-              <LinkButton
-                onPress={() => onHaveMore(undefined, selectedMood ?? undefined)}
-                size="sm"
-              >
-                <LinkButton.Label className="font-light text-accent/70">
-                  Have more? I&apos;m here.
-                </LinkButton.Label>
-              </LinkButton>
-              <Pressable
-                onPress={() => onDismiss(false, selectedMood ?? undefined)}
-                accessibilityLabel="Done"
-              >
-                <AppText className="text-sm text-foreground/30">Done</AppText>
-              </Pressable>
-            </View>
+        <View className="flex-1 justify-center items-center px-8">
+          {/* Ambient ember glow */}
+          <View className="absolute inset-0 items-center justify-center">
+            <View className="rounded-full `bg-accent/8" style={{ width: 240, height: 240 }} />
+          </View>
+
+          <EaseView
+            initialAnimate={FADE_OUT}
+            animate={FADE_IN}
+            transition={EASE_IN}
+            className="w-full items-center gap-5"
+          >
+            <PressableFeedback
+              onPress={() => onHaveMore(undefined, selectedMood ?? undefined)}
+              accessibilityLabel="Have more? I'm here."
+              className="w-full rounded-2xl border border-accent/20 bg-accent/[0.06] px-5 py-4"
+            >
+              <AppText className="text-sm text-center font-light text-accent/60">
+                Have more? I&apos;m here.
+              </AppText>
+            </PressableFeedback>
+
+            <Pressable
+              onPress={() => onDismiss(false, selectedMood ?? undefined)}
+              accessibilityLabel="Done"
+              hitSlop={12}
+            >
+              <AppText className="text-sm text-foreground/20">Done</AppText>
+            </Pressable>
           </EaseView>
         </View>
       )}
