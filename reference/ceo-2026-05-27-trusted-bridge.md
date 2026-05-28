@@ -372,3 +372,135 @@ Build order is sequenced — each task is unblocked by previous completion.
 
 ## Deferred Items for TODOS.md
 - **"Save without sending" with AsyncStorage persistence** (Stage 2 scope): "Save without sending" in Stage 1 dismisses without persistence. If Stage 1 shows demand for saved drafts, add AsyncStorage persistence in Stage 2 as "unsent letters" pattern. (Priority: P2, unblocked after Stage 1 data)
+
+---
+
+## Plan Revision — 2026-05-28 (Eng Review, Session 2)
+
+**Context:** Stage 1 (mirror pre-fill validation build) is dropped. Team going straight to AI generation — cost is low at current scale and the validation step adds unnecessary delay. Session-end UI is being redesigned separately (separate design session), so this branch does NOT touch session-end.
+
+### Scope Change Summary
+
+| Item | Old (Stage 1) | New (Stage 2 Direct) |
+|------|--------------|----------------------|
+| AI calls | None (Stage 1) | Yes — Anthropic via `requestBridgeDraft` action |
+| Mirror pre-fill | Screen 2 pre-filled with mirrorText | Screen 2 pre-filled with AI-generated draft |
+| Entry point | BridgeCard in ExitVariant + ActivityVariant | Step in redesigned session-end (separate branch, DEPENDENCY) |
+| Error fallback | n/a | AI fails → Mirror text with "Couldn't personalize" note |
+| Bridge visibility | Optional card, opt-in | Default step in session-end, opt-out via settings |
+| Settings toggle | n/a | `bridgeEnabled: boolean` in Zustand toggles slice (default: true) |
+| Skip behavior | n/a | Skip = skip this session only; settings for permanent opt-out |
+
+### D-Decisions (this session)
+
+| # | Question | Answer |
+|---|----------|--------|
+| D1 | Entry point: wire into current session-end or defer? | Defer — Bridge is a step in the redesigned session-end (separate design session) |
+| D2 | How does Bridge appear in default-on model? | Step in redesigned session-end sequence with visible Skip button |
+| D3 | Settings opt-out storage | Zustand persist in existing toggles slice (`bridgeEnabled`, default: true) |
+| D4 | Skip behavior | Skip = skip this session only; no prompt; Settings for permanent opt-out |
+
+### NOT in Scope (this branch) — Revised
+
+- Session-end wiring: BridgeCard in ExitVariant/ActivityVariant, useSessionEnd mirrorText extension, notif nudge suppression — all deferred to session-end redesign branch
+- `completePath` bridge tap callback — not needed until session-end redesign
+- activity-variant.tsx extraction — not touching session-end files
+- Stage 1 implementation tasks (Tasks 1–6 from original task list) — dropped entirely
+- Contact picker, draft persistence, push notifications — MVP scope unchanged
+
+### Updated Implementation Tasks (Stage 2 Direct)
+
+Build order is sequenced. Session-end redesign is a DEPENDENCY of end-to-end feature availability, but these tasks produce a fully functional Bridge that is integrated during that redesign.
+
+**T1 (P1, human: ~30min / CC: ~5min) — Zustand store: Bridge opt-out toggle**
+- File: `src/store/store.ts`
+- Add `bridgeEnabled: boolean` (default: `true`) to the `toggles` slice
+- Persisted automatically by existing persist middleware
+- Consumed by session-end redesign to decide whether to show Bridge step
+
+**T2 (P1, human: ~1h / CC: ~10min) — Settings toggle UI**
+- File: settings screen (find path in `src/app/(protected)/settings/`)
+- Add "Share with someone" toggle reading `bridgeEnabled` from store
+- Label: something like "Suggest sharing with someone after sessions"
+- On toggle off: sets `bridgeEnabled: false` in Zustand
+
+**T3 (P1, human: ~2h / CC: ~20min) — `convex/ai/bridge.ts`**
+- `verifyOwnership` internalQuery (wraps `requireSessionOwnership()` from `convex/lib/auth.ts`)
+- `_generateDraft(mirrorText, recipientName, relationship)` async helper — single Anthropic call (non-streaming, 3–5 sentences)
+- `requestBridgeDraft` public action: auth check → `verifyOwnership` → `_generateDraft` → return `{ draft: string }`
+- Anthropic prompt per design doc (first-person, warm tone, 3–5 sentences, no app mention)
+- Uses `api.sessions.getById` (NOT the non-existent `getMirrorText`) if mirrorText fetch needed server-side
+- `recipientName` and `recipientRelationship` used in prompt ONLY, never persisted
+
+**T4 (P1, human: ~30min / CC: ~5min) — Route file + layout registration**
+- `src/app/(protected)/trusted-bridge.tsx` — thin wrapper importing `TrustedBridgeScreen`
+- `src/app/(protected)/_layout.tsx` — register `trusted-bridge` with default options only (gestureEnabled toggled dynamically inside component, NOT at layout level)
+
+**T5 (P1, human: ~3h / CC: ~30min) — `TrustedBridgeScreen` (Screen 1 + Screen 2)**
+- File: `src/features/trusted-bridge/components/screen/trusted-bridge-screen.tsx`
+- Local state: `step: "recipient" | "draft"`, `recipientName`, `recipientRelationship: string | null`
+- Screen 1 ("recipient"):
+  - Header: "Who would you like to tell?"
+  - `TextField` (heroui-native): recipientName, placeholder "their name or how you think of them"
+  - Relationship selector: 4 pill options (parent / partner / friend / sibling), optional
+  - Primary CTA "Write this together": disabled when `recipientName.trim() === ""`; on tap → `PostHog.capture("bridge_opened", { recipient_relationship })` → advance step → trigger AI call
+- Screen 2 ("draft"):
+  - Header: "Here's a start..."
+  - `TextArea` (heroui-native): editable, pre-filled with AI draft (or Mirror text on error)
+  - `useRef<string>` captures initial first sentence at mount (for `first_sentence_changed` delta at share time)
+  - Back button in header "← Back" → `setStep("recipient")`
+  - Skip button "Not right now" → `router.replace("/(protected)")` → `PostHog.capture("bridge_dismissed", { step: "draft" })`
+  - Primary CTA "Share...": `Share.open({ message: draft })` wrapped in try/catch (cancel throws on some platforms)
+  - On share: `PostHog.capture("bridge_shared", { character_delta: draft.length - originalDraft.length, first_sentence_changed, recipient_relationship })`
+  - Footer: "This only lives on your device. We don't see who you're writing to."
+  - Error fallback: if AI call fails, show Mirror text + small note "Couldn't personalize — here's a starting point"
+- gestureEnabled dynamic toggle:
+  ```typescript
+  const navigation = useNavigation(); // from @react-navigation/native, NOT expo-router
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: step !== "draft" });
+  }, [step, navigation]);
+  ```
+- `first_sentence_changed` calculation: `draft.split(/[.!?]/)[0] !== initialFirstSentenceRef.current`
+  Note: AI draft produces proper sentences; this metric is now reliable unlike the Mirror-text case
+
+**T6 (P1, human: ~1h / CC: ~10min) — `use-bridge-draft.ts` hook**
+- File: `src/features/trusted-bridge/hooks/use-bridge-draft.ts`
+- Wraps `useAction(api.ai.bridge.requestBridgeDraft)` from `convex/react`
+- States: `{ status: "idle" | "loading" | "success" | "error", draft: string | null }`
+- On error: sets status "error"; component falls back to mirrorText
+- Exposed: `{ requestDraft, status, draft }`
+
+### Failure Modes (updated for Stage 2 scope)
+
+| Mode | Trigger | Severity | Mitigation |
+|------|---------|----------|------------|
+| AI call fails | Anthropic timeout / error | HIGH | use-bridge-draft sets status "error"; Screen 2 shows Mirror text + note |
+| Share.open() throws (user cancels share sheet) | User presses Cancel on share sheet | MED | try/catch; catch silently; Screen 2 stays open |
+| mirrorText > 500 chars (URL truncation) | Long Mirror output | MED | Pass `sessionId` only as route param; Screen 1 queries via `api.sessions.getById` on mount |
+| recipientName empty → impersonal draft | User taps CTA with empty name | MED | CTA disabled when `recipientName.trim() === ""`; no submit path |
+| Screen 2 is a trap (gesture disabled, no back button) | gestureEnabled: false, iOS | MED | Explicit "← Back" header button; back always works |
+
+### What Already Exists (can use unchanged)
+
+- `requireSessionOwnership()` — `convex/lib/auth.ts`
+- `api.sessions.getById` — `convex/sessions.ts:385` (use instead of non-existent `getMirrorText`)
+- Anthropic client pattern — `convex/ai/process.ts`
+- `react-native-share` — merged PR #73
+- Zustand store with toggles slice + persist — `src/store/store.ts`
+- PostHog client-side capture — throughout app
+- `useNavigation` from `@react-navigation/native` — already in codebase
+
+## GSTACK REVIEW REPORT
+
+| Review | Trigger | Why | Runs | Status | Findings |
+|--------|---------|-----|------|--------|----------|
+| CEO Review | `/plan-ceo-review` | Scope & strategy | 1 | CLEAR | 4 scope proposals, 3 accepted, 1 deferred; 2 critical gaps closed |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 2 | CLEAR | Session 1: D1–D9 (Stage 1 architecture); Session 2: D1–D4 (Stage 2 scope, session-end deferral, settings toggle, skip behavior) |
+| Codex Review | `/codex review` | Independent 2nd opinion | 0 | — | — |
+| Design Review | `/plan-design-review` | UI/UX gaps | 0 | — | — |
+| DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | — |
+
+**UNRESOLVED:** 0 — all decisions locked across both eng review sessions.
+
+**VERDICT:** ENG REVIEW CLEARED (2 sessions). Ready to implement. Session-end redesign is a DEPENDENCY — Bridge screens + Convex action can be built independently; integration happens during session-end redesign branch.
