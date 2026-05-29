@@ -44,7 +44,7 @@ export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
 
   useEffect(() => {
     if (phase !== "acknowledge") return;
-    const timer = setTimeout(() => setPhase("close"), 1500);
+    const timer = setTimeout(() => setPhase("close"), 3500);
     return () => clearTimeout(timer);
   }, [phase]);
 

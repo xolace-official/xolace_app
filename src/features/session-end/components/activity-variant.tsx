@@ -95,7 +95,7 @@ export const ActivityVariant = ({
     if (phase !== "acknowledge") return;
     const timer = setTimeout(() => {
       setPhase(isNight ? (distilledText ? "offer" : "close") : "mood");
-    }, 4000);
+    }, 4500);
     return () => clearTimeout(timer);
   }, [phase, isNight, distilledText]);
 
@@ -249,6 +249,7 @@ export const ActivityVariant = ({
 
             {/* Spacer */}
             <View className="flex-1" />
+            
 
             {/* TODO(bridge): replace or extend this phase with BridgeOffer component when Trusted Bridge feature ships */}
             {/* Action buttons pinned at bottom */}
@@ -285,6 +286,7 @@ export const ActivityVariant = ({
           </EaseView>
         </View>
       )}
+      
 
       {/* ── Phase 4: Close ── */}
       {phase === "close" && (
@@ -292,7 +294,7 @@ export const ActivityVariant = ({
           {/* Ambient ember glow */}
           <View className="absolute inset-0 items-center justify-center">
             <View
-              className="rounded-full `bg-accent/8"
+              className="rounded-full bg-accent/8"
               style={styles.ambientGlow}
             />
           </View>
