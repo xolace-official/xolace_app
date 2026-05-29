@@ -117,16 +117,24 @@ export const ActivityVariant = ({
       {phase === "acknowledge" && (
         <Pressable
           onPress={advancePhase}
-          className="flex-1 px-8 justify-end pb-16"
+          className="flex-1 items-center justify-center px-8 pb-16"
         >
-          {/* TODO(mascot): Insert illustrated mascot component here when asset is ready */}
+          {/* Ambient glow */}
+          <View className="absolute inset-0 items-center justify-center">
+            <View
+              className="rounded-full bg-accent/6"
+              style={styles.ambientGlow}
+            />
+          </View>
+          {/* TODO(mascot-video): Replace this spacer with VideoView once expo-video is installed in a store release. See TODOS.md — "Looping Mascot Video on Acknowledge Phase". */}
           <View className="flex-1" />
           <EaseView
             initialAnimate={FADE_OUT}
             animate={FADE_IN}
             transition={EASE_SLOW}
+            className="w-full pb-8"
           >
-            <AppText className="font-serif text-2xl leading-9 text-foreground">
+            <AppText className="font-serif text-3xl leading-10 text-foreground">
               {isNight
                 ? NIGHT_SESSION_END_ACTIVITY
                 : "You showed up for\nyourself today."}
