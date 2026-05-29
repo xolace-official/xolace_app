@@ -140,13 +140,13 @@ export async function distillQuoteForUser(
         })
         .join("\n");
 
-      const systemPrompt = `You are given the emotional themes from a user's recent reflections. Generate one beautiful, honest sentence (or two short sentences); like a quote that captures the emotional experience without being specific. It should feel like something a thoughtful writer found for themselves and wanted to keep.
+      const systemPrompt = `You are given the emotional themes from a user's recent reflections. Generate beautiful, honest quote; a quote that captures the emotional experience without being specific. It should feel like something a thoughtful writer found for themselves and wanted to keep.
 
       Rules:
       - 1-2 sentences maximum
       - Poetic but grounded — not therapy-speak.
       - Can even rephrase real world quotes to suit the user's emotional context
-      - Second person ("You've been carrying something...") or first person ("There's a weight I'm starting to name.")
+      - Second person (You) or first person
       - No specific details from the session (the quote will be shared publicly)
       - No medical or clinical terminology
       - Must be able to stand alone without any context

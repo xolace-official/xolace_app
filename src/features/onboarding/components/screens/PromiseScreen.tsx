@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSharedValue } from 'react-native-reanimated';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { playGentlePresence, playOnboardingEntrance } from '@/src/lib/haptics';
@@ -54,6 +55,8 @@ export const PromiseScreen = () => {
   const marqueeStyle = { flex: 5, paddingTop: insets.top + 40 };
 
   return (
+    <>
+    <StatusBar hidden />
     <View
       className="flex-1 bg-background"
       style={rootStyle}
@@ -110,6 +113,7 @@ export const PromiseScreen = () => {
         </EaseView>
       </View>
     </View>
+    </>
   );
 };
 
