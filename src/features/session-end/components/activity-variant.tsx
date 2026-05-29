@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Image } from "expo-image";
 import { EaseView } from "react-native-ease/uniwind";
 import { BottomSheet, PressableFeedback } from "heroui-native";
 import { useQuery } from "convex/react";
@@ -62,6 +63,10 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
   },
+  mascot: {
+    width: "100%",
+    flex: 1,
+  },
 });
 
 export const ActivityVariant = ({
@@ -117,22 +122,18 @@ export const ActivityVariant = ({
       {phase === "acknowledge" && (
         <Pressable
           onPress={advancePhase}
-          className="flex-1 items-center justify-center px-8 pb-16"
+          className="flex-1 px-8 pb-8"
         >
-          {/* Ambient glow */}
-          <View className="absolute inset-0 items-center justify-center">
-            <View
-              className="rounded-full bg-accent/6"
-              style={styles.ambientGlow}
-            />
-          </View>
-          {/* TODO(mascot-video): Replace this spacer with VideoView once expo-video is installed in a store release. See TODOS.md — "Looping Mascot Video on Acknowledge Phase". */}
-          <View className="flex-1" />
+          {/* TODO(mascot-video): Replace Image with VideoView once expo-video is installed in a store release. See TODOS.md — "Looping Mascot Video on Acknowledge Phase". */}
+          <Image
+            source={require("@/assets/images/flux/jump-love-bgremove.png")}
+            style={styles.mascot}
+            contentFit="contain"
+          />
           <EaseView
             initialAnimate={FADE_OUT}
             animate={FADE_IN}
             transition={EASE_SLOW}
-            className="w-full pb-8"
           >
             <AppText className="font-serif text-3xl leading-10 text-foreground">
               {isNight
@@ -305,9 +306,9 @@ export const ActivityVariant = ({
             <PressableFeedback
               onPress={() => onHaveMore(undefined, selectedMood ?? undefined)}
               accessibilityLabel="Have more? I'm here."
-              className="w-full rounded-2xl border border-accent/20 bg-accent/6 px-5 py-4"
+              className="w-full rounded-2xl border border-accent/20 bg-accent/15 px-5 py-4"
             >
-              <AppText className="text-sm text-center font-light text-accent/60">
+              <AppText className="text-sm text-center font-light text-accent/70">
                 Have more? I&apos;m here.
               </AppText>
             </PressableFeedback>

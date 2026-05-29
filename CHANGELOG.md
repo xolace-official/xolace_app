@@ -4,7 +4,19 @@ All notable changes to Xolace are documented here.
 
 ---
 
-## [1.3.0.0] - OTA Update (2026-05-22)
+## [1.3.0.1] - OTA Update (2026-05-29)
+
+### Changed
+
+- **Session-end acknowledge screen** — mascot illustration (`jump-love-bgremove`) now fills the upper space of the acknowledge phase on both the activity and exit variants, replacing the empty void. Text sits below the mascot, bumped to `text-3xl` for more presence. Placeholder for the upcoming looping mascot video (requires a future store release).
+- **Session-end close screen** — "Have more? I'm here." redesigned as a full-width bordered pill (`PressableFeedback`) centered on screen with an ambient glow; replaces the previous plain link text floating at the bottom. Same treatment applied to both activity and exit variants.
+- **Session-end offer screen** — title size increased to `text-3xl`; subtitle copy updated to "Someone out there might be carrying something just like this."
+- **Contributed confirmation screen** — replaced placeholder with an ember particle animation (7 particles, staggered timing, single `progress` shared value pattern) rising above a soft glow. Message and Done button fade in sequentially.
+- **Mirror tone badge** — now reads `toneUsed` from the session record rather than the user's current tone preference setting. The badge reflects the tone that actually generated the mirror, not what the user has set today.
+
+---
+
+## [1.3.0.0] - App Store release (2026-05-22)
 
 ### Added
 

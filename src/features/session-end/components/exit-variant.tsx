@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { Image } from "expo-image";
 import { EaseView } from "react-native-ease/uniwind";
 import { useRouter } from "expo-router";
 import { LinkButton, PressableFeedback } from "heroui-native";
@@ -31,6 +32,10 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
   },
+  mascot: {
+    width: "100%",
+    flex: 1,
+  },
 });
 
 export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
@@ -52,10 +57,14 @@ export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
       {phase === "acknowledge" && (
         <Pressable
           onPress={() => setPhase("close")}
-          className="flex-1 px-8 justify-end pb-16"
+          className="flex-1 px-8 pb-8"
         >
-          {/* TODO(mascot): Insert illustrated mascot component here when asset is ready */}
-          <View className="flex-1" />
+          {/* TODO(mascot-video): Replace Image with VideoView once expo-video is installed in a store release. See TODOS.md — "Looping Mascot Video on Acknowledge Phase". */}
+          <Image
+            source={require("@/assets/images/flux/jump-love-bgremove.png")}
+            style={styles.mascot}
+            contentFit="contain"
+          />
           <EaseView
             initialAnimate={FADE_OUT}
             animate={FADE_IN}
