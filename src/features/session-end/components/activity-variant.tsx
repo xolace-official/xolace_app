@@ -1,22 +1,22 @@
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { EaseView } from 'react-native-ease/uniwind';
-import { BottomSheet, PressableFeedback } from 'heroui-native';
-import { useQuery } from 'convex/react';
-import { BottomSheetBlurOverlay } from '@/src/components/bottom-sheet-blur-overlay';
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
-import { AppText } from '@/src/components/shared/app-text';
-import { Presets } from 'react-native-pulsar';
-import { ContributedConfirmation } from '@/src/features/session-end/components/contributed-confirmation';
-import { HeavierFeedbackPrompt } from '@/src/features/session-end/components/heavier-feedback-prompt';
-import { NIGHT_SESSION_END_ACTIVITY } from '@/src/features/reflect/night-copy';
+import { useEffect, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { EaseView } from "react-native-ease/uniwind";
+import { BottomSheet, PressableFeedback } from "heroui-native";
+import { useQuery } from "convex/react";
+import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { AppText } from "@/src/components/shared/app-text";
+import { Presets } from "react-native-pulsar";
+import { ContributedConfirmation } from "@/src/features/session-end/components/contributed-confirmation";
+import { HeavierFeedbackPrompt } from "@/src/features/session-end/components/heavier-feedback-prompt";
+import { NIGHT_SESSION_END_ACTIVITY } from "@/src/features/reflect/night-copy";
 
-type PostSessionMood = 'lighter' | 'same' | 'heavier' | 'unsure';
-type Phase = 'acknowledge' | 'mood' | 'offer' | 'close' | 'contributed';
+type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
+type Phase = "acknowledge" | "mood" | "offer" | "close" | "contributed";
 
 type Props = {
-  sessionId?: Id<'sessions'>;
+  sessionId?: Id<"sessions">;
   distilledText: string | null;
   contributeByDefault: boolean;
   onDismiss: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
@@ -24,13 +24,13 @@ type Props = {
   isNight?: boolean;
 };
 
-const MOODS = ['lighter', 'same', 'heavier', 'unsure'] as const;
+const MOODS = ["lighter", "same", "heavier", "unsure"] as const;
 
 const MOOD_LABELS: Record<PostSessionMood, string> = {
-  lighter: 'lighter',
-  same: 'the same',
-  heavier: 'heavier',
-  unsure: 'not sure',
+  lighter: "lighter",
+  same: "the same",
+  heavier: "heavier",
+  unsure: "not sure",
 };
 
 const MOOD_HAPTICS: Record<PostSessionMood, () => void> = {
@@ -40,17 +40,29 @@ const MOOD_HAPTICS: Record<PostSessionMood, () => void> = {
   unsure: () => Presets.murmur(),
 };
 
-const HEAVIER_SHEET_SNAP = ['52%'];
+const HEAVIER_SHEET_SNAP = ["52%"];
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
-const EASE_SLOW = { type: 'timing' as const, duration: 600, easing: EASING };
-const EASE_IN = { type: 'timing' as const, duration: 400, delay: 200, easing: EASING };
+const EASE_SLOW = { type: "timing" as const, duration: 600, easing: EASING };
+const EASE_IN = {
+  type: "timing" as const,
+  duration: 400,
+  delay: 200,
+  easing: EASING,
+};
 const FADE_OUT = { opacity: 0 };
 const FADE_IN = { opacity: 1 };
 const SLIDE_OUT = { opacity: 0, translateY: 24 };
 const SLIDE_IN = { opacity: 1, translateY: 0 };
 
 const SCROLL_CONTENT = { flexGrow: 1 as const };
+
+const styles = StyleSheet.create({
+  ambientGlow: {
+    width: 240,
+    height: 240,
+  },
+});
 
 export const ActivityVariant = ({
   sessionId,
@@ -60,21 +72,24 @@ export const ActivityVariant = ({
   onHaveMore,
   isNight = false,
 }: Props) => {
-  const [phase, setPhase] = useState<Phase>('acknowledge');
-  const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(null);
+  const [phase, setPhase] = useState<Phase>("acknowledge");
+  const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(
+    null,
+  );
   const [heavierSheetOpen, setHeavierSheetOpen] = useState(false);
   const canAsk = useQuery(api.feedback.canAskContextual);
 
   const advancePhase = () => {
-    if (phase === 'acknowledge') setPhase(isNight ? (distilledText ? 'offer' : 'close') : 'mood');
-    else if (phase === 'mood') setPhase(distilledText ? 'offer' : 'close');
-    else if (phase === 'offer') setPhase('close');
+    if (phase === "acknowledge")
+      setPhase(isNight ? (distilledText ? "offer" : "close") : "mood");
+    else if (phase === "mood") setPhase(distilledText ? "offer" : "close");
+    else if (phase === "offer") setPhase("close");
   };
 
   useEffect(() => {
-    if (phase !== 'acknowledge') return;
+    if (phase !== "acknowledge") return;
     const timer = setTimeout(() => {
-      setPhase(isNight ? (distilledText ? 'offer' : 'close') : 'mood');
+      setPhase(isNight ? (distilledText ? "offer" : "close") : "mood");
     }, 4000);
     return () => clearTimeout(timer);
   }, [phase, isNight, distilledText]);
@@ -83,32 +98,45 @@ export const ActivityVariant = ({
     MOOD_HAPTICS[mood]();
     setSelectedMood(mood);
     // Open the heavier feedback sheet without blocking phase flow
-    if (mood === 'heavier' && canAsk === true) {
+    if (mood === "heavier" && canAsk === true) {
       setHeavierSheetOpen(true);
     }
   };
 
-  if (phase === 'contributed') {
-    return <ContributedConfirmation onDone={() => onDismiss(true, selectedMood ?? undefined)} />;
+  if (phase === "contributed") {
+    return (
+      <ContributedConfirmation
+        onDone={() => onDismiss(true, selectedMood ?? undefined)}
+      />
+    );
   }
 
   return (
     <View className="flex-1">
       {/* ── Phase 1: Acknowledgment ── */}
-      {phase === 'acknowledge' && (
-        <Pressable onPress={advancePhase} className="flex-1 px-8 justify-end pb-16">
+      {phase === "acknowledge" && (
+        <Pressable
+          onPress={advancePhase}
+          className="flex-1 px-8 justify-end pb-16"
+        >
           {/* TODO(mascot): Insert illustrated mascot component here when asset is ready */}
           <View className="flex-1" />
-          <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_SLOW}>
+          <EaseView
+            initialAnimate={FADE_OUT}
+            animate={FADE_IN}
+            transition={EASE_SLOW}
+          >
             <AppText className="font-serif text-2xl leading-9 text-foreground">
-              {isNight ? NIGHT_SESSION_END_ACTIVITY : 'You showed up for\nyourself today.'}
+              {isNight
+                ? NIGHT_SESSION_END_ACTIVITY
+                : "You showed up for\nyourself today."}
             </AppText>
           </EaseView>
         </Pressable>
       )}
 
       {/* ── Phase 2: Mood Check ── */}
-      {phase === 'mood' && (
+      {phase === "mood" && (
         <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
@@ -126,7 +154,8 @@ export const ActivityVariant = ({
                 How do you feel now?
               </AppText>
               <AppText className="text-sm font-light leading-5 text-foreground/40">
-                Your answer stays private. It helps you notice patterns over time.
+                Your answer stays private. It helps you notice patterns over
+                time.
               </AppText>
             </View>
 
@@ -139,15 +168,15 @@ export const ActivityVariant = ({
                   accessibilityLabel={MOOD_LABELS[mood]}
                   className={`w-full rounded-2xl border px-5 py-4 ${
                     selectedMood === mood
-                      ? 'border-accent/40 bg-accent/10'
-                      : 'border-border/60 bg-surface/30'
+                      ? "border-accent/40 bg-accent/10"
+                      : "border-border/60 bg-surface/30"
                   }`}
                 >
                   <AppText
                     className={`text-base text-center ${
                       selectedMood === mood
-                        ? 'text-accent font-medium'
-                        : 'text-foreground/50 font-light'
+                        ? "text-accent font-medium"
+                        : "text-foreground/50 font-light"
                     }`}
                   >
                     {MOOD_LABELS[mood]}
@@ -163,19 +192,19 @@ export const ActivityVariant = ({
             <View className="px-8 pt-6 pb-12">
               <PressableFeedback
                 onPress={advancePhase}
-                accessibilityLabel={selectedMood ? 'Continue' : 'Skip for now'}
+                accessibilityLabel={selectedMood ? "Continue" : "Skip for now"}
                 className={`w-full rounded-2xl border px-5 py-4 ${
                   selectedMood
-                    ? 'border-foreground/20 bg-foreground/5'
-                    : 'border-border/40'
+                    ? "border-foreground/20 bg-foreground/5"
+                    : "border-border/40"
                 }`}
               >
                 <AppText
                   className={`text-sm text-center ${
-                    selectedMood ? 'text-foreground/70' : 'text-foreground/25'
+                    selectedMood ? "text-foreground/70" : "text-foreground/25"
                   }`}
                 >
-                  {selectedMood ? 'Continue' : 'Skip for now'}
+                  {selectedMood ? "Continue" : "Skip for now"}
                 </AppText>
               </PressableFeedback>
             </View>
@@ -184,7 +213,7 @@ export const ActivityVariant = ({
       )}
 
       {/* ── Phase 3: The Offer ── */}
-      {phase === 'offer' && distilledText && (
+      {phase === "offer" && distilledText && (
         <View className="flex-1">
           <EaseView
             initialAnimate={SLIDE_OUT}
@@ -216,17 +245,19 @@ export const ActivityVariant = ({
             {/* Action buttons pinned at bottom */}
             <View className="px-8 gap-3 pb-12">
               <PressableFeedback
-                onPress={() => setPhase('contributed')}
+                onPress={() => setPhase("contributed")}
                 accessibilityLabel="Yes, share anonymously"
                 className={`w-full rounded-2xl border px-5 py-4 ${
                   contributeByDefault
-                    ? 'border-accent/40 bg-accent/10'
-                    : 'border-border/60 bg-surface/30'
+                    ? "border-accent/40 bg-accent/10"
+                    : "border-border/60 bg-surface/30"
                 }`}
               >
                 <AppText
                   className={`text-base text-center ${
-                    contributeByDefault ? 'text-accent font-medium' : 'text-foreground/50 font-light'
+                    contributeByDefault
+                      ? "text-accent font-medium"
+                      : "text-foreground/50 font-light"
                   }`}
                 >
                   Yes, anonymously
@@ -247,11 +278,14 @@ export const ActivityVariant = ({
       )}
 
       {/* ── Phase 4: Close ── */}
-      {phase === 'close' && (
+      {phase === "close" && (
         <View className="flex-1 justify-center items-center px-8">
           {/* Ambient ember glow */}
           <View className="absolute inset-0 items-center justify-center">
-            <View className="rounded-full `bg-accent/8" style={{ width: 240, height: 240 }} />
+            <View
+              className="rounded-full `bg-accent/8"
+              style={styles.ambientGlow}
+            />
           </View>
 
           <EaseView
@@ -263,7 +297,7 @@ export const ActivityVariant = ({
             <PressableFeedback
               onPress={() => onHaveMore(undefined, selectedMood ?? undefined)}
               accessibilityLabel="Have more? I'm here."
-              className="w-full rounded-2xl border border-accent/20 bg-accent/[0.06] px-5 py-4"
+              className="w-full rounded-2xl border border-accent/20 bg-accent/6 px-5 py-4"
             >
               <AppText className="text-sm text-center font-light text-accent/60">
                 Have more? I&apos;m here.
@@ -284,7 +318,9 @@ export const ActivityVariant = ({
       {/* ── Heavier Feedback Sheet ── */}
       <BottomSheet
         isOpen={heavierSheetOpen}
-        onOpenChange={(open) => { if (!open) setHeavierSheetOpen(false); }}
+        onOpenChange={(open) => {
+          if (!open) setHeavierSheetOpen(false);
+        }}
       >
         <BottomSheet.Portal>
           <BottomSheetBlurOverlay />
