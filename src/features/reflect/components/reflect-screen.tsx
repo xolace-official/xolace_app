@@ -33,6 +33,7 @@ export const ReflectScreen = () => {
     sessionId,
     turnsCount,
     escalationResources,
+    toneUsed,
     isRecording,
     submitReflection,
     submitScaffold,
@@ -130,6 +131,7 @@ export const ReflectScreen = () => {
             selectedTextures={state.selectedTextures}
             entryType={state.entryType}
             sessionId={sessionId}
+            toneUsed={toneUsed}
             onThatsIt={handleThatsIt}
             onNotQuite={handleNotQuite}
             onSayMore={handleSayMore}

@@ -4,6 +4,52 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P2 — Session End: Looping Mascot Video on Acknowledge Phase
+
+**What:** Replace the current empty acknowledge phase in `activity-variant.tsx` (and `exit-variant.tsx`) with a short looping mascot video (5–10s, muted, autoplay) in the Calm-app style — video fills the upper ~55% of the screen edge-to-edge, a `LinearGradient` fades its bottom edge into the background color, and the text sits below in the remaining space.
+
+**Why:** The acknowledge phase is currently a dead black screen with text pinned at the bottom — emotionally flat for the highest-warmth moment in the app. A looping animated mascot (sitting quietly, contemplative, gentle ambient motion) reinforces the "digital campfire" metaphor — the mascot is literally sitting with the user. Reference: Calm app's homepage looping landscape video. This was deferred because `expo-video` would require a native rebuild and we needed to ship OTA.
+
+**Design notes:**
+- Mascot posture: seated/still, subtle idle breathing or ambient particle, contemplative — NOT smiling or waving. Grounded presence.
+- **Two assets: `mascot-acknowledge-dark.mp4` + `mascot-acknowledge-light.mp4`** — transparent video is not cross-platform safe: iOS doesn't support WEBM (the only alpha-capable format on Android), and HEVC-with-alpha (iOS 13+ only) has inconsistent expo-video support. Since every Xolace theme is either a light or dark variant (quiet-light/dark, reverie-light/dark, etc.), two MP4s cover all themes with zero platform complexity. Pick at runtime: `themeName.endsWith('-light') || themeName === 'light'`.
+- Dark video: mascot on near-black background matching default dark `--background`. Light video: mascot on near-white background matching default light `--background`.
+- Gradient: `['transparent', backgroundColor]` using `useThemeColor('background')` — fades the video edge into whatever exact shade the active theme uses, so minor tone differences between dark themes still blend cleanly.
+- Video dimensions: 1080×1920 or 750×1334, keep each under ~2MB.
+- Must loop cleanly (last frame matches first frame visually).
+
+**How to start:**
+1. Get animated mascot video asset from design (MP4, dark bg, 5–10s loop).
+2. `bunx expo install expo-video` (requires native rebuild — NOT OTA safe, plan a store release).
+3. In `activity-variant.tsx` acknowledge phase: replace `<View className="flex-1" />` placeholder with `<VideoView>` (full-width, `resizeMode="cover"`, autoPlay, loop, muted).
+4. Overlay `<LinearGradient>` absolutely positioned over bottom 40% of the video: `colors={['transparent', backgroundColor]}`.
+5. Move text below the video area, centered horizontally, left-aligned text (current style).
+6. Mirror the same treatment in `exit-variant.tsx` acknowledge phase.
+
+**Key files:** `src/features/session-end/components/activity-variant.tsx` (acknowledge phase, line ~117), `src/features/session-end/components/exit-variant.tsx` (acknowledge phase, line ~52)
+
+**Effort:** S–M (CC ~30min once asset exists; native rebuild required)
+**Priority:** P2 — blocked on (a) mascot video asset from design, (b) next store release window (native rebuild)
+**Depends on:** Mascot animated video asset + store release (not OTA-safe due to `expo-video` install)
+
+---
+
+## P2 — Trusted Bridge: "Save without sending" (AsyncStorage, unsent letters)
+
+**What:** When the user taps "Save without sending" on Screen 2 of the Trusted Bridge, persist the draft to `AsyncStorage` locally on-device instead of discarding it. Surface saved drafts as an "unsent letters" list — accessible from the timeline or a dedicated entry point.
+
+**Why:** Stage 1 of the Bridge (branch: `chore-trusted-human-bridge`) ships "Save without sending" as a dismiss-only action (no persistence) to keep Stage 1 minimal for demand validation. If Stage 1 data shows high save-button usage (or qualitative signals that users wanted to revisit drafts), the AsyncStorage architecture belongs in Stage 2. The therapeutic value of an unsent-letters collection is standalone — separate from whether the user eventually sends the message.
+
+**How to start:** After Stage 1 ships and data validates: add `AsyncStorage.setItem` in the "Save without sending" handler in `TrustedBridgeScreen`. Key format: `trusted_bridge_drafts` → JSON array of `{ id, mirrorText, draft, recipientName, recipientRelationship, savedAt }`. Build a minimal "Unsent letters" view in `src/features/trusted-bridge/`. No Convex writes — this is intentionally device-local per the privacy constraint in the design doc.
+
+**Key files:** `src/features/trusted-bridge/components/screen/trusted-bridge-screen.tsx` (save handler), `src/features/trusted-bridge/components/unsent-letters/` (new), `src/app/(protected)/trusted-bridge-saved.tsx` (new route, optional)
+
+**Effort:** M (human ~1 day / CC ~45min)
+**Priority:** P2 — gated on Stage 1 validation. Do NOT build until bridge_saved/bridge_shared rates from Stage 1 confirm demand.
+**Depends on:** `chore-trusted-human-bridge` Stage 1 shipped + 2 weeks of analytics data (bridge_dismissed { step: "draft" } rate as proxy for save-intent)
+
+---
+
 ## P2 — Feedback Analytics Dashboard
 
 **What:** Build a PostHog dashboard tracking gave_up rate (gave_up events / total sessions), mirror_miss rate (mirror_miss events / clarification attempts), and top selectedOption distributions for gave_up and mood_heavier.
@@ -64,7 +110,7 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
-## P3 — Tone Shown in Session Timeline
+## P3 — Tone Shown in Session Timeline ✅
 
 **What:** When users review past sessions in the timeline, show which mirror tone was active for that session. A small chip or label — "Witnessed", "Poetic" — next to the session entry or inside the session detail view.
 

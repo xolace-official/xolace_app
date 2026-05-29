@@ -390,6 +390,7 @@ export function useReflectionMachine() {
     sessionId,
     turnsCount,
     escalationResources: session?.escalationResources ?? null,
+    toneUsed: session?.toneUsed ?? null,
     isRecording,
     submitReflection,
     submitScaffold,

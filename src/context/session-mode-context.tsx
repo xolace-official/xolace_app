@@ -27,8 +27,7 @@ function isNightHour(hour: number): boolean {
   return hour >= 22 || hour < 4;
 }
 
-function computeMode(nightModeEnabled: boolean): SessionMode {
-  if (!nightModeEnabled) return 'day';
+function computeMode(): SessionMode {
   return isNightHour(new Date().getHours()) ? 'night' : 'day';
 }
 
@@ -51,10 +50,10 @@ export function SessionModeProvider({
   const nightModeEnabled = useAppStore((s) => s.nightModeEnabled);
   const setPreviousTheme = useAppStore((s) => s.setPreviousTheme);
 
-  // mode is derived during render — nightModeEnabled from the store already
-  // triggers re-renders; forceRefresh handles time-based foreground refreshes.
+  // mode always reflects the actual time of day regardless of nightModeEnabled.
+  // forceRefresh handles time-based foreground refreshes.
   const [, forceRefresh] = useReducer((n: number) => n + 1, 0);
-  const mode: SessionMode = computeMode(nightModeEnabled);
+  const mode: SessionMode = computeMode();
 
   // Track whether we've already applied the nightly theme swap so we
   // don't double-stash on repeated AppState events within the window.
@@ -87,14 +86,14 @@ export function SessionModeProvider({
     Uniwind.setTheme(nextTheme);
   }, [setPreviousTheme]);
 
-  // Sync Uniwind theme whenever mode changes
+  // Theme swap is gated by the user's night mode preference; session mode is not.
   useEffect(() => {
-    if (mode === 'night') {
+    if (nightModeEnabled && mode === 'night') {
       applyNightTheme();
     } else {
       restoreDayTheme();
     }
-  }, [mode, applyNightTheme, restoreDayTheme]);
+  }, [mode, nightModeEnabled, applyNightTheme, restoreDayTheme]);
 
   // On app foreground, re-render so mode recomputes with the current hour
   useEffect(() => {
@@ -106,8 +105,8 @@ export function SessionModeProvider({
   }, []);
 
   const value = useMemo(
-    () => ({ mode, isNight: mode === 'night' }),
-    [mode],
+    () => ({ mode, isNight: nightModeEnabled && mode === 'night' }),
+    [mode, nightModeEnabled],
   );
 
   return (

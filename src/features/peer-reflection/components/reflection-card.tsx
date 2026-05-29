@@ -1,11 +1,12 @@
 import { SymbolView } from "expo-symbols";
 import { useMemo } from "react";
-import { View, ColorValue, Pressable, StyleSheet } from "react-native";
+import { View, ColorValue, StyleSheet } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { Card, Chip, cn } from "heroui-native";
+import { Card, Chip, cn, PressableFeedback } from "heroui-native";
 import { TruncatedText } from "@/src/features/peer-reflection/components/truncated-text";
 import { playResonanceToggle } from "@/src/lib/haptics";
 import { useCSSVariable, withUniwind } from "uniwind";
+
 
 const StyledSymbolView = withUniwind(SymbolView);
 
@@ -62,7 +63,7 @@ export const ReflectionCard = ({
       animate={EASE_ANIMATE}
       transition={easeTransition}
     >
-      <Pressable onLongPress={onRequestReport} delayLongPress={400}>
+      <PressableFeedback onLongPress={onRequestReport} delayLongPress={400}>
         <Card
           variant="tertiary"
           className="border border-foreground/10 rounded-2xl"
@@ -106,7 +107,7 @@ export const ReflectionCard = ({
             </View>
           </Card.Body>
         </Card>
-      </Pressable>
+      </PressableFeedback>
     </EaseView>
   );
 };

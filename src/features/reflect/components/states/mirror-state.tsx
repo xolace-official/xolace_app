@@ -16,8 +16,8 @@ import {
   playAffirmativePress,
 } from "@/src/lib/haptics";
 import { useMirrorAudio } from "@/src/features/reflect/hooks/use-mirror-audio";
-import { useSettings } from "@/src/features/settings/hooks/use-settings";
 import { ToneTipBanner } from "@/src/features/reflect/components/tone-tip-banner";
+import type { MirrorTone } from "@/src/features/settings/components/mirror-tone-picker-dialog";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 
 type Props = {
@@ -25,6 +25,7 @@ type Props = {
   selectedTextures: string[];
   entryType: EntryType;
   sessionId: Id<"sessions"> | null;
+  toneUsed: MirrorTone | null;
   onThatsIt: () => void;
   onNotQuite: () => void;
   onSayMore: () => void;
@@ -84,15 +85,15 @@ export const MirrorState = ({
   selectedTextures,
   entryType,
   sessionId,
+  toneUsed,
   onThatsIt,
   onNotQuite,
   onSayMore,
 }: Props) => {
   const { isReady, isPlaying, toggle, stop } = useMirrorAudio(sessionId);
   const accent = useThemeColor("accent");
-  const { mirrorTone } = useSettings();
-  const showToneBadge = mirrorTone !== "adaptive";
-  const toneLabel = mirrorTone.charAt(0).toUpperCase() + mirrorTone.slice(1);
+  const showToneBadge = toneUsed != null && toneUsed !== "adaptive";
+  const toneLabel = toneUsed ? toneUsed.charAt(0).toUpperCase() + toneUsed.slice(1) : "";
 
   const TONE_BADGE: Partial<Record<string, { text: string; border: string }>> =
     {
@@ -104,7 +105,7 @@ export const MirrorState = ({
         border: "border-tone-witnessed/40",
       },
     };
-  const badgeStyle = TONE_BADGE[mirrorTone] ?? {
+  const badgeStyle = (toneUsed ? TONE_BADGE[toneUsed] : undefined) ?? {
     text: "text-foreground/40",
     border: "border-foreground/20",
   };
