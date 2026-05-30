@@ -228,9 +228,9 @@ export const IdleState = ({
           onSelectionChange={handleSelectionChange}
           animation="disable-all"
         >
-          <TagGroup.List className="flex-row flex-wrap gap-2">
+          <TagGroup.List className="flex-row flex-wrap gap-2 pr-14">
             {TEXTURE_WORDS.map((word) => (
-              <TagGroup.Item key={word} id={word}>
+              <TagGroup.Item key={word} id={word} className="min-w-18 justify-center">
                 {({ isSelected }) => (
                   <>
                     <TagGroup.ItemLabel

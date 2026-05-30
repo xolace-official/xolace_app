@@ -9,7 +9,7 @@ type Props = {
 };
 
 export const MenuButtonsWrapper = ({ isOpen, isOpenJS, onClose }: Props) => (
-  <View className="mb-2 min-w-40" pointerEvents={isOpenJS ? "auto" : "none"}>
+  <View className="mb-2 min-w-56" pointerEvents={isOpenJS ? "auto" : "none"}>
     <MenuButtons isOpen={isOpen} onClose={onClose} />
   </View>
 );
