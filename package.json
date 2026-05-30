@@ -64,6 +64,7 @@
     "expo-symbols": "~55.0.8",
     "expo-system-ui": "~55.0.17",
     "expo-updates": "~55.0.21",
+    "expo-video": "~55.0.17",
     "expo-web-browser": "~55.0.15",
     "heroui-native": "^1.0.0",
     "posthog-react-native": "^4.43.10",
