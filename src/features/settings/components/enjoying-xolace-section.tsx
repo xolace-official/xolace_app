@@ -1,0 +1,93 @@
+import { Linking, Platform, View } from "react-native";
+import { Accordion, PressableFeedback, useThemeColor } from "heroui-native";
+import { SymbolView } from "expo-symbols";
+import { AppText } from "@/src/components/shared/app-text";
+import { SettingsSection } from "@/src/features/settings/components/settings-section";
+
+const IOS_STORE_URL =
+  "https://apps.apple.com/app/apple-store/id6761601429?action=write-review";
+const ANDROID_STORE_URL =
+  "https://play.google.com/store/apps/details?id=com.xolaceincorg.xolace&showAllReviews=true";
+const FEEDBACK_EMAIL = "feedback@xolaceinc.com";
+
+const RATE_ICON = { ios: "star.fill", android: "star", web: "star" } as const;
+const FEEDBACK_ICON = {
+  ios: "envelope.fill",
+  android: "email",
+  web: "email",
+} as const;
+
+const handleRateApp = async () => {
+  try {
+    const url = Platform.OS === "ios" ? IOS_STORE_URL : ANDROID_STORE_URL;
+    await Linking.openURL(url);
+  } catch (e) {
+    console.error("Error opening store:", e);
+  }
+};
+
+const handleSendFeedback = async () => {
+  try {
+    const subject = encodeURIComponent("Xolace Feedback");
+    const body = encodeURIComponent(
+      "Hi Xolace team,\n\nI have some feedback:\n\n[Your feedback here]\n\nThanks!",
+    );
+    await Linking.openURL(`mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`);
+  } catch (e) {
+    console.error("Error opening mail:", e);
+  }
+};
+
+type ActionRowProps = {
+  label: string;
+  icon: { ios: string; android: string; web: string };
+  onPress: () => void;
+  isLast?: boolean;
+};
+
+const ActionRow = ({ label, icon, onPress, isLast = false }: ActionRowProps) => {
+  const mutedColor = useThemeColor("muted") as string;
+  return (
+    <PressableFeedback onPress={onPress} className="flex-row items-center justify-between px-5 py-4">
+      <AppText className="text-base text-foreground">{label}</AppText>
+      <SymbolView name={icon} size={16} tintColor={mutedColor} />
+    </PressableFeedback>
+  );
+};
+
+export const EnjoyingXolaceSection = () => {
+  return (
+    <SettingsSection title="Is Xolace helping?">
+      <Accordion selectionMode="single">
+        <Accordion.Item value="helping">
+          <Accordion.Trigger className="px-5 py-4">
+            <AppText className="text-base text-foreground flex-1">
+            🎁 Leave us a review
+            </AppText>
+            <Accordion.Indicator />
+          </Accordion.Trigger>
+          <Accordion.Content>
+            <View className="pb-2">
+              <AppText className="text-sm font-light leading-5 text-foreground/50 px-5 pb-4">
+                If Xolace has helped you sit with something heavy, a review
+                helps others find it when they need it most. You can also reach
+                us directly — we read everything.
+              </AppText>
+              <ActionRow
+                label="Rate on App Store"
+                icon={RATE_ICON}
+                onPress={handleRateApp}
+              />
+              <ActionRow
+                label="Send Feedback"
+                icon={FEEDBACK_ICON}
+                onPress={handleSendFeedback}
+                isLast
+              />
+            </View>
+          </Accordion.Content>
+        </Accordion.Item>
+      </Accordion>
+    </SettingsSection>
+  );
+};

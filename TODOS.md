@@ -64,7 +64,7 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
-## P2 — App Store Review Prompt (lighter mood trigger)
+## ✅ P2 — App Store Review Prompt (lighter mood trigger)
 
 **What:** Call `StoreReview.requestReviewAsync()` from `expo-store-review` when a user selects "lighter" at session end. The OS enforces a 30-day throttle automatically.
 

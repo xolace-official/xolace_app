@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { EaseView } from "react-native-ease/uniwind";
 import { BottomSheet, PressableFeedback } from "heroui-native";
 import { useQuery } from "convex/react";
+import * as StoreReview from "expo-store-review";
 import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -98,6 +99,14 @@ export const ActivityVariant = ({
     }, 4500);
     return () => clearTimeout(timer);
   }, [phase, isNight, distilledText]);
+
+  useEffect(() => {
+    if (phase === "close" && selectedMood === "lighter") {
+      StoreReview.isAvailableAsync()
+        .then((ok) => { if (ok) return StoreReview.requestReview(); })
+        .catch(console.error);
+    }
+  }, [phase, selectedMood]);
 
   const handleMoodPress = (mood: PostSessionMood) => {
     MOOD_HAPTICS[mood]();
