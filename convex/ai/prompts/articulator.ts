@@ -67,6 +67,7 @@ export function buildArticulatorPrompt(
   const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
   const entryTypeInstructions = getEntryTypeInstructions(entryType);
   const identityLine = getIdentityLine(spaceName);
+  const [lastMirror, ...olderMirrors] = recentMirrors;
 
   const system = `${identityLine}
 
@@ -103,9 +104,9 @@ ${classification.thematicTags.length > 0 ? `Themes: ${classification.thematicTag
 User's words: ${classification.userLanguageTags.length > 0 ? classification.userLanguageTags.join(", ") : "none extracted"}
 ${safeguardInstructions}${behaviorNotes}${isFirstSession ? "\nFirst session. Be slightly warmer. They don't know what to expect. The mirror should feel like a surprise." : ""}
 ${sessionMode === "night" ? getLateNightAddendum() : ""}
-## Pattern Context (use for subtle continuity; never reference past sessions explicitly)
+## Pattern Context (this is the emotional terrain they tend to carry, let it actively shape what you notice and how precisely you name it; never reference past sessions explicitly)
 ${patternSummary}
-${recentMirrors.length > 0 ? `\n## Recent Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${recentMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}`;
+${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}`;
 
   const user = rawInput;
 
