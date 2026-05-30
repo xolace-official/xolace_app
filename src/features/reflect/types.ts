@@ -43,7 +43,8 @@ export type ReflectionAction =
   | { type: 'ESCALATION_TRIGGERED'; mirror: string }
   | { type: 'VOICE_START' }
   | { type: 'VOICE_TRANSCRIPT'; text: string }
-  | { type: 'BACK_TO_MIRROR' };
+  | { type: 'BACK_TO_MIRROR' }
+  | { type: 'CLEAR_TEXTURES' };
 
 export interface ReflectionState {
   screen: ReflectionStateName;
