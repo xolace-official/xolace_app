@@ -82,7 +82,7 @@ export const EnjoyingXolaceSection = () => {
               <AppText className="text-sm font-light leading-5 text-foreground/50 px-5 pb-4">
                 If Xolace has helped you sit with something heavy, a review
                 helps others find it when they need it most. You can also reach
-                us directly — we read everything.
+                us directly, we read everything.
               </AppText>
               <ActionRow
                 label={Platform.select({ ios: "Rate on App Store", android: "Rate on Play Store", default: "Rate on Store" })}
