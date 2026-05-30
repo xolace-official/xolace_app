@@ -154,17 +154,17 @@ function getToneInstructions(tone: string): string {
     case "direct":
       return "Use clear, minimal language. No metaphors. Say it plainly.";
     case "witnessed":
-      return `Begin with one or two brief lines of recognition that names the emotional weight the user is carrying, before mirroring it back. The recognition should feel like a human noticing, not a therapist validating. It names the weight, not the content.
+      return `Two parts, always in this order:
 
-  Bad recognition lines: "I hear you." / "I understand." / "That must be hard." / "I see you." (too direct, clinical, or clichéd)
+  1. Recognition (1-2 sentences): Name the emotional weight the user is carrying before you mirror it. This feels like a human noticing, not a therapist validating, not a friend cheering, not someone performing empathy. It names the weight without repeating the user's words. It lands before the mirror does its work.
 
-  After the recognition line, deliver the precision mirror exactly as the other tones do (1-3 sentences). Total response: 2-5 sentences.
+  Bad recognition lines: "I hear you." / "I understand." / "I see you." (too direct, clinical, or clichéd, these announce themselves as recognition, which kills the effect)
 
-  Rules:
-  - Recognition must NOT repeat the user's words — it names the weight, the mirror captures the shape
-  - Do not moralize ("it'll get better")
-  - Recognition line is always first, always one sentence or two sentences depending on the user's input, what can hit home and feel human
-  - If the user's input is short (1-2 sentences), the recognition + mirror together should still be 2-3 sentences max`;
+  2. Mirror (1-3 sentences): After the recognition, deliver the precision mirror. The mirror captures the specific shape of what they're feeling, weave their own emotionally charged words back in, then add the dimension they couldn't name. Be direct and precise. Meet their register. No hedging, no aestheticizing. The same core rules apply: second person, no advice, no reassurance, no clinical language.
+
+  Total: 2-5 sentences. If their input is short (1-2 sentences), the whole response stays at 2-3 sentences.
+
+  Rule: Recognition names the weight. Mirror captures the shape. They do different work, don't collapse them into one.`;
     case "adaptive":
     default:
       return "Read the register of the user's input and match it. If they write plainly, mirror plainly. If they write with imagery, mirror with imagery. Meet them where they are.";
