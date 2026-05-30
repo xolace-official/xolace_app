@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, type ViewStyle, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { MorphLoader } from '@/src/components/shared/loader/morph/morph-loader';
 import { EaseView } from 'react-native-ease';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { HelpHeaderButton } from '@/src/features/reflect/components/help-header-button';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useReflectionMachine } from '@/src/features/reflect/hooks/use-reflection-machine';
@@ -105,7 +106,6 @@ export const ReflectScreen = () => {
             onVoiceTap={startVoiceFromIdle}
             isRecording={isRecording}
             spaceName={context?.preferences?.spaceName}
-            onCrisisTap={() => router.push('/crisis-resources?from=idle_button')}
           />
         );
       case 'typing':
@@ -201,11 +201,29 @@ export const ReflectScreen = () => {
     bottom: insets.bottom,
   };
 
+  const isIdle = current === 'idle';
+
   return (
     <View
       className="flex-1 bg-background"
       style={safeAreaStyle}
     >
+      <Stack.Screen
+        options={{
+          headerShown: isIdle,
+          headerTransparent: true,
+          headerTitle: '',
+          headerShadowVisible: false,
+          headerBackVisible: false,
+          headerRight: isIdle
+            ? () => (
+                <HelpHeaderButton
+                  onPress={() => router.push('/crisis-resources?from=idle_button')}
+                />
+              )
+            : undefined,
+        }}
+      />
       {/* Outgoing screen — fades out then unmounts */}
       {previous && previousConfig && (
         <EaseView
