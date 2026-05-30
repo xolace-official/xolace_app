@@ -102,14 +102,17 @@ export const IdleState = ({
   // Freeze the last known header height so it doesn't jump during transition animations
   const stableHeaderHeight = useRef(0);
   if (rawHeaderHeight > 0) stableHeaderHeight.current = rawHeaderHeight;
-  const headerExtraPadding = Math.max(0, stableHeaderHeight.current - insets.top);
+  const headerExtraPadding = Math.max(
+    0,
+    stableHeaderHeight.current - insets.top,
+  );
 
   const todayQuotes = useQuery(api.dailyQuotes.getToday);
   const hasQuote = !!(todayQuotes?.session ?? todayQuotes?.curated);
 
   const TEXTURE_WORDS: readonly string[] = isNight
     ? NIGHT_TEXTURE_WORDS
-    : TEXTURE_SETS[resolvedSetId] ?? TEXTURE_SETS.flat;
+    : (TEXTURE_SETS[resolvedSetId] ?? TEXTURE_SETS.flat);
 
   const activeQuietReturn = !isNight ? quietReturn : null;
   const hasPlayedEntrance = useRef(false);
@@ -117,6 +120,14 @@ export const IdleState = ({
   const selectedTextureKeys = useMemo(
     () => new Set(selectedTextures),
     [selectedTextures],
+  );
+  const containerStyle = useMemo(
+    () => ({ paddingTop: headerExtraPadding }),
+    [headerExtraPadding],
+  );
+  const wordsFadeAnimate = useMemo(
+    () => ({ opacity: wordsVisible ? 1 : 0 }),
+    [wordsVisible],
   );
 
   useEffect(() => {
@@ -169,8 +180,7 @@ export const IdleState = ({
   }, [hasSelections]);
 
   return (
-    // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-    <View className="flex-1 px-6" style={{ paddingTop: headerExtraPadding }}>
+    <View className="flex-1 px-6" style={containerStyle}>
       <View className="pt-4 pb-4">
         <QuietReturnHeader
           variant={variant}
@@ -237,7 +247,7 @@ export const IdleState = ({
         )}
 
         <EaseView
-          animate={{ opacity: wordsVisible ? 1 : 0 }}
+          animate={wordsFadeAnimate}
           transition={wordsVisible ? WORDS_FADE_IN : WORDS_FADE_OUT}
           onTransitionEnd={({ finished }) => {
             if (finished && !wordsVisible) {
@@ -257,7 +267,11 @@ export const IdleState = ({
           >
             <TagGroup.List className="flex-row flex-wrap gap-2 pr-14">
               {TEXTURE_WORDS.map((word) => (
-                <TagGroup.Item key={word} id={word} className="min-w-18 justify-center">
+                <TagGroup.Item
+                  key={word}
+                  id={word}
+                  className="min-w-18 justify-center"
+                >
                   {({ isSelected }) => (
                     <>
                       <TagGroup.ItemLabel
