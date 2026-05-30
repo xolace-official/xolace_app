@@ -11,6 +11,8 @@ import { SpaceNameDialog } from "@/src/features/settings/components/space-name-d
 import { ReachSelectorDialog } from "@/src/features/settings/components/reach-selector-dialog";
 import { QuietWindowDialog } from "@/src/features/settings/components/quiet-window-dialog";
 import { FeedbackDialog } from "@/src/features/settings/components/feedback-dialog";
+import { EnjoyingXolaceSection } from "@/src/features/settings/components/enjoying-xolace-section";
+import { FollowUsSection } from "@/src/features/settings/components/follow-us-section";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { useSettings } from "@/src/features/settings/hooks/use-settings";
 import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
@@ -184,6 +186,12 @@ export const SettingsScreen = () => {
             isLast
           />
         </SettingsSection>
+
+        {/* ── IS XOLACE HELPING? ───────────────────────────────── */}
+        <EnjoyingXolaceSection />
+
+        {/* ── FOLLOW US ────────────────────────────────────────── */}
+        <FollowUsSection />
 
         {/* ── SUPPORT ──────────────────────────────────────────── */}
         <SettingsSection title="Support">

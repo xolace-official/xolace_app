@@ -205,6 +205,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           "speechRecognitionPermission": "Allow Xolace to use speech recognition to transcribe your voice."
         }
       ],
+      "expo-video",
       "expo-image",
       "expo-web-browser",
       "expo-sharing",
