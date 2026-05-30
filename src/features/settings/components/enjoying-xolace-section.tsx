@@ -85,7 +85,7 @@ export const EnjoyingXolaceSection = () => {
                 us directly — we read everything.
               </AppText>
               <ActionRow
-                label="Rate on App Store"
+                label={Platform.select({ ios: "Rate on App Store", android: "Rate on Play Store", default: "Rate on Store" })}
                 icon={RATE_ICON}
                 onPress={handleRateApp}
               />
