@@ -9,6 +9,8 @@ import {
   useThemeColor,
 } from "heroui-native";
 import { useRouter } from "expo-router";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
@@ -41,11 +43,6 @@ const DAY_TEXTURE_WORDS = [
   "raw",
 ];
 
-const HELP_ICON_NAME = {
-  ios: "lifepreserver",
-  android: "sos",
-  web: "sos",
-} as const;
 const QUOTE_ICON_NAME = { ios: "sparkles", android: "auto_awesome" } as const;
 const BUTTON_INITIAL_ANIMATE = { opacity: 0, translateY: 20 } as const;
 const BUTTON_VISIBLE_ANIMATE = { opacity: 1, translateY: 0 } as const;
@@ -74,7 +71,6 @@ type Props = {
   onVoiceTap: () => void;
   isRecording: boolean;
   spaceName?: string;
-  onCrisisTap: () => void;
 };
 
 export const IdleState = ({
@@ -87,12 +83,17 @@ export const IdleState = ({
   onVoiceTap,
   isRecording,
   spaceName,
-  onCrisisTap,
 }: Props) => {
   const { isNight } = useSessionMode();
   const router = useRouter();
-  const warningColor = useThemeColor("warning") as string;
   const accentColor = useThemeColor("accent") as string;
+  const insets = useSafeAreaInsets();
+  const rawHeaderHeight = useHeaderHeight();
+
+  // Freeze the last known header height so it doesn't jump during transition animations
+  const stableHeaderHeight = useRef(0);
+  if (rawHeaderHeight > 0) stableHeaderHeight.current = rawHeaderHeight;
+  const headerExtraPadding = Math.max(0, stableHeaderHeight.current - insets.top);
 
   const todayQuotes = useQuery(api.dailyQuotes.getToday);
   const hasQuote = !!(todayQuotes?.session ?? todayQuotes?.curated);
@@ -148,29 +149,16 @@ export const IdleState = ({
   }, [hasSelections]);
 
   return (
-    <View className="flex-1 px-6">
-      <View className="flex-row items-start justify-between pt-5 pb-4">
+    // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
+    <View className="flex-1 px-6" style={{ paddingTop: headerExtraPadding }}>
+      <View className="pt-4 pb-4">
         <QuietReturnHeader
           variant={variant}
           isNight={isNight}
           activeQuietReturn={activeQuietReturn}
           spaceName={spaceName}
-          className="flex-1 pt-0 pb-0"
+          className="pt-0 pb-0"
         />
-        <PressableFeedback
-          onPress={onCrisisTap}
-          accessibilityLabel="Open crisis resources"
-          hitSlop={8}
-        >
-          <View className="bg-warning/10 border border-warning/20 rounded-full px-3 py-1.5 flex-row items-center gap-1.5">
-            <SymbolView
-              name={HELP_ICON_NAME}
-              size={16}
-              tintColor={warningColor}
-            />
-            <AppText className="text-xs text-warning">Help</AppText>
-          </View>
-        </PressableFeedback>
       </View>
 
       {hasQuote && (
@@ -228,9 +216,9 @@ export const IdleState = ({
           onSelectionChange={handleSelectionChange}
           animation="disable-all"
         >
-          <TagGroup.List className="flex-row flex-wrap gap-2">
+          <TagGroup.List className="flex-row flex-wrap gap-2 pr-14">
             {TEXTURE_WORDS.map((word) => (
-              <TagGroup.Item key={word} id={word}>
+              <TagGroup.Item key={word} id={word} className="min-w-18 justify-center">
                 {({ isSelected }) => (
                   <>
                     <TagGroup.ItemLabel

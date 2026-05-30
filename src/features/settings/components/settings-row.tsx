@@ -1,3 +1,4 @@
+import { type ReactNode } from "react";
 import { Pressable, View } from "react-native";
 import { Switch, Separator, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
@@ -14,6 +15,7 @@ const ANDROID_RIPPLE = { color: "rgba(255,255,255,0.05)" };
 
 type BaseProps = {
   label: string;
+  icon?: ReactNode;
   danger?: boolean;
   isLast?: boolean;
   className?: string;
@@ -22,6 +24,7 @@ type BaseProps = {
 type ValueProps = BaseProps & {
   variant: "value";
   value: string;
+  valueIcon?: ReactNode;
   onPress?: () => void;
 };
 
@@ -58,23 +61,29 @@ export type SettingsRowProps =
  * Pass `danger` to render the label in the danger/error color.
  */
 export const SettingsRow = (props: SettingsRowProps) => {
-  const { label, danger = false, isLast = false, className } = props;
+  const { label, icon, danger = false, isLast = false, className } = props;
   const mutedColor = useThemeColor("muted") as string;
 
   const labelEl = (
-    <AppText
-      className={cn("text-base", danger ? "text-danger" : "text-foreground")}
-    >
-      {label}
-    </AppText>
+    <View className="flex-row items-center gap-3 flex-1 pr-3">
+      {icon && <View className="opacity-85">{icon}</View>}
+      <AppText
+        className={cn("text-base", danger ? "text-danger" : "text-foreground")}
+      >
+        {label}
+      </AppText>
+    </View>
   );
 
   const renderTrailing = () => {
     if (props.variant === "value") {
       return (
-        <AppText className="text-base text-foreground/50">
-          {props.value}
-        </AppText>
+        <View className="flex-row items-center gap-2">
+          {props.valueIcon}
+          <AppText className="text-base text-foreground/50">
+            {props.value}
+          </AppText>
+        </View>
       );
     }
 

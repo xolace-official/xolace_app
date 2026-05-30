@@ -153,9 +153,13 @@ export async function requestPushToken(): Promise<string | null> {
     return null;
   }
 
-  const { data: token } = await Notifications.getExpoPushTokenAsync({
-    projectId,
-  });
-
-  return token;
+  try {
+    const { data: token } = await Notifications.getExpoPushTokenAsync({
+      projectId,
+    });
+    return token;
+  } catch (err) {
+    console.log("Failed to fetch Expo push token (will retry on next launch):", err);
+    return null;
+  }
 }

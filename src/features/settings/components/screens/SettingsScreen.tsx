@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useToast } from "heroui-native";
+import { SymbolView } from "expo-symbols";
+import { useToast, useThemeColor } from "heroui-native";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
 import { SettingsRow } from "@/src/features/settings/components/settings-row";
 import { ThemePickerDialog } from "@/src/features/settings/components/theme-picker-dialog";
@@ -17,7 +18,29 @@ import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog"
 import { useSettings } from "@/src/features/settings/hooks/use-settings";
 import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
 import { useAppStore } from "@/src/store/store";
+import { AppleIcon } from "@/src/features/auth/components/apple-icon";
+import { GoogleIcon } from "@/src/features/auth/components/google-icon";
 import type { ThemeMode } from "@/src/features/settings/hooks/use-settings";
+import {
+  type CrossPlatformSymbol,
+  ACCOUNT_ICON,
+  SPACE_NAME_ICON,
+  MODE_ICON,
+  APPEARANCE_ICON,
+  MOTION_ICON,
+  REPLAY_ICON,
+  MIRROR_ICON,
+  NOTIFICATIONS_ICON,
+  REACH_ICON,
+  QUIET_HOURS_ICON,
+  SHARE_ICON,
+  FEEDBACK_ICON,
+  RETENTION_ICON,
+  DELETE_DATA_ICON,
+  DELETE_ACCOUNT_ICON,
+  LOG_OUT_ICON,
+  EMAIL_ICON,
+} from "@/src/features/settings/components/settings-icons";
 
 const styles = StyleSheet.create({
   contentContainer: { paddingTop: 20, paddingBottom: 48 },
@@ -30,6 +53,8 @@ const styles = StyleSheet.create({
 export const SettingsScreen = () => {
   const { toast } = useToast();
   const router = useRouter();
+  const iconColor = useThemeColor("foreground") as string;
+  const mutedIconColor = useThemeColor("muted") as string;
   const setIntroSeen = useAppStore((s) => s.setIntroSeen);
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
   const [mirrorToneDialogOpen, setMirrorToneDialogOpen] = useState(false);
@@ -74,6 +99,19 @@ export const SettingsScreen = () => {
     ? `${quietWindow.dontReachBefore}–${quietWindow.dontReachAfter}h`
     : "Off";
 
+  const settingIcon = (name: CrossPlatformSymbol) => (
+    <SymbolView name={name} size={17} tintColor={mutedIconColor} />
+  );
+
+  const signInProvider = signInMethod.toLowerCase();
+  const signInValueIcon = signInProvider.includes("apple") ? (
+    <AppleIcon size={16} color={iconColor} />
+  ) : signInProvider.includes("google") ? (
+    <GoogleIcon size={16} />
+  ) : (
+    <SymbolView name={EMAIL_ICON} size={15} tintColor={mutedIconColor} />
+  );
+
   const { setConfirmAction, isConfirmLoading, activeConfig, handleConfirm } =
     useConfirmAction({
       performLogout,
@@ -93,8 +131,10 @@ export const SettingsScreen = () => {
         <SettingsSection title="Account">
           <SettingsRow
             variant="value"
+            icon={settingIcon(ACCOUNT_ICON)}
             label="Sign-in method"
             value={signInMethod}
+            valueIcon={signInValueIcon}
             isLast
           />
         </SettingsSection>
@@ -103,6 +143,7 @@ export const SettingsScreen = () => {
         <SettingsSection title="Your space">
           <SettingsRow
             variant="value"
+            icon={settingIcon(SPACE_NAME_ICON)}
             label="Name"
             value={spaceName ?? "—"}
             onPress={() => setSpaceNameDialogOpen(true)}
@@ -114,23 +155,27 @@ export const SettingsScreen = () => {
         <SettingsSection title="Appearance">
           <SettingsRow
             variant="value"
+            icon={settingIcon(MODE_ICON)}
             label="Mode"
             value={themeDisplay}
             onPress={() => setThemeDialogOpen(true)}
           />
           <SettingsRow
             variant="chevron"
+            icon={settingIcon(APPEARANCE_ICON)}
             label="Appearance"
             onPress={() => router.push("/(protected)/settings/appearance")}
           />
           <SettingsRow
             variant="toggle"
+            icon={settingIcon(MOTION_ICON)}
             label="Reduced motion"
             isSelected={reducedMotion}
             onToggle={setReducedMotion}
           />
           <SettingsRow
             variant="chevron"
+            icon={settingIcon(REPLAY_ICON)}
             label="Replay intro"
             onPress={() => setReplayIntroOpen(true)}
             isLast
@@ -141,6 +186,7 @@ export const SettingsScreen = () => {
         <SettingsSection title="Mirror">
           <SettingsRow
             variant="value"
+            icon={settingIcon(MIRROR_ICON)}
             label="Tone"
             value={mirrorToneDisplay}
             onPress={() => setMirrorToneDialogOpen(true)}
@@ -152,6 +198,7 @@ export const SettingsScreen = () => {
         <SettingsSection title="Notifications">
           <SettingsRow
             variant="toggle"
+            icon={settingIcon(NOTIFICATIONS_ICON)}
             label="Gentle reminders"
             isSelected={gentleReminders}
             onToggle={setGentleReminders}
@@ -161,12 +208,14 @@ export const SettingsScreen = () => {
             <>
               <SettingsRow
                 variant="value"
+                icon={settingIcon(REACH_ICON)}
                 label="How I reach out"
                 value={reachDisplay}
                 onPress={() => setReachDialogOpen(true)}
               />
               <SettingsRow
                 variant="value"
+                icon={settingIcon(QUIET_HOURS_ICON)}
                 label="Quiet hours"
                 value={quietWindowDisplay}
                 onPress={() => setQuietWindowDialogOpen(true)}
@@ -180,6 +229,7 @@ export const SettingsScreen = () => {
         <SettingsSection title="Reflection Pool">
           <SettingsRow
             variant="toggle"
+            icon={settingIcon(SHARE_ICON)}
             label="Share by default"
             isSelected={contributeAnonymously}
             onToggle={setContributeAnonymously}
@@ -197,6 +247,7 @@ export const SettingsScreen = () => {
         <SettingsSection title="Support">
           <SettingsRow
             variant="chevron"
+            icon={settingIcon(FEEDBACK_ICON)}
             label="Send feedback"
             onPress={() => setFeedbackDialogOpen(true)}
             isLast
@@ -213,18 +264,21 @@ export const SettingsScreen = () => {
           /> */}
           <SettingsRow
             variant="value"
+            icon={settingIcon(RETENTION_ICON)}
             label="Retention"
             value={retentionDisplay}
             onPress={() => setRetentionDialogOpen(true)}
           />
           <SettingsRow
             variant="chevron"
+            icon={settingIcon(DELETE_DATA_ICON)}
             label="Delete all my data"
             danger
             onPress={() => setConfirmAction("deleteData")}
           />
           <SettingsRow
             variant="chevron"
+            icon={settingIcon(DELETE_ACCOUNT_ICON)}
             label="Delete account"
             danger
             onPress={() => setConfirmAction("deleteAccount")}
@@ -236,6 +290,7 @@ export const SettingsScreen = () => {
         <View className="px-5">
           <SettingsRow
             variant="action"
+            icon={settingIcon(LOG_OUT_ICON)}
             label="Log out"
             danger
             onPress={() => setConfirmAction("logout")}

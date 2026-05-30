@@ -115,7 +115,7 @@ export default function RootLayout() {
   }
   return (
     <RootProvider>
-      <ThemeProvider value={theme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={theme.includes('dark') ? DarkTheme : DefaultTheme}>
         <AppContent />
       </ThemeProvider>
     </RootProvider>

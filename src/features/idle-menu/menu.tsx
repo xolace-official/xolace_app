@@ -51,7 +51,7 @@ export const IdleMenu = () => {
 const styles = StyleSheet.create({
   menuAnchor: {
     position: "absolute",
-    bottom: 88,
+    bottom: 72,
     right: 24,
     alignItems: "flex-end",
   },

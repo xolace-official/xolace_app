@@ -96,14 +96,14 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
             accessibilityRole="menuitem"
             accessibilityLabel={item.accessibilityLabel}
           >
-            <View className="flex-row items-center gap-3 rounded-xl bg-surface px-4 py-3">
+            <View className="flex-row items-center gap-4 rounded-2xl bg-surface px-6 py-4">
               <SymbolView
                 name={item.iconName as any}
-                size={16}
+                size={22}
                 tintColor={foregroundColor}
                 style={itemIconStyle}
               />
-              <AppText className="text-sm font-medium text-foreground">
+              <AppText className="text-base font-medium text-foreground">
                 {item.label}
               </AppText>
             </View>

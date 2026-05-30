@@ -60,10 +60,6 @@ const SLIDE_IN = { opacity: 1, translateY: 0 };
 const SCROLL_CONTENT = { flexGrow: 1 as const };
 
 const styles = StyleSheet.create({
-  ambientGlow: {
-    width: 240,
-    height: 240,
-  },
   mascot: {
     width: "100%",
     flex: 1,
@@ -300,14 +296,6 @@ export const ActivityVariant = ({
       {/* ── Phase 4: Close ── */}
       {phase === "close" && (
         <View className="flex-1 justify-center items-center px-8">
-          {/* Ambient ember glow */}
-          <View className="absolute inset-0 items-center justify-center">
-            <View
-              className="rounded-full bg-accent/8"
-              style={styles.ambientGlow}
-            />
-          </View>
-
           <EaseView
             initialAnimate={FADE_OUT}
             animate={FADE_IN}
