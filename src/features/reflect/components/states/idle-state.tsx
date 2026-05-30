@@ -149,6 +149,7 @@ export const IdleState = ({
   }, [hasSelections]);
 
   return (
+    // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
     <View className="flex-1 px-6" style={{ paddingTop: headerExtraPadding }}>
       <View className="pt-4 pb-4">
         <QuietReturnHeader

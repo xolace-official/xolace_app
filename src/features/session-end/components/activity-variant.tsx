@@ -60,10 +60,6 @@ const SLIDE_IN = { opacity: 1, translateY: 0 };
 const SCROLL_CONTENT = { flexGrow: 1 as const };
 
 const styles = StyleSheet.create({
-  ambientGlow: {
-    width: 240,
-    height: 240,
-  },
   mascot: {
     width: "100%",
     flex: 1,

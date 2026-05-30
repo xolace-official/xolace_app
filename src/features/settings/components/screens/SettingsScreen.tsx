@@ -1,4 +1,4 @@
-import { type ComponentProps, useState } from "react";
+import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -21,100 +21,30 @@ import { useAppStore } from "@/src/store/store";
 import { AppleIcon } from "@/src/features/auth/components/apple-icon";
 import { GoogleIcon } from "@/src/features/auth/components/google-icon";
 import type { ThemeMode } from "@/src/features/settings/hooks/use-settings";
+import {
+  type CrossPlatformSymbol,
+  ACCOUNT_ICON,
+  SPACE_NAME_ICON,
+  MODE_ICON,
+  APPEARANCE_ICON,
+  MOTION_ICON,
+  REPLAY_ICON,
+  MIRROR_ICON,
+  NOTIFICATIONS_ICON,
+  REACH_ICON,
+  QUIET_HOURS_ICON,
+  SHARE_ICON,
+  FEEDBACK_ICON,
+  RETENTION_ICON,
+  DELETE_DATA_ICON,
+  DELETE_ACCOUNT_ICON,
+  LOG_OUT_ICON,
+  EMAIL_ICON,
+} from "@/src/features/settings/components/settings-icons";
 
 const styles = StyleSheet.create({
   contentContainer: { paddingTop: 20, paddingBottom: 48 },
 });
-
-type SymbolName = ComponentProps<typeof SymbolView>["name"];
-
-type CrossPlatformSymbol = Exclude<SymbolName, string>;
-
-const ACCOUNT_ICON: CrossPlatformSymbol = {
-  ios: "person.crop.circle",
-  android: "account_circle",
-  web: "account_circle",
-};
-const SPACE_NAME_ICON: CrossPlatformSymbol = {
-  ios: "person.text.rectangle",
-  android: "badge",
-  web: "badge",
-};
-const MODE_ICON: CrossPlatformSymbol = {
-  ios: "circle.lefthalf.filled",
-  android: "contrast",
-  web: "contrast",
-};
-const APPEARANCE_ICON: CrossPlatformSymbol = {
-  ios: "paintbrush.pointed",
-  android: "palette",
-  web: "palette",
-};
-const MOTION_ICON: CrossPlatformSymbol = {
-  ios: "figure.walk.motion",
-  android: "motion_photos_paused",
-  web: "motion_photos_paused",
-};
-const REPLAY_ICON: CrossPlatformSymbol = {
-  ios: "arrow.counterclockwise",
-  android: "replay",
-  web: "replay",
-};
-const MIRROR_ICON: CrossPlatformSymbol = {
-  ios: "quote.bubble",
-  android: "format_quote",
-  web: "format_quote",
-};
-const NOTIFICATIONS_ICON: CrossPlatformSymbol = {
-  ios: "bell",
-  android: "notifications",
-  web: "notifications",
-};
-const REACH_ICON: CrossPlatformSymbol = {
-  ios: "paperplane",
-  android: "send",
-  web: "send",
-};
-const QUIET_HOURS_ICON: CrossPlatformSymbol = {
-  ios: "moon.zzz",
-  android: "bedtime",
-  web: "bedtime",
-};
-const SHARE_ICON: CrossPlatformSymbol = {
-  ios: "person.2.wave.2",
-  android: "groups",
-  web: "groups",
-};
-const FEEDBACK_ICON: CrossPlatformSymbol = {
-  ios: "text.bubble",
-  android: "feedback",
-  web: "feedback",
-};
-const RETENTION_ICON: CrossPlatformSymbol = {
-  ios: "clock.arrow.circlepath",
-  android: "history",
-  web: "history",
-};
-const DELETE_DATA_ICON: CrossPlatformSymbol = {
-  ios: "trash",
-  android: "delete",
-  web: "delete",
-};
-const DELETE_ACCOUNT_ICON: CrossPlatformSymbol = {
-  ios: "person.crop.circle.badge.xmark",
-  android: "person_remove",
-  web: "person_remove",
-};
-const LOG_OUT_ICON: CrossPlatformSymbol = {
-  ios: "rectangle.portrait.and.arrow.right",
-  android: "logout",
-  web: "logout",
-};
-const EMAIL_ICON: CrossPlatformSymbol = {
-  ios: "envelope",
-  android: "email",
-  web: "email",
-};
 
 /**
  * Settings screen — composes all preference sections.

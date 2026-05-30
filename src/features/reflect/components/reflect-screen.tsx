@@ -1,29 +1,39 @@
-import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, type ViewStyle, View } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { MorphLoader } from '@/src/components/shared/loader/morph/morph-loader';
-import { EaseView } from 'react-native-ease';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HelpHeaderButton } from '@/src/features/reflect/components/help-header-button';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { useReflectionMachine } from '@/src/features/reflect/hooks/use-reflection-machine';
-import { useScreenTransition } from '@/src/features/reflect/hooks/use-screen-transition';
-import { SCREEN_TRANSITIONS, DEFAULT_SCREEN_TRANSITION } from '@/src/features/reflect/reflect-transitions';
-import { computeUserVariant, computeQuietReturn } from '@/src/helpers/utils/user-variant';
-import type { ReflectionStateName } from '@/src/features/reflect/types';
-import { IdleState } from '@/src/features/reflect/components/states/idle-state';
-import { TypingState } from '@/src/features/reflect/components/states/typing-state';
-import { ProcessingState } from '@/src/features/reflect/components/states/processing-state';
-import { MirrorState } from '@/src/features/reflect/components/states/mirror-state';
-import { ClarifyState } from '@/src/features/reflect/components/states/clarify-state';
-import { GaveUpState } from '@/src/features/reflect/components/states/gave-up-state';
-import { PathSelectionState } from '@/src/features/reflect/components/states/path-selection-state';
-import { EscalationState } from '@/src/features/reflect/components/states/escalation-state';
-import { ErrorState } from '@/src/features/reflect/components/states/error-state';
-import { SpaceNamePromptDialog } from '@/src/features/reflect/components/space-name-prompt-dialog';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { StyleSheet, type ViewStyle, View } from "react-native";
+import { Stack, useRouter } from "expo-router";
+import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
+import { EaseView } from "react-native-ease";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { HelpHeaderButton } from "@/src/features/reflect/components/help-header-button";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useReflectionMachine } from "@/src/features/reflect/hooks/use-reflection-machine";
+import { useScreenTransition } from "@/src/features/reflect/hooks/use-screen-transition";
+import {
+  SCREEN_TRANSITIONS,
+  DEFAULT_SCREEN_TRANSITION,
+} from "@/src/features/reflect/reflect-transitions";
+import {
+  computeUserVariant,
+  computeQuietReturn,
+} from "@/src/helpers/utils/user-variant";
+import type { ReflectionStateName } from "@/src/features/reflect/types";
+import { IdleState } from "@/src/features/reflect/components/states/idle-state";
+import { TypingState } from "@/src/features/reflect/components/states/typing-state";
+import { ProcessingState } from "@/src/features/reflect/components/states/processing-state";
+import { MirrorState } from "@/src/features/reflect/components/states/mirror-state";
+import { ClarifyState } from "@/src/features/reflect/components/states/clarify-state";
+import { GaveUpState } from "@/src/features/reflect/components/states/gave-up-state";
+import { PathSelectionState } from "@/src/features/reflect/components/states/path-selection-state";
+import { EscalationState } from "@/src/features/reflect/components/states/escalation-state";
+import { ErrorState } from "@/src/features/reflect/components/states/error-state";
+import { SpaceNamePromptDialog } from "@/src/features/reflect/components/space-name-prompt-dialog";
 
 const EASE_ANIMATE_OUT = { opacity: 0 };
+
+const HeaderRight = ({ onPress }: { onPress: () => void }) => (
+  <HelpHeaderButton onPress={onPress} />
+);
 
 export const ReflectScreen = () => {
   const router = useRouter();
@@ -56,8 +66,10 @@ export const ReflectScreen = () => {
     handleDismissTyping,
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
+  const safeAreaStyle = useMemo(
+    () => ({ paddingTop: insets.top, paddingBottom: insets.bottom }),
+    [insets.bottom, insets.top],
+  );
   const context = useQuery(api.users.getFullContext);
   const updatePreferences = useMutation(api.preferences.update);
   const { current, previous, isTransitioning, onOutgoingComplete } =
@@ -68,51 +80,50 @@ export const ReflectScreen = () => {
 
   useEffect(() => {
     if (!context?.profile) return;
-    dispatch({ type: 'SET_USER_VARIANT', variant: computeUserVariant(context.profile) });
-    dispatch({ type: 'SET_QUIET_RETURN', tier: computeQuietReturn(context.profile) });
+    dispatch({
+      type: "SET_USER_VARIANT",
+      variant: computeUserVariant(context.profile),
+    });
+    dispatch({
+      type: "SET_QUIET_RETURN",
+      tier: computeQuietReturn(context.profile),
+    });
   }, [context?.profile, dispatch]);
 
   useEffect(() => {
-    if (current !== 'path-selection') return;
+    if (current !== "path-selection") return;
     if (firedSpaceNameDialog.current) return;
     if (!context?.preferences) return;
-    if (context.preferences.spaceName || context.preferences.spaceNamePromptDismissed) return;
+    if (
+      context.preferences.spaceName ||
+      context.preferences.spaceNamePromptDismissed
+    )
+      return;
     firedSpaceNameDialog.current = true;
     setShowSpaceNameDialog(true);
   }, [current, context?.preferences]);
 
-  if (isLoading) {
-    return (
-      <View
-        className="flex-1 items-center justify-center bg-background"
-        style={safeAreaStyle}
-      >
-        <MorphLoader />
-      </View>
-    );
-  }
-
   const renderScreen = (screen: ReflectionStateName, isOutgoing = false) => {
     switch (screen) {
-      case 'idle':
+      case "idle":
         return (
           <IdleState
             variant={state.userVariant}
             quietReturn={state.quietReturn}
             selectedTextures={state.selectedTextures}
             dispatch={dispatch}
-            onTap={() => dispatch({ type: 'TAP_INPUT' })}
+            onTap={() => dispatch({ type: "TAP_INPUT" })}
             onScaffoldSubmit={submitScaffold}
             onVoiceTap={startVoiceFromIdle}
             isRecording={isRecording}
             spaceName={context?.preferences?.spaceName}
           />
         );
-      case 'typing':
-      case 'typing-nudge':
+      case "typing":
+      case "typing-nudge":
         return (
           <TypingState
-            showNudge={state.screen === 'typing-nudge'}
+            showNudge={state.screen === "typing-nudge"}
             entryText={state.entryText}
             dispatch={dispatch}
             onSubmit={submitReflection}
@@ -122,9 +133,9 @@ export const ReflectScreen = () => {
             autoFocus={!isOutgoing}
           />
         );
-      case 'processing':
+      case "processing":
         return <ProcessingState />;
-      case 'mirror':
+      case "mirror":
         return (
           <MirrorState
             mirror={state.mirrorResponse}
@@ -137,7 +148,7 @@ export const ReflectScreen = () => {
             onSayMore={handleSayMore}
           />
         );
-      case 'clarify':
+      case "clarify":
         return (
           <ClarifyState
             previousMirror={state.mirrorResponse}
@@ -149,7 +160,7 @@ export const ReflectScreen = () => {
             turnIndex={turnsCount}
           />
         );
-      case 'gave-up':
+      case "gave-up":
         return (
           <GaveUpState
             onPathSelection={handleGaveUpPathSelection}
@@ -157,7 +168,7 @@ export const ReflectScreen = () => {
             sessionId={sessionId ?? undefined}
           />
         );
-      case 'escalation':
+      case "escalation":
         return (
           <EscalationState
             mirror={state.mirrorResponse}
@@ -167,7 +178,7 @@ export const ReflectScreen = () => {
             onContinue={handleEscalationContinue}
           />
         );
-      case 'path-selection':
+      case "path-selection":
         return (
           <PathSelectionState
             mirror={state.mirrorResponse}
@@ -176,10 +187,10 @@ export const ReflectScreen = () => {
             onSelectExit={handleSelectExit}
           />
         );
-      case 'error':
+      case "error":
         return (
           <ErrorState
-            errorMessage={state.errorMessage || 'Something went wrong.'}
+            errorMessage={state.errorMessage || "Something went wrong."}
             onRetry={handleRetry}
             onReset={handleReset}
           />
@@ -187,43 +198,57 @@ export const ReflectScreen = () => {
     }
   };
 
-  const currentConfig = SCREEN_TRANSITIONS[current] ?? DEFAULT_SCREEN_TRANSITION;
+  const currentConfig =
+    SCREEN_TRANSITIONS[current] ?? DEFAULT_SCREEN_TRANSITION;
   const previousConfig = previous
     ? (SCREEN_TRANSITIONS[previous] ?? DEFAULT_SCREEN_TRANSITION)
     : null;
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-  const absoluteWithInsets: ViewStyle = {
-    position: 'absolute',
-    top: insets.top,
-    left: 0,
-    right: 0,
-    bottom: insets.bottom,
-  };
+  const absoluteWithInsets = useMemo<ViewStyle>(
+    () => ({
+      position: "absolute",
+      top: insets.top,
+      left: 0,
+      right: 0,
+      bottom: insets.bottom,
+    }),
+    [insets.bottom, insets.top],
+  );
 
-  const isIdle = current === 'idle';
+  const isIdle = current === "idle";
+  const handleIdleHelpPress = useCallback(() => {
+    router.push("/crisis-resources?from=idle_button");
+  }, [router]);
+  const idleHeaderRight = useCallback(
+    () => <HeaderRight onPress={handleIdleHelpPress} />,
+    [handleIdleHelpPress],
+  );
+  const stackScreenOptions = useMemo(
+    () => ({
+      headerShown: isIdle,
+      headerTransparent: true,
+      headerTitle: "",
+      headerShadowVisible: false,
+      headerBackVisible: false,
+      headerRight: isIdle ? idleHeaderRight : undefined,
+    }),
+    [idleHeaderRight, isIdle],
+  );
+
+  if (isLoading) {
+    return (
+      <View
+        className="flex-1 items-center justify-center bg-background"
+        style={safeAreaStyle}
+      >
+        <MorphLoader />
+      </View>
+    );
+  }
 
   return (
-    <View
-      className="flex-1 bg-background"
-      style={safeAreaStyle}
-    >
-      <Stack.Screen
-        options={{
-          headerShown: isIdle,
-          headerTransparent: true,
-          headerTitle: '',
-          headerShadowVisible: false,
-          headerBackVisible: false,
-          headerRight: isIdle
-            ? () => (
-                <HelpHeaderButton
-                  onPress={() => router.push('/crisis-resources?from=idle_button')}
-                />
-              )
-            : undefined,
-        }}
-      />
+    <View className="flex-1 bg-background" style={safeAreaStyle}>
+      <Stack.Screen options={stackScreenOptions} />
       {/* Outgoing screen — fades out then unmounts */}
       {previous && previousConfig && (
         <EaseView

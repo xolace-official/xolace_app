@@ -28,10 +28,6 @@ const SLIDE_OUT = { opacity: 0, translateY: 20 };
 const SLIDE_IN = { opacity: 1, translateY: 0 };
 
 const styles = StyleSheet.create({
-  ambientGlow: {
-    width: 240,
-    height: 240,
-  },
   mascot: {
     width: "100%",
     flex: 1,
