@@ -78,9 +78,10 @@ function validateQuote(text: string): { ok: boolean; reason?: string } {
 export const loadEmotionalContext = internalQuery({
   args: {
     emotionalProfileId: v.id("emotional_profiles"),
+    referenceDate: v.number(),
   },
   handler: async (ctx, args) => {
-    const fiveDaysAgo = Date.now() - 5 * 24 * 60 * 60 * 1000;
+    const fiveDaysAgo = args.referenceDate - 5 * 24 * 60 * 60 * 1000;
 
     const recentSessions = await ctx.db
       .query("sessions")
@@ -172,9 +173,12 @@ export async function distillQuoteForUser(
   args: { emotionalProfileId: Id<"emotional_profiles">; date: string; preferredThemes: string[] }
 ): Promise<string | null> {
   try {
+      const refMs = new Date(args.date + "T00:00:00Z").getTime();
+
       const [context, recentQuoteTexts] = await Promise.all([
         ctx.runQuery(internal.ai.quotesDistiller.loadEmotionalContext, {
           emotionalProfileId: args.emotionalProfileId,
+          referenceDate: refMs,
         }) as Promise<EmotionalContext>,
         ctx.runQuery(internal.ai.quotesDistiller.loadRecentQuotes, {
           emotionalProfileId: args.emotionalProfileId,
@@ -191,7 +195,7 @@ export async function distillQuoteForUser(
 
       const angleSeed = dailyAngleSeed(args.date);
 
-      const now = Date.now();
+      const now = refMs;
       const emotionalSummary: string = context.sessions
         .map((s: NonNullable<EmotionalContext>["sessions"][number]) => {
           const label = s.granularLabel ?? s.primaryEmotion;
