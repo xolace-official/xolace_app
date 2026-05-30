@@ -8,6 +8,7 @@ import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import { zustandJSONStorage } from '@/src/lib/storage/unified-storage';
 import type { Id } from '@/convex/_generated/dataModel';
+import type { TextureSetId } from '@/src/features/reflect/texture-sets';
 
 type ThemeSlice = {
   theme: 'system' | 'light' | 'dark';
@@ -39,6 +40,11 @@ type TogglesSlice = {
   setNotifNudgeDismissed: (v: boolean) => void;
 };
 
+type PreferencesSlice = {
+  textureSetId: TextureSetId;
+  setTextureSetId: (id: TextureSetId) => void;
+};
+
 /** Ephemeral, not persisted. Tracks store version check state. */
 type UpdateCheckSlice = {
   isVersionChecked: boolean;
@@ -54,7 +60,7 @@ type LastNotificationSlice = {
   clearLastNotification: () => void;
 };
 
-export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & UpdateCheckSlice & LastNotificationSlice;
+export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & PreferencesSlice & UpdateCheckSlice & LastNotificationSlice;
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -84,6 +90,9 @@ export const useAppStore = create<AppState>()(
         notifNudgeDismissed: false,
         setNotifNudgeDismissed: (v) => set({ notifNudgeDismissed: v }),
 
+        textureSetId: 'flat',
+        setTextureSetId: (id) => set({ textureSetId: id }),
+
         isVersionChecked: false,
         setIsVersionChecked: (v) => set({ isVersionChecked: v }),
         isNewVersionAvailable: false,
@@ -105,6 +114,7 @@ export const useAppStore = create<AppState>()(
           nightModeEnabled: s.nightModeEnabled,
           toneTipSeen: s.toneTipSeen,
           notifNudgeDismissed: s.notifNudgeDismissed,
+          textureSetId: s.textureSetId,
         }),
       }
     )

@@ -110,6 +110,9 @@ export function reducer(
     case 'VOICE_TRANSCRIPT':
       return { ...state, screen: 'typing', entryText: action.text, entryType: 'voice' };
 
+    case 'CLEAR_TEXTURES':
+      return { ...state, selectedTextures: [] };
+
     case 'RESET':
       return { ...initialState, userVariant: state.userVariant };
 

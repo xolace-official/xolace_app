@@ -18,6 +18,7 @@ import { PillButton } from "@/src/components/shared/pill-button";
 import { IdleMenu } from "@/src/features/idle-menu/menu";
 import { MicButton } from "@/src/features/reflect/components/mic-button";
 import { QuietReturnHeader } from "@/src/features/reflect/components/quiet-return-header";
+import { TextureSetTabs } from "@/src/features/reflect/components/texture-set-tabs";
 import type {
   UserVariant,
   ReflectionAction,
@@ -31,17 +32,13 @@ import {
 import { useSessionMode } from "@/src/context/session-mode-context";
 import { NIGHT_TEXTURE_WORDS } from "@/src/features/reflect/night-copy";
 import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
-
-const DAY_TEXTURE_WORDS = [
-  "heavy",
-  "tight",
-  "foggy",
-  "buzzing",
-  "empty",
-  "scattered",
-  "numb",
-  "raw",
-];
+import {
+  TEXTURE_SETS,
+  resolveTextureSetId,
+  type TextureSetId,
+} from "@/src/features/reflect/texture-sets";
+import { useAppStore } from "@/src/store/store";
+import { posthog } from "@/src/config/posthog";
 
 const QUOTE_ICON_NAME = { ios: "sparkles", android: "auto_awesome" } as const;
 const BUTTON_INITIAL_ANIMATE = { opacity: 0, translateY: 20 } as const;
@@ -60,6 +57,8 @@ const BUTTON_TRANSITION_OUT = {
   duration: 200,
   easing: BUTTON_EASING,
 };
+const WORDS_FADE_OUT = { type: "timing" as const, duration: 150 };
+const WORDS_FADE_IN = { type: "timing" as const, duration: 200 };
 
 type Props = {
   variant: UserVariant;
@@ -90,16 +89,30 @@ export const IdleState = ({
   const insets = useSafeAreaInsets();
   const rawHeaderHeight = useHeaderHeight();
 
+  const storedSetId = useAppStore((s) => s.textureSetId);
+  const setTextureSetId = useAppStore((s) => s.setTextureSetId);
+  const safeSetId = resolveTextureSetId(storedSetId);
+
+  // Three-state animation: wordsVisible drives fade, pendingSetId stages the
+  // incoming set, resolvedSetId drives the word list (swapped while hidden).
+  const [wordsVisible, setWordsVisible] = useState(true);
+  const [pendingSetId, setPendingSetId] = useState<TextureSetId>(safeSetId);
+  const [resolvedSetId, setResolvedSetId] = useState<TextureSetId>(safeSetId);
+
   // Freeze the last known header height so it doesn't jump during transition animations
   const stableHeaderHeight = useRef(0);
   if (rawHeaderHeight > 0) stableHeaderHeight.current = rawHeaderHeight;
-  const headerExtraPadding = Math.max(0, stableHeaderHeight.current - insets.top);
+  const headerExtraPadding = Math.max(
+    0,
+    stableHeaderHeight.current - insets.top,
+  );
 
   const todayQuotes = useQuery(api.dailyQuotes.getToday);
   const hasQuote = !!(todayQuotes?.session ?? todayQuotes?.curated);
+
   const TEXTURE_WORDS: readonly string[] = isNight
     ? NIGHT_TEXTURE_WORDS
-    : DAY_TEXTURE_WORDS;
+    : (TEXTURE_SETS[resolvedSetId] ?? TEXTURE_SETS.flat);
 
   const activeQuietReturn = !isNight ? quietReturn : null;
   const hasPlayedEntrance = useRef(false);
@@ -107,6 +120,14 @@ export const IdleState = ({
   const selectedTextureKeys = useMemo(
     () => new Set(selectedTextures),
     [selectedTextures],
+  );
+  const containerStyle = useMemo(
+    () => ({ paddingTop: headerExtraPadding }),
+    [headerExtraPadding],
+  );
+  const wordsFadeAnimate = useMemo(
+    () => ({ opacity: wordsVisible ? 1 : 0 }),
+    [wordsVisible],
   );
 
   useEffect(() => {
@@ -135,6 +156,16 @@ export const IdleState = ({
     }
   };
 
+  const handleSetChange = (id: TextureSetId) => {
+    if (id === resolvedSetId) return;
+    dispatch({ type: "CLEAR_TEXTURES" });
+    setTextureSetId(id);
+    setPendingSetId(id);
+    setWordsVisible(false);
+    playSoftPress();
+    posthog.capture("texture_set_changed", { from: resolvedSetId, to: id });
+  };
+
   const hasSelections = selectedTextures.length > 0;
   const [buttonVisible, setButtonVisible] = useState(hasSelections);
   const [buttonMounted, setButtonMounted] = useState(hasSelections);
@@ -149,8 +180,7 @@ export const IdleState = ({
   }, [hasSelections]);
 
   return (
-    // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
-    <View className="flex-1 px-6" style={{ paddingTop: headerExtraPadding }}>
+    <View className="flex-1 px-6" style={containerStyle}>
       <View className="pt-4 pb-4">
         <QuietReturnHeader
           variant={variant}
@@ -208,32 +238,56 @@ export const IdleState = ({
           Or just tap what feels close:
         </AppText>
 
-        <TagGroup
-          selectionMode="multiple"
-          size="sm"
-          variant="surface"
-          selectedKeys={selectedTextureKeys}
-          onSelectionChange={handleSelectionChange}
-          animation="disable-all"
+        {!isNight && (
+          <TextureSetTabs
+            activeSet={resolvedSetId}
+            onSelect={handleSetChange}
+            disabled={!wordsVisible}
+          />
+        )}
+
+        <EaseView
+          animate={wordsFadeAnimate}
+          transition={wordsVisible ? WORDS_FADE_IN : WORDS_FADE_OUT}
+          onTransitionEnd={({ finished }) => {
+            if (finished && !wordsVisible) {
+              setResolvedSetId(pendingSetId);
+              setWordsVisible(true);
+            }
+          }}
         >
-          <TagGroup.List className="flex-row flex-wrap gap-2 pr-14">
-            {TEXTURE_WORDS.map((word) => (
-              <TagGroup.Item key={word} id={word} className="min-w-18 justify-center">
-                {({ isSelected }) => (
-                  <>
-                    <TagGroup.ItemLabel
-                      className={
-                        isSelected ? "text-accent" : "text-foreground/80"
-                      }
-                    >
-                      {word}
-                    </TagGroup.ItemLabel>
-                  </>
-                )}
-              </TagGroup.Item>
-            ))}
-          </TagGroup.List>
-        </TagGroup>
+          <TagGroup
+            key={resolvedSetId}
+            selectionMode="multiple"
+            size="sm"
+            variant="surface"
+            selectedKeys={selectedTextureKeys}
+            onSelectionChange={handleSelectionChange}
+            animation="disable-all"
+          >
+            <TagGroup.List className="flex-row flex-wrap gap-2 pr-14">
+              {TEXTURE_WORDS.map((word) => (
+                <TagGroup.Item
+                  key={word}
+                  id={word}
+                  className="min-w-18 justify-center"
+                >
+                  {({ isSelected }) => (
+                    <>
+                      <TagGroup.ItemLabel
+                        className={
+                          isSelected ? "text-accent" : "text-foreground/80"
+                        }
+                      >
+                        {word}
+                      </TagGroup.ItemLabel>
+                    </>
+                  )}
+                </TagGroup.Item>
+              ))}
+            </TagGroup.List>
+          </TagGroup>
+        </EaseView>
 
         {buttonMounted && (
           <EaseView

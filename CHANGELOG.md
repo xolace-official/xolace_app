@@ -4,15 +4,24 @@ All notable changes to Xolace are documented here.
 
 ---
 
-## [1.3.0.1] - OTA Update (2026-05-29)
+## [1.4.0.0] - (2026-05-29)
+
+### Added
+
+- **Help button in reflect header** — a "Help" button (crisis resources shortcut) now appears in the native stack header on the reflect screen's idle state only; it is invisible in all other states (typing, processing, mirror, etc.). The header is transparent with no visible bar — the button floats at the top-right. Tapping it navigates to the crisis resources screen.
 
 ### Changed
 
+- **Session-end close screen** — removed the ambient ember glow circle behind the "Have more? I'm here." and "Done" buttons on both the activity and exit variants; the close phase is now clean and uncluttered.
 - **Session-end acknowledge screen** — mascot illustration (`jump-love-bgremove`) now fills the upper space of the acknowledge phase on both the activity and exit variants, replacing the empty void. Text sits below the mascot, bumped to `text-3xl` for more presence. Placeholder for the upcoming looping mascot video (requires a future store release).
-- **Session-end close screen** — "Have more? I'm here." redesigned as a full-width bordered pill (`PressableFeedback`) centered on screen with an ambient glow; replaces the previous plain link text floating at the bottom. Same treatment applied to both activity and exit variants.
 - **Session-end offer screen** — title size increased to `text-3xl`; subtitle copy updated to "Someone out there might be carrying something just like this."
 - **Contributed confirmation screen** — replaced placeholder with an ember particle animation (7 particles, staggered timing, single `progress` shared value pattern) rising above a soft glow. Message and Done button fade in sequentially.
 - **Mirror tone badge** — now reads `toneUsed` from the session record rather than the user's current tone preference setting. The badge reflects the tone that actually generated the mirror, not what the user has set today.
+
+### Fixed
+
+- **White background flash on navigation** — `ThemeProvider` now detects all dark theme variants (`quiet-dark`, `nightly-dark`, `reverie-dark`, etc.) by checking `theme.includes('dark')` instead of strict equality; fixes the white flash when navigating between screens on any non-base dark theme.
+- **Push token fetch crash on 503** — `getExpoPushTokenAsync` is now wrapped in a try/catch; a transient Expo service error no longer surfaces as an unhandled promise rejection. The token registers normally on the next launch.
 
 ---
 

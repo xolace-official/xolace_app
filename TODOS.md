@@ -4,6 +4,28 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P3 — Texture Word Sets v2: Auto-Suggest Active Set from Prior Session Tone
+
+**What:** When the user opens the app, automatically suggest (or pre-select) the most contextually appropriate word set based on prior session signals: last session's mirror tone (heavy → Flat, grief-adjacent → Tender, hopeful → Bright, anxious → Charged), time of day (Night Mode already does this), and/or session frequency pattern.
+
+**Why:** The v1 tab switcher requires the user to consciously classify their emotional state before they see any words — which is friction at exactly the moment when they're most overwhelmed. The 12-month ideal is that the right words surface automatically, like Night Mode does for 3am sessions. v1 validates that multiple word sets have value; v2 closes the gap by removing the selection step.
+
+**Gate:** Only pursue v2 if `texture_set_changed` PostHog data shows meaningful switching behavior within 2-3 weeks of v1 shipping. If 80%+ of sessions stay on Flat, the sets may need retuning before investing in routing logic.
+
+**How to start:**
+1. Read 2-3 weeks of `texture_set_changed` data from PostHog.
+2. If switching is meaningful: map the `toneUsed` field from `sessions` table (already populated) to a `TextureSetId` suggestion function: `suggestSetFromTone(toneUsed: string): TextureSetId`.
+3. On idle screen mount, if `textureSetId === 'flat'` (user hasn't expressed a manual preference), apply the suggestion as the initial `pendingSetId` — no Zustand write, just pre-selects the tab visually.
+4. If the user taps a different tab, their explicit choice wins and is persisted.
+
+**Key files:** `src/features/reflect/texture-sets.ts` (add `suggestSetFromTone`), `src/features/reflect/components/states/idle-state.tsx` (apply suggestion on mount), `convex/sessions.ts` (`toneUsed` field already there)
+
+**Effort:** S (human: ~4h / CC: ~30min once data validates the approach)
+**Priority:** P3 — gated on v1 analytics data
+**Depends on:** v1 texture word sets shipped + 2-3 weeks of `texture_set_changed` data from PostHog
+
+---
+
 ## P2 — Session End: Looping Mascot Video on Acknowledge Phase
 
 **What:** Replace the current empty acknowledge phase in `activity-variant.tsx` (and `exit-variant.tsx`) with a short looping mascot video (5–10s, muted, autoplay) in the Calm-app style — video fills the upper ~55% of the screen edge-to-edge, a `LinearGradient` fades its bottom edge into the background color, and the text sits below in the remaining space.
