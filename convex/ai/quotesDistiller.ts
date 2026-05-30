@@ -26,6 +26,31 @@ const MEDICAL_BLOCKLIST = [
   "prescribed",
 ];
 
+// 12 poetic lenses that rotate daily — forces a fresh rhetorical entry point
+// even when emotional input is identical across consecutive days.
+const ANGLE_SEEDS = [
+  "impermanence",
+  "self-compassion",
+  "paradox",
+  "movement",
+  "stillness",
+  "clarity",
+  "tenderness",
+  "observation",
+  "strength",
+  "surrender",
+  "distance",
+  "contrast",
+] as const;
+
+function dailyAngleSeed(dateString: string): string {
+  const [year, month, day] = dateString.split("-").map(Number);
+  const start = new Date(Date.UTC(year, 0, 0));
+  const current = new Date(Date.UTC(year, month - 1, day));
+  const dayOfYear = Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return ANGLE_SEEDS[dayOfYear % ANGLE_SEEDS.length];
+}
+
 function validateQuote(text: string): { ok: boolean; reason?: string } {
   if (text.length < 20) return { ok: false, reason: "too short" };
   if (text.length > 300) return { ok: false, reason: "too long" };
@@ -55,19 +80,18 @@ export const loadEmotionalContext = internalQuery({
     emotionalProfileId: v.id("emotional_profiles"),
   },
   handler: async (ctx, args) => {
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const fiveDaysAgo = Date.now() - 5 * 24 * 60 * 60 * 1000;
 
-    // Get recent completed sessions
     const recentSessions = await ctx.db
       .query("sessions")
       .withIndex("by_profile_time", (q) =>
         q
           .eq("emotionalProfileId", args.emotionalProfileId)
-          .gte("createdAt", sevenDaysAgo)
+          .gte("createdAt", fiveDaysAgo)
       )
       .order("desc")
       .filter((q) => q.eq(q.field("state"), "completed"))
-      .take(3);
+      .take(2);
 
     if (recentSessions.length === 0) return null;
 
@@ -82,6 +106,7 @@ export const loadEmotionalContext = internalQuery({
       if (metadata) {
         contextItems.push({
           sessionId: session._id,
+          sessionCreatedAt: session.createdAt,
           primaryEmotion: metadata.primaryEmotion,
           granularLabel: metadata.granularLabel,
           thematicTags: metadata.thematicTags,
@@ -97,17 +122,44 @@ export const loadEmotionalContext = internalQuery({
 });
 
 /**
+ * Load the text of recent session-derived quotes for this user (excluding today).
+ * Used to steer the model away from angles it has already taken.
+ */
+export const loadRecentQuotes = internalQuery({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+    beforeDate: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Fetch last 14 rows (≤7 days × 2 types) bounded by profile + date range
+    const rows = await ctx.db
+      .query("daily_quotes")
+      .withIndex("by_profile_date", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId).lt("date", args.beforeDate)
+      )
+      .order("desc")
+      .take(14);
+
+    return rows
+      .filter((r) => r.type === "session")
+      .slice(0, 7)
+      .map((r) => r.text);
+  },
+});
+
+/**
  * Generate a session-derived quote for one user.
  * Called per-user by the nightly cron batch processor.
  */
 type EmotionalContext = {
   sessions: {
     sessionId: string;
+    sessionCreatedAt: number;
     primaryEmotion: string;
     granularLabel?: string;
     thematicTags: string[];
     intensity: number;
-    }[];
+  }[];
   sessionIds: string[];
 } | null;
 
@@ -120,10 +172,15 @@ export async function distillQuoteForUser(
   args: { emotionalProfileId: Id<"emotional_profiles">; date: string; preferredThemes: string[] }
 ): Promise<string | null> {
   try {
-      const context = (await ctx.runQuery(
-        internal.ai.quotesDistiller.loadEmotionalContext,
-        { emotionalProfileId: args.emotionalProfileId }
-      )) as EmotionalContext;
+      const [context, recentQuoteTexts] = await Promise.all([
+        ctx.runQuery(internal.ai.quotesDistiller.loadEmotionalContext, {
+          emotionalProfileId: args.emotionalProfileId,
+        }) as Promise<EmotionalContext>,
+        ctx.runQuery(internal.ai.quotesDistiller.loadRecentQuotes, {
+          emotionalProfileId: args.emotionalProfileId,
+          beforeDate: args.date,
+        }) as Promise<string[]>,
+      ]);
 
       if (!context) {
         console.log(
@@ -132,33 +189,43 @@ export async function distillQuoteForUser(
         return null;
       }
 
+      const angleSeed = dailyAngleSeed(args.date);
+
+      const now = Date.now();
       const emotionalSummary: string = context.sessions
         .map((s: NonNullable<EmotionalContext>["sessions"][number]) => {
           const label = s.granularLabel ?? s.primaryEmotion;
           const tags = s.thematicTags.length > 0 ? ` (${s.thematicTags.join(", ")})` : "";
-          return `- ${label}, intensity ${s.intensity}/10${tags}`;
+          const daysAgo = Math.max(1, Math.round((now - s.sessionCreatedAt) / (1000 * 60 * 60 * 24)));
+          const recency = daysAgo === 1 ? "1 day ago" : `${daysAgo} days ago`;
+          return `- ${label}, intensity ${s.intensity}/10${tags} — ${recency}`;
         })
         .join("\n");
 
-      const systemPrompt = `You are given the emotional themes from a user's recent reflections. Generate beautiful, honest quote; a quote that captures the emotional experience without being specific. It should feel like something a thoughtful writer found for themselves and wanted to keep.
+      const systemPrompt = `You are given the emotional themes from a user's recent reflections. Generate a beautiful, honest quote that captures the emotional experience without being specific. It should feel like something a thoughtful writer found for themselves and wanted to keep.
 
-      Rules:
-      - 1-2 sentences maximum
-      - Poetic but grounded — not therapy-speak.
-      - Can even rephrase real world quotes to suit the user's emotional context
-      - Second person (You) or first person
-      - No specific details from the session (the quote will be shared publicly)
-      - No medical or clinical terminology
-      - Must be able to stand alone without any context
-      - Pass the "would someone screenshot this?" test`;
-    
+Rules:
+- 1-2 sentences maximum
+- Poetic but grounded — not therapy-speak
+- Can rephrase real-world quotes to suit the user's emotional context
+- Second person (You) or first person
+- No specific details from the session (the quote will be shared publicly)
+- No medical or clinical terminology
+- Must be able to stand alone without any context
+- Pass the "would someone screenshot this?" test
+- Approach the quote through the lens of: ${angleSeed} — use this as a poetic entry point, not a literal theme`;
 
       const themesLine =
         args.preferredThemes.length > 0
-          ? `\nUser's preferred themes (let the quote naturally align with one if fitting): ${args.preferredThemes.join(", ")}`
+          ? `\nPreferred themes (align naturally with one if fitting): ${args.preferredThemes.join(", ")}`
           : "";
 
-      const userPrompt: string = `Recent emotional themes:\n${emotionalSummary}${themesLine}\n\nGenerate a quote:`;
+      const avoidLine =
+        recentQuoteTexts.length > 0
+          ? `\nRecent quotes already shown — do NOT reuse these framings, metaphors, or angles:\n${recentQuoteTexts.map((t) => `- "${t}"`).join("\n")}`
+          : "";
+
+      const userPrompt: string = `Recent emotional themes:\n${emotionalSummary}${themesLine}${avoidLine}\n\nGenerate a quote:`;
 
       const client = getAnthropicClient();
       const response = await client.messages.create({
