@@ -5,6 +5,7 @@ import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { Presets } from 'react-native-pulsar';
+import { StatusBar } from 'expo-status-bar';
 
 import { useAppStore } from '@/src/store/store';
 import { playGentlePresence } from '@/src/lib/haptics';
@@ -48,6 +49,8 @@ export const FrameScreenV2 = () => {
   const bottomBarStyle = { position: 'absolute' as const, bottom: 0, left: 0, right: 0, paddingHorizontal: 36, paddingBottom: insets.bottom + 28, alignItems: 'center' as const, gap: 20, zIndex: 10 };
 
   return (
+    <>
+    <StatusBar hidden />  
     <View className="flex-1 bg-background">
       <DuskDriftBackdrop />
 
@@ -94,6 +97,7 @@ export const FrameScreenV2 = () => {
         </EaseView>
       </View>
     </View>
+    </>
   );
 };
 

@@ -67,6 +67,7 @@ export function buildArticulatorPrompt(
   const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
   const entryTypeInstructions = getEntryTypeInstructions(entryType);
   const identityLine = getIdentityLine(spaceName);
+  const [lastMirror, ...olderMirrors] = recentMirrors;
 
   const system = `${identityLine}
 
@@ -103,9 +104,9 @@ ${classification.thematicTags.length > 0 ? `Themes: ${classification.thematicTag
 User's words: ${classification.userLanguageTags.length > 0 ? classification.userLanguageTags.join(", ") : "none extracted"}
 ${safeguardInstructions}${behaviorNotes}${isFirstSession ? "\nFirst session. Be slightly warmer. They don't know what to expect. The mirror should feel like a surprise." : ""}
 ${sessionMode === "night" ? getLateNightAddendum() : ""}
-## Pattern Context (use for subtle continuity; never reference past sessions explicitly)
+## Pattern Context (this is the emotional terrain they tend to carry, let it actively shape what you notice and how precisely you name it; never reference past sessions explicitly)
 ${patternSummary}
-${recentMirrors.length > 0 ? `\n## Recent Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${recentMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}`;
+${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}`;
 
   const user = rawInput;
 
@@ -148,24 +149,23 @@ function sanitizeSpaceName(raw?: string): string | null {
 function getToneInstructions(tone: string): string {
   switch (tone) {
     case "poetic":
-      return "Imagery is permitted only when it sharpens recognition: never as flourish. If a metaphor makes the feeling more specific, use it; if it just sounds pretty, drop it. Plain is always safe. Example register: \"There's a specific kind of tired that comes from carrying something you can't put down.\"";
+      return "Imagery is permitted only when it sharpens recognition: never as flourish. If a metaphor makes the feeling more specific, use it; if it just sounds pretty, drop it. Plain is always safe.";
     case "gentle":
-      return "Use warm, simple, everyday language. Be soft without being vague, and avoid counselor cadence. Example register: \"This one's sitting heavy.\"";
+      return "Use warm, simple, everyday language. Be soft without being vague, and avoid counselor cadence.";
     case "direct":
-      return "Use clear, minimal language. No metaphors. Say it plainly. Example register: \"You're angry, and it's about feeling unseen.\"";
+      return "Use clear, minimal language. No metaphors. Say it plainly.";
     case "witnessed":
-      return `Begin with one or two brief lines of recognition that names the emotional weight the user is carrying, before mirroring it back. The recognition should feel like a human noticing, not a therapist validating. It names the weight, not the content.
+      return `Two parts, always in this order:
 
-  Good recognition lines(Important Notice: Please take note that these are just sample lines, so you should make sure the recognition line is appropriate for the user's context/input not generic responses): "That's a lot to carry." / "Something heavy landed." / "That kind of tired goes deeper than sleep." / "That took something out of you."
-  Bad recognition lines: "I hear you." / "I understand." / "That must be hard." / "I see you." (too direct, clinical, or clichéd)
+  1. Recognition (1-2 sentences): Name the emotional weight the user is carrying before you mirror it. This feels like a human noticing, not a therapist validating, not someone performing empathy. It names the weight without repeating the user's words. It lands before the mirror does its work.
 
-  After the recognition line, deliver the precision mirror exactly as the other tones do (1-3 sentences). Total response: 2-5 sentences.
+  Bad recognition lines: "I hear you." / "I understand." / "I see you." (too direct, clinical, or clichéd, these announce themselves as recognition, which kills the effect)
 
-  Rules:
-  - Recognition must NOT repeat the user's words — it names the weight, the mirror captures the shape
-  - Do not moralize or comfort ("it'll get better", "you're not alone")
-  - Recognition line is always first, always one sentence or two sentences depending on the user's input, what can hit home and feel human
-  - If the user's input is short (1-2 sentences), the recognition + mirror together should still be 2-3 sentences max`;
+  2. Mirror (1-3 sentences): After the recognition, deliver the precision mirror. The mirror captures the specific shape of what they're feeling, weave their own emotionally charged words back in, then add the dimension they couldn't name. Be direct and precise. Meet their register. No hedging, no aestheticizing. The same core rules apply: second person, no advice, no reassurance, no clinical language.
+
+  Total: 2-5 sentences. If their input is short (1-2 sentences), the whole response stays at 2-3 sentences.
+
+  Rule: Recognition names the weight. Mirror captures the shape. They do different work, don't collapse them into one.`;
     case "adaptive":
     default:
       return "Read the register of the user's input and match it. If they write plainly, mirror plainly. If they write with imagery, mirror with imagery. Meet them where they are.";
