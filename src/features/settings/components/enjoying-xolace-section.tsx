@@ -10,12 +10,18 @@ const ANDROID_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.xolaceincorg.xolace&showAllReviews=true";
 const FEEDBACK_EMAIL = "feedback@xolaceinc.com";
 
-const RATE_ICON = { ios: "star.fill", android: "star", web: "star" } as const;
-const FEEDBACK_ICON = {
+type SymbolName = React.ComponentProps<typeof SymbolView>["name"];
+type SymbolPlatformMap = Exclude<SymbolName, string>;
+type MobileIconName = {
+  ios: NonNullable<SymbolPlatformMap["ios"]>;
+  android: NonNullable<SymbolPlatformMap["android"]>;
+};
+
+const RATE_ICON: MobileIconName = { ios: "star.fill", android: "star" };
+const FEEDBACK_ICON: MobileIconName = {
   ios: "envelope.fill",
   android: "email",
-  web: "email",
-} as const;
+};
 
 const handleRateApp = async () => {
   try {
@@ -32,7 +38,9 @@ const handleSendFeedback = async () => {
     const body = encodeURIComponent(
       "Hi Xolace team,\n\nI have some feedback:\n\n[Your feedback here]\n\nThanks!",
     );
-    await Linking.openURL(`mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`);
+    await Linking.openURL(
+      `mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`,
+    );
   } catch (e) {
     console.error("Error opening mail:", e);
   }
@@ -40,15 +48,18 @@ const handleSendFeedback = async () => {
 
 type ActionRowProps = {
   label: string;
-  icon: { ios: string; android: string; web: string };
+  icon: MobileIconName;
   onPress: () => void;
   isLast?: boolean;
 };
 
-const ActionRow = ({ label, icon, onPress, isLast = false }: ActionRowProps) => {
+const ActionRow = ({ label, icon, onPress }: ActionRowProps) => {
   const mutedColor = useThemeColor("muted") as string;
   return (
-    <PressableFeedback onPress={onPress} className="flex-row items-center justify-between px-5 py-4">
+    <PressableFeedback
+      onPress={onPress}
+      className="flex-row items-center justify-between px-5 py-4"
+    >
       <AppText className="text-base text-foreground">{label}</AppText>
       <SymbolView name={icon} size={16} tintColor={mutedColor} />
     </PressableFeedback>
@@ -62,7 +73,7 @@ export const EnjoyingXolaceSection = () => {
         <Accordion.Item value="helping">
           <Accordion.Trigger className="px-5 py-4">
             <AppText className="text-base text-foreground flex-1">
-            🎁 Leave us a review
+              🎁 Leave us a review
             </AppText>
             <Accordion.Indicator />
           </Accordion.Trigger>
