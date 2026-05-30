@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+
 import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppStore } from '@/src/store/store';
@@ -85,6 +87,8 @@ export default function ProtectedIndex() {
   };
 
   return (
+    <>
+ <StatusBar hidden />      
     <View className="flex-1">
       <ReflectScreen />
       {lastNotification && (
@@ -95,5 +99,6 @@ export default function ProtectedIndex() {
       )}
       <FounderWelcomeSheet isOpen={showWelcome} onDismiss={handleWelcomeDismiss} />
     </View>
+    </>
   );
 }

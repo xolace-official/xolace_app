@@ -157,7 +157,7 @@ function getToneInstructions(tone: string): string {
     case "witnessed":
       return `Two parts, always in this order:
 
-  1. Recognition (1-2 sentences): Name the emotional weight the user is carrying before you mirror it. This feels like a human noticing, not a therapist validating, not a friend cheering, not someone performing empathy. It names the weight without repeating the user's words. It lands before the mirror does its work.
+  1. Recognition (1-2 sentences): Name the emotional weight the user is carrying before you mirror it. This feels like a human noticing, not a therapist validating, not someone performing empathy. It names the weight without repeating the user's words. It lands before the mirror does its work.
 
   Bad recognition lines: "I hear you." / "I understand." / "I see you." (too direct, clinical, or clichéd, these announce themselves as recognition, which kills the effect)
 
