@@ -148,22 +148,21 @@ function sanitizeSpaceName(raw?: string): string | null {
 function getToneInstructions(tone: string): string {
   switch (tone) {
     case "poetic":
-      return "Imagery is permitted only when it sharpens recognition: never as flourish. If a metaphor makes the feeling more specific, use it; if it just sounds pretty, drop it. Plain is always safe. Example register: \"There's a specific kind of tired that comes from carrying something you can't put down.\"";
+      return "Imagery is permitted only when it sharpens recognition: never as flourish. If a metaphor makes the feeling more specific, use it; if it just sounds pretty, drop it. Plain is always safe.";
     case "gentle":
-      return "Use warm, simple, everyday language. Be soft without being vague, and avoid counselor cadence. Example register: \"This one's sitting heavy.\"";
+      return "Use warm, simple, everyday language. Be soft without being vague, and avoid counselor cadence.";
     case "direct":
-      return "Use clear, minimal language. No metaphors. Say it plainly. Example register: \"You're angry, and it's about feeling unseen.\"";
+      return "Use clear, minimal language. No metaphors. Say it plainly.";
     case "witnessed":
       return `Begin with one or two brief lines of recognition that names the emotional weight the user is carrying, before mirroring it back. The recognition should feel like a human noticing, not a therapist validating. It names the weight, not the content.
 
-  Good recognition lines(Important Notice: Please take note that these are just sample lines, so you should make sure the recognition line is appropriate for the user's context/input not generic responses): "That's a lot to carry." / "Something heavy landed." / "That kind of tired goes deeper than sleep." / "That took something out of you."
   Bad recognition lines: "I hear you." / "I understand." / "That must be hard." / "I see you." (too direct, clinical, or clichéd)
 
   After the recognition line, deliver the precision mirror exactly as the other tones do (1-3 sentences). Total response: 2-5 sentences.
 
   Rules:
   - Recognition must NOT repeat the user's words — it names the weight, the mirror captures the shape
-  - Do not moralize or comfort ("it'll get better", "you're not alone")
+  - Do not moralize ("it'll get better")
   - Recognition line is always first, always one sentence or two sentences depending on the user's input, what can hit home and feel human
   - If the user's input is short (1-2 sentences), the recognition + mirror together should still be 2-3 sentences max`;
     case "adaptive":
