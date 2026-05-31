@@ -38,6 +38,9 @@ type TogglesSlice = {
   /** One-time flag — once dismissed, session-end notification nudge never shows again. */
   notifNudgeDismissed: boolean;
   setNotifNudgeDismissed: (v: boolean) => void;
+  /** One-time flag — once true, reflect screen tour never shows again on this device. */
+  reflectTourSeen: boolean;
+  setReflectTourSeen: (v: boolean) => void;
 };
 
 type PreferencesSlice = {
@@ -90,6 +93,9 @@ export const useAppStore = create<AppState>()(
         notifNudgeDismissed: false,
         setNotifNudgeDismissed: (v) => set({ notifNudgeDismissed: v }),
 
+        reflectTourSeen: false,
+        setReflectTourSeen: (v) => set({ reflectTourSeen: v }),
+
         textureSetId: 'flat',
         setTextureSetId: (id) => set({ textureSetId: id }),
 
@@ -114,6 +120,7 @@ export const useAppStore = create<AppState>()(
           nightModeEnabled: s.nightModeEnabled,
           toneTipSeen: s.toneTipSeen,
           notifNudgeDismissed: s.notifNudgeDismissed,
+          reflectTourSeen: s.reflectTourSeen,
           textureSetId: s.textureSetId,
         }),
       }
