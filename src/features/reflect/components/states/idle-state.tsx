@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import {
+  Popover,
   PressableFeedback,
   Separator,
   TagGroup,
   useThemeColor,
 } from "heroui-native";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "convex/react";
@@ -39,6 +42,9 @@ import {
 } from "@/src/features/reflect/texture-sets";
 import { useAppStore } from "@/src/store/store";
 import { posthog } from "@/src/config/posthog";
+import { useReflectTour } from "@/src/features/reflect/hooks/use-reflect-tour";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const QUOTE_ICON_NAME = { ios: "sparkles", android: "auto_awesome" } as const;
 const BUTTON_INITIAL_ANIMATE = { opacity: 0, translateY: 20 } as const;
@@ -59,6 +65,41 @@ const BUTTON_TRANSITION_OUT = {
 };
 const WORDS_FADE_OUT = { type: "timing" as const, duration: 150 };
 const WORDS_FADE_IN = { type: "timing" as const, duration: 200 };
+
+const styles = StyleSheet.create({
+  popoverStep0Trigger: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    right: 56,
+    height: 44,
+  },
+  popoverStep1Trigger: {
+    position: "absolute",
+    right: 8,
+    top: 8,
+  },
+  popoverStep1Anchor: {
+    width: 44,
+    height: 44,
+  },
+  popoverDynamicTriggerBase: {
+    position: "absolute",
+    left: 0,
+  },
+  popoverStep2Trigger: {
+    right: 48,
+    height: 60,
+  },
+  popoverStep3Trigger: {
+    right: 0,
+    height: 40,
+  },
+  skipContainerBase: {
+    position: "absolute",
+    right: 10,
+  },
+});
 
 type Props = {
   variant: UserVariant;
@@ -93,13 +134,11 @@ export const IdleState = ({
   const setTextureSetId = useAppStore((s) => s.setTextureSetId);
   const safeSetId = resolveTextureSetId(storedSetId);
 
-  // Three-state animation: wordsVisible drives fade, pendingSetId stages the
-  // incoming set, resolvedSetId drives the word list (swapped while hidden).
   const [wordsVisible, setWordsVisible] = useState(true);
   const [pendingSetId, setPendingSetId] = useState<TextureSetId>(safeSetId);
   const [resolvedSetId, setResolvedSetId] = useState<TextureSetId>(safeSetId);
 
-  // Freeze the last known header height so it doesn't jump during transition animations
+  // Freeze the last known header height so it doesn't jump during transitions
   const stableHeaderHeight = useRef(0);
   if (rawHeaderHeight > 0) stableHeaderHeight.current = rawHeaderHeight;
   const headerExtraPadding = Math.max(
@@ -129,6 +168,22 @@ export const IdleState = ({
     () => ({ opacity: wordsVisible ? 1 : 0 }),
     [wordsVisible],
   );
+
+  const { tourState, steps, advance, skip } = useReflectTour();
+  const setReflectTourSeen = useAppStore((s) => s.setReflectTourSeen);
+  const navigation = useNavigation();
+
+  // Dismiss tour if user navigates away (e.g. Help button in transparent header)
+  useEffect(() => {
+    const unsub = navigation.addListener("blur", () => {
+      if (tourState.isActive) skip();
+    });
+    return unsub;
+  }, [navigation, tourState.isActive, skip]);
+
+  // Measured y-offsets for steps 2/3 anchors within the tags section
+  const tagGroupLayoutY = useRef(0);
+  const textureTabsLayoutY = useRef(0);
 
   useEffect(() => {
     if (!hasPlayedEntrance.current) {
@@ -179,6 +234,34 @@ export const IdleState = ({
     }
   }, [hasSelections]);
 
+  const step = tourState.currentStepIndex;
+
+  const step2Top = tagGroupLayoutY.current;
+  const step3Top = textureTabsLayoutY.current;
+
+  const step2TriggerStyle = useMemo(
+    () => [
+      styles.popoverDynamicTriggerBase,
+      styles.popoverStep2Trigger,
+      { top: step2Top },
+    ],
+    [step2Top],
+  );
+
+  const step3TriggerStyle = useMemo(
+    () => [
+      styles.popoverDynamicTriggerBase,
+      styles.popoverStep3Trigger,
+      { top: step3Top },
+    ],
+    [step3Top],
+  );
+
+  const skipContainerStyle = useMemo(
+    () => [styles.skipContainerBase, { top: insets.top }],
+    [insets.top],
+  );
+
   return (
     <View className="flex-1 px-6" style={containerStyle}>
       <View className="pt-4 pb-4">
@@ -228,9 +311,55 @@ export const IdleState = ({
             Tap to begin writing or speaking...
           </AppText>
         </Pressable>
+
         <View className="absolute right-2 top-2">
           <MicButton size="md" isRecording={isRecording} onPress={onVoiceTap} />
         </View>
+
+        {/* Each Popover mounts only for its step so measure() fires with isOpen=true */}
+        {tourState.isActive && step === 0 && (
+          <Popover
+            isOpen={true}
+            onOpenChange={() => {}}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="box-none"
+          >
+            <Popover.Trigger style={styles.popoverStep0Trigger}>
+              <View />
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content presentation="popover" placement="bottom">
+                <Popover.Arrow />
+                <Popover.Title>{steps[0]?.title}</Popover.Title>
+                <Popover.Description>
+                  {steps[0]?.description}
+                </Popover.Description>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover>
+        )}
+
+        {tourState.isActive && step === 1 && (
+          <Popover
+            isOpen={true}
+            onOpenChange={() => {}}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="box-none"
+          >
+            <Popover.Trigger style={styles.popoverStep1Trigger}>
+              <View style={styles.popoverStep1Anchor} />
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content presentation="popover" placement="bottom">
+                <Popover.Arrow />
+                <Popover.Title>{steps[1]?.title}</Popover.Title>
+                <Popover.Description>
+                  {steps[1]?.description}
+                </Popover.Description>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover>
+        )}
       </View>
 
       <View className="border-t border-foreground/5 pt-6 pb-8">
@@ -239,41 +368,51 @@ export const IdleState = ({
         </AppText>
 
         {!isNight && (
-          <TextureSetTabs
-            activeSet={resolvedSetId}
-            onSelect={handleSetChange}
-            disabled={!wordsVisible}
-          />
+          <View
+            onLayout={(e) => {
+              textureTabsLayoutY.current = e.nativeEvent.layout.y;
+            }}
+          >
+            <TextureSetTabs
+              activeSet={resolvedSetId}
+              onSelect={handleSetChange}
+              disabled={!wordsVisible}
+            />
+          </View>
         )}
 
-        <EaseView
-          animate={wordsFadeAnimate}
-          transition={wordsVisible ? WORDS_FADE_IN : WORDS_FADE_OUT}
-          onTransitionEnd={({ finished }) => {
-            if (finished && !wordsVisible) {
-              setResolvedSetId(pendingSetId);
-              setWordsVisible(true);
-            }
+        <View
+          onLayout={(e) => {
+            tagGroupLayoutY.current = e.nativeEvent.layout.y;
           }}
         >
-          <TagGroup
-            key={resolvedSetId}
-            selectionMode="multiple"
-            size="sm"
-            variant="surface"
-            selectedKeys={selectedTextureKeys}
-            onSelectionChange={handleSelectionChange}
-            animation="disable-all"
+          <EaseView
+            animate={wordsFadeAnimate}
+            transition={wordsVisible ? WORDS_FADE_IN : WORDS_FADE_OUT}
+            onTransitionEnd={({ finished }) => {
+              if (finished && !wordsVisible) {
+                setResolvedSetId(pendingSetId);
+                setWordsVisible(true);
+              }
+            }}
           >
-            <TagGroup.List className="flex-row flex-wrap gap-2 pr-14">
-              {TEXTURE_WORDS.map((word) => (
-                <TagGroup.Item
-                  key={word}
-                  id={word}
-                  className="min-w-18 justify-center"
-                >
-                  {({ isSelected }) => (
-                    <>
+            <TagGroup
+              key={resolvedSetId}
+              selectionMode="multiple"
+              size="sm"
+              variant="surface"
+              selectedKeys={selectedTextureKeys}
+              onSelectionChange={handleSelectionChange}
+              animation="disable-all"
+            >
+              <TagGroup.List className="flex-row flex-wrap gap-2 pr-14">
+                {TEXTURE_WORDS.map((word) => (
+                  <TagGroup.Item
+                    key={word}
+                    id={word}
+                    className="min-w-18 justify-center"
+                  >
+                    {({ isSelected }) => (
                       <TagGroup.ItemLabel
                         className={
                           isSelected ? "text-accent" : "text-foreground/80"
@@ -281,13 +420,57 @@ export const IdleState = ({
                       >
                         {word}
                       </TagGroup.ItemLabel>
-                    </>
-                  )}
-                </TagGroup.Item>
-              ))}
-            </TagGroup.List>
-          </TagGroup>
-        </EaseView>
+                    )}
+                  </TagGroup.Item>
+                ))}
+              </TagGroup.List>
+            </TagGroup>
+          </EaseView>
+        </View>
+
+        {tourState.isActive && step === 2 && (
+          <Popover
+            isOpen={true}
+            onOpenChange={() => {}}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="box-none"
+          >
+            <Popover.Trigger style={step2TriggerStyle}>
+              <View />
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content presentation="popover" placement="top">
+                <Popover.Arrow />
+                <Popover.Title>{steps[2]?.title}</Popover.Title>
+                <Popover.Description>
+                  {steps[2]?.description}
+                </Popover.Description>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover>
+        )}
+
+        {!isNight && tourState.isActive && step === 3 && (
+          <Popover
+            isOpen={true}
+            onOpenChange={() => {}}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="box-none"
+          >
+            <Popover.Trigger style={step3TriggerStyle}>
+              <View />
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content presentation="popover" placement="top">
+                <Popover.Arrow />
+                <Popover.Title>{steps[3]?.title}</Popover.Title>
+                <Popover.Description>
+                  {steps[3]?.description}
+                </Popover.Description>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover>
+        )}
 
         {buttonMounted && (
           <EaseView
@@ -308,7 +491,49 @@ export const IdleState = ({
         )}
       </View>
 
+      {/* IdleMenu before overlay so overlay is on top (higher Z) */}
       <IdleMenu />
+
+      {tourState.isActive && (
+        <AnimatedPressable
+          entering={FadeIn.delay(300)}
+          exiting={FadeOut}
+          style={StyleSheet.absoluteFill}
+          onPress={advance}
+          className="bg-black/25"
+          accessibilityLabel="Tour guide, tap to continue"
+        />
+      )}
+
+      {/* Skip rendered separately so it sits above the dim layer */}
+      {tourState.isActive && (
+        <Animated.View
+          entering={FadeIn.delay(300)}
+          exiting={FadeOut}
+          style={skipContainerStyle}
+          pointerEvents="box-none"
+        >
+          <PressableFeedback
+            onPress={skip}
+            accessibilityLabel="Skip tour"
+            hitSlop={8}
+            className="p-3"
+          >
+            <AppText className="text-foreground/60 text-sm">Skip</AppText>
+          </PressableFeedback>
+        </Animated.View>
+      )}
+
+      {/* DEV ONLY — tap to restart tour for testing */}
+      {__DEV__ && !tourState.isActive && (
+        <PressableFeedback
+          onPress={() => setReflectTourSeen(false)}
+          className="absolute bottom-5 right-4 p-3"
+          hitSlop={8}
+        >
+          <AppText className="text-xs text-foreground/25">↺ tour</AppText>
+        </PressableFeedback>
+      )}
     </View>
   );
 };

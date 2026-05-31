@@ -223,3 +223,19 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 **Effort:** S per screen, M for app-wide adoption
 **Priority:** P3 (accessibility debt, not blocking)
 **Depends on:** `feat(crisis-resourses-ui)` shipped
+
+---
+
+## P3 — Tour: Tune inter-step delay
+
+**What:** Tune `STEP_DELAY_MS` in `use-reflect-tour.ts` from 500ms to 200–300ms after shipping.
+
+**Why:** 500ms inter-step delay (close previous popover, then open next) was copied from the HeroUI showcase. In practice, users who understand immediately must wait ~500ms per step. The close animation is ~150ms so 200–300ms is sufficient.
+
+**How to start:** Change one constant in `src/features/reflect/hooks/use-reflect-tour.ts`. Test with rapid tapping on device to confirm no visual double-fire.
+
+**Key files:** `src/features/reflect/hooks/use-reflect-tour.ts`
+
+**Effort:** XS (1 line)
+**Priority:** P3 — gate on post-ship feedback; ship at 500ms first
+**Depends on:** Tour feature shipped
