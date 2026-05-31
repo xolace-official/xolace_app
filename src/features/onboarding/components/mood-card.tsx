@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   interpolate,
@@ -139,7 +139,7 @@ const MoodCardComponent = ({
   );
 };
 
-export const MoodCard = memo(MoodCardComponent);
+export const MoodCard = MoodCardComponent;
 
 const styles = StyleSheet.create({
   cardContainer: { position: 'absolute', height: '100%', padding: 6, transformOrigin: 'bottom' as const },

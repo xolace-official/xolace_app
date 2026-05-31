@@ -1,4 +1,4 @@
-import React, { FC, PropsWithChildren, useMemo } from "react";
+import React, { FC, PropsWithChildren } from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
   SharedValue,
@@ -50,7 +50,7 @@ export const AnimatedRow: FC<PropsWithChildren<Props>> = ({
     };
   });
 
-  const containerStyle = useMemo(() => [rStyle, styles.container], [rStyle]);
+  const containerStyle = [rStyle, styles.container];
 
   return <Animated.View style={containerStyle}>{children}</Animated.View>;
 };

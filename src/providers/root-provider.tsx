@@ -1,5 +1,4 @@
 import { HeroUINativeConfig, HeroUINativeProvider } from "heroui-native";
-import { useCallback, useMemo } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   KeyboardAvoidingView,
@@ -30,31 +29,25 @@ const AUTO_CAPTURE = {
 };
 
 export function RootProvider({ children }: { children: React.ReactNode }) {
-  const contentWrapper = useCallback(
-    (children: React.ReactNode) => (
-      <KeyboardAvoidingView
-        pointerEvents="box-none"
-        behavior="padding"
-        keyboardVerticalOffset={12}
-        style={FLEX_1}
-      >
-        {children}
-      </KeyboardAvoidingView>
-    ),
-    [],
+  const contentWrapper = (children: React.ReactNode) => (
+    <KeyboardAvoidingView
+      pointerEvents="box-none"
+      behavior="padding"
+      keyboardVerticalOffset={12}
+      style={FLEX_1}
+    >
+      {children}
+    </KeyboardAvoidingView>
   );
 
-  const config = useMemo<HeroUINativeConfig>(
-    () => ({
-      toast: {
-        contentWrapper,
-      },
-      devInfo: {
-        stylingPrinciples: false,
-      },
-    }),
-    [contentWrapper],
-  );
+  const config: HeroUINativeConfig = {
+    toast: {
+      contentWrapper,
+    },
+    devInfo: {
+      stylingPrinciples: false,
+    },
+  };
 
   return (
     <GestureHandlerRootView style={FLEX_1}>

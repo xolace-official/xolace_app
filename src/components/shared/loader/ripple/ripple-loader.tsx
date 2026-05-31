@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Easing } from "react-native-reanimated";
 import { useThemeColor } from "heroui-native";
@@ -38,10 +38,7 @@ const styles = StyleSheet.create({
 export const RippleLoader = () => {
   const accentColor = useThemeColor("accent");
 
-  const ringStyle = useMemo(
-    () => [styles.ring, { borderColor: accentColor }],
-    [accentColor],
-  );
+  const ringStyle = [styles.ring, { borderColor: accentColor }];
 
   return (
     <View style={styles.container}>

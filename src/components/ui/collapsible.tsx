@@ -1,5 +1,5 @@
 import { SymbolView } from "expo-symbols";
-import { PropsWithChildren, useMemo, useState } from "react";
+import { PropsWithChildren, useState } from "react";
 import { Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 
@@ -22,16 +22,9 @@ export function Collapsible({
 }: PropsWithChildren & { title: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const chevronStyle = useMemo(
-    () => ({ transform: [{ rotate: isOpen ? "-90deg" : "90deg" }] }),
-    [isOpen],
-  );
-
-  const chevronName = useMemo(() => CHEVRON_NAME, []);
-  const transition = useMemo(
-    () => ({ type: "timing" as const, duration: 200, easing: CONTENT_EASING }),
-    [],
-  );
+  const chevronStyle = { transform: [{ rotate: isOpen ? "-90deg" : "90deg" }] };
+  const chevronName = CHEVRON_NAME;
+  const transition = { type: "timing" as const, duration: 200, easing: CONTENT_EASING };
 
   return (
     <View>

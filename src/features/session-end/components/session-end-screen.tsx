@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -36,13 +36,10 @@ export const SessionEndScreen = ({ path }: Props) => {
     haveMore,
   } = useSessionEnd();
   const { isNight } = useSessionMode();
-  const insetsStyle = useMemo(
-    () => [
-      styles.insetsContainer,
-      { paddingTop: insets.top, paddingBottom: insets.bottom },
-    ],
-    [insets.top, insets.bottom],
-  );
+  const insetsStyle = [
+    styles.insetsContainer,
+    { paddingTop: insets.top, paddingBottom: insets.bottom },
+  ];
 
   useEffect(() => {
     if (!isLoading) {

@@ -1,4 +1,3 @@
-import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -122,7 +121,7 @@ const Item = ({
 };
 
 Item.displayName = 'PreviewCarouselItem';
-export const PreviewCarouselItem = memo(Item);
+export const PreviewCarouselItem = Item;
 
 const styles = StyleSheet.create({
   absoluteOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 28, borderCurve: 'continuous' },

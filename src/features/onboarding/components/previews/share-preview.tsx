@@ -1,5 +1,4 @@
 import { StyleSheet, View } from "react-native";
-import { useMemo } from "react";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -70,15 +69,12 @@ const AnimatedChip = ({
     ),
   }));
 
-  const overlayStyle = useMemo(
-    () => [
-      StyleSheet.absoluteFill,
-      styles.chipOverlay,
-      { borderColor: accentColor + "99", backgroundColor: accentColor + "1A" },
-      rOverlay,
-    ],
-    [accentColor, rOverlay],
-  );
+  const overlayStyle = [
+    StyleSheet.absoluteFill,
+    styles.chipOverlay,
+    { borderColor: accentColor + "99", backgroundColor: accentColor + "1A" },
+    rOverlay,
+  ];
 
   return (
     <Animated.View style={rContainer}>

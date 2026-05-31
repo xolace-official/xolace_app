@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { SymbolView } from "expo-symbols";
@@ -156,18 +156,9 @@ export const IdleState = ({
   const activeQuietReturn = !isNight ? quietReturn : null;
   const hasPlayedEntrance = useRef(false);
 
-  const selectedTextureKeys = useMemo(
-    () => new Set(selectedTextures),
-    [selectedTextures],
-  );
-  const containerStyle = useMemo(
-    () => ({ paddingTop: headerExtraPadding }),
-    [headerExtraPadding],
-  );
-  const wordsFadeAnimate = useMemo(
-    () => ({ opacity: wordsVisible ? 1 : 0 }),
-    [wordsVisible],
-  );
+  const selectedTextureKeys = new Set(selectedTextures);
+  const containerStyle = { paddingTop: headerExtraPadding };
+  const wordsFadeAnimate = { opacity: wordsVisible ? 1 : 0 };
 
   const { tourState, steps, advance, skip } = useReflectTour();
   const setReflectTourSeen = useAppStore((s) => s.setReflectTourSeen);
@@ -239,28 +230,19 @@ export const IdleState = ({
   const step2Top = tagGroupLayoutY.current;
   const step3Top = textureTabsLayoutY.current;
 
-  const step2TriggerStyle = useMemo(
-    () => [
-      styles.popoverDynamicTriggerBase,
-      styles.popoverStep2Trigger,
-      { top: step2Top },
-    ],
-    [step2Top],
-  );
+  const step2TriggerStyle = [
+    styles.popoverDynamicTriggerBase,
+    styles.popoverStep2Trigger,
+    { top: step2Top },
+  ];
 
-  const step3TriggerStyle = useMemo(
-    () => [
-      styles.popoverDynamicTriggerBase,
-      styles.popoverStep3Trigger,
-      { top: step3Top },
-    ],
-    [step3Top],
-  );
+  const step3TriggerStyle = [
+    styles.popoverDynamicTriggerBase,
+    styles.popoverStep3Trigger,
+    { top: step3Top },
+  ];
 
-  const skipContainerStyle = useMemo(
-    () => [styles.skipContainerBase, { top: insets.top }],
-    [insets.top],
-  );
+  const skipContainerStyle = [styles.skipContainerBase, { top: insets.top }];
 
   return (
     <View className="flex-1 px-6" style={containerStyle}>

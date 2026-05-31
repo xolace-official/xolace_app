@@ -1,4 +1,3 @@
-import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -161,7 +160,7 @@ const EmberCarouselItemComponent = ({
 };
 
 EmberCarouselItemComponent.displayName = 'EmberCarouselItem';
-export const EmberCarouselItem = memo(EmberCarouselItemComponent);
+export const EmberCarouselItem = EmberCarouselItemComponent;
 
 const styles = StyleSheet.create({
   container: { position: 'absolute', width: '58%', aspectRatio: 1 / 0.72 },

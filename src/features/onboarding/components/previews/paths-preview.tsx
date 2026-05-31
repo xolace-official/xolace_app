@@ -1,5 +1,4 @@
 import { StyleSheet, View } from "react-native";
-import { useMemo } from "react";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -81,12 +80,9 @@ const PathOption = ({
     backgroundColor: accent,
   }));
 
-  const rowStyle = useMemo(() => [styles.row, rRow], [rRow]);
-  const rowBgStyle = useMemo(
-    () => [StyleSheet.absoluteFill, styles.rowBg, rBg],
-    [rBg],
-  );
-  const barStyle = useMemo(() => [styles.bar, rBar], [rBar]);
+  const rowStyle = [styles.row, rRow];
+  const rowBgStyle = [StyleSheet.absoluteFill, styles.rowBg, rBg];
+  const barStyle = [styles.bar, rBar];
 
   return (
     <Animated.View style={rowStyle}>

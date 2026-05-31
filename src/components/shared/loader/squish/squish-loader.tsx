@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { StyleSheet } from "react-native";
 import { Easing } from "react-native-reanimated";
 import { useThemeColor } from "heroui-native";
@@ -27,10 +27,7 @@ const styles = StyleSheet.create({
 export const SquishLoader = () => {
   const accentColor = useThemeColor("accent");
 
-  const blockStyle = useMemo(
-    () => [styles.block, { backgroundColor: accentColor }],
-    [accentColor],
-  );
+  const blockStyle = [styles.block, { backgroundColor: accentColor }];
 
   return (
     <Loader

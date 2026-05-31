@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -23,13 +23,10 @@ export function SitWithThisScreen() {
   const { toast } = useToast();
   const startedRef = useRef(false);
   const [swapSheetOpen, setSwapSheetOpen] = useState(false);
-  const insetsStyle = useMemo(
-    () => [
-      styles.insetsContainer,
-      { paddingTop: insets.top, paddingBottom: insets.bottom },
-    ],
-    [insets.top, insets.bottom],
-  );
+  const insetsStyle = [
+    styles.insetsContainer,
+    { paddingTop: insets.top, paddingBottom: insets.bottom },
+  ];
 
   const { sessionId, session, startPath, completePath } = usePathSession();
   const posthog = usePostHog();
@@ -57,7 +54,7 @@ export function SitWithThisScreen() {
     }
   }, [sessionId, session, startPath]);
 
-  const handleComplete = useCallback(async () => {
+  const handleComplete = async () => {
     const ok = await completePath(true);
     if (ok) {
       router.replace("/session-end?path=solo");
@@ -68,9 +65,9 @@ export function SitWithThisScreen() {
         variant: "default",
       });
     }
-  }, [completePath, router, toast]);
+  };
 
-  const handleExitEarly = useCallback(async () => {
+  const handleExitEarly = async () => {
     const ok = await completePath(false);
     if (ok) {
       router.replace("/session-end?path=solo");
@@ -81,55 +78,48 @@ export function SitWithThisScreen() {
         variant: "default",
       });
     }
-  }, [completePath, router, toast]);
+  };
 
-  const handleSwap = useCallback(
-    async (newExerciseId: Id<"exercises">) => {
-      if (!sessionId) return;
-      try {
-        const result = await recordSwapMutation({ sessionId, newExerciseId });
-        posthog.capture("exercise_swapped", {
-          swaps_used: result.swapsUsed,
-        });
+  const handleSwap = async (newExerciseId: Id<"exercises">) => {
+    if (!sessionId) return;
+    try {
+      const result = await recordSwapMutation({ sessionId, newExerciseId });
+      posthog.capture("exercise_swapped", {
+        swaps_used: result.swapsUsed,
+      });
+      setSwapSheetOpen(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      // Server-state mismatches: close sheet and let queries re-render.
+      if (
+        msg.includes("Maximum swaps reached") ||
+        msg.includes("Exercise not allowed")
+      ) {
         setSwapSheetOpen(false);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "";
-        // Server-state mismatches: close sheet and let queries re-render.
-        if (
-          msg.includes("Maximum swaps reached") ||
-          msg.includes("Exercise not allowed")
-        ) {
-          setSwapSheetOpen(false);
-          return;
-        }
-        toast.show({
-          label: "Could not switch",
-          description: "Try again in a moment.",
-          variant: "default",
-        });
+        return;
       }
-    },
-    [sessionId, recordSwapMutation, posthog, toast],
-  );
+      toast.show({
+        label: "Could not switch",
+        description: "Try again in a moment.",
+        variant: "default",
+      });
+    }
+  };
 
-  const handleOpenSwapSheet = useCallback(() => {
+  const handleOpenSwapSheet = () => {
     setSwapSheetOpen(true);
-  }, []);
+  };
 
-  const exerciseData = useMemo<ExerciseData | null>(() => {
-    if (!exerciseResult) return null;
-
-    return {
-      exercise: {
-        _id: exerciseResult.exercise._id,
-        title: exerciseResult.exercise.title,
-        type: exerciseResult.exercise.type,
-        steps: exerciseResult.exercise.steps,
-        estimatedMinutes: exerciseResult.exercise.estimatedMinutes,
-      },
-      slots: exerciseResult.slots,
-    };
-  }, [exerciseResult]);
+  const exerciseData: ExerciseData | null = !exerciseResult ? null : {
+    exercise: {
+      _id: exerciseResult.exercise._id,
+      title: exerciseResult.exercise.title,
+      type: exerciseResult.exercise.type,
+      steps: exerciseResult.exercise.steps,
+      estimatedMinutes: exerciseResult.exercise.estimatedMinutes,
+    },
+    slots: exerciseResult.slots,
+  };
 
   if (exerciseResult === undefined || !session || preferences === undefined) {
     return (

@@ -11,7 +11,7 @@ import {
   TabListProps,
 } from "expo-router/ui";
 import { SymbolView } from "expo-symbols";
-import React, { useMemo } from "react";
+import React from "react";
 import { Pressable, View } from "react-native";
 import { useThemeColor } from "heroui-native";
 
@@ -69,7 +69,7 @@ export function TabButton({
 export function CustomTabList(props: TabListProps) {
   const accentColor = useThemeColor("accent");
 
-  const iconName = useMemo(() => EXTERNAL_ICON_NAME, []);
+  const iconName = EXTERNAL_ICON_NAME;
 
   return (
     <View

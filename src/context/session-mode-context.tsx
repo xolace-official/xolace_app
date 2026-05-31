@@ -3,7 +3,6 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useReducer,
   useRef,
 } from 'react';
@@ -104,10 +103,7 @@ export function SessionModeProvider({
     return () => sub.remove();
   }, []);
 
-  const value = useMemo(
-    () => ({ mode, isNight: nightModeEnabled && mode === 'night' }),
-    [mode, nightModeEnabled],
-  );
+  const value = { mode, isNight: nightModeEnabled && mode === 'night' };
 
   return (
     <SessionModeContext.Provider value={value}>

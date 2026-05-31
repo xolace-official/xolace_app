@@ -44,47 +44,41 @@ export function useSessionEnd() {
     }
   }, [isLoading, sessionId, navigateHome]);
 
-  const dismiss = useCallback(
-    async (
-      contributedReflection?: boolean,
-      postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
-    ) => {
-      if (busyRef.current) return;
-      busyRef.current = true;
-      const ok = await completePath(true, contributedReflection, postSessionMood);
-      busyRef.current = false;
-      if (ok) {
-        posthog.capture('session_completed', {
-          post_session_mood: postSessionMood ?? null,
-          contributed_reflection: contributedReflection ?? false,
-          action: 'dismiss',
-        });
-        navigateHome();
-      }
-    },
-    [completePath, navigateHome, posthog],
-  );
+  const dismiss = async (
+    contributedReflection?: boolean,
+    postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
+  ) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    const ok = await completePath(true, contributedReflection, postSessionMood);
+    busyRef.current = false;
+    if (ok) {
+      posthog.capture('session_completed', {
+        post_session_mood: postSessionMood ?? null,
+        contributed_reflection: contributedReflection ?? false,
+        action: 'dismiss',
+      });
+      navigateHome();
+    }
+  };
 
-  const haveMore = useCallback(
-    async (
-      contributedReflection?: boolean,
-      postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
-    ) => {
-      if (busyRef.current) return;
-      busyRef.current = true;
-      const ok = await completePath(true, contributedReflection, postSessionMood);
-      busyRef.current = false;
-      if (ok) {
-        posthog.capture('session_completed', {
-          post_session_mood: postSessionMood ?? null,
-          contributed_reflection: contributedReflection ?? false,
-          action: 'have_more',
-        });
-        navigateHome();
-      }
-    },
-    [completePath, navigateHome, posthog],
-  );
+  const haveMore = async (
+    contributedReflection?: boolean,
+    postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
+  ) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    const ok = await completePath(true, contributedReflection, postSessionMood);
+    busyRef.current = false;
+    if (ok) {
+      posthog.capture('session_completed', {
+        post_session_mood: postSessionMood ?? null,
+        contributed_reflection: contributedReflection ?? false,
+        action: 'have_more',
+      });
+      navigateHome();
+    }
+  };
 
   const distilledText = (session as { distilledText?: string } | undefined)
     ?.distilledText ?? null;

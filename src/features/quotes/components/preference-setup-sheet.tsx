@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { TagGroup, PressableFeedback } from "heroui-native";
@@ -78,10 +78,7 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
 
   const progress = step === 0 ? 0.5 : 1;
   const stepAccessibilityLabel = `Step ${step + 1} of 2`;
-  const stepContentAnimate = useMemo(
-    () => ({ opacity: visible ? 1 : 0 }),
-    [visible],
-  );
+  const stepContentAnimate = { opacity: visible ? 1 : 0 };
 
   const navigateTo = (target: 0 | 1) => {
     setVisible(false);
@@ -252,10 +249,7 @@ function Step1({
   selectedTime: string | null;
   onTimeSelect: (keys: Set<string | number>) => void;
 }) {
-  const selectedTimeKeys = useMemo(
-    () => (selectedTime ? new Set([selectedTime]) : EMPTY_SELECTED_KEYS),
-    [selectedTime],
-  );
+  const selectedTimeKeys = selectedTime ? new Set([selectedTime]) : EMPTY_SELECTED_KEYS;
 
   return (
     <View>

@@ -2,7 +2,6 @@ import React, {
   forwardRef,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useRef,
 } from "react";
 import { StyleSheet, View } from "react-native";
@@ -181,14 +180,8 @@ export const PacedOrb = forwardRef<PacedOrbHandle, Props>(
     const coreStyle = useAnimatedStyle(() => ({ opacity: coreOpacity.value }));
     const haloStyle = useAnimatedStyle(() => ({ opacity: haloOpacity.value }));
 
-    const haloViewStyle = useMemo(
-      () => [styles.halo, { backgroundColor: accentColor }, haloStyle],
-      [accentColor, haloStyle],
-    );
-    const coreViewStyle = useMemo(
-      () => [styles.core, { backgroundColor: accentColor }, coreStyle],
-      [accentColor, coreStyle],
-    );
+    const haloViewStyle = [styles.halo, { backgroundColor: accentColor }, haloStyle];
+    const coreViewStyle = [styles.core, { backgroundColor: accentColor }, coreStyle];
 
     return (
       <Animated.View className="items-center justify-center">

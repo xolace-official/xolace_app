@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import {
   ExpoSpeechRecognitionModule,
@@ -51,7 +51,7 @@ export function useVoiceInput() {
     };
   }, []);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = async () => {
     setError(null);
     const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     if (!result.granted) {
@@ -73,11 +73,11 @@ export function useVoiceInput() {
       iosTaskHint: 'dictation',
       maxAlternatives: 1,
     });
-  }, [consentStatus, grantConsent]);
+  };
 
-  const stopRecording = useCallback(() => {
+  const stopRecording = () => {
     ExpoSpeechRecognitionModule.abort();
-  }, []);
+  };
 
   return {
     isRecording,

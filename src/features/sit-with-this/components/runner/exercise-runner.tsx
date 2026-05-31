@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer } from 'react';
+import { useEffect, useReducer } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { AppText } from '@/src/components/shared/app-text';
@@ -33,10 +33,7 @@ export function ExerciseRunner({
   onExitEarly,
   onSwap,
 }: Props) {
-  const steps = useMemo(
-    () => [...exercise.exercise.steps].sort((a, b) => a.order - b.order),
-    [exercise.exercise.steps],
-  );
+  const steps = [...exercise.exercise.steps].sort((a, b) => a.order - b.order);
   const totalBeats = steps.length;
 
   const initialPhase: RunnerPhase = showPreRoll
@@ -68,9 +65,9 @@ export function ExerciseRunner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase.kind]);
 
-  const handleBeatComplete = useCallback(() => {
+  const handleBeatComplete = () => {
     dispatch({ type: 'BEAT_COMPLETE', totalBeats });
-  }, [totalBeats]);
+  };
 
   if (phase.kind === 'pre_roll') {
     return (

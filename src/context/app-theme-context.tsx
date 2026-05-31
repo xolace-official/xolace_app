@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import React, { createContext, useContext } from 'react';
 import { Uniwind, useUniwind } from 'uniwind';
 
 /**
@@ -44,20 +44,15 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { theme } = useUniwind();
 
-  const isLight = useMemo(() => {
-    return theme === 'light' || theme.endsWith('-light');
-  }, [theme]);
+  const isLight = theme === 'light' || theme.endsWith('-light');
+  const isDark = theme === 'dark' || theme.endsWith('-dark');
 
-  const isDark = useMemo(() => {
-    return theme === 'dark' || theme.endsWith('-dark');
-  }, [theme]);
-
-  const setTheme = useCallback((newTheme: ThemeName) => {
+  const setTheme = (newTheme: ThemeName) => {
     Uniwind.setTheme(newTheme);
-  }, []);
+  };
 
   /** Toggles between light/dark within the current color theme. Add cases here for new themes. */
-  const toggleTheme = useCallback(() => {
+  const toggleTheme = () => {
     switch (theme) {
       case 'light':
         Uniwind.setTheme('dark');
@@ -90,18 +85,15 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         Uniwind.setTheme('nightly-light');
         break;
     }
-  }, [theme]);
+  };
 
-  const value = useMemo(
-    () => ({
-      currentTheme: theme,
-      isLight,
-      isDark,
-      setTheme,
-      toggleTheme,
-    }),
-    [theme, isLight, isDark, setTheme, toggleTheme]
-  );
+  const value = {
+    currentTheme: theme,
+    isLight,
+    isDark,
+    setTheme,
+    toggleTheme,
+  };
 
   return (
     <AppThemeContext.Provider value={value}>

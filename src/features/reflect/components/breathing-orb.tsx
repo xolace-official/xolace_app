@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react";
+import { useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -89,7 +89,7 @@ const BreathingOrbComponent = () => {
   );
 };
 
-export const BreathingOrb = memo(BreathingOrbComponent);
+export const BreathingOrb = BreathingOrbComponent;
 
 const styles = StyleSheet.create({
   orbContainer: {

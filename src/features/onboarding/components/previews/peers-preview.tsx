@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
   cancelAnimation,
@@ -60,19 +59,13 @@ const ResonatedBadge = ({
     ),
   }));
 
-  const badgeStyle = useMemo(
-    () => [
-      styles.badge,
-      { borderColor: accent + "4D", backgroundColor: accent + "1A" },
-      rStyle,
-    ],
-    [accent, rStyle],
-  );
+  const badgeStyle = [
+    styles.badge,
+    { borderColor: accent + "4D", backgroundColor: accent + "1A" },
+    rStyle,
+  ];
 
-  const badgeTextStyle = useMemo(
-    () => [styles.badgeText, { color: accent }],
-    [accent],
-  );
+  const badgeTextStyle = [styles.badgeText, { color: accent }];
 
   return (
     <Animated.View style={badgeStyle}>
@@ -119,28 +112,16 @@ const ResonanceTapButton = ({
     ),
   }));
 
-  const selectedBadgeStyle = useMemo(
-    () => [
-      styles.badge,
-      styles.badgeSelected,
-      { borderColor: accent + "4D", backgroundColor: accent + "1A" },
-      rSelected,
-    ],
-    [accent, rSelected],
-  );
+  const selectedBadgeStyle = [
+    styles.badge,
+    styles.badgeSelected,
+    { borderColor: accent + "4D", backgroundColor: accent + "1A" },
+    rSelected,
+  ];
 
-  const tapContainerStyle = useMemo(
-    () => [styles.tapContainer, rContainer],
-    [rContainer],
-  );
-  const unselectedBadgeStyle = useMemo(
-    () => [styles.badge, styles.badgeUnselected, rUnselected],
-    [rUnselected],
-  );
-  const selectedTextStyle = useMemo(
-    () => [styles.badgeText, { color: accent }],
-    [accent],
-  );
+  const tapContainerStyle = [styles.tapContainer, rContainer];
+  const unselectedBadgeStyle = [styles.badge, styles.badgeUnselected, rUnselected];
+  const selectedTextStyle = [styles.badgeText, { color: accent }];
 
   return (
     <Animated.View style={tapContainerStyle}>

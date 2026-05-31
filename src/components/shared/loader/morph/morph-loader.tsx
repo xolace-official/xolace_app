@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { StyleSheet } from "react-native";
 import { Easing } from "react-native-reanimated";
 import { useThemeColor } from "heroui-native";
@@ -18,26 +18,23 @@ export const MorphLoader = () => {
   const accentColor = useThemeColor("accent");
   const foregroundColor = useThemeColor("foreground");
 
-  const keyframes = useMemo<LoaderKeyframes>(
-    () => ({
-      0: {
-        borderRadius: 5,
-        backgroundColor: accentColor,
-        transform: [{ rotate: 0 }, { scale: 1 }],
-      },
-      50: {
-        borderRadius: 26,
-        backgroundColor: foregroundColor,
-        transform: [{ rotate: 180 }, { scale: 0.8 }],
-      },
-      100: {
-        borderRadius: 5,
-        backgroundColor: accentColor,
-        transform: [{ rotate: 360 }, { scale: 1 }],
-      },
-    }),
-    [accentColor, foregroundColor],
-  );
+  const keyframes: LoaderKeyframes = {
+    0: {
+      borderRadius: 5,
+      backgroundColor: accentColor,
+      transform: [{ rotate: 0 }, { scale: 1 }],
+    },
+    50: {
+      borderRadius: 26,
+      backgroundColor: foregroundColor,
+      transform: [{ rotate: 180 }, { scale: 0.8 }],
+    },
+    100: {
+      borderRadius: 5,
+      backgroundColor: accentColor,
+      transform: [{ rotate: 360 }, { scale: 1 }],
+    },
+  };
 
   return (
     <Loader
