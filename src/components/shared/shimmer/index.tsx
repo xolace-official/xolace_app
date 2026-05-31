@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import {
   View,
   type LayoutChangeEvent,
@@ -54,7 +54,10 @@ const ShimmerRoot = React.forwardRef<View, ShimmerProps>(
       onLayout?.(e);
     };
 
-    const contextValue: ShimmerContextValue = { containerWidth, containerHeight, containerDiagonal, debug };
+    const contextValue: ShimmerContextValue = useMemo(
+      () => ({ containerWidth, containerHeight, containerDiagonal, debug }),
+      [containerWidth, containerHeight, containerDiagonal, debug],
+    );
     const containerStyle = [styles.container, style, debug && styles.containerDebug];
 
     return (

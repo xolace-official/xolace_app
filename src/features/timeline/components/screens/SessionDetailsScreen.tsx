@@ -87,7 +87,6 @@ export const SessionDetailsScreen = () => {
   const stopRef = useRef(stop);
   stopRef.current = stop;
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const topInsetStyle = { paddingTop: insets.top };
 
   useEffect(() => {

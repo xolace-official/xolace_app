@@ -24,12 +24,10 @@ function NotificationBanner({ content, onDismiss }: { content: string; onDismiss
     return () => clearTimeout(timer);
   }, []);
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const animate = { opacity: visible ? 1 : 0 };
   const transition = visible
     ? { type: 'timing' as const, duration: 400, easing: [0.455, 0.03, 0.515, 0.955] as [number, number, number, number] }
     : { type: 'timing' as const, duration: 300, easing: [0.455, 0.03, 0.515, 0.955] as [number, number, number, number] };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const bannerStyle = {
     position: 'absolute' as const,
     top: insets.top + 8,

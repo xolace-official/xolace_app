@@ -67,13 +67,9 @@ export const FrameScreen = () => {
     router.replace('/(auth)/auth');
   };
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const orbContainerStyle = { height: Math.min(height * 0.42, 320), alignItems: 'center' as const, justifyContent: 'center' as const, paddingTop: insets.top };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const scrollContentStyle = { flexGrow: 1, justifyContent: 'space-between' as const, paddingHorizontal: 32, paddingBottom: insets.bottom + 24 };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const disclaimerStyle = { color: EMBER_50, lineHeight: 18 };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const ctaTextStyle = { color: EMBER_80, letterSpacing: 0.5 };
 
   return (

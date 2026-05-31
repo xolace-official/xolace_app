@@ -157,19 +157,15 @@ export function QuotesScreen() {
     }
   };
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const closeButtonStyle = { paddingTop: top + 12 };
-  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
   const gradientBottomColors: [string, string] = [
     "transparent",
     `${accentColor}28`,
   ];
-  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
   const gradientTopRightColors: [string, string] = [
     `${accentColor}20`,
     "transparent",
   ];
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const glassStyle = {
     width: 34,
     height: 34,
@@ -178,7 +174,6 @@ export function QuotesScreen() {
     justifyContent: "center" as const,
     backgroundColor: `${foregroundColor}10`,
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const prefContentStyle = { padding: 24, paddingTop: top + 24, gap: 16 };
 
   return (
@@ -201,7 +196,6 @@ export function QuotesScreen() {
         {/* Heart burst overlay */}
         <Animated.View
           pointerEvents="none"
-          // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
           style={[styles.heartBurst, heartStyle]}
         >
           <SymbolView name={HEART_ICON} size={96} tintColor={accentColor} />

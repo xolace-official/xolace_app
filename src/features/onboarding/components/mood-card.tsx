@@ -95,7 +95,6 @@ const MoodCardComponent = ({
   const cardSizeStyle = { width: cardWidth };
 
   return (
-    // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
     <Animated.View style={[animatedStyle, styles.cardContainer, cardSizeStyle]}>
       <View style={styles.cardInner}>
         {item.image ? (

@@ -44,9 +44,7 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
     backgroundColor,
   };
 
-  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
   const topGlowColors: [string, string] = [`${accentColor}20`, "transparent"];
-  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
   const bottomGlowColors: [string, string] = [
     "transparent",
     `${accentColor}18`,

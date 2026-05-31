@@ -16,13 +16,15 @@ export default defineConfig([
     },
   },
   // Performance sweep rules
-  // Note: jsx-no-new-function-as-prop and jsx-no-bind are omitted — React Compiler
-  // (reactCompiler: true) memoizes inline functions automatically via useMemoCache.
+  // Note: jsx-no-new-function-as-prop, jsx-no-bind, jsx-no-new-object-as-prop, and
+  // jsx-no-new-array-as-prop are all omitted — React Compiler (reactCompiler: true)
+  // memoizes inline functions, objects, and arrays automatically via useMemoCache.
+  // These rules predate React Compiler and are false positives in this codebase.
   {
     plugins: { 'react-perf': reactPerfPlugin, 'react-native': reactNativePlugin },
     rules: {
-      'react-perf/jsx-no-new-object-as-prop': 'warn',
-      'react-perf/jsx-no-new-array-as-prop': 'warn',
+      'react-perf/jsx-no-new-object-as-prop': 'off',
+      'react-perf/jsx-no-new-array-as-prop': 'off',
       'react-perf/jsx-no-jsx-as-prop': 'warn',
       'react/no-array-index-key': 'warn',
       'react/jsx-no-constructed-context-values': 'warn',

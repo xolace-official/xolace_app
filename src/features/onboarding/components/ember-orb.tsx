@@ -47,9 +47,7 @@ const EmberOrbComponent = ({ phase }: Props) => {
   }));
 
   const colors = PALETTES[phase];
-  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
   const haloColors: [string, string, string] = [colors[0] + '18', colors[1] + '10', colors[2] + '08'];
-  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
   const coreColors: [string, string, string] = [colors[0] + '90', colors[1] + '70', colors[2] + '50'];
 
   return (

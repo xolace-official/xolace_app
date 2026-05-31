@@ -57,7 +57,6 @@ function ResourceItem({
   index: number;
 }) {
   const delay = 400 + index * 150;
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const transition = {
     type: "timing" as const,
     duration: 500,

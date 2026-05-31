@@ -43,9 +43,7 @@ export const FrameScreenV2 = () => {
     router.replace('/(auth)/auth');
   };
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const headerStyle = { paddingTop: insets.top + 28, paddingHorizontal: 32, zIndex: 10 };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const bottomBarStyle = { position: 'absolute' as const, bottom: 0, left: 0, right: 0, paddingHorizontal: 36, paddingBottom: insets.bottom + 28, alignItems: 'center' as const, gap: 20, zIndex: 10 };
 
   return (

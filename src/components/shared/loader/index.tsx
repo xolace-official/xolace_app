@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import { View } from "react-native";
 import Animated, {
   useSharedValue,
@@ -75,7 +75,10 @@ const LoaderRoot = React.forwardRef<View, LoaderProps>(
       },
     );
 
-    const contextValue: LoaderContextValue = { progress: activeProgress };
+    const contextValue: LoaderContextValue = useMemo(
+      () => ({ progress: activeProgress }),
+      [activeProgress],
+    );
 
     return (
       <LoaderContext.Provider value={contextValue}>

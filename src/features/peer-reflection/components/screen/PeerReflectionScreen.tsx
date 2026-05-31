@@ -137,7 +137,6 @@ export const PeerReflectionScreen = () => {
     router.replace('/session-end?path=peers');
   };
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
 
   if (isLoading || matchedReflections === undefined || awaitingFallback) {
