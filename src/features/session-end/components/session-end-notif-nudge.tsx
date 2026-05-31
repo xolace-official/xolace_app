@@ -33,13 +33,16 @@ export function SessionEndNotifNudge() {
   useEffect(() => {
     if (notifNudgeDismissed) return;
 
+    let t: ReturnType<typeof setTimeout> | undefined;
+
     Notifications.getPermissionsAsync().then(({ status }) => {
       if (status === "undetermined") {
         setMounted(true);
-        const t = setTimeout(() => setShow(true), 900);
-        return () => clearTimeout(t);
+        t = setTimeout(() => setShow(true), 900);
       }
     });
+
+    return () => clearTimeout(t);
   }, [notifNudgeDismissed]);
 
   const dismiss = () => {

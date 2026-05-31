@@ -13,9 +13,13 @@ export function useVersionCheck() {
   useEffect(() => {
     if (__DEV__) return;
 
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
     const check = async () => {
       try {
-        const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+        const timeout = new Promise<null>((resolve) => {
+          timeoutId = setTimeout(() => resolve(null), 5000);
+        });
         const result = await Promise.race([getAppInfoFromTheStore(), timeout]);
         const newestVersion = result?.version;
         const installedVersion = Constants.expoConfig?.version;
@@ -53,5 +57,6 @@ export function useVersionCheck() {
     };
 
     check();
+    return () => clearTimeout(timeoutId);
   }, [setIsVersionChecked, setIsNewVersionAvailable]);
 }
