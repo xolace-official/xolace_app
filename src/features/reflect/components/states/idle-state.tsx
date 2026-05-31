@@ -136,6 +136,15 @@ export const IdleState = ({
 
   const { tourState, steps, advance, skip } = useReflectTour();
   const setReflectTourSeen = useAppStore((s) => s.setReflectTourSeen);
+  const navigation = useNavigation();
+
+  // Dismiss tour if user navigates away (e.g. Help button in transparent header)
+  useEffect(() => {
+    const unsub = navigation.addListener("blur", () => {
+      if (tourState.isActive) skip();
+    });
+    return unsub;
+  }, [navigation, tourState.isActive, skip]);
 
   // Measured y-offsets for steps 2/3 anchors within the tags section
   const tagGroupLayoutY = useRef(0);
