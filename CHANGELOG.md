@@ -8,6 +8,10 @@ All notable changes to Xolace are documented here.
 
 ### Added
 
+- **Reflect screen tour guide** — a one-time, 4-step popover tour that greets new users on the idle reflect screen. Each step anchors to a key input element: the write area, the mic button, the texture word tags, and the word-set tabs. Steps advance on any tap; a Skip button exits at any point. The tour only starts after the founder welcome sheet is dismissed, so the two never compete. Night Mode users see 3 steps (word-set tabs are hidden at night). Tour completion and skip events are captured in PostHog (`tour_started`, `tour_completed`, `tour_skipped`). State is persisted via Zustand so the tour never repeats. Navigating away mid-tour (e.g. tapping the Help button in the header) auto-dismisses the tour cleanly via a navigation blur listener.
+
+### Fixed
+
 - **Help button in reflect header** — a "Help" button (crisis resources shortcut) now appears in the native stack header on the reflect screen's idle state only; it is invisible in all other states (typing, processing, mirror, etc.). The header is transparent with no visible bar — the button floats at the top-right. Tapping it navigates to the crisis resources screen.
 
 ### Changed
