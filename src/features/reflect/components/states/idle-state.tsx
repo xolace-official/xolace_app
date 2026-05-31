@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useNavigation } from "expo-router";
+
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
@@ -11,7 +11,7 @@ import {
   TagGroup,
   useThemeColor,
 } from "heroui-native";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "convex/react";
@@ -65,6 +65,41 @@ const BUTTON_TRANSITION_OUT = {
 };
 const WORDS_FADE_OUT = { type: "timing" as const, duration: 150 };
 const WORDS_FADE_IN = { type: "timing" as const, duration: 200 };
+
+const styles = StyleSheet.create({
+  popoverStep0Trigger: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    right: 56,
+    height: 44,
+  },
+  popoverStep1Trigger: {
+    position: "absolute",
+    right: 8,
+    top: 8,
+  },
+  popoverStep1Anchor: {
+    width: 44,
+    height: 44,
+  },
+  popoverDynamicTriggerBase: {
+    position: "absolute",
+    left: 0,
+  },
+  popoverStep2Trigger: {
+    right: 48,
+    height: 60,
+  },
+  popoverStep3Trigger: {
+    right: 0,
+    height: 40,
+  },
+  skipContainerBase: {
+    position: "absolute",
+    right: 10,
+  },
+});
 
 type Props = {
   variant: UserVariant;
@@ -201,6 +236,32 @@ export const IdleState = ({
 
   const step = tourState.currentStepIndex;
 
+  const step2Top = tagGroupLayoutY.current;
+  const step3Top = textureTabsLayoutY.current;
+
+  const step2TriggerStyle = useMemo(
+    () => [
+      styles.popoverDynamicTriggerBase,
+      styles.popoverStep2Trigger,
+      { top: step2Top },
+    ],
+    [step2Top],
+  );
+
+  const step3TriggerStyle = useMemo(
+    () => [
+      styles.popoverDynamicTriggerBase,
+      styles.popoverStep3Trigger,
+      { top: step3Top },
+    ],
+    [step3Top],
+  );
+
+  const skipContainerStyle = useMemo(
+    () => [styles.skipContainerBase, { top: insets.top }],
+    [insets.top],
+  );
+
   return (
     <View className="flex-1 px-6" style={containerStyle}>
       <View className="pt-4 pb-4">
@@ -263,16 +324,16 @@ export const IdleState = ({
             style={StyleSheet.absoluteFill}
             pointerEvents="box-none"
           >
-            <Popover.Trigger
-              style={{ position: "absolute", left: 0, top: 0, right: 56, height: 44 }}
-            >
+            <Popover.Trigger style={styles.popoverStep0Trigger}>
               <View />
             </Popover.Trigger>
             <Popover.Portal>
               <Popover.Content presentation="popover" placement="bottom">
                 <Popover.Arrow />
                 <Popover.Title>{steps[0]?.title}</Popover.Title>
-                <Popover.Description>{steps[0]?.description}</Popover.Description>
+                <Popover.Description>
+                  {steps[0]?.description}
+                </Popover.Description>
               </Popover.Content>
             </Popover.Portal>
           </Popover>
@@ -285,14 +346,16 @@ export const IdleState = ({
             style={StyleSheet.absoluteFill}
             pointerEvents="box-none"
           >
-            <Popover.Trigger style={{ position: "absolute", right: 8, top: 8 }}>
-              <View style={{ width: 44, height: 44 }} />
+            <Popover.Trigger style={styles.popoverStep1Trigger}>
+              <View style={styles.popoverStep1Anchor} />
             </Popover.Trigger>
             <Popover.Portal>
               <Popover.Content presentation="popover" placement="bottom">
                 <Popover.Arrow />
                 <Popover.Title>{steps[1]?.title}</Popover.Title>
-                <Popover.Description>{steps[1]?.description}</Popover.Description>
+                <Popover.Description>
+                  {steps[1]?.description}
+                </Popover.Description>
               </Popover.Content>
             </Popover.Portal>
           </Popover>
@@ -372,22 +435,16 @@ export const IdleState = ({
             style={StyleSheet.absoluteFill}
             pointerEvents="box-none"
           >
-            <Popover.Trigger
-              style={{
-                position: "absolute",
-                top: tagGroupLayoutY.current,
-                left: 0,
-                right: 48,
-                height: 60,
-              }}
-            >
+            <Popover.Trigger style={step2TriggerStyle}>
               <View />
             </Popover.Trigger>
             <Popover.Portal>
               <Popover.Content presentation="popover" placement="top">
                 <Popover.Arrow />
                 <Popover.Title>{steps[2]?.title}</Popover.Title>
-                <Popover.Description>{steps[2]?.description}</Popover.Description>
+                <Popover.Description>
+                  {steps[2]?.description}
+                </Popover.Description>
               </Popover.Content>
             </Popover.Portal>
           </Popover>
@@ -400,22 +457,16 @@ export const IdleState = ({
             style={StyleSheet.absoluteFill}
             pointerEvents="box-none"
           >
-            <Popover.Trigger
-              style={{
-                position: "absolute",
-                top: textureTabsLayoutY.current,
-                left: 0,
-                right: 0,
-                height: 40,
-              }}
-            >
+            <Popover.Trigger style={step3TriggerStyle}>
               <View />
             </Popover.Trigger>
             <Popover.Portal>
               <Popover.Content presentation="popover" placement="top">
                 <Popover.Arrow />
                 <Popover.Title>{steps[3]?.title}</Popover.Title>
-                <Popover.Description>{steps[3]?.description}</Popover.Description>
+                <Popover.Description>
+                  {steps[3]?.description}
+                </Popover.Description>
               </Popover.Content>
             </Popover.Portal>
           </Popover>
@@ -459,11 +510,7 @@ export const IdleState = ({
         <Animated.View
           entering={FadeIn.delay(300)}
           exiting={FadeOut}
-          style={{
-            position: "absolute",
-            top: insets.top,
-            right: 10,
-          }}
+          style={skipContainerStyle}
           pointerEvents="box-none"
         >
           <PressableFeedback

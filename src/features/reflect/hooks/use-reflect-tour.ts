@@ -34,6 +34,7 @@ function tourReducer(state: TourState, action: TourAction): TourState {
 export function useReflectTour() {
   const reflectTourSeen = useAppStore((s) => s.reflectTourSeen);
   const setReflectTourSeen = useAppStore((s) => s.setReflectTourSeen);
+  const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
   const { isNight } = useSessionMode();
 
   const steps = useMemo(
@@ -49,13 +50,13 @@ export function useReflectTour() {
 
   const isAdvancing = useRef(false);
 
-  // Start tour after idle screen settles
+  // Start tour after idle screen settles — but only after founder welcome is dismissed
   useEffect(() => {
-    if (!reflectTourSeen) {
+    if (!reflectTourSeen && founderWelcomeSeen) {
       const t = setTimeout(() => dispatch({ type: 'START_TOUR' }), 800);
       return () => clearTimeout(t);
     }
-  }, [reflectTourSeen]);
+  }, [reflectTourSeen, founderWelcomeSeen]);
 
   // Fire tour_started once the first step is shown
   const hasFiredStartEvent = useRef(false);
