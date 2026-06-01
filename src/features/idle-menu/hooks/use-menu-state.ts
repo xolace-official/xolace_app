@@ -30,17 +30,16 @@ export function useMenuState(): MenuState {
     isOpenJS,
     open: () => {
       if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
-      isOpen.value = true;
+      isOpen.set(true);
       setIsOpenJS(true);
     },
     close: () => {
-      isOpen.value = false;
+      isOpen.set(false);
       deferClose();
     },
     toggle: () => {
-      const next = !isOpen.value;
-      isOpen.value = next;
-      if (next) {
+      isOpen.set((prev) => !prev);
+      if (!isOpenJS) {
         if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
         setIsOpenJS(true);
       } else {
