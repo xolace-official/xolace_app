@@ -35,14 +35,14 @@ const AnimatedChip = ({
   const press = useSharedValue(0);
 
   useAnimatedReaction(
-    () => activeChip.value,
+    () => activeChip.get(),
     (chip) => {
       if (chip === chipIndex) {
-        press.value = 0;
-        press.value = withSequence(
+        press.set(0);
+        press.set(withSequence(
           withTiming(0.5, { duration: 100, easing: Easing.out(Easing.quad) }),
           withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) }),
-        );
+        ));
       }
     },
   );
@@ -51,7 +51,7 @@ const AnimatedChip = ({
     transform: [
       {
         scale: interpolate(
-          press.value,
+          press.get(),
           [0, 0.5, 1],
           [1, 0.88, 1],
           Extrapolation.CLAMP,
@@ -62,7 +62,7 @@ const AnimatedChip = ({
 
   const rOverlay = useAnimatedStyle(() => ({
     opacity: interpolate(
-      press.value,
+      press.get(),
       [0, 0.2, 0.65, 1],
       [0, 1, 0.8, 0],
       Extrapolation.CLAMP,
@@ -94,25 +94,25 @@ export const SharePreview = ({ isActive }: Props) => {
   const progress = useSharedValue(0);
 
   const activeChip = useDerivedValue(
-    () => Math.floor(progress.value) % CHIPS.length,
+    () => Math.floor(progress.get()) % CHIPS.length,
   );
 
   useAnimatedReaction(
-    () => isActive.value,
+    () => isActive.get(),
     (active, prev) => {
       if (active && !prev) {
-        progress.value = 0;
-        progress.value = withRepeat(
+        progress.set(0);
+        progress.set(withRepeat(
           withTiming(CHIPS.length, {
             duration: CHIPS.length * DWELL_MS,
             easing: Easing.steps(CHIPS.length, true),
           }),
           -1,
           false,
-        );
+        ));
       } else if (!active) {
         cancelAnimation(progress);
-        progress.value = 0;
+        progress.set(0);
       }
     },
   );

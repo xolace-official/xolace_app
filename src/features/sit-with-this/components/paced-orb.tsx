@@ -153,15 +153,9 @@ export const PacedOrb = forwardRef<PacedOrbHandle, Props>(
           }
 
           if (scaleAnims.length > 0) {
-            scale.value = withSequence(scaleAnims[0], ...scaleAnims.slice(1));
-            coreOpacity.value = withSequence(
-              coreAnims[0],
-              ...coreAnims.slice(1),
-            );
-            haloOpacity.value = withSequence(
-              haloAnims[0],
-              ...haloAnims.slice(1),
-            );
+            scale.set(withSequence(scaleAnims[0], ...scaleAnims.slice(1)));
+            coreOpacity.set(withSequence(coreAnims[0], ...coreAnims.slice(1)));
+            haloOpacity.set(withSequence(haloAnims[0], ...haloAnims.slice(1)));
           }
 
           transitionTimersRef.current.push(setTimeout(resolve, totalMs));
@@ -175,10 +169,10 @@ export const PacedOrb = forwardRef<PacedOrbHandle, Props>(
     }));
 
     const scaleStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: scale.value }],
+      transform: [{ scale: scale.get() }],
     }));
-    const coreStyle = useAnimatedStyle(() => ({ opacity: coreOpacity.value }));
-    const haloStyle = useAnimatedStyle(() => ({ opacity: haloOpacity.value }));
+    const coreStyle = useAnimatedStyle(() => ({ opacity: coreOpacity.get() }));
+    const haloStyle = useAnimatedStyle(() => ({ opacity: haloOpacity.get() }));
 
     const haloViewStyle = [styles.halo, { backgroundColor: accentColor }, haloStyle];
     const coreViewStyle = [styles.core, { backgroundColor: accentColor }, coreStyle];

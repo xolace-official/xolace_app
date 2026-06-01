@@ -32,15 +32,15 @@ export const AuthBg = () => {
   const opacity = useSharedValue(0.4);
 
   useEffect(() => {
-    opacity.value = withRepeat(
+    opacity.set(withRepeat(
       withTiming(0.7, { duration: 6000, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
-    );
+    ));
   }, [opacity]);
 
   const pulseStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
+    opacity: opacity.get(),
   }));
 
   const pulseContainerStyle = [StyleSheet.absoluteFill, pulseStyle];

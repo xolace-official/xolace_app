@@ -88,21 +88,21 @@ export function QuotesScreen() {
   const heartScale = useSharedValue(0);
   const heartOpacity = useSharedValue(0);
   const heartStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: heartScale.value }],
-    opacity: heartOpacity.value,
+    transform: [{ scale: heartScale.get() }],
+    opacity: heartOpacity.get(),
   }));
 
   const triggerHeartBurst = () => {
-    heartScale.value = 0;
-    heartOpacity.value = 1;
-    heartScale.value = withSequence(
+    heartScale.set(0);
+    heartOpacity.set(1);
+    heartScale.set(withSequence(
       withSpring(1.5, { damping: 6, stiffness: 200 }),
       withDelay(180, withTiming(0, { duration: 320 })),
-    );
-    heartOpacity.value = withSequence(
+    ));
+    heartOpacity.set(withSequence(
       withTiming(1, { duration: 40 }),
       withDelay(350, withTiming(0, { duration: 270 })),
-    );
+    ));
   };
 
   useEffect(() => {

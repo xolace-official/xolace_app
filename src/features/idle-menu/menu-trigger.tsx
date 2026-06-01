@@ -23,8 +23,8 @@ export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
   const borderStyle = { borderColor: foregroundColor + "28" };
 
   const rStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(isOpen.value ? 0.5 : 1),
-    transform: [{ scale: withTiming(isOpen.value ? 0.6 : 1) }],
+    opacity: withTiming(isOpen.get() ? 0.5 : 1),
+    transform: [{ scale: withTiming(isOpen.get() ? 0.6 : 1) }],
   }));
 
   const triggerStyle = [styles.trigger, borderStyle, rStyle];

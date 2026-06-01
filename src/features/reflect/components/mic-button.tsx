@@ -29,21 +29,21 @@ export const MicButton = ({ size, isRecording, onPress }: Props) => {
 
   useEffect(() => {
     if (isRecording && !reduceMotion) {
-      scale.value = withRepeat(
+      scale.set(withRepeat(
         withTiming(1.25, { duration: 700, easing: Easing.inOut(Easing.ease) }),
         -1,
         true,
-      );
-      bgOpacity.value = withRepeat(
+      ));
+      bgOpacity.set(withRepeat(
         withTiming(0.15, { duration: 700, easing: Easing.inOut(Easing.ease) }),
         -1,
         true,
-      );
+      ));
     } else {
       cancelAnimation(scale);
       cancelAnimation(bgOpacity);
-      scale.value = withTiming(1, { duration: 150 });
-      bgOpacity.value = withTiming(isRecording ? 0.12 : 0, { duration: 150 });
+      scale.set(withTiming(1, { duration: 150 }));
+      bgOpacity.set(withTiming(isRecording ? 0.12 : 0, { duration: 150 }));
     }
     return () => {
       cancelAnimation(scale);
@@ -61,7 +61,7 @@ export const MicButton = ({ size, isRecording, onPress }: Props) => {
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: scale.get() }],
   }));
 
   const bgStyle = useAnimatedStyle(() => ({
@@ -70,7 +70,7 @@ export const MicButton = ({ size, isRecording, onPress }: Props) => {
     height: containerSize,
     borderRadius: containerSize / 2,
     backgroundColor: accentColor,
-    opacity: bgOpacity.value,
+    opacity: bgOpacity.get(),
   }));
 
   const iconWrapperStyle = useAnimatedStyle(() => ({

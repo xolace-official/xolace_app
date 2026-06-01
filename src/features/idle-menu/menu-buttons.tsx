@@ -74,7 +74,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
   const onContainerLayout = (e: {
     nativeEvent: { layout: { height: number } };
   }) => {
-    containerHeight.value = e.nativeEvent.layout.height;
+    containerHeight.set(e.nativeEvent.layout.height);
   };
 
   return (

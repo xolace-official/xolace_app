@@ -44,7 +44,7 @@ const ResonatedBadge = ({
     transform: [
       {
         scale: interpolate(
-          press.value,
+          press.get(),
           [0, 0.5, 1],
           [1, 0.86, 1],
           Extrapolation.CLAMP,
@@ -52,7 +52,7 @@ const ResonatedBadge = ({
       },
     ],
     opacity: interpolate(
-      press.value,
+      press.get(),
       [0, 0.2, 0.5, 1],
       [1, 0.6, 1, 1],
       Extrapolation.CLAMP,
@@ -85,7 +85,7 @@ const ResonanceTapButton = ({
     transform: [
       {
         scale: interpolate(
-          press.value,
+          press.get(),
           [0, 0.5, 1],
           [1, 0.86, 1],
           Extrapolation.CLAMP,
@@ -96,7 +96,7 @@ const ResonanceTapButton = ({
 
   const rUnselected = useAnimatedStyle(() => ({
     opacity: interpolate(
-      press.value,
+      press.get(),
       [0, 0.4, 0.55, 1],
       [1, 1, 0, 0],
       Extrapolation.CLAMP,
@@ -105,7 +105,7 @@ const ResonanceTapButton = ({
 
   const rSelected = useAnimatedStyle(() => ({
     opacity: interpolate(
-      press.value,
+      press.get(),
       [0, 0.4, 0.55, 1],
       [0, 0, 1, 1],
       Extrapolation.CLAMP,
@@ -149,66 +149,66 @@ export const PeersPreview = ({ isActive }: Props) => {
   const progress = useSharedValue(0);
 
   useAnimatedReaction(
-    () => isActive.value,
+    () => isActive.get(),
     (active, prev) => {
       if (active && !prev) {
-        card1Y.value = CARD_START_Y;
-        card2Y.value = CARD_START_Y;
-        press1.value = 0;
-        press2.value = 0;
-        progress.value = 0;
-        progress.value = withRepeat(
+        card1Y.set(CARD_START_Y);
+        card2Y.set(CARD_START_Y);
+        press1.set(0);
+        press2.set(0);
+        progress.set(0);
+        progress.set(withRepeat(
           withTiming(1, { duration: CYCLE, easing: Easing.linear }),
           -1,
           false,
-        );
+        ));
       } else if (!active) {
         cancelAnimation(progress);
         cancelAnimation(card1Y);
         cancelAnimation(card2Y);
-        card1Y.value = CARD_START_Y;
-        card2Y.value = CARD_START_Y;
-        press1.value = 0;
-        press2.value = 0;
-        progress.value = 0;
+        card1Y.set(CARD_START_Y);
+        card2Y.set(CARD_START_Y);
+        press1.set(0);
+        press2.set(0);
+        progress.set(0);
       }
     },
   );
 
   useAnimatedReaction(
-    () => progress.value,
+    () => progress.get(),
     (p, prev) => {
       if (prev !== null && p < prev) return;
 
       if (prev !== null && prev < T.card1In && p >= T.card1In) {
-        card1Y.value = withSpring(0, SPRING);
+        card1Y.set(withSpring(0, SPRING));
       }
       if (prev !== null && prev < T.tap1 && p >= T.tap1) {
-        press1.value = 0;
-        press1.value = withSequence(...PRESS_SEQ);
+        press1.set(0);
+        press1.set(withSequence(...PRESS_SEQ));
       }
       if (prev !== null && prev < T.card2In && p >= T.card2In) {
-        card2Y.value = CARD_START_Y;
-        card2Y.value = withSpring(0, SPRING);
+        card2Y.set(CARD_START_Y);
+        card2Y.set(withSpring(0, SPRING));
       }
       if (prev !== null && prev < T.tap2 && p >= T.tap2) {
-        press2.value = 0;
-        press2.value = withSequence(...PRESS_SEQ);
+        press2.set(0);
+        press2.set(withSequence(...PRESS_SEQ));
       }
       if (prev !== null && prev < T.slideOut && p >= T.slideOut) {
         const out = { duration: 300, easing: Easing.in(Easing.cubic) };
-        press2.value = 0;
-        card1Y.value = withTiming(CARD_START_Y, out);
-        card2Y.value = withTiming(CARD_START_Y, out);
+        press2.set(0);
+        card1Y.set(withTiming(CARD_START_Y, out));
+        card2Y.set(withTiming(CARD_START_Y, out));
       }
     },
   );
 
   const rCard1 = useAnimatedStyle(() => ({
-    transform: [{ translateY: card1Y.value }],
+    transform: [{ translateY: card1Y.get() }],
   }));
   const rCard2 = useAnimatedStyle(() => ({
-    transform: [{ translateY: card2Y.value }],
+    transform: [{ translateY: card2Y.get() }],
   }));
 
   return (

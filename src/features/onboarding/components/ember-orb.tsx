@@ -35,15 +35,15 @@ const EmberOrbComponent = ({ phase }: Props) => {
   const scale = useSharedValue(1);
 
   useEffect(() => {
-    scale.value = withRepeat(
+    scale.set(withRepeat(
       withTiming(1.08, { duration: 4000, easing: Easing.inOut(Easing.ease) }),
       -1,
       true
-    );
+    ));
   }, [scale]);
 
   const breathStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: scale.get() }],
   }));
 
   const colors = PALETTES[phase];

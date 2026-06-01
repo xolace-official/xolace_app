@@ -34,25 +34,25 @@ export const ReflectPreview = ({ isActive }: Props) => {
   const progress = useSharedValue(0);
 
   useAnimatedReaction(
-    () => isActive.value,
+    () => isActive.get(),
     (active, prev) => {
       if (active && !prev) {
-        progress.value = 0;
-        progress.value = withRepeat(
+        progress.set(0);
+        progress.set(withRepeat(
           withTiming(1, { duration: CYCLE, easing: Easing.linear }),
           -1,
           false,
-        );
+        ));
       } else if (!active) {
         cancelAnimation(progress);
-        progress.value = 0;
+        progress.set(0);
       }
     },
   );
 
   const rMirror = useAnimatedStyle(() => ({
     opacity: interpolate(
-      progress.value,
+      progress.get(),
       [0, FADE_IN_END, FADE_OUT_START, FADE_OUT_END],
       [0, 1, 1, 0],
       Extrapolation.CLAMP,

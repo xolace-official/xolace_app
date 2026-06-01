@@ -56,7 +56,7 @@ const MoodCardComponent = ({
 
   const animatedStyle = useAnimatedStyle(() => {
     const normalizedOffset =
-      ((scrollOffsetX.value % allItemsWidth) + allItemsWidth) % allItemsWidth;
+      ((scrollOffsetX.get() % allItemsWidth) + allItemsWidth) % allItemsWidth;
     const left = ((initialLeft - normalizedOffset) % allItemsWidth) + shift;
 
     const rotation = interpolate(

@@ -25,7 +25,7 @@ export function CircleProgress({
   const animatedProgress = useSharedValue(progress);
 
   useEffect(() => {
-    animatedProgress.value = withTiming(progress, { duration: 400 });
+    animatedProgress.set(withTiming(progress, { duration: 400 }));
   }, [progress, animatedProgress]);
 
   const backgroundPath = (() => {
@@ -44,7 +44,7 @@ export function CircleProgress({
         height: size - strokeWidth,
       },
       -90,
-      animatedProgress.value * 360,
+      animatedProgress.get() * 360,
     );
     return path;
   }, [animatedProgress, size, strokeWidth]);
