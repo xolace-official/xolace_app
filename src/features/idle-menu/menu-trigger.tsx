@@ -20,14 +20,12 @@ type Props = {
 export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
   const foregroundColor = useThemeColor("foreground") as string;
 
-  const borderStyle = { borderColor: foregroundColor + "28" };
-
   const rStyle = useAnimatedStyle(() => ({
     opacity: withTiming(isOpen.get() ? 0.5 : 1),
     transform: [{ scale: withTiming(isOpen.get() ? 0.6 : 1) }],
   }));
 
-  const triggerStyle = [styles.trigger, borderStyle, rStyle];
+  const triggerStyle = [styles.trigger, rStyle];
 
   return (
     <AnimatedPressable
@@ -47,6 +45,7 @@ export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
           ? "Closes navigation options"
           : "Opens navigation options: Today, Timeline, Settings"
       }
+      className="border-foreground/16"
       style={triggerStyle}
     >
       <GlassView
