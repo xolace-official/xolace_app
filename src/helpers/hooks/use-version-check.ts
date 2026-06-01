@@ -52,6 +52,7 @@ export function useVersionCheck() {
       } catch (error) {
         console.error('[useVersionCheck] Failed:', error);
       } finally {
+        clearTimeout(timeoutId);
         setIsVersionChecked(true);
       }
     };

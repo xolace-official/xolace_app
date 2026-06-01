@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, KeyboardAvoidingView, Platform } from 'react-native';
 import { Dialog, TextArea, Button } from 'heroui-native';
 import { DialogBlurBackdrop } from '@/src/components/dialog-blur-backdrop';
@@ -30,11 +30,21 @@ const FeedbackForm = ({ onOpenChange }: { onOpenChange: (open: boolean) => void 
   const canSubmit = useQuery(api.feedback.canSubmitGeneral);
   const posthog = usePostHog();
 
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSubmittingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
   const isRateLimited = canSubmit === false;
   const isDisabled = isSaving || !text.trim() || isRateLimited || sent;
 
   const handleSend = async () => {
-    if (isDisabled) return;
+    if (isDisabled || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSaving(true);
     setError(null);
     try {
@@ -45,11 +55,13 @@ const FeedbackForm = ({ onOpenChange }: { onOpenChange: (open: boolean) => void 
         has_text: true,
         has_option: false,
       });
-      setTimeout(() => onOpenChange(false), 1500);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = setTimeout(() => onOpenChange(false), 1500);
     } catch (e) {
       setError(extractErrorMessage(e));
     } finally {
       setIsSaving(false);
+      isSubmittingRef.current = false;
     }
   };
 

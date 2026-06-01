@@ -50,8 +50,11 @@ export function useSessionEnd() {
   ) => {
     if (busyRef.current) return;
     busyRef.current = true;
-    const ok = await completePath(true, contributedReflection, postSessionMood);
-    busyRef.current = false;
+    const ok = await completePath(true, contributedReflection, postSessionMood).finally(
+      () => {
+        busyRef.current = false;
+      },
+    );
     if (ok) {
       posthog.capture('session_completed', {
         post_session_mood: postSessionMood ?? null,
@@ -68,8 +71,11 @@ export function useSessionEnd() {
   ) => {
     if (busyRef.current) return;
     busyRef.current = true;
-    const ok = await completePath(true, contributedReflection, postSessionMood);
-    busyRef.current = false;
+    const ok = await completePath(true, contributedReflection, postSessionMood).finally(
+      () => {
+        busyRef.current = false;
+      },
+    );
     if (ok) {
       posthog.capture('session_completed', {
         post_session_mood: postSessionMood ?? null,
