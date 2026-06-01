@@ -1,4 +1,3 @@
-import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -120,19 +119,16 @@ const EmberCarouselItemComponent = ({
 
   return (
     <Animated.View
-      // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
       style={[styles.container, rContainerStyle]}
       onLayout={(e) => itemHeight.set(e.nativeEvent.layout.height)}
     >
       {/* Soft ambient halo — opacity-controlled so it works with any accent color format */}
       <Animated.View
-        // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
         style={[haloStyle, rHaloStyle]}
       />
 
       {/* Active border ring */}
       <Animated.View
-        // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
         style={[ringStyle, rRingStyle]}
       />
 
@@ -161,7 +157,7 @@ const EmberCarouselItemComponent = ({
 };
 
 EmberCarouselItemComponent.displayName = 'EmberCarouselItem';
-export const EmberCarouselItem = memo(EmberCarouselItemComponent);
+export const EmberCarouselItem = EmberCarouselItemComponent;
 
 const styles = StyleSheet.create({
   container: { position: 'absolute', width: '58%', aspectRatio: 1 / 0.72 },

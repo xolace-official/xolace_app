@@ -49,9 +49,7 @@ export const PromiseScreen = () => {
     router.push('/frame');
   };
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const rootStyle = { paddingBottom: insets.bottom };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const marqueeStyle = { flex: 5, paddingTop: insets.top + 40 };
 
   return (

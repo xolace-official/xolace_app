@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { View } from "react-native";
 import { GlassView } from "expo-glass-effect";
 import { PressableFeedback } from "heroui-native";
@@ -20,29 +19,19 @@ export function SocialIcon({
   foregroundColor,
   onPress,
 }: Props) {
-  const glassStyle = useMemo(
-    () => ({
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      alignItems: "center" as const,
-      justifyContent: "center" as const,
-      backgroundColor: `${foregroundColor}08`,
-      borderWidth: 1,
-      borderColor: `${foregroundColor}10`,
-    }),
-    [foregroundColor],
-  );
+  const glassStyle = {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: `${foregroundColor}08`,
+    borderWidth: 1,
+    borderColor: `${foregroundColor}10`,
+  };
 
-  const iconName = useMemo(
-    () => ({ ios: ios as any, android: android as any }),
-    [ios, android],
-  );
-
-  const labelStyle = useMemo(
-    () => ({ color: `${foregroundColor}40`, fontSize: 10 }),
-    [foregroundColor],
-  );
+  const iconName = { ios: ios as any, android: android as any };
+  const labelStyle = { color: `${foregroundColor}40`, fontSize: 10 };
 
   return (
     <PressableFeedback

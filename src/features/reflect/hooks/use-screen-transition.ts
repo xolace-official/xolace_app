@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Keyboard } from 'react-native';
 import type { ReflectionStateName } from '@/src/features/reflect/types';
 import { normalizeScreen } from '@/src/features/reflect/reflect-transitions';
@@ -41,13 +41,13 @@ export function useScreenTransition(screen: ReflectionStateName) {
     });
   }, [screen]);
 
-  const onOutgoingComplete = useCallback(() => {
+  const onOutgoingComplete = () => {
     setState((prev) => ({
       ...prev,
       previous: null,
       isTransitioning: false,
     }));
-  }, []);
+  };
 
   return {
     current: state.current,

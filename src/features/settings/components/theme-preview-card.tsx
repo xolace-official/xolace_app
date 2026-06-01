@@ -26,14 +26,12 @@ export const ThemePreviewCard = ({ theme, isActive, onPress }: Props) => {
   const { preview } = theme;
   const isLocked = theme.tier === 'premium' && theme.available === false;
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const outerRingStyle = {
     borderRadius: 16,
     padding: isActive ? 2 : 0,
     borderWidth: isActive ? 1.5 : 0,
     borderColor: isActive ? preview.accent : 'transparent',
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const cardBodyStyle = {
     backgroundColor: preview.bg,
     borderRadius: isActive ? 14 : 16,
@@ -41,20 +39,17 @@ export const ThemePreviewCard = ({ theme, isActive, onPress }: Props) => {
     minHeight: 140,
     padding: 14,
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const encouragementStyle = {
     fontSize: 9,
     fontStyle: 'italic' as const,
     color: preview.fg + '50',
     marginBottom: 8,
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const separatorStyle = {
     height: 0.5,
     backgroundColor: preview.border,
     marginBottom: 8,
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const headlineStyle = {
     fontSize: 12,
     fontWeight: '600' as const,
@@ -62,7 +57,6 @@ export const ThemePreviewCard = ({ theme, isActive, onPress }: Props) => {
     lineHeight: 17,
     marginBottom: 12,
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const chipStyle = {
     alignSelf: 'flex-start' as const,
     borderRadius: 20,
@@ -72,9 +66,7 @@ export const ThemePreviewCard = ({ theme, isActive, onPress }: Props) => {
     paddingHorizontal: 8,
     paddingVertical: 3,
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const chipLabelStyle = { fontSize: 9, color: preview.accent, fontWeight: '500' as const };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const accentDotStyle = {
     position: 'absolute' as const,
     bottom: 10,
@@ -84,7 +76,6 @@ export const ThemePreviewCard = ({ theme, isActive, onPress }: Props) => {
     borderRadius: 2.5,
     backgroundColor: preview.accent + '80',
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const lockOverlayStyle = {
     position: 'absolute' as const,
     top: 0,
@@ -96,7 +87,6 @@ export const ThemePreviewCard = ({ theme, isActive, onPress }: Props) => {
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const activeLabelStyle = { fontSize: 9, color: preview.accent };
 
   return (

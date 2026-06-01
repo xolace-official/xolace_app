@@ -8,7 +8,6 @@ import {
   useToast,
 } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
-import { useCallback, useMemo } from "react";
 import { AppText } from "@/src/components/shared/app-text";
 import { ResourceItem } from "@/src/components/shared/resource-item";
 import { useCrisisResources } from "./use-crisis-resources";
@@ -46,17 +45,14 @@ export function CrisisResourcesScreen() {
     ? COUNTRY_OPTIONS.find((o) => o.value === selectedCountry)
     : undefined;
 
-  const handleCountryChange = useCallback(
-    (option: SelectOption) => {
-      const code = option?.value;
-      setCountry(
-        code && COUNTRY_RESOURCES[code as CountryCode]
-          ? (code as CountryCode)
-          : null,
-      );
-    },
-    [setCountry],
-  );
+  const handleCountryChange = (option: SelectOption) => {
+    const code = option?.value;
+    setCountry(
+      code && COUNTRY_RESOURCES[code as CountryCode]
+        ? (code as CountryCode)
+        : null,
+    );
+  };
 
   const handleEmergencyCall = async () => {
     if (!countryData) return;
@@ -127,47 +123,44 @@ export function CrisisResourcesScreen() {
     });
   };
 
-  const resourcesContent = useMemo(
-    () => (
-      <>
-        {selectedCountry && countryData && (
-          <AppText className="text-sm text-foreground/50 mb-2">
-            Showing resources for {countryData.name} {countryData.flag}
-          </AppText>
-        )}
+  const resourcesContent = (
+    <>
+      {selectedCountry && countryData && (
+        <AppText className="text-sm text-foreground/50 mb-2">
+          Showing resources for {countryData.name} {countryData.flag}
+        </AppText>
+      )}
 
-        <Select
-          presentation="bottom-sheet"
-          value={selectValue}
-          onValueChange={handleCountryChange}
-        >
-          <Select.Trigger className="w-full">
-            <Select.Value placeholder="Select your country" />
-            <Select.TriggerIndicator />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Overlay />
-            <Select.Content
-              presentation="bottom-sheet"
-              snapPoints={COUNTRY_SNAP_POINTS}
-            >
-              <Select.ListLabel>Select your country</Select.ListLabel>
-              {COUNTRY_OPTIONS.map((opt) => (
-                <Select.Item
-                  key={opt.value}
-                  value={opt.value}
-                  label={opt.label}
-                >
-                  <Select.ItemLabel className="flex-1" />
-                  <Select.ItemIndicator />
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select.Portal>
-        </Select>
-      </>
-    ),
-    [countryData, selectedCountry, selectValue, handleCountryChange],
+      <Select
+        presentation="bottom-sheet"
+        value={selectValue}
+        onValueChange={handleCountryChange}
+      >
+        <Select.Trigger className="w-full">
+          <Select.Value placeholder="Select your country" />
+          <Select.TriggerIndicator />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Overlay />
+          <Select.Content
+            presentation="bottom-sheet"
+            snapPoints={COUNTRY_SNAP_POINTS}
+          >
+            <Select.ListLabel>Select your country</Select.ListLabel>
+            {COUNTRY_OPTIONS.map((opt) => (
+              <Select.Item
+                key={opt.value}
+                value={opt.value}
+                label={opt.label}
+              >
+                <Select.ItemLabel className="flex-1" />
+                <Select.ItemIndicator />
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Portal>
+      </Select>
+    </>
   );
 
   return (

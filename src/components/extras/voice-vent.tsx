@@ -1,6 +1,5 @@
 import { View } from "react-native";
 import { useRouter } from "expo-router";
-import { useMemo } from "react";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
@@ -17,7 +16,7 @@ export default function VoiceVentScreen() {
     router.back();
   };
 
-  const closeIconStyle = useMemo(() => ({ opacity: 0.6 }), []);
+  const closeIconStyle = { opacity: 0.6 };
 
   return (
     <View className="flex-1 bg-background">

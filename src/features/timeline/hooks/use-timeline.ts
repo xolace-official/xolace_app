@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { buildTimelineSections } from "@/src/features/timeline/utils";
@@ -26,22 +25,18 @@ export function useTimeline() {
 
   const isLoading = status === "LoadingFirstPage";
 
-  const entries: TimelineEntry[] = useMemo(
-    () =>
-      results.map((s) => ({
-        id: s._id,
-        mirrorText: s.mirrorText,
-        primaryEmotion: s.primaryEmotion,
-        granularLabel: s.granularLabel,
-        pathChosen: s.pathChosen,
-        toneUsed: s.toneUsed,
-        confirmationState: s.confirmationState,
-        createdAt: s.createdAt,
-      })),
-    [results],
-  );
+  const entries: TimelineEntry[] = results.map((s) => ({
+    id: s._id,
+    mirrorText: s.mirrorText,
+    primaryEmotion: s.primaryEmotion,
+    granularLabel: s.granularLabel,
+    pathChosen: s.pathChosen,
+    toneUsed: s.toneUsed,
+    confirmationState: s.confirmationState,
+    createdAt: s.createdAt,
+  }));
 
-  const sections = useMemo(() => buildTimelineSections(entries), [entries]);
+  const sections = buildTimelineSections(entries);
 
   return {
     sections,

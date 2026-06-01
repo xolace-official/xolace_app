@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useMemo } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import Animated, {
   cancelAnimation,
@@ -47,10 +47,7 @@ export const DualBreathCanvas = forwardRef<PacedOrbHandle, Props>(
       }
     })
 
-    const labelContainerStyle = useMemo(
-      () => [labelPositionStyle, styles.labelCenter],
-      [labelPositionStyle],
-    )
+    const labelContainerStyle = [labelPositionStyle, styles.labelCenter]
 
 
     const labelFadeStyle = useAnimatedStyle(() => ({ opacity: labelOpacity.get() }))

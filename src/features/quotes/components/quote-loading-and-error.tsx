@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { View } from "react-native";
 import { Button, SkeletonGroup } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
@@ -20,10 +19,7 @@ export function QuoteLoadingAndError({
   top,
   onRetry,
 }: Props) {
-  const loadingContainerStyle = useMemo(
-    () => ({ paddingTop: top + 36 }),
-    [top],
-  );
+  const loadingContainerStyle = { paddingTop: top + 36 };
 
   if (!isFirstVisit && (isLoading || isColdStarting)) {
     return (

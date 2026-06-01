@@ -32,7 +32,6 @@ export default function TimelineLayout() {
     </Pressable>
   );
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const screenOptions = {
     ...largeHeaderOptions,
     headerLeft: renderBackButton,

@@ -31,22 +31,22 @@ const MoodMarqueeComponent = ({ moods, scrollOffsetX }: Props) => {
 
   useFrameCallback((frameInfo) => {
     const dt = (frameInfo?.timeSincePreviousFrame ?? 0) / 1000;
-    scrollOffsetX.value += scrollSpeed.value * dt;
+    scrollOffsetX.set(scrollOffsetX.get() + scrollSpeed.get() * dt);
   });
 
   const gesture = Gesture.Pan()
     .onBegin(() => {
-      scrollSpeed.value = 0;
+      scrollSpeed.set(0);
     })
     .onChange((e) => {
-      scrollOffsetX.value -= e.changeX;
+      scrollOffsetX.set(scrollOffsetX.get() - e.changeX);
     })
     .onFinalize((e) => {
-      scrollSpeed.value = -e.velocityX;
-      scrollSpeed.value = withTiming(AUTO_SCROLL_SPEED, {
+      scrollSpeed.set(-e.velocityX);
+      scrollSpeed.set(withTiming(AUTO_SCROLL_SPEED, {
         duration: 1200,
         easing: Easing.out(Easing.quad),
-      });
+      }));
     });
 
   return (

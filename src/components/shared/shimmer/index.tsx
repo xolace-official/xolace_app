@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import {
   View,
   type LayoutChangeEvent,
@@ -47,25 +47,18 @@ const ShimmerRoot = React.forwardRef<View, ShimmerProps>(
       return w > 0 && h > 0 ? Math.sqrt(w * w + h * h) : 0;
     });
 
-    const handleLayout = useCallback(
-      (e: LayoutChangeEvent) => {
-        const { width, height } = e.nativeEvent.layout;
-        containerWidth.set(width);
-        containerHeight.set(height);
-        onLayout?.(e);
-      },
-      [containerWidth, containerHeight, onLayout],
-    );
+    const handleLayout = (e: LayoutChangeEvent) => {
+      const { width, height } = e.nativeEvent.layout;
+      containerWidth.set(width);
+      containerHeight.set(height);
+      onLayout?.(e);
+    };
 
-    const contextValue = useMemo<ShimmerContextValue>(
+    const contextValue: ShimmerContextValue = useMemo(
       () => ({ containerWidth, containerHeight, containerDiagonal, debug }),
       [containerWidth, containerHeight, containerDiagonal, debug],
     );
-
-    const containerStyle = useMemo(
-      () => [styles.container, style, debug && styles.containerDebug],
-      [style, debug],
-    );
+    const containerStyle = [styles.container, style, debug && styles.containerDebug];
 
     return (
       <ShimmerContext.Provider value={contextValue}>
@@ -140,37 +133,25 @@ const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
       },
     );
 
-    const trackContainerStyle = useMemo(
-      () => [
-        StyleSheet.absoluteFill,
-        TRACK_CONTAINER_BASE_STYLE,
-        { transform: [{ rotate: `${trackAngle}deg` }] },
-      ],
-      [trackAngle],
-    );
+    const trackContainerStyle = [
+      StyleSheet.absoluteFill,
+      TRACK_CONTAINER_BASE_STYLE,
+      { transform: [{ rotate: `${trackAngle}deg` }] },
+    ];
 
-    const rotateContainerStyle = useMemo(
-      () => [
-        styles.rotateContainer,
-        { width: overlayWidth, height: rotateContainerHeight },
-        { transform: [{ rotate: `${overlayAngle}deg` }] },
-      ],
-      [overlayWidth, rotateContainerHeight, overlayAngle],
-    );
+    const rotateContainerStyle = [
+      styles.rotateContainer,
+      { width: overlayWidth, height: rotateContainerHeight },
+      { transform: [{ rotate: `${overlayAngle}deg` }] },
+    ];
 
-    const trackStyle = useMemo(
-      () => [{ width: trackDistance }, debug && styles.trackDebug],
-      [trackDistance, debug],
-    );
+    const trackStyle = [{ width: trackDistance }, debug && styles.trackDebug];
 
-    const translateStyle = useMemo(
-      () => [
-        styles.translateContainer,
-        animatedStyle,
-        debug && styles.overlayDebug,
-      ],
-      [animatedStyle, debug],
-    );
+    const translateStyle = [
+      styles.translateContainer,
+      animatedStyle,
+      debug && styles.overlayDebug,
+    ];
 
     return (
       <View style={trackContainerStyle} pointerEvents="none">

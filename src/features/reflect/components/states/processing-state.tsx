@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { useThemeColor } from "heroui-native";
 import Animated, {
@@ -78,13 +78,10 @@ export const ProcessingState = () => {
     opacity: opacity.value,
   }));
 
-  const shimmerOverlayStyle = useMemo(
-    () => ({
-      ...SHIMMER_OVERLAY_INNER_STYLE,
-      backgroundColor: accentColor,
-    }),
-    [accentColor],
-  );
+  const shimmerOverlayStyle = {
+    ...SHIMMER_OVERLAY_INNER_STYLE,
+    backgroundColor: accentColor,
+  };
 
   return (
     <View className="flex-1 items-center justify-center gap-8">

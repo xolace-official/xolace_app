@@ -66,7 +66,6 @@ export const ClarifyState = ({
     }
   };
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const textInputStyle = { fontSize: 14, color: foregroundColor, marginTop: 12, paddingHorizontal: 4 };
 
   return (

@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet, View } from "react-native";
-import { useMemo } from "react";
 import { EaseView } from "react-native-ease/uniwind";
 import { BlurView } from "expo-blur";
 import { MenuTrigger } from "@/src/features/idle-menu/menu-trigger";
@@ -16,7 +15,7 @@ const EASE_TRANSITION = {
 
 export const IdleMenu = () => {
   const { isOpen, isOpenJS, toggle, close } = useMenuState();
-  const absoluteFillStyle = useMemo(() => StyleSheet.absoluteFill, []);
+  const absoluteFillStyle = StyleSheet.absoluteFill;
 
   return (
     <View style={absoluteFillStyle} pointerEvents="box-none">

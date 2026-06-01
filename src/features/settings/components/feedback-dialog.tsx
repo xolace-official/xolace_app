@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, KeyboardAvoidingView, Platform } from 'react-native';
 import { Dialog, TextArea, Button } from 'heroui-native';
 import { DialogBlurBackdrop } from '@/src/components/dialog-blur-backdrop';
@@ -20,7 +20,7 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
-export const FeedbackDialog = ({ isOpen, onOpenChange }: Props) => {
+const FeedbackForm = ({ onOpenChange }: { onOpenChange: (open: boolean) => void }) => {
   const [text, setText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [sent, setSent] = useState(false);
@@ -30,20 +30,21 @@ export const FeedbackDialog = ({ isOpen, onOpenChange }: Props) => {
   const canSubmit = useQuery(api.feedback.canSubmitGeneral);
   const posthog = usePostHog();
 
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSubmittingRef = useRef(false);
+
   useEffect(() => {
-    if (isOpen) {
-      setText('');
-      setError(null);
-      setSent(false);
-      setIsSaving(false);
-    }
-  }, [isOpen]);
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   const isRateLimited = canSubmit === false;
   const isDisabled = isSaving || !text.trim() || isRateLimited || sent;
 
   const handleSend = async () => {
-    if (isDisabled) return;
+    if (isDisabled || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSaving(true);
     setError(null);
     try {
@@ -54,73 +55,81 @@ export const FeedbackDialog = ({ isOpen, onOpenChange }: Props) => {
         has_text: true,
         has_option: false,
       });
-      setTimeout(() => onOpenChange(false), 1500);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = setTimeout(() => onOpenChange(false), 1500);
     } catch (e) {
       setError(extractErrorMessage(e));
     } finally {
       setIsSaving(false);
+      isSubmittingRef.current = false;
     }
   };
 
+  return (
+    <Dialog.Content className="mx-auto w-full max-w-sm">
+      <View className="mb-4 gap-1">
+        <Dialog.Title>Send feedback</Dialog.Title>
+        <Dialog.Description>
+          What&apos;s on your mind?
+        </Dialog.Description>
+      </View>
+
+      <TextArea
+        value={text}
+        onChangeText={(t: string) => { setText(t); setError(null); }}
+        placeholder="Tell us what you think..."
+        maxLength={MAX_LENGTH}
+        isDisabled={isSaving || sent}
+        className="min-h-30 mb-1"
+        accessibilityHint="Up to 1000 characters"
+      />
+
+      <AppText className="text-xs text-foreground/30 text-right mb-2">
+        {text.length} / {MAX_LENGTH}
+      </AppText>
+
+      {isRateLimited && (
+        <AppText className="text-xs text-foreground/50 mt-1 mb-2">
+          You&apos;ve sent feedback today — come back tomorrow.
+        </AppText>
+      )}
+
+      {error && (
+        <AppText className="text-xs text-danger/80 mt-1 mb-2">
+          {error}
+        </AppText>
+      )}
+
+      <View className="flex-row justify-end gap-3 mt-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onPress={() => onOpenChange(false)}
+          isDisabled={isSaving}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
+          onPress={handleSend}
+          isDisabled={isDisabled}
+          accessibilityLabel="Send feedback"
+        >
+          {sent ? 'Sent.' : isSaving ? 'Sending...' : 'Send'}
+        </Button>
+      </View>
+    </Dialog.Content>
+  );
+};
+
+export const FeedbackDialog = ({ isOpen, onOpenChange }: Props) => {
   return (
     <Dialog isOpen={isOpen} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <DialogBlurBackdrop />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <Dialog.Content className="mx-auto w-full max-w-sm">
-            <View className="mb-4 gap-1">
-              <Dialog.Title>Send feedback</Dialog.Title>
-              <Dialog.Description>
-                What&apos;s on your mind?
-              </Dialog.Description>
-            </View>
-
-            <TextArea
-              value={text}
-              onChangeText={(t: string) => { setText(t); setError(null); }}
-              placeholder="Tell us what you think..."
-              maxLength={MAX_LENGTH}
-              isDisabled={isSaving || sent}
-              className="min-h-30 mb-1"
-              accessibilityHint="Up to 1000 characters"
-            />
-
-            <AppText className="text-xs text-foreground/30 text-right mb-2">
-              {text.length} / {MAX_LENGTH}
-            </AppText>
-
-            {isRateLimited && (
-              <AppText className="text-xs text-foreground/50 mt-1 mb-2">
-                You&apos;ve sent feedback today — come back tomorrow.
-              </AppText>
-            )}
-
-            {error && (
-              <AppText className="text-xs text-danger/80 mt-1 mb-2">
-                {error}
-              </AppText>
-            )}
-
-            <View className="flex-row justify-end gap-3 mt-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onPress={() => onOpenChange(false)}
-                isDisabled={isSaving}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onPress={handleSend}
-                isDisabled={isDisabled}
-                accessibilityLabel="Send feedback"
-              >
-                {sent ? 'Sent.' : isSaving ? 'Sending...' : 'Send'}
-              </Button>
-            </View>
-          </Dialog.Content>
+          {isOpen && <FeedbackForm onOpenChange={onOpenChange} />}
         </KeyboardAvoidingView>
       </Dialog.Portal>
     </Dialog>

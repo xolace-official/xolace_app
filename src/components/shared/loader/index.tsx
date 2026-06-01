@@ -75,10 +75,8 @@ const LoaderRoot = React.forwardRef<View, LoaderProps>(
       },
     );
 
-    const contextValue = useMemo<LoaderContextValue>(
-      () => ({
-        progress: activeProgress,
-      }),
+    const contextValue: LoaderContextValue = useMemo(
+      () => ({ progress: activeProgress }),
       [activeProgress],
     );
 
@@ -103,13 +101,9 @@ const LoaderKeyframeView = React.forwardRef<
 >(({ keyframes, style, ...viewProps }, ref) => {
   const { progress } = useLoader();
 
-  const parsed = useMemo(() => parseKeyframes(keyframes), [keyframes]);
-
-  const numericKeys = useMemo(
-    () => Object.keys(parsed.numericRanges),
-    [parsed],
-  );
-  const colorKeys = useMemo(() => Object.keys(parsed.colorRanges), [parsed]);
+  const parsed = parseKeyframes(keyframes);
+  const numericKeys = Object.keys(parsed.numericRanges);
+  const colorKeys = Object.keys(parsed.colorRanges);
 
   const animatedStyle = useAnimatedStyle(() => {
     const p = progress.get();
@@ -149,10 +143,7 @@ const LoaderKeyframeView = React.forwardRef<
     return result;
   });
 
-  const keyframeStyle = useMemo(
-    () => [animatedStyle, style],
-    [animatedStyle, style],
-  );
+  const keyframeStyle = [animatedStyle, style];
 
   return <Animated.View ref={ref} style={keyframeStyle} {...viewProps} />;
 });

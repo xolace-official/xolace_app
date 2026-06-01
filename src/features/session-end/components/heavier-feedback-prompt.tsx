@@ -89,7 +89,6 @@ export const HeavierFeedbackPrompt = ({ sessionId, onDismiss }: Props) => {
     }
   };
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const textInputStyle = { fontSize: 14, color: foregroundColor, paddingHorizontal: 4, paddingVertical: 8 };
 
   // Sheet mode — clean layout without card wrapper or EaseView (sheet handles its own animation)
@@ -148,9 +147,7 @@ export const HeavierFeedbackPrompt = ({ sessionId, onDismiss }: Props) => {
   }
 
   // Inline mode — self-contained with EaseView enter/exit animation
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const outerInitial = { opacity: 0, translateY: 20 };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const outerAnimate = { opacity: exiting ? 0 : 1, translateY: exiting ? 10 : 0 };
   const outerTransition = exiting ? EASE_EXIT_TRANSITION : EASE_ENTER_TRANSITION;
 

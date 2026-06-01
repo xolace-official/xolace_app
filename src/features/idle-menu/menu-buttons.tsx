@@ -1,5 +1,4 @@
 import { View } from "react-native";
-import { useMemo } from "react";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { useRouter } from "expo-router";
 import { SymbolView, SFSymbol } from "expo-symbols";
@@ -70,12 +69,12 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
     },
   ];
 
-  const itemIconStyle = useMemo(() => ICON_DIM_STYLE, []);
+  const itemIconStyle = ICON_DIM_STYLE;
 
   const onContainerLayout = (e: {
     nativeEvent: { layout: { height: number } };
   }) => {
-    containerHeight.value = e.nativeEvent.layout.height;
+    containerHeight.set(e.nativeEvent.layout.height);
   };
 
   return (

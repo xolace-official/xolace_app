@@ -1,5 +1,4 @@
 import { Linking, View } from "react-native";
-import { useMemo } from "react";
 import { EaseView } from "react-native-ease/uniwind";
 import { PressableFeedback, useToast } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
@@ -58,23 +57,17 @@ export function ResourceItem({ resource, index, onTap }: Props) {
     resource.type === "email";
   const isXolace = resource.source === "xolace_support";
 
-  const accessibilityLabel = useMemo(
-    () =>
-      resource.type === "phone" || resource.type === "email"
-        ? `${resource.label}, ${resource.value}`
-        : resource.label,
-    [resource.label, resource.type, resource.value],
-  );
+  const accessibilityLabel =
+    resource.type === "phone" || resource.type === "email"
+      ? `${resource.label}, ${resource.value}`
+      : resource.label;
 
-  const transition = useMemo(
-    () => ({
-      type: "timing" as const,
-      duration: 500,
-      delay,
-      easing: EASE_EASING,
-    }),
-    [delay],
-  );
+  const transition = {
+    type: "timing" as const,
+    duration: 500,
+    delay,
+    easing: EASE_EASING,
+  };
 
   const handlePress = async () => {
     playSoftPress();

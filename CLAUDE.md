@@ -205,6 +205,47 @@ interfaces/    — TypeScript interfaces by domain
 types/         — Type definitions
 ```
 
+## Performance Best Practices
+
+### React Compiler (`reactCompiler: true` is enabled)
+
+The React Compiler is active in this project. It automatically memoizes values, objects, arrays, and functions via `useMemoCache`. This has important consequences:
+
+- **Never add `useMemo` or `useCallback` manually** for performance reasons. The compiler handles it.
+- **Never wrap components in `memo()`** for performance reasons. The compiler handles it.
+- The ESLint rules `react-perf/jsx-no-new-object-as-prop` and `react-perf/jsx-no-new-array-as-prop` are **turned off** — these rules predate the compiler and produce false positives here.
+
+**Exceptions — keep manual memoization in these specific cases:**
+
+| Case | Why |
+|------|-----|
+| `useMemo` on Context Provider `value` objects | Context subscriptions propagate to all consumers when the value reference changes; React Compiler does not stabilize across context boundaries the same way |
+| `useCallback` for functions used in `useEffect` dependency arrays | Removing them causes infinite effect loops regardless of compiler output |
+| `useCallback`/`useMemo` on functions/values with `try/finally` bodies | The compiler skips optimization for `try/finally` blocks |
+| `memo()` on components with `"use no memo"` directive | The directive explicitly opts the component out of compiler optimization |
+
+### Reanimated Shared Values (`react-native-reanimated` ≥ 4.x)
+
+Always use `.get()` / `.set()` instead of `.value` for reading and writing shared values. The `.value` property is not compliant with React Compiler standards.
+
+```tsx
+// Wrong — .value not React Compiler-compliant
+sv.value = newValue;
+const current = sv.value;
+
+// Correct
+sv.set(newValue);
+sv.set((prev) => prev + 1);
+const current = sv.get(); // only inside worklets/callbacks, never during render
+```
+
+### Styling
+
+- Default to Tailwind `className` props via Uniwind.
+- Use `StyleSheet.create()` for static styles that never change.
+- Inline style objects (e.g. `style={{ color: accentColor }}`) are fine when values are dynamic — React Compiler stabilizes them. No need to hoist to module-level constants or wrap in `useMemo`.
+- **Never hardcode hex colors** — always use CSS variables / `useThemeColor()`.
+
 <!-- convex-ai-start -->
 This project uses [Convex](https://convex.dev) as its backend.
 

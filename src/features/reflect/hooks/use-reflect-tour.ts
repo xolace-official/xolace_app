@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import { useEffect, useReducer, useRef } from 'react';
 import { useSessionMode } from '@/src/context/session-mode-context';
 import { posthog } from '@/src/config/posthog';
 import { useAppStore } from '@/src/store/store';
@@ -37,10 +37,7 @@ export function useReflectTour() {
   const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
   const { isNight } = useSessionMode();
 
-  const steps = useMemo(
-    () => (isNight ? TOUR_STEPS.slice(0, 3) : [...TOUR_STEPS]),
-    [isNight],
-  );
+  const steps = isNight ? TOUR_STEPS.slice(0, 3) : [...TOUR_STEPS];
 
   const [tourState, dispatch] = useReducer(tourReducer, {
     currentStepIndex: 0,
@@ -77,20 +74,20 @@ export function useReflectTour() {
     }
   }, [tourState.currentStepIndex, tourState.isActive, steps.length, setReflectTourSeen]);
 
-  const advance = useCallback(() => {
+  const advance = () => {
     if (!tourState.isActive || isAdvancing.current) return;
     isAdvancing.current = true;
     dispatch({ type: 'NEXT_STEP' });
     setTimeout(() => {
       isAdvancing.current = false;
     }, 600);
-  }, [tourState.isActive]);
+  };
 
-  const skip = useCallback(() => {
+  const skip = () => {
     dispatch({ type: 'SKIP_TOUR' });
     setReflectTourSeen(true);
     posthog.capture('tour_skipped', { at_step: tourState.currentStepIndex });
-  }, [tourState.currentStepIndex, setReflectTourSeen]);
+  };
 
   return { tourState, steps, advance, skip };
 }

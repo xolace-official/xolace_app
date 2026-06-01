@@ -33,11 +33,11 @@ export function HapticBeat({
     // Gate haptic on reducedMotion per plan §4.2 — dissociated states can be startled.
     if (!reducedMotion) {
       playSoftenPulse();
-      pulse.value = withRepeat(
+      pulse.set(withRepeat(
         withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.quad) }),
         -1,
         true,
-      );
+      ));
     }
 
     timerRef.current = setTimeout(onComplete, durationSeconds * 1000);
@@ -50,8 +50,8 @@ export function HapticBeat({
   }, []);
 
   const dotStyle = useAnimatedStyle(() => ({
-    opacity: 0.3 + pulse.value * 0.5,
-    transform: [{ scale: 0.85 + pulse.value * 0.3 }],
+    opacity: 0.3 + pulse.get() * 0.5,
+    transform: [{ scale: 0.85 + pulse.get() * 0.3 }],
   }));
 
   // With no haptic or pulse, reduced-motion users need a text anchor so the

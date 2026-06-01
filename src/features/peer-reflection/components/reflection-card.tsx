@@ -1,5 +1,4 @@
 import { SymbolView } from "expo-symbols";
-import { useMemo } from "react";
 import { View, ColorValue, StyleSheet } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Card, Chip, cn, PressableFeedback } from "heroui-native";
@@ -47,15 +46,12 @@ export const ReflectionCard = ({
     onToggleResonance();
   };
 
-  const easeTransition = useMemo(
-    () => ({
-      type: "timing" as const,
-      duration: 500,
-      delay: 200 + index * 150,
-      easing: [0.455, 0.03, 0.515, 0.955] as [number, number, number, number],
-    }),
-    [index],
-  );
+  const easeTransition = {
+    type: "timing" as const,
+    duration: 500,
+    delay: 200 + index * 150,
+    easing: [0.455, 0.03, 0.515, 0.955] as [number, number, number, number],
+  };
 
   return (
     <EaseView

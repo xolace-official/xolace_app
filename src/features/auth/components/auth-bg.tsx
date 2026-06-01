@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -32,21 +32,18 @@ export const AuthBg = () => {
   const opacity = useSharedValue(0.4);
 
   useEffect(() => {
-    opacity.value = withRepeat(
+    opacity.set(withRepeat(
       withTiming(0.7, { duration: 6000, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
-    );
+    ));
   }, [opacity]);
 
   const pulseStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
+    opacity: opacity.get(),
   }));
 
-  const pulseContainerStyle = useMemo(
-    () => [StyleSheet.absoluteFill, pulseStyle],
-    [pulseStyle],
-  );
+  const pulseContainerStyle = [StyleSheet.absoluteFill, pulseStyle];
 
   return (
     <>

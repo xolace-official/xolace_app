@@ -1,7 +1,6 @@
 import { Image } from "expo-image";
 import { Card, PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { useMemo } from "react";
 import { withUniwind } from "uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 
@@ -19,20 +18,14 @@ export const CardContent = () => {
   const warningColor = useThemeColor("warning");
   const successColor = useThemeColor("success");
 
-  const firstRippleAnimation = useMemo(
-    () => ({
-      backgroundColor: { value: warningColor },
-      opacity: { value: [0, 0.2, 0] as [number, number, number] },
-    }),
-    [warningColor],
-  );
+  const firstRippleAnimation = {
+    backgroundColor: { value: warningColor },
+    opacity: { value: [0, 0.2, 0] as [number, number, number] },
+  };
 
-  const secondRippleAnimation = useMemo(
-    () => ({
-      backgroundColor: { value: successColor },
-    }),
-    [successColor],
-  );
+  const secondRippleAnimation = {
+    backgroundColor: { value: successColor },
+  };
 
   return (
     <View className="flex-row gap-4">

@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react";
+import { useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -24,27 +24,27 @@ const BreathingOrbComponent = () => {
 
   useEffect(() => {
     if (reduceMotion) {
-      scale.value = 1.15;
-      coreOpacity.value = 0.6;
-      haloOpacity.value = 0.12;
+      scale.set(1.15);
+      coreOpacity.set(0.6);
+      haloOpacity.set(0.12);
       return;
     }
 
-    scale.value = withRepeat(
+    scale.set(withRepeat(
       withTiming(1.3, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
-    );
-    coreOpacity.value = withRepeat(
+    ));
+    coreOpacity.set(withRepeat(
       withTiming(0.8, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
-    );
-    haloOpacity.value = withRepeat(
+    ));
+    haloOpacity.set(withRepeat(
       withTiming(0.15, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
-    );
+    ));
 
     return () => {
       cancelAnimation(scale);
@@ -54,7 +54,7 @@ const BreathingOrbComponent = () => {
   }, [scale, coreOpacity, haloOpacity, reduceMotion]);
 
   const breathStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: scale.get() }],
   }));
 
   const haloStyle = useAnimatedStyle(() => ({
@@ -63,7 +63,7 @@ const BreathingOrbComponent = () => {
     height: HALO_SIZE,
     borderRadius: HALO_SIZE / 2,
     backgroundColor: accentColor,
-    opacity: haloOpacity.value,
+    opacity: haloOpacity.get(),
   }));
 
   const coreStyle = useAnimatedStyle(() => ({
@@ -71,7 +71,7 @@ const BreathingOrbComponent = () => {
     height: CORE_SIZE,
     borderRadius: CORE_SIZE / 2,
     backgroundColor: accentColor,
-    opacity: coreOpacity.value,
+    opacity: coreOpacity.get(),
   }));
 
   return (
@@ -89,7 +89,7 @@ const BreathingOrbComponent = () => {
   );
 };
 
-export const BreathingOrb = memo(BreathingOrbComponent);
+export const BreathingOrb = BreathingOrbComponent;
 
 const styles = StyleSheet.create({
   orbContainer: {

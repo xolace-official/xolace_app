@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { Uniwind, useUniwind } from 'uniwind';
 
 /**
@@ -44,64 +44,32 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { theme } = useUniwind();
 
-  const isLight = useMemo(() => {
-    return theme === 'light' || theme.endsWith('-light');
+  const value = useMemo(() => {
+    const isLight = theme === 'light' || theme.endsWith('-light');
+    const isDark = theme === 'dark' || theme.endsWith('-dark');
+
+    const setTheme = (newTheme: ThemeName) => {
+      Uniwind.setTheme(newTheme);
+    };
+
+    /** Toggles between light/dark within the current color theme. Add cases here for new themes. */
+    const toggleTheme = () => {
+      switch (theme) {
+        case 'light': Uniwind.setTheme('dark'); break;
+        case 'dark': Uniwind.setTheme('light'); break;
+        case 'quiet-light': Uniwind.setTheme('quiet-dark'); break;
+        case 'quiet-dark': Uniwind.setTheme('quiet-light'); break;
+        case 'reverie-light': Uniwind.setTheme('reverie-dark'); break;
+        case 'reverie-dark': Uniwind.setTheme('reverie-light'); break;
+        case 'human-light': Uniwind.setTheme('human-dark'); break;
+        case 'human-dark': Uniwind.setTheme('human-light'); break;
+        case 'nightly-light': Uniwind.setTheme('nightly-dark'); break;
+        case 'nightly-dark': Uniwind.setTheme('nightly-light'); break;
+      }
+    };
+
+    return { currentTheme: theme, isLight, isDark, setTheme, toggleTheme };
   }, [theme]);
-
-  const isDark = useMemo(() => {
-    return theme === 'dark' || theme.endsWith('-dark');
-  }, [theme]);
-
-  const setTheme = useCallback((newTheme: ThemeName) => {
-    Uniwind.setTheme(newTheme);
-  }, []);
-
-  /** Toggles between light/dark within the current color theme. Add cases here for new themes. */
-  const toggleTheme = useCallback(() => {
-    switch (theme) {
-      case 'light':
-        Uniwind.setTheme('dark');
-        break;
-      case 'dark':
-        Uniwind.setTheme('light');
-        break;
-      case 'quiet-light':
-        Uniwind.setTheme('quiet-dark');
-        break;
-      case 'quiet-dark':
-        Uniwind.setTheme('quiet-light');
-        break;
-      case 'reverie-light':
-        Uniwind.setTheme('reverie-dark');
-        break;
-      case 'reverie-dark':
-        Uniwind.setTheme('reverie-light');
-        break;
-      case 'human-light':
-        Uniwind.setTheme('human-dark');
-        break;
-      case 'human-dark':
-        Uniwind.setTheme('human-light');
-        break;
-      case 'nightly-light':
-        Uniwind.setTheme('nightly-dark');
-        break;
-      case 'nightly-dark':
-        Uniwind.setTheme('nightly-light');
-        break;
-    }
-  }, [theme]);
-
-  const value = useMemo(
-    () => ({
-      currentTheme: theme,
-      isLight,
-      isDark,
-      setTheme,
-      toggleTheme,
-    }),
-    [theme, isLight, isDark, setTheme, toggleTheme]
-  );
 
   return (
     <AppThemeContext.Provider value={value}>

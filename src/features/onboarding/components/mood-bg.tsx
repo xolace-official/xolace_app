@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React from "react";
 import { View, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
@@ -13,10 +13,7 @@ const START_TOP_LEFT = { x: 0, y: 0 };
 const END_BOTTOM_RIGHT = { x: 1, y: 1 };
 
 const MoodBgComponent = ({ mood }: Props) => {
-  const colors = useMemo<readonly [string, string, string]>(
-    () => [mood.colors[0] + "40", mood.colors[1] + "30", mood.colors[2] + "20"],
-    [mood.colors],
-  );
+  const colors: readonly [string, string, string] = [mood.colors[0] + "40", mood.colors[1] + "30", mood.colors[2] + "20"];
 
   return (
     <View style={StyleSheet.absoluteFill}>
@@ -34,4 +31,4 @@ const MoodBgComponent = ({ mood }: Props) => {
   );
 };
 
-export const MoodBg = memo(MoodBgComponent);
+export const MoodBg = MoodBgComponent;

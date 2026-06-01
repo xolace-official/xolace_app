@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { EaseView } from "react-native-ease/uniwind";
@@ -33,13 +33,21 @@ export function SessionEndNotifNudge() {
   useEffect(() => {
     if (notifNudgeDismissed) return;
 
+    let cancelled = false;
+    let t: ReturnType<typeof setTimeout> | undefined;
+
     Notifications.getPermissionsAsync().then(({ status }) => {
+      if (cancelled) return;
       if (status === "undetermined") {
         setMounted(true);
-        const t = setTimeout(() => setShow(true), 900);
-        return () => clearTimeout(t);
+        t = setTimeout(() => setShow(true), 900);
       }
     });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
   }, [notifNudgeDismissed]);
 
   const dismiss = () => {
@@ -68,17 +76,11 @@ export function SessionEndNotifNudge() {
     dismiss();
   };
 
-  const nudgeAnimate = useMemo(
-    () => ({ opacity: show ? 1 : 0, translateY: show ? 0 : height }),
-    [height, show],
-  );
-  const containerInsetStyle = useMemo(
-    () => ({
-      paddingTop: insets.top,
-      paddingBottom: insets.bottom + 8,
-    }),
-    [insets.bottom, insets.top],
-  );
+  const nudgeAnimate = { opacity: show ? 1 : 0, translateY: show ? 0 : height };
+  const containerInsetStyle = {
+    paddingTop: insets.top,
+    paddingBottom: insets.bottom + 8,
+  };
 
   if (!mounted) return null;
 

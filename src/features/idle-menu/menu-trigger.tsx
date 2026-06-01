@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet } from "react-native";
-import { useMemo } from "react";
 import Animated, {
   SharedValue,
   useAnimatedStyle,
@@ -21,20 +20,12 @@ type Props = {
 export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
   const foregroundColor = useThemeColor("foreground") as string;
 
-  const borderStyle = useMemo(
-    () => ({ borderColor: foregroundColor + "28" }),
-    [foregroundColor],
-  );
-
   const rStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(isOpen.value ? 0.5 : 1),
-    transform: [{ scale: withTiming(isOpen.value ? 0.6 : 1) }],
+    opacity: withTiming(isOpen.get() ? 0.5 : 1),
+    transform: [{ scale: withTiming(isOpen.get() ? 0.6 : 1) }],
   }));
 
-  const triggerStyle = useMemo(
-    () => [styles.trigger, borderStyle, rStyle],
-    [borderStyle, rStyle],
-  );
+  const triggerStyle = [styles.trigger, rStyle];
 
   return (
     <AnimatedPressable
@@ -54,6 +45,7 @@ export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
           ? "Closes navigation options"
           : "Opens navigation options: Today, Timeline, Settings"
       }
+      className="border-foreground/16"
       style={triggerStyle}
     >
       <GlassView

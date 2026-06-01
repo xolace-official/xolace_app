@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { useMutation } from "convex/react";
@@ -36,12 +36,11 @@ export function useQuoteNotifications() {
   const [state, setState] = useState<NotifSetupState>("idle");
   const updateQuotePrefs = useMutation(api.preferences.updateQuotePreferences);
 
-  const scheduleNotification = useCallback(
-    async (
-      themes: string[],
-      notificationEnabled: boolean,
-      notificationTime?: string
-    ) => {
+  const scheduleNotification = async (
+    themes: string[],
+    notificationEnabled: boolean,
+    notificationTime?: string
+  ) => {
       // Always save preferences first
       await updateQuotePrefs({ themes, notificationEnabled, notificationTime });
 
@@ -113,9 +112,7 @@ export function useQuoteNotifications() {
 
       setState("scheduled");
       return { granted: true };
-    },
-    [updateQuotePrefs]
-  );
+  };
 
   return { state, scheduleNotification };
 }

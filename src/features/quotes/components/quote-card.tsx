@@ -56,17 +56,11 @@ export function QuoteCard({
     onReact(reaction === "not_today" ? null : "not_today");
   };
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const topBarStyle = { paddingTop: top + 56, paddingBottom: 120 };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const accentLineStyle = { height: 1.5, backgroundColor: `${accentColor}50` };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const labelStyle = { color: `${foregroundColor}40` };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const nudgePillStyle = { backgroundColor: `${accentColor}18`, borderWidth: 1, borderColor: `${accentColor}35`, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 12, flexDirection: "row" as const, alignItems: "center" as const, alignSelf: "flex-start" as const, gap: 6 };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const nudgeTextStyle = { color: `${accentColor}CC` };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const bottomBarStyle = { paddingBottom: bottom + 32 };
 
   return (
@@ -168,11 +162,8 @@ function ActionButton({
   isDisabled,
   onPress,
 }: ActionButtonProps) {
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const glassStyle = { width: 52, height: 52, borderRadius: 26, alignItems: "center" as const, justifyContent: "center" as const, backgroundColor: isActive ? `${accentColor}18` : `${color}08`, borderWidth: isActive ? 1.5 : 1, borderColor: isActive ? `${accentColor}60` : `${color}12` };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const symbolName = { ios: iosIcon as any, android: androidIcon as any };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const labelStyle = { color: isActive ? accentColor : `${color}30` };
 
   return (

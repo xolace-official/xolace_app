@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, type ViewStyle, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
@@ -66,10 +66,7 @@ export const ReflectScreen = () => {
     handleDismissTyping,
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
-  const safeAreaStyle = useMemo(
-    () => ({ paddingTop: insets.top, paddingBottom: insets.bottom }),
-    [insets.bottom, insets.top],
-  );
+  const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
   const context = useQuery(api.users.getFullContext);
   const updatePreferences = useMutation(api.preferences.update);
   const { current, previous, isTransitioning, onOutgoingComplete } =
@@ -204,36 +201,27 @@ export const ReflectScreen = () => {
     ? (SCREEN_TRANSITIONS[previous] ?? DEFAULT_SCREEN_TRANSITION)
     : null;
 
-  const absoluteWithInsets = useMemo<ViewStyle>(
-    () => ({
-      position: "absolute",
-      top: insets.top,
-      left: 0,
-      right: 0,
-      bottom: insets.bottom,
-    }),
-    [insets.bottom, insets.top],
-  );
+  const absoluteWithInsets: ViewStyle = {
+    position: "absolute",
+    top: insets.top,
+    left: 0,
+    right: 0,
+    bottom: insets.bottom,
+  };
 
   const isIdle = current === "idle";
-  const handleIdleHelpPress = useCallback(() => {
+  const handleIdleHelpPress = () => {
     router.push("/crisis-resources?from=idle_button");
-  }, [router]);
-  const idleHeaderRight = useCallback(
-    () => <HeaderRight onPress={handleIdleHelpPress} />,
-    [handleIdleHelpPress],
-  );
-  const stackScreenOptions = useMemo(
-    () => ({
-      headerShown: isIdle,
-      headerTransparent: true,
-      headerTitle: "",
-      headerShadowVisible: false,
-      headerBackVisible: false,
-      headerRight: isIdle ? idleHeaderRight : undefined,
-    }),
-    [idleHeaderRight, isIdle],
-  );
+  };
+  const idleHeaderRight = () => <HeaderRight onPress={handleIdleHelpPress} />;
+  const stackScreenOptions = {
+    headerShown: isIdle,
+    headerTransparent: true,
+    headerTitle: "",
+    headerShadowVisible: false,
+    headerBackVisible: false,
+    headerRight: isIdle ? idleHeaderRight : undefined,
+  };
 
   if (isLoading) {
     return (

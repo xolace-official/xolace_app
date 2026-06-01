@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   interpolate,
@@ -59,30 +59,34 @@ const BUTTON_TRANSITION = {
   easing: EASE,
 } as const;
 
+const styles = StyleSheet.create({
+  emberContainer: { width: 160, height: 160, marginBottom: 40 },
+  glowSource: { width: 80, height: 80, left: 40, bottom: -20 },
+});
+
 const EmberParticle = ({ config, color }: EmberParticleProps) => {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withDelay(
+    progress.set(withDelay(
       config.delay,
       withRepeat(
         withTiming(1, { duration: config.duration, easing: Easing.linear }),
         -1,
         false,
       ),
-    );
+    ));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateY: interpolate(progress.value, [0, 1], [0, -config.rise]) },
-      { translateX: interpolate(progress.value, [0, 1], [0, config.driftX]) },
+      { translateY: interpolate(progress.get(), [0, 1], [0, -config.rise]) },
+      { translateX: interpolate(progress.get(), [0, 1], [0, config.driftX]) },
     ],
-    opacity: interpolate(progress.value, [0, 0.12, 0.55, 1], [0, 0.6, 0.35, 0]),
+    opacity: interpolate(progress.get(), [0, 0.12, 0.55, 1], [0, 0.6, 0.35, 0]),
   }));
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const baseStyle = {
     position: "absolute" as const,
     width: config.size,
@@ -106,14 +110,14 @@ export const ContributedConfirmation = ({ onDone }: Props) => {
   return (
     <View className="flex-1 items-center justify-center px-8 pb-20">
       {/* Ember particle field */}
-      <View style={{ width: 160, height: 160, marginBottom: 40 }}>
+      <View style={styles.emberContainer}>
         {/* Soft glow source at base */}
         <View
-          className="absolute rounded-full bg-accent/[0.08]"
-          style={{ width: 80, height: 80, left: 40, bottom: -20 }}
+          className="absolute rounded-full bg-accent/8"
+          style={styles.glowSource}
         />
-        {PARTICLES.map((config, i) => (
-          <EmberParticle key={i} config={config} color={accentColor} />
+        {PARTICLES.map((config) => (
+          <EmberParticle key={config.x} config={config} color={accentColor} />
         ))}
       </View>
 

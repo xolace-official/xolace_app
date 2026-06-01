@@ -1,5 +1,4 @@
 import { StyleSheet, View } from "react-native";
-import { useMemo } from "react";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -57,7 +56,7 @@ const PathOption = ({
 }: PathOptionProps) => {
   const rRow = useAnimatedStyle(() => ({
     opacity: interpolate(
-      highlight.value,
+      highlight.get(),
       [0, 1],
       [0.38, 1],
       Extrapolation.CLAMP,
@@ -66,8 +65,8 @@ const PathOption = ({
 
   // Accent bar on the left — scales in when highlighted, brightens when settled
   const rBar = useAnimatedStyle(() => {
-    const h = highlight.value;
-    const s = settled.value;
+    const h = highlight.get();
+    const s = settled.get();
     return {
       width: interpolate(h, [0, 1], [0, 2.5], Extrapolation.CLAMP),
       opacity: interpolate(s, [0, 1], [0.5, 1], Extrapolation.CLAMP),
@@ -77,16 +76,13 @@ const PathOption = ({
 
   // Subtle accent bg behind the row when settled
   const rBg = useAnimatedStyle(() => ({
-    opacity: interpolate(settled.value, [0, 1], [0, 0.07], Extrapolation.CLAMP),
+    opacity: interpolate(settled.get(), [0, 1], [0, 0.07], Extrapolation.CLAMP),
     backgroundColor: accent,
   }));
 
-  const rowStyle = useMemo(() => [styles.row, rRow], [rRow]);
-  const rowBgStyle = useMemo(
-    () => [StyleSheet.absoluteFill, styles.rowBg, rBg],
-    [rBg],
-  );
-  const barStyle = useMemo(() => [styles.bar, rBar], [rBar]);
+  const rowStyle = [styles.row, rRow];
+  const rowBgStyle = [StyleSheet.absoluteFill, styles.rowBg, rBg];
+  const barStyle = [styles.bar, rBar];
 
   return (
     <Animated.View style={rowStyle}>
@@ -117,43 +113,43 @@ export const PathsPreview = ({ isActive }: Props) => {
 
   const fade = (sv: SharedValue<number>, to: number, ms = 180) => {
     "worklet";
-    sv.value = withTiming(to, {
+    sv.set(withTiming(to, {
       duration: ms,
       easing: Easing.inOut(Easing.quad),
-    });
+    }));
   };
 
   useAnimatedReaction(
-    () => isActive.value,
+    () => isActive.get(),
     (active, prev) => {
       if (active && !prev) {
-        h0.value = 0;
-        h1.value = 0;
-        h2.value = 0;
-        settled.value = 0;
-        s0.value = 0;
-        s1.value = 0;
-        progress.value = 0;
-        progress.value = withRepeat(
+        h0.set(0);
+        h1.set(0);
+        h2.set(0);
+        settled.set(0);
+        s0.set(0);
+        s1.set(0);
+        progress.set(0);
+        progress.set(withRepeat(
           withTiming(1, { duration: CYCLE, easing: Easing.linear }),
           -1,
           false,
-        );
+        ));
       } else if (!active) {
         cancelAnimation(progress);
-        h0.value = 0;
-        h1.value = 0;
-        h2.value = 0;
-        settled.value = 0;
-        s0.value = 0;
-        s1.value = 0;
-        progress.value = 0;
+        h0.set(0);
+        h1.set(0);
+        h2.set(0);
+        settled.set(0);
+        s0.set(0);
+        s1.set(0);
+        progress.set(0);
       }
     },
   );
 
   useAnimatedReaction(
-    () => progress.value,
+    () => progress.get(),
     (p, prev) => {
       if (prev !== null && p < prev) return; // loop reset
 

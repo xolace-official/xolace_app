@@ -170,7 +170,6 @@ export const AuthScreen = () => {
   }, [startGoogleAuthenticationFlow, getOrCreate, posthog]);
 
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
 
   return (

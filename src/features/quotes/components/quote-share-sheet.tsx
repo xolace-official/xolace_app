@@ -50,21 +50,16 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
   const previewWidth = width * 0.72;
   const previewHeight = previewWidth * (16 / 9);
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const backdropStyle = { backgroundColor };
-  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
   const gradientTopColors: [string, string] = [
     `${accentColor}18`,
     "transparent",
   ];
-  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
   const gradientBottomColors: [string, string] = [
     "transparent",
     `${accentColor}22`,
   ];
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const headerStyle = { paddingTop: top + 16, paddingBottom: 20 };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const glassStyle = {
     width: 40,
     height: 40,
@@ -73,9 +68,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
     justifyContent: "center" as const,
     backgroundColor: `${foregroundColor}0D`,
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const shareLabelStyle = { color: `${foregroundColor}60` };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const previewContainerStyle = {
     width: previewWidth,
     height: previewHeight,
@@ -83,11 +76,8 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
     overflow: "hidden" as const,
     backgroundColor: surfaceColor,
   };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const preparingTextStyle = { color: `${foregroundColor}40` };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const imageSource = { uri: imageUri ?? "" };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const socialRowStyle = { marginTop: 28, paddingBottom: bottom + 40 };
 
 

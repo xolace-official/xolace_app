@@ -1,16 +1,12 @@
-import { useMemo } from "react";
 import { View, StyleSheet } from "react-native";
 import { useThemeColor } from "heroui-native";
 
 export const PresenceDot = () => {
   const accentColor = useThemeColor("accent");
-  const dotStyle = useMemo(
-    () => ({
-      ...styles.base,
-      shadowColor: accentColor,
-    }),
-    [accentColor],
-  );
+  const dotStyle = {
+    ...styles.base,
+    shadowColor: accentColor,
+  };
 
   return <View className="h-3 w-3 rounded-full bg-accent" style={dotStyle} />;
 };

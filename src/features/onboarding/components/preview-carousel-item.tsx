@@ -1,4 +1,3 @@
-import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -72,16 +71,12 @@ const Item = ({
 
    
   const cardSizeStyle = { position: 'absolute' as const, width: cardWidth, height: cardHeight, alignItems: 'center' as const };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const blurStyle = { width: cardWidth, height: cardHeight, borderRadius: 28, borderCurve: 'continuous' as const, overflow: 'hidden' as const };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const windowStyle = { position: 'absolute' as const, top: WINDOW_INSET, left: WINDOW_INSET, right: WINDOW_INSET, height: windowHeight, borderRadius: 18, borderCurve: 'continuous' as const };
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const captionStyle = { position: 'absolute' as const, top: WINDOW_INSET + windowHeight, left: 0, right: 0, bottom: 0, alignItems: 'center' as const, justifyContent: 'center' as const, paddingHorizontal: 16, gap: 4 };
 
   return (
     <Animated.View
-      // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
       style={[cardSizeStyle, rStyle]}
     >
       <BlurView
@@ -122,7 +117,7 @@ const Item = ({
 };
 
 Item.displayName = 'PreviewCarouselItem';
-export const PreviewCarouselItem = memo(Item);
+export const PreviewCarouselItem = Item;
 
 const styles = StyleSheet.create({
   absoluteOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 28, borderCurve: 'continuous' },

@@ -1,4 +1,3 @@
-import { memo, useMemo } from "react";
 import { View, StyleSheet } from "react-native";
 import Animated, { cubicBezier } from "react-native-reanimated";
 
@@ -103,24 +102,20 @@ const STAR_ANIMATION_FILL_MODE = "forwards";
 const STAR_ANIMATION_ITERATION_COUNT = "infinite";
 
 const SparkleStarsComponent = ({ color }: Props) => {
-  const starStylesByIndex = useMemo(
-    () =>
-      STARS.map((star) => [
-        starStyles.star,
-        star.position,
-        {
-          fontSize: star.fontSize,
-          color,
-          animationDelay: star.delay,
-          animationDuration: star.duration,
-          animationFillMode: STAR_ANIMATION_FILL_MODE,
-          animationName: starKeyframes(star.x, star.y, star.rotate, star.scale),
-          animationTimingFunction: star.easing,
-          animationIterationCount: STAR_ANIMATION_ITERATION_COUNT,
-        } as const,
-      ]),
-    [color],
-  );
+  const starStylesByIndex = STARS.map((star) => [
+    starStyles.star,
+    star.position,
+    {
+      fontSize: star.fontSize,
+      color,
+      animationDelay: star.delay,
+      animationDuration: star.duration,
+      animationFillMode: STAR_ANIMATION_FILL_MODE,
+      animationName: starKeyframes(star.x, star.y, star.rotate, star.scale),
+      animationTimingFunction: star.easing,
+      animationIterationCount: STAR_ANIMATION_ITERATION_COUNT,
+    } as const,
+  ]);
 
   return (
     <View
@@ -142,7 +137,7 @@ const SparkleStarsComponent = ({ color }: Props) => {
   );
 };
 
-export const SparkleStars = memo(SparkleStarsComponent);
+export const SparkleStars = SparkleStarsComponent;
 
 const starStyles = StyleSheet.create({
   wrapper: {

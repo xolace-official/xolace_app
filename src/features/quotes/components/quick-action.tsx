@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { View } from "react-native";
 import { GlassView } from "expo-glass-effect";
 import { PressableFeedback } from "heroui-native";
@@ -20,27 +19,17 @@ export function QuickAction({
   foregroundColor,
   onPress,
 }: Props) {
-  const glassStyle = useMemo(
-    () => ({
-      width: 56,
-      height: 56,
-      borderRadius: 16,
-      alignItems: "center" as const,
-      justifyContent: "center" as const,
-      backgroundColor: `${foregroundColor}08`,
-    }),
-    [foregroundColor],
-  );
+  const glassStyle = {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: `${foregroundColor}08`,
+  };
 
-  const iconName = useMemo(
-    () => ({ ios: iosIcon as any, android: androidIcon as any }),
-    [iosIcon, androidIcon],
-  );
-
-  const labelStyle = useMemo(
-    () => ({ color: `${foregroundColor}50` }),
-    [foregroundColor],
-  );
+  const iconName = { ios: iosIcon as any, android: androidIcon as any };
+  const labelStyle = { color: `${foregroundColor}50` };
 
   return (
     <PressableFeedback onPress={onPress} accessibilityLabel={label} hitSlop={8}>

@@ -79,7 +79,6 @@ const ThemeCircle: React.FC<{
     themeGradients[theme.id as keyof typeof themeGradients] ??
     themeGradients.default;
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const activeRingStyle = { position: 'absolute' as const, width: 68, height: 68, borderRadius: 34, borderWidth: 2, borderColor: themeColorAccent, top: 0, left: 0 };
 
   return (
@@ -129,7 +128,6 @@ export default function Themes() {
     playSoftPress();
   };
 
-  // eslint-disable-next-line react-perf/jsx-no-new-object-as-prop
   const scrollContentStyle = { paddingTop: headerHeight, paddingBottom: 12 };
 
   return (
