@@ -1,49 +1,120 @@
-import { View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
-import { PressableFeedback } from "heroui-native";
+import { SymbolView } from "expo-symbols";
+import { EaseView } from "react-native-ease/uniwind";
+import { Button, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 
-const PRIVACY_LINES = [
-  "Stays on your device",
-  "We never see who",
-  "Nothing sends on its own",
-];
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const FADE_OUT = { opacity: 0 };
+const FADE_IN = { opacity: 1 };
+const SLIDE_OUT = { opacity: 0, translateY: 14 };
+const SLIDE_IN = { opacity: 1, translateY: 0 };
 
-type Props = {
-  onBegin: () => void;
-};
+const PRIVACY_ITEMS = [
+  {
+    symbol: { ios: "lock.shield.fill", android: "security", web: "security" },
+    title: "Stays on your device",
+    sub: "We never store who you're writing to.",
+  },
+  {
+    symbol: { ios: "eye.slash.fill", android: "visibility_off", web: "visibility_off" },
+    title: "We never see who",
+    sub: "The recipient lives only in your hands.",
+  },
+  {
+    symbol: { ios: "hand.raised.fill", android: "back_hand", web: "back_hand" },
+    title: "Nothing sends itself",
+    sub: "Only you decide if it goes.",
+  },
+] as const;
+
+const styles = StyleSheet.create({
+  mascot: { width: "100%", height: "100%" },
+  scrollContainer: { paddingHorizontal: 32, paddingTop: 24, paddingBottom: 16, gap: 28 }
+});
+
+type Props = { onBegin: () => void };
 
 export function BridgeIntro({ onBegin }: Props) {
+  const accentColor = useThemeColor("accent") as string;
+  const iconBg = (useThemeColor("foreground") as string) + "12";
+
   return (
-    <View className="flex-1 px-8 justify-between">
-      <View className="flex-1 justify-center items-center gap-6">
-        <Image
-          source={require("@/assets/images/flux/jump-love-bgremove.png")}
-          style={{ width: "65%", aspectRatio: 1 }}
-          contentFit="contain"
-        />
-        <AppText className="font-serif text-3xl text-foreground text-center leading-10">
-          A bridge for what you&apos;ve been carrying.
-        </AppText>
-        <View className="gap-2">
-          {PRIVACY_LINES.map((line) => (
-            <AppText key={line} className="text-sm font-light text-foreground/40 text-center">
-              {line}
-            </AppText>
+    <View className="flex-1">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+
+        {/* Mascot */}
+        <EaseView
+          initialAnimate={FADE_OUT}
+          animate={FADE_IN}
+          transition={{ type: "timing", duration: 700, easing: EASING }}
+          className="h-44 items-center"
+        >
+          <Image
+            source={require("@/assets/images/flux/jump-love-bgremove.png")}
+            style={styles.mascot}
+            contentFit="contain"
+          />
+        </EaseView>
+
+        {/* Headline + problem statement */}
+        <EaseView
+          initialAnimate={SLIDE_OUT}
+          animate={SLIDE_IN}
+          transition={{ type: "timing", duration: 500, delay: 200, easing: EASING }}
+          className="gap-3"
+        >
+          <AppText className="text-3xl leading-10 text-foreground">
+            Felt it.{"\n"}Now find the words.
+          </AppText>
+          <AppText className="text-sm font-light leading-6 text-foreground/50">
+            Processing is one thing. Telling someone who matters is another.
+            Trusted Bridge turns what you felt into something you can actually say.
+          </AppText>
+        </EaseView>
+
+        {/* Privacy rows */}
+        <View className="gap-4">
+          {PRIVACY_ITEMS.map(({ symbol, title, sub }, i) => (
+            <EaseView
+              key={title}
+              initialAnimate={SLIDE_OUT}
+              animate={SLIDE_IN}
+              transition={{ type: "timing", duration: 500, delay: 400 + i * 100, easing: EASING }}
+              className="flex-row items-center gap-4"
+            >
+              <View
+                className="w-10 h-10 rounded-2xl items-center justify-center shrink-0"
+                style={{ backgroundColor: iconBg }}
+              >
+                <SymbolView name={symbol} size={18} tintColor={accentColor} />
+              </View>
+              <View className="flex-1 gap-0.5">
+                <AppText className="text-sm font-medium text-foreground">{title}</AppText>
+                <AppText className="text-xs font-light text-foreground/40 leading-4">{sub}</AppText>
+              </View>
+            </EaseView>
           ))}
         </View>
-      </View>
 
-      <View className="pb-8">
-        <PressableFeedback
-          onPress={onBegin}
-          accessibilityLabel="Begin"
-          accessibilityRole="button"
-          className="w-full rounded-2xl border border-accent/30 bg-accent/10 px-5 py-4"
-        >
-          <AppText className="text-base text-center text-accent font-medium">Begin</AppText>
-        </PressableFeedback>
-      </View>
+      </ScrollView>
+
+      {/* Fixed CTA */}
+      <EaseView
+        initialAnimate={FADE_OUT}
+        animate={FADE_IN}
+        transition={{ type: "timing", duration: 400, delay: 750, easing: EASING }}
+        className="px-8 pb-10 pt-4"
+      >
+        <Button variant="primary" size="lg" onPress={onBegin} className="w-full">
+          Begin
+        </Button>
+      </EaseView>
     </View>
   );
 }

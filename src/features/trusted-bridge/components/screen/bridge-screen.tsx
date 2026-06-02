@@ -3,8 +3,7 @@ import { Pressable, ScrollView, Share, View } from "react-native";
 import { useNavigation, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
-import { PressableFeedback, TextField, TextArea, Input } from "heroui-native";
-import { useThemeColor } from "heroui-native";
+import { Button, PressableFeedback, TextField, TextArea, Input, useThemeColor } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { usePostHog } from "posthog-react-native";
 import { AppText } from "@/src/components/shared/app-text";
@@ -87,53 +86,74 @@ export function BridgeScreen({ sessionId }: Props) {
 
       {/* ── Recipient step ── */}
       {step === "recipient" && (
-        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
-          <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_IN} className="flex-1">
-            <View className="flex-row items-center px-5 pt-4 pb-2">
-              <Pressable onPress={handleDismiss} hitSlop={12} accessibilityLabel="Close" accessibilityRole="button">
-                <SymbolView name={{ ios: "xmark", android: "close", web: "close" }} size={18} tintColor={mutedColor} />
-              </Pressable>
-            </View>
-
-            <View className="px-8 pt-6 gap-8">
-              <AppText className="font-serif text-3xl text-foreground leading-10">
-                Who would you like to tell?
-              </AppText>
-              <TextField>
-                <Input value={name} onChangeText={setName} placeholder="their name or how you think of them" autoFocus />
-              </TextField>
-              <View className="flex-row flex-wrap gap-2">
-                {RELATIONSHIPS.map((rel) => (
-                  <PressableFeedback
-                    key={rel}
-                    onPress={() => setRelationship(relationship === rel ? null : rel)}
-                    accessibilityLabel={rel}
-                    accessibilityRole="button"
-                    className={`rounded-full border px-4 py-2 ${relationship === rel ? "border-accent/40 bg-accent/10" : "border-border/50 bg-surface/30"}`}
-                  >
-                    <AppText className={`text-sm ${relationship === rel ? "text-accent font-medium" : "text-foreground/50 font-light"}`}>
-                      {rel}
-                    </AppText>
-                  </PressableFeedback>
-                ))}
+        <View className="flex-1">
+          <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_IN}>
+              <View className="flex-row items-center px-5 pt-4 pb-2">
+                <Pressable onPress={handleDismiss} hitSlop={12} accessibilityLabel="Close" accessibilityRole="button">
+                  <SymbolView name={{ ios: "xmark", android: "close", web: "close" }} size={18} tintColor={mutedColor} />
+                </Pressable>
               </View>
-            </View>
 
-            <View className="flex-1" />
-            <View className="px-8 pb-10">
-              <PressableFeedback
-                onPress={handleWriteTogether}
-                accessibilityLabel="Write this together"
-                accessibilityRole="button"
-                className={`w-full rounded-2xl border px-5 py-4 ${name.trim() ? "border-accent/40 bg-accent/10" : "border-border/30 bg-surface/20"}`}
-              >
-                <AppText className={`text-base text-center ${name.trim() ? "text-accent font-medium" : "text-foreground/25 font-light"}`}>
-                  Write this together
-                </AppText>
-              </PressableFeedback>
-            </View>
-          </EaseView>
-        </ScrollView>
+              <View className="px-8 pt-6 gap-8">
+                {/* Heading */}
+                <View className="gap-2">
+                  <AppText className="text-3xl text-foreground leading-10">
+                    Who would you like to tell?
+                  </AppText>
+                  <AppText className="text-sm font-light text-foreground/40 leading-5">
+                    We&apos;ll shape the message around them, nothing leaves your device.
+                  </AppText>
+                </View>
+
+                {/* Name field */}
+                <TextField>
+                  <Input value={name} onChangeText={setName} placeholder="their name or how you think of them" autoFocus />
+                </TextField>
+
+                {/* Relationship section */}
+                <View className="gap-3">
+                  <View className="gap-0.5">
+                    <AppText className="text-sm font-medium text-foreground/70">
+                      Their relationship to you
+                    </AppText>
+                    <AppText className="text-xs font-light text-foreground/35 leading-4">
+                      Optional — helps us find the right tone for your words
+                    </AppText>
+                  </View>
+                  <View className="flex-row flex-wrap gap-2">
+                    {RELATIONSHIPS.map((rel) => (
+                      <PressableFeedback
+                        key={rel}
+                        onPress={() => setRelationship(relationship === rel ? null : rel)}
+                        accessibilityLabel={rel}
+                        accessibilityRole="button"
+                        className={`rounded-full border px-4 py-2 ${relationship === rel ? "border-accent/40 bg-accent/10" : "border-border/50 bg-surface/30"}`}
+                      >
+                        <AppText className={`text-sm ${relationship === rel ? "text-accent font-medium" : "text-foreground/50 font-light"}`}>
+                          {rel}
+                        </AppText>
+                      </PressableFeedback>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            </EaseView>
+          </ScrollView>
+
+          {/* Fixed CTA */}
+          <View className="px-8 pb-10 pt-2">
+            <Button
+              variant="primary"
+              size="lg"
+              onPress={handleWriteTogether}
+              isDisabled={!name.trim()}
+              className="w-full"
+            >
+              Write this together
+            </Button>
+          </View>
+        </View>
       )}
 
       {/* ── Draft step ── */}

@@ -87,7 +87,6 @@ export const ActivityVariant = ({
   const canAsk = useQuery(api.feedback.canAskContextual);
   const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
   const showBridgeCard = bridgeEnabled && mirrorText != null;
-  console.log("bridgeEnabled", bridgeEnabled, "mirrorText", mirrorText, "showBridgeCard", showBridgeCard)
 
   const advancePhase = () => {
     if (phase === "acknowledge")
@@ -124,7 +123,10 @@ export const ActivityVariant = ({
   if (phase === "contributed") {
     return (
       <ContributedConfirmation
-        onDone={() => onDismiss(true, selectedMood ?? undefined)}
+        onDone={() => {
+          setContributed(true);
+          setPhase("close");
+        }}
       />
     );
   }
@@ -309,10 +311,10 @@ export const ActivityVariant = ({
             className="w-full items-center gap-5"
           >
             {showBridgeCard && (
-              <BridgeCard onPress={() => onCompleteAndBridge(false, selectedMood ?? undefined)} />
+              <BridgeCard onPress={() => onCompleteAndBridge(contributed, selectedMood ?? undefined)} />
             )}
             <PressableFeedback
-              onPress={() => onHaveMore(undefined, selectedMood ?? undefined)}
+              onPress={() => onHaveMore(contributed, selectedMood ?? undefined)}
               accessibilityLabel="Have more? I'm here."
               className="w-full rounded-2xl border border-accent/20 bg-accent/15 px-5 py-4"
             >
@@ -322,7 +324,7 @@ export const ActivityVariant = ({
             </PressableFeedback>
 
             <Pressable
-              onPress={() => onDismiss(false, selectedMood ?? undefined)}
+              onPress={() => onDismiss(contributed, selectedMood ?? undefined)}
               accessibilityLabel="Done"
               hitSlop={12}
             >

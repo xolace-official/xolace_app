@@ -1,7 +1,6 @@
 import { View } from "react-native";
-import { PressableFeedback } from "heroui-native";
+import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 
 type Props = {
