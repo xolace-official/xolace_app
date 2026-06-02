@@ -33,4 +33,19 @@ export const styles = StyleSheet.create({
   maskSizer: {
     opacity: 0,
   },
+  overlayTrack: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  directionArrow: {
+    position: "absolute",
+    backgroundColor: "transparent",
+    borderStyle: "solid",
+    borderLeftWidth: 18,
+    borderTopWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftColor: "green",
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
+  },
 });

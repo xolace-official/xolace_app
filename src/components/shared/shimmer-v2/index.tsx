@@ -144,11 +144,8 @@ const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
       <View
         style={[
           StyleSheet.absoluteFill,
-          {
-            alignItems: "center",
-            justifyContent: "center",
-            transform: [{ rotate: `${trackAngle}deg` }],
-          },
+          styles.overlayTrack,
+          { transform: [{ rotate: `${trackAngle}deg` }] },
         ]}
         pointerEvents="none"
       >
@@ -169,21 +166,7 @@ const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
           </Animated.View>
         </Animated.View>
         {/* Debug: direction arrow */}
-        {debug && (
-          <View
-            style={{
-              position: "absolute",
-              backgroundColor: "transparent",
-              borderStyle: "solid",
-              borderLeftWidth: 18,
-              borderTopWidth: 8,
-              borderBottomWidth: 8,
-              borderLeftColor: "green",
-              borderTopColor: "transparent",
-              borderBottomColor: "transparent",
-            }}
-          />
-        )}
+        {debug && <View style={styles.directionArrow} />}
       </View>
     );
   },

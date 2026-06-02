@@ -25,6 +25,20 @@ const styles = StyleSheet.create({
   mascot: { width: 132, height: 132 },
 });
 
+// Static shimmer layers — hoisted so they aren't re-created per render and
+// aren't flagged as JSX-as-prop (react-perf/jsx-no-jsx-as-prop).
+const BACKGROUND = <View className="flex-1 bg-foreground/25" />;
+const OVERLAY = (
+  <Shimmer.Overlay
+    width="100%"
+    animation={{
+      type: "timing",
+      config: { duration: 1900, easing: Easing.inOut(Easing.ease) },
+    }}
+  >
+    <View className="flex-1" style={styles.shimmerGradient} />
+  </Shimmer.Overlay>
+);
 
 export function ShimmerLoadingText({ name }: Props) {
   const recipient = name.trim() || "them";
@@ -38,19 +52,6 @@ export function ShimmerLoadingText({ name }: Props) {
     transform: [{ translateY: -6 * bob.get() }],
   }));
 
-  const background = <View className="flex-1 bg-foreground/25" />;
-  const overlay = (
-    <Shimmer.Overlay
-      width="100%"
-      animation={{
-        type: "timing",
-        config: { duration: 1900, easing: Easing.inOut(Easing.ease) },
-      }}
-    >
-      <View className="flex-1" style={styles.shimmerGradient} />
-    </Shimmer.Overlay>
-  );
-
   return (
     <View className="items-center px-8 gap-3">
       <Animated.View style={mascotStyle} className="mb-3">
@@ -62,7 +63,7 @@ export function ShimmerLoadingText({ name }: Props) {
       </Animated.View>
 
       <Shimmer>
-        <Shimmer.Mask background={background} overlay={overlay}>
+        <Shimmer.Mask background={BACKGROUND} overlay={OVERLAY}>
           <AppText className="text-black text-xl font-light text-center leading-8">
             {`Finding the words for ${recipient}…`}
           </AppText>
