@@ -39,4 +39,17 @@ export default defineConfig([
       'no-empty': ['warn', { allowEmptyCatch: false }],
     },
   },
+  // Illustrative demo files — not shipped and not imported by the app. They
+  // intentionally use inline styles, literal colors, and sample data to read
+  // as self-contained usage examples, so relax the stylistic rules here.
+  {
+    files: ['**/examples/**'],
+    rules: {
+      'react-native/no-inline-styles': 'off',
+      'react-native/no-color-literals': 'off',
+      'react-perf/jsx-no-jsx-as-prop': 'off',
+      'react/no-array-index-key': 'off',
+      'react/jsx-no-constructed-context-values': 'off',
+    },
+  },
 ]);

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback } from "react";
+import React, { createContext, useContext, useCallback, useMemo } from "react";
 import { View, type LayoutChangeEvent, StyleSheet } from "react-native";
 import Animated, {
   useDerivedValue,
@@ -55,12 +55,15 @@ const ShimmerRoot = React.forwardRef<View, ShimmerProps>(
       [containerWidth, containerHeight, onLayout],
     );
 
-    const contextValue: ShimmerContextValue = {
-      containerWidth,
-      containerHeight,
-      containerDiagonal,
-      debug,
-    };
+    const contextValue: ShimmerContextValue = useMemo(
+      () => ({
+        containerWidth,
+        containerHeight,
+        containerDiagonal,
+        debug,
+      }),
+      [containerWidth, containerHeight, containerDiagonal, debug],
+    );
 
     return (
       <ShimmerContext value={contextValue}>
