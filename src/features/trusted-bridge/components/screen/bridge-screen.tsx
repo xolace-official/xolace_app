@@ -17,6 +17,15 @@ type Step = "recipient" | "draft";
 type Relationship = "parent" | "partner" | "friend" | "sibling";
 
 const RELATIONSHIPS: Relationship[] = ["parent", "partner", "friend", "sibling"];
+
+// Address-term suggestions only where what you call them diverges from their
+// name. For a friend or sibling you usually just use the name, so we skip chips.
+const ADDRESS_TERMS: Record<Relationship, string[]> = {
+  parent: ["Mom", "Mum", "Mama", "Dad", "Ma"],
+  partner: ["babe", "love", "honey"],
+  friend: [],
+  sibling: ["bro", "sis", "bruh"],
+};
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const EASE_IN = { type: "timing" as const, duration: 400, delay: 80, easing: EASING };
 const FADE_OUT = { opacity: 0 };
@@ -40,7 +49,13 @@ export function BridgeScreen({ sessionId }: Props) {
   const [step, setStep] = useState<Step>("recipient");
   const [name, setName] = useState("");
   const [relationship, setRelationship] = useState<Relationship | null>(null);
+  const [addressTerm, setAddressTerm] = useState<string | null>(null);
   const { status, draft, setDraft, generate } = useBridgeDraft();
+
+  const selectRelationship = (rel: Relationship) => {
+    setRelationship((prev) => (prev === rel ? null : rel));
+    setAddressTerm(null); // terms differ per relationship — reset on change
+  };
 
   useEffect(() => {
     navigation.setOptions({ gestureEnabled: step === "recipient" });
@@ -60,7 +75,7 @@ export function BridgeScreen({ sessionId }: Props) {
     if (!name.trim()) return;
     posthog.capture("bridge_opened", { recipient_relationship: relationship });
     setStep("draft");
-    generate(sessionId, name.trim(), relationship ?? undefined);
+    generate(sessionId, name.trim(), relationship ?? undefined, addressTerm ?? undefined);
   };
 
   const handleShare = async () => {
@@ -125,7 +140,7 @@ export function BridgeScreen({ sessionId }: Props) {
                     {RELATIONSHIPS.map((rel) => (
                       <PressableFeedback
                         key={rel}
-                        onPress={() => setRelationship(relationship === rel ? null : rel)}
+                        onPress={() => selectRelationship(rel)}
                         accessibilityLabel={rel}
                         accessibilityRole="button"
                         className={`rounded-full border px-4 py-2 ${relationship === rel ? "border-accent/40 bg-accent/10" : "border-border/50 bg-surface/30"}`}
@@ -137,6 +152,44 @@ export function BridgeScreen({ sessionId }: Props) {
                     ))}
                   </View>
                 </View>
+
+                {/* Address-term section — chips suggest, field captures the long tail */}
+                {relationship && (
+                  <View className="gap-3">
+                    <View className="gap-0.5">
+                      <AppText className="text-sm font-medium text-foreground/70">
+                        What do you call them?
+                      </AppText>
+                      <AppText className="text-xs font-light text-foreground/35 leading-4">
+                        Optional — the message will open with exactly this word, the way you greet them (like &ldquo;Mom&rdquo;, &ldquo;babe&rdquo; or &ldquo;bro&rdquo;), instead of their name.
+                      </AppText>
+                    </View>
+                    {ADDRESS_TERMS[relationship].length > 0 && (
+                      <View className="flex-row flex-wrap gap-2">
+                        {ADDRESS_TERMS[relationship].map((term) => (
+                          <PressableFeedback
+                            key={term}
+                            onPress={() => setAddressTerm(addressTerm === term ? null : term)}
+                            accessibilityLabel={term}
+                            accessibilityRole="button"
+                            className={`rounded-full border px-4 py-2 ${addressTerm === term ? "border-accent/40 bg-accent/10" : "border-border/50 bg-surface/30"}`}
+                          >
+                            <AppText className={`text-sm ${addressTerm === term ? "text-accent font-medium" : "text-foreground/50 font-light"}`}>
+                              {term}
+                            </AppText>
+                          </PressableFeedback>
+                        ))}
+                      </View>
+                    )}
+                    <TextField>
+                      <Input
+                        value={addressTerm ?? ""}
+                        onChangeText={(t) => setAddressTerm(t.length > 0 ? t : null)}
+                        placeholder="or type what you call them"
+                      />
+                    </TextField>
+                  </View>
+                )}
               </View>
             </EaseView>
           </ScrollView>

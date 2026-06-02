@@ -6,9 +6,8 @@ import type { Id } from '@/convex/_generated/dataModel';
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 const FALLBACK_DRAFT =
-  "I've been sitting with something and wanted to share it with you. " +
-  "I processed some feelings today that made me think of you. " +
-  "I just wanted you to know I'm thinking of you.";
+  "Hey — I've been working through something lately and I'd really like to talk to you about it. " +
+  "Could we find some time soon?";
 
 export function useBridgeDraft() {
   const [status, setStatus] = useState<Status>('idle');
@@ -19,10 +18,11 @@ export function useBridgeDraft() {
     sessionId: Id<'sessions'>,
     recipientName: string,
     recipientRelationship?: string,
+    addressTerm?: string,
   ) => {
     setStatus('loading');
     try {
-      const result = await requestDraft({ sessionId, recipientName, recipientRelationship });
+      const result = await requestDraft({ sessionId, recipientName, recipientRelationship, addressTerm });
       setDraft(result.draft);
       setStatus('success');
     } catch {
