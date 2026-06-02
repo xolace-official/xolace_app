@@ -159,6 +159,7 @@ export function BridgeScreen({ sessionId }: Props) {
       {/* ── Draft step ── */}
       {step === "draft" && (
         <View className="flex-1">
+          {/* Nav */}
           <View className="flex-row items-center px-5 pt-4 pb-2">
             <Pressable onPress={() => setStep("recipient")} hitSlop={12} accessibilityLabel="Back" accessibilityRole="button">
               <SymbolView name={{ ios: "chevron.left", android: "arrow_back", web: "arrow_back" }} size={18} tintColor={mutedColor} />
@@ -171,25 +172,65 @@ export function BridgeScreen({ sessionId }: Props) {
             </View>
           ) : (
             <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_IN} className="flex-1">
-              <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
-                <View className="px-8 pt-4 pb-8 flex-1 gap-5">
-                  <AppText className="font-serif text-2xl text-foreground">Here&apos;s a start...</AppText>
+              {/* Scrollable content */}
+              <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <View className="px-8 pt-4 pb-6 gap-5">
+                  {/* Heading */}
+                  <View className="gap-2">
+                    <AppText className="font-serif text-3xl text-foreground leading-10">
+                      A message for {name}.
+                    </AppText>
+                    <AppText className="text-sm font-light text-foreground/40 leading-5">
+                      This was shaped around what you felt. Edit it until it sounds like you — then share when you&apos;re ready.
+                    </AppText>
+                  </View>
+
+                  {/* Error banner */}
                   {status === "error" && (
-                    <AppText className="text-xs text-foreground/40 font-light">couldn&apos;t personalize — feel free to edit</AppText>
+                    <View className="flex-row items-start gap-3 rounded-2xl bg-surface/40 border border-border/40 px-4 py-3">
+                      <SymbolView
+                        name={{ ios: "exclamationmark.circle", android: "error_outline", web: "error_outline" }}
+                        size={15}
+                        tintColor={mutedColor}
+                      />
+                      <AppText className="text-xs font-light text-foreground/50 flex-1 leading-4">
+                        Couldn&apos;t personalize this time — the template below is yours to edit.
+                      </AppText>
+                    </View>
                   )}
-                  <TextArea value={draft} onChangeText={setDraft} numberOfLines={7} className="min-h-40" />
-                  <View className="flex-1" />
-                  <PressableFeedback onPress={handleShare} accessibilityLabel="Share" accessibilityRole="button" className="w-full rounded-2xl border border-accent/40 bg-accent/10 px-5 py-4">
-                    <AppText className="text-base text-center text-accent font-medium">Share...</AppText>
-                  </PressableFeedback>
-                  <Pressable onPress={() => { posthog.capture("bridge_dismissed", { step: "draft" }); router.replace("/"); }} hitSlop={12} accessibilityLabel="Not right now">
-                    <AppText className="text-sm text-center text-foreground/30 font-light">Not right now</AppText>
-                  </Pressable>
-                  <AppText className="text-xs text-center text-foreground/30 font-light">
-                    This only lives on your device. We don&apos;t see who you&apos;re writing to.
-                  </AppText>
+
+                  {/* Draft text area */}
+                  <TextArea value={draft} onChangeText={setDraft} numberOfLines={8} className="min-h-44" />
                 </View>
               </ScrollView>
+
+              {/* Fixed bottom actions */}
+              <View className="px-8 pb-10 pt-3 gap-3">
+                <View className="flex-row items-center justify-center gap-1.5">
+                  <SymbolView
+                    name={{ ios: "lock.fill", android: "lock", web: "lock" }}
+                    size={11}
+                    tintColor={mutedColor}
+                  />
+                  <AppText className="text-xs font-light text-foreground/30">
+                    Stays on your device · We never see who you&apos;re writing to
+                  </AppText>
+                </View>
+                <Button variant="primary" size="lg" onPress={handleShare} className="w-full">
+                  Share with {name}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="md"
+                  onPress={() => {
+                    posthog.capture("bridge_dismissed", { step: "draft" });
+                    router.replace("/");
+                  }}
+                  className="w-full"
+                >
+                  Not right now
+                </Button>
+              </View>
             </EaseView>
           )}
         </View>
