@@ -9,6 +9,8 @@ import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overl
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
+import { BridgeCard } from "@/src/features/session-end/components/bridge-card";
+import { useAppStore } from "@/src/store/store";
 import { Presets } from "react-native-pulsar";
 import { ContributedConfirmation } from "@/src/features/session-end/components/contributed-confirmation";
 import { HeavierFeedbackPrompt } from "@/src/features/session-end/components/heavier-feedback-prompt";
@@ -20,9 +22,11 @@ type Phase = "acknowledge" | "mood" | "offer" | "close" | "contributed";
 type Props = {
   sessionId?: Id<"sessions">;
   distilledText: string | null;
+  mirrorText: string | null;
   contributeByDefault: boolean;
   onDismiss: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
   onHaveMore: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
+  onCompleteAndBridge: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
   isNight?: boolean;
 };
 
@@ -69,17 +73,21 @@ const styles = StyleSheet.create({
 export const ActivityVariant = ({
   sessionId,
   distilledText,
+  mirrorText,
   contributeByDefault,
   onDismiss,
   onHaveMore,
+  onCompleteAndBridge,
   isNight = false,
 }: Props) => {
   const [phase, setPhase] = useState<Phase>("acknowledge");
-  const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(
-    null,
-  );
+  const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(null);
+  const [contributed, setContributed] = useState(false);
   const [heavierSheetOpen, setHeavierSheetOpen] = useState(false);
   const canAsk = useQuery(api.feedback.canAskContextual);
+  const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
+  const showBridgeCard = bridgeEnabled && mirrorText != null;
+  console.log("bridgeEnabled", bridgeEnabled, "mirrorText", mirrorText, "showBridgeCard", showBridgeCard)
 
   const advancePhase = () => {
     if (phase === "acknowledge")
@@ -254,9 +262,7 @@ export const ActivityVariant = ({
 
             {/* Spacer */}
             <View className="flex-1" />
-            
 
-            {/* TODO(bridge): replace or extend this phase with BridgeOffer component when Trusted Bridge feature ships */}
             {/* Action buttons pinned at bottom */}
             <View className="px-8 gap-3 pb-12">
               <PressableFeedback
@@ -302,6 +308,9 @@ export const ActivityVariant = ({
             transition={EASE_IN}
             className="w-full items-center gap-5"
           >
+            {showBridgeCard && (
+              <BridgeCard onPress={() => onCompleteAndBridge(false, selectedMood ?? undefined)} />
+            )}
             <PressableFeedback
               onPress={() => onHaveMore(undefined, selectedMood ?? undefined)}
               accessibilityLabel="Have more? I'm here."

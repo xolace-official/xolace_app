@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from 'convex/react';
 import { usePostHog } from 'posthog-react-native';
 import { api } from '@/convex/_generated/api';
+import type { Id } from '@/convex/_generated/dataModel';
 import { usePathSession } from '@/src/features/sit-with-this/hooks/use-path-session';
 
 /**
@@ -86,10 +87,38 @@ export function useSessionEnd() {
     }
   };
 
-  const distilledText = (session as { distilledText?: string } | undefined)
-    ?.distilledText ?? null;
+  const completeAndBridge = async (
+    contributedReflection?: boolean,
+    postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
+  ) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    const ok = await completePath(true, contributedReflection, postSessionMood).finally(
+      () => {
+        busyRef.current = false;
+      },
+    );
+    if (ok) {
+      posthog.capture('session_completed', {
+        post_session_mood: postSessionMood ?? null,
+        contributed_reflection: contributedReflection ?? false,
+        action: 'bridge',
+      });
+      router.push({
+        pathname: '/(protected)/trusted-bridge',
+        params: {
+          sessionId: sessionId as Id<'sessions'>,
+          mirrorText: mirrorText ?? '',
+        },
+      });
+    }
+  };
+
+  const sessionData = session as { distilledText?: string; mirrorText?: string } | undefined;
+  const distilledText = sessionData?.distilledText ?? null;
+  const mirrorText = sessionData?.mirrorText ?? null;
   const contributeByDefault = contributeByDefaultQuery ?? false;
   const sessionCount = sessionCountQuery ?? 0;
 
-  return { sessionId, isLoading, distilledText, contributeByDefault, sessionCount, dismiss, haveMore };
+  return { sessionId, isLoading, distilledText, mirrorText, contributeByDefault, sessionCount, dismiss, haveMore, completeAndBridge };
 }

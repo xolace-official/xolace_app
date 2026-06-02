@@ -30,10 +30,12 @@ export const SessionEndScreen = ({ path }: Props) => {
     sessionId,
     isLoading,
     distilledText,
+    mirrorText,
     contributeByDefault,
     sessionCount,
     dismiss,
     haveMore,
+    completeAndBridge,
   } = useSessionEnd();
   const { isNight } = useSessionMode();
   const insetsStyle = [
@@ -61,17 +63,27 @@ export const SessionEndScreen = ({ path }: Props) => {
   return (
     <View className="flex-1 bg-background" style={insetsStyle}>
       {path === "exit" ? (
-        <ExitVariant onHaveMore={() => haveMore()} isNight={isNight} />
+        <ExitVariant
+          onHaveMore={() => haveMore()}
+          isNight={isNight}
+          sessionId={sessionId ?? undefined}
+          mirrorText={mirrorText}
+          onCompleteAndBridge={() => completeAndBridge()}
+        />
       ) : (
         <ActivityVariant
           sessionId={sessionId ?? undefined}
           distilledText={distilledText}
+          mirrorText={mirrorText}
           contributeByDefault={contributeByDefault}
           onDismiss={(contributed?: boolean, mood?: PostSessionMood) =>
             dismiss(contributed, mood)
           }
           onHaveMore={(contributed?: boolean, mood?: PostSessionMood) =>
             haveMore(contributed, mood)
+          }
+          onCompleteAndBridge={(contributed?: boolean, mood?: PostSessionMood) =>
+            completeAndBridge(contributed, mood)
           }
           isNight={isNight}
         />

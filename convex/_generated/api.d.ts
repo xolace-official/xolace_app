@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as ai_bridge from "../ai/bridge.js";
 import type * as ai_cached from "../ai/cached.js";
 import type * as ai_cachedActions from "../ai/cachedActions.js";
 import type * as ai_clarify from "../ai/clarify.js";
@@ -67,6 +68,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "ai/bridge": typeof ai_bridge;
   "ai/cached": typeof ai_cached;
   "ai/cachedActions": typeof ai_cachedActions;
   "ai/clarify": typeof ai_clarify;

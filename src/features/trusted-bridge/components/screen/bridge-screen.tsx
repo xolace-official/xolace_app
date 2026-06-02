@@ -1,0 +1,179 @@
+import { useEffect, useState } from "react";
+import { Pressable, ScrollView, Share, View } from "react-native";
+import { useNavigation, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SymbolView } from "expo-symbols";
+import { PressableFeedback, TextField, TextArea, Input } from "heroui-native";
+import { useThemeColor } from "heroui-native";
+import { EaseView } from "react-native-ease/uniwind";
+import { usePostHog } from "posthog-react-native";
+import { AppText } from "@/src/components/shared/app-text";
+import { useAppStore } from "@/src/store/store";
+import { useBridgeDraft } from "@/src/features/trusted-bridge/hooks/use-bridge-draft";
+import { BridgeIntro } from "@/src/features/trusted-bridge/components/bridge-intro";
+import { ShimmerLoadingText } from "@/src/features/trusted-bridge/components/shimmer-loading-text";
+import type { Id } from "@/convex/_generated/dataModel";
+
+type Step = "recipient" | "draft";
+type Relationship = "parent" | "partner" | "friend" | "sibling";
+
+const RELATIONSHIPS: Relationship[] = ["parent", "partner", "friend", "sibling"];
+const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const EASE_IN = { type: "timing" as const, duration: 400, delay: 80, easing: EASING };
+const FADE_OUT = { opacity: 0 };
+const FADE_IN = { opacity: 1 };
+
+type Props = {
+  sessionId: Id<"sessions">;
+};
+
+export function BridgeScreen({ sessionId }: Props) {
+  const router = useRouter();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const posthog = usePostHog();
+  const mutedColor = (useThemeColor("foreground") as string) + "55";
+
+  const bridgeIntroSeen = useAppStore((s) => s.bridgeIntroSeen);
+  const setBridgeIntroSeen = useAppStore((s) => s.setBridgeIntroSeen);
+
+  const [showIntro, setShowIntro] = useState(!bridgeIntroSeen);
+  const [step, setStep] = useState<Step>("recipient");
+  const [name, setName] = useState("");
+  const [relationship, setRelationship] = useState<Relationship | null>(null);
+  const { status, draft, setDraft, generate } = useBridgeDraft();
+
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: step === "recipient" });
+  }, [navigation, step]);
+
+  const handleBegin = () => {
+    setBridgeIntroSeen(true);
+    setShowIntro(false);
+  };
+
+  const handleDismiss = () => {
+    posthog.capture("bridge_dismissed", { step: "recipient" });
+    router.replace("/");
+  };
+
+  const handleWriteTogether = () => {
+    if (!name.trim()) return;
+    posthog.capture("bridge_opened", { recipient_relationship: relationship });
+    setStep("draft");
+    generate(sessionId, name.trim(), relationship ?? undefined);
+  };
+
+  const handleShare = async () => {
+    if (!draft.trim()) return;
+    try {
+      await Share.share({ message: draft });
+      posthog.capture("bridge_shared", { recipient_relationship: relationship });
+    } catch {
+      // share sheet cancelled
+    }
+  };
+
+  if (showIntro) {
+    return (
+      <View className="flex-1 bg-background" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
+        <BridgeIntro onBegin={handleBegin} />
+      </View>
+    );
+  }
+
+  return (
+    <View className="flex-1 bg-background" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
+
+      {/* ── Recipient step ── */}
+      {step === "recipient" && (
+        <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
+          <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_IN} className="flex-1">
+            <View className="flex-row items-center px-5 pt-4 pb-2">
+              <Pressable onPress={handleDismiss} hitSlop={12} accessibilityLabel="Close" accessibilityRole="button">
+                <SymbolView name={{ ios: "xmark", android: "close", web: "close" }} size={18} tintColor={mutedColor} />
+              </Pressable>
+            </View>
+
+            <View className="px-8 pt-6 gap-8">
+              <AppText className="font-serif text-3xl text-foreground leading-10">
+                Who would you like to tell?
+              </AppText>
+              <TextField>
+                <Input value={name} onChangeText={setName} placeholder="their name or how you think of them" autoFocus />
+              </TextField>
+              <View className="flex-row flex-wrap gap-2">
+                {RELATIONSHIPS.map((rel) => (
+                  <PressableFeedback
+                    key={rel}
+                    onPress={() => setRelationship(relationship === rel ? null : rel)}
+                    accessibilityLabel={rel}
+                    accessibilityRole="button"
+                    className={`rounded-full border px-4 py-2 ${relationship === rel ? "border-accent/40 bg-accent/10" : "border-border/50 bg-surface/30"}`}
+                  >
+                    <AppText className={`text-sm ${relationship === rel ? "text-accent font-medium" : "text-foreground/50 font-light"}`}>
+                      {rel}
+                    </AppText>
+                  </PressableFeedback>
+                ))}
+              </View>
+            </View>
+
+            <View className="flex-1" />
+            <View className="px-8 pb-10">
+              <PressableFeedback
+                onPress={handleWriteTogether}
+                accessibilityLabel="Write this together"
+                accessibilityRole="button"
+                className={`w-full rounded-2xl border px-5 py-4 ${name.trim() ? "border-accent/40 bg-accent/10" : "border-border/30 bg-surface/20"}`}
+              >
+                <AppText className={`text-base text-center ${name.trim() ? "text-accent font-medium" : "text-foreground/25 font-light"}`}>
+                  Write this together
+                </AppText>
+              </PressableFeedback>
+            </View>
+          </EaseView>
+        </ScrollView>
+      )}
+
+      {/* ── Draft step ── */}
+      {step === "draft" && (
+        <View className="flex-1">
+          <View className="flex-row items-center px-5 pt-4 pb-2">
+            <Pressable onPress={() => setStep("recipient")} hitSlop={12} accessibilityLabel="Back" accessibilityRole="button">
+              <SymbolView name={{ ios: "chevron.left", android: "arrow_back", web: "arrow_back" }} size={18} tintColor={mutedColor} />
+            </Pressable>
+          </View>
+
+          {status === "loading" ? (
+            <View className="flex-1 justify-center">
+              <ShimmerLoadingText name={name} />
+            </View>
+          ) : (
+            <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_IN} className="flex-1">
+              <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
+                <View className="px-8 pt-4 pb-8 flex-1 gap-5">
+                  <AppText className="font-serif text-2xl text-foreground">Here&apos;s a start...</AppText>
+                  {status === "error" && (
+                    <AppText className="text-xs text-foreground/40 font-light">couldn&apos;t personalize — feel free to edit</AppText>
+                  )}
+                  <TextArea value={draft} onChangeText={setDraft} numberOfLines={7} className="min-h-40" />
+                  <View className="flex-1" />
+                  <PressableFeedback onPress={handleShare} accessibilityLabel="Share" accessibilityRole="button" className="w-full rounded-2xl border border-accent/40 bg-accent/10 px-5 py-4">
+                    <AppText className="text-base text-center text-accent font-medium">Share...</AppText>
+                  </PressableFeedback>
+                  <Pressable onPress={() => { posthog.capture("bridge_dismissed", { step: "draft" }); router.replace("/"); }} hitSlop={12} accessibilityLabel="Not right now">
+                    <AppText className="text-sm text-center text-foreground/30 font-light">Not right now</AppText>
+                  </Pressable>
+                  <AppText className="text-xs text-center text-foreground/30 font-light">
+                    This only lives on your device. We don&apos;t see who you&apos;re writing to.
+                  </AppText>
+                </View>
+              </ScrollView>
+            </EaseView>
+          )}
+        </View>
+      )}
+    </View>
+  );
+}

@@ -5,6 +5,9 @@ import { EaseView } from "react-native-ease/uniwind";
 import { useRouter } from "expo-router";
 import { LinkButton, PressableFeedback } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import { BridgeCard } from "@/src/features/session-end/components/bridge-card";
+import { useAppStore } from "@/src/store/store";
+import type { Id } from "@/convex/_generated/dataModel";
 import { NIGHT_SESSION_END_EXIT } from "@/src/features/reflect/night-copy";
 
 type Phase = "acknowledge" | "close";
@@ -12,6 +15,9 @@ type Phase = "acknowledge" | "close";
 type Props = {
   onHaveMore: () => void;
   isNight?: boolean;
+  sessionId?: Id<"sessions">;
+  mirrorText: string | null;
+  onCompleteAndBridge: () => void;
 };
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -34,9 +40,11 @@ const styles = StyleSheet.create({
   },
 });
 
-export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
+export const ExitVariant = ({ onHaveMore, isNight = false, mirrorText, onCompleteAndBridge }: Props) => {
   const [phase, setPhase] = useState<Phase>("acknowledge");
   const router = useRouter();
+  const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
+  const showBridgeCard = bridgeEnabled && mirrorText != null;
 
   useEffect(() => {
     if (phase !== "acknowledge") return;
@@ -93,8 +101,9 @@ export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
             initialAnimate={SLIDE_OUT}
             animate={SLIDE_IN}
             transition={EASE_IN}
-            className="w-full items-center"
+            className="w-full items-center gap-4"
           >
+            {showBridgeCard && <BridgeCard onPress={onCompleteAndBridge} />}
             <PressableFeedback
               onPress={onHaveMore}
               accessibilityLabel="Have more? I'm here."

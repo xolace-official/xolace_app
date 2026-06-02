@@ -56,6 +56,8 @@ export const SettingsScreen = () => {
   const iconColor = useThemeColor("foreground") as string;
   const mutedIconColor = useThemeColor("muted") as string;
   const setIntroSeen = useAppStore((s) => s.setIntroSeen);
+  const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
+  const setBridgeEnabled = useAppStore((s) => s.setBridgeEnabled);
   const [themeDialogOpen, setThemeDialogOpen] = useState(false);
   const [mirrorToneDialogOpen, setMirrorToneDialogOpen] = useState(false);
   const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
@@ -233,6 +235,18 @@ export const SettingsScreen = () => {
             label="Share by default"
             isSelected={contributeAnonymously}
             onToggle={setContributeAnonymously}
+            isLast
+          />
+        </SettingsSection>
+
+        {/* ── TRUSTED BRIDGE ───────────────────────────────────── */}
+        <SettingsSection title="Trusted Bridge">
+          <SettingsRow
+            variant="toggle"
+            icon={settingIcon({ ios: "flame", android: "local_fire_department", web: "local_fire_department" })}
+            label="Show bridge at session end"
+            isSelected={bridgeEnabled}
+            onToggle={setBridgeEnabled}
             isLast
           />
         </SettingsSection>
