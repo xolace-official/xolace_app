@@ -12,6 +12,7 @@ import { useAppStore } from "@/src/store/store";
 import { useBridgeDraft } from "@/src/features/trusted-bridge/hooks/use-bridge-draft";
 import { BridgeIntro } from "@/src/features/trusted-bridge/components/bridge-intro";
 import { ShimmerLoadingText } from "@/src/features/trusted-bridge/components/shimmer-loading-text";
+import { BridgeDoneButton } from "@/src/features/trusted-bridge/components/bridge-done-button";
 import type { Id } from "@/convex/_generated/dataModel";
 
 type Step = "recipient" | "draft";
@@ -51,6 +52,7 @@ export function BridgeScreen({ sessionId }: Props) {
   const [name, setName] = useState("");
   const [relationship, setRelationship] = useState<Relationship | null>(null);
   const [addressTerm, setAddressTerm] = useState<string | null>(null);
+  const [hasShared, setHasShared] = useState(false);
   const { status, draft, setDraft, generate } = useBridgeDraft();
   const addressInputRef = useRef<TextInput>(null);
 
@@ -85,6 +87,7 @@ export function BridgeScreen({ sessionId }: Props) {
   const handleWriteTogether = () => {
     if (!name.trim()) return;
     posthog.capture("bridge_opened", { recipient_relationship: relationship });
+    setHasShared(false); // fresh draft — not yet shared
     setStep("draft");
     generate(sessionId, name.trim(), relationship ?? undefined, addressTerm ?? undefined);
   };
@@ -92,11 +95,21 @@ export function BridgeScreen({ sessionId }: Props) {
   const handleShare = async () => {
     if (!draft.trim()) return;
     try {
-      await Share.share({ message: draft });
-      posthog.capture("bridge_shared", { recipient_relationship: relationship });
+      const result = await Share.share({ message: draft });
+      // Only treat it as shared when the sheet actually completed — this is what
+      // reveals the "Done" affordance. (Android always reports sharedAction.)
+      if (result.action === Share.sharedAction) {
+        setHasShared(true);
+        posthog.capture("bridge_shared", { recipient_relationship: relationship });
+      }
     } catch {
       // share sheet cancelled
     }
+  };
+
+  const handleComplete = () => {
+    posthog.capture("bridge_completed", { recipient_relationship: relationship });
+    router.replace("/");
   };
 
   if (showIntro) {
@@ -232,10 +245,19 @@ export function BridgeScreen({ sessionId }: Props) {
       {step === "draft" && (
         <View className="flex-1">
           {/* Nav */}
-          <View className="flex-row items-center px-5 pt-4 pb-2">
-            <Pressable onPress={() => setStep("recipient")} hitSlop={12} accessibilityLabel="Back" accessibilityRole="button">
+          <View className="flex-row items-center justify-between px-5 pt-4 pb-2">
+            <Pressable
+              onPress={() => {
+                setHasShared(false);
+                setStep("recipient");
+              }}
+              hitSlop={12}
+              accessibilityLabel="Back"
+              accessibilityRole="button"
+            >
               <SymbolView name={{ ios: "chevron.left", android: "arrow_back", web: "arrow_back" }} size={18} tintColor={mutedColor} />
             </Pressable>
+            {hasShared && <BridgeDoneButton onPress={handleComplete} />}
           </View>
 
           {status === "loading" ? (
