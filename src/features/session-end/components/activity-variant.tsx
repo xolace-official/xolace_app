@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { EaseView } from "react-native-ease/uniwind";
-import { BottomSheet, PressableFeedback } from "heroui-native";
+import { BottomSheet, Button, PressableFeedback } from "heroui-native";
 import { useQuery } from "convex/react";
 import * as StoreReview from "expo-store-review";
 import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
@@ -86,6 +86,7 @@ export const ActivityVariant = ({
   const [heavierSheetOpen, setHeavierSheetOpen] = useState(false);
   const canAsk = useQuery(api.feedback.canAskContextual);
   const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
+  const setBridgeIntroSeen = useAppStore((s) => s.setBridgeIntroSeen);
   const showBridgeCard = bridgeEnabled && mirrorText != null;
 
   const advancePhase = () => {
@@ -313,15 +314,27 @@ export const ActivityVariant = ({
             {showBridgeCard && (
               <BridgeCard onPress={() => onCompleteAndBridge(contributed, selectedMood ?? undefined)} />
             )}
-            <PressableFeedback
+            {__DEV__ && showBridgeCard && (
+              <Pressable
+                onPress={() => setBridgeIntroSeen(false)}
+                accessibilityLabel="Reset bridge intro"
+                hitSlop={8}
+                className="px-3 py-1"
+              >
+                <AppText className="text-xs text-foreground/25">↺ bridge intro</AppText>
+              </Pressable>
+            )}
+            <Button
+              variant="ghost"
+              size="lg"
               onPress={() => onHaveMore(contributed, selectedMood ?? undefined)}
               accessibilityLabel="Have more? I'm here."
-              className="w-full rounded-2xl border border-accent/20 bg-accent/15 px-5 py-4"
+              className="w-full"
             >
-              <AppText className="text-sm text-center font-light text-accent/70">
+              <Button.Label className="font-light text-foreground/50">
                 Have more? I&apos;m here.
-              </AppText>
-            </PressableFeedback>
+              </Button.Label>
+            </Button>
 
             <Pressable
               onPress={() => onDismiss(contributed, selectedMood ?? undefined)}

@@ -1,9 +1,9 @@
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
 import { Button, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import { BridgeIntroMascot } from "@/src/features/trusted-bridge/components/bridge-intro-mascot";
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const FADE_OUT = { opacity: 0 };
@@ -30,7 +30,6 @@ const PRIVACY_ITEMS = [
 ] as const;
 
 const styles = StyleSheet.create({
-  mascot: { width: "100%", height: "100%" },
   scrollContainer: { paddingHorizontal: 32, paddingTop: 24, paddingBottom: 16, gap: 28 }
 });
 
@@ -48,18 +47,13 @@ export function BridgeIntro({ onBegin }: Props) {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* Mascot */}
+        {/* Mascot — crossfades from holding the boat to sending it off */}
         <EaseView
           initialAnimate={FADE_OUT}
           animate={FADE_IN}
           transition={{ type: "timing", duration: 700, easing: EASING }}
-          className="h-44 items-center"
         >
-          <Image
-            source={require("@/assets/images/flux/jump-love-bgremove.png")}
-            style={styles.mascot}
-            contentFit="contain"
-          />
+          <BridgeIntroMascot />
         </EaseView>
 
         {/* Headline + problem statement */}

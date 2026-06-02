@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Pressable, ScrollView, Share, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Pressable, ScrollView, Share, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView, KeyboardStickyView } from "react-native-keyboard-controller";
 import { useNavigation, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
@@ -51,11 +52,21 @@ export function BridgeScreen({ sessionId }: Props) {
   const [relationship, setRelationship] = useState<Relationship | null>(null);
   const [addressTerm, setAddressTerm] = useState<string | null>(null);
   const { status, draft, setDraft, generate } = useBridgeDraft();
+  const addressInputRef = useRef<TextInput>(null);
 
   const selectRelationship = (rel: Relationship) => {
     setRelationship((prev) => (prev === rel ? null : rel));
     setAddressTerm(null); // terms differ per relationship — reset on change
   };
+
+  // When a relationship is chosen, focus the address field so the newly revealed
+  // section scrolls above the keyboard — otherwise it appears hidden underneath it.
+  useEffect(() => {
+    if (relationship) {
+      const t = setTimeout(() => addressInputRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [relationship]);
 
   useEffect(() => {
     navigation.setOptions({ gestureEnabled: step === "recipient" });
@@ -102,15 +113,20 @@ export function BridgeScreen({ sessionId }: Props) {
       {/* ── Recipient step ── */}
       {step === "recipient" && (
         <View className="flex-1">
-          <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <KeyboardAwareScrollView
+            className="flex-1"
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bottomOffset={110}
+          >
             <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_IN}>
-              <View className="flex-row items-center px-5 pt-4 pb-2">
+              <View className="flex-row items-center px-5 pt-4 pb-2 ">
                 <Pressable onPress={handleDismiss} hitSlop={12} accessibilityLabel="Close" accessibilityRole="button">
                   <SymbolView name={{ ios: "xmark", android: "close", web: "close" }} size={18} tintColor={mutedColor} />
                 </Pressable>
               </View>
 
-              <View className="px-8 pt-6 gap-8">
+              <View className="px-5 pt-6 gap-8">
                 {/* Heading */}
                 <View className="gap-2">
                   <AppText className="text-3xl text-foreground leading-10">
@@ -133,7 +149,7 @@ export function BridgeScreen({ sessionId }: Props) {
                       Their relationship to you
                     </AppText>
                     <AppText className="text-xs font-light text-foreground/35 leading-4">
-                      Optional — helps us find the right tone for your words
+                      Optional - helps us find the right tone for your words
                     </AppText>
                   </View>
                   <View className="flex-row flex-wrap gap-2">
@@ -161,7 +177,7 @@ export function BridgeScreen({ sessionId }: Props) {
                         What do you call them?
                       </AppText>
                       <AppText className="text-xs font-light text-foreground/35 leading-4">
-                        Optional — the message will open with exactly this word, the way you greet them (like &ldquo;Mom&rdquo;, &ldquo;babe&rdquo; or &ldquo;bro&rdquo;), instead of their name.
+                        Optional - the message will open with exactly this word, the way you greet them (like &ldquo;Mom&rdquo;, &ldquo;babe&rdquo; or &ldquo;bro&rdquo;), instead of their name.
                       </AppText>
                     </View>
                     {ADDRESS_TERMS[relationship].length > 0 && (
@@ -183,6 +199,7 @@ export function BridgeScreen({ sessionId }: Props) {
                     )}
                     <TextField>
                       <Input
+                        ref={addressInputRef}
                         value={addressTerm ?? ""}
                         onChangeText={(t) => setAddressTerm(t.length > 0 ? t : null)}
                         placeholder="or type what you call them"
@@ -192,20 +209,22 @@ export function BridgeScreen({ sessionId }: Props) {
                 )}
               </View>
             </EaseView>
-          </ScrollView>
+          </KeyboardAwareScrollView>
 
-          {/* Fixed CTA */}
-          <View className="px-8 pb-10 pt-2">
-            <Button
-              variant="primary"
-              size="lg"
-              onPress={handleWriteTogether}
-              isDisabled={!name.trim()}
-              className="w-full"
-            >
-              Write this together
-            </Button>
-          </View>
+          {/* Sticky CTA — rides above the keyboard, tucks into the safe area when closed */}
+          <KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
+            <View className="px-8 pb-10 pt-2 bg-background">
+              <Button
+                variant="primary"
+                size="lg"
+                onPress={handleWriteTogether}
+                isDisabled={!name.trim()}
+                className="w-full"
+              >
+                Write this together
+              </Button>
+            </View>
+          </KeyboardStickyView>
         </View>
       )}
 
@@ -230,11 +249,11 @@ export function BridgeScreen({ sessionId }: Props) {
                 <View className="px-8 pt-4 pb-6 gap-5">
                   {/* Heading */}
                   <View className="gap-2">
-                    <AppText className="font-serif text-3xl text-foreground leading-10">
+                    <AppText className="text-3xl text-foreground leading-10">
                       A message for {name}.
                     </AppText>
                     <AppText className="text-sm font-light text-foreground/40 leading-5">
-                      This was shaped around what you felt. Edit it until it sounds like you — then share when you&apos;re ready.
+                      This was shaped around what you felt. Edit it until it sounds like you, then share when you&apos;re ready.
                     </AppText>
                   </View>
 

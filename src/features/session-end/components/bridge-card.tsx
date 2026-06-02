@@ -13,24 +13,51 @@ export const BridgeCard = ({ onPress }: Props) => {
   return (
     <PressableFeedback
       onPress={onPress}
-      accessibilityLabel="Find the words for someone who matters"
+      accessibilityLabel="Find the words for someone who matters. Suggested for you."
       accessibilityRole="button"
-      className="w-full rounded-2xl border border-accent/20 bg-surface px-5 py-4"
+      className="w-full overflow-hidden rounded-3xl border border-accent/30 bg-accent/[0.07] px-5 py-5"
     >
-      <View className="flex-row items-start justify-between mb-2">
-        <SymbolView
-          name={{ ios: "flame", android: "local_fire_department", web: "local_fire_department" }}
-          size={16}
-          tintColor={accentColor}
-        />
-        <AppText className="text-xs text-accent font-medium">· new</AppText>
+      <PressableFeedback.Highlight
+        animation={{ backgroundColor: { value: accentColor }, opacity: { value: [0, 0.08] } }}
+      />
+
+      {/* Top row: flame chip leads, "suggested" anchor balances the right */}
+      <View className="flex-row items-center justify-between mb-4">
+        <View className="h-9 w-9 items-center justify-center rounded-xl bg-accent/12">
+          <SymbolView
+            name={{ ios: "flame.fill", android: "local_fire_department", web: "local_fire_department" }}
+            size={16}
+            tintColor={accentColor}
+          />
+        </View>
+        <View className="flex-row items-center gap-1 rounded-full bg-accent/12 px-2.5 py-1">
+          <SymbolView
+            name={{ ios: "sparkles", android: "auto_awesome", web: "auto_awesome" }}
+            size={10}
+            tintColor={accentColor}
+          />
+          <AppText className="text-[11px] font-medium text-accent">Suggested for you</AppText>
+        </View>
       </View>
-      <AppText className="font-serif text-xl text-foreground mb-1">
+
+      {/* Body */}
+      <AppText className="font-serif text-xl text-foreground leading-7 mb-1.5">
         Find the words for someone who matters.
       </AppText>
-      <AppText className="text-sm font-light text-foreground/50">
+      <AppText className="text-sm font-light text-foreground/50 leading-5">
         Turn what you felt into something you can say.
       </AppText>
+
+      {/* Footer affordance: makes the card read as a door you open */}
+      <View className="h-px bg-accent/15 mt-4 mb-3" />
+      <View className="flex-row items-center justify-between">
+        <AppText className="text-sm font-medium text-accent">Begin</AppText>
+        <SymbolView
+          name={{ ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" }}
+          size={14}
+          tintColor={accentColor}
+        />
+      </View>
     </PressableFeedback>
   );
 };
