@@ -77,15 +77,16 @@ export const SessionEndScreen = ({ path, pathCompleted = true }: Props) => {
           distilledText={distilledText}
           mirrorText={mirrorText}
           contributeByDefault={contributeByDefault}
-          onDismiss={(contributed?: boolean, mood?: PostSessionMood) =>
+          onDismiss={(contributed: boolean | null, mood?: PostSessionMood) =>
             dismiss(contributed, mood)
           }
-          onHaveMore={(contributed?: boolean, mood?: PostSessionMood) =>
+          onHaveMore={(contributed: boolean | null, mood?: PostSessionMood) =>
             haveMore(contributed, mood)
           }
-          onCompleteAndBridge={(contributed?: boolean, mood?: PostSessionMood) =>
-            completeAndBridge(contributed, mood)
-          }
+          onCompleteAndBridge={(
+            contributed: boolean | null,
+            mood?: PostSessionMood,
+          ) => completeAndBridge(contributed, mood)}
           isNight={isNight}
         />
       )}

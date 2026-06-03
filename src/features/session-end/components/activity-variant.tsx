@@ -24,9 +24,18 @@ type Props = {
   distilledText: string | null;
   mirrorText: string | null;
   contributeByDefault: boolean;
-  onDismiss: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
-  onHaveMore: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
-  onCompleteAndBridge: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
+  onDismiss: (
+    contributedReflection: boolean | null,
+    mood?: PostSessionMood,
+  ) => void;
+  onHaveMore: (
+    contributedReflection: boolean | null,
+    mood?: PostSessionMood,
+  ) => void;
+  onCompleteAndBridge: (
+    contributedReflection: boolean | null,
+    mood?: PostSessionMood,
+  ) => void;
   isNight?: boolean;
 };
 
@@ -81,8 +90,10 @@ export const ActivityVariant = ({
   isNight = false,
 }: Props) => {
   const [phase, setPhase] = useState<Phase>("acknowledge");
-  const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(null);
-  const [contributed, setContributed] = useState(false);
+  const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(
+    null,
+  );
+  const [contributed, setContributed] = useState<boolean | null>(null);
   const [heavierSheetOpen, setHeavierSheetOpen] = useState(false);
   const canAsk = useQuery(api.feedback.canAskContextual);
   const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
@@ -107,7 +118,9 @@ export const ActivityVariant = ({
   useEffect(() => {
     if (phase === "close" && selectedMood === "lighter") {
       StoreReview.isAvailableAsync()
-        .then((ok) => { if (ok) return StoreReview.requestReview(); })
+        .then((ok) => {
+          if (ok) return StoreReview.requestReview();
+        })
         .catch(console.error);
     }
   }, [phase, selectedMood]);
@@ -136,10 +149,7 @@ export const ActivityVariant = ({
     <View className="flex-1">
       {/* ── Phase 1: Acknowledgment ── */}
       {phase === "acknowledge" && (
-        <Pressable
-          onPress={advancePhase}
-          className="flex-1 px-8 pb-8"
-        >
+        <Pressable onPress={advancePhase} className="flex-1 px-8 pb-8">
           {/* TODO(mascot-video): Replace Image with VideoView once expo-video is installed in a store release. See TODOS.md — "Looping Mascot Video on Acknowledge Phase". */}
           <Image
             source={require("@/assets/images/flux/jump-love-bgremove.png")}
@@ -288,7 +298,10 @@ export const ActivityVariant = ({
                 </AppText>
               </PressableFeedback>
               <PressableFeedback
-                onPress={advancePhase}
+                onPress={() => {
+                  setContributed(false);
+                  advancePhase();
+                }}
                 accessibilityLabel="Not this time"
                 className="w-full rounded-2xl border border-border/40 px-5 py-4"
               >
@@ -300,7 +313,6 @@ export const ActivityVariant = ({
           </EaseView>
         </View>
       )}
-      
 
       {/* ── Phase 4: Close ── */}
       {phase === "close" && (
@@ -312,7 +324,11 @@ export const ActivityVariant = ({
             className="w-full items-center gap-5"
           >
             {showBridgeCard && (
-              <BridgeCard onPress={() => onCompleteAndBridge(contributed, selectedMood ?? undefined)} />
+              <BridgeCard
+                onPress={() =>
+                  onCompleteAndBridge(contributed, selectedMood ?? undefined)
+                }
+              />
             )}
             {__DEV__ && showBridgeCard && (
               <Pressable
@@ -321,7 +337,9 @@ export const ActivityVariant = ({
                 hitSlop={8}
                 className="px-3 py-1"
               >
-                <AppText className="text-xs text-foreground/25">↺ bridge intro</AppText>
+                <AppText className="text-xs text-foreground/25">
+                  ↺ bridge intro
+                </AppText>
               </Pressable>
             )}
             <Button
