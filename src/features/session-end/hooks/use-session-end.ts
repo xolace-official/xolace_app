@@ -1,9 +1,10 @@
-import { useCallback, useRef, useEffect } from 'react';
-import { useRouter } from 'expo-router';
-import { useQuery } from 'convex/react';
-import { usePostHog } from 'posthog-react-native';
-import { api } from '@/convex/_generated/api';
-import { usePathSession } from '@/src/features/sit-with-this/hooks/use-path-session';
+import { useCallback, useRef, useEffect } from "react";
+import { useRouter } from "expo-router";
+import { useQuery } from "convex/react";
+import { usePostHog } from "posthog-react-native";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
 
 /**
  * Prepare and expose session completion and navigation utilities for the session-end screen.
@@ -22,10 +23,12 @@ import { usePathSession } from '@/src/features/sit-with-this/hooks/use-path-sess
  * - `dismiss` — callback accepting an optional `contributedReflection` boolean to complete the session and navigate home
  * - `haveMore` — callback accepting an optional `contributedReflection` boolean to complete the session and navigate home
  */
-export function useSessionEnd() {
+export function useSessionEnd(pathCompleted: boolean = true) {
   const router = useRouter();
   const { sessionId, session, isLoading, completePath } = usePathSession();
-  const contributeByDefaultQuery = useQuery(api.preferences.getContributeByDefault);
+  const contributeByDefaultQuery = useQuery(
+    api.preferences.getContributeByDefault,
+  );
   const sessionCountQuery = useQuery(api.users.getSessionCount);
   const posthog = usePostHog();
   const busyRef = useRef(false);
@@ -34,7 +37,7 @@ export function useSessionEnd() {
   const navigateHome = useCallback(() => {
     if (navigatedRef.current) return;
     navigatedRef.current = true;
-    router.replace('/');
+    router.replace("/");
   }, [router]);
 
   // Guard: if no active session after loading (e.g. session abandoned externally)
@@ -45,51 +48,100 @@ export function useSessionEnd() {
   }, [isLoading, sessionId, navigateHome]);
 
   const dismiss = async (
-    contributedReflection?: boolean,
-    postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
+    contributedReflection: boolean | null = null,
+    postSessionMood?: "lighter" | "same" | "heavier" | "unsure",
   ) => {
     if (busyRef.current) return;
     busyRef.current = true;
-    const ok = await completePath(true, contributedReflection, postSessionMood).finally(
-      () => {
-        busyRef.current = false;
-      },
-    );
+    const ok = await completePath(
+      pathCompleted,
+      contributedReflection ?? undefined,
+      postSessionMood,
+    ).finally(() => {
+      busyRef.current = false;
+    });
     if (ok) {
-      posthog.capture('session_completed', {
+      posthog.capture("session_completed", {
         post_session_mood: postSessionMood ?? null,
-        contributed_reflection: contributedReflection ?? false,
-        action: 'dismiss',
+        contributed_reflection: contributedReflection,
+        action: "dismiss",
       });
       navigateHome();
     }
   };
 
   const haveMore = async (
-    contributedReflection?: boolean,
-    postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
+    contributedReflection: boolean | null = null,
+    postSessionMood?: "lighter" | "same" | "heavier" | "unsure",
   ) => {
     if (busyRef.current) return;
     busyRef.current = true;
-    const ok = await completePath(true, contributedReflection, postSessionMood).finally(
-      () => {
-        busyRef.current = false;
-      },
-    );
+    const ok = await completePath(
+      pathCompleted,
+      contributedReflection ?? undefined,
+      postSessionMood,
+    ).finally(() => {
+      busyRef.current = false;
+    });
     if (ok) {
-      posthog.capture('session_completed', {
+      posthog.capture("session_completed", {
         post_session_mood: postSessionMood ?? null,
-        contributed_reflection: contributedReflection ?? false,
-        action: 'have_more',
+        contributed_reflection: contributedReflection,
+        action: "have_more",
       });
       navigateHome();
     }
   };
 
-  const distilledText = (session as { distilledText?: string } | undefined)
-    ?.distilledText ?? null;
+  const completeAndBridge = async (
+    contributedReflection: boolean | null = null,
+    postSessionMood?: "lighter" | "same" | "heavier" | "unsure",
+  ) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    const ok = await completePath(
+      pathCompleted,
+      contributedReflection ?? undefined,
+      postSessionMood,
+    ).finally(() => {
+      busyRef.current = false;
+    });
+    if (ok) {
+      posthog.capture("session_completed", {
+        post_session_mood: postSessionMood ?? null,
+        contributed_reflection: contributedReflection,
+        action: "bridge",
+      });
+      // Completing the session flips it terminal, so getActive goes null and the
+      // "no active session" guard would otherwise race us home. We're navigating
+      // to the bridge ourselves — claim navigation so navigateHome() no-ops.
+      navigatedRef.current = true;
+      router.push({
+        pathname: "/(protected)/trusted-bridge",
+        // The bridge re-derives mirror text (and the rest of the emotional
+        // context) server-side from the session, so only the id needs to ride along.
+        params: { sessionId: sessionId as Id<"sessions"> },
+      });
+    }
+  };
+
+  const sessionData = session as
+    | { distilledText?: string; mirrorText?: string }
+    | undefined;
+  const distilledText = sessionData?.distilledText ?? null;
+  const mirrorText = sessionData?.mirrorText ?? null;
   const contributeByDefault = contributeByDefaultQuery ?? false;
   const sessionCount = sessionCountQuery ?? 0;
 
-  return { sessionId, isLoading, distilledText, contributeByDefault, sessionCount, dismiss, haveMore };
+  return {
+    sessionId,
+    isLoading,
+    distilledText,
+    mirrorText,
+    contributeByDefault,
+    sessionCount,
+    dismiss,
+    haveMore,
+    completeAndBridge,
+  };
 }

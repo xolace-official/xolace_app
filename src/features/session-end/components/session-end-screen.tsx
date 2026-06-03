@@ -15,6 +15,7 @@ type PathType = "solo" | "peers" | "exit";
 
 type Props = {
   path: PathType;
+  pathCompleted?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -24,17 +25,19 @@ const styles = StyleSheet.create({
   },
 });
 
-export const SessionEndScreen = ({ path }: Props) => {
+export const SessionEndScreen = ({ path, pathCompleted = true }: Props) => {
   const insets = useSafeAreaInsets();
   const {
     sessionId,
     isLoading,
     distilledText,
+    mirrorText,
     contributeByDefault,
     sessionCount,
     dismiss,
     haveMore,
-  } = useSessionEnd();
+    completeAndBridge,
+  } = useSessionEnd(pathCompleted);
   const { isNight } = useSessionMode();
   const insetsStyle = [
     styles.insetsContainer,
@@ -61,18 +64,29 @@ export const SessionEndScreen = ({ path }: Props) => {
   return (
     <View className="flex-1 bg-background" style={insetsStyle}>
       {path === "exit" ? (
-        <ExitVariant onHaveMore={() => haveMore()} isNight={isNight} />
+        <ExitVariant
+          onHaveMore={() => haveMore()}
+          isNight={isNight}
+          sessionId={sessionId ?? undefined}
+          mirrorText={mirrorText}
+          onCompleteAndBridge={() => completeAndBridge()}
+        />
       ) : (
         <ActivityVariant
           sessionId={sessionId ?? undefined}
           distilledText={distilledText}
+          mirrorText={mirrorText}
           contributeByDefault={contributeByDefault}
-          onDismiss={(contributed?: boolean, mood?: PostSessionMood) =>
+          onDismiss={(contributed: boolean | null, mood?: PostSessionMood) =>
             dismiss(contributed, mood)
           }
-          onHaveMore={(contributed?: boolean, mood?: PostSessionMood) =>
+          onHaveMore={(contributed: boolean | null, mood?: PostSessionMood) =>
             haveMore(contributed, mood)
           }
+          onCompleteAndBridge={(
+            contributed: boolean | null,
+            mood?: PostSessionMood,
+          ) => completeAndBridge(contributed, mood)}
           isNight={isNight}
         />
       )}

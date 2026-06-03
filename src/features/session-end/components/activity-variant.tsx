@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { EaseView } from "react-native-ease/uniwind";
-import { BottomSheet, PressableFeedback } from "heroui-native";
+import { BottomSheet, Button, PressableFeedback } from "heroui-native";
 import { useQuery } from "convex/react";
 import * as StoreReview from "expo-store-review";
 import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
+import { BridgeCard } from "@/src/features/session-end/components/bridge-card";
+import { useAppStore } from "@/src/store/store";
 import { Presets } from "react-native-pulsar";
 import { ContributedConfirmation } from "@/src/features/session-end/components/contributed-confirmation";
 import { HeavierFeedbackPrompt } from "@/src/features/session-end/components/heavier-feedback-prompt";
@@ -20,9 +22,20 @@ type Phase = "acknowledge" | "mood" | "offer" | "close" | "contributed";
 type Props = {
   sessionId?: Id<"sessions">;
   distilledText: string | null;
+  mirrorText: string | null;
   contributeByDefault: boolean;
-  onDismiss: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
-  onHaveMore: (contributedReflection?: boolean, mood?: PostSessionMood) => void;
+  onDismiss: (
+    contributedReflection: boolean | null,
+    mood?: PostSessionMood,
+  ) => void;
+  onHaveMore: (
+    contributedReflection: boolean | null,
+    mood?: PostSessionMood,
+  ) => void;
+  onCompleteAndBridge: (
+    contributedReflection: boolean | null,
+    mood?: PostSessionMood,
+  ) => void;
   isNight?: boolean;
 };
 
@@ -69,17 +82,23 @@ const styles = StyleSheet.create({
 export const ActivityVariant = ({
   sessionId,
   distilledText,
+  mirrorText,
   contributeByDefault,
   onDismiss,
   onHaveMore,
+  onCompleteAndBridge,
   isNight = false,
 }: Props) => {
   const [phase, setPhase] = useState<Phase>("acknowledge");
   const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(
     null,
   );
+  const [contributed, setContributed] = useState<boolean | null>(null);
   const [heavierSheetOpen, setHeavierSheetOpen] = useState(false);
   const canAsk = useQuery(api.feedback.canAskContextual);
+  const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
+  const setBridgeIntroSeen = useAppStore((s) => s.setBridgeIntroSeen);
+  const showBridgeCard = bridgeEnabled && mirrorText != null;
 
   const advancePhase = () => {
     if (phase === "acknowledge")
@@ -99,7 +118,9 @@ export const ActivityVariant = ({
   useEffect(() => {
     if (phase === "close" && selectedMood === "lighter") {
       StoreReview.isAvailableAsync()
-        .then((ok) => { if (ok) return StoreReview.requestReview(); })
+        .then((ok) => {
+          if (ok) return StoreReview.requestReview();
+        })
         .catch(console.error);
     }
   }, [phase, selectedMood]);
@@ -116,7 +137,10 @@ export const ActivityVariant = ({
   if (phase === "contributed") {
     return (
       <ContributedConfirmation
-        onDone={() => onDismiss(true, selectedMood ?? undefined)}
+        onDone={() => {
+          setContributed(true);
+          setPhase("close");
+        }}
       />
     );
   }
@@ -125,10 +149,7 @@ export const ActivityVariant = ({
     <View className="flex-1">
       {/* ── Phase 1: Acknowledgment ── */}
       {phase === "acknowledge" && (
-        <Pressable
-          onPress={advancePhase}
-          className="flex-1 px-8 pb-8"
-        >
+        <Pressable onPress={advancePhase} className="flex-1 px-8 pb-8">
           {/* TODO(mascot-video): Replace Image with VideoView once expo-video is installed in a store release. See TODOS.md — "Looping Mascot Video on Acknowledge Phase". */}
           <Image
             source={require("@/assets/images/flux/jump-love-bgremove.png")}
@@ -254,9 +275,7 @@ export const ActivityVariant = ({
 
             {/* Spacer */}
             <View className="flex-1" />
-            
 
-            {/* TODO(bridge): replace or extend this phase with BridgeOffer component when Trusted Bridge feature ships */}
             {/* Action buttons pinned at bottom */}
             <View className="px-8 gap-3 pb-12">
               <PressableFeedback
@@ -279,7 +298,10 @@ export const ActivityVariant = ({
                 </AppText>
               </PressableFeedback>
               <PressableFeedback
-                onPress={advancePhase}
+                onPress={() => {
+                  setContributed(false);
+                  advancePhase();
+                }}
                 accessibilityLabel="Not this time"
                 className="w-full rounded-2xl border border-border/40 px-5 py-4"
               >
@@ -291,7 +313,6 @@ export const ActivityVariant = ({
           </EaseView>
         </View>
       )}
-      
 
       {/* ── Phase 4: Close ── */}
       {phase === "close" && (
@@ -302,18 +323,39 @@ export const ActivityVariant = ({
             transition={EASE_IN}
             className="w-full items-center gap-5"
           >
-            <PressableFeedback
-              onPress={() => onHaveMore(undefined, selectedMood ?? undefined)}
+            {showBridgeCard && (
+              <BridgeCard
+                onPress={() =>
+                  onCompleteAndBridge(contributed, selectedMood ?? undefined)
+                }
+              />
+            )}
+            {__DEV__ && showBridgeCard && (
+              <Pressable
+                onPress={() => setBridgeIntroSeen(false)}
+                accessibilityLabel="Reset bridge intro"
+                hitSlop={8}
+                className="px-3 py-1"
+              >
+                <AppText className="text-xs text-foreground/25">
+                  ↺ bridge intro
+                </AppText>
+              </Pressable>
+            )}
+            <Button
+              variant="ghost"
+              size="lg"
+              onPress={() => onHaveMore(contributed, selectedMood ?? undefined)}
               accessibilityLabel="Have more? I'm here."
-              className="w-full rounded-2xl border border-accent/20 bg-accent/15 px-5 py-4"
+              className="w-full"
             >
-              <AppText className="text-sm text-center font-light text-accent/70">
+              <Button.Label className="font-light text-foreground/50">
                 Have more? I&apos;m here.
-              </AppText>
-            </PressableFeedback>
+              </Button.Label>
+            </Button>
 
             <Pressable
-              onPress={() => onDismiss(false, selectedMood ?? undefined)}
+              onPress={() => onDismiss(contributed, selectedMood ?? undefined)}
               accessibilityLabel="Done"
               hitSlop={12}
             >

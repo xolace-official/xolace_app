@@ -28,7 +28,7 @@ export function SitWithThisScreen() {
     { paddingTop: insets.top, paddingBottom: insets.bottom },
   ];
 
-  const { sessionId, session, startPath, completePath } = usePathSession();
+  const { sessionId, session, startPath } = usePathSession();
   const posthog = usePostHog();
   const exerciseResult = useQuery(
     api.exercises.getForSession,
@@ -54,30 +54,17 @@ export function SitWithThisScreen() {
     }
   }, [sessionId, session, startPath]);
 
+  // Don't complete the session here — that would flip it to a terminal state and
+  // strand session-end (its "no active session" guard bounces home, and it loses
+  // the distilled/mirror text it reads from the active session). Like the peer
+  // and exit paths, we just navigate and let session-end complete on dismiss,
+  // carrying whether the exercise was finished.
   const handleComplete = async () => {
-    const ok = await completePath(true);
-    if (ok) {
-      router.replace("/session-end?path=solo");
-    } else {
-      toast.show({
-        label: "Could not wrap up",
-        description: "Try again in a moment.",
-        variant: "default",
-      });
-    }
+    router.replace("/session-end?path=solo&completed=true");
   };
 
   const handleExitEarly = async () => {
-    const ok = await completePath(false);
-    if (ok) {
-      router.replace("/session-end?path=solo");
-    } else {
-      toast.show({
-        label: "Could not wrap up",
-        description: "Try again in a moment.",
-        variant: "default",
-      });
-    }
+    router.replace("/session-end?path=solo&completed=false");
   };
 
   const handleSwap = async (newExerciseId: Id<"exercises">) => {
@@ -128,7 +115,7 @@ export function SitWithThisScreen() {
         style={insetsStyle}
       >
         <AppText className="text-center text-base text-foreground/40">
-          Getting ready...
+          Getting ready…
         </AppText>
       </View>
     );

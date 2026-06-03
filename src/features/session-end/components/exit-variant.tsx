@@ -3,8 +3,11 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { EaseView } from "react-native-ease/uniwind";
 import { useRouter } from "expo-router";
-import { LinkButton, PressableFeedback } from "heroui-native";
+import { Button, LinkButton } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import { BridgeCard } from "@/src/features/session-end/components/bridge-card";
+import { useAppStore } from "@/src/store/store";
+import type { Id } from "@/convex/_generated/dataModel";
 import { NIGHT_SESSION_END_EXIT } from "@/src/features/reflect/night-copy";
 
 type Phase = "acknowledge" | "close";
@@ -12,6 +15,9 @@ type Phase = "acknowledge" | "close";
 type Props = {
   onHaveMore: () => void;
   isNight?: boolean;
+  sessionId?: Id<"sessions">;
+  mirrorText: string | null;
+  onCompleteAndBridge: () => void;
 };
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -34,9 +40,12 @@ const styles = StyleSheet.create({
   },
 });
 
-export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
+export const ExitVariant = ({ onHaveMore, isNight = false, mirrorText, onCompleteAndBridge }: Props) => {
   const [phase, setPhase] = useState<Phase>("acknowledge");
   const router = useRouter();
+  const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
+  const setBridgeIntroSeen = useAppStore((s) => s.setBridgeIntroSeen);
+  const showBridgeCard = bridgeEnabled && mirrorText != null;
 
   useEffect(() => {
     if (phase !== "acknowledge") return;
@@ -93,17 +102,30 @@ export const ExitVariant = ({ onHaveMore, isNight = false }: Props) => {
             initialAnimate={SLIDE_OUT}
             animate={SLIDE_IN}
             transition={EASE_IN}
-            className="w-full items-center"
+            className="w-full items-center gap-4"
           >
-            <PressableFeedback
+            {showBridgeCard && <BridgeCard onPress={onCompleteAndBridge} />}
+            {__DEV__ && showBridgeCard && (
+              <Pressable
+                onPress={() => setBridgeIntroSeen(false)}
+                accessibilityLabel="Reset bridge intro"
+                hitSlop={8}
+                className="px-3 py-1"
+              >
+                <AppText className="text-xs text-foreground/25">↺ bridge intro</AppText>
+              </Pressable>
+            )}
+            <Button
+              variant="ghost"
+              size="lg"
               onPress={onHaveMore}
               accessibilityLabel="Have more? I'm here."
-              className="w-full rounded-2xl border border-accent/20 bg-accent/6 px-5 py-4"
+              className="w-full"
             >
-              <AppText className="text-sm text-center font-light text-accent/60">
+              <Button.Label className="font-light text-foreground/50">
                 Have more? I&apos;m here.
-              </AppText>
-            </PressableFeedback>
+              </Button.Label>
+            </Button>
           </EaseView>
         </View>
       )}

@@ -41,6 +41,12 @@ type TogglesSlice = {
   /** One-time flag — once true, reflect screen tour never shows again on this device. */
   reflectTourSeen: boolean;
   setReflectTourSeen: (v: boolean) => void;
+  /** Feature flag — when false, bridge card is hidden and route is inaccessible. */
+  bridgeEnabled: boolean;
+  setBridgeEnabled: (v: boolean) => void;
+  /** One-time flag — once true, bridge first-run intro modal never shows again. */
+  bridgeIntroSeen: boolean;
+  setBridgeIntroSeen: (v: boolean) => void;
 };
 
 type PreferencesSlice = {
@@ -96,6 +102,11 @@ export const useAppStore = create<AppState>()(
         reflectTourSeen: false,
         setReflectTourSeen: (v) => set({ reflectTourSeen: v }),
 
+        bridgeEnabled: true,
+        setBridgeEnabled: (v) => set({ bridgeEnabled: v }),
+        bridgeIntroSeen: false,
+        setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
+
         textureSetId: 'flat',
         setTextureSetId: (id) => set({ textureSetId: id }),
 
@@ -121,6 +132,8 @@ export const useAppStore = create<AppState>()(
           toneTipSeen: s.toneTipSeen,
           notifNudgeDismissed: s.notifNudgeDismissed,
           reflectTourSeen: s.reflectTourSeen,
+          bridgeEnabled: s.bridgeEnabled,
+          bridgeIntroSeen: s.bridgeIntroSeen,
           textureSetId: s.textureSetId,
         }),
       }
