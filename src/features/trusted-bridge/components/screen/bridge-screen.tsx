@@ -1,10 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Share, TextInput, View } from "react-native";
-import { KeyboardAwareScrollView, KeyboardStickyView } from "react-native-keyboard-controller";
+import {
+  KeyboardAwareScrollView,
+  KeyboardStickyView,
+} from "react-native-keyboard-controller";
 import { useNavigation, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
-import { Button, PressableFeedback, TextField, TextArea, Input, useThemeColor } from "heroui-native";
+import {
+  Button,
+  PressableFeedback,
+  TextField,
+  TextArea,
+  Input,
+  useThemeColor,
+} from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { usePostHog } from "posthog-react-native";
 import { AppText } from "@/src/components/shared/app-text";
@@ -18,7 +28,12 @@ import type { Id } from "@/convex/_generated/dataModel";
 type Step = "recipient" | "draft";
 type Relationship = "parent" | "partner" | "friend" | "sibling";
 
-const RELATIONSHIPS: Relationship[] = ["parent", "partner", "friend", "sibling"];
+const RELATIONSHIPS: Relationship[] = [
+  "parent",
+  "partner",
+  "friend",
+  "sibling",
+];
 
 // Address-term suggestions only where what you call them diverges from their
 // name. For a friend or sibling you usually just use the name, so we skip chips.
@@ -29,7 +44,12 @@ const ADDRESS_TERMS: Record<Relationship, string[]> = {
   sibling: ["bro", "sis", "bruh"],
 };
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
-const EASE_IN = { type: "timing" as const, duration: 400, delay: 80, easing: EASING };
+const EASE_IN = {
+  type: "timing" as const,
+  duration: 400,
+  delay: 80,
+  easing: EASING,
+};
 const FADE_OUT = { opacity: 0 };
 const FADE_IN = { opacity: 1 };
 
@@ -89,7 +109,12 @@ export function BridgeScreen({ sessionId }: Props) {
     posthog.capture("bridge_opened", { recipient_relationship: relationship });
     setHasShared(false); // fresh draft — not yet shared
     setStep("draft");
-    generate(sessionId, name.trim(), relationship ?? undefined, addressTerm ?? undefined);
+    generate(
+      sessionId,
+      name.trim(),
+      relationship ?? undefined,
+      addressTerm ?? undefined,
+    );
   };
 
   const handleShare = async () => {
@@ -100,7 +125,9 @@ export function BridgeScreen({ sessionId }: Props) {
       // reveals the "Done" affordance. (Android always reports sharedAction.)
       if (result.action === Share.sharedAction) {
         setHasShared(true);
-        posthog.capture("bridge_shared", { recipient_relationship: relationship });
+        posthog.capture("bridge_shared", {
+          recipient_relationship: relationship,
+        });
       }
     } catch {
       // share sheet cancelled
@@ -108,21 +135,28 @@ export function BridgeScreen({ sessionId }: Props) {
   };
 
   const handleComplete = () => {
-    posthog.capture("bridge_completed", { recipient_relationship: relationship });
+    posthog.capture("bridge_completed", {
+      recipient_relationship: relationship,
+    });
     router.replace("/");
   };
 
   if (showIntro) {
     return (
-      <View className="flex-1 bg-background" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
+      <View
+        className="flex-1 bg-background"
+        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      >
         <BridgeIntro onBegin={handleBegin} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
-
+    <View
+      className="flex-1 bg-background"
+      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+    >
       {/* ── Recipient step ── */}
       {step === "recipient" && (
         <View className="flex-1">
@@ -132,10 +166,23 @@ export function BridgeScreen({ sessionId }: Props) {
             showsVerticalScrollIndicator={false}
             bottomOffset={110}
           >
-            <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_IN}>
+            <EaseView
+              initialAnimate={FADE_OUT}
+              animate={FADE_IN}
+              transition={EASE_IN}
+            >
               <View className="flex-row items-center px-5 pt-4 pb-2 ">
-                <Pressable onPress={handleDismiss} hitSlop={12} accessibilityLabel="Close" accessibilityRole="button">
-                  <SymbolView name={{ ios: "xmark", android: "close", web: "close" }} size={18} tintColor={mutedColor} />
+                <Pressable
+                  onPress={handleDismiss}
+                  hitSlop={12}
+                  accessibilityLabel="Close"
+                  accessibilityRole="button"
+                >
+                  <SymbolView
+                    name={{ ios: "xmark", android: "close", web: "close" }}
+                    size={18}
+                    tintColor={mutedColor}
+                  />
                 </Pressable>
               </View>
 
@@ -146,13 +193,19 @@ export function BridgeScreen({ sessionId }: Props) {
                     Who would you like to tell?
                   </AppText>
                   <AppText className="text-sm font-light text-foreground/40 leading-5">
-                    We&apos;ll shape the message around them. We never store who they are.
+                    We&apos;ll shape the message around them. We never store who
+                    they are.
                   </AppText>
                 </View>
 
                 {/* Name field */}
                 <TextField>
-                  <Input value={name} onChangeText={setName} placeholder="their name or how you think of them" autoFocus />
+                  <Input
+                    value={name}
+                    onChangeText={setName}
+                    placeholder="their name or how you think of them"
+                    autoFocus
+                  />
                 </TextField>
 
                 {/* Relationship section */}
@@ -172,9 +225,12 @@ export function BridgeScreen({ sessionId }: Props) {
                         onPress={() => selectRelationship(rel)}
                         accessibilityLabel={rel}
                         accessibilityRole="button"
+                        accessibilityState={{ selected: relationship === rel }}
                         className={`rounded-full border px-4 py-2 ${relationship === rel ? "border-accent/40 bg-accent/10" : "border-border/50 bg-surface/30"}`}
                       >
-                        <AppText className={`text-sm ${relationship === rel ? "text-accent font-medium" : "text-foreground/50 font-light"}`}>
+                        <AppText
+                          className={`text-sm ${relationship === rel ? "text-accent font-medium" : "text-foreground/50 font-light"}`}
+                        >
                           {rel}
                         </AppText>
                       </PressableFeedback>
@@ -190,7 +246,10 @@ export function BridgeScreen({ sessionId }: Props) {
                         What do you call them?
                       </AppText>
                       <AppText className="text-xs font-light text-foreground/35 leading-4">
-                        Optional - the message will open with exactly this word, the way you greet them (like &ldquo;Mom&rdquo;, &ldquo;babe&rdquo; or &ldquo;bro&rdquo;), instead of their name.
+                        Optional - the message will open with exactly this word,
+                        the way you greet them (like &ldquo;Mom&rdquo;,
+                        &ldquo;babe&rdquo; or &ldquo;bro&rdquo;), instead of
+                        their name.
                       </AppText>
                     </View>
                     {ADDRESS_TERMS[relationship].length > 0 && (
@@ -198,12 +257,19 @@ export function BridgeScreen({ sessionId }: Props) {
                         {ADDRESS_TERMS[relationship].map((term) => (
                           <PressableFeedback
                             key={term}
-                            onPress={() => setAddressTerm(addressTerm === term ? null : term)}
+                            onPress={() =>
+                              setAddressTerm(addressTerm === term ? null : term)
+                            }
                             accessibilityLabel={term}
                             accessibilityRole="button"
+                            accessibilityState={{
+                              selected: addressTerm === term,
+                            }}
                             className={`rounded-full border px-4 py-2 ${addressTerm === term ? "border-accent/40 bg-accent/10" : "border-border/50 bg-surface/30"}`}
                           >
-                            <AppText className={`text-sm ${addressTerm === term ? "text-accent font-medium" : "text-foreground/50 font-light"}`}>
+                            <AppText
+                              className={`text-sm ${addressTerm === term ? "text-accent font-medium" : "text-foreground/50 font-light"}`}
+                            >
                               {term}
                             </AppText>
                           </PressableFeedback>
@@ -214,7 +280,9 @@ export function BridgeScreen({ sessionId }: Props) {
                       <Input
                         ref={addressInputRef}
                         value={addressTerm ?? ""}
-                        onChangeText={(t) => setAddressTerm(t.length > 0 ? t : null)}
+                        onChangeText={(t) =>
+                          setAddressTerm(t.length > 0 ? t : null)
+                        }
                         placeholder="or type what you call them"
                       />
                     </TextField>
@@ -255,7 +323,15 @@ export function BridgeScreen({ sessionId }: Props) {
               accessibilityLabel="Back"
               accessibilityRole="button"
             >
-              <SymbolView name={{ ios: "chevron.left", android: "arrow_back", web: "arrow_back" }} size={18} tintColor={mutedColor} />
+              <SymbolView
+                name={{
+                  ios: "chevron.left",
+                  android: "arrow_back",
+                  web: "arrow_back",
+                }}
+                size={18}
+                tintColor={mutedColor}
+              />
             </Pressable>
             {hasShared && <BridgeDoneButton onPress={handleComplete} />}
           </View>
@@ -265,7 +341,12 @@ export function BridgeScreen({ sessionId }: Props) {
               <ShimmerLoadingText name={name} />
             </View>
           ) : (
-            <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_IN} className="flex-1">
+            <EaseView
+              initialAnimate={FADE_OUT}
+              animate={FADE_IN}
+              transition={EASE_IN}
+              className="flex-1"
+            >
               {/* Scrollable content — keyboard-aware so the editor lifts above the keyboard */}
               <KeyboardAwareScrollView
                 className="flex-1"
@@ -280,7 +361,8 @@ export function BridgeScreen({ sessionId }: Props) {
                       A message for {name}.
                     </AppText>
                     <AppText className="text-sm font-light text-foreground/40 leading-5">
-                      This was shaped around what you felt. Edit it until it sounds like you, then share when you&apos;re ready.
+                      This was shaped around what you felt. Edit it until it
+                      sounds like you, then share when you&apos;re ready.
                     </AppText>
                   </View>
 
@@ -288,18 +370,28 @@ export function BridgeScreen({ sessionId }: Props) {
                   {status === "error" && (
                     <View className="flex-row items-start gap-3 rounded-2xl bg-surface/40 border border-border/40 px-4 py-3">
                       <SymbolView
-                        name={{ ios: "exclamationmark.circle", android: "error_outline", web: "error_outline" }}
+                        name={{
+                          ios: "exclamationmark.circle",
+                          android: "error_outline",
+                          web: "error_outline",
+                        }}
                         size={15}
                         tintColor={mutedColor}
                       />
                       <AppText className="text-xs font-light text-foreground/50 flex-1 leading-4">
-                        Couldn&apos;t personalize this time — the template below is yours to edit.
+                        Couldn&apos;t personalize this time — the template below
+                        is yours to edit.
                       </AppText>
                     </View>
                   )}
 
                   {/* Draft text area */}
-                  <TextArea value={draft} onChangeText={setDraft} numberOfLines={8} className="min-h-44" />
+                  <TextArea
+                    value={draft}
+                    onChangeText={setDraft}
+                    numberOfLines={8}
+                    className="min-h-44"
+                  />
                 </View>
               </KeyboardAwareScrollView>
 
@@ -316,7 +408,12 @@ export function BridgeScreen({ sessionId }: Props) {
                       Used only to write your draft · never stored
                     </AppText>
                   </View>
-                  <Button variant="primary" size="lg" onPress={handleShare} className="w-full">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onPress={handleShare}
+                    className="w-full"
+                  >
                     Share with {name}
                   </Button>
                   <Button
