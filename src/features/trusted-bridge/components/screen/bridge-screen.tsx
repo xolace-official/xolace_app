@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, Share, TextInput, View } from "react-native";
+import { Pressable, Share, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView, KeyboardStickyView } from "react-native-keyboard-controller";
 import { useNavigation, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -266,8 +266,13 @@ export function BridgeScreen({ sessionId }: Props) {
             </View>
           ) : (
             <EaseView initialAnimate={FADE_OUT} animate={FADE_IN} transition={EASE_IN} className="flex-1">
-              {/* Scrollable content */}
-              <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              {/* Scrollable content — keyboard-aware so the editor lifts above the keyboard */}
+              <KeyboardAwareScrollView
+                className="flex-1"
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                bottomOffset={170}
+              >
                 <View className="px-8 pt-4 pb-6 gap-5">
                   {/* Heading */}
                   <View className="gap-2">
@@ -296,35 +301,37 @@ export function BridgeScreen({ sessionId }: Props) {
                   {/* Draft text area */}
                   <TextArea value={draft} onChangeText={setDraft} numberOfLines={8} className="min-h-44" />
                 </View>
-              </ScrollView>
+              </KeyboardAwareScrollView>
 
-              {/* Fixed bottom actions */}
-              <View className="px-8 pb-10 pt-3 gap-3">
-                <View className="flex-row items-center justify-center gap-1.5">
-                  <SymbolView
-                    name={{ ios: "lock.fill", android: "lock", web: "lock" }}
-                    size={11}
-                    tintColor={mutedColor}
-                  />
-                  <AppText className="text-xs font-light text-foreground/30">
-                    Stays on your device · We never see who you&apos;re writing to
-                  </AppText>
+              {/* Bottom actions — ride above the keyboard while editing the draft */}
+              <KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
+                <View className="px-8 pb-10 pt-3 gap-3 bg-background">
+                  <View className="flex-row items-center justify-center gap-1.5">
+                    <SymbolView
+                      name={{ ios: "lock.fill", android: "lock", web: "lock" }}
+                      size={11}
+                      tintColor={mutedColor}
+                    />
+                    <AppText className="text-xs font-light text-foreground/30">
+                      Stays on your device · We never see who you&apos;re writing to
+                    </AppText>
+                  </View>
+                  <Button variant="primary" size="lg" onPress={handleShare} className="w-full">
+                    Share with {name}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    onPress={() => {
+                      posthog.capture("bridge_dismissed", { step: "draft" });
+                      router.replace("/");
+                    }}
+                    className="w-full"
+                  >
+                    Not right now
+                  </Button>
                 </View>
-                <Button variant="primary" size="lg" onPress={handleShare} className="w-full">
-                  Share with {name}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="md"
-                  onPress={() => {
-                    posthog.capture("bridge_dismissed", { step: "draft" });
-                    router.replace("/");
-                  }}
-                  className="w-full"
-                >
-                  Not right now
-                </Button>
-              </View>
+              </KeyboardStickyView>
             </EaseView>
           )}
         </View>

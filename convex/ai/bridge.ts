@@ -154,7 +154,12 @@ async function _generateDraft(input: DraftInput): Promise<string> {
     messages: [{ role: "user", content: prompt }],
   });
 
-  return extractTextFromResponse(response).trim();
+  const draft = extractTextFromResponse(response).trim();
+  if (!draft) {
+    throw new Error("Articulator returned empty draft");
+  }
+
+  return draft;
 }
 
 export const requestBridgeDraft = action({
@@ -174,11 +179,20 @@ export const requestBridgeDraft = action({
       throw new Error("No mirror text for this session");
     }
 
+    const trimmedRecipientName = args.recipientName?.trim();
+    const trimmedRecipientRelationship =
+      args.recipientRelationship?.trim() || undefined;
+    const trimmedAddressTerm = args.addressTerm?.trim() || undefined;
+
+    if (!trimmedRecipientName) {
+      throw new Error("Recipient name is required");
+    }
+
     const draft = await _generateDraft({
       ...context,
-      recipientName: args.recipientName.trim(),
-      recipientRelationship: args.recipientRelationship,
-      addressTerm: args.addressTerm?.trim() || undefined,
+      recipientName: trimmedRecipientName,
+      recipientRelationship: trimmedRecipientRelationship,
+      addressTerm: trimmedAddressTerm,
     });
 
     return { draft };
@@ -214,6 +228,9 @@ export const evalBridgeDraft = internalAction({
       recipientRelationship: args.recipientRelationship,
       addressTerm: args.addressTerm?.trim() || undefined,
     };
-    return { prompt: buildBridgePrompt(input), draft: await _generateDraft(input) };
+    return {
+      prompt: buildBridgePrompt(input),
+      draft: await _generateDraft(input),
+    };
   },
 });

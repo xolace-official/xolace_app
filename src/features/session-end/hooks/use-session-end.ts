@@ -110,10 +110,9 @@ export function useSessionEnd(pathCompleted: boolean = true) {
       navigatedRef.current = true;
       router.push({
         pathname: '/(protected)/trusted-bridge',
-        params: {
-          sessionId: sessionId as Id<'sessions'>,
-          mirrorText: mirrorText ?? '',
-        },
+        // The bridge re-derives mirror text (and the rest of the emotional
+        // context) server-side from the session, so only the id needs to ride along.
+        params: { sessionId: sessionId as Id<'sessions'> },
       });
     }
   };
