@@ -14,13 +14,13 @@ const SLIDE_IN = { opacity: 1, translateY: 0 };
 const PRIVACY_ITEMS = [
   {
     symbol: { ios: "lock.shield.fill", android: "security", web: "security" },
-    title: "Stays on your device",
-    sub: "We never store who you're writing to.",
+    title: "Never stored",
+    sub: "Who you're writing to is never saved.",
   },
   {
-    symbol: { ios: "eye.slash.fill", android: "visibility_off", web: "visibility_off" },
-    title: "We never see who",
-    sub: "The recipient lives only in your hands.",
+    symbol: { ios: "sparkles", android: "auto_awesome", web: "auto_awesome" },
+    title: "Used only to write this",
+    sub: "Their name shapes the draft, then it's discarded.",
   },
   {
     symbol: { ios: "hand.raised.fill", android: "back_hand", web: "back_hand" },

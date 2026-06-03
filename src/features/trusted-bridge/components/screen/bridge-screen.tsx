@@ -146,7 +146,7 @@ export function BridgeScreen({ sessionId }: Props) {
                     Who would you like to tell?
                   </AppText>
                   <AppText className="text-sm font-light text-foreground/40 leading-5">
-                    We&apos;ll shape the message around them, nothing leaves your device.
+                    We&apos;ll shape the message around them. We never store who they are.
                   </AppText>
                 </View>
 
@@ -313,7 +313,7 @@ export function BridgeScreen({ sessionId }: Props) {
                       tintColor={mutedColor}
                     />
                     <AppText className="text-xs font-light text-foreground/30">
-                      Stays on your device · We never see who you&apos;re writing to
+                      Used only to write your draft · never stored
                     </AppText>
                   </View>
                   <Button variant="primary" size="lg" onPress={handleShare} className="w-full">
