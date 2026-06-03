@@ -15,6 +15,7 @@ type PathType = "solo" | "peers" | "exit";
 
 type Props = {
   path: PathType;
+  pathCompleted?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -24,7 +25,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export const SessionEndScreen = ({ path }: Props) => {
+export const SessionEndScreen = ({ path, pathCompleted = true }: Props) => {
   const insets = useSafeAreaInsets();
   const {
     sessionId,
@@ -36,7 +37,7 @@ export const SessionEndScreen = ({ path }: Props) => {
     dismiss,
     haveMore,
     completeAndBridge,
-  } = useSessionEnd();
+  } = useSessionEnd(pathCompleted);
   const { isNight } = useSessionMode();
   const insetsStyle = [
     styles.insetsContainer,

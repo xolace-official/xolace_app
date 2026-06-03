@@ -3,9 +3,12 @@ import { SessionEndScreen } from '@/src/features/session-end/components/session-
 
 type Params = {
   path: 'solo' | 'peers' | 'exit';
+  completed?: string;
 };
 
 export default function SessionEnd() {
-  const { path } = useLocalSearchParams<Params>();
-  return <SessionEndScreen path={path ?? 'exit'} />;
+  const { path, completed } = useLocalSearchParams<Params>();
+  // Path screens defer completion to here and pass whether the activity was
+  // finished; absent (peers/exit) defaults to completed.
+  return <SessionEndScreen path={path ?? 'exit'} pathCompleted={completed !== 'false'} />;
 }

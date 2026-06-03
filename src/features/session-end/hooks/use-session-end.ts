@@ -23,7 +23,7 @@ import { usePathSession } from '@/src/features/sit-with-this/hooks/use-path-sess
  * - `dismiss` — callback accepting an optional `contributedReflection` boolean to complete the session and navigate home
  * - `haveMore` — callback accepting an optional `contributedReflection` boolean to complete the session and navigate home
  */
-export function useSessionEnd() {
+export function useSessionEnd(pathCompleted: boolean = true) {
   const router = useRouter();
   const { sessionId, session, isLoading, completePath } = usePathSession();
   const contributeByDefaultQuery = useQuery(api.preferences.getContributeByDefault);
@@ -51,7 +51,7 @@ export function useSessionEnd() {
   ) => {
     if (busyRef.current) return;
     busyRef.current = true;
-    const ok = await completePath(true, contributedReflection, postSessionMood).finally(
+    const ok = await completePath(pathCompleted, contributedReflection, postSessionMood).finally(
       () => {
         busyRef.current = false;
       },
@@ -72,7 +72,7 @@ export function useSessionEnd() {
   ) => {
     if (busyRef.current) return;
     busyRef.current = true;
-    const ok = await completePath(true, contributedReflection, postSessionMood).finally(
+    const ok = await completePath(pathCompleted, contributedReflection, postSessionMood).finally(
       () => {
         busyRef.current = false;
       },
@@ -93,7 +93,7 @@ export function useSessionEnd() {
   ) => {
     if (busyRef.current) return;
     busyRef.current = true;
-    const ok = await completePath(true, contributedReflection, postSessionMood).finally(
+    const ok = await completePath(pathCompleted, contributedReflection, postSessionMood).finally(
       () => {
         busyRef.current = false;
       },
@@ -104,6 +104,10 @@ export function useSessionEnd() {
         contributed_reflection: contributedReflection ?? false,
         action: 'bridge',
       });
+      // Completing the session flips it terminal, so getActive goes null and the
+      // "no active session" guard would otherwise race us home. We're navigating
+      // to the bridge ourselves — claim navigation so navigateHome() no-ops.
+      navigatedRef.current = true;
       router.push({
         pathname: '/(protected)/trusted-bridge',
         params: {
