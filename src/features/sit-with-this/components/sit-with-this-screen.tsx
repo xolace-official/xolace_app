@@ -115,7 +115,7 @@ export function SitWithThisScreen() {
         style={insetsStyle}
       >
         <AppText className="text-center text-base text-foreground/40">
-          Getting ready...
+          Getting ready…
         </AppText>
       </View>
     );

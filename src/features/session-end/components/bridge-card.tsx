@@ -15,7 +15,7 @@ export const BridgeCard = ({ onPress }: Props) => {
       onPress={onPress}
       accessibilityLabel="Find the words for someone who matters. Suggested for you."
       accessibilityRole="button"
-      className="w-full overflow-hidden rounded-3xl border border-accent/30 bg-accent/[0.07] px-5 py-5"
+      className="w-full overflow-hidden rounded-3xl border border-accent/30 bg-accent/[0.07] p-5"
     >
       <PressableFeedback.Highlight
         animation={{ backgroundColor: { value: accentColor }, opacity: { value: [0, 0.08] } }}
@@ -23,7 +23,7 @@ export const BridgeCard = ({ onPress }: Props) => {
 
       {/* Top row: flame chip leads, "suggested" anchor balances the right */}
       <View className="flex-row items-center justify-between mb-4">
-        <View className="h-9 w-9 items-center justify-center rounded-xl bg-accent/12">
+        <View className="size-9 items-center justify-center rounded-xl bg-accent/12">
           <SymbolView
             name={{ ios: "flame.fill", android: "local_fire_department", web: "local_fire_department" }}
             size={16}

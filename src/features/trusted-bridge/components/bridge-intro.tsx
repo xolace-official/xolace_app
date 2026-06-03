@@ -83,7 +83,7 @@ export function BridgeIntro({ onBegin }: Props) {
               className="flex-row items-center gap-4"
             >
               <View
-                className="w-10 h-10 rounded-2xl items-center justify-center shrink-0"
+                className="size-10 rounded-2xl items-center justify-center shrink-0"
                 style={{ backgroundColor: iconBg }}
               >
                 <SymbolView name={symbol} size={18} tintColor={accentColor} />

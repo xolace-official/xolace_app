@@ -379,8 +379,8 @@ export function BridgeScreen({ sessionId }: Props) {
                         tintColor={mutedColor}
                       />
                       <AppText className="text-xs font-light text-foreground/50 flex-1 leading-4">
-                        Couldn&apos;t personalize this time — the template below
-                        is yours to edit.
+                        Couldn&apos;t personalize this time, but the template
+                        below is yours to edit.
                       </AppText>
                     </View>
                   )}
