@@ -42,7 +42,6 @@ export const ReflectScreen = () => {
     dispatch,
     isLoading,
     sessionId,
-    turnsCount,
     escalationResources,
     toneUsed,
     isRecording,
