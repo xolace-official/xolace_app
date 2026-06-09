@@ -28,6 +28,7 @@ import { PathSelectionState } from "@/src/features/reflect/components/states/pat
 import { EscalationState } from "@/src/features/reflect/components/states/escalation-state";
 import { ErrorState } from "@/src/features/reflect/components/states/error-state";
 import { SpaceNamePromptDialog } from "@/src/features/reflect/components/space-name-prompt-dialog";
+import { ClarifyFeedbackSheet } from "@/src/features/reflect/components/states/clarify-feedback-sheet";
 
 const EASE_ANIMATE_OUT = { opacity: 0 };
 
@@ -63,6 +64,7 @@ export const ReflectScreen = () => {
     startVoiceFromIdle,
     startVoiceFromTyping,
     handleDismissTyping,
+    turnsCount,
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
   const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
@@ -73,6 +75,24 @@ export const ReflectScreen = () => {
 
   const [showSpaceNameDialog, setShowSpaceNameDialog] = useState(false);
   const firedSpaceNameDialog = useRef(false);
+  const [mirrorFeedbackOpen, setMirrorFeedbackOpen] = useState(false);
+  const mirrorFeedbackShown = useRef(false);
+
+  const handleNotQuiteWithFeedback = () => {
+    if (!mirrorFeedbackShown.current) {
+      mirrorFeedbackShown.current = true;
+      setMirrorFeedbackOpen(true);
+    }
+    handleNotQuite();
+  };
+
+  const handleSayMoreWithFeedback = () => {
+    if (!mirrorFeedbackShown.current) {
+      mirrorFeedbackShown.current = true;
+      setMirrorFeedbackOpen(true);
+    }
+    handleSayMore();
+  };
 
   useEffect(() => {
     if (!context?.profile) return;
@@ -140,8 +160,8 @@ export const ReflectScreen = () => {
             sessionId={sessionId}
             toneUsed={toneUsed}
             onThatsIt={handleThatsIt}
-            onNotQuite={handleNotQuite}
-            onSayMore={handleSayMore}
+            onNotQuite={handleNotQuiteWithFeedback}
+            onSayMore={handleSayMoreWithFeedback}
           />
         );
       case "clarify":
@@ -151,7 +171,7 @@ export const ReflectScreen = () => {
             clarifyText={state.clarifyText}
             dispatch={dispatch}
             onSubmit={submitClarification}
-            autoFocus={!isOutgoing}
+            autoFocus={!isOutgoing && !mirrorFeedbackOpen}
           />
         );
       case "gave-up":
@@ -256,6 +276,14 @@ export const ReflectScreen = () => {
       >
         {renderScreen(current)}
       </EaseView>
+
+      {/* Mirror feedback — fires when user rejects a mirror, persists through screen transition */}
+      <ClarifyFeedbackSheet
+        sessionId={sessionId}
+        turnIndex={turnsCount}
+        isOpen={mirrorFeedbackOpen}
+        onClose={() => setMirrorFeedbackOpen(false)}
+      />
 
       {/* Space naming — fires once on first path-selection when unnamed */}
       <SpaceNamePromptDialog

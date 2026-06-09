@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { EaseView } from "react-native-ease/uniwind";
-import { BottomSheet, Button, PressableFeedback } from "heroui-native";
+import { Button, PressableFeedback } from "heroui-native";
 import { useQuery } from "convex/react";
 import * as StoreReview from "expo-store-review";
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
+import { UnsureFeedbackPrompt } from "@/src/features/session-end/components/unsure-feedback-prompt";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
@@ -14,6 +14,7 @@ import { useAppStore } from "@/src/store/store";
 import { Presets } from "react-native-pulsar";
 import { ContributedConfirmation } from "@/src/features/session-end/components/contributed-confirmation";
 import { HeavierFeedbackPrompt } from "@/src/features/session-end/components/heavier-feedback-prompt";
+
 import { NIGHT_SESSION_END_ACTIVITY } from "@/src/features/reflect/night-copy";
 
 type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
@@ -55,8 +56,6 @@ const MOOD_HAPTICS: Record<PostSessionMood, () => void> = {
   unsure: () => Presets.murmur(),
 };
 
-const HEAVIER_SHEET_SNAP = ["52%"];
-
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const EASE_SLOW = { type: "timing" as const, duration: 600, easing: EASING };
 const EASE_IN = {
@@ -95,7 +94,9 @@ export const ActivityVariant = ({
   );
   const [contributed, setContributed] = useState<boolean | null>(null);
   const [heavierSheetOpen, setHeavierSheetOpen] = useState(false);
+  const [unsureSheetOpen, setUnsureSheetOpen] = useState(false);
   const canAsk = useQuery(api.feedback.canAskContextual);
+  const canAskUnsure = useQuery(api.feedback.canAskUnsureContextual);
   const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
   const setBridgeIntroSeen = useAppStore((s) => s.setBridgeIntroSeen);
   const showBridgeCard = bridgeEnabled && mirrorText != null;
@@ -128,9 +129,12 @@ export const ActivityVariant = ({
   const handleMoodPress = (mood: PostSessionMood) => {
     MOOD_HAPTICS[mood]();
     setSelectedMood(mood);
-    // Open the heavier feedback sheet without blocking phase flow
+    // Open feedback sheets without blocking phase flow
     if (mood === "heavier" && canAsk === true) {
       setHeavierSheetOpen(true);
+    }
+    if (mood === "unsure" && canAskUnsure === true) {
+      setUnsureSheetOpen(true);
     }
   };
 
@@ -372,29 +376,17 @@ export const ActivityVariant = ({
         </View>
       )}
 
-      {/* ── Heavier Feedback Sheet ── */}
-      <BottomSheet
+      <HeavierFeedbackPrompt
+        sessionId={sessionId}
         isOpen={heavierSheetOpen}
-        onOpenChange={(open) => {
-          if (!open) setHeavierSheetOpen(false);
-        }}
-      >
-        <BottomSheet.Portal>
-          <BottomSheetBlurOverlay />
-          <BottomSheet.Content
-            snapPoints={HEAVIER_SHEET_SNAP}
-            enableOverDrag={false}
-            enableDynamicSizing={false}
-            backgroundClassName="bg-background"
-            handleIndicatorClassName="bg-foreground/20"
-          >
-            <HeavierFeedbackPrompt
-              sessionId={sessionId}
-              onDismiss={() => setHeavierSheetOpen(false)}
-            />
-          </BottomSheet.Content>
-        </BottomSheet.Portal>
-      </BottomSheet>
+        onClose={() => setHeavierSheetOpen(false)}
+      />
+
+      <UnsureFeedbackPrompt
+        sessionId={sessionId}
+        isOpen={unsureSheetOpen}
+        onClose={() => setUnsureSheetOpen(false)}
+      />
     </View>
   );
 };

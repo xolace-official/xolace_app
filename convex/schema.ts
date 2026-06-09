@@ -1030,14 +1030,15 @@ export default defineSchema({
   // ===========================================================
   //
   // User feedback tied to emotional profile.
-  // Four types: general (settings), mood_heavier (session end),
-  // mirror_miss (clarify state), gave_up (gave-up state).
+  // Five types: general (settings), mood_heavier (session end),
+  // mood_unsure (session end), mirror_miss (clarify state), gave_up (gave-up state).
   //
   feedback: defineTable({
     emotionalProfileId: v.id("emotional_profiles"),
     type: v.union(
       v.literal("general"),
       v.literal("mood_heavier"),
+      v.literal("mood_unsure"),
       v.literal("mirror_miss"),
       v.literal("gave_up"),
     ),
@@ -1046,10 +1047,12 @@ export default defineSchema({
     // mirror_miss only: 0 = first clarify attempt, 1 = second (final).
     // Range: 0..MAX_TURNS-1
     turnIndex: v.optional(v.number()),
-    // general: max 1000 chars; mood_heavier: max 300 chars; mirror_miss: max 100 chars
+    // general: max 1000 chars; mood_heavier/mood_unsure: max 300 chars; mirror_miss: max 100 chars
     text: v.optional(v.string()),
     // gave_up: "mirror_kept_missing" | "figured_it_out" | "needed_to_vent"
     // mood_heavier: "mirror_missed" | "life_is_heavy" | "something_else"
+    // mood_unsure: "felt_ok_while_here" | "still_processing" | "too_many_things" | "something_else"
+    // mirror_miss: "wrong_emotion" | "too_surface_level" | "close_but_not_quite" | "missed_the_main_thing"
     selectedOption: v.optional(v.string()),
     createdAt: v.number(),
   })
