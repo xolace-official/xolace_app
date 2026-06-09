@@ -11,7 +11,7 @@ import { Settings } from 'react-native-pulsar';
 
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
 import { useUniwind } from 'uniwind'
 import * as SplashScreen from 'expo-splash-screen';
@@ -103,19 +103,19 @@ export default function RootLayout() {
   const [updateSheetOpen, setUpdateSheetOpen] = useState(false);
   const [updateSheetMode, setUpdateSheetMode] = useState<UpdateBottomSheetMode>('new-version');
 
-  const handleVersionChecked = useCallback((isNew: boolean) => {
+  const handleVersionChecked = (isNew: boolean) => {
     setIsVersionChecked(true);
     setIsNewVersionAvailable(isNew);
     if (isNew) {
       setUpdateSheetMode('new-version');
       setUpdateSheetOpen(true);
     }
-  }, [setIsVersionChecked, setIsNewVersionAvailable]);
+  };
 
-  const handleOtaUpdateReady = useCallback(() => {
+  const handleOtaUpdateReady = () => {
     setUpdateSheetMode('ota-update');
     setUpdateSheetOpen(true);
-  }, []);
+  };
 
   useVersionCheck({ onVersionChecked: handleVersionChecked });
   useOtaUpdate({ isVersionChecked, isNewVersionAvailable, onUpdateReady: handleOtaUpdateReady });
