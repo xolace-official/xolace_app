@@ -225,23 +225,25 @@ export const ActivityVariant = ({
 
             {/* Pinned CTA */}
             <View className="px-8 pt-6 pb-12">
-              <PressableFeedback
+              <Button
                 onPress={advancePhase}
                 accessibilityLabel={selectedMood ? "Continue" : "Skip for now"}
-                className={`w-full rounded-2xl border px-5 py-4 ${
+                variant="outline"
+                size="lg"
+                className={`w-full rounded-2xl ${
                   selectedMood
                     ? "border-foreground/20 bg-foreground/5"
                     : "border-border/40"
                 }`}
               >
-                <AppText
-                  className={`text-sm text-center ${
+                <Button.Label
+                  className={`text-sm ${
                     selectedMood ? "text-foreground/70" : "text-foreground/25"
                   }`}
                 >
                   {selectedMood ? "Continue" : "Skip for now"}
-                </AppText>
-              </PressableFeedback>
+                </Button.Label>
+              </Button>
             </View>
           </EaseView>
         </ScrollView>
@@ -278,37 +280,41 @@ export const ActivityVariant = ({
 
             {/* Action buttons pinned at bottom */}
             <View className="px-8 gap-3 pb-12">
-              <PressableFeedback
+              <Button
                 onPress={() => setPhase("contributed")}
                 accessibilityLabel="Yes, share anonymously"
-                className={`w-full rounded-2xl border px-5 py-4 ${
+                variant="outline"
+                size="lg"
+                className={`w-full rounded-2xl ${
                   contributeByDefault
                     ? "border-accent/40 bg-accent/10"
                     : "border-border/60 bg-surface/30"
                 }`}
               >
-                <AppText
-                  className={`text-base text-center ${
+                <Button.Label
+                  className={`text-base ${
                     contributeByDefault
                       ? "text-accent font-medium"
                       : "text-foreground/50 font-light"
                   }`}
                 >
                   Yes, anonymously
-                </AppText>
-              </PressableFeedback>
-              <PressableFeedback
+                </Button.Label>
+              </Button>
+              <Button
                 onPress={() => {
                   setContributed(false);
                   advancePhase();
                 }}
                 accessibilityLabel="Not this time"
-                className="w-full rounded-2xl border border-border/40 px-5 py-4"
+                variant="ghost"
+                size="lg"
+                className="w-full rounded-2xl"
               >
-                <AppText className="text-sm text-center text-foreground/30 font-light">
+                <Button.Label className="text-sm text-foreground/30 font-light">
                   Not this time
-                </AppText>
-              </PressableFeedback>
+                </Button.Label>
+              </Button>
             </View>
           </EaseView>
         </View>
@@ -354,13 +360,14 @@ export const ActivityVariant = ({
               </Button.Label>
             </Button>
 
-            <Pressable
+            <Button
               onPress={() => onDismiss(contributed, selectedMood ?? undefined)}
               accessibilityLabel="Done"
-              hitSlop={12}
+              variant="ghost"
+              size="sm"
             >
-              <AppText className="text-sm text-foreground/20">Done</AppText>
-            </Pressable>
+              <Button.Label className="text-sm text-foreground/20">Done</Button.Label>
+            </Button>
           </EaseView>
         </View>
       )}
