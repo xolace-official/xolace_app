@@ -1,4 +1,5 @@
-import { View, Dimensions } from "react-native";
+import { View, Dimensions, StyleSheet } from "react-native";
+import { useRef, useMemo } from "react";
 import { SymbolView } from "expo-symbols";
 import { LinearGradient } from "expo-linear-gradient";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -19,6 +20,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CONTAINER_WIDTH = SCREEN_WIDTH - 48;
 const FLAME_WIDTH = CONTAINER_WIDTH / FLAME_COUNT;
 
+const styles = StyleSheet.create({ gradientFill: { flex: 1 } });
+
 const SPRING_BOUNCE = { damping: 8, stiffness: 320, mass: 0.6 };
 const SPRING_SETTLE = { damping: 14, stiffness: 220, mass: 0.6 };
 const SPRING_FILL = { damping: 20, stiffness: 180, mass: 0.6 };
@@ -30,16 +33,23 @@ type Props = {
 
 export function FlameIntensitySelector({ value, onChange }: Props) {
   const accent = useThemeColor("accent") as string;
+  const foreground = useThemeColor("foreground") as string;
 
-  // Gradient fill progress (0-100%)
   const gradientWidth = useSharedValue(value > 0 ? (value / FLAME_COUNT) * 100 : 0);
-
-  // Per-flame scale values
   const s1 = useSharedValue(value >= 1 ? 1 : 0.75);
   const s2 = useSharedValue(value >= 2 ? 1 : 0.75);
   const s3 = useSharedValue(value >= 3 ? 1 : 0.75);
   const s4 = useSharedValue(value >= 4 ? 1 : 0.75);
   const s5 = useSharedValue(value >= 5 ? 1 : 0.75);
+
+  // Stable relay so the memoized gesture never goes stale and is never
+  // re-registered mid-gesture (which is what caused the drag crash).
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const notifyDragEnd = useRef((rating: number) => {
+    onChangeRef.current(rating);
+    Presets.plunk();
+  }).current;
 
   const updateScales = (rating: number) => {
     "worklet";
@@ -52,6 +62,7 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
 
   const bounceFlame = (index: number) => {
     "worklet";
+    if (index < 0 || index > 4) return;
     const sv = [s1, s2, s3, s4, s5][index];
     sv.set(
       withSpring(1.35, SPRING_BOUNCE, () => {
@@ -60,26 +71,35 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
     );
   };
 
-  const applyRating = (rating: number) => {
-    "worklet";
-    gradientWidth.set(withSpring((rating / FLAME_COUNT) * 100, SPRING_FILL));
-    updateScales(rating);
-    scheduleOnRN(Presets.plunk);
-    scheduleOnRN(onChange, rating);
-  };
-
-  const panGesture = Gesture.Pan()
-    .minDistance(5)
-    .onStart((e) => {
-      "worklet";
-      const rating = Math.max(1, Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)));
-      applyRating(rating);
-    })
-    .onUpdate((e) => {
-      "worklet";
-      const rating = Math.max(1, Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)));
-      applyRating(rating);
-    });
+  // useMemo keeps the gesture object stable across re-renders so GestureDetector
+  // never swaps handlers mid-gesture. All captured values are stable:
+  // shared values never change identity; notifyDragEnd is a stable ref function.
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .minDistance(5)
+        .activeOffsetX([-5, 5])
+        .failOffsetY([-5, 5])
+        .onStart((e) => {
+          "worklet";
+          const rating = Math.max(1, Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)));
+          gradientWidth.set(withSpring((rating / FLAME_COUNT) * 100, SPRING_FILL));
+          updateScales(rating);
+        })
+        .onUpdate((e) => {
+          "worklet";
+          const rating = Math.max(1, Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)));
+          gradientWidth.set(withSpring((rating / FLAME_COUNT) * 100, SPRING_FILL));
+          updateScales(rating);
+        })
+        .onEnd((e) => {
+          "worklet";
+          const rating = Math.max(1, Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)));
+          scheduleOnRN(notifyDragEnd, rating);
+        }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const handleTap = (intensity: number) => {
     gradientWidth.set(withSpring((intensity / FLAME_COUNT) * 100, SPRING_FILL));
@@ -117,22 +137,21 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
 
   const flameStyles = [f1Style, f2Style, f3Style, f4Style, f5Style];
 
-  const foreground = useThemeColor("foreground") as string;
-
   return (
     <View className="gap-2">
       <GestureDetector gesture={panGesture}>
         <Animated.View className="h-14 rounded-2xl overflow-hidden bg-surface/60">
           {/* Gradient fill bar */}
           <Animated.View
-            style={[gradientStyle, { position: "absolute", top: 0, bottom: 0, left: 0 }]}
+            style={gradientStyle}
+            className="absolute inset-y-0 left-0"
           >
             <LinearGradient
               colors={[`${accent}50`, `${accent}CC`, accent]}
               locations={[0, 0.5, 1]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ flex: 1 }}
+              style={styles.gradientFill}
             />
           </Animated.View>
 
