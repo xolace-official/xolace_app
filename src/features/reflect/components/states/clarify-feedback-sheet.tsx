@@ -12,7 +12,7 @@ const CHIPS = [
   { key: "missed_the_main_thing", label: "Missed the main thing" },
 ] as const;
 
-const SNAP_POINTS = ["44%"];
+const SNAP_POINTS = ["48%"];
 
 type Props = {
   sessionId: Id<"sessions"> | null;
@@ -45,7 +45,7 @@ export function ClarifyFeedbackSheet({ sessionId, turnIndex, isOpen, onClose }: 
 
   return (
     <FeedbackSheet.Frame snapPoints={SNAP_POINTS} isOpen={isOpen} onClose={onClose}>
-      <FeedbackSheet.Header subtitle="One tap — no pressure.">
+      <FeedbackSheet.Header subtitle="One tap, no pressure. Can dismiss to">
         What didn&apos;t land?
       </FeedbackSheet.Header>
       <FeedbackSheet.Chips chips={CHIPS} selected={null} onSelect={handleChip} />

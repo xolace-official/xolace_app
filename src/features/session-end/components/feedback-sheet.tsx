@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { BottomSheet, Button, PressableFeedback, useThemeColor } from "heroui-native";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
@@ -121,7 +121,7 @@ function FeedbackSheetInput({ value, onChangeText, placeholder, maxLength = 300 
       maxLength={maxLength}
       placeholderTextColor={`${foreground}4D`}
       returnKeyType="done"
-      style={{ fontSize: 14, color: foreground, paddingHorizontal: 4, paddingVertical: 8 }}
+      style={[styles.input, { color: foreground }]}
     />
   );
 }
@@ -148,6 +148,10 @@ function FeedbackSheetSubmit({ onPress, disabled = false, label = "Done" }: Subm
     </Button>
   );
 }
+
+const styles = StyleSheet.create({
+  input: { fontSize: 14, paddingHorizontal: 4, paddingVertical: 8 },
+});
 
 // ─── Export ───────────────────────────────────────────────────────────────────
 

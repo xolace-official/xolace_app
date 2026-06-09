@@ -6,7 +6,7 @@ import { FeedbackSheet } from "./feedback-sheet";
 import { FlameIntensitySelector } from "./flame-intensity-selector";
 import { useHeavierFeedback } from "./use-heavier-feedback";
 
-const SNAP_POINTS = ["70%"];
+const SNAP_POINTS = ["75%"];
 
 type Props = {
   sessionId?: Id<"sessions">;
@@ -30,7 +30,7 @@ export function HeavierFeedbackPrompt({ sessionId, isOpen, onClose }: Props) {
 
   return (
     <FeedbackSheet.Frame snapPoints={SNAP_POINTS} isOpen={isOpen} onClose={onClose}>
-      <FeedbackSheet.Header subtitle="You don't have to answer — this is just for us to understand.">
+      <FeedbackSheet.Header subtitle="You don't have to answer, but this is just for us to understand.">
         How did that land?
       </FeedbackSheet.Header>
 
