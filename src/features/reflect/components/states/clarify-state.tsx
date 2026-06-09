@@ -1,12 +1,9 @@
-import { useEffect, useState } from 'react';
-import { View, TextInput } from 'react-native';
+import { useEffect } from 'react';
+import { View } from 'react-native';
 import { Presets } from 'react-native-pulsar';
 import { EaseView } from 'react-native-ease/uniwind';
-import { TextArea, LinkButton, useThemeColor } from 'heroui-native';
+import { TextArea, LinkButton } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
 import type { ReflectionAction } from '@/src/features/reflect/types';
@@ -17,11 +14,6 @@ type Props = {
   dispatch: React.Dispatch<ReflectionAction>;
   onSubmit: () => void;
   autoFocus?: boolean;
-  // sessionId is guaranteed non-null here: clarify state is only reachable after
-  // session initiation + mirror delivery. Typed as | undefined to satisfy the schema
-  // optional field, but in practice it will always be defined.
-  sessionId: Id<'sessions'> | undefined;
-  turnIndex: number;
 };
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -32,7 +24,6 @@ const EASE_ANIMATE_SLIDE = { opacity: 1, translateY: 0 };
 const EASE_BACK_TRANSITION = { type: 'timing' as const, duration: 300, easing: EASING };
 const EASE_MIRROR_TRANSITION = { type: 'timing' as const, duration: 600, easing: EASING };
 const EASE_PROMPT_TRANSITION = { type: 'timing' as const, duration: 400, delay: 200, easing: EASING };
-const EASE_FEEDBACK_TRANSITION = { type: 'timing' as const, duration: 300, delay: 200, easing: EASING };
 
 export const ClarifyState = ({
   previousMirror,
@@ -40,33 +31,11 @@ export const ClarifyState = ({
   dispatch,
   onSubmit,
   autoFocus = true,
-  sessionId,
-  turnIndex,
 }: Props) => {
-  const [feedbackText, setFeedbackText] = useState('');
-
   useEffect(() => {
     Presets.wobble();
   }, []);
   const canSubmit = clarifyText.trim().length > 0;
-  const submitFeedback = useMutation(api.feedback.submit);
-  const foregroundColor = useThemeColor('foreground') as string;
-
-  const handleSubmit = () => {
-    const capturedFeedbackText = feedbackText.trim();
-    onSubmit();
-    if (capturedFeedbackText && sessionId) {
-      // Fire-and-forget — not awaited, PostHog not captured
-      submitFeedback({
-        type: 'mirror_miss',
-        sessionId,
-        turnIndex,
-        text: capturedFeedbackText,
-      }).catch((e) => console.error('mirror_miss feedback failed', e));
-    }
-  };
-
-  const textInputStyle = { fontSize: 14, color: foregroundColor, marginTop: 12, paddingHorizontal: 4 };
 
   return (
     <View className="flex-1">
@@ -120,28 +89,12 @@ export const ClarifyState = ({
             variant="secondary"
             className="min-h-[120] border-0 bg-transparent text-base text-foreground"
           />
-
-          <EaseView
-            initialAnimate={EASE_INITIAL_FADE}
-            animate={EASE_ANIMATE_FADE}
-            transition={EASE_FEEDBACK_TRANSITION}
-          >
-            <TextInput
-              placeholder="What was off? (optional)"
-              accessibilityLabel="Tell us what was off (optional)"
-              value={feedbackText}
-              onChangeText={setFeedbackText}
-              maxLength={100}
-              placeholderTextColor={`${foregroundColor}4D`}
-              style={textInputStyle}
-            />
-          </EaseView>
         </View>
 
         <View className="items-center pb-4 pt-2">
           <PillButton
             label="Let it out"
-            onPress={() => { Presets.propel(); handleSubmit(); }}
+            onPress={() => { Presets.propel(); onSubmit(); }}
             disabled={!canSubmit}
           />
         </View>

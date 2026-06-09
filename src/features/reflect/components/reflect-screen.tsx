@@ -153,8 +153,6 @@ export const ReflectScreen = () => {
             dispatch={dispatch}
             onSubmit={submitClarification}
             autoFocus={!isOutgoing}
-            sessionId={sessionId ?? undefined}
-            turnIndex={turnsCount}
           />
         );
       case "gave-up":
