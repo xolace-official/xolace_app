@@ -27,8 +27,7 @@ import {
 
 import { RootProvider } from '@/src/providers/root-provider';
 import { useAppStore } from '@/src/store/store';
-import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
-import { useVersionCheck } from '@/src/helpers/hooks/use-version-check';
+import { UpdateBottomSheets } from '@/src/components/shared/update-bottom-sheets';
 import { FullRippleLoader } from '@/src/components/shared/loader/ripple/full-ripple-loader';
 
 SplashScreen.preventAutoHideAsync();
@@ -94,8 +93,6 @@ const AppContent = () => {
  * @returns The root layout element that provides app-wide context and a navigation theme.
  */
 export default function RootLayout() {
-  useVersionCheck();
-  useOtaUpdate();
   const { theme } = useUniwind()
   const [fontsLoaded, fontError] = useFonts({
     SpaceGrotesk_400Regular,
@@ -117,6 +114,7 @@ export default function RootLayout() {
     <RootProvider>
       <ThemeProvider value={theme.includes('dark') ? DarkTheme : DefaultTheme}>
         <AppContent />
+        <UpdateBottomSheets />
       </ThemeProvider>
     </RootProvider>
   );
