@@ -1,55 +1,58 @@
-import { useEffect, useRef, useState } from 'react';
 import * as Updates from 'expo-updates';
+import { useCallback, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
-import { useAppStore } from '@/src/store/store';
+
+type UseOtaUpdateOptions = {
+  isVersionChecked: boolean;
+  isNewVersionAvailable: boolean;
+  onUpdateReady: () => void;
+};
 
 /**
- * Checks for OTA updates on mount and whenever the app comes to the foreground.
- * Defers to useVersionCheck — if a native store update is available, the OTA
- * sheet is suppressed (the store update supersedes it).
- *
- * All network calls are no-ops in development mode.
+ * Manages EAS OTA updates. Fetches available updates and notifies the layout
+ * when one is ready to apply. Re-checks when the app returns to the foreground.
+ * Skipped entirely in development builds.
  */
-export function useOtaUpdate() {
+export function useOtaUpdate({
+  isVersionChecked,
+  isNewVersionAvailable,
+  onUpdateReady,
+}: UseOtaUpdateOptions) {
+  const { isUpdateAvailable } = Updates.useUpdates();
   const appState = useRef(AppState.currentState);
-  const { isUpdateAvailable, isUpdatePending } = Updates.useUpdates();
-  const isVersionChecked = useAppStore((s) => s.isVersionChecked);
-  const isNewVersionAvailable = useAppStore((s) => s.isNewVersionAvailable);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  // Silently download the update once detected, but only when we know the
-  // installed version is already the latest store release.
+  const handleUpdate = useCallback(async () => {
+    if (!isUpdateAvailable || !isVersionChecked || isNewVersionAvailable) return;
+
+    try {
+      await Updates.fetchUpdateAsync();
+      onUpdateReady();
+    } catch (error) {
+      console.log('[useOtaUpdate] Failed to fetch update:', error);
+    }
+  }, [isUpdateAvailable, isVersionChecked, isNewVersionAvailable, onUpdateReady]);
+
   useEffect(() => {
-    if (__DEV__ || !isUpdateAvailable || !isVersionChecked || isNewVersionAvailable) return;
-    Updates.fetchUpdateAsync().catch(() => {});
+    if (__DEV__) return;
+    handleUpdate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isUpdateAvailable, isVersionChecked, isNewVersionAvailable]);
 
-  // When download completes, open the sheet
-  useEffect(() => {
-    if (__DEV__ || !isUpdatePending || isSheetOpen) return;
-    setIsSheetOpen(true);
-  }, [isUpdatePending, isSheetOpen]);
-
-  // Re-check for updates each time the app returns to the foreground
   useEffect(() => {
     if (__DEV__) return;
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (
-        appState.current.match(/inactive|background/) &&
-        nextAppState === 'active'
-      ) {
-        Updates.checkForUpdateAsync().catch(() => {});
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        Updates.checkForUpdateAsync()
+          .then(() => handleUpdate())
+          .catch((error) => {
+            console.log('[useOtaUpdate] Failed to check for update on foreground:', error);
+          });
       }
       appState.current = nextAppState;
     });
 
     return () => subscription.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  return {
-    isSheetOpen,
-    dismiss: () => setIsSheetOpen(false),
-    confirm: () => Updates.reloadAsync(),
-  };
 }

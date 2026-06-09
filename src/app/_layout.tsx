@@ -11,7 +11,7 @@ import { Settings } from 'react-native-pulsar';
 
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
 import { useUniwind } from 'uniwind'
 import * as SplashScreen from 'expo-splash-screen';
@@ -27,7 +27,9 @@ import {
 
 import { RootProvider } from '@/src/providers/root-provider';
 import { useAppStore } from '@/src/store/store';
-import { UpdateBottomSheets } from '@/src/components/shared/update-bottom-sheets';
+import { UpdateBottomSheet, type UpdateBottomSheetMode } from '@/src/components/shared/update-bottom-sheet';
+import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
+import { useVersionCheck } from '@/src/helpers/hooks/use-version-check';
 import { FullRippleLoader } from '@/src/components/shared/loader/ripple/full-ripple-loader';
 
 SplashScreen.preventAutoHideAsync();
@@ -93,7 +95,31 @@ const AppContent = () => {
  * @returns The root layout element that provides app-wide context and a navigation theme.
  */
 export default function RootLayout() {
-  const { theme } = useUniwind()
+  const { theme } = useUniwind();
+  const setIsVersionChecked = useAppStore((s) => s.setIsVersionChecked);
+  const setIsNewVersionAvailable = useAppStore((s) => s.setIsNewVersionAvailable);
+  const isVersionChecked = useAppStore((s) => s.isVersionChecked);
+  const isNewVersionAvailable = useAppStore((s) => s.isNewVersionAvailable);
+  const [updateSheetOpen, setUpdateSheetOpen] = useState(false);
+  const [updateSheetMode, setUpdateSheetMode] = useState<UpdateBottomSheetMode>('new-version');
+
+  const handleVersionChecked = useCallback((isNew: boolean) => {
+    setIsVersionChecked(true);
+    setIsNewVersionAvailable(isNew);
+    if (isNew) {
+      setUpdateSheetMode('new-version');
+      setUpdateSheetOpen(true);
+    }
+  }, [setIsVersionChecked, setIsNewVersionAvailable]);
+
+  const handleOtaUpdateReady = useCallback(() => {
+    setUpdateSheetMode('ota-update');
+    setUpdateSheetOpen(true);
+  }, []);
+
+  useVersionCheck({ onVersionChecked: handleVersionChecked });
+  useOtaUpdate({ isVersionChecked, isNewVersionAvailable, onUpdateReady: handleOtaUpdateReady });
+
   const [fontsLoaded, fontError] = useFonts({
     SpaceGrotesk_400Regular,
     SpaceGrotesk_500Medium,
@@ -114,7 +140,11 @@ export default function RootLayout() {
     <RootProvider>
       <ThemeProvider value={theme.includes('dark') ? DarkTheme : DefaultTheme}>
         <AppContent />
-        <UpdateBottomSheets />
+        <UpdateBottomSheet
+          isOpen={updateSheetOpen}
+          onOpenChange={setUpdateSheetOpen}
+          mode={updateSheetMode}
+        />
       </ThemeProvider>
     </RootProvider>
   );

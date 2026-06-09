@@ -1,60 +1,46 @@
 import Constants from 'expo-constants';
-import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
-import * as Linking from 'expo-linking';
+import { useEffect } from 'react';
 import { getAppInfoFromTheStore, shouldUpdateApp } from '../utils/version-check';
-import { APP_STORE_URL, PLAY_MARKET_URL } from '@/src/lib/constants/links';
-import { useAppStore } from '@/src/store/store';
 
-export function useVersionCheck() {
-  const setIsVersionChecked = useAppStore((s) => s.setIsVersionChecked);
-  const setIsNewVersionAvailable = useAppStore((s) => s.setIsNewVersionAvailable);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [storeLink, setStoreLink] = useState<string | null>(null);
+type UseVersionCheckOptions = {
+  /**
+   * Called when the version check completes.
+   * @param isNewVersionAvailable - `true` when the store has a newer version
+   */
+  onVersionChecked: (isNewVersionAvailable: boolean) => void;
+};
 
+/**
+ * Checks the App Store for a newer version on mount.
+ * Skipped entirely in development builds.
+ */
+export function useVersionCheck({ onVersionChecked }: UseVersionCheckOptions) {
   useEffect(() => {
     if (__DEV__) return;
 
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let cancelled = false;
 
-    const check = async () => {
+    const checkForUpdate = async () => {
       try {
-        const timeout = new Promise<null>((resolve) => {
-          timeoutId = setTimeout(() => resolve(null), 5000);
-        });
-        const result = await Promise.race([getAppInfoFromTheStore(), timeout]);
+        const result = await getAppInfoFromTheStore();
         const newestVersion = result?.version;
         const installedVersion = Constants.expoConfig?.version;
 
-        if (
-          installedVersion &&
-          newestVersion &&
-          shouldUpdateApp(installedVersion, newestVersion)
-        ) {
-          setIsNewVersionAvailable(true);
+        if (cancelled) return;
 
-          const link = Platform.select({ ios: APP_STORE_URL, android: PLAY_MARKET_URL });
-          if (link) {
-            setStoreLink(link);
-            setIsSheetOpen(true);
-          }
+        if (installedVersion && newestVersion && shouldUpdateApp(installedVersion, newestVersion)) {
+          onVersionChecked(true);
+        } else {
+          onVersionChecked(false);
         }
       } catch (error) {
-        console.error('[useVersionCheck] Failed:', error);
-      } finally {
-        clearTimeout(timeoutId);
-        setIsVersionChecked(true);
+        console.log('[useVersionCheck] Failed to check for updates:', error);
+        if (!cancelled) onVersionChecked(false);
       }
     };
 
-    check();
-    return () => clearTimeout(timeoutId);
-  }, [setIsVersionChecked, setIsNewVersionAvailable]);
-
-  return {
-    isSheetOpen,
-    storeLink,
-    dismiss: () => setIsSheetOpen(false),
-    confirm: () => storeLink && Linking.openURL(storeLink),
-  };
+    checkForUpdate();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }
