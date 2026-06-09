@@ -1,16 +1,17 @@
-import { Dimensions } from "react-native";
+import { View, Dimensions } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { LinearGradient } from "expo-linear-gradient";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { Presets } from "react-native-pulsar";
+import { scheduleOnRN } from "react-native-worklets";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  runOnJS,
   interpolate,
 } from "react-native-reanimated";
+import { AppText } from "@/src/components/shared/app-text";
 
 const FLAME_COUNT = 5;
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -63,12 +64,13 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
     "worklet";
     gradientWidth.set(withSpring((rating / FLAME_COUNT) * 100, SPRING_FILL));
     updateScales(rating);
-    runOnJS(Presets.plunk)();
-    runOnJS(onChange)(rating);
+    scheduleOnRN(Presets.plunk);
+    scheduleOnRN(onChange, rating);
   };
 
   const panGesture = Gesture.Pan()
-    .onBegin((e) => {
+    .minDistance(5)
+    .onStart((e) => {
       "worklet";
       const rating = Math.max(1, Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)));
       applyRating(rating);
@@ -115,48 +117,65 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
 
   const flameStyles = [f1Style, f2Style, f3Style, f4Style, f5Style];
 
-  return (
-    <GestureDetector gesture={panGesture}>
-      <Animated.View className="h-14 rounded-2xl overflow-hidden bg-surface/60">
-        {/* Gradient fill bar */}
-        <Animated.View
-          style={[gradientStyle, { position: "absolute", top: 0, bottom: 0, left: 0 }]}
-        >
-          <LinearGradient
-            colors={[`${accent}50`, `${accent}CC`, accent]}
-            locations={[0, 0.5, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={{ flex: 1 }}
-          />
-        </Animated.View>
+  const foreground = useThemeColor("foreground") as string;
 
-        {/* Flames row */}
-        <Animated.View className="flex-row h-full items-center justify-around px-2">
-          {Array.from({ length: FLAME_COUNT }, (_, i) => {
-            const intensity = i + 1;
-            return (
-              <PressableFeedback
-                key={intensity}
-                onPress={() => handleTap(intensity)}
-                accessibilityRole="button"
-                accessibilityLabel={`Intensity ${intensity} of ${FLAME_COUNT}`}
-                accessibilityState={{ selected: value === intensity }}
-                className="flex-1 items-center justify-center h-full"
-              >
-                <Animated.View style={flameStyles[i]}>
-                  <SymbolView
-                    name="flame.fill"
-                    size={26}
-                    tintColor="#ffffff"
-                    resizeMode="scaleAspectFit"
-                  />
-                </Animated.View>
-              </PressableFeedback>
-            );
-          })}
+  return (
+    <View className="gap-2">
+      <GestureDetector gesture={panGesture}>
+        <Animated.View className="h-14 rounded-2xl overflow-hidden bg-surface/60">
+          {/* Gradient fill bar */}
+          <Animated.View
+            style={[gradientStyle, { position: "absolute", top: 0, bottom: 0, left: 0 }]}
+          >
+            <LinearGradient
+              colors={[`${accent}50`, `${accent}CC`, accent]}
+              locations={[0, 0.5, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ flex: 1 }}
+            />
+          </Animated.View>
+
+          {/* Flames row */}
+          <Animated.View className="flex-row h-full items-center justify-around px-2">
+            {Array.from({ length: FLAME_COUNT }, (_, i) => {
+              const intensity = i + 1;
+              return (
+                <PressableFeedback
+                  key={intensity}
+                  onPress={() => handleTap(intensity)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Intensity ${intensity} of ${FLAME_COUNT}`}
+                  accessibilityState={{ selected: value === intensity }}
+                  className="flex-1 items-center justify-center h-full"
+                >
+                  <Animated.View style={flameStyles[i]}>
+                    <SymbolView
+                      name="flame.fill"
+                      size={26}
+                      tintColor="#ffffff"
+                      resizeMode="scaleAspectFit"
+                    />
+                  </Animated.View>
+                </PressableFeedback>
+              );
+            })}
+          </Animated.View>
         </Animated.View>
-      </Animated.View>
-    </GestureDetector>
+      </GestureDetector>
+
+      {/* Slider affordance hint */}
+      <View className="flex-row items-center justify-center gap-1.5">
+        <SymbolView
+          name={{ ios: "arrow.left.and.right", android: "swap_horiz", web: "swap_horiz" }}
+          size={10}
+          tintColor={`${foreground}40`}
+          resizeMode="scaleAspectFit"
+        />
+        <AppText className="text-xs font-light text-foreground/25">
+          tap a flame or drag across
+        </AppText>
+      </View>
+    </View>
   );
 }
