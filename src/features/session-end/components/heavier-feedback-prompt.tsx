@@ -4,7 +4,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { AnimatedText } from "@/src/components/shared/animated-text";
 import { FeedbackSheet } from "@/src/features/session-end/components/feedback-sheet";
 import { FlameIntensitySelector } from "@/src/features/session-end/components/flame-intensity-selector";
-import { useHeavierFeedback } from "@/src/features/session-end/components/use-heavier-feedback";
+import { useHeavierFeedback } from "@/src/features/session-end/hooks/use-heavier-feedback";
 
 type Props = {
   sessionId?: Id<"sessions">;

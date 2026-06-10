@@ -1,7 +1,7 @@
 import { EaseView } from "react-native-ease/uniwind";
 import type { Id } from "@/convex/_generated/dataModel";
 import { FeedbackSheet } from "./feedback-sheet";
-import { UNSURE_CHIPS, useUnsureFeedback } from "./use-unsure-feedback";
+import { UNSURE_CHIPS, useUnsureFeedback } from "@/src/features/session-end/hooks/use-unsure-feedback";
 
 type Props = {
   sessionId?: Id<"sessions">;

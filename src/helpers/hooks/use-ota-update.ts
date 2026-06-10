@@ -35,9 +35,10 @@ export function useOtaUpdate({
   useEffect(() => {
     if (__DEV__) return;
     handleUpdate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isUpdateAvailable, isVersionChecked, isNewVersionAvailable]);
+  }, [handleUpdate]);
 
+  // Re-subscribed whenever handleUpdate changes so the foreground re-check never
+  // runs a stale closure. appState is a ref, so its tracking survives re-subscription.
   useEffect(() => {
     if (__DEV__) return;
 
@@ -53,6 +54,5 @@ export function useOtaUpdate({
     });
 
     return () => subscription.remove();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [handleUpdate]);
 }

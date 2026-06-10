@@ -56,7 +56,7 @@ export function useHeavierFeedback(
   const chips = intensity > 0 ? CHIPS_BY_INTENSITY[bucket] : [];
   const questionText = intensity > 0 ? QUESTIONS_BY_INTENSITY[bucket] : "";
 
-  const canSubmit = intensity > 0 && selectedChip !== null;
+  const canSubmit = intensity > 0 && selectedChip !== null && Boolean(sessionId);
 
   const handleSubmit = async () => {
     if (!canSubmit || !sessionId) return;
