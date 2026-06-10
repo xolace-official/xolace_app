@@ -2,9 +2,9 @@ import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AnimatedText } from "@/src/components/shared/animated-text";
-import { FeedbackSheet } from "./feedback-sheet";
-import { FlameIntensitySelector } from "./flame-intensity-selector";
-import { useHeavierFeedback } from "./use-heavier-feedback";
+import { FeedbackSheet } from "@/src/features/session-end/components/feedback-sheet";
+import { FlameIntensitySelector } from "@/src/features/session-end/components/flame-intensity-selector";
+import { useHeavierFeedback } from "@/src/features/session-end/components/use-heavier-feedback";
 
 type Props = {
   sessionId?: Id<"sessions">;

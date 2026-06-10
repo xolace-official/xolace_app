@@ -33,6 +33,7 @@ type Props = {
 
 export function FlameIntensitySelector({ value, onChange }: Props) {
   const accent = useThemeColor("accent") as string;
+  const accentForeground = useThemeColor("accent-foreground") as string;
   const foreground = useThemeColor("foreground") as string;
 
   const gradientWidth = useSharedValue(value > 0 ? (value / FLAME_COUNT) * 100 : 0);
@@ -172,7 +173,7 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
                     <SymbolView
                       name="flame.fill"
                       size={26}
-                      tintColor="#ffffff"
+                      tintColor={accentForeground}
                       resizeMode="scaleAspectFit"
                     />
                   </Animated.View>
