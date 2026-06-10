@@ -3,8 +3,6 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { FeedbackSheet } from "./feedback-sheet";
 import { UNSURE_CHIPS, useUnsureFeedback } from "./use-unsure-feedback";
 
-const SNAP_POINTS = ["52%"];
-
 type Props = {
   sessionId?: Id<"sessions">;
   isOpen: boolean;
@@ -16,7 +14,7 @@ export function UnsureFeedbackPrompt({ sessionId, isOpen, onClose }: Props) {
     useUnsureFeedback(sessionId, onClose);
 
   return (
-    <FeedbackSheet.Frame snapPoints={SNAP_POINTS} isOpen={isOpen} onClose={onClose}>
+    <FeedbackSheet.Frame keyboardBehavior="extend" isOpen={isOpen} onClose={onClose}>
       <FeedbackSheet.Header subtitle="No wrong answers here.">
         What&apos;s making it hard to tell?
       </FeedbackSheet.Header>

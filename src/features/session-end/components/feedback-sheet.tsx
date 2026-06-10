@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
-import { BottomSheet, Button, PressableFeedback, useThemeColor } from "heroui-native";
+import { BottomSheet, Button, PressableFeedback, useBottomSheetAwareHandlers, useThemeColor } from "heroui-native";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
 import { AppText } from "@/src/components/shared/app-text";
@@ -8,13 +8,15 @@ import { AppText } from "@/src/components/shared/app-text";
 // ─── Frame ────────────────────────────────────────────────────────────────────
 
 type FrameProps = {
-  snapPoints: string[];
+  snapPoints?: string[];
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
+  keyboardBehavior?: "extend" | "interactive" | "fillParent";
 };
 
-function FeedbackSheetFrame({ snapPoints, isOpen, onClose, children }: FrameProps) {
+function FeedbackSheetFrame({ snapPoints, isOpen, onClose, children, keyboardBehavior }: FrameProps) {
+  const dynamic = !snapPoints;
   return (
     <BottomSheet
       isOpen={isOpen}
@@ -23,9 +25,10 @@ function FeedbackSheetFrame({ snapPoints, isOpen, onClose, children }: FrameProp
       <BottomSheet.Portal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
-          snapPoints={snapPoints}
+          {...(snapPoints ? { snapPoints } : {})}
           enableOverDrag={false}
-          enableDynamicSizing={false}
+          enableDynamicSizing={dynamic}
+          keyboardBehavior={keyboardBehavior}
           backgroundClassName="bg-background"
           handleIndicatorClassName="bg-foreground/20"
         >
@@ -112,6 +115,7 @@ type InputProps = {
 
 function FeedbackSheetInput({ value, onChangeText, placeholder, maxLength = 300 }: InputProps) {
   const foreground = useThemeColor("foreground") as string;
+  const { onFocus, onBlur } = useBottomSheetAwareHandlers();
   return (
     <BottomSheetTextInput
       placeholder={placeholder ?? "Anything you want us to know?"}
@@ -121,6 +125,8 @@ function FeedbackSheetInput({ value, onChangeText, placeholder, maxLength = 300 
       maxLength={maxLength}
       placeholderTextColor={`${foreground}4D`}
       returnKeyType="done"
+      onFocus={onFocus}
+      onBlur={onBlur}
       style={[styles.input, { color: foreground }]}
     />
   );
