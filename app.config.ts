@@ -56,13 +56,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
     name: getAppName(),
     slug: "xolace",
-    version: "1.3.0",
+    version: "1.4.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "xolace",
     userInterfaceStyle: "automatic",
     ios: {
-      icon: "./assets/xolace-icon-sample.icon",
+      icon: "./assets/xolace-app-v2.icon",
       bundleIdentifier: getUniqueIdentifier(),
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -145,8 +145,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     android: {
       adaptiveIcon: {
-        backgroundColor: "#040307",
+        backgroundColor: "#000000",
         foregroundImage: "./assets/images/android-icon-foreground.png",
+        backgroundImage: "./assets/images/android-icon-background.png",
         monochromeImage: "./assets/images/android-icon-monochrome.png"
       },
       predictiveBackGestureEnabled: false,

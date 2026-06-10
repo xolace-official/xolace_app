@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EaseView } from 'react-native-ease/uniwind';
-import { FadeIn } from 'react-native-reanimated';
+import { FadeIn, LinearTransition } from 'react-native-reanimated';
 import { Button , Spinner, useThemeColor} from 'heroui-native';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useSignInWithGoogle } from '@clerk/expo/google';
@@ -207,16 +207,20 @@ export const AuthScreen = () => {
               variant="ghost"
               size="lg"
               isDisabled={loadingProvider !== null}
-              className="bg-white rounded-[14px] py-3.5 px-6"
+              isIconOnly={loadingProvider === 'apple'}
+              layout={LinearTransition.springify()}
+              className={`bg-white rounded-[14px] py-3.5 px-6${loadingProvider === 'apple' ? ' self-center' : ''}`}
             >
-              {loadingProvider === 'apple' && <Spinner entering={SPINNER_ENTERING} color="#000" />}
-              <AppleIcon size={20} color="#000" />
-              <Button.Label
-                className="text-[15px] text-black"
-                style={styles.fontMedium}
-              >
-                Continue with Apple
-              </Button.Label>
+              {loadingProvider === 'apple' ? (
+                <Spinner entering={SPINNER_ENTERING} color="#000" />
+              ) : (
+                <>
+                  <AppleIcon size={20} color="#000" />
+                  <Button.Label className="text-[15px] text-black" style={styles.fontMedium}>
+                    Continue with Apple
+                  </Button.Label>
+                </>
+              )}
             </Button>
           </EaseView>
 
@@ -231,16 +235,20 @@ export const AuthScreen = () => {
               variant="outline"
               size="lg"
               isDisabled={loadingProvider !== null}
-              className="rounded-[14px] py-3.5 px-6 bg-foreground/8 border-accent/20"
+              isIconOnly={loadingProvider === 'google'}
+              layout={LinearTransition.springify()}
+              className={`rounded-[14px] py-3.5 px-6 bg-foreground/8 border-accent/20${loadingProvider === 'google' ? ' self-center' : ''}`}
             >
-              {loadingProvider === 'google' && <Spinner entering={SPINNER_ENTERING} color={themeColorAccentForeground} />}
-              <GoogleIcon size={20} />
-              <Button.Label
-                className="text-[15px] text-foreground/90"
-                style={styles.fontRegular}
-              >
-                Continue with Google
-              </Button.Label>
+              {loadingProvider === 'google' ? (
+                <Spinner entering={SPINNER_ENTERING} color={themeColorAccentForeground} />
+              ) : (
+                <>
+                  <GoogleIcon size={20} />
+                  <Button.Label className="text-[15px] text-foreground/90" style={styles.fontRegular}>
+                    Continue with Google
+                  </Button.Label>
+                </>
+              )}
             </Button>
           </EaseView>
         </View>

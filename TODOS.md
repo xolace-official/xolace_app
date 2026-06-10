@@ -239,3 +239,21 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 **Effort:** XS (1 line)
 **Priority:** P3 — gate on post-ship feedback; ship at 500ms first
 **Depends on:** Tour feature shipped
+
+---
+
+## P3 — Session End: Dedupe feedback submit orchestration into a shared hook
+
+**What:** `use-heavier-feedback.ts` and `use-unsure-feedback.ts` duplicate nearly identical submit orchestration: `useMutation(api.feedback.submit)` + `posthog.capture("feedback_submitted", ...)` + success/error `toast.show` + `onClose()`. Extract the shared part into a **hook** (e.g. `useFeedbackSubmit`) that each feature hook composes.
+
+**Why:** The two `handleSubmit` bodies are copy-paste with only the `type`, analytics payload, and success-toast copy differing. A code-review finding suggested a `feedbackService` for this, but a plain service won't work: all three operations are hook-bound (`useMutation`, `usePostHog`, `useToast`), and the project's service convention (`src/features/reflect/session-service.ts`) is pure functions only. A shared hook can legitimately own the three hook calls.
+
+**How to start:**
+1. Create `src/features/session-end/hooks/use-feedback-submit.ts` exposing `submit({ type, sessionId, selectedOption, text, analytics, successToast })` that runs the mutation, captures analytics, shows success/error toast, and calls `onClose` on success (returns success boolean).
+2. Refactor `use-heavier-feedback.ts` and `use-unsure-feedback.ts` to keep only their UI state (intensity / selectedChip / text) and chip config, delegating `handleSubmit` to the shared hook.
+
+**Key files:** `src/features/session-end/hooks/use-heavier-feedback.ts`, `src/features/session-end/components/use-unsure-feedback.ts` (note: heavier hook now lives under `hooks/`; unsure hook is still under `components/`)
+
+**Effort:** S (CC ~20min)
+**Priority:** P3 — cleanup, no user-facing change
+**Depends on:** Nothing

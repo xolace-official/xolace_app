@@ -21,6 +21,22 @@ export const canAskContextual = query({
   },
 });
 
+export const canAskUnsureContextual = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    const last = await ctx.db
+      .query("feedback")
+      .withIndex("by_profile_and_type_and_created", (q) =>
+        q.eq("emotionalProfileId", profile._id).eq("type", "mood_unsure")
+      )
+      .order("desc")
+      .first();
+    if (!last) return true;
+    return last.createdAt < Date.now() - THROTTLE_MS;
+  },
+});
+
 export const canSubmitGeneral = query({
   args: {},
   handler: async (ctx) => {
@@ -37,6 +53,7 @@ export const submit = mutation({
     type: v.union(
       v.literal("general"),
       v.literal("mood_heavier"),
+      v.literal("mood_unsure"),
       v.literal("mirror_miss"),
       v.literal("gave_up"),
     ),
@@ -58,8 +75,12 @@ export const submit = mutation({
     if (args.type === "mirror_miss") {
       if (!args.sessionId) throw new Error("sessionId is required for mirror_miss feedback");
       if (args.turnIndex === undefined) throw new Error("turnIndex is required for mirror_miss feedback");
-      if (!args.text?.trim()) throw new Error("Text is required for mirror_miss feedback");
-      if (args.text.length > 100) throw new Error("Text exceeds 100 character limit");
+      if (!args.selectedOption) throw new Error("selectedOption is required for mirror_miss feedback");
+      if (args.text && args.text.length > 100) throw new Error("Text exceeds 100 character limit");
+    }
+    if (args.type === "mood_unsure") {
+      if (!args.selectedOption) throw new Error("selectedOption is required for mood_unsure feedback");
+      if (args.text && args.text.length > 300) throw new Error("Text exceeds 300 character limit");
     }
     if (args.type === "gave_up") {
       if (!args.sessionId) throw new Error("sessionId is required for gave_up feedback");
@@ -67,6 +88,20 @@ export const submit = mutation({
     }
     if (args.type === "mood_heavier" && args.text && args.text.length > 300) {
       throw new Error("Text exceeds 300 character limit");
+    }
+
+    // Server-side throttle for mood_unsure — silent no-op on race condition
+    if (args.type === "mood_unsure") {
+      const last = await ctx.db
+        .query("feedback")
+        .withIndex("by_profile_and_type_and_created", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("type", "mood_unsure")
+        )
+        .order("desc")
+        .first();
+      if (last && last.createdAt >= Date.now() - THROTTLE_MS) {
+        return null;
+      }
     }
 
     // Server-side throttle for mood_heavier — silent no-op on race condition

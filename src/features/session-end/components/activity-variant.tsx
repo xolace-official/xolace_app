@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { EaseView } from "react-native-ease/uniwind";
-import { BottomSheet, Button, PressableFeedback } from "heroui-native";
+import { Button, PressableFeedback } from "heroui-native";
 import { useQuery } from "convex/react";
 import * as StoreReview from "expo-store-review";
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
+import { UnsureFeedbackPrompt } from "@/src/features/session-end/components/unsure-feedback-prompt";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
@@ -14,6 +14,7 @@ import { useAppStore } from "@/src/store/store";
 import { Presets } from "react-native-pulsar";
 import { ContributedConfirmation } from "@/src/features/session-end/components/contributed-confirmation";
 import { HeavierFeedbackPrompt } from "@/src/features/session-end/components/heavier-feedback-prompt";
+
 import { NIGHT_SESSION_END_ACTIVITY } from "@/src/features/reflect/night-copy";
 
 type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
@@ -55,8 +56,6 @@ const MOOD_HAPTICS: Record<PostSessionMood, () => void> = {
   unsure: () => Presets.murmur(),
 };
 
-const HEAVIER_SHEET_SNAP = ["52%"];
-
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const EASE_SLOW = { type: "timing" as const, duration: 600, easing: EASING };
 const EASE_IN = {
@@ -95,7 +94,9 @@ export const ActivityVariant = ({
   );
   const [contributed, setContributed] = useState<boolean | null>(null);
   const [heavierSheetOpen, setHeavierSheetOpen] = useState(false);
+  const [unsureSheetOpen, setUnsureSheetOpen] = useState(false);
   const canAsk = useQuery(api.feedback.canAskContextual);
+  const canAskUnsure = useQuery(api.feedback.canAskUnsureContextual);
   const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
   const setBridgeIntroSeen = useAppStore((s) => s.setBridgeIntroSeen);
   const showBridgeCard = bridgeEnabled && mirrorText != null;
@@ -128,9 +129,12 @@ export const ActivityVariant = ({
   const handleMoodPress = (mood: PostSessionMood) => {
     MOOD_HAPTICS[mood]();
     setSelectedMood(mood);
-    // Open the heavier feedback sheet without blocking phase flow
+    // Open feedback sheets without blocking phase flow
     if (mood === "heavier" && canAsk === true) {
       setHeavierSheetOpen(true);
+    }
+    if (mood === "unsure" && canAskUnsure === true) {
+      setUnsureSheetOpen(true);
     }
   };
 
@@ -225,23 +229,25 @@ export const ActivityVariant = ({
 
             {/* Pinned CTA */}
             <View className="px-8 pt-6 pb-12">
-              <PressableFeedback
+              <Button
                 onPress={advancePhase}
                 accessibilityLabel={selectedMood ? "Continue" : "Skip for now"}
-                className={`w-full rounded-2xl border px-5 py-4 ${
+                variant="outline"
+                size="lg"
+                className={`w-full rounded-2xl ${
                   selectedMood
                     ? "border-foreground/20 bg-foreground/5"
                     : "border-border/40"
                 }`}
               >
-                <AppText
-                  className={`text-sm text-center ${
+                <Button.Label
+                  className={`text-sm ${
                     selectedMood ? "text-foreground/70" : "text-foreground/25"
                   }`}
                 >
                   {selectedMood ? "Continue" : "Skip for now"}
-                </AppText>
-              </PressableFeedback>
+                </Button.Label>
+              </Button>
             </View>
           </EaseView>
         </ScrollView>
@@ -278,37 +284,41 @@ export const ActivityVariant = ({
 
             {/* Action buttons pinned at bottom */}
             <View className="px-8 gap-3 pb-12">
-              <PressableFeedback
+              <Button
                 onPress={() => setPhase("contributed")}
                 accessibilityLabel="Yes, share anonymously"
-                className={`w-full rounded-2xl border px-5 py-4 ${
+                variant="outline"
+                size="lg"
+                className={`w-full rounded-2xl ${
                   contributeByDefault
                     ? "border-accent/40 bg-accent/10"
                     : "border-border/60 bg-surface/30"
                 }`}
               >
-                <AppText
-                  className={`text-base text-center ${
+                <Button.Label
+                  className={`text-base ${
                     contributeByDefault
                       ? "text-accent font-medium"
                       : "text-foreground/50 font-light"
                   }`}
                 >
                   Yes, anonymously
-                </AppText>
-              </PressableFeedback>
-              <PressableFeedback
+                </Button.Label>
+              </Button>
+              <Button
                 onPress={() => {
                   setContributed(false);
                   advancePhase();
                 }}
                 accessibilityLabel="Not this time"
-                className="w-full rounded-2xl border border-border/40 px-5 py-4"
+                variant="ghost"
+                size="lg"
+                className="w-full rounded-2xl"
               >
-                <AppText className="text-sm text-center text-foreground/30 font-light">
+                <Button.Label className="text-sm text-foreground/30 font-light">
                   Not this time
-                </AppText>
-              </PressableFeedback>
+                </Button.Label>
+              </Button>
             </View>
           </EaseView>
         </View>
@@ -354,40 +364,29 @@ export const ActivityVariant = ({
               </Button.Label>
             </Button>
 
-            <Pressable
+            <Button
               onPress={() => onDismiss(contributed, selectedMood ?? undefined)}
               accessibilityLabel="Done"
-              hitSlop={12}
+              variant="ghost"
+              size="sm"
             >
-              <AppText className="text-sm text-foreground/20">Done</AppText>
-            </Pressable>
+              <Button.Label className="text-sm text-foreground/20">Done</Button.Label>
+            </Button>
           </EaseView>
         </View>
       )}
 
-      {/* ── Heavier Feedback Sheet ── */}
-      <BottomSheet
+      <HeavierFeedbackPrompt
+        sessionId={sessionId}
         isOpen={heavierSheetOpen}
-        onOpenChange={(open) => {
-          if (!open) setHeavierSheetOpen(false);
-        }}
-      >
-        <BottomSheet.Portal>
-          <BottomSheetBlurOverlay />
-          <BottomSheet.Content
-            snapPoints={HEAVIER_SHEET_SNAP}
-            enableOverDrag={false}
-            enableDynamicSizing={false}
-            backgroundClassName="bg-background"
-            handleIndicatorClassName="bg-foreground/20"
-          >
-            <HeavierFeedbackPrompt
-              sessionId={sessionId}
-              onDismiss={() => setHeavierSheetOpen(false)}
-            />
-          </BottomSheet.Content>
-        </BottomSheet.Portal>
-      </BottomSheet>
+        onClose={() => setHeavierSheetOpen(false)}
+      />
+
+      <UnsureFeedbackPrompt
+        sessionId={sessionId}
+        isOpen={unsureSheetOpen}
+        onClose={() => setUnsureSheetOpen(false)}
+      />
     </View>
   );
 };

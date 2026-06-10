@@ -4,7 +4,27 @@ All notable changes to Xolace are documented here.
 
 ---
 
-## [1.4.0.0] - OTA Update (2026-06-01)
+## [1.4.0.1] - OTA Update (2026-06-10)
+
+### Added
+
+- **`mood_unsure` feedback** — contextual bottom sheet appears when a user taps "unsure" on the session-end mood check (throttled to once per 24 h). Four option cards: "Felt okay while here", "Still processing", "Too many things at once", and "Something else" with optional free text (max 300 chars). Backend: new `canAskUnsureContextual` query and `mood_unsure` type added to the `feedback` table and `submit` mutation.
+- **Unified update bottom sheet** — new `UpdateBottomSheet` component replaces native `Alert.alert()` for both OTA-ready and new-store-version prompts. Both modes share one sheet with copy tuned to the context ("Refresh Now" for OTA, "Download Now" for store updates) and a dismissible "Later" option.
+
+### Changed
+
+- **`mood_heavier` feedback redesigned as a bottom sheet** — `HeavierFeedbackPrompt` is now driven by a dedicated `FeedbackSheet` bottom sheet with a `FlameIntensitySelector` for expressing intensity level, replacing the previous inline card in the session-end activity variant.
+- **Clarify mirror-miss feedback uses option cards** — removed the raw `TextInput` ("What was off? optional") from `ClarifyState`. Mirror-miss feedback now surfaces through a `ClarifyFeedbackCard` tap target that opens a `ClarifyFeedbackSheet` with four predefined options ("Wrong emotion", "Too surface level", "Close but not quite", "Missed the main thing"). `mirror_miss` submissions now require `selectedOption` rather than free text.
+- **`useVersionCheck` / `useOtaUpdate` refactored to callbacks** — both hooks now accept `onVersionChecked` / `onUpdateReady` callback props instead of owning their own `Alert` calls. The root layout is now the single owner of update state and drives `UpdateBottomSheet` from there; hooks only signal readiness.
+- **Session-end activity CTA migrated to `Button`** — the mood-check continue/skip button in `ActivityVariant` now uses HeroUI Native `Button variant="outline"` instead of a raw `PressableFeedback`.
+
+---
+
+## [1.4.0.0] - (2026-06-01)
+
+### Added
+
+- **Trusted Bridge** — turns what you felt in a session into a message you can actually send to someone who matters. Reachable from a suggested card on the session-end screen. A one-time intro explains the promise and privacy model, then you name who you're writing to (name, relationship, and how you address them); the AI drafts a message shaped around your session's emotional context via Anthropic. You edit the draft inline and share it through the native share sheet, or step away with "Not right now" — nothing sends itself. Privacy-first: recipient details are used only to generate the draft and are never stored. Intro-seen and feature-enabled state persist via Zustand; PostHog captures bridge open/dismiss and share events.
 
 ### Changed
 
@@ -12,6 +32,11 @@ All notable changes to Xolace are documented here.
 - **Reanimated shared value API migration** — migrated all `.value` reads and writes on Reanimated shared values to the React Compiler-compatible `.get()` / `.set()` API across 19 files (`auth-bg`, `animated-row`, `menu-buttons`, `menu-trigger`, `ember-orb`, `mood-card`, `mood-marquee`, `paths-preview`, `peers-preview`, `reflect-preview`, `share-preview`, `circle-progress`, `quotes-screen`, `breathing-orb`, `mic-button`, `contributed-confirmation`, `paced-orb`, `haptic-beat`, `use-menu-state`). Menu toggle uses functional setter `(prev) => !prev` for atomic UI-thread read-compute-write.
 - **Dialog state reset pattern** — `SpaceNameDialog` and `FeedbackDialog` now use a mount/unmount inner component pattern (`{isOpen && <Form />}`) instead of `useEffect` to reset form state on open. State initializes from props on mount; no cascading renders.
 - **CLAUDE.md best practices** — documented React Compiler memoization rules and Reanimated `.get()`/`.set()` guidance to prevent regressions in future agent sessions.
+
+### Fixed
+
+- **Solo "Done" bounced to home instead of session-end** — the sit-with-this screen was calling `completePath()` before navigating, flipping the session to a terminal state. With no active session, the session-end "no active session" guard fired `router.replace('/')` and bounced the user home. It now defers completion to the session-end screen (matching the peer and exit paths), navigating to `session-end?path=solo&completed=true|false` and threading the finished-vs-exited-early flag through so completion records the correct outcome.
+- **Bridge card bounced to home instead of the bridge screen** — `completeAndBridge` completes the session (turning it terminal) and then pushes the trusted-bridge screen; because session-end stays mounted underneath, its "no active session" guard raced and `router.replace('/')`'d on top of the pushed bridge. A latent race since the bridge was added, made deterministic once the bridge screen grew heavier. Fixed by claiming navigation (`navigatedRef.current = true`) before the push, so the guard's `navigateHome()` no-ops.
 
 ---
 

@@ -167,9 +167,9 @@ export function QuotesScreen() {
     "transparent",
   ];
   const glassStyle = {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center" as const,
     justifyContent: "center" as const,
     backgroundColor: `${foregroundColor}10`,
@@ -209,12 +209,12 @@ export function QuotesScreen() {
               router.back();
             }}
             accessibilityLabel="Close"
-            hitSlop={8}
+            hitSlop={12}
           >
             <GlassView style={glassStyle} glassEffectStyle="clear">
               <SymbolView
                 name={CLOSE_ICON}
-                size={14}
+                size={15}
                 tintColor={`${foregroundColor}70`}
               />
             </GlassView>

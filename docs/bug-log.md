@@ -15,6 +15,44 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-06-10 — `eas update` fails with "Channel has no branches associated with it"
+
+**Symptom**
+- Running `eas update --environment preview --channel preview` (or any channel) exits with:
+  `Channel has no branches associated with it. Run 'eas channel:edit' to map a branch.`
+- The environment variables section prints correctly — that part is fine.
+
+**Where it appeared**
+- EAS Update workflow, first time publishing to a newly-declared channel (e.g. `preview`).
+- Channels declared in `eas.json` under `build.<profile>.channel` do **not** get a branch mapping automatically.
+
+**Root cause**
+EAS channels and EAS branches are separate entities. Declaring `"channel": "preview"` in `eas.json` creates the channel concept (and builds tag their artifacts with it) but does not create or link a branch. `eas update` delivers updates via branches, so the channel must be explicitly wired to one before any update can be published.
+
+**How we diagnosed it**
+Error message was self-describing. Confirmed via `eas channel:list` that the channel existed with no branch attached.
+
+**Fix**
+1. Create the branch if it doesn't exist yet:
+   ```bash
+   eas branch:create preview
+   ```
+2. Map the branch to the channel:
+   ```bash
+   eas channel:edit preview --branch preview
+   ```
+3. Re-run the update:
+   ```bash
+   eas update --environment preview --channel preview --message "your message"
+   ```
+
+**Prevention / future reference**
+- Whenever a new build profile with a `channel` value is added to `eas.json`, immediately run `eas branch:create <name>` and `eas channel:edit <name> --branch <name>` so the plumbing is ready before the first OTA push.
+- `eas channel:list` and `eas branch:list` are fast sanity checks before any `eas update` run.
+- The `--environment <name>` flag is required so EAS recomputes the fingerprint using the same env vars that were baked into the build (EAS secrets). Omitting it causes a fingerprint mismatch because local `.env.local` values differ from EAS-managed secrets.
+
+---
+
 ## 2026-05-24 — `react-native-share` `shareSingle` to WhatsApp / Telegram / Instagram broken on iOS (TestFlight)
 
 **Symptom**

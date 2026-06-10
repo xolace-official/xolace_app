@@ -57,6 +57,8 @@ export function usePathSession() {
       postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
     ): Promise<boolean> => {
       if (!sessionId || busyRef.current) return false;
+      const s = session?.state;
+      if (s !== 'path_in_progress' && s !== 'path_selected' && s !== 'confirmed') return false;
       busyRef.current = true;
       try {
         await completePathMutation({
@@ -72,7 +74,7 @@ export function usePathSession() {
         busyRef.current = false;
       }
     },
-    [sessionId, completePathMutation],
+    [sessionId, session?.state, completePathMutation],
   );
 
   return {
