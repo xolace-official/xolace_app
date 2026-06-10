@@ -14,7 +14,7 @@ export function UnsureFeedbackPrompt({ sessionId, isOpen, onClose }: Props) {
     useUnsureFeedback(sessionId, onClose);
 
   return (
-    <FeedbackSheet.Frame keyboardBehavior="extend" isOpen={isOpen} onClose={onClose}>
+    <FeedbackSheet.Frame keyboardBehavior="interactive" isOpen={isOpen} onClose={onClose}>
       <FeedbackSheet.Header subtitle="No wrong answers here.">
         What&apos;s making it hard to tell?
       </FeedbackSheet.Header>

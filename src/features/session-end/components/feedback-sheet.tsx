@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { BottomSheet, Button, PressableFeedback, useBottomSheetAwareHandlers, useThemeColor } from "heroui-native";
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { BottomSheetTextInput, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
 import { AppText } from "@/src/components/shared/app-text";
 
@@ -12,11 +12,38 @@ type FrameProps = {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
+  // Pass "interactive" for sheets that contain a text input.
+  // "extend" is a no-op with enableDynamicSizing (highest detent === current position).
   keyboardBehavior?: "extend" | "interactive" | "fillParent";
 };
 
 function FeedbackSheetFrame({ snapPoints, isOpen, onClose, children, keyboardBehavior }: FrameProps) {
   const dynamic = !snapPoints;
+  const { height: windowHeight } = useWindowDimensions();
+
+  // When the sheet has an input, we need a BottomSheetScrollView so content can
+  // scroll into view after the sheet shifts up in "interactive" keyboard mode.
+  // maxHeight bounds the scroll container so gorhom's dynamic sizing stays compact
+  // initially (small content < maxHeight) but becomes scrollable once full content
+  // (chips + input) exceeds it.
+  const maxScrollHeight = windowHeight * 0.60;
+
+  const innerContent = keyboardBehavior ? (
+    <BottomSheetScrollView
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      style={[styles.scrollView, { maxHeight: maxScrollHeight }]}
+    >
+      <View className="px-6 pt-2 pb-10 gap-5">
+        {children}
+      </View>
+    </BottomSheetScrollView>
+  ) : (
+    <View className="px-6 pt-2 pb-10 gap-5">
+      {children}
+    </View>
+  );
+
   return (
     <BottomSheet
       isOpen={isOpen}
@@ -29,12 +56,11 @@ function FeedbackSheetFrame({ snapPoints, isOpen, onClose, children, keyboardBeh
           enableOverDrag={false}
           enableDynamicSizing={dynamic}
           keyboardBehavior={keyboardBehavior}
+          keyboardBlurBehavior={keyboardBehavior ? "restore" : undefined}
           backgroundClassName="bg-background"
           handleIndicatorClassName="bg-foreground/20"
         >
-          <View className="px-6 pt-2 pb-10 gap-5">
-            {children}
-          </View>
+          {innerContent}
         </BottomSheet.Content>
       </BottomSheet.Portal>
     </BottomSheet>
@@ -118,7 +144,7 @@ function FeedbackSheetInput({ value, onChangeText, placeholder, maxLength = 300 
   const { onFocus, onBlur } = useBottomSheetAwareHandlers();
   return (
     <BottomSheetTextInput
-      placeholder={placeholder ?? "Anything you want us to know?"}
+      placeholder={placeholder ?? "Anything you want us to know? Tap here"}
       accessibilityLabel="Additional context"
       value={value}
       onChangeText={onChangeText}
@@ -157,6 +183,7 @@ function FeedbackSheetSubmit({ onPress, disabled = false, label = "Done" }: Subm
 
 const styles = StyleSheet.create({
   input: { fontSize: 14, paddingHorizontal: 4, paddingVertical: 8 },
+  scrollView: { flexGrow: 0 },
 });
 
 // ─── Export ───────────────────────────────────────────────────────────────────

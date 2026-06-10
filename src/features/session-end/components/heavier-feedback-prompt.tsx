@@ -27,7 +27,7 @@ export function HeavierFeedbackPrompt({ sessionId, isOpen, onClose }: Props) {
   } = useHeavierFeedback(sessionId, onClose);
 
   return (
-    <FeedbackSheet.Frame keyboardBehavior="extend" isOpen={isOpen} onClose={onClose}>
+    <FeedbackSheet.Frame keyboardBehavior="interactive" isOpen={isOpen} onClose={onClose}>
       <FeedbackSheet.Header subtitle="You don't have to answer, but this is just for us to understand.">
         How did that land?
       </FeedbackSheet.Header>
