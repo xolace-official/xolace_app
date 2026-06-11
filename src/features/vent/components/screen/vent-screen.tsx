@@ -156,7 +156,7 @@ export function VentScreen() {
           className="absolute inset-x-0 top-[68%] items-center"
           style={labelStyle}
         >
-          <AppText className="text-sm text-foreground/25">Speak your weight</AppText>
+          <AppText className="text-sm text-[#F5F0E8]/40">Speak your weight</AppText>
         </Animated.View>
 
         {/* Mic / stop — fades out the moment the burn begins */}
@@ -189,7 +189,7 @@ export function VentScreen() {
             className="absolute bottom-5 left-4 p-3"
             hitSlop={8}
           >
-            <AppText className="text-xs text-foreground/25">↺ intro</AppText>
+            <AppText className="text-xs text-[#F5F0E8]/30">↺ intro</AppText>
           </PressableFeedback>
         )}
       </View>

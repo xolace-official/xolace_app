@@ -33,7 +33,7 @@ export function VentIntro({ onUnderstand }: Props) {
           {LINES.map((line) => (
             <AppText
               key={line}
-              className="text-center text-base leading-7 text-foreground/70"
+              className="text-center text-base leading-7 text-[#F5F0E8]/70"
             >
               {line}
             </AppText>
@@ -50,7 +50,7 @@ export function VentIntro({ onUnderstand }: Props) {
           onPress={handlePress}
           accessibilityLabel="I understand"
         >
-          <Button.Label className="text-base text-foreground/60">
+          <Button.Label className="text-base text-[#F5F0E8]/60">
             I understand
           </Button.Label>
         </Button>

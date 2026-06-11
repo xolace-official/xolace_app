@@ -72,7 +72,7 @@ export function VentGone({ isCrisis, onDone }: Props) {
             onPress={() => router.push('/(protected)/crisis-resources')}
             accessibilityLabel="Open crisis resources"
           >
-            <Button.Label className="text-sm text-foreground/70">
+            <Button.Label className="text-sm text-[#F5F0E8]/70">
               Support is here if you want it
             </Button.Label>
           </Button>
@@ -82,7 +82,7 @@ export function VentGone({ isCrisis, onDone }: Props) {
             onPress={onDone}
             accessibilityLabel="Close"
           >
-            <Button.Label className="text-sm text-foreground/40">Close</Button.Label>
+            <Button.Label className="text-sm text-[#F5F0E8]/40">Close</Button.Label>
           </Button>
         </Animated.View>
       )}

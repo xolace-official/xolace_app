@@ -1,5 +1,6 @@
 import { useAction } from 'convex/react';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { File } from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
@@ -120,10 +121,13 @@ export function useVentFlow(): UseVentFlowReturn {
     }
 
     const run = async () => {
-      // Convert local file URI → ArrayBuffer for Convex v.bytes()
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const audioBytes = await blob.arrayBuffer();
+      // Convert local file URI → ArrayBuffer for Convex v.bytes().
+      // RN's fetch Blob has no arrayBuffer(), so read via expo-file-system.
+      const bytes = await new File(uri).bytes();
+      const audioBytes = bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength,
+      );
 
       const result = await processVentAudio({ audioBytes });
       resultRef.current = result;
