@@ -19,6 +19,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useAppStore } from '@/src/store/store';
 import { MAX_VENT_DURATION_MS, useVentFlow } from '../../hooks/use-vent-flow';
+import { useVentSounds } from '../../hooks/use-vent-sounds';
 import { ParticleField, type ParticleStage } from '../particles/particle-field';
 import { VentAcknowledgement } from '../vent-acknowledgement';
 import { VentGone } from '../vent-gone';
@@ -58,6 +59,8 @@ export function VentScreen() {
     metering,
     durationMs,
   } = useVentFlow();
+
+  const { notifyBurnComplete } = useVentSounds(state, !showIntro);
 
   const burnSkip = useSharedValue(0);
   const labelOpacity = useSharedValue(0);
@@ -128,7 +131,11 @@ export function VentScreen() {
           stage={STAGE_FOR_STATE[state] ?? 'enter'}
           metering={metering}
           burnSkip={burnSkip}
-          onBurnComplete={onBurnComplete}
+          onBurnComplete={() => {
+            // Sounds first: the afterglow check needs the pre-advance state.
+            notifyBurnComplete();
+            onBurnComplete();
+          }}
         />
 
         {/* Close — top-right, hidden while recording/burning */}
