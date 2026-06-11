@@ -80,6 +80,8 @@ export const checkAndIncrementCap = internalMutation({
 export const getVentSessionToken = action({
   args: {},
   handler: async (ctx): Promise<{ signedUrl: string }> => {
+    // Fast-fail only — full requireAuth (user, accountStatus, profile) runs
+    // inside checkAndIncrementCap below, transactionally with the cap charge.
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
@@ -376,6 +378,8 @@ export const transcribeAndAcknowledge = internalAction({
 export const processVentAudio = action({
   args: { audioBytes: v.bytes(), durationMs: v.number() },
   handler: async (ctx, args): Promise<VentResult> => {
+    // Fast-fail only — full requireAuth (user, accountStatus, profile) runs
+    // inside checkAndIncrementCap below, transactionally with the cap charge.
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
