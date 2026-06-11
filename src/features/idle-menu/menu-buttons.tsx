@@ -28,15 +28,16 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
   const containerHeight = useSharedValue(0);
 
   const items: MenuButtonItem[] = [
-    // {
-    //   label: "Vent",
-    //   icon: { ios: "mic", android: "mic" },
-    //   accessibilityLabel: "Open voice vent — speak your weight",
-    //   onPress: () => {
-    //     onClose();
-    //     router.push("/(protected)/voice-vent");
-    //   },
-    // },
+    {
+      label: "Vent",
+      icon: { ios: "mic", android: "mic" },
+      iconName: { ios: "mic", android: "mic" },
+      accessibilityLabel: "Open voice vent — speak your weight",
+      onPress: () => {
+        onClose();
+        router.push("/(protected)/voice-vent");
+      },
+    },
     {
       label: "Today",
       icon: { ios: "quote.bubble", android: "format_quote" },

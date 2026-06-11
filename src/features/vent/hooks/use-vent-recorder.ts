@@ -22,8 +22,14 @@ export type UseVentRecorderReturn = {
 export function useVentRecorder(): UseVentRecorderReturn {
   const meteringValue = useSharedValue(0);
 
+  // Mono 48kbps AAC: voice-quality for Scribe STT while keeping a 2-minute
+  // recording (~720KB) under Convex's 1MB v.bytes() limit. HIGH_QUALITY
+  // (stereo 128kbps) would exceed the limit at ~60 seconds.
   const recorder = useAudioRecorder({
     ...RecordingPresets.HIGH_QUALITY,
+    sampleRate: 24000,
+    numberOfChannels: 1,
+    bitRate: 48000,
     isMeteringEnabled: true,
   });
 

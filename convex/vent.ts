@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, action, internalAction, type ActionCtx } from "./_generated/server";
 import { api } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
-import { buildVentAcknowledgePrompt } from "./ai/vent-acknowledge";
+import { buildVentAcknowledgePrompt } from "./ai/ventAcknowledge";
 import {
   getAnthropicClient,
   extractTextFromResponse,
