@@ -1,11 +1,4 @@
-import { v } from "convex/values";
-import { internalAction } from "../_generated/server";
-import {
-  getAnthropicClient,
-  extractTextFromResponse,
-} from "./providers/anthropic";
-
-const ACKNOWLEDGE_MODEL = "claude-haiku-4-5-20251001";
+export const ACKNOWLEDGE_MODEL = "claude-haiku-4-5-20251001";
 
 export function buildVentAcknowledgePrompt(
   transcript: string,
@@ -44,31 +37,3 @@ Reply ONLY with the enhanced text — no labels, no explanation, no preamble.`;
 
   return { system, user: transcript };
 }
-
-/**
- * Call Claude to generate a 1-2 sentence acknowledgement for a vent transcript,
- * enhanced with audio tags for expressive ElevenLabs TTS playback.
- * Returns { words }. Callers should wrap in try/catch and fall back silently —
- * the destruction animation plays regardless of whether this succeeds.
- */
-export const generateVentAcknowledgement = internalAction({
-  args: {
-    transcript: v.string(),
-  },
-  handler: async (_ctx, args) => {
-    const client = getAnthropicClient();
-    const { system, user } = buildVentAcknowledgePrompt(args.transcript);
-
-    const response = await client.messages.create({
-      model: ACKNOWLEDGE_MODEL,
-      max_tokens: 120,
-      system,
-      messages: [{ role: "user", content: user }],
-    });
-
-    const words = extractTextFromResponse(response).trim();
-
-    console.log("[vent-acknowledge] Generated:", words);
-    return { words };
-  },
-});

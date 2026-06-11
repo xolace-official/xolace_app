@@ -2,15 +2,18 @@ import { v } from "convex/values";
 import { internalMutation, action, internalAction, type ActionCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
-import { buildVentAcknowledgePrompt } from "./ai/ventAcknowledge";
+import { ACKNOWLEDGE_MODEL, buildVentAcknowledgePrompt } from "./ai/ventAcknowledge";
 import {
   getAnthropicClient,
   extractTextFromResponse,
 } from "./ai/providers/anthropic";
+import {
+  moderateInput,
+  MODERATION_UNAVAILABLE,
+} from "./ai/providers/moderation";
 
 const WITNESSED_VOICE_ID = "NOpBlnGInO9m6vDvFkFC"; // Spuds Oxley — wise, approachable
 const CRISIS_FALLBACK = "you don't have to carry this alone";
-const ACKNOWLEDGE_MODEL = "claude-haiku-4-5-20251001";
 
 // Ceiling on what a single vent can charge — also the fallback when the
 // caller can't know the real duration (e.g. the legacy agent session token).
