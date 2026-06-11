@@ -11,12 +11,20 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { Button } from 'heroui-native';
+import { SymbolView } from 'expo-symbols';
 import { AppText } from '@/src/components/shared/app-text';
 
 // 60% cream-white — more muted than the acknowledgement words (design spec).
 const GONE_STYLE = { color: '#F5F0E899' };
 // Quieter still — the cap notice is a footnote, not a second headline.
 const CAP_STYLE = { color: '#F5F0E866' };
+// Full cream — the crisis CTA must read as a button, not a statement.
+const CRISIS_CREAM = '#F5F0E8';
+
+const HEART_NAME = {
+  ios: 'heart',
+  android: 'favorite',
+} as const;
 
 type Props = {
   /** When true, stay on screen and surface the crisis resources link. */
@@ -82,8 +90,10 @@ export function VentGone({ isCrisis, capReached, onDone }: Props) {
             size="md"
             onPress={() => router.push('/(protected)/crisis-resources')}
             accessibilityLabel="Open crisis resources"
+            className="rounded-full border border-[#F5F0E8]/30 bg-[#F5F0E8]/10 px-6"
           >
-            <Button.Label className="text-sm text-[#F5F0E8]/70">
+            <SymbolView name={HEART_NAME} size={16} tintColor={CRISIS_CREAM} />
+            <Button.Label className="text-sm text-[#F5F0E8]">
               Support is here if you want it
             </Button.Label>
           </Button>

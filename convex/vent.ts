@@ -144,6 +144,35 @@ const CRISIS_KEYWORDS = [
   "suicide",
 ];
 
+// Moderation may only DE-escalate a keyword hit, never escalate — so the
+// threshold is lenient toward crisis. A false positive costs the user a
+// static fallback line; a false negative riffs warmly over suicidal content.
+const CRISIS_CLEAR_THRESHOLD = 0.35;
+const SELF_HARM_CATEGORIES = [
+  "self-harm",
+  "self-harm/intent",
+  "self-harm/instructions",
+] as const;
+
+/**
+ * Confirm a keyword-flagged transcript via OpenAI moderation.
+ * Returns false (not crisis) only when every self-harm score is clearly low —
+ * the idiom case ("end it... this sprint"). Fails safe: if moderation is
+ * unavailable, the keyword hit stands and we stay in crisis mode.
+ */
+async function confirmCrisisWithModeration(
+  transcript: string,
+): Promise<boolean> {
+  const moderation = await moderateInput(transcript);
+  if (moderation === MODERATION_UNAVAILABLE) {
+    console.warn("[vent] Moderation unavailable — keeping crisis flag (fail safe)");
+    return true;
+  }
+  return SELF_HARM_CATEGORIES.some(
+    (cat) => (moderation.categoryScores[cat] ?? 0) >= CRISIS_CLEAR_THRESHOLD,
+  );
+}
+
 /**
  * Classify a voice vent transcript for safety signals.
  *
@@ -246,15 +275,16 @@ async function runVentPipeline(
 
   console.log("[vent] Transcript length:", transcript.length, "(not stored)");
 
-  // --- Step 2: Crisis keyword check ---
-  // TODO: keyword matching is too blunt — catches edge cases like "I want to end it
-  // (this project)" or "I'm killing it today". Replace with a lightweight Claude
-  // classifier call (similar to safeguard.ts) that understands context before
-  // flagging crisis. Keep keyword list as a fast pre-filter, not the sole gate.
+  // --- Step 2: Crisis check (keyword pre-filter → moderation confirm) ---
   const lower = transcript.toLowerCase();
-  const isCrisis = CRISIS_KEYWORDS.some((kw) => lower.includes(kw));
-  if (isCrisis) {
-    console.warn("[vent] Crisis keywords detected — returning static fallback");
+  let isCrisis = false;
+  if (CRISIS_KEYWORDS.some((kw) => lower.includes(kw))) {
+    isCrisis = await confirmCrisisWithModeration(transcript);
+    if (isCrisis) {
+      console.warn("[vent] Crisis confirmed — returning static fallback");
+    } else {
+      console.log("[vent] Crisis keyword cleared by moderation (idiom)");
+    }
   }
 
   // --- Step 3: Generate acknowledgement words ---
