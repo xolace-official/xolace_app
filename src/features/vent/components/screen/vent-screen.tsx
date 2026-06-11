@@ -60,7 +60,7 @@ export function VentScreen() {
     durationMs,
   } = useVentFlow();
 
-  const { notifyBurnComplete } = useVentSounds(state, !showIntro);
+  useVentSounds(state);
 
   const burnSkip = useSharedValue(0);
   const labelOpacity = useSharedValue(0);
@@ -131,11 +131,7 @@ export function VentScreen() {
           stage={STAGE_FOR_STATE[state] ?? 'enter'}
           metering={metering}
           burnSkip={burnSkip}
-          onBurnComplete={() => {
-            // Sounds first: the afterglow check needs the pre-advance state.
-            notifyBurnComplete();
-            onBurnComplete();
-          }}
+          onBurnComplete={onBurnComplete}
         />
 
         {/* Close — top-right, hidden while recording/burning */}
