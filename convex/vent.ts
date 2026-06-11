@@ -179,6 +179,9 @@ type VentResult = {
   words: string | null;
   audioUrl: string | null;
   isCrisis: boolean;
+  // True only when the daily cap blocked the pipeline — lets the client
+  // distinguish "limit reached" from a genuine (silent) pipeline failure.
+  capReached: boolean;
 };
 
 /**
@@ -194,7 +197,7 @@ async function runVentPipeline(
   const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
   if (!apiKey) {
     console.error("[vent] ELEVENLABS_VOICE_API_KEY not set — skipping pipeline");
-    return { words: null, audioUrl: null, isCrisis: false };
+    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
   }
 
   // --- Step 1: Scribe v2 STT ---
@@ -217,7 +220,7 @@ async function runVentPipeline(
     if (!scribeRes.ok) {
       const body = await scribeRes.text();
       console.error(`[vent] Scribe error ${scribeRes.status}: ${body}`);
-      return { words: null, audioUrl: null, isCrisis: false };
+      return { words: null, audioUrl: null, isCrisis: false, capReached: false };
     }
 
     const data = await scribeRes.json();
@@ -228,14 +231,14 @@ async function runVentPipeline(
     } else {
       console.error("[vent] Scribe fetch failed:", err);
     }
-    return { words: null, audioUrl: null, isCrisis: false };
+    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
   } finally {
     clearTimeout(scribeTimeout);
   }
 
   if (transcript.length < 20) {
     console.log("[vent] Transcript too short — skipping acknowledgement");
-    return { words: null, audioUrl: null, isCrisis: false };
+    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
   }
 
   console.log("[vent] Transcript length:", transcript.length, "(not stored)");
@@ -272,7 +275,7 @@ async function runVentPipeline(
     }
   }
 
-  if (!words) return { words: null, audioUrl: null, isCrisis };
+  if (!words) return { words: null, audioUrl: null, isCrisis, capReached: false };
 
   // --- Step 4: ElevenLabs TTS ---
   let audioUrl: string | null = null;
@@ -316,7 +319,7 @@ async function runVentPipeline(
     clearTimeout(ttsTimeout);
   }
 
-  return { words, audioUrl, isCrisis };
+  return { words, audioUrl, isCrisis, capReached: false };
 }
 
 /**
@@ -355,7 +358,7 @@ export const processVentAudio = action({
     );
     if (!capResult.allowed) {
       console.log("[vent] Daily cap reached — skipping pipeline");
-      return { words: null, audioUrl: null, isCrisis: false };
+      return { words: null, audioUrl: null, isCrisis: false, capReached: true };
     }
 
     return runVentPipeline(ctx, args.audioBytes);

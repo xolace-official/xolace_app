@@ -15,10 +15,14 @@ import { AppText } from '@/src/components/shared/app-text';
 
 // 60% cream-white — more muted than the acknowledgement words (design spec).
 const GONE_STYLE = { color: '#F5F0E899' };
+// Quieter still — the cap notice is a footnote, not a second headline.
+const CAP_STYLE = { color: '#F5F0E866' };
 
 type Props = {
   /** When true, stay on screen and surface the crisis resources link. */
   isCrisis: boolean;
+  /** True when the daily cap is why no acknowledgement came back. */
+  capReached: boolean;
   /** Called after "Gone." has fully faded (non-crisis path → auto-dismiss). */
   onDone: () => void;
 };
@@ -28,7 +32,7 @@ type Props = {
  * over 1s, then auto-dismisses. In the crisis path it stays put and offers
  * the crisis resources screen instead of auto-dismissing.
  */
-export function VentGone({ isCrisis, onDone }: Props) {
+export function VentGone({ isCrisis, capReached, onDone }: Props) {
   const router = useRouter();
   const opacity = useSharedValue(0);
 
@@ -37,11 +41,13 @@ export function VentGone({ isCrisis, onDone }: Props) {
       opacity.set(withTiming(1, { duration: 400 }));
       return;
     }
+    // Hold longer when the cap notice is showing so it can actually be read.
+    const holdMs = capReached ? 3600 : 2000;
     opacity.set(
       withSequence(
         withTiming(1, { duration: 400 }),
         withDelay(
-          2000,
+          holdMs,
           withTiming(0, { duration: 1000 }, (finished) => {
             'worklet';
             if (finished) scheduleOnRN(onDone);
@@ -49,16 +55,21 @@ export function VentGone({ isCrisis, onDone }: Props) {
         ),
       ),
     );
-  }, [isCrisis, opacity, onDone]);
+  }, [isCrisis, capReached, opacity, onDone]);
 
   const fadeStyle = useAnimatedStyle(() => ({ opacity: opacity.get() }));
 
   return (
     <View className="absolute inset-0 items-center justify-center px-12">
-      <Animated.View style={fadeStyle}>
+      <Animated.View style={fadeStyle} className="items-center gap-3">
         <AppText className="text-base font-normal" style={GONE_STYLE}>
           Gone.
         </AppText>
+        {capReached && (
+          <AppText className="text-center text-sm" style={CAP_STYLE}>
+            You&apos;ve used today&apos;s voice replies. They return tomorrow.
+          </AppText>
+        )}
       </Animated.View>
 
       {isCrisis && (

@@ -17,6 +17,7 @@ type VentResult = {
   words: string | null;
   audioUrl: string | null;
   isCrisis: boolean;
+  capReached: boolean;
 };
 
 export type UseVentFlowReturn = {
@@ -24,6 +25,8 @@ export type UseVentFlowReturn = {
   /** Words for on-screen display — ElevenLabs audio tags ([sighs] etc.) stripped. */
   displayWords: string | null;
   isCrisis: boolean;
+  /** True when the daily cap (not a failure) is why there's no acknowledgement. */
+  capReached: boolean;
   startVent: () => Promise<void>;
   stopVent: () => Promise<void>;
   // Screen calls this when the burn animation (scatter + silence) finishes.
@@ -48,6 +51,7 @@ export function useVentFlow(): UseVentFlowReturn {
   const [words, setWords] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isCrisis, setIsCrisis] = useState(false);
+  const [capReached, setCapReached] = useState(false);
 
   const { startRecording, stopRecording, metering, isRecording, durationMs } =
     useVentRecorder();
@@ -65,6 +69,7 @@ export function useVentFlow(): UseVentFlowReturn {
     if (result === null) return; // pipeline still in flight — dark screen waits
 
     if (result === 'error' || !result.words) {
+      if (result !== 'error' && result.capReached) setCapReached(true);
       setState((prev) => (prev === 'processing' ? 'gone' : prev));
       return;
     }
@@ -163,6 +168,7 @@ export function useVentFlow(): UseVentFlowReturn {
     state,
     displayWords,
     isCrisis,
+    capReached,
     startVent,
     stopVent,
     onBurnComplete,

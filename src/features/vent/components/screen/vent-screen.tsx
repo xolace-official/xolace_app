@@ -50,6 +50,7 @@ export function VentScreen() {
     state,
     displayWords,
     isCrisis,
+    capReached,
     startVent,
     stopVent,
     onBurnComplete,
@@ -177,7 +178,9 @@ export function VentScreen() {
         {state === 'heard' && displayWords && <VentAcknowledgement words={displayWords} />}
 
         {/* The period */}
-        {state === 'gone' && <VentGone isCrisis={isCrisis} onDone={onGoneComplete} />}
+        {state === 'gone' && (
+          <VentGone isCrisis={isCrisis} capReached={capReached} onDone={onGoneComplete} />
+        )}
 
         {/* DEV ONLY — tap to re-activate the first-run intro for testing */}
         {__DEV__ && state === 'idle' && (
