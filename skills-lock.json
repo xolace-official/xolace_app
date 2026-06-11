@@ -197,6 +197,12 @@
       "skillPath": "skills/custom-product-pages/SKILL.md",
       "computedHash": "56728f769e5a118cbaeba4190989197e291759be64bc4278be6315c9cac99cf6"
     },
+    "humanizer-zh": {
+      "source": "op7418/humanizer-zh",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "7bd195e3bcdcc24f078dfd4e3b3e37e8ac321c36f410a41241fc4175eab1825a"
+    },
     "in-app-events": {
       "source": "eronred/aso-skills",
       "sourceType": "github",

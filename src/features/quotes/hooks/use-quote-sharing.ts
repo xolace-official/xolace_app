@@ -2,8 +2,9 @@ import { useRef, useState } from "react";
 import { View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import { useToast } from "heroui-native";
+import { usePostHog } from "posthog-react-native";
 
-export function useQuoteSharing(displayedQuote: { text: string } | null) {
+export function useQuoteSharing(displayedQuote: { text: string; type: string } | null) {
   const sharingCardRef = useRef<View>(null);
   const layoutResolverRef = useRef<(() => void) | null>(null);
   const imageResolverRef = useRef<(() => void) | null>(null);
@@ -13,6 +14,7 @@ export function useQuoteSharing(displayedQuote: { text: string } | null) {
   const [shareImageUri, setShareImageUri] = useState<string | null>(null);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const { toast } = useToast();
+  const posthog = usePostHog();
 
   const layoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -34,6 +36,7 @@ export function useQuoteSharing(displayedQuote: { text: string } | null) {
 
   const handleShare = async () => {
     if (!displayedQuote || isSharingLoading) return;
+    posthog.capture('quote_share_initiated', { quote_type: displayedQuote.type });
     setIsSharingLoading(true);
     imageLoadedRef.current = false;
     setShowSharingCard(true);

@@ -4,13 +4,15 @@ import * as Sharing from "expo-sharing";
 import * as MediaLibrary from "expo-media-library";
 import { useToast } from "heroui-native";
 import { Presets } from "react-native-pulsar";
+import { usePostHog } from "posthog-react-native";
 
 // Required for Instagram Stories since Jan 2023.
 // Set EXPO_PUBLIC_FB_APP_ID in your .env to enable Stories sharing.
 const FB_APP_ID = process.env.EXPO_PUBLIC_FB_APP_ID ?? "";
 
-export function useQuoteShareActions(imageUri: string | null) {
+export function useQuoteShareActions(imageUri: string | null, quoteType: string) {
   const { toast } = useToast();
+  const posthog = usePostHog();
 
   const shareGeneric = async () => {
     if (!imageUri) return;
@@ -36,6 +38,7 @@ export function useQuoteShareActions(imageUri: string | null) {
   const shareViaWhatsApp = async () => {
     Presets.flick();
     if (!imageUri) return;
+    posthog.capture('quote_shared', { platform: 'whatsapp', quote_type: quoteType });
     // WhatsApp's iOS URL scheme only accepts text — it silently ignores files.
     // UI hides this button on iOS; fall back defensively for any stray callers.
     if (Platform.OS === "ios") {
@@ -56,6 +59,7 @@ export function useQuoteShareActions(imageUri: string | null) {
   const shareViaTelegram = async () => {
     Presets.flick();
     if (!imageUri) return;
+    posthog.capture('quote_shared', { platform: 'telegram', quote_type: quoteType });
     // Telegram's iOS URL scheme stringifies the file path into the chat — not
     // an actual image. UI hides this button on iOS; defensive fallback here.
     if (Platform.OS === "ios") {
@@ -76,6 +80,7 @@ export function useQuoteShareActions(imageUri: string | null) {
   const shareViaInstagram = async () => {
     Presets.flick();
     if (!imageUri) return;
+    posthog.capture('quote_shared', { platform: 'instagram', quote_type: quoteType });
 
     // Instagram Feed on iOS reads the latest item from the camera roll rather
     // than the URL we pass — so we save first so it picks up our quote image.
@@ -132,12 +137,14 @@ export function useQuoteShareActions(imageUri: string | null) {
 
   const shareMore = async () => {
     Presets.flick();
+    posthog.capture('quote_shared', { platform: 'more', quote_type: quoteType });
     await shareGeneric();
   };
 
   const saveToLibrary = async () => {
     if (!imageUri) return;
     Presets.flick();
+    posthog.capture('quote_shared', { platform: 'save_to_library', quote_type: quoteType });
     const { status } = await MediaLibrary.requestPermissionsAsync(false);
     if (status !== "granted") {
       toast.show({ label: "Permission denied", description: "Allow photo access in Settings to save images.", variant: "default" });
