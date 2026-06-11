@@ -24,6 +24,7 @@ import {
   SpaceGrotesk_700Bold,
   useFonts
 } from '@expo-google-fonts/space-grotesk';
+import { AppMetrics, AppMetricsRoot } from 'expo-observe';
 
 import { RootProvider } from '@/src/providers/root-provider';
 import { useAppStore } from '@/src/store/store';
@@ -62,6 +63,12 @@ const AppContent = () => {
   const previousPathname = useRef<string | undefined>(undefined);
 
   useEffect(() => {
+    if (!isAuthLoading) {
+      AppMetrics.markInteractive();
+    }
+  }, [isAuthLoading]);
+
+  useEffect(() => {
     if (previousPathname.current !== pathname) {
       posthog.screen(pathname, {
         previous_screen: previousPathname.current ?? null,
@@ -94,7 +101,7 @@ const AppContent = () => {
  *
  * @returns The root layout element that provides app-wide context and a navigation theme.
  */
-export default function RootLayout() {
+function RootLayout() {
   const { theme } = useUniwind();
   const setIsVersionChecked = useAppStore((s) => s.setIsVersionChecked);
   const setIsNewVersionAvailable = useAppStore((s) => s.setIsNewVersionAvailable);
@@ -149,3 +156,5 @@ export default function RootLayout() {
     </RootProvider>
   );
 }
+
+export default AppMetricsRoot.wrap(RootLayout);
