@@ -21,6 +21,7 @@ import {
 } from "./helpers/patternSummary";
 
 import { rateLimiter } from "../lib/rateLimits";
+import { posthog } from "../posthog";
 
 import type { SessionContext } from "./context";
 import { matchExercise } from "../exercises/match";
@@ -39,6 +40,15 @@ export const generateMirror = internalAction({
     rawText: v.string(),
   },
   handler: async (ctx, args) => {
+    let session:
+      | {
+          entryType?: string;
+          timeOfDay?: string;
+          sessionMode?: "day" | "night";
+          emotionalProfileId: string;
+          [key: string]: unknown;
+        }
+      | undefined;
     try {
       // 1. Load full context (single DB transaction)
       const context: SessionContext = await ctx.runQuery(
@@ -66,6 +76,11 @@ export const generateMirror = internalAction({
           sessionId: args.sessionId,
           errorMessage: `You've reached the limit for reflections. ${retryText}`,
         });
+        await posthog.capture(ctx, {
+          distinctId: context.session.emotionalProfileId as string,
+          event: "mirror_rate_limited",
+          properties: { retryAfterMs: retryAfter ?? 0 },
+        });
         return;
       }
 
@@ -83,7 +98,7 @@ export const generateMirror = internalAction({
       // 3. Parallel: moderation + classification (both cached)
       const anthropic = getAnthropicClient();
 
-      const session = context.session as {
+      session = context.session as {
         entryType?: string;
         timeOfDay?: string;
         sessionMode?: "day" | "night";
@@ -124,6 +139,13 @@ export const generateMirror = internalAction({
         await ctx.runMutation(internal.sessions.failSession, {
           sessionId: args.sessionId,
           errorMessage: safeguard.rejectionReason ?? "content_policy_violation",
+        });
+        await posthog.capture(ctx, {
+          distinctId: session.emotionalProfileId,
+          event: "mirror_content_rejected",
+          properties: {
+            rejectionReason: safeguard.rejectionReason ?? "content_policy_violation",
+          },
         });
         return;
       }
@@ -188,6 +210,19 @@ export const generateMirror = internalAction({
               escalationResources: safeguard.resourcesPresented,
             }
           : {}),
+      });
+      await posthog.capture(ctx, {
+        distinctId: session.emotionalProfileId,
+        event: "mirror_delivered",
+        properties: {
+          entryType: session.entryType ?? "open_prompt",
+          toneUsed: mirrorTone,
+          safeguardLevel: safeguard.level,
+          escalationTriggered: isEscalation,
+          usedFallback: mirrorText === FALLBACK_MIRROR,
+          isFirstSession: context.isFirstSession,
+          sessionMode: session.sessionMode ?? "day",
+        },
       });
 
       // 7.5. Schedule TTS generation (fire-and-forget, non-blocking)
@@ -315,6 +350,11 @@ export const generateMirror = internalAction({
         sessionId: args.sessionId,
         errorMessage,
       });
+      await posthog.capture(ctx, {
+        distinctId: session?.emotionalProfileId ?? (args.sessionId as string),
+        event: "mirror_generation_failed",
+        properties: { errorType: classifyAiError(error) },
+      });
     }
   },
 });
@@ -328,4 +368,13 @@ function sanitizeAiError(error: Error): string {
     return "The space is a little full right now. Take a breath and try again in a moment.";
   }
   return "Something interrupted this moment. You can try again when you're ready.";
+}
+
+function classifyAiError(error: unknown): string {
+  if (!(error instanceof Error)) return "unknown";
+  const msg = error.message;
+  if (msg.includes("overloaded_error") || msg.startsWith("529")) return "anthropic_overloaded";
+  if (msg.includes("rate_limit") || msg.startsWith("429")) return "anthropic_rate_limit";
+  if (msg.includes("context") || msg.startsWith("buildSessionContext")) return "context_load_failed";
+  return "unknown";
 }

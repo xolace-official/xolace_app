@@ -53,6 +53,7 @@ import type * as lib_timeOfDay from "../lib/timeOfDay.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
+import type * as posthog from "../posthog.js";
 import type * as preferences from "../preferences.js";
 import type * as quotes from "../quotes.js";
 import type * as reflections from "../reflections.js";
@@ -114,6 +115,7 @@ declare const fullApi: ApiFromModules<{
   "lib/validators": typeof lib_validators;
   migrations: typeof migrations;
   notifications: typeof notifications;
+  posthog: typeof posthog;
   preferences: typeof preferences;
   quotes: typeof quotes;
   reflections: typeof reflections;
@@ -155,4 +157,5 @@ export declare const components: {
   actionCache: import("@convex-dev/action-cache/_generated/component.js").ComponentApi<"actionCache">;
   migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
   pushNotifications: import("@convex-dev/expo-push-notifications/_generated/component.js").ComponentApi<"pushNotifications">;
+  posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
 };

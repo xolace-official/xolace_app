@@ -53,6 +53,7 @@ export function useReflectionMachine() {
 
   const prevServerStateRef = useRef<string | null>(null);
   const typingStartRef = useRef<number | null>(null);
+  const submitTimestampRef = useRef<number | null>(null);
   const freezeOccurredRef = useRef(false);
   const freezeStartRef = useRef<number | null>(null);
   const freezeDurationRef = useRef<number | undefined>(undefined);
@@ -61,12 +62,18 @@ export function useReflectionMachine() {
   const clearRefs = useCallback(() => {
     prevServerStateRef.current = null;
     typingStartRef.current = null;
+    submitTimestampRef.current = null;
     freezeOccurredRef.current = false;
     freezeStartRef.current = null;
     freezeDurationRef.current = undefined;
     busyRef.current = false;
     voicePrefixRef.current = '';
   }, []);
+
+  const dispatchError = (message: string) => {
+    dispatch({ type: 'SESSION_ERROR', message });
+    posthog.capture('ai_error', { reason: message });
+  };
 
   // Forward live transcript to entryText
   useEffect(() => {
@@ -89,6 +96,11 @@ export function useReflectionMachine() {
         break;
       case 'mirror_delivered':
         if (mirrorText) {
+          const durationMs = submitTimestampRef.current
+            ? Date.now() - submitTimestampRef.current
+            : undefined;
+          submitTimestampRef.current = null;
+          posthog.capture('mirror_arrived', { duration_ms: durationMs });
           if (session?.escalationTriggered) {
             posthog.capture('escalation_triggered');
             dispatch({ type: 'ESCALATION_TRIGGERED', mirror: mirrorText });
@@ -103,10 +115,7 @@ export function useReflectionMachine() {
         }
         break;
       case 'error':
-        dispatch({
-          type: 'SESSION_ERROR',
-          message: errorMessage ?? 'Something went wrong.',
-        });
+        dispatchError(errorMessage ?? 'Something went wrong.');
         break;
       case 'abandoned':
       case 'completed':
@@ -158,8 +167,9 @@ export function useReflectionMachine() {
         input_length: state.entryText.length,
         freeze_occurred: freezeOccurredRef.current,
       });
+      submitTimestampRef.current = Date.now();
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
@@ -181,8 +191,9 @@ export function useReflectionMachine() {
         input_length: state.selectedTextures.length,
         freeze_occurred: false,
       });
+      submitTimestampRef.current = Date.now();
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
@@ -202,10 +213,7 @@ export function useReflectionMachine() {
       ) {
         dispatch({ type: 'SESSION_RESUMED', screen: 'gave-up' });
       } else {
-        dispatch({
-          type: 'SESSION_ERROR',
-          message: extractErrorMessage(error),
-        });
+        dispatchError(extractErrorMessage(error));
       }
     } finally {
       busyRef.current = false;
@@ -221,7 +229,7 @@ export function useReflectionMachine() {
       await confirmMirror(confirmationState);
       posthog.capture('mirror_confirmed', { turns_count: turnsCount });
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
@@ -252,7 +260,7 @@ export function useReflectionMachine() {
       await confirmMirror('gave_up');
       dispatch({ type: 'THATS_IT' });
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
@@ -265,7 +273,7 @@ export function useReflectionMachine() {
       await selectPath('exit');
       posthog.capture('path_selected', { path: 'exit' });
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
@@ -278,7 +286,7 @@ export function useReflectionMachine() {
       await selectPath('solo');
       posthog.capture('path_selected', { path: 'solo' });
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
@@ -291,7 +299,7 @@ export function useReflectionMachine() {
       await selectPath('peers');
       posthog.capture('path_selected', { path: 'peers' });
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
@@ -305,7 +313,7 @@ export function useReflectionMachine() {
       posthog.capture('escalation_engaged');
       // Resources phase is shown inline — component manages local state.
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
@@ -319,7 +327,7 @@ export function useReflectionMachine() {
       await confirmMirror(confirmation);
       dispatch({ type: 'THATS_IT' });
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
@@ -334,7 +342,7 @@ export function useReflectionMachine() {
       await confirmMirror(confirmation);
       dispatch({ type: 'THATS_IT' });
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
@@ -377,7 +385,7 @@ export function useReflectionMachine() {
     try {
       await retry();
     } catch (error) {
-      dispatch({ type: 'SESSION_ERROR', message: extractErrorMessage(error) });
+      dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }

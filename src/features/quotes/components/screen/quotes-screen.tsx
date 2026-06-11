@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -11,6 +11,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { usePostHog } from "posthog-react-native";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { PressableFeedback, useThemeColor } from "heroui-native";
@@ -43,6 +44,7 @@ const EASE_TRANSITION = {
 export function QuotesScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const router = useRouter();
+  const posthog = usePostHog();
   const foregroundColor = useThemeColor("foreground") as string;
   const accentColor = useThemeColor("accent") as string;
 
@@ -56,6 +58,7 @@ export function QuotesScreen() {
 
   const [isColdStarting, setIsColdStarting] = useState(false);
   const [coldStartError, setColdStartError] = useState(false);
+  const viewedTrackedRef = useRef(false);
 
   const isLoading = todayQuotes === undefined || quotePrefs === undefined;
   const displayedQuote = todayQuotes?.session ?? todayQuotes?.curated ?? null;
@@ -123,11 +126,26 @@ export function QuotesScreen() {
     }
   }, [displayedQuote, isColdStarting]);
 
+  useEffect(() => {
+    if (viewedTrackedRef.current || isFirstVisit || isLoading || !displayedQuote) return;
+    viewedTrackedRef.current = true;
+    posthog.capture('quote_viewed', {
+      quote_type: displayedQuote.type,
+      has_session_today: todayQuotes?.hasSessionToday ?? false,
+    });
+  }, [isFirstVisit, isLoading, displayedQuote, todayQuotes?.hasSessionToday, posthog]);
+
   const handlePrefsComplete = async (
     themes: string[],
     notifEnabled: boolean,
     notifTime?: string,
   ) => {
+    posthog.capture('quote_preferences_set', {
+      theme_count: themes.length,
+      themes,
+      notifications_enabled: notifEnabled,
+      notification_time: notifTime ?? null,
+    });
     await scheduleNotification(themes, notifEnabled, notifTime);
     setIsColdStarting(true);
     coldStart().catch(() => {
@@ -151,8 +169,16 @@ export function QuotesScreen() {
   ) => {
     if (!displayedQuote) return;
     if (!reaction) {
+      posthog.capture('quote_reaction_cleared', {
+        previous_reaction: displayedQuote.reaction ?? null,
+        quote_type: displayedQuote.type,
+      });
       await clearReaction({ quoteId: displayedQuote._id });
     } else {
+      posthog.capture('quote_reacted', {
+        reaction,
+        quote_type: displayedQuote.type,
+      });
       await reactToQuote({ quoteId: displayedQuote._id, reaction });
     }
   };
@@ -269,6 +295,7 @@ export function QuotesScreen() {
         <QuoteShareSheet
           visible={showShareSheet}
           imageUri={shareImageUri}
+          quoteType={displayedQuote?.type ?? 'curated'}
           onClose={() => {
             setShowShareSheet(false);
             setShareImageUri(null);

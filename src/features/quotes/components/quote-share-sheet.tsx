@@ -13,6 +13,7 @@ import { useQuoteShareActions } from "@/src/features/quotes/hooks/use-quote-shar
 type Props = {
   visible: boolean;
   imageUri: string | null;
+  quoteType: "session" | "curated";
   onClose: () => void;
 };
 
@@ -37,7 +38,7 @@ const GRADIENT_TOP_START: [number, number] = [0, 0];
 const GRADIENT_TOP_END: [number, number] = [1, 0.4];
 const CLOSE_ICON = { ios: "xmark" as const, android: "close" as const };
 
-export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
+export function QuoteShareSheet({ visible, imageUri, quoteType, onClose }: Props) {
   const { top, bottom } = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const foregroundColor = useThemeColor("foreground") as string;
@@ -45,7 +46,7 @@ export function QuoteShareSheet({ visible, imageUri, onClose }: Props) {
   const surfaceColor = useThemeColor("surface") as string;
   const accentColor = useThemeColor("accent") as string;
   const { shareViaWhatsApp, shareViaTelegram, shareViaInstagram, shareMore, saveToLibrary } =
-    useQuoteShareActions(imageUri);
+    useQuoteShareActions(imageUri, quoteType);
 
   const previewWidth = width * 0.72;
   const previewHeight = previewWidth * (16 / 9);
