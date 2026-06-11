@@ -11,10 +11,13 @@ import { scheduleOnRN } from 'react-native-worklets';
 import {
   BASE_RADIUS,
   COMPRESS_MS,
+  DIR_X,
   FLASH_COLOR,
   MAX_RADIUS,
+  PHASE0,
   SCATTER_MS,
   SILENCE_MS,
+  SIZE,
 } from './particle-config';
 import { drawBurn, drawField, drawSparse } from './particle-render';
 
@@ -129,22 +132,47 @@ export function ParticleField({ stage, metering, burnSkip, onBurnComplete }: Pro
       const es = enterStart.get();
       drawField(canvas, paint, ts, es < 0 ? 0 : ts - es, radius.get(), warmth.get(), w, h);
     } else if (ph === PHASES.burning) {
-      const flashPaint = Skia.Paint();
-      flashPaint.setColor(Skia.Color(FLASH_COLOR));
-      flashPaint.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, 26, true));
       const explodeStart = skipAt.get() >= 0 ? skipAt.get() : COMPRESS_MS;
-      drawBurn(
-        canvas,
-        paint,
-        flashPaint,
-        ts,
-        ts - phaseStart.get(),
-        radiusAtBurn.get(),
-        warmthAtBurn.get(),
-        explodeStart,
-        w,
-        h,
-      );
+      const bt = ts - phaseStart.get();
+      const burnEnd = explodeStart + SCATTER_MS + SILENCE_MS;
+      if (bt <= burnEnd) {
+        const flashPaint = Skia.Paint();
+        flashPaint.setColor(Skia.Color(FLASH_COLOR));
+        flashPaint.setMaskFilter(Skia.MaskFilter.MakeBlur(BlurStyle.Normal, 26, true));
+        drawBurn(
+          canvas,
+          paint,
+          flashPaint,
+          ts,
+          bt,
+          radiusAtBurn.get(),
+          warmthAtBurn.get(),
+          explodeStart,
+          w,
+          h,
+        );
+      } else {
+        // Afterglow: the burn finished but the pipeline result hasn't arrived.
+        // A handful of stray sparks keep rising off the spot where the paper
+        // burned — flickering, drifting, dying out — so the wait reads as the
+        // fire settling rather than a frozen screen.
+        const wt = bt - burnEnd;
+        const fadeIn = Math.min(wt / 800, 1);
+        const cx = w / 2;
+        const cy = h / 2;
+        for (let i = 0; i < 9; i++) {
+          const cycle = 2400 + PHASE0[i] * 350; // per-spark loop length
+          const p = ((wt + PHASE0[i] * 900) % cycle) / cycle; // 0→1 lifetime
+          const x = cx + DIR_X[i] * 30 + Math.sin(p * 6.283 + PHASE0[i]) * 12;
+          const y = cy + 16 - p * 110; // born low, rises ~110px, dies
+          const flicker = 0.55 + 0.45 * Math.sin(wt * 0.013 + PHASE0[i] * 7);
+          // Lifetime envelope peaks mid-rise, fades at birth/death.
+          const life = 4 * p * (1 - p);
+          paint.setColor(Skia.Color(i % 3 === 0 ? '#E8A84C' : '#C4883F'));
+          paint.setAlphaf(Math.min(fadeIn * life * flicker, 0.85));
+          canvas.drawCircle(x, y, 1.4 + SIZE[i] * 0.5 * (1 - p * 0.5), paint);
+        }
+      }
     }
     // 'done' renders an empty picture — the dark screen.
     return recorder.finishRecordingAsPicture();

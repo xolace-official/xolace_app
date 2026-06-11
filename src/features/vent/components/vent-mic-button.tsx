@@ -20,6 +20,8 @@ const STOP_ICON = { ios: 'stop.fill', android: 'stop', web: 'stop' } as const;
 const RECORDING_AMBER = '#C4883F';
 const IDLE_RING = '#9399A8';
 const ICON_COLOR = '#F5F0E8';
+// Matches VENT_BG — punches the hole in the donut ring.
+const RING_HOLE = { backgroundColor: '#0A0A0D' };
 
 type Props = {
   recording: boolean;
@@ -54,7 +56,7 @@ export function VentMicButton({ recording, onPress }: Props) {
   const ringStyle = useAnimatedStyle(() => ({
     opacity: ringPulse.get(),
     transform: [{ scale: recording ? 1.12 : 1 }],
-    borderColor: recording ? RECORDING_AMBER : IDLE_RING,
+    backgroundColor: recording ? RECORDING_AMBER : IDLE_RING,
   }));
 
   const handlePress = () => {
@@ -70,10 +72,14 @@ export function VentMicButton({ recording, onPress }: Props) {
       hitSlop={16}
     >
       <View className="h-[60px] w-[60px] items-center justify-center">
+        {/* Ring drawn as a solid donut (disc + screen-bg hole) — a 2px border
+            on a scaled/fading view renders with gaps on iOS. */}
         <Animated.View
-          className="absolute h-[60px] w-[60px] rounded-full border-2"
+          className="absolute h-[60px] w-[60px] items-center justify-center rounded-full"
           style={ringStyle}
-        />
+        >
+          <View className="h-[56px] w-[56px] rounded-full" style={RING_HOLE} />
+        </Animated.View>
         <View className="h-[52px] w-[52px] items-center justify-center rounded-full bg-white/5">
           <SymbolView
             name={recording ? STOP_ICON : MIC_ICON}

@@ -15,10 +15,11 @@ export const PERSPECTIVE = 600;
 
 export const ASSEMBLY_MS = 2000;
 export const PULSE_MS = 1200;
-export const COMPRESS_MS = 500;
+// Burn beats total ~4s: compress → flash → scatter → silence.
+export const COMPRESS_MS = 600;
 export const FLASH_MS = 140;
-export const SCATTER_MS = 1500;
-export const SILENCE_MS = 1000;
+export const SCATTER_MS = 2200;
+export const SILENCE_MS = 1200;
 
 export const FLASH_COLOR = '#FFF3E0';
 
