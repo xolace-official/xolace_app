@@ -10,7 +10,7 @@ import { useVentRecorder } from './use-vent-recorder';
 export type VentState = 'idle' | 'recording' | 'processing' | 'heard' | 'gone' | 'error';
 
 // Hard recording ceiling — keeps the m4a payload safely under Convex's 1MB
-// v.bytes() limit and inside the pessimistic 3-minute cap increment.
+// v.bytes() limit. The daily cap is charged by actual duration server-side.
 export const MAX_VENT_DURATION_MS = 120_000;
 
 type VentResult = {
@@ -129,7 +129,7 @@ export function useVentFlow(): UseVentFlowReturn {
         bytes.byteOffset + bytes.byteLength,
       );
 
-      const result = await processVentAudio({ audioBytes });
+      const result = await processVentAudio({ audioBytes, durationMs });
       resultRef.current = result;
     };
 

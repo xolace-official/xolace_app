@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { mutation, action, internalAction, type ActionCtx } from "./_generated/server";
-import { api } from "./_generated/api";
+import { internalMutation, action, internalAction, type ActionCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 import { buildVentAcknowledgePrompt } from "./ai/ventAcknowledge";
 import {
@@ -12,8 +12,12 @@ const WITNESSED_VOICE_ID = "NOpBlnGInO9m6vDvFkFC"; // Spuds Oxley — wise, appr
 const CRISIS_FALLBACK = "you don't have to carry this alone";
 const ACKNOWLEDGE_MODEL = "claude-haiku-4-5-20251001";
 
-// Pessimistic increment: assume a 3-minute session to avoid going over cap.
-const INCREMENT_MINUTES = 3;
+// Ceiling on what a single vent can charge — also the fallback when the
+// caller can't know the real duration (e.g. the legacy agent session token).
+const MAX_INCREMENT_MINUTES = 3;
+// Mono 48kbps AAC ≈ 6KB/s. Used to sanity-check the client-claimed duration
+// against the actual payload so a tampered client can't under-report.
+const AUDIO_BYTES_PER_SECOND = 6000;
 
 function startOfTodayUTC(): number {
   const now = new Date();
@@ -25,15 +29,21 @@ function startOfTodayUTC(): number {
  *
  * Lazy daily reset: if ventDailyResetAt < startOfTodayUTC, the counter is
  * treated as 0 for today. The cap is read from ELEVENLABS_DAILY_CAP_MINUTES
- * (default 2). Increments by 3 minutes pessimistically so a user who hits
- * the cap mid-session doesn't keep burning quota.
+ * (default 2). Increments by the actual session length in whole minutes
+ * (clamped to 1..MAX_INCREMENT_MINUTES) — callers derive it from the
+ * recording duration and payload size.
  *
  * Returns { allowed: false } without incrementing when cap is exceeded.
  */
-export const checkAndIncrementCap = mutation({
-  args: {},
-  handler: async (ctx) => {
+export const checkAndIncrementCap = internalMutation({
+  args: { minutes: v.number() },
+  handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+
+    const minutes = Math.min(
+      Math.max(Math.ceil(args.minutes), 1),
+      MAX_INCREMENT_MINUTES,
+    );
 
     const todayStart = startOfTodayUTC();
     const capRaw = Number(process.env.ELEVENLABS_DAILY_CAP_MINUTES ?? "2");
@@ -49,7 +59,7 @@ export const checkAndIncrementCap = mutation({
     }
 
     await ctx.db.patch(profile._id, {
-      ventDailyMinutesUsed: currentUsed + INCREMENT_MINUTES,
+      ventDailyMinutesUsed: currentUsed + minutes,
       ventDailyResetAt: needsReset ? todayStart : profile.ventDailyResetAt,
       updatedAt: Date.now(),
     });
@@ -70,7 +80,11 @@ export const getVentSessionToken = action({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
-    const capResult: { allowed: boolean } = await ctx.runMutation(api.vent.checkAndIncrementCap, {});
+    // Open-ended agent session — duration unknown up front, charge the max.
+    const capResult: { allowed: boolean } = await ctx.runMutation(
+      internal.vent.checkAndIncrementCap,
+      { minutes: MAX_INCREMENT_MINUTES },
+    );
     if (!capResult.allowed) throw new Error("Daily voice cap reached");
 
     const apiKey = process.env.ELEVENLABS_AGENT_KEY;
@@ -324,14 +338,20 @@ export const transcribeAndAcknowledge = internalAction({
  * The client plays the destruction animation regardless of what comes back.
  */
 export const processVentAudio = action({
-  args: { audioBytes: v.bytes() },
+  args: { audioBytes: v.bytes(), durationMs: v.number() },
   handler: async (ctx, args): Promise<VentResult> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
+    // Charge actual usage: trust whichever is larger of the client-claimed
+    // duration and what the payload size implies, so under-reporting is moot.
+    const claimedSeconds = Math.max(args.durationMs, 0) / 1000;
+    const payloadSeconds = args.audioBytes.byteLength / AUDIO_BYTES_PER_SECOND;
+    const minutes = Math.max(claimedSeconds, payloadSeconds) / 60;
+
     const capResult: { allowed: boolean } = await ctx.runMutation(
-      api.vent.checkAndIncrementCap,
-      {},
+      internal.vent.checkAndIncrementCap,
+      { minutes },
     );
     if (!capResult.allowed) {
       console.log("[vent] Daily cap reached — skipping pipeline");
