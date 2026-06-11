@@ -14,6 +14,7 @@ import {
   buildPatternSummary,
   collectRecentMirrors,
 } from "./helpers/patternSummary";
+import { posthog } from "../posthog";
 
 const FALLBACK_MIRROR =
   "I hear you more clearly now. What you're feeling deserves to be seen.";
@@ -160,6 +161,16 @@ export const handleClarification = internalAction({
           | "adaptive"
           | "witnessed",
       });
+      await posthog.capture(ctx, {
+        distinctId: session.emotionalProfileId,
+        event: "clarify_delivered",
+        properties: {
+          turnNumber: args.turnNumber,
+          hadAdditionalText: !!args.additionalRawText,
+          usedFallback: revisedMirrorText === FALLBACK_MIRROR,
+          userFeedback: userFeedback ?? "not_quite",
+        },
+      });
 
       // 7.5. Replace TTS: delete old audio file and schedule fresh generation.
       const oldStorageId = await ctx.runQuery(
@@ -193,6 +204,17 @@ export const handleClarification = internalAction({
       await ctx.runMutation(internal.sessions.failSession, {
         sessionId: args.sessionId,
         errorMessage,
+      });
+      await posthog.capture(ctx, {
+        distinctId: args.sessionId as string,
+        event: "clarify_failed",
+        properties: {
+          turnNumber: args.turnNumber,
+          errorType:
+            error instanceof Error && error.message.includes("No classification")
+              ? "missing_metadata"
+              : "unknown",
+        },
       });
     }
   },
