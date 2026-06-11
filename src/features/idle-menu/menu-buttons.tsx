@@ -5,14 +5,17 @@ import { SymbolView, SFSymbol } from "expo-symbols";
 import { SharedValue, useSharedValue } from "react-native-reanimated";
 import { AppText } from "@/src/components/shared/app-text";
 import { AnimatedRow } from "@/src/features/idle-menu/animated-row";
+import { GlowIcon } from "@/src/features/idle-menu/glow-icon";
 import { playSoftPress } from "@/src/lib/haptics";
+import { useAppStore } from "@/src/store/store";
 
 type MenuButtonItem = {
   label: string;
-  icon: { ios: SFSymbol; android: string };
   iconName: { ios: SFSymbol; android: string };
   onPress: () => void;
   accessibilityLabel: string;
+  /** Newly added item — icon glows until the item is opened once. */
+  newKey?: string;
 };
 
 type Props = {
@@ -25,21 +28,25 @@ const ICON_DIM_STYLE = { opacity: 0.6 };
 export const MenuButtons = ({ isOpen, onClose }: Props) => {
   const router = useRouter();
   const foregroundColor = useThemeColor("foreground");
+  const accentColor = useThemeColor("accent");
   const containerHeight = useSharedValue(0);
+  const seenMenuItems = useAppStore((s) => s.seenMenuItems);
+  const markMenuItemSeen = useAppStore((s) => s.markMenuItemSeen);
 
-  const items: MenuButtonItem[] = [
-    // {
-    //   label: "Vent",
-    //   icon: { ios: "mic", android: "mic" },
-    //   accessibilityLabel: "Open voice vent — speak your weight",
-    //   onPress: () => {
-    //     onClose();
-    //     router.push("/(protected)/voice-vent");
-    //   },
-    // },
+  // Primary actions — what you came to do. Full rows.
+  const primaryItems: MenuButtonItem[] = [
+    {
+      label: "Vent",
+      iconName: { ios: "mic", android: "mic" },
+      accessibilityLabel: "Open voice vent — speak your weight",
+      newKey: "vent",
+      onPress: () => {
+        onClose();
+        router.push("/(protected)/voice-vent");
+      },
+    },
     {
       label: "Today",
-      icon: { ios: "quote.bubble", android: "format_quote" },
       iconName: { ios: "quote.bubble", android: "format_quote" },
       accessibilityLabel: "Open your daily quote",
       onPress: () => {
@@ -47,9 +54,12 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
         router.push("/(protected)/quotes" as any);
       },
     },
+  ];
+
+  // Housekeeping — shares one compact row.
+  const compactItems: MenuButtonItem[] = [
     {
       label: "Timeline",
-      icon: { ios: "clock", android: "history" },
       iconName: { ios: "clock", android: "history" },
       accessibilityLabel: "Open your session timeline",
       onPress: () => {
@@ -59,7 +69,6 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
     },
     {
       label: "Settings",
-      icon: { ios: "gearshape", android: "settings" },
       iconName: { ios: "gearshape", android: "settings" },
       accessibilityLabel: "Open settings",
       onPress: () => {
@@ -69,7 +78,28 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
     },
   ];
 
-  const itemIconStyle = ICON_DIM_STYLE;
+  const rowCount = primaryItems.length + 1;
+
+  const isNew = (item: MenuButtonItem) =>
+    !!item.newKey && !seenMenuItems.includes(item.newKey);
+
+  const handlePress = (item: MenuButtonItem) => {
+    playSoftPress();
+    if (item.newKey) markMenuItemSeen(item.newKey);
+    item.onPress();
+  };
+
+  const renderIcon = (item: MenuButtonItem, size: number) =>
+    isNew(item) ? (
+      <GlowIcon name={item.iconName} size={size} color={accentColor} />
+    ) : (
+      <SymbolView
+        name={item.iconName as any}
+        size={size}
+        tintColor={foregroundColor}
+        style={ICON_DIM_STYLE}
+      />
+    );
 
   const onContainerLayout = (e: {
     nativeEvent: { layout: { height: number } };
@@ -79,29 +109,21 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
 
   return (
     <View className="gap-1" onLayout={onContainerLayout}>
-      {items.map((item, index) => (
+      {primaryItems.map((item, index) => (
         <AnimatedRow
           key={item.label}
           isOpen={isOpen}
           index={index}
-          numberOfRows={items.length}
+          numberOfRows={rowCount}
           containerHeight={containerHeight}
         >
           <PressableFeedback
-            onPress={() => {
-              playSoftPress();
-              item.onPress();
-            }}
+            onPress={() => handlePress(item)}
             accessibilityRole="menuitem"
             accessibilityLabel={item.accessibilityLabel}
           >
             <View className="flex-row items-center gap-4 rounded-2xl bg-surface px-6 py-4">
-              <SymbolView
-                name={item.iconName as any}
-                size={22}
-                tintColor={foregroundColor}
-                style={itemIconStyle}
-              />
+              {renderIcon(item, 22)}
               <AppText className="text-base font-medium text-foreground">
                 {item.label}
               </AppText>
@@ -109,6 +131,36 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
           </PressableFeedback>
         </AnimatedRow>
       ))}
+
+      <AnimatedRow
+        key="compact-row"
+        isOpen={isOpen}
+        index={primaryItems.length}
+        numberOfRows={rowCount}
+        containerHeight={containerHeight}
+      >
+        <View className="flex-row gap-1">
+          {compactItems.map((item) => (
+            <PressableFeedback
+              key={item.label}
+              className="flex-1"
+              onPress={() => handlePress(item)}
+              accessibilityRole="menuitem"
+              accessibilityLabel={item.accessibilityLabel}
+            >
+              <View className="flex-row items-center justify-center gap-2.5 rounded-2xl bg-surface px-4 py-4">
+                {renderIcon(item, 20)}
+                <AppText
+                  className="text-sm font-medium text-foreground"
+                  numberOfLines={1}
+                >
+                  {item.label}
+                </AppText>
+              </View>
+            </PressableFeedback>
+          ))}
+        </View>
+      </AnimatedRow>
     </View>
   );
 };

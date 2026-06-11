@@ -21,4 +21,14 @@ describe("store partialize", () => {
     );
     expect(persisted).toContain("bridgeIntroSeen");
   });
+
+  it("ventIntroSeen is persisted", () => {
+    const state = useAppStore.getState();
+    const persisted = Object.keys(
+      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
+        .persist.getOptions()
+        .partialize(state),
+    );
+    expect(persisted).toContain("ventIntroSeen");
+  });
 });

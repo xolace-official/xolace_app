@@ -47,6 +47,12 @@ type TogglesSlice = {
   /** One-time flag — once true, bridge first-run intro modal never shows again. */
   bridgeIntroSeen: boolean;
   setBridgeIntroSeen: (v: boolean) => void;
+  /** One-time flag — once true, vent first-run intro never shows again. */
+  ventIntroSeen: boolean;
+  setVentIntroSeen: (v: boolean) => void;
+  /** Menu item keys whose "new" glow has been acknowledged (item opened once). */
+  seenMenuItems: string[];
+  markMenuItemSeen: (key: string) => void;
 };
 
 type PreferencesSlice = {
@@ -106,6 +112,16 @@ export const useAppStore = create<AppState>()(
         setBridgeEnabled: (v) => set({ bridgeEnabled: v }),
         bridgeIntroSeen: false,
         setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
+        ventIntroSeen: false,
+        setVentIntroSeen: (v) => set({ ventIntroSeen: v }),
+
+        seenMenuItems: [],
+        markMenuItemSeen: (key) =>
+          set((s) =>
+            s.seenMenuItems.includes(key)
+              ? {}
+              : { seenMenuItems: [...s.seenMenuItems, key] },
+          ),
 
         textureSetId: 'flat',
         setTextureSetId: (id) => set({ textureSetId: id }),
@@ -134,6 +150,8 @@ export const useAppStore = create<AppState>()(
           reflectTourSeen: s.reflectTourSeen,
           bridgeEnabled: s.bridgeEnabled,
           bridgeIntroSeen: s.bridgeIntroSeen,
+          ventIntroSeen: s.ventIntroSeen,
+          seenMenuItems: s.seenMenuItems,
           textureSetId: s.textureSetId,
         }),
       }

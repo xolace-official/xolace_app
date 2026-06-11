@@ -27,6 +27,7 @@ import type * as ai_quotesDistiller from "../ai/quotesDistiller.js";
 import type * as ai_safeguard from "../ai/safeguard.js";
 import type * as ai_slotFill from "../ai/slotFill.js";
 import type * as ai_tts from "../ai/tts.js";
+import type * as ai_ventAcknowledge from "../ai/ventAcknowledge.js";
 import type * as consent from "../consent.js";
 import type * as crons from "../crons.js";
 import type * as dailyQuotes from "../dailyQuotes.js";
@@ -87,6 +88,7 @@ declare const fullApi: ApiFromModules<{
   "ai/safeguard": typeof ai_safeguard;
   "ai/slotFill": typeof ai_slotFill;
   "ai/tts": typeof ai_tts;
+  "ai/ventAcknowledge": typeof ai_ventAcknowledge;
   consent: typeof consent;
   crons: typeof crons;
   dailyQuotes: typeof dailyQuotes;

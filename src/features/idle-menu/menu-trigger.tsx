@@ -43,7 +43,7 @@ export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
       accessibilityHint={
         isOpenJS
           ? "Closes navigation options"
-          : "Opens navigation options: Today, Timeline, Settings"
+          : "Opens navigation options: Vent, Today, Timeline, Settings"
       }
       className="border-foreground/16"
       style={triggerStyle}

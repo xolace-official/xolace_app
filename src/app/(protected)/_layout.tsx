@@ -23,6 +23,10 @@ export default function ProtectedLayout() {
       <Stack.Screen name="session-end" options={NO_GESTURE} />
       <Stack.Screen name="crisis-resources" options={NO_GESTURE} />
       <Stack.Screen name="trusted-bridge" />
+      <Stack.Screen
+        name="voice-vent"
+        options={{ gestureEnabled: false, animation: 'fade' }}
+      />
       <Stack.Screen name="quotes/index" />
     </Stack>
   );
