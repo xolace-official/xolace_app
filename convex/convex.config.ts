@@ -8,7 +8,7 @@ import posthog from "@posthog/convex/convex.config.js";
 
 const app = defineApp({
   env: {
-    POSTHOG_PROJECT_TOKEN: v.optional(v.string()),
+    POSTHOG_PROJECT_TOKEN: v.string(),
     POSTHOG_HOST: v.optional(v.string()),
     POSTHOG_PERSONAL_API_KEY: v.optional(v.string()),
     POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS: v.optional(v.string()),

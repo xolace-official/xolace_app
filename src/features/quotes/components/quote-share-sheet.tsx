@@ -13,7 +13,7 @@ import { useQuoteShareActions } from "@/src/features/quotes/hooks/use-quote-shar
 type Props = {
   visible: boolean;
   imageUri: string | null;
-  quoteType: string;
+  quoteType: "session" | "curated";
   onClose: () => void;
 };
 

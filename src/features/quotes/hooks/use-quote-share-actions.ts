@@ -10,7 +10,7 @@ import { usePostHog } from "posthog-react-native";
 // Set EXPO_PUBLIC_FB_APP_ID in your .env to enable Stories sharing.
 const FB_APP_ID = process.env.EXPO_PUBLIC_FB_APP_ID ?? "";
 
-export function useQuoteShareActions(imageUri: string | null, quoteType: string) {
+export function useQuoteShareActions(imageUri: string | null, quoteType: "session" | "curated") {
   const { toast } = useToast();
   const posthog = usePostHog();
 

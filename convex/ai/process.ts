@@ -40,6 +40,15 @@ export const generateMirror = internalAction({
     rawText: v.string(),
   },
   handler: async (ctx, args) => {
+    let session:
+      | {
+          entryType?: string;
+          timeOfDay?: string;
+          sessionMode?: "day" | "night";
+          emotionalProfileId: string;
+          [key: string]: unknown;
+        }
+      | undefined;
     try {
       // 1. Load full context (single DB transaction)
       const context: SessionContext = await ctx.runQuery(
@@ -89,7 +98,7 @@ export const generateMirror = internalAction({
       // 3. Parallel: moderation + classification (both cached)
       const anthropic = getAnthropicClient();
 
-      const session = context.session as {
+      session = context.session as {
         entryType?: string;
         timeOfDay?: string;
         sessionMode?: "day" | "night";
@@ -342,7 +351,7 @@ export const generateMirror = internalAction({
         errorMessage,
       });
       await posthog.capture(ctx, {
-        distinctId: args.sessionId as string,
+        distinctId: session?.emotionalProfileId ?? (args.sessionId as string),
         event: "mirror_generation_failed",
         properties: { errorType: classifyAiError(error) },
       });

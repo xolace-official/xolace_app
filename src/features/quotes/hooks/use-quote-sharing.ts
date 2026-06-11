@@ -4,7 +4,7 @@ import { captureRef } from "react-native-view-shot";
 import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 
-export function useQuoteSharing(displayedQuote: { text: string; type: string } | null) {
+export function useQuoteSharing(displayedQuote: { text: string; type: "session" | "curated" } | null) {
   const sharingCardRef = useRef<View>(null);
   const layoutResolverRef = useRef<(() => void) | null>(null);
   const imageResolverRef = useRef<(() => void) | null>(null);

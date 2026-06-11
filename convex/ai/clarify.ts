@@ -32,6 +32,14 @@ export const handleClarification = internalAction({
     additionalRawText: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    let session: {
+      mirrorText?: string;
+      emotionalProfileId: string;
+      entryType?: string;
+      inputDuration?: number;
+      freezeOccurred?: boolean;
+      [key: string]: unknown;
+    } | undefined;
     try {
       // 1. Load full context (includes turns + current mirror)
       const context = await ctx.runQuery(
@@ -39,7 +47,7 @@ export const handleClarification = internalAction({
         { sessionId: args.sessionId },
       );
 
-      const session = context.session as {
+      session = context.session as {
         mirrorText?: string;
         emotionalProfileId: string;
         entryType?: string;
@@ -206,7 +214,7 @@ export const handleClarification = internalAction({
         errorMessage,
       });
       await posthog.capture(ctx, {
-        distinctId: args.sessionId as string,
+        distinctId: session?.emotionalProfileId ?? (args.sessionId as string),
         event: "clarify_failed",
         properties: {
           turnNumber: args.turnNumber,
