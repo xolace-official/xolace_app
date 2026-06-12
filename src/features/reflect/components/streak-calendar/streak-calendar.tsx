@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from "react";
 
+import { useIsFocused } from "@react-navigation/native";
 import { Portal, useThemeColor } from "heroui-native";
 import Animated, {
   measure,
@@ -38,6 +39,11 @@ export const StreakCalendar = ({ currentStreak }: Props) => {
     (s) => s.setLastAcknowledgedStreak,
   );
   const reducedMotion = useReducedMotion();
+  // The reflect screen stays mounted under pushed screens, and the
+  // reveal renders via Portal above everything — so without this gate
+  // a streak update would play the reveal on top of whatever screen
+  // the user is on. Wait until this screen is focused again.
+  const isFocused = useIsFocused();
 
   const headerColor = useThemeColor("accent") as string;
   const headerTextColor = useThemeColor("accent-foreground") as string;
@@ -64,7 +70,7 @@ export const StreakCalendar = ({ currentStreak }: Props) => {
       setLastAcknowledgedStreak(currentStreak);
       return;
     }
-    if (!revealPending || revealing) return;
+    if (!revealPending || revealing || !isFocused) return;
 
     // Reduced motion: skip the reveal entirely, just update the number
     if (reducedMotion) {
@@ -86,6 +92,7 @@ export const StreakCalendar = ({ currentStreak }: Props) => {
     revealPending,
     revealing,
     reducedMotion,
+    isFocused,
     miniRef,
     setLastAcknowledgedStreak,
   ]);
