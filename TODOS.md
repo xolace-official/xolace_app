@@ -242,6 +242,27 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P2 — Settings: Restructure into Per-Section Sub-Screens
+
+**What:** Break the single monolithic settings scroll into a root screen with ~6 navigation rows, each pushing to a dedicated sub-screen (Appearance, Mirror, Notifications, Privacy & Data, Account, Follow & Support).
+
+**Why:** Profiling session (20260612-162522) confirmed the mount is ~96ms in production — 24 SettingsRows + 4 animated Switch components + 9 Dialog trees all initializing simultaneously (383 Views in one commit). The cost is structural. Restructuring drops the root screen mount to ~20ms; each sub-screen only loads when navigated to. Secondary benefit: dialogs become inline pickers on their sub-screens (ThemePickerDialog, MirrorTonePickerDialog, RetentionPickerDialog become inline RadioGroup lists) — removes 9 dialog trees from the initial render entirely. The `useSettings` hook splits per sub-screen so each only subscribes to the fields it needs.
+
+**How to start:**
+1. `settings/appearance.tsx` already exists — extend it with mode + color theme + reduced motion + replay intro.
+2. Add `settings/mirror.tsx`, `settings/notifications.tsx`, `settings/data.tsx`, `settings/account.tsx`, `settings/follow.tsx`.
+3. Slim `SettingsScreen.tsx` to ~6 navigation rows — no dialogs, no inline toggles.
+4. Move each section's rows + dialogs into its sub-screen; convert picker dialogs to inline RadioGroup lists where practical.
+5. Split `use-settings.ts` into per-sub-screen hooks. Convex deduplicates `useQuery(api.preferences.get)` calls automatically so no extra network cost.
+
+**Key files:** `src/features/settings/components/screens/SettingsScreen.tsx`, `src/features/settings/hooks/use-settings.ts`, `src/app/(protected)/settings/_layout.tsx` (update per-screen header config), `src/app/(protected)/settings/appearance.tsx` (already exists, extend)
+
+**Effort:** M (CC ~1h — mostly mechanical movement of existing components into new routes)
+**Priority:** P2
+**Depends on:** Nothing — standalone refactor
+
+---
+
 ## P3 — Session End: Dedupe feedback submit orchestration into a shared hook
 
 **What:** `use-heavier-feedback.ts` and `use-unsure-feedback.ts` duplicate nearly identical submit orchestration: `useMutation(api.feedback.submit)` + `posthog.capture("feedback_submitted", ...)` + success/error `toast.show` + `onClose()`. Extract the shared part into a **hook** (e.g. `useFeedbackSubmit`) that each feature hook composes.

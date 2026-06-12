@@ -79,16 +79,15 @@ export const RevealOverlay = ({ day, miniLayout, colors, onDismissed }: Props) =
   const deltaY =
     miniLayout.pageY + miniLayout.height / 2 - (targetY + FULL_SIZE / 2);
 
-  const handleFlipDone = () => {
-    setShowMessage(true);
-    setCanDismiss(true);
-  };
-
   // Expand, then flip. The expand spring callback runs on the UI
   // thread, so chaining the flip there avoids a JS round-trip.
   // The spring start is pushed past the overlay's first paint (double
   // rAF) — kicking it off on the mount frame drops the early frames.
   useEffect(() => {
+    const onFlipDone = () => {
+      setShowMessage(true);
+      setCanDismiss(true);
+    };
     let rafId = requestAnimationFrame(() => {
       rafId = requestAnimationFrame(() => {
         morphProgress.set(
@@ -99,7 +98,7 @@ export const RevealOverlay = ({ day, miniLayout, colors, onDismissed }: Props) =
             flipProgress.set(
               withSpring(1, FLIP_SPRING, (flipDone) => {
                 "worklet";
-                if (flipDone) scheduleOnRN(handleFlipDone);
+                if (flipDone) scheduleOnRN(onFlipDone);
               }),
             );
           }),
@@ -107,7 +106,7 @@ export const RevealOverlay = ({ day, miniLayout, colors, onDismissed }: Props) =
       });
     });
     return () => cancelAnimationFrame(rafId);
-  }, [morphProgress, flipProgress, handleFlipDone, setBlastReady]);
+  }, [morphProgress, flipProgress, setBlastReady]);
 
   // Fire blast + haptic exactly once at the flip apex
   const handleApex = () => {
