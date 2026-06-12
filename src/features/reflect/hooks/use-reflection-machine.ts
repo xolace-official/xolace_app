@@ -100,7 +100,7 @@ export function useReflectionMachine() {
             ? Date.now() - submitTimestampRef.current
             : undefined;
           submitTimestampRef.current = null;
-          posthog.capture('mirror_arrived', { duration_ms: durationMs });
+          posthog.capture('mirror_arrived', { duration_ms: durationMs ?? null });
           if (session?.escalationTriggered) {
             posthog.capture('escalation_triggered');
             dispatch({ type: 'ESCALATION_TRIGGERED', mirror: mirrorText });
