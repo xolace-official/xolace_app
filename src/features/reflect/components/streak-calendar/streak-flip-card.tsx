@@ -27,7 +27,6 @@ const StaticHalf = ({ day, position, metrics, colors }: StaticHalfProps) => {
 
   return (
     <View
-      
       style={[
         styles.half,
         // eslint-disable-next-line react-native/no-inline-styles
