@@ -32,7 +32,7 @@ function AnimatedChar({ char, index, ...textProps }: CharProps) {
       translateY.set(withSpring(0, SPRING_CONFIG));
     }, delay);
     return () => clearTimeout(timeout);
-  }, [char]);
+  }, [char, index, opacity, translateY]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.get(),
@@ -59,11 +59,12 @@ export function AnimatedText({ children, ...textProps }: AnimatedTextProps) {
         .damping(15)
         .stiffness(200)
         .mass(0.5)}
-      style={{ flexDirection: "row", flexWrap: "wrap" }}
+      className="flex-row flex-wrap"
     >
-      {chars.map((char, i) => (
-        <AnimatedChar key={`${char}-${i}`} char={char} index={i} {...textProps} />
-      ))}
+      {chars.map((char, i) => {
+        // eslint-disable-next-line react/no-array-index-key
+        return <AnimatedChar key={`${char}-${i}`} char={char} index={i} {...textProps} />;
+      })}
     </Animated.View>
   );
 }

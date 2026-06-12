@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { cn } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import { StreakCalendar } from "@/src/features/reflect/components/streak-calendar";
 import type { UserVariant } from "@/src/features/reflect/types";
 import {
   NIGHT_ENCOURAGEMENT,
@@ -19,14 +20,15 @@ type Props = {
   className?: string;
 };
 
-function encouragementText(variant: UserVariant): string {
+function encouragementText(variant: UserVariant): string | null {
   switch (variant.kind) {
     case "first-time":
       return "You don't need to know what to say.";
     case "returning":
       return "It's been a little while.\nNo pressure. I'm here.";
     case "active":
-      return `Day ${variant.dayCount}`;
+      // Active users get the streak calendar widget instead of text
+      return null;
   }
 }
 
@@ -49,19 +51,21 @@ export const QuietReturnHeader = ({
       ? null
       : encouragementText(variant);
 
-  const isSpaceNameActive =
-    variant.kind === "active" && !!spaceName && !isNight && !activeQuietReturn;
+  const showStreakCalendar =
+    variant.kind === "active" && !isNight && !activeQuietReturn;
 
   return (
     <View className={cn('pt-10 pb-4', className)}>
-      {isSpaceNameActive ? (
-        <View className="flex-row items-center gap-2">
-          <View className="rounded-full bg-accent/15 px-3 py-1">
-            <AppText className="text-xs font-semibold text-accent">
-              {spaceName}
-            </AppText>
-          </View>
-          <AppText className="text-sm text-foreground/40">{encouragement}</AppText>
+      {showStreakCalendar ? (
+        <View className="flex-row items-center gap-3">
+          <StreakCalendar currentStreak={variant.dayCount} />
+          {!!spaceName && (
+            <View className="rounded-full bg-accent/15 px-3 py-1">
+              <AppText className="text-xs font-semibold text-accent">
+                {spaceName}
+              </AppText>
+            </View>
+          )}
         </View>
       ) : encouragement ? (
         <AppText
@@ -78,7 +82,7 @@ export const QuietReturnHeader = ({
         className={cn(
           "font-semibold text-foreground",
           activeQuietReturn ? "text-2xl leading-9" : "text-4xl",
-          encouragement && "mt-4",
+          (encouragement || showStreakCalendar) && "mt-4",
         )}
       >
         {headline}

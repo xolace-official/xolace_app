@@ -163,6 +163,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       favicon: "./assets/images/favicon.png"
     },
     plugins: [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "extraPods": [
+              { "name": "GoogleUtilities", "modular_headers": true },
+              { "name": "RecaptchaInterop", "modular_headers": true }
+            ]
+          }
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",

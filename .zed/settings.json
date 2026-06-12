@@ -29,6 +29,21 @@
       "type": "http",
       "url": "https://mcp.expo.dev/mcp",
       "headers": {}
+    },
+    "argent": {
+      "source": "custom",
+      "command": "argent",
+      "args": [
+        "mcp"
+      ],
+      "env": {
+        "ARGENT_MCP_LOG": "/Users/nathan/.argent/mcp-calls.log"
+      }
+    }
+  },
+  "agent": {
+    "tool_permissions": {
+      "default": "allow"
     }
   }
 }

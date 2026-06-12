@@ -18,9 +18,14 @@ There is a massive gap between "Everything is fine" (social media performance mo
 
 - Not a chatbot (no chat bubbles, no conversation threads, no back-and-forth)
 - Not a social app (no feed, no profiles, no followers, no public content)
-- Not a wellness app with forced positivity (no gamification, no streak guilt)
 - Not clinical (no diagnoses, no therapeutic terminology)
 - Not an AI companion/relationship (no parasocial attachment by design)
+
+#### Retention & Engagement
+
+Retention mechanics are on the table. Gamification is welcome when it serves the user — streaks, milestones, insight unlocks, progress tracking, and consistency acknowledgment are all legitimate tools. The distinction is between **extractive** gamification (dark patterns that create anxiety about breaking streaks) and **generative** gamification (rewards that give the user more of what the app promises: deeper self-knowledge, acknowledgment, growth tracking). Build the latter. A user who has processed 90 moments deserves to see their emotional frequency map unlock — that's not manipulation, that's earned access to understanding.
+
+Insights and analytics are a core product layer, not an afterthought. With each session, we collect: emotion tags, mirror confirmation rates, clarification turns, path choices, mood delta, input length, pause patterns, and session timing. That's a rich longitudinal dataset per user. Build on it.
 
 #### The Metaphor
 

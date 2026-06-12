@@ -1,0 +1,1 @@
+### These are all different standalone components , but we can leverage the parts we need into building out our own animates.

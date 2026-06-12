@@ -31,6 +31,7 @@ import type * as ai_ventAcknowledge from "../ai/ventAcknowledge.js";
 import type * as consent from "../consent.js";
 import type * as crons from "../crons.js";
 import type * as dailyQuotes from "../dailyQuotes.js";
+import type * as devTools from "../devTools.js";
 import type * as emotionalMetadata from "../emotionalMetadata.js";
 import type * as escalation from "../escalation.js";
 import type * as exercises from "../exercises.js";
@@ -93,6 +94,7 @@ declare const fullApi: ApiFromModules<{
   consent: typeof consent;
   crons: typeof crons;
   dailyQuotes: typeof dailyQuotes;
+  devTools: typeof devTools;
   emotionalMetadata: typeof emotionalMetadata;
   escalation: typeof escalation;
   exercises: typeof exercises;

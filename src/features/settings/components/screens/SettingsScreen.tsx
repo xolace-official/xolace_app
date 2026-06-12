@@ -14,6 +14,7 @@ import { QuietWindowDialog } from "@/src/features/settings/components/quiet-wind
 import { FeedbackDialog } from "@/src/features/settings/components/feedback-dialog";
 import { EnjoyingXolaceSection } from "@/src/features/settings/components/enjoying-xolace-section";
 import { FollowUsSection } from "@/src/features/settings/components/follow-us-section";
+import { DevToolsSection } from "@/src/features/settings/components/dev-tools-section";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { useSettings } from "@/src/features/settings/hooks/use-settings";
 import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
@@ -299,6 +300,9 @@ export const SettingsScreen = () => {
             isLast
           />
         </SettingsSection>
+
+        {/* ── DEV TOOLS (development builds only) ──────────────── */}
+        {__DEV__ && <DevToolsSection />}
 
         {/* ── LOG OUT ──────────────────────────────────────────── */}
         <View className="px-5">

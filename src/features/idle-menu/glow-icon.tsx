@@ -45,10 +45,10 @@ export function GlowIcon({ name, size, color }: Props) {
     <View className="items-center justify-center">
       <Animated.View
         pointerEvents="none"
+        className="absolute"
         style={[
           haloStyle,
           {
-            position: 'absolute',
             width: halo,
             height: halo,
             borderRadius: halo / 2,

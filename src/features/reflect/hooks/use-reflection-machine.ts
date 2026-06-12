@@ -70,10 +70,10 @@ export function useReflectionMachine() {
     voicePrefixRef.current = '';
   }, []);
 
-  const dispatchError = (message: string) => {
+  const dispatchError = useCallback((message: string) => {
     dispatch({ type: 'SESSION_ERROR', message });
     posthog.capture('ai_error', { reason: message });
-  };
+  }, [posthog]);
 
   // Forward live transcript to entryText
   useEffect(() => {
@@ -100,7 +100,7 @@ export function useReflectionMachine() {
             ? Date.now() - submitTimestampRef.current
             : undefined;
           submitTimestampRef.current = null;
-          posthog.capture('mirror_arrived', { duration_ms: durationMs });
+          posthog.capture('mirror_arrived', { duration_ms: durationMs ?? null });
           if (session?.escalationTriggered) {
             posthog.capture('escalation_triggered');
             dispatch({ type: 'ESCALATION_TRIGGERED', mirror: mirrorText });
@@ -125,7 +125,7 @@ export function useReflectionMachine() {
         dispatch({ type: 'RESET' });
         break;
     }
-  }, [serverState, mirrorText, errorMessage, state.screen, session, resetSession, clearRefs, posthog]);
+  }, [serverState, mirrorText, errorMessage, state.screen, session, resetSession, clearRefs, posthog, dispatchError]);
 
   // Track freeze (typing-nudge = user paused)
   useEffect(() => {
@@ -173,7 +173,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [state.entryText, state.entryType, initiateAndSubmit, posthog]);
+  }, [state.entryText, state.entryType, initiateAndSubmit, posthog, dispatchError]);
 
   const submitScaffold = useCallback(async () => {
     if (busyRef.current) return;
@@ -197,7 +197,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [state.selectedTextures, initiateAndSubmit, posthog]);
+  }, [state.selectedTextures, initiateAndSubmit, posthog, dispatchError]);
 
   const submitClarification = useCallback(async () => {
     if (busyRef.current) return;
@@ -218,7 +218,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [state.clarifyText, state.lastFeedbackType, submitRefinement]);
+  }, [state.clarifyText, state.lastFeedbackType, submitRefinement, dispatchError]);
 
   const handleThatsIt = useCallback(async () => {
     if (busyRef.current) return;
@@ -233,7 +233,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [turnsCount, confirmMirror, posthog]);
+  }, [turnsCount, confirmMirror, posthog, dispatchError]);
 
   const handleNotQuite = useCallback(() => {
     if (turnsCount >= MAX_TURNS) {
@@ -264,7 +264,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [confirmMirror]);
+  }, [confirmMirror, dispatchError]);
 
   const handleSelectExit = useCallback(async () => {
     if (busyRef.current) return;
@@ -277,7 +277,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [selectPath, posthog]);
+  }, [selectPath, posthog, dispatchError]);
 
   const handleSelectSolo = useCallback(async () => {
     if (busyRef.current) return;
@@ -290,7 +290,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [selectPath, posthog]);
+  }, [selectPath, posthog, dispatchError]);
 
   const handleSelectPeers = useCallback(async () => {
     if (busyRef.current) return;
@@ -303,7 +303,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [selectPath, posthog]);
+  }, [selectPath, posthog, dispatchError]);
 
   const handleEscalationEngage = useCallback(async () => {
     if (busyRef.current) return;
@@ -317,7 +317,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [recordEscalationResponse, posthog]);
+  }, [recordEscalationResponse, posthog, dispatchError]);
 
   const handleEscalationContinue = useCallback(async () => {
     if (busyRef.current) return;
@@ -331,7 +331,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [turnsCount, confirmMirror]);
+  }, [turnsCount, confirmMirror, dispatchError]);
 
   const handleEscalationDismiss = useCallback(async () => {
     if (busyRef.current) return;
@@ -346,7 +346,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [recordEscalationResponse, confirmMirror, turnsCount]);
+  }, [recordEscalationResponse, confirmMirror, turnsCount, dispatchError]);
 
   const startVoiceFromIdle = async () => {
     if (isRecording) { stopRecording(); return; }
@@ -389,7 +389,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [retry]);
+  }, [retry, dispatchError]);
 
   return {
     state,
