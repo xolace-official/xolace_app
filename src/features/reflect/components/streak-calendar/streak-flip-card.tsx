@@ -27,8 +27,10 @@ const StaticHalf = ({ day, position, metrics, colors }: StaticHalfProps) => {
 
   return (
     <View
+      
       style={[
         styles.half,
+        // eslint-disable-next-line react-native/no-inline-styles
         {
           backgroundColor: colors.body,
           height: metrics.pageSize,
@@ -171,6 +173,8 @@ export const StreakFlipCard = ({
   );
 };
 
+const DIVIDER_BG = "rgba(0,0,0,0.08)";
+
 const styles = StyleSheet.create({
   bodyContainer: {
     borderCurve: "continuous",
@@ -202,7 +206,7 @@ const styles = StyleSheet.create({
     boxShadow: "0px 0px 20px rgba(0, 0, 0, 0.1)",
   },
   dividerLine: {
-    backgroundColor: "rgba(0,0,0,0.08)",
+    backgroundColor: DIVIDER_BG,
     bottom: 0,
     height: 1,
     left: 0,

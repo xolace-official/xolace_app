@@ -28,6 +28,7 @@ import { RevealOverlay } from "./reveal-overlay";
 import { StreakFlipCard } from "./streak-flip-card";
 
 const MINI_METRICS = getCardMetrics(MINI_SIZE);
+const miniCardStyle = { width: MINI_SIZE };
 
 type Props = {
   currentStreak: number;
@@ -110,7 +111,8 @@ export const StreakCalendar = ({ currentStreak }: Props) => {
     <>
       <Animated.View
         ref={miniRef}
-        style={{ opacity: revealing ? 0 : 1, width: MINI_SIZE }}
+        className={revealing ? "opacity-0" : "opacity-100"}
+        style={miniCardStyle}
       >
         <StreakFlipCard day={miniDay} metrics={MINI_METRICS} colors={colors} />
       </Animated.View>

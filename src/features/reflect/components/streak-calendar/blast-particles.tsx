@@ -62,16 +62,20 @@ export const BlastParticles = forwardRef<
 
   const texture = useTexture(
     <Group>
-      {new Array(count).fill(0).map((_, index) => (
-        <Circle
-          key={`${index}-${count}`}
-          cx={circleSize * index - circleRadius}
-          cy={circleRadius}
-          color={color}
-          r={circleRadius}
-          opacity={interpolate(Math.random(), [0, 1], [0.35, 0.7])}
-        />
-      ))}
+      {new Array(count).fill(0).map((_, index) => {
+        
+        return (
+          <Circle
+          // eslint-disable-next-line react/no-array-index-key
+            key={`${index}-${count}`}
+            cx={circleSize * index - circleRadius}
+            cy={circleRadius}
+            color={color}
+            r={circleRadius}
+            opacity={interpolate(Math.random(), [0, 1], [0.35, 0.7])}
+          />
+        );
+      })}
     </Group>,
     {
       width: circleSize * count,

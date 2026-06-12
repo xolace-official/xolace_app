@@ -185,9 +185,11 @@ export const FlipPage = ({
   );
 };
 
+const DEPTH_SHADOW_BG = "rgba(0,0,0,0.1)";
+
 const styles = StyleSheet.create({
   depthShadow: {
-    backgroundColor: "rgba(0,0,0,0.1)",
+    backgroundColor: DEPTH_SHADOW_BG,
     bottom: 0,
     left: 0,
     position: "absolute",
