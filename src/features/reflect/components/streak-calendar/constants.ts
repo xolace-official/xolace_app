@@ -8,7 +8,7 @@
  * — no layout animation.
  */
 export const FULL_SIZE = 190;
-export const MINI_SIZE = 72;
+export const MINI_SIZE = 62;
 
 export const MORPH_SPRING = { dampingRatio: 1, duration: 520 } as const;
 export const FLIP_SPRING = { dampingRatio: 1, duration: 1100 } as const;

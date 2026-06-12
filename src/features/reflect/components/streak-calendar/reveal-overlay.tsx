@@ -86,19 +86,27 @@ export const RevealOverlay = ({ day, miniLayout, colors, onDismissed }: Props) =
 
   // Expand, then flip. The expand spring callback runs on the UI
   // thread, so chaining the flip there avoids a JS round-trip.
+  // The spring start is pushed past the overlay's first paint (double
+  // rAF) — kicking it off on the mount frame drops the early frames.
   useEffect(() => {
-    morphProgress.set(
-      withSpring(1, MORPH_SPRING, (morphDone) => {
-        "worklet";
-        if (!morphDone) return;
-        flipProgress.set(
-          withSpring(1, FLIP_SPRING, (flipDone) => {
+    let rafId = requestAnimationFrame(() => {
+      rafId = requestAnimationFrame(() => {
+        morphProgress.set(
+          withSpring(1, MORPH_SPRING, (morphDone) => {
             "worklet";
-            if (flipDone) scheduleOnRN(handleFlipDone);
+            if (!morphDone) return;
+            scheduleOnRN(setBlastReady, true);
+            flipProgress.set(
+              withSpring(1, FLIP_SPRING, (flipDone) => {
+                "worklet";
+                if (flipDone) scheduleOnRN(handleFlipDone);
+              }),
+            );
           }),
         );
-      }),
-    );
+      });
+    });
+    return () => cancelAnimationFrame(rafId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -155,25 +163,27 @@ export const RevealOverlay = ({ day, miniLayout, colors, onDismissed }: Props) =
         className="absolute inset-0 bg-black/50"
       />
 
-      <View
-        pointerEvents="none"
-        style={[
-          styles.blastContainer,
-          {
-            left: targetX + FULL_SIZE / 2 - BLAST_CANVAS_SIZE / 2,
-            top: targetY + FULL_SIZE / 2 - BLAST_CANVAS_SIZE / 2,
-          },
-        ]}
-      >
-        <BlastParticles
-          ref={blastRef}
-          size={BLAST_CANVAS_SIZE}
-          count={24}
-          circleRadius={3}
-          color={colors.header}
-          blastRadius={FULL_SIZE * 0.95}
-        />
-      </View>
+      {blastReady && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.blastContainer,
+            {
+              left: targetX + FULL_SIZE / 2 - BLAST_CANVAS_SIZE / 2,
+              top: targetY + FULL_SIZE / 2 - BLAST_CANVAS_SIZE / 2,
+            },
+          ]}
+        >
+          <BlastParticles
+            ref={blastRef}
+            size={BLAST_CANVAS_SIZE}
+            count={24}
+            circleRadius={3}
+            color={colors.header}
+            blastRadius={FULL_SIZE * 0.95}
+          />
+        </View>
+      )}
 
       <Animated.View
         style={[rCardStyle, styles.card, { left: targetX, top: targetY }]}
