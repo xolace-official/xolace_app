@@ -86,6 +86,9 @@ export const RAMP_STEPS = 32;
 export const RAMP_R: number[] = [];
 export const RAMP_G: number[] = [];
 export const RAMP_B: number[] = [];
+// Normalized Float32 colors (RGBA 0–1) for each ramp step — eliminates
+// Float32Array.of(...) allocations inside the per-particle setRampColor worklet.
+export const RAMP_COLORS: Float32Array[] = [];
 
 const STOPS = [
   [0x93, 0x99, 0xa8], // #9399A8 cool ash-gray
@@ -97,7 +100,11 @@ for (let i = 0; i < RAMP_STEPS; i++) {
   const p = (i / (RAMP_STEPS - 1)) * (STOPS.length - 1);
   const lo = Math.min(Math.floor(p), STOPS.length - 2);
   const f = p - lo;
-  RAMP_R.push(STOPS[lo][0] + (STOPS[lo + 1][0] - STOPS[lo][0]) * f);
-  RAMP_G.push(STOPS[lo][1] + (STOPS[lo + 1][1] - STOPS[lo][1]) * f);
-  RAMP_B.push(STOPS[lo][2] + (STOPS[lo + 1][2] - STOPS[lo][2]) * f);
+  const r = STOPS[lo][0] + (STOPS[lo + 1][0] - STOPS[lo][0]) * f;
+  const g = STOPS[lo][1] + (STOPS[lo + 1][1] - STOPS[lo][1]) * f;
+  const b = STOPS[lo][2] + (STOPS[lo + 1][2] - STOPS[lo][2]) * f;
+  RAMP_R.push(r);
+  RAMP_G.push(g);
+  RAMP_B.push(b);
+  RAMP_COLORS.push(Float32Array.of(r / 255, g / 255, b / 255, 1));
 }

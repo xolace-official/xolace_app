@@ -13,9 +13,7 @@ import {
   PERSPECTIVE,
   PHASE0,
   PULSE_MS,
-  RAMP_B,
-  RAMP_G,
-  RAMP_R,
+  RAMP_COLORS,
   RAMP_STEPS,
   SCAT_G,
   SCAT_VX,
@@ -29,9 +27,7 @@ import {
 function setRampColor(paint: SkPaint, warm: number, alpha: number) {
   'worklet';
   const idx = Math.round(Math.min(1, Math.max(0, warm)) * (RAMP_STEPS - 1));
-  paint.setColor(
-    Float32Array.of(RAMP_R[idx] / 255, RAMP_G[idx] / 255, RAMP_B[idx] / 255, 1),
-  );
+  paint.setColor(RAMP_COLORS[idx]);
   paint.setAlphaf(Math.min(1, Math.max(0, alpha)));
 }
 
