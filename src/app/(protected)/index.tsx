@@ -8,6 +8,8 @@ import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen'
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppStore } from '@/src/store/store';
 import { FounderWelcomeSheet } from '@/src/features/founder-welcome/components/founder-welcome-sheet';
+import { MonthlyEventSheet } from '@/src/features/awareness-events/components/monthly-event-sheet';
+import { useAwarenessEvent } from '@/src/features/awareness-events/hooks/use-awareness-event';
 
 const BANNER_INITIAL = { opacity: 0 };
 
@@ -72,6 +74,7 @@ export default function ProtectedIndex() {
   const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
   const setFounderWelcomeSeen = useAppStore((s) => s.setFounderWelcomeSeen);
   const [showWelcome, setShowWelcome] = useState(false);
+  const awarenessEvent = useAwarenessEvent();
 
   useEffect(() => {
     if (founderWelcomeSeen) return;
@@ -96,6 +99,7 @@ export default function ProtectedIndex() {
         />
       )}
       <FounderWelcomeSheet isOpen={showWelcome} onDismiss={handleWelcomeDismiss} />
+      <MonthlyEventSheet event={founderWelcomeSeen ? awarenessEvent : null} />
     </View>
     </>
   );

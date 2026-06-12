@@ -56,6 +56,14 @@ type TogglesSlice = {
   /** Highest streak day the user has seen the calendar reveal for. */
   lastAcknowledgedStreak: number;
   setLastAcknowledgedStreak: (n: number) => void;
+  /** Awareness event slugs the user has already seen, with timestamps for pruning. */
+  seenEventIds: { slug: string; seenAt: number }[];
+  addToSeenEventIds: (slug: string) => void;
+  /** Drops entries older than 13 months. Called on hook mount, not during render. */
+  pruneSeenEventIds: () => void;
+  /** Session prompt set when a monthly event with sessionPrompt is dismissed. Expires after 7 days. */
+  pendingEventPrompt: { text: string; expiresAt: number } | null;
+  setPendingEventPrompt: (prompt: { text: string; expiresAt: number } | null) => void;
 };
 
 type PreferencesSlice = {
@@ -129,6 +137,23 @@ export const useAppStore = create<AppState>()(
         lastAcknowledgedStreak: 0,
         setLastAcknowledgedStreak: (n) => set({ lastAcknowledgedStreak: n }),
 
+        seenEventIds: [],
+        addToSeenEventIds: (slug) =>
+          set((s) =>
+            s.seenEventIds.some((e) => e.slug === slug)
+              ? {}
+              : { seenEventIds: [...s.seenEventIds, { slug, seenAt: Date.now() }] },
+          ),
+        pruneSeenEventIds: () =>
+          set((s) => ({
+            seenEventIds: s.seenEventIds.filter(
+              (e) => e.seenAt >= Date.now() - 13 * 30 * 24 * 60 * 60 * 1000,
+            ),
+          })),
+
+        pendingEventPrompt: null,
+        setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
+
         textureSetId: 'flat',
         setTextureSetId: (id) => set({ textureSetId: id }),
 
@@ -160,6 +185,8 @@ export const useAppStore = create<AppState>()(
           seenMenuItems: s.seenMenuItems,
           lastAcknowledgedStreak: s.lastAcknowledgedStreak,
           textureSetId: s.textureSetId,
+          seenEventIds: s.seenEventIds,
+          pendingEventPrompt: s.pendingEventPrompt,
         }),
       }
     )

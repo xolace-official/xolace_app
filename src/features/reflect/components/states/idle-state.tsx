@@ -134,6 +134,13 @@ export const IdleState = ({
   const setTextureSetId = useAppStore((s) => s.setTextureSetId);
   const safeSetId = resolveTextureSetId(storedSetId);
 
+  const pendingEventPrompt = useAppStore((s) => s.pendingEventPrompt);
+  const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
+  const activeEventPrompt =
+    pendingEventPrompt && pendingEventPrompt.expiresAt > Date.now()
+      ? pendingEventPrompt.text
+      : null;
+
   const [wordsVisible, setWordsVisible] = useState(true);
   const [pendingSetId, setPendingSetId] = useState<TextureSetId>(safeSetId);
   const [resolvedSetId, setResolvedSetId] = useState<TextureSetId>(safeSetId);
@@ -185,6 +192,7 @@ export const IdleState = ({
 
   const handleTap = () => {
     playTypingBegin();
+    if (activeEventPrompt) setPendingEventPrompt(null);
     onTap();
   };
 
@@ -277,6 +285,12 @@ export const IdleState = ({
             </AppText>
           </View>
         </PressableFeedback>
+      )}
+
+      {activeEventPrompt && (
+        <AppText className="text-xs text-accent/70 pb-3 leading-5">
+          {activeEventPrompt}
+        </AppText>
       )}
 
       <Separator className="mb-0" />

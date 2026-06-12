@@ -1,0 +1,50 @@
+import { query, internalMutation } from "./_generated/server";
+import { v } from "convex/values";
+
+// Returns all events — date filtering happens client-side in local timezone.
+// The table is small and team-managed; collect() is safe here.
+export const getActive = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("monthlyEvents").collect();
+  },
+});
+
+// Idempotent seed — safe to run multiple times. Skips if slug already exists.
+// Run via: npx convex run monthlyEvents:seed --no-push
+export const seed = internalMutation({
+  args: {
+    slug: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const slug = args.slug ?? "mens-mental-health-month-2026-06";
+
+    const existing = await ctx.db
+      .query("monthlyEvents")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .unique();
+
+    if (existing) {
+      return { skipped: true, id: existing._id };
+    }
+
+    const today = new Date();
+    const startDate = today.toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+    const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+      .toLocaleDateString("en-CA"); // last day of current month
+
+    const id = await ctx.db.insert("monthlyEvents", {
+      slug,
+      title: "Men's Mental Health Month",
+      body: "June holds space for something that often goes unspoken — the weight, the pressure, the quiet exhaustion of holding it all together. Whatever is here for you right now, it belongs here.",
+      ctaLabel: "Find support",
+      ctaRoute: "/(protected)/crisis-resources",
+      sessionPrompt: "What has it been like for you lately?",
+      startDate,
+      endDate,
+      priority: 1,
+    });
+
+    return { skipped: false, id };
+  },
+});
