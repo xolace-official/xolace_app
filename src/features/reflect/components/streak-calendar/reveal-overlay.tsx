@@ -107,8 +107,7 @@ export const RevealOverlay = ({ day, miniLayout, colors, onDismissed }: Props) =
       });
     });
     return () => cancelAnimationFrame(rafId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [morphProgress, flipProgress, handleFlipDone, setBlastReady]);
 
   // Fire blast + haptic exactly once at the flip apex
   const handleApex = () => {
