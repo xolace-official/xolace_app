@@ -53,6 +53,9 @@ type TogglesSlice = {
   /** Menu item keys whose "new" glow has been acknowledged (item opened once). */
   seenMenuItems: string[];
   markMenuItemSeen: (key: string) => void;
+  /** Highest streak day the user has seen the calendar reveal for. */
+  lastAcknowledgedStreak: number;
+  setLastAcknowledgedStreak: (n: number) => void;
 };
 
 type PreferencesSlice = {
@@ -123,6 +126,9 @@ export const useAppStore = create<AppState>()(
               : { seenMenuItems: [...s.seenMenuItems, key] },
           ),
 
+        lastAcknowledgedStreak: 0,
+        setLastAcknowledgedStreak: (n) => set({ lastAcknowledgedStreak: n }),
+
         textureSetId: 'flat',
         setTextureSetId: (id) => set({ textureSetId: id }),
 
@@ -152,6 +158,7 @@ export const useAppStore = create<AppState>()(
           bridgeIntroSeen: s.bridgeIntroSeen,
           ventIntroSeen: s.ventIntroSeen,
           seenMenuItems: s.seenMenuItems,
+          lastAcknowledgedStreak: s.lastAcknowledgedStreak,
           textureSetId: s.textureSetId,
         }),
       }
