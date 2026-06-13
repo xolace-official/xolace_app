@@ -4,6 +4,42 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.5.0] - (2026-06-13)
+
+### Added
+
+- **Voice Vent** — a voice-first release ritual ("I released something real"). Reachable from the idle menu, it opens a full dark screen where you speak something heavy aloud and then watch it burn away. A Skia particle field (80–120 soft glowing particles, rendered on the UI thread) reacts to your voice in real time: ash-gray and still at rest, warming from center outward toward amber as your volume rises. Tapping stop runs a four-beat dissolution — compression inward, a white-amber flash, an uneven outward scatter, then one full second of silence. The dissolution is the emotional peak; only after it does a short 1–2 sentence acknowledgement (the "coda") fade in and speak aloud, before resolving to "Gone." and auto-returning home. A pinch-spread gesture during the burn jumps straight to the explosion — if the user chose to release, it's honored instantly.
+- **First-time vent intro** — a sparse, slow version of the particle field behind the promise: "This is a space to say the unsaid. Your voice is never stored. It goes when you close." Gated on a `ventIntroSeen` Zustand toggle (persisted), shown once before the first vent.
+- **Vent sound design** — a burning-paper crackle plays at the scatter beat (the emotional payload of the ritual), timed to fire after the compression + flash and entirely after the recorder has stopped, so it never disturbs the metering-driven particles.
+- **Mic button states** — a 56–64px circle: a gently pulsing ring at idle, a solid warm-amber ring while recording (icon swaps to a stop square), fading to nothing as the burn begins.
+- **Awareness Events** — a campfire-side way to acknowledge what a given month holds (e.g. Men's Mental Health Month). When an event is live, a detached bottom sheet greets the user on the reflect screen: a title, an optional cover image (skeleton placeholder while it loads, graceful fallback if it fails), a scrollable body under a pinned header and footer, and an optional external-link button in the header that opens the full article in an in-app browser. Events can carry an optional CTA (e.g. "Find support") that routes to an allowlisted in-app destination (currently crisis resources). Dismissing offers context-aware copy — "Not right now" when a CTA is present, "I see this" otherwise. The sheet only appears after the founder welcome sheet is dismissed and the reflect screen is focused, so prompts never compete.
+- **Event session prompts** — when an event defines a `sessionPrompt`, dismissing the sheet (via any action) seeds the reflect idle screen with that prompt for up to 7 days. The reflect header swaps its headline to the event's prompt and shows an "event pill" (heart icon + event label, e.g. "This month") above the encouragement line — only during the day, and never while a Quiet Return prompt is active, so the two never collide. The prompt clears automatically the moment the user taps to write or after it expires, so it never lingers into an unrelated session.
+- **`--event` theme color** — a dedicated rose/magenta "monthly awareness marker" color (`--event` / `--event-foreground`) added to the base light/dark themes and all five color themes (quiet, reverie, human, nightly, alpha), in both variants. Used by the event pill so the marker reads consistently across every theme.
+- **`monthlyEvents` Convex table** — privacy-first, team-managed content table with `slug` (immutable seen-tracking key), `title`, `body`, optional `ctaLabel`/`ctaRoute`/`sessionPrompt`/`imageUrl`/`linkUrl`, `startDate`/`endDate` (ISO `YYYY-MM-DD`, compared client-side in local timezone), and `priority`. Indexed `by_slug` and `by_priority`. Reads go through an auth-gated `getActive` query; content is seeded via an idempotent `seed` internal mutation (safe to re-run, skips existing slugs).
+- **Seen-event tracking + analytics** — dismissed events are remembered locally in Zustand (`seenEventIds` as `{ slug, seenAt }`) so an event never re-shows after it's been dismissed, even across force-quit. PostHog captures `awareness_event_shown`, `awareness_event_dismissed`, `awareness_event_cta_tapped`, and `awareness_event_link_tapped`. Dev tools gain a control to clear the pending event prompt.
+
+### Privacy
+
+- **Vent transcripts are never stored** — at any point in the pipeline. Audio is ephemeral: it's transcribed in-flight, used to generate the acknowledgement, and discarded. Only safety-flag metadata can persist. The intro screen's promise ("Your voice is never stored. It goes when you close.") is enforced end-to-end.
+
+### Backend
+
+- **Vent AI pipeline (`convex/vent.ts`)** — `processVentAudio` runs Scribe v2 speech-to-text → crisis check → a Claude Haiku acknowledgement (1–2 sentences, enriched with ElevenLabs audio tags like `[sighs]`/`[soft]` for warmth) → ElevenLabs TTS (`eleven_v3`, a "witnessed" voice). Every stage fails soft and returns `null` — the destruction animation always plays regardless of whether the AI succeeds. On-screen words have the audio tags stripped; the TTS keeps them.
+- **Daily voice cap** — voice processing is gated behind a per-user daily cap (`ELEVENLABS_DAILY_CAP_MINUTES`, default 2) charged transactionally in `checkAndIncrementCap`, with a lazy per-day UTC reset. New `emotional_profiles` fields `ventDailyMinutesUsed` / `ventDailyResetAt`. The charge takes the larger of the client-claimed duration and the duration implied by payload size, so a tampered client can't under-report. A `capReached` flag lets the client distinguish "limit reached" from a genuine (silent) pipeline failure.
+- **Crisis handling** — a keyword pre-filter is confirmed by OpenAI moderation (fail-safe: if moderation is unavailable, the crisis flag stands). Confirmed crisis returns a single static line ("you don't have to carry this alone") and never riffs over self-harm content; an idiomatic false positive ("end it… this sprint") is cleared by moderation.
+- **Recording ceiling** — capped at 120s client-side to keep the m4a payload under Convex's 1MB `v.bytes()` limit (the daily cap is still charged by actual duration server-side). Also adds `getVentSessionToken` for issuing a short-lived ElevenLabs signed URL.
+
+### Changed
+
+- **`useAwarenessEvent` selection logic** — picks at most one event to show: filters to events whose date range includes today and that the user hasn't already seen, then sorts by `priority` (lowest number first) and `startDate`. Stale seen-entries are pruned on mount.
+
+### Fixed
+
+- **Seen-event retention now uses true calendar months** — `pruneSeenEventIds` previously approximated the 13-month retention window as `13 × 30` days (390 fixed days); it now subtracts 13 calendar months via `Date.setMonth`, so retention is exact regardless of month lengths.
+- **`getActive` is auth-gated** — the events query now calls `requireAuth` before reading, for defense-in-depth. This content is only ever shown inside the authenticated app, so there's no reason to expose it publicly.
+
+---
+
 ## [1.4.0.1] - OTA Update (2026-06-10)
 
 ### Added

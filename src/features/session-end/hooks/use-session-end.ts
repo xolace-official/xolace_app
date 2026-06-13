@@ -5,6 +5,7 @@ import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
+import { useAppStore } from "@/src/store/store";
 
 /**
  * Prepare and expose session completion and navigation utilities for the session-end screen.
@@ -31,6 +32,7 @@ export function useSessionEnd(pathCompleted: boolean = true) {
   );
   const sessionCountQuery = useQuery(api.users.getSessionCount);
   const posthog = usePostHog();
+  const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
   const busyRef = useRef(false);
   const navigatedRef = useRef(false);
 
@@ -61,6 +63,7 @@ export function useSessionEnd(pathCompleted: boolean = true) {
       busyRef.current = false;
     });
     if (ok) {
+      setPendingEventPrompt(null);
       posthog.capture("session_completed", {
         post_session_mood: postSessionMood ?? null,
         contributed_reflection: contributedReflection,
@@ -84,6 +87,7 @@ export function useSessionEnd(pathCompleted: boolean = true) {
       busyRef.current = false;
     });
     if (ok) {
+      setPendingEventPrompt(null);
       posthog.capture("session_completed", {
         post_session_mood: postSessionMood ?? null,
         contributed_reflection: contributedReflection,
@@ -107,6 +111,7 @@ export function useSessionEnd(pathCompleted: boolean = true) {
       busyRef.current = false;
     });
     if (ok) {
+      setPendingEventPrompt(null);
       posthog.capture("session_completed", {
         post_session_mood: postSessionMood ?? null,
         contributed_reflection: contributedReflection,

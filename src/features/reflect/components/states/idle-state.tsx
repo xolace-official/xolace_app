@@ -135,7 +135,6 @@ export const IdleState = ({
   const safeSetId = resolveTextureSetId(storedSetId);
 
   const pendingEventPrompt = useAppStore((s) => s.pendingEventPrompt);
-  const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
   // Read the clock once at mount (lazy init keeps the call out of the render
   // body so React Compiler can still optimize this component). The prompt has a
   // multi-day expiry, so mount-time accuracy is sufficient.
@@ -198,7 +197,6 @@ export const IdleState = ({
 
   const handleTap = () => {
     playTypingBegin();
-    if (activeEventPrompt) setPendingEventPrompt(null);
     onTap();
   };
 
