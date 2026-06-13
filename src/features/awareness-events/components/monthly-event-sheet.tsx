@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { BottomSheet, PressableFeedback, Skeleton } from 'heroui-native';
-import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 
 import { AppText } from '@/src/components/shared/app-text';
@@ -39,8 +38,10 @@ export const MonthlyEventSheet = ({ event }: Props) => {
     }
   }, [event?.slug, event?.imageUrl]);
 
+  const capturedSlug = useRef<string | null>(null);
   useEffect(() => {
-    if (event) {
+    if (event && capturedSlug.current !== event.slug) {
+      capturedSlug.current = event.slug;
       posthog.capture('awareness_event_shown', { slug: event.slug });
     }
   }, [event]);
@@ -77,16 +78,16 @@ export const MonthlyEventSheet = ({ event }: Props) => {
       onOpenChange={(open) => { if (!open) handleDismiss(); }}
     >
       <BottomSheet.Portal>
-        {/* No overlay — card floats above the live home screen */}
+        <BottomSheet.Overlay />
         <BottomSheet.Content
           detached={true}
           bottomInset={insets.bottom + 12}
-          snapPoints={[screenHeight * 0.75]}
-          enableDynamicSizing={false}
+          maxDynamicContentSize={screenHeight * 0.75}
           enablePanDownToClose={false}
           enableOverDrag={false}
           className="mx-4"
-          backgroundClassName="rounded-[32px] bg-overlay"
+          backgroundClassName="rounded-[32px] bg-overlay overflow-hidden"
+          contentContainerClassName="p-0"
           handleIndicatorClassName="opacity-0"
           accessibilityViewIsModal
         >
@@ -107,11 +108,8 @@ export const MonthlyEventSheet = ({ event }: Props) => {
             </View>
           )}
 
-          {/* Scrollable title + body */}
-          <BottomSheetScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 8, paddingTop: showImage ? 16 : 24 }}
-          >
+          {/* Content */}
+          <View className="px-5" style={{ paddingTop: showImage ? 16 : 24 }}>
             <AppText
               className="text-foreground text-left mb-2.5"
               style={{ fontFamily: 'SpaceGrotesk-SemiBold', fontSize: 20, lineHeight: 28 }}
@@ -125,9 +123,9 @@ export const MonthlyEventSheet = ({ event }: Props) => {
             >
               {event?.body}
             </AppText>
-          </BottomSheetScrollView>
+          </View>
 
-          {/* Pinned actions */}
+          {/* Actions */}
           <View className="px-5 pt-3 pb-5 gap-1">
             {hasCta && (
               <PressableFeedback

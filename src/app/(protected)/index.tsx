@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 
 import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
@@ -74,6 +75,7 @@ export default function ProtectedIndex() {
   const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
   const setFounderWelcomeSeen = useAppStore((s) => s.setFounderWelcomeSeen);
   const [showWelcome, setShowWelcome] = useState(false);
+  const isFocused = useIsFocused();
   const awarenessEvent = useAwarenessEvent();
 
   useEffect(() => {
@@ -99,7 +101,7 @@ export default function ProtectedIndex() {
         />
       )}
       <FounderWelcomeSheet isOpen={showWelcome} onDismiss={handleWelcomeDismiss} />
-      <MonthlyEventSheet event={founderWelcomeSeen ? awarenessEvent : null} />
+      <MonthlyEventSheet event={founderWelcomeSeen && isFocused ? awarenessEvent : null} />
     </View>
     </>
   );
