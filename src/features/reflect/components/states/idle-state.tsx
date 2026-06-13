@@ -136,10 +136,12 @@ export const IdleState = ({
 
   const pendingEventPrompt = useAppStore((s) => s.pendingEventPrompt);
   const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
-  const activeEventPrompt =
-    pendingEventPrompt && pendingEventPrompt.expiresAt > Date.now()
-      ? pendingEventPrompt.text
-      : null;
+  const eventPromptActive =
+    !!pendingEventPrompt && pendingEventPrompt.expiresAt > Date.now();
+  const activeEventPrompt = eventPromptActive ? pendingEventPrompt.text : null;
+  const activeEventLabel = eventPromptActive
+    ? (pendingEventPrompt.label ?? null)
+    : null;
 
   const [wordsVisible, setWordsVisible] = useState(true);
   const [pendingSetId, setPendingSetId] = useState<TextureSetId>(safeSetId);
@@ -259,6 +261,8 @@ export const IdleState = ({
           variant={variant}
           isNight={isNight}
           activeQuietReturn={activeQuietReturn}
+          eventPrompt={activeEventPrompt}
+          eventLabel={activeEventLabel}
           spaceName={spaceName}
           className="pt-0 pb-0"
         />
@@ -285,12 +289,6 @@ export const IdleState = ({
             </AppText>
           </View>
         </PressableFeedback>
-      )}
-
-      {activeEventPrompt && (
-        <AppText className="text-xs text-accent/70 pb-3 leading-5">
-          {activeEventPrompt}
-        </AppText>
       )}
 
       <Separator className="mb-0" />

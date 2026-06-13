@@ -1205,6 +1205,10 @@ export default defineSchema({
     // Optional: CDN or Expo asset URL. Recommended: 686×360px ≤200KB.
     imageUrl: v.optional(v.string()),
 
+    // Optional: https URL to a full article (e.g. blog post). Shown as an
+    // external-link button in the sheet header when present.
+    linkUrl: v.optional(v.string()),
+
     // ISO "YYYY-MM-DD" — client filters using local timezone string comparison.
     startDate: v.string(),
     endDate: v.string(),

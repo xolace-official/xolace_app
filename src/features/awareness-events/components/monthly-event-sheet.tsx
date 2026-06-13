@@ -6,6 +6,9 @@ import { BottomSheet, PressableFeedback, Skeleton } from 'heroui-native';
 import { BottomSheetFooter, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import type { BottomSheetFooterProps } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
+import { SymbolView } from 'expo-symbols';
+import * as WebBrowser from 'expo-web-browser';
+import { useThemeColor } from 'heroui-native';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppStore } from '@/src/store/store';
@@ -28,9 +31,12 @@ export const MonthlyEventSheet = ({ event }: Props) => {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageFailed, setImageFailed] = useState(false);
 
+  const accentColor = useThemeColor('accent') as string;
+
   const isOpen = event !== null;
   const showImage = !!(event?.imageUrl) && !imageFailed;
   const hasCta = !!(event?.ctaLabel && event?.ctaRoute);
+  const hasLink = !!event?.linkUrl?.startsWith('https://');
 
   // Footer overlays the scroll content (gorhom footers are not part of the
   // measured content height), so we pad the scroll content by its height.
@@ -52,25 +58,32 @@ export const MonthlyEventSheet = ({ event }: Props) => {
     }
   }, [event]);
 
-  const markSeen = (slug: string, sessionPrompt?: string) => {
-    if (sessionPrompt) {
+  const markSeen = (e: Doc<'monthlyEvents'>) => {
+    if (e.sessionPrompt) {
       setPendingEventPrompt({
-        text: sessionPrompt,
+        text: e.sessionPrompt,
+        label: e.title,
         expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
       });
     }
-    addToSeenEventIds(slug);
+    addToSeenEventIds(e.slug);
   };
 
   const handleDismiss = () => {
     if (!event) return;
-    markSeen(event.slug, event.sessionPrompt);
+    markSeen(event);
     posthog.capture('awareness_event_dismissed', { slug: event.slug });
+  };
+
+  const handleLink = () => {
+    if (!event?.linkUrl) return;
+    posthog.capture('awareness_event_link_tapped', { slug: event.slug });
+    WebBrowser.openBrowserAsync(event.linkUrl);
   };
 
   const handleCta = () => {
     if (!event) return;
-    markSeen(event.slug, event.sessionPrompt);
+    markSeen(event);
     posthog.capture('awareness_event_cta_tapped', { slug: event.slug });
     const route = event.ctaRoute;
     if (route && (CTA_ROUTE_ALLOWLIST as readonly string[]).includes(route)) {
@@ -136,23 +149,51 @@ export const MonthlyEventSheet = ({ event }: Props) => {
           handleIndicatorClassName="opacity-0"
           accessibilityViewIsModal
         >
+          {/* Pinned header: title stays visible while long content scrolls.
+              The external-link button opens the full article when linkUrl is set. */}
+          <View className="flex-row items-start justify-between gap-3 px-5 pb-3">
+            <BottomSheet.Title
+              className="flex-1 text-foreground text-left"
+              style={{ fontFamily: 'SpaceGrotesk-SemiBold', fontSize: 20, lineHeight: 28 }}
+              maxFontSizeMultiplier={1.2}
+            >
+              {event?.title}
+            </BottomSheet.Title>
+            {hasLink && (
+              <PressableFeedback
+                onPress={handleLink}
+                hitSlop={8}
+                className="size-9 rounded-full bg-accent/15 items-center justify-center"
+                accessibilityLabel="Read the full article"
+                accessibilityRole="link"
+              >
+                <SymbolView
+                  name={{ ios: "arrow.up.right", android: "open_in_new", web: "open_in_new" }}
+                  size={15}
+                  tintColor={accentColor}
+                />
+              </PressableFeedback>
+            )}
+          </View>
+          <View className="h-px bg-foreground/10" />
+
           {/* Cap the scrollable itself so short content keeps a snug dynamic
               height while long content scrolls under the pinned footer. */}
           <BottomSheetScrollView
-            style={{ maxHeight: screenHeight * 0.75 }}
+            style={{ maxHeight: screenHeight * 0.65 }}
             contentContainerStyle={{ paddingBottom: footerHeight }}
             showsVerticalScrollIndicator={false}
           >
             {/* Image slot */}
             {showImage && (
-              <View className="h-[180px] overflow-hidden rounded-tl-[32px] rounded-tr-[32px]">
+              <View className="h-45 overflow-hidden">
                 {imageLoading && (
-                  <Skeleton className="absolute inset-x-0 top-0 h-[180px] rounded-tl-[32px] rounded-tr-[32px]" />
+                  <Skeleton className="absolute inset-x-0 top-0 h-45" />
                 )}
                 <Image
                   source={{ uri: event!.imageUrl }}
                   contentFit="cover"
-                  className="w-full h-[180px]"
+                  style={{ width: '100%', height: 180 }}
                   accessibilityLabel={`${event!.title} — awareness event image`}
                   onLoadEnd={() => setImageLoading(false)}
                   onError={() => setImageFailed(true)}
@@ -161,21 +202,12 @@ export const MonthlyEventSheet = ({ event }: Props) => {
             )}
 
             {/* Content */}
-            <View className="px-5" style={{ paddingTop: showImage ? 16 : 24 }}>
-              <AppText
-                className="text-foreground text-left mb-2.5"
-                style={{ fontFamily: 'SpaceGrotesk-SemiBold', fontSize: 20, lineHeight: 28 }}
-                accessibilityRole="header"
-              >
-                {event?.title}
-              </AppText>
-              <AppText
-                className="text-foreground/80 text-left"
-                style={{ fontFamily: 'Poppins-Regular', fontSize: 14, lineHeight: 22 }}
-              >
-                {event?.body}
-              </AppText>
-            </View>
+            <AppText
+              className="px-5 pt-4 text-foreground/80 text-left"
+              style={{ fontFamily: 'Poppins-Regular', fontSize: 14, lineHeight: 22 }}
+            >
+              {event?.body}
+            </AppText>
           </BottomSheetScrollView>
         </BottomSheet.Content>
       </BottomSheet.Portal>
