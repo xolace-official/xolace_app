@@ -46,6 +46,10 @@
       --tone-direct: oklch(68% 0.15 225);
       --tone-witnessed: oklch(72% 0.15 75);
 
+      /* Event — monthly awareness marker */
+      --event: oklch(60% 0.15 350);
+      --event-foreground: oklch(99% 0.005 350);
+
       --success: oklch(70% 0.15 150);
       --success-foreground: oklch(21% 0.01 150);
 
@@ -119,6 +123,10 @@
       --tone-gentle: oklch(72% 0.17 15);
       --tone-direct: oklch(72% 0.15 225);
       --tone-witnessed: oklch(76% 0.15 75);
+
+      /* Event — monthly awareness marker */
+      --event: oklch(76% 0.12 350);
+      --event-foreground: oklch(15% 0.01 350);
 
       --success: oklch(70% 0.15 150);
       --success-foreground: oklch(15% 0.01 150);

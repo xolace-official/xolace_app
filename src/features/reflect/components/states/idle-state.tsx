@@ -134,6 +134,18 @@ export const IdleState = ({
   const setTextureSetId = useAppStore((s) => s.setTextureSetId);
   const safeSetId = resolveTextureSetId(storedSetId);
 
+  const pendingEventPrompt = useAppStore((s) => s.pendingEventPrompt);
+  // Read the clock once at mount (lazy init keeps the call out of the render
+  // body so React Compiler can still optimize this component). The prompt has a
+  // multi-day expiry, so mount-time accuracy is sufficient.
+  const [now] = useState(() => Date.now());
+  const eventPromptActive =
+    !!pendingEventPrompt && pendingEventPrompt.expiresAt > now;
+  const activeEventPrompt = eventPromptActive ? pendingEventPrompt.text : null;
+  const activeEventLabel = eventPromptActive
+    ? (pendingEventPrompt.label ?? null)
+    : null;
+
   const [wordsVisible, setWordsVisible] = useState(true);
   const [pendingSetId, setPendingSetId] = useState<TextureSetId>(safeSetId);
   const [resolvedSetId, setResolvedSetId] = useState<TextureSetId>(safeSetId);
@@ -251,6 +263,8 @@ export const IdleState = ({
           variant={variant}
           isNight={isNight}
           activeQuietReturn={activeQuietReturn}
+          eventPrompt={activeEventPrompt}
+          eventLabel={activeEventLabel}
           spaceName={spaceName}
           className="pt-0 pb-0"
         />

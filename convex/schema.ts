@@ -1177,4 +1177,45 @@ export default defineSchema({
       "consentType",
       "createdAt",
     ]),
+
+  // ===========================================================
+  // 17. MONTHLY EVENTS ("Moments" layer — Phase 1)
+  // ===========================================================
+  //
+  // Team-managed awareness events shown once per user per event.
+  // Seed of the "Moments" infrastructure layer.
+  // No server-side date filtering — client filters in local timezone.
+  //
+  monthlyEvents: defineTable({
+    // Immutable identifier. Never rename post-publish — used as
+    // the key in client-side seen tracking.
+    slug: v.string(),
+
+    title: v.string(),
+    body: v.string(),
+
+    // Optional CTA — only shown when both fields are present.
+    ctaLabel: v.optional(v.string()),
+    // Validated client-side against CTA_ROUTE_ALLOWLIST before router.push.
+    ctaRoute: v.optional(v.string()),
+
+    // Optional: injected as the reflect session prompt after dismiss.
+    sessionPrompt: v.optional(v.string()),
+
+    // Optional: CDN or Expo asset URL. Recommended: 686×360px ≤200KB.
+    imageUrl: v.optional(v.string()),
+
+    // Optional: https URL to a full article (e.g. blog post). Shown as an
+    // external-link button in the sheet header when present.
+    linkUrl: v.optional(v.string()),
+
+    // ISO "YYYY-MM-DD" — client filters using local timezone string comparison.
+    startDate: v.string(),
+    endDate: v.string(),
+
+    // 1 = highest priority. Used when multiple events are active simultaneously.
+    priority: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_priority", ["priority", "startDate"]),
 });

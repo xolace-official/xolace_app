@@ -2,6 +2,33 @@
 
 ---
 
+## Post 0 — Developer Friend's Xolace Post
+**Type:** Comment + Repost
+**Account:** Personal (Nathaniel)
+**Timing:** Comment within first hour of friend's post going live; repost same day a few hours later
+
+### Comment (on friend's LinkedIn post)
+
+[Name], this means more than you know. Thank you for sharing it.
+
+The developer angle is personal for me — I built a lot of Xolace while I was also deep in the code, carrying things I didn't have words for yet.
+
+Glad it's helping. That's exactly why we built it.
+
+---
+
+### Repost caption (personal LinkedIn)
+
+A developer friend shared this about Xolace today.
+
+I built this partly because I know what it's like to be deep in a problem, exhausted, and have nowhere to put what you're actually feeling.
+
+Seeing it land for people like this — that's the whole point.
+
+→ [link to Xolace]
+
+---
+
 ## Post 1 — ElevenLabs / Headspace Comment Strategy
 **Type:** Comment + Repost
 **Account:** Personal (founder)

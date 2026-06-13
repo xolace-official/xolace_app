@@ -30,6 +30,11 @@ const REPLAY_ICON: CrossPlatformSymbol = {
   android: "replay",
   web: "replay",
 };
+const AWARENESS_ICON: CrossPlatformSymbol = {
+  ios: "calendar.badge.clock",
+  android: "event_repeat",
+  web: "event_repeat",
+};
 
 export const DevToolsSection = () => {
   const { toast } = useToast();
@@ -37,6 +42,12 @@ export const DevToolsSection = () => {
   const setLastAcknowledgedStreak = useAppStore(
     (s) => s.setLastAcknowledgedStreak,
   );
+  const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
+  const resetAwarenessEvents = () => {
+    useAppStore.setState({ seenEventIds: [] });
+    setPendingEventPrompt(null);
+    toast.show({ label: "Awareness events reset", description: "Reopen home to see the card." });
+  };
   const setStreak = useMutation(api.devTools.setStreak);
   const [busy, setBusy] = useState(false);
 
@@ -93,6 +104,12 @@ export const DevToolsSection = () => {
         icon={icon(REPLAY_ICON)}
         label="Replay streak reveal"
         onPress={replayReveal}
+      />
+      <SettingsRow
+        variant="action"
+        icon={icon(AWARENESS_ICON)}
+        label="Reset awareness events"
+        onPress={resetAwarenessEvents}
         isLast
       />
     </SettingsSection>

@@ -4,6 +4,69 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P3 — Awareness Events: E2E Test Coverage
+
+**What:** Add E2E tests for the 3 critical awareness event flows once a mobile test framework is chosen (Detox or Maestro).
+
+**Why:** These are the 3 flows where a silent regression causes real user harm: event re-showing after dismiss (notification fatigue), wrong event shown (priority ordering bug), or event never shown (date filter bug). Unit tests can't cover these because they span Convex → Zustand → React Native component lifecycle.
+
+**Flows to cover:**
+1. **Single show:** Event appears on first app open during the date range; not shown again after dismiss + force-quit + reopen.
+2. **Priority ordering:** Two events active in the same month — highest priority (lowest number) shows first; second shows after first is dismissed.
+3. **Date boundary:** Event with `startDate: today` shows today; event with `endDate: yesterday` does not show.
+
+**How to start:**
+1. Choose a framework: Detox (full native), Maestro (simpler YAML-based), or wait for team consensus.
+2. Seed `monthlyEvents` table with test fixtures in Convex test environment.
+3. Write each flow as an E2E script covering: app launch → sheet appears → dismiss → force-quit → relaunch → sheet absent.
+4. Add to CI.
+
+**Key files:** `src/features/awareness-events/` (the full feature dir), `src/app/(protected)/index.tsx` (wiring point)
+
+**Effort:** M (human ~1 day once framework chosen / CC ~1h)
+**Priority:** P3 — gated on test framework selection
+**Depends on:** `feat(🎪)/setup-event-showing` shipped + mobile test framework chosen
+
+---
+
+## P3 — Awareness Events: Team Content Guide
+
+**What:** Create a one-page content guide (Notion or Google Doc) for anyone creating events via the Convex dashboard. Cover: image dimensions, copy framing rules, slug conventions, and CTA route options.
+
+**Why:** The card's visual quality depends entirely on what the team uploads. Without a guide: the first person to create an event will choose an arbitrary image size (breaking the 180px fixed container if the CDN doesn't resize), write imperative marketing copy ("This month, join us in recognizing..."), and pick an arbitrary slug that can never be renamed post-publish. One bad first event sets a template for all future events.
+
+**What to include:**
+1. **Images:** 686×360px (2x for 343px card width × 180px height), JPG or WebP, ≤200KB. Upload via any image host, paste URL into `imageUrl` field.
+2. **Copy framing:** Acknowledgment sentence first ("If you've been carrying something heavy this month, you're not alone."), context second (what the month is about), CTA optional ("Support resources are here when you're ready."). No imperative framing. No emoji.
+3. **Slug:** kebab-case, permanent, descriptive ("mens-mental-health-2026", "world-mh-day"). Never rename after publish.
+4. **CTA routes:** currently only `/(protected)/crisis-resources` is allowlisted. Contact eng to add new routes.
+5. **Kill-switch:** set `endDate` to yesterday to immediately pull a live event.
+
+**Effort:** XS (human ~1h to write / no CC work)
+**Priority:** P3 — create before the first event is added to the dashboard
+**Depends on:** `feat(🎪)/setup-event-showing` shipped
+
+---
+
+## P2 — Awareness Events: Recurring Event Support
+
+**What:** Add `recurrence: v.optional(v.literal('annual'))` to the `monthlyEvents` Convex schema. Annual events match any year — the client filter checks `month/day` instead of the full ISO date. One dashboard entry covers all future occurrences.
+
+**Why:** World Mental Health Day (October 10), Suicide Prevention Month (September), and Men's Mental Health Month (June) repeat every year. Without recurrence, someone must manually re-add each event every year — and if they forget, users get nothing. The risk is silent omission of crisis-adjacent content in high-need months.
+
+**How to start:**
+1. Add `recurrence: v.optional(v.literal('annual'))` to `convex/schema.ts` `monthlyEvents` table.
+2. In the client-side `getActive` filter (`MonthlyEventSheet` hook): if `event.recurrence === 'annual'`, compare only `month/day` of `startDate`/`endDate` against today (ignore year). Otherwise compare full ISO date as before.
+3. Update `seenEventIds` pruning: annual events use slug-only tracking (not year-scoped) — a user who dismissed "world-mental-health-day" in 2026 should see it again in 2027. Store seen entries as `{ slug, seenAt }` and prune entries older than 13 months (already the plan — annual events naturally re-appear after the 13-month prune window).
+
+**Key files:** `convex/schema.ts` (add field), `src/features/awareness-events/hooks/use-awareness-event.ts` (update filter logic)
+
+**Effort:** S (human ~2h / CC ~15min)
+**Priority:** P2 — gate: add before scheduling World Mental Health Day (October 10)
+**Depends on:** `feat(🎪)/setup-event-showing` shipped
+
+---
+
 ## P3 — Texture Word Sets v2: Auto-Suggest Active Set from Prior Session Tone
 
 **What:** When the user opens the app, automatically suggest (or pre-select) the most contextually appropriate word set based on prior session signals: last session's mirror tone (heavy → Flat, grief-adjacent → Tender, hopeful → Bright, anxious → Charged), time of day (Night Mode already does this), and/or session frequency pattern.
@@ -277,4 +340,23 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 **Effort:** S (CC ~20min)
 **Priority:** P3 — cleanup, no user-facing change
+**Depends on:** Nothing
+
+
+---
+
+## P3 — Awareness Events: Deterministic todayStr date formatting
+
+**What:** `todayStr` in `use-awareness-event.ts` uses `today.toLocaleDateString('en-CA')` to produce `"YYYY-MM-DD"` for lexical `startDate`/`endDate` comparisons. Replace with a manual zero-padded build if it ever misbehaves: `` `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}` ``.
+
+**Why:** `toLocaleDateString('en-CA')` relies on ICU/locale data being identical across runtimes (Hermes native vs web). It works today, so we're leaving it. The risk is an awareness event showing on the wrong day or not appearing in one environment if a runtime's locale data differs.
+
+**How to start:**
+1. In `src/features/awareness-events/hooks/use-awareness-event.ts` (~line 21), replace the `toLocaleDateString` line with the zero-padded template literal above.
+2. Keep the `startDate <= todayStr && todayStr <= e.endDate` and `seenEventIds`/`slug` filters unchanged — they rely on lexical YYYY-MM-DD ordering.
+
+**Key files:** `src/features/awareness-events/hooks/use-awareness-event.ts`
+
+**Effort:** XS (CC ~5min)
+**Priority:** P3 — gated on symptom; no change while current behavior is correct
 **Depends on:** Nothing

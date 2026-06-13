@@ -1,4 +1,6 @@
 import { View } from "react-native";
+import { SymbolView } from "expo-symbols";
+import { useCSSVariable } from "uniwind";
 import { cn } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { StreakCalendar } from "@/src/features/reflect/components/streak-calendar";
@@ -16,6 +18,8 @@ type Props = {
   variant: UserVariant;
   isNight: boolean;
   activeQuietReturn: QuietReturnTier | null;
+  eventPrompt?: string | null;
+  eventLabel?: string | null;
   spaceName?: string;
   className?: string;
 };
@@ -36,14 +40,21 @@ export const QuietReturnHeader = ({
   variant,
   isNight,
   activeQuietReturn,
+  eventPrompt,
+  eventLabel,
   spaceName,
   className,
 }: Props) => {
+  const [eventColor] = useCSSVariable(["--color-event"]);
+
   const headline = isNight
     ? NIGHT_HEADLINE
     : activeQuietReturn
       ? QUIET_RETURN_PROMPTS[activeQuietReturn]
-      : "What’s here right now... what are you feeling?";
+      : eventPrompt ?? "What’s here right now... what are you feeling?";
+
+  const showEventPrompt = !isNight && !activeQuietReturn && !!eventPrompt;
+  const isLongPrompt = !!activeQuietReturn || showEventPrompt;
 
   const encouragement = isNight
     ? NIGHT_ENCOURAGEMENT
@@ -53,6 +64,19 @@ export const QuietReturnHeader = ({
 
   const showStreakCalendar =
     variant.kind === "active" && !isNight && !activeQuietReturn;
+
+  const eventPill = showEventPrompt ? (
+    <View className="shrink flex-row items-center gap-1.5 rounded-full bg-event/15 px-3 py-1">
+      <SymbolView
+        name={{ ios: "heart.fill", android: "favorite", web: "favorite" }}
+        size={11}
+        tintColor={String(eventColor)}
+      />
+      <AppText className="shrink text-xs font-semibold text-event" numberOfLines={1}>
+        {eventLabel ?? "This month"}
+      </AppText>
+    </View>
+  ) : null;
 
   return (
     <View className={cn('pt-10 pb-4', className)}>
@@ -66,23 +90,29 @@ export const QuietReturnHeader = ({
               </AppText>
             </View>
           )}
+          {eventPill}
         </View>
       ) : encouragement ? (
-        <AppText
-          className={cn(
-            "text-sm italic leading-6 text-foreground/40",
-            variant.kind === "returning" && "text-warning",
-          )}
-        >
-          {encouragement}
-        </AppText>
+        <View className="flex-row items-start justify-between gap-3">
+          <AppText
+            className={cn(
+              "flex-1 text-sm italic leading-6 text-foreground/40",
+              variant.kind === "returning" && "text-warning",
+            )}
+          >
+            {encouragement}
+          </AppText>
+          {eventPill}
+        </View>
+      ) : eventPill ? (
+        <View className="flex-row justify-end">{eventPill}</View>
       ) : null}
 
       <AppText
         className={cn(
           "font-semibold text-foreground",
-          activeQuietReturn ? "text-2xl leading-9" : "text-4xl",
-          (encouragement || showStreakCalendar) && "mt-4",
+          isLongPrompt ? "text-4xl leading-9" : "text-4xl",
+          (encouragement || showStreakCalendar || showEventPrompt) && "mt-4",
         )}
       >
         {headline}
