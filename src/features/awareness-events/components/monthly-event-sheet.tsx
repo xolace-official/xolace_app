@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { BottomSheet, PressableFeedback, Skeleton } from 'heroui-native';
+import { BottomSheet, PressableFeedback, Skeleton, useThemeColor } from 'heroui-native';
 import { BottomSheetFooter, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import type { BottomSheetFooterProps } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
 import * as WebBrowser from 'expo-web-browser';
-import { useThemeColor } from 'heroui-native';
 
+import { cn } from '@/src/lib/utils';
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppStore } from '@/src/store/store';
 import { posthog } from '@/src/config/posthog';
@@ -78,6 +78,7 @@ export const MonthlyEventSheet = ({ event }: Props) => {
   const handleLink = () => {
     if (!event?.linkUrl) return;
     posthog.capture('awareness_event_link_tapped', { slug: event.slug });
+    markSeen(event);
     WebBrowser.openBrowserAsync(event.linkUrl);
   };
 
@@ -94,20 +95,17 @@ export const MonthlyEventSheet = ({ event }: Props) => {
   const renderFooter = (props: BottomSheetFooterProps) => (
     <BottomSheetFooter {...props}>
       <View
-        className="px-5 pt-3 pb-5 gap-1 bg-overlay rounded-b-[32px]"
+        className="px-5 pt-3 pb-5 gap-1 bg-overlay rounded-b-4xl"
         onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}
       >
         {hasCta && (
           <PressableFeedback
             onPress={handleCta}
-            className="h-[52px] bg-accent rounded-2xl items-center justify-center"
+            className="h-13 bg-accent rounded-2xl items-center justify-center"
             accessibilityLabel={event!.ctaLabel}
             accessibilityRole="button"
           >
-            <AppText
-              className="text-white"
-              style={{ fontFamily: 'Poppins-Medium', fontSize: 16 }}
-            >
+            <AppText className="text-white text-base font-[Poppins-Medium]">
               {event!.ctaLabel}
             </AppText>
           </PressableFeedback>
@@ -120,8 +118,10 @@ export const MonthlyEventSheet = ({ event }: Props) => {
           accessibilityRole="button"
         >
           <AppText
-            className={hasCta ? 'text-foreground/50' : 'text-foreground/70'}
-            style={{ fontFamily: 'Poppins-Regular', fontSize: 13, textAlign: 'center' }}
+            className={cn(
+              'text-center text-[13px] font-[Poppins-Medium]',
+              hasCta ? 'text-foreground/50' : 'text-foreground/70',
+            )}
           >
             {hasCta ? 'Not right now' : 'I see this'}
           </AppText>
@@ -151,10 +151,9 @@ export const MonthlyEventSheet = ({ event }: Props) => {
         >
           {/* Pinned header: title stays visible while long content scrolls.
               The external-link button opens the full article when linkUrl is set. */}
-          <View className="flex-row items-start justify-between gap-3 px-5 pb-3">
+          <View className="flex-row items-center justify-between gap-3 px-5 pb-3">
             <BottomSheet.Title
-              className="flex-1 text-foreground text-left"
-              style={{ fontFamily: 'SpaceGrotesk-SemiBold', fontSize: 20, lineHeight: 28 }}
+              className="flex-1 text-foreground text-left font-semibold text-xl leading-7"
               maxFontSizeMultiplier={1.2}
             >
               {event?.title}
@@ -193,7 +192,7 @@ export const MonthlyEventSheet = ({ event }: Props) => {
                 <Image
                   source={{ uri: event!.imageUrl }}
                   contentFit="cover"
-                  style={{ width: '100%', height: 180 }}
+                  style={styles.image}
                   accessibilityLabel={`${event!.title} — awareness event image`}
                   onLoadEnd={() => setImageLoading(false)}
                   onError={() => setImageFailed(true)}
@@ -202,10 +201,7 @@ export const MonthlyEventSheet = ({ event }: Props) => {
             )}
 
             {/* Content */}
-            <AppText
-              className="px-5 pt-4 text-foreground/80 text-left"
-              style={{ fontFamily: 'Poppins-Regular', fontSize: 14, lineHeight: 22 }}
-            >
+            <AppText className="px-5 pt-4 text-foreground/80 text-left text-sm leading-5.5 font-[Poppins-Regular]">
               {event?.body}
             </AppText>
           </BottomSheetScrollView>
@@ -214,3 +210,8 @@ export const MonthlyEventSheet = ({ event }: Props) => {
     </BottomSheet>
   );
 };
+
+
+const styles = StyleSheet.create({
+  image : {width: '100%', height: 180}
+})
