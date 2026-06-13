@@ -1,11 +1,15 @@
 import { query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAuth } from "./lib/auth";
 
 // Returns all events — date filtering happens client-side in local timezone.
 // The table is small and team-managed; collect() is safe here.
+// Auth-gated for defense-in-depth: this content is only ever shown inside the
+// authenticated app, so there's no reason to expose it publicly.
 export const getActive = query({
   args: {},
   handler: async (ctx) => {
+    await requireAuth(ctx);
     return await ctx.db.query("monthlyEvents").collect();
   },
 });

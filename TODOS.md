@@ -341,3 +341,22 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 **Effort:** S (CC ~20min)
 **Priority:** P3 — cleanup, no user-facing change
 **Depends on:** Nothing
+
+
+---
+
+## P3 — Awareness Events: Deterministic todayStr date formatting
+
+**What:** `todayStr` in `use-awareness-event.ts` uses `today.toLocaleDateString('en-CA')` to produce `"YYYY-MM-DD"` for lexical `startDate`/`endDate` comparisons. Replace with a manual zero-padded build if it ever misbehaves: `` `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}` ``.
+
+**Why:** `toLocaleDateString('en-CA')` relies on ICU/locale data being identical across runtimes (Hermes native vs web). It works today, so we're leaving it. The risk is an awareness event showing on the wrong day or not appearing in one environment if a runtime's locale data differs.
+
+**How to start:**
+1. In `src/features/awareness-events/hooks/use-awareness-event.ts` (~line 21), replace the `toLocaleDateString` line with the zero-padded template literal above.
+2. Keep the `startDate <= todayStr && todayStr <= e.endDate` and `seenEventIds`/`slug` filters unchanged — they rely on lexical YYYY-MM-DD ordering.
+
+**Key files:** `src/features/awareness-events/hooks/use-awareness-event.ts`
+
+**Effort:** XS (CC ~5min)
+**Priority:** P3 — gated on symptom; no change while current behavior is correct
+**Depends on:** Nothing

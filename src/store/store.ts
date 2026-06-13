@@ -147,11 +147,15 @@ export const useAppStore = create<AppState>()(
               : { seenEventIds: [...s.seenEventIds, { slug, seenAt: Date.now() }] },
           ),
         pruneSeenEventIds: () =>
-          set((s) => ({
-            seenEventIds: s.seenEventIds.filter(
-              (e) => e.seenAt >= Date.now() - 13 * 30 * 24 * 60 * 60 * 1000,
-            ),
-          })),
+          set((s) => {
+            const threshold = new Date();
+            threshold.setMonth(threshold.getMonth() - 13);
+            return {
+              seenEventIds: s.seenEventIds.filter(
+                (e) => e.seenAt >= threshold.getTime(),
+              ),
+            };
+          }),
 
         pendingEventPrompt: null,
         setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
