@@ -180,7 +180,7 @@ export const MonthlyEventSheet = ({ event }: Props) => {
               height while long content scrolls under the pinned footer. */}
           <BottomSheetScrollView
             style={{ maxHeight: screenHeight * 0.65 }}
-            contentContainerStyle={{ paddingBottom: footerHeight }}
+            contentContainerStyle={{ paddingBottom: footerHeight + 50 }}
             showsVerticalScrollIndicator={false}
           >
             {/* Image slot */}
