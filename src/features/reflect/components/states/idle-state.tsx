@@ -136,8 +136,12 @@ export const IdleState = ({
 
   const pendingEventPrompt = useAppStore((s) => s.pendingEventPrompt);
   const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
+  // Read the clock once at mount (lazy init keeps the call out of the render
+  // body so React Compiler can still optimize this component). The prompt has a
+  // multi-day expiry, so mount-time accuracy is sufficient.
+  const [now] = useState(() => Date.now());
   const eventPromptActive =
-    !!pendingEventPrompt && pendingEventPrompt.expiresAt > Date.now();
+    !!pendingEventPrompt && pendingEventPrompt.expiresAt > now;
   const activeEventPrompt = eventPromptActive ? pendingEventPrompt.text : null;
   const activeEventLabel = eventPromptActive
     ? (pendingEventPrompt.label ?? null)

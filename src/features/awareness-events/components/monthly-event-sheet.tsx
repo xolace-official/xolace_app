@@ -42,13 +42,15 @@ export const MonthlyEventSheet = ({ event }: Props) => {
   // measured content height), so we pad the scroll content by its height.
   const [footerHeight, setFooterHeight] = useState(hasCta ? 132 : 76);
 
-  // Reset image state when a new event arrives
-  useEffect(() => {
-    if (event?.imageUrl) {
-      setImageLoading(true);
-      setImageFailed(false);
-    }
-  }, [event?.slug, event?.imageUrl]);
+  // Reset image state when a new event arrives. Adjusting during render (with a
+  // prev-slug comparison) instead of in an effect avoids an extra render that
+  // would briefly show the previous event's image state.
+  const [prevSlug, setPrevSlug] = useState<string | null>(null);
+  if (event?.imageUrl && event.slug !== prevSlug) {
+    setPrevSlug(event.slug);
+    setImageLoading(true);
+    setImageFailed(false);
+  }
 
   const capturedSlug = useRef<string | null>(null);
   useEffect(() => {
