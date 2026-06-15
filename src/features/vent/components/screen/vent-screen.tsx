@@ -168,7 +168,7 @@ export function VentScreen() {
           <Animated.View
             entering={FadeIn.duration(500).delay(600)}
             exiting={FadeOut.duration(250)}
-            className="absolute inset-x-0 bottom-[100px] items-center"
+            className="absolute inset-x-0 bottom-25 items-center"
           >
             <VentMicButton
               recording={state === 'recording'}

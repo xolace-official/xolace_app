@@ -71,16 +71,16 @@ export function VentMicButton({ recording, onPress }: Props) {
       accessibilityLabel={recording ? 'Stop and release' : 'Start speaking'}
       hitSlop={16}
     >
-      <View className="h-[60px] w-[60px] items-center justify-center">
+      <View className="h-15 w-15 items-center justify-center">
         {/* Ring drawn as a solid donut (disc + screen-bg hole) — a 2px border
             on a scaled/fading view renders with gaps on iOS. */}
         <Animated.View
-          className="absolute h-[60px] w-[60px] items-center justify-center rounded-full"
+          className="absolute h-15 w-15 items-center justify-center rounded-full"
           style={ringStyle}
         >
-          <View className="h-[56px] w-[56px] rounded-full" style={RING_HOLE} />
+          <View className="h-14 w-14 rounded-full" style={RING_HOLE} />
         </Animated.View>
-        <View className="h-[52px] w-[52px] items-center justify-center rounded-full bg-white/5">
+        <View className="h-13 w-13 items-center justify-center rounded-full bg-white/5">
           <SymbolView
             name={recording ? STOP_ICON : MIC_ICON}
             size={recording ? 20 : 24}

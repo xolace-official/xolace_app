@@ -186,6 +186,22 @@ The crinkle → crackle → silence sequence is the emotional payload. It must n
 
 ---
 
+## Sound Candidates (Unused — Removed from Bundle)
+
+The following files were produced during sound design but are not wired up. They were removed from `assets/sounds/vent/` to keep the bundle lean. Re-add if a playback approach is found that doesn't lag or conflict with the active recorder session.
+
+| File | Intended moment |
+|---|---|
+| `a-single-soft-human-4-recording-starts.wav` | Recording starts |
+| `quiet-smoldering-4-afterglow.wav` | Afterglow / session end |
+| `fine-grain-sand-4-entry-fav.wav` | Entry / prompt appears |
+| `one-single-soft-1-chime.wav` | Chime / confirmation |
+| `a-single-sheet-2-compression.wav` | Compression phase |
+
+**Active sound:** `burning-paper-crack-2-scatter.wav` — plays once per burn, timed to scatter phase (compress + flash delay). See `use-vent-sounds.ts`.
+
+---
+
 ## What Is Not In v1
 
 Per the CEO plan scope boundary — these are explicitly deferred:
