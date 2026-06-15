@@ -10,6 +10,11 @@ import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
 const BACK_ICON_NAME = { ios: "chevron.left", android: "arrow_back", web: "arrow_back" } as const;
 const SETTINGS_OPTIONS = { title: "Settings" };
 const APPEARANCE_OPTIONS = { title: "Appearance" };
+const MIRROR_OPTIONS = { title: "Mirror" };
+const NOTIFICATIONS_OPTIONS = { title: "Notifications" };
+const DATA_OPTIONS = { title: "Privacy & Data" };
+const ACCOUNT_OPTIONS = { title: "Account" };
+const FOLLOW_OPTIONS = { title: "Follow & Support" };
 
 export default function SettingsLayout() {
   const router = useRouter();
@@ -37,6 +42,11 @@ export default function SettingsLayout() {
       <Stack screenOptions={screenOptions}>
         <Stack.Screen name="index" options={SETTINGS_OPTIONS} />
         <Stack.Screen name="appearance" options={APPEARANCE_OPTIONS} />
+        <Stack.Screen name="mirror" options={MIRROR_OPTIONS} />
+        <Stack.Screen name="notifications" options={NOTIFICATIONS_OPTIONS} />
+        <Stack.Screen name="data" options={DATA_OPTIONS} />
+        <Stack.Screen name="account" options={ACCOUNT_OPTIONS} />
+        <Stack.Screen name="follow" options={FOLLOW_OPTIONS} />
       </Stack>
     </View>
   );

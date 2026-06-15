@@ -44,11 +44,18 @@ type ActionProps = BaseProps & {
   onPress: () => void;
 };
 
+type NavProps = BaseProps & {
+  variant: "nav";
+  value?: string;
+  onPress: () => void;
+};
+
 export type SettingsRowProps =
   | ValueProps
   | ToggleProps
   | ChevronProps
-  | ActionProps;
+  | ActionProps
+  | NavProps;
 
 /**
  * A single settings row supporting four display variants:
@@ -101,6 +108,17 @@ export const SettingsRow = (props: SettingsRowProps) => {
       );
     }
 
+    if (props.variant === "nav") {
+      return (
+        <View className="flex-row items-center gap-2">
+          {props.value && (
+            <AppText className="text-base text-foreground/50">{props.value}</AppText>
+          )}
+          <SymbolView name={CHEVRON_NAME} size={14} tintColor={mutedColor} />
+        </View>
+      );
+    }
+
     return null;
   };
 
@@ -121,6 +139,7 @@ export const SettingsRow = (props: SettingsRowProps) => {
   const isPressable =
     props.variant === "chevron" ||
     props.variant === "action" ||
+    props.variant === "nav" ||
     (props.variant === "value" && !!props.onPress);
 
   return (
@@ -130,7 +149,8 @@ export const SettingsRow = (props: SettingsRowProps) => {
           onPress={
             props.variant === "value" ||
             props.variant === "chevron" ||
-            props.variant === "action"
+            props.variant === "action" ||
+            props.variant === "nav"
               ? props.onPress
               : undefined
           }
