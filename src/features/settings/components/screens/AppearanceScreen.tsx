@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { RadioGroup, Radio, Separator } from "heroui-native";
+import { RadioGroup, Separator } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { cn } from "@/src/lib/utils";
 import { AppText } from "@/src/components/shared/app-text";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
 import { SettingsRow } from "@/src/features/settings/components/settings-row";
+import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
+import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
 import { ThemePreviewCard } from "@/src/features/settings/components/theme-preview-card";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { FREE_THEMES } from "@/src/lib/themes";
@@ -13,10 +15,30 @@ import { useAppearanceSettings, type ThemeMode } from "@/src/features/settings/h
 import { useAppStore } from "@/src/store/store";
 import { Presets } from "react-native-pulsar";
 
-const MODE_OPTIONS: { value: ThemeMode; label: string; description: string }[] = [
-  { value: "system", label: "System", description: "Follows your device's appearance setting" },
-  { value: "light", label: "Light", description: "Always use the light theme" },
-  { value: "dark", label: "Dark", description: "Always use the dark theme" },
+const MODE_OPTIONS: {
+  value: ThemeMode;
+  label: string;
+  description: string;
+  symbol: CrossPlatformSymbol;
+}[] = [
+  {
+    value: "system",
+    label: "System",
+    description: "Follows your device's appearance setting",
+    symbol: { ios: "gearshape", android: "settings", web: "settings" },
+  },
+  {
+    value: "light",
+    label: "Light",
+    description: "Always use the light theme",
+    symbol: { ios: "sun.max", android: "light_mode", web: "light_mode" },
+  },
+  {
+    value: "dark",
+    label: "Dark",
+    description: "Always use the dark theme",
+    symbol: { ios: "moon", android: "dark_mode", web: "dark_mode" },
+  },
 ];
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -82,7 +104,10 @@ export const AppearanceScreen = () => {
                           isSelected ? "bg-surface" : "bg-surface/30",
                         )}
                       >
-                        <Radio />
+                        <RadioIconIndicator
+                          symbol={opt.symbol}
+                          isSelected={isSelected}
+                        />
                         <View className="flex-1 gap-0.5">
                           <AppText className="text-base font-medium text-foreground">
                             {opt.label}
@@ -100,7 +125,7 @@ export const AppearanceScreen = () => {
           </SettingsSection>
         </EaseView>
 
-        {/* ── COLOURS ──────────────────────────────────────────── */}
+        {/* ── THEMES ──────────────────────────────────────────── */}
         <EaseView
           initialAnimate={{ opacity: 0, translateY: 16 }}
           animate={{ opacity: 1, translateY: 0 }}
@@ -108,7 +133,7 @@ export const AppearanceScreen = () => {
           className="mb-8"
         >
           <AppText className="text-xs font-semibold tracking-widest text-accent uppercase px-5 pb-3">
-            Colours
+            App Themes
           </AppText>
           <ScrollView
             horizontal

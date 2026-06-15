@@ -20,6 +20,10 @@ export const FollowScreen = () => {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const mutedColor = useThemeColor("muted") as string;
 
+  const settingIcon = (icon: React.ComponentProps<typeof SymbolView>["name"]) => (
+    <SymbolView name={icon} size={17} tintColor={mutedColor} />
+  );
+
   return (
     <>
       <ScrollView
@@ -52,7 +56,7 @@ export const FollowScreen = () => {
           <SettingsSection title="Support">
             <SettingsRow
               variant="chevron"
-              icon={<SymbolView name={FEEDBACK_ICON} size={17} tintColor={mutedColor} />}
+              icon={settingIcon(FEEDBACK_ICON)}
               label="Send feedback"
               onPress={() => setFeedbackOpen(true)}
               isLast

@@ -6,6 +6,7 @@ import { cn } from "@/src/lib/utils";
 import { AppText } from "@/src/components/shared/app-text";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
 import { SettingsRow } from "@/src/features/settings/components/settings-row";
+import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
 import {
   useNotificationSettings,
   type NotificationReach,
@@ -14,12 +15,33 @@ import {
 import {
   NOTIFICATIONS_ICON,
   QUIET_HOURS_ICON,
+  type CrossPlatformSymbol,
 } from "@/src/features/settings/components/settings-icons";
 
-const REACH_OPTIONS: { value: NotificationReach; label: string; description: string }[] = [
-  { value: "warm", label: "Warm", description: "Gentle recognition — a friend who notices without demanding" },
-  { value: "direct", label: "Direct", description: "Honest and pattern-aware — gets to the point" },
-  { value: "quiet", label: "Quiet", description: "Minimal presence — often just a word or two" },
+const REACH_OPTIONS: {
+  value: NotificationReach;
+  label: string;
+  description: string;
+  symbol: CrossPlatformSymbol;
+}[] = [
+  {
+    value: "warm",
+    label: "Warm",
+    description: "Gentle recognition — a friend who notices without demanding",
+    symbol: { ios: "heart", android: "favorite", web: "favorite" },
+  },
+  {
+    value: "direct",
+    label: "Direct",
+    description: "Honest and pattern-aware — gets to the point",
+    symbol: { ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" },
+  },
+  {
+    value: "quiet",
+    label: "Quiet",
+    description: "Minimal presence — often just a word or two",
+    symbol: { ios: "speaker.wave.1", android: "volume_down", web: "volume_down" },
+  },
 ];
 
 const BEFORE_OPTIONS = [
@@ -132,7 +154,10 @@ export const NotificationsScreen = () => {
                             isSelected ? "bg-surface" : "bg-surface/30",
                           )}
                         >
-                          <Radio />
+                          <RadioIconIndicator
+                            symbol={opt.symbol}
+                            isSelected={isSelected}
+                          />
                           <View className="flex-1 gap-0.5">
                             <AppText className="text-base font-medium text-foreground">
                               {opt.label}

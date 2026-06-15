@@ -1,10 +1,9 @@
 import { ScrollView, StyleSheet, View } from "react-native";
-import { RadioGroup, Radio, Separator, useThemeColor } from "heroui-native";
-import { SymbolView } from "expo-symbols";
-import Animated, { ZoomIn, FadeInUp, FadeIn } from "react-native-reanimated";
+import { RadioGroup, Separator } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
+import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
 import { useMirrorSettings, type MirrorTone } from "@/src/features/settings/hooks/use-mirror-settings";
 import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
 
@@ -48,14 +47,6 @@ const TONE_OPTIONS: ToneOption[] = [
   },
 ];
 
-const ENTERING = [
-  () => ZoomIn.springify(),
-  () => FadeInUp.duration(220),
-  () => ZoomIn.duration(220),
-  () => FadeIn.duration(180),
-  () => FadeIn.duration(260),
-] as const;
-
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
 const styles = StyleSheet.create({
@@ -64,9 +55,6 @@ const styles = StyleSheet.create({
 
 export const MirrorScreen = () => {
   const { mirrorTone, setMirrorTone } = useMirrorSettings();
-  // When a Radio is selected, the indicator fills with `accent`, so the symbol
-  // sitting on top must use `accent-foreground` (the contrast color) to be visible.
-  const accentForeground = useThemeColor("accent-foreground") as string;
 
   return (
     <ScrollView
@@ -98,20 +86,10 @@ export const MirrorScreen = () => {
                           {opt.description}
                         </AppText>
                       </View>
-                      <Radio>
-                        <Radio.Indicator>
-                          {isSelected && (
-                            <Animated.View entering={ENTERING[index]()}>
-                              <SymbolView
-                                name={opt.symbol}
-                                size={14}
-                                weight="bold"
-                                tintColor={accentForeground}
-                              />
-                            </Animated.View>
-                          )}
-                        </Radio.Indicator>
-                      </Radio>
+                      <RadioIconIndicator
+                        symbol={opt.symbol}
+                        isSelected={isSelected}
+                      />
                     </>
                   )}
                 </RadioGroup.Item>

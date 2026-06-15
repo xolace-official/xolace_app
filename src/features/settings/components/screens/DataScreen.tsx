@@ -1,12 +1,12 @@
 import { ScrollView, StyleSheet, View } from "react-native";
-import { RadioGroup, Radio, useToast } from "heroui-native";
+import { RadioGroup, useToast, useThemeColor  } from "heroui-native";
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { cn } from "@/src/lib/utils";
 import { AppText } from "@/src/components/shared/app-text";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
 import { SettingsRow } from "@/src/features/settings/components/settings-row";
+import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { useDataSettings, type RetentionOption } from "@/src/features/settings/hooks/use-data-settings";
 import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
@@ -14,12 +14,33 @@ import {
   SHARE_ICON,
   DELETE_DATA_ICON,
   DELETE_ACCOUNT_ICON,
+  type CrossPlatformSymbol,
 } from "@/src/features/settings/components/settings-icons";
 
-const RETENTION_OPTIONS: { value: RetentionOption; label: string; description: string }[] = [
-  { value: "indefinite", label: "Indefinite", description: "Keep my data until I delete it" },
-  { value: "1_year", label: "1 year", description: "Auto-delete sessions older than 1 year" },
-  { value: "6_months", label: "6 months", description: "Auto-delete sessions older than 6 months" },
+const RETENTION_OPTIONS: {
+  value: RetentionOption;
+  label: string;
+  description: string;
+  symbol: CrossPlatformSymbol;
+}[] = [
+  {
+    value: "indefinite",
+    label: "Indefinite",
+    description: "Keep my data until I delete it",
+    symbol: { ios: "infinity", android: "all_inclusive", web: "all_inclusive" },
+  },
+  {
+    value: "1_year",
+    label: "1 year",
+    description: "Auto-delete sessions older than 1 year",
+    symbol: { ios: "calendar", android: "calendar_month", web: "calendar_month" },
+  },
+  {
+    value: "6_months",
+    label: "6 months",
+    description: "Auto-delete sessions older than 6 months",
+    symbol: { ios: "calendar.badge.clock", android: "event_repeat", web: "event_repeat" },
+  },
 ];
 
 const BRIDGE_ICON = {
@@ -116,7 +137,10 @@ export const DataScreen = () => {
                           isSelected ? "bg-surface" : "bg-surface/30",
                         )}
                       >
-                        <Radio />
+                        <RadioIconIndicator
+                          symbol={opt.symbol}
+                          isSelected={isSelected}
+                        />
                         <View className="flex-1 gap-0.5">
                           <AppText className="text-base font-medium text-foreground">
                             {opt.label}

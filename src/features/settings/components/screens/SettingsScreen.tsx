@@ -1,5 +1,4 @@
-import { StyleSheet, View } from "react-native";
-import { ScrollView } from "react-native";
+import { StyleSheet, View, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
