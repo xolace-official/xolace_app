@@ -1,17 +1,60 @@
 import { ScrollView, StyleSheet, View } from "react-native";
-import { RadioGroup, Radio, Separator } from "heroui-native";
+import { RadioGroup, Radio, Separator, useThemeColor } from "heroui-native";
+import { SymbolView } from "expo-symbols";
+import Animated, { ZoomIn, FadeInUp, FadeIn } from "react-native-reanimated";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
 import { useMirrorSettings, type MirrorTone } from "@/src/features/settings/hooks/use-mirror-settings";
+import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
 
-const TONE_OPTIONS: { value: MirrorTone; label: string; description: string }[] = [
-  { value: "adaptive", label: "Adaptive", description: "Reads your writing style and mirrors it back" },
-  { value: "poetic", label: "Poetic", description: "Evocative, metaphor-rich language" },
-  { value: "gentle", label: "Gentle", description: "Warm, simple language" },
-  { value: "direct", label: "Direct", description: "Clear, minimal — no metaphors" },
-  { value: "witnessed", label: "Witnessed", description: "Begins with a moment of recognition, then mirrors" },
+type ToneOption = {
+  value: MirrorTone;
+  label: string;
+  description: string;
+  symbol: CrossPlatformSymbol;
+};
+
+const TONE_OPTIONS: ToneOption[] = [
+  {
+    value: "adaptive",
+    label: "Adaptive",
+    description: "Reads your writing style and mirrors it back",
+    symbol: { ios: "waveform", android: "graphic_eq", web: "graphic_eq" },
+  },
+  {
+    value: "poetic",
+    label: "Poetic",
+    description: "Evocative, metaphor-rich language",
+    symbol: { ios: "moon.stars", android: "auto_awesome", web: "auto_awesome" },
+  },
+  {
+    value: "gentle",
+    label: "Gentle",
+    description: "Warm, simple language",
+    symbol: { ios: "heart", android: "favorite", web: "favorite" },
+  },
+  {
+    value: "direct",
+    label: "Direct",
+    description: "Clear, minimal — no metaphors",
+    symbol: { ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" },
+  },
+  {
+    value: "witnessed",
+    label: "Witnessed",
+    description: "Begins with a moment of recognition, then mirrors",
+    symbol: { ios: "eye", android: "visibility", web: "visibility" },
+  },
 ];
+
+const ENTERING = [
+  () => ZoomIn.springify(),
+  () => FadeInUp.duration(220),
+  () => ZoomIn.duration(220),
+  () => FadeIn.duration(180),
+  () => FadeIn.duration(260),
+] as const;
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
@@ -21,6 +64,9 @@ const styles = StyleSheet.create({
 
 export const MirrorScreen = () => {
   const { mirrorTone, setMirrorTone } = useMirrorSettings();
+  // When a Radio is selected, the indicator fills with `accent`, so the symbol
+  // sitting on top must use `accent-foreground` (the contrast color) to be visible.
+  const accentForeground = useThemeColor("accent-foreground") as string;
 
   return (
     <ScrollView
@@ -42,15 +88,32 @@ export const MirrorScreen = () => {
             {TONE_OPTIONS.map((opt, index) => (
               <View key={opt.value}>
                 <RadioGroup.Item value={opt.value} className="px-5 py-4">
-                  <View className="flex-1 gap-0.5 pr-3">
-                    <AppText className="text-base font-medium text-foreground">
-                      {opt.label}
-                    </AppText>
-                    <AppText className="text-sm text-foreground/50">
-                      {opt.description}
-                    </AppText>
-                  </View>
-                  <Radio />
+                  {({ isSelected }) => (
+                    <>
+                      <View className="flex-1 gap-0.5 pr-3">
+                        <AppText className="text-base font-medium text-foreground">
+                          {opt.label}
+                        </AppText>
+                        <AppText className="text-sm text-foreground/50">
+                          {opt.description}
+                        </AppText>
+                      </View>
+                      <Radio>
+                        <Radio.Indicator>
+                          {isSelected && (
+                            <Animated.View entering={ENTERING[index]()}>
+                              <SymbolView
+                                name={opt.symbol}
+                                size={14}
+                                weight="bold"
+                                tintColor={accentForeground}
+                              />
+                            </Animated.View>
+                          )}
+                        </Radio.Indicator>
+                      </Radio>
+                    </>
+                  )}
                 </RadioGroup.Item>
                 {index < TONE_OPTIONS.length - 1 && <Separator className="mx-5" />}
               </View>

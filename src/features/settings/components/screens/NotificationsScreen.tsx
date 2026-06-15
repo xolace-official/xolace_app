@@ -1,8 +1,8 @@
 import { ScrollView, StyleSheet, View } from "react-native";
-import { RadioGroup, Radio, Separator } from "heroui-native";
+import { RadioGroup, Radio, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
+import { cn } from "@/src/lib/utils";
 import { AppText } from "@/src/components/shared/app-text";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
 import { SettingsRow } from "@/src/features/settings/components/settings-row";
@@ -13,7 +13,6 @@ import {
 } from "@/src/features/settings/hooks/use-notification-settings";
 import {
   NOTIFICATIONS_ICON,
-  REACH_ICON,
   QUIET_HOURS_ICON,
 } from "@/src/features/settings/components/settings-icons";
 
@@ -118,29 +117,36 @@ export const NotificationsScreen = () => {
             transition={{ type: "timing", duration: 280, delay: 60, easing: EASE }}
           >
             <SettingsSection title="How I reach out">
-              <RadioGroup
-                value={reach}
-                onValueChange={(v) => setReach(v as NotificationReach)}
-              >
-                {REACH_OPTIONS.map((opt, index) => (
-                  <View key={opt.value}>
-                    <RadioGroup.Item value={opt.value} className="px-5 py-4">
-                      <View className="flex-1 gap-0.5 pr-3">
-                        <AppText className="text-base font-medium text-foreground">
-                          {opt.label}
-                        </AppText>
-                        <AppText className="text-sm text-foreground/50">
-                          {opt.description}
-                        </AppText>
-                      </View>
-                      <Radio />
+              <View className="px-5">
+                <RadioGroup
+                  value={reach}
+                  onValueChange={(v) => setReach(v as NotificationReach)}
+                  className="gap-2"
+                >
+                  {REACH_OPTIONS.map((opt) => (
+                    <RadioGroup.Item key={opt.value} value={opt.value}>
+                      {({ isSelected }) => (
+                        <View
+                          className={cn(
+                            "flex-row items-center gap-4 px-4 py-4 rounded-2xl",
+                            isSelected ? "bg-surface" : "bg-surface/30",
+                          )}
+                        >
+                          <Radio />
+                          <View className="flex-1 gap-0.5">
+                            <AppText className="text-base font-medium text-foreground">
+                              {opt.label}
+                            </AppText>
+                            <AppText className="text-sm text-foreground/50">
+                              {opt.description}
+                            </AppText>
+                          </View>
+                        </View>
+                      )}
                     </RadioGroup.Item>
-                    {index < REACH_OPTIONS.length - 1 && (
-                      <Separator className="mx-5" />
-                    )}
-                  </View>
-                ))}
-              </RadioGroup>
+                  ))}
+                </RadioGroup>
+              </View>
             </SettingsSection>
           </EaseView>
 
@@ -162,55 +168,67 @@ export const NotificationsScreen = () => {
 
               {quietWindow && (
                 <>
-                  <Separator className="mx-5" />
-                  <View className="px-5 pt-4 pb-1">
+                  <View className="px-5 pt-5 pb-1">
                     <AppText className="text-xs font-semibold text-foreground/40 uppercase tracking-wider">
                       Not before
                     </AppText>
                   </View>
-                  <RadioGroup
-                    value={String(quietWindow.dontReachBefore)}
-                    onValueChange={handleBeforeChange}
-                  >
-                    {BEFORE_OPTIONS.map((opt, index) => (
-                      <View key={opt.value}>
-                        <RadioGroup.Item value={String(opt.value)} className="px-5 py-3">
-                          <AppText className="flex-1 text-base text-foreground">
-                            {opt.label}
-                          </AppText>
-                          <Radio />
+                  <View className="px-5">
+                    <RadioGroup
+                      value={String(quietWindow.dontReachBefore)}
+                      onValueChange={handleBeforeChange}
+                      className="gap-1.5"
+                    >
+                      {BEFORE_OPTIONS.map((opt) => (
+                        <RadioGroup.Item key={opt.value} value={String(opt.value)}>
+                          {({ isSelected }) => (
+                            <View
+                              className={cn(
+                                "flex-row items-center gap-4 px-4 py-3 rounded-xl",
+                                isSelected ? "bg-surface" : "bg-surface/30",
+                              )}
+                            >
+                              <Radio />
+                              <AppText className="flex-1 text-base text-foreground">
+                                {opt.label}
+                              </AppText>
+                            </View>
+                          )}
                         </RadioGroup.Item>
-                        {index < BEFORE_OPTIONS.length - 1 && (
-                          <Separator className="mx-5" />
-                        )}
-                      </View>
-                    ))}
-                  </RadioGroup>
+                      ))}
+                    </RadioGroup>
+                  </View>
 
-                  <Separator className="mx-5 mt-2" />
-                  <View className="px-5 pt-4 pb-1">
+                  <View className="px-5 pt-5 pb-1">
                     <AppText className="text-xs font-semibold text-foreground/40 uppercase tracking-wider">
                       Not after
                     </AppText>
                   </View>
-                  <RadioGroup
-                    value={String(quietWindow.dontReachAfter)}
-                    onValueChange={handleAfterChange}
-                  >
-                    {AFTER_OPTIONS.map((opt, index) => (
-                      <View key={opt.value}>
-                        <RadioGroup.Item value={String(opt.value)} className="px-5 py-3">
-                          <AppText className="flex-1 text-base text-foreground">
-                            {opt.label}
-                          </AppText>
-                          <Radio />
+                  <View className="px-5 pb-4">
+                    <RadioGroup
+                      value={String(quietWindow.dontReachAfter)}
+                      onValueChange={handleAfterChange}
+                      className="gap-1.5"
+                    >
+                      {AFTER_OPTIONS.map((opt) => (
+                        <RadioGroup.Item key={opt.value} value={String(opt.value)}>
+                          {({ isSelected }) => (
+                            <View
+                              className={cn(
+                                "flex-row items-center gap-4 px-4 py-3 rounded-xl",
+                                isSelected ? "bg-surface" : "bg-surface/30",
+                              )}
+                            >
+                              <Radio />
+                              <AppText className="flex-1 text-base text-foreground">
+                                {opt.label}
+                              </AppText>
+                            </View>
+                          )}
                         </RadioGroup.Item>
-                        {index < AFTER_OPTIONS.length - 1 && (
-                          <Separator className="mx-5" />
-                        )}
-                      </View>
-                    ))}
-                  </RadioGroup>
+                      ))}
+                    </RadioGroup>
+                  </View>
                 </>
               )}
             </SettingsSection>

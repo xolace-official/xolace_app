@@ -1,8 +1,9 @@
 import { ScrollView, StyleSheet, View } from "react-native";
-import { RadioGroup, Radio, Separator, useToast } from "heroui-native";
+import { RadioGroup, Radio, useToast } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
+import { cn } from "@/src/lib/utils";
 import { AppText } from "@/src/components/shared/app-text";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
 import { SettingsRow } from "@/src/features/settings/components/settings-row";
@@ -11,7 +12,6 @@ import { useDataSettings, type RetentionOption } from "@/src/features/settings/h
 import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
 import {
   SHARE_ICON,
-  RETENTION_ICON,
   DELETE_DATA_ICON,
   DELETE_ACCOUNT_ICON,
 } from "@/src/features/settings/components/settings-icons";
@@ -101,29 +101,36 @@ export const DataScreen = () => {
           transition={{ type: "timing", duration: 280, delay: 60, easing: EASE }}
         >
           <SettingsSection title="Retention">
-            <RadioGroup
-              value={retention}
-              onValueChange={(v) => setRetention(v as RetentionOption)}
-            >
-              {RETENTION_OPTIONS.map((opt, index) => (
-                <View key={opt.value}>
-                  <RadioGroup.Item value={opt.value} className="px-5 py-4">
-                    <View className="flex-1 gap-0.5 pr-3">
-                      <AppText className="text-base font-medium text-foreground">
-                        {opt.label}
-                      </AppText>
-                      <AppText className="text-sm text-foreground/50">
-                        {opt.description}
-                      </AppText>
-                    </View>
-                    <Radio />
+            <View className="px-5">
+              <RadioGroup
+                value={retention}
+                onValueChange={(v) => setRetention(v as RetentionOption)}
+                className="gap-2"
+              >
+                {RETENTION_OPTIONS.map((opt) => (
+                  <RadioGroup.Item key={opt.value} value={opt.value}>
+                    {({ isSelected }) => (
+                      <View
+                        className={cn(
+                          "flex-row items-center gap-4 px-4 py-4 rounded-2xl",
+                          isSelected ? "bg-surface" : "bg-surface/30",
+                        )}
+                      >
+                        <Radio />
+                        <View className="flex-1 gap-0.5">
+                          <AppText className="text-base font-medium text-foreground">
+                            {opt.label}
+                          </AppText>
+                          <AppText className="text-sm text-foreground/50">
+                            {opt.description}
+                          </AppText>
+                        </View>
+                      </View>
+                    )}
                   </RadioGroup.Item>
-                  {index < RETENTION_OPTIONS.length - 1 && (
-                    <Separator className="mx-5" />
-                  )}
-                </View>
-              ))}
-            </RadioGroup>
+                ))}
+              </RadioGroup>
+            </View>
           </SettingsSection>
         </EaseView>
 
