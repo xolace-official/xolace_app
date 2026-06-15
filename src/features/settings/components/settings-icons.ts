@@ -89,3 +89,13 @@ export const EMAIL_ICON: CrossPlatformSymbol = {
   android: "email",
   web: "email",
 };
+export const SHIELD_ICON: CrossPlatformSymbol = {
+  ios: "lock.shield",
+  android: "shield",
+  web: "shield",
+};
+export const HEART_ICON: CrossPlatformSymbol = {
+  ios: "heart",
+  android: "favorite",
+  web: "favorite",
+};
