@@ -35,11 +35,15 @@ export const SettingsScreen = () => {
   const themeDisplay =
     storedTheme === "system" ? "System" : storedTheme === "light" ? "Light" : "Dark";
 
-  const mirrorToneRaw = preferences?.mirrorTone ?? "adaptive";
-  const mirrorToneDisplay =
-    mirrorToneRaw.charAt(0).toUpperCase() + mirrorToneRaw.slice(1);
+  const mirrorToneDisplay = preferences
+    ? preferences.mirrorTone.charAt(0).toUpperCase() + preferences.mirrorTone.slice(1)
+    : "—";
 
-  const notificationsDisplay = preferences?.notifications?.enabled ? "On" : "Off";
+  const notificationsDisplay = preferences
+    ? preferences.notifications?.enabled
+      ? "On"
+      : "Off"
+    : "—";
 
   const signInMethod = (() => {
     if (!user) return "—";

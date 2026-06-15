@@ -13,11 +13,11 @@ export const useAccountSettings = () => {
 
   const signInMethod = (() => {
     if (!user) return "—";
-    const ext = user.externalAccounts?.[0];
-    if (!ext) return "Email";
-    const provider = (ext.provider ?? "").toLowerCase();
-    if (provider.includes("apple")) return "Apple";
-    if (provider.includes("google")) return "Google";
+    for (const ext of user.externalAccounts ?? []) {
+      const provider = (ext.provider ?? "").toLowerCase();
+      if (provider.includes("apple")) return "Apple";
+      if (provider.includes("google")) return "Google";
+    }
     return "Email";
   })();
 
