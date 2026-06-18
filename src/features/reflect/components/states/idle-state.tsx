@@ -12,7 +12,7 @@ import {
   useThemeColor,
 } from "heroui-native";
 import { useNavigation, useRouter } from "expo-router";
-import { useHeaderHeight } from "@react-navigation/elements";
+import { useHeaderHeight } from "expo-router/react-navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";

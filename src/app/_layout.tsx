@@ -10,7 +10,7 @@ import '@/src/lib/theme-bootstrap';
 import { Settings } from 'react-native-pulsar';
 
 
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { useEffect, useRef, useState } from 'react';
 import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
 import { useUniwind } from 'uniwind'
@@ -24,7 +24,7 @@ import {
   SpaceGrotesk_700Bold,
   useFonts
 } from '@expo-google-fonts/space-grotesk';
-import { AppMetrics, AppMetricsRoot } from 'expo-observe';
+import { ObserveRoot, useObserve } from 'expo-observe';
 
 import { RootProvider } from '@/src/providers/root-provider';
 import { useAppStore } from '@/src/store/store';
@@ -61,12 +61,13 @@ const AppContent = () => {
   const pathname = usePathname();
   const params = useGlobalSearchParams();
   const previousPathname = useRef<string | undefined>(undefined);
+  const { markInteractive } = useObserve();
 
   useEffect(() => {
     if (!isAuthLoading) {
-      AppMetrics.markInteractive();
+      markInteractive();
     }
-  }, [isAuthLoading]);
+  }, [isAuthLoading, markInteractive]);
 
   useEffect(() => {
     if (previousPathname.current !== pathname) {
@@ -157,4 +158,4 @@ function RootLayout() {
   );
 }
 
-export default AppMetricsRoot.wrap(RootLayout);
+export default ObserveRoot.wrap(RootLayout);

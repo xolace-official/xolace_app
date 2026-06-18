@@ -11,7 +11,7 @@ import type { FrameStep } from "@/src/features/onboarding/frame-steps";
 const SPRING_CONFIG = { damping: 60, stiffness: 280, mass: 6 };
 const INTERVAL_MS = 3200;
 const ABSOLUTE_OVERFLOW_STYLE = StyleSheet.create({
-  fill: { ...StyleSheet.absoluteFillObject, overflow: "hidden" },
+  fill: { ...StyleSheet.absoluteFill, overflow: "hidden" },
   row: {
     flex: 1,
     flexDirection: "row",

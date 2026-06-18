@@ -1,20 +1,18 @@
-import { Ionicons } from '@expo/vector-icons';
-
-import AntDesign from '@expo/vector-icons/AntDesign';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
-import { cn } from 'heroui-native';
+import { SymbolView } from 'expo-symbols';
+import { cn, useThemeColor } from 'heroui-native';
 import { playSoftPress } from '@/src/lib/haptics';
 import { type FC } from 'react';
 import { TouchableOpacity } from 'react-native';
 import Animated, { FadeOut, ZoomIn } from 'react-native-reanimated';
-import { withUniwind } from 'uniwind';
 import { useAppTheme } from '@/src/context/app-theme-context';
 
-const StyledIonicons = withUniwind(Ionicons);
-const StyledAntDesign = withUniwind(AntDesign);
+const MOON_ICON = { ios: 'moon.fill', android: 'dark_mode', web: 'dark_mode' } as const;
+const SUN_ICON = { ios: 'sun.max.fill', android: 'light_mode', web: 'light_mode' } as const;
 
 export const ThemeToggle: FC = () => {
   const { toggleTheme, isLight } = useAppTheme();
+  const tintColor = useThemeColor('foreground') as string;
 
   const isLGAvailable = isLiquidGlassAvailable();
 
@@ -32,11 +30,11 @@ export const ThemeToggle: FC = () => {
     >
       {isLight ? (
         <Animated.View key="moon" entering={ZoomIn} exiting={FadeOut}>
-          <StyledAntDesign name="moon" size={20} className="text-foreground" />
+          <SymbolView name={MOON_ICON} size={20} tintColor={tintColor} />
         </Animated.View>
       ) : (
         <Animated.View key="sun" entering={ZoomIn} exiting={FadeOut}>
-          <StyledIonicons name="sunny" size={20} className="text-foreground" />
+          <SymbolView name={SUN_ICON} size={20} tintColor={tintColor} />
         </Animated.View>
       )}
     </TouchableOpacity>
