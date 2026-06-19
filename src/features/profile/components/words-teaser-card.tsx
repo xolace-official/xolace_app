@@ -22,6 +22,8 @@ const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 // Representative counts behind the frosted badges — never real values.
 const PLACEHOLDER_COUNTS = [12, 7, 4];
 const FALLBACK_WORDS = ["still", "here", "quiet"];
+// Stable positional keys — rows are fixed slots (clear → fogged), never reordered.
+const ROW_SLOTS = ["primary", "secondary", "tertiary"] as const;
 
 const WORD_W = 190;
 const WORD_H = 22;
@@ -38,6 +40,7 @@ function BlurredWord({ text, color }: { text: string; color: string }) {
 
   return (
     <Canvas style={{ width: WORD_W, height: WORD_H }}>
+      {/* eslint-disable-next-line react-perf/jsx-no-jsx-as-prop -- Skia <Group layer> requires a Paint JSX element; React Compiler stabilizes it */}
       <Group layer={<Paint><Blur blur={4} /></Paint>}>
         <Text x={0} y={WORD_H / 2 + 5} text={text} font={font} color={color} />
       </Group>
@@ -59,7 +62,7 @@ export function WordsTeaserCard({ words, onUnlock, onView, staggerDelay = 360 }:
   // Three rows: the top word reads clear; the rest are blurred. Counts stay
   // frosted on every row (the recurrence is the premium part).
   const source = words.length > 0 ? words : FALLBACK_WORDS;
-  const rows = [0, 1, 2].map((i) => source[i] ?? FALLBACK_WORDS[i]);
+  const rows = ROW_SLOTS.map((slot, i) => ({ slot, word: source[i] ?? FALLBACK_WORDS[i] }));
 
   return (
     <EaseView
@@ -84,8 +87,8 @@ export function WordsTeaserCard({ words, onUnlock, onView, staggerDelay = 360 }:
 
           {/* Rows: top word clear, others blurred — counts frosted throughout. */}
           <View className="px-5 pb-4 gap-2.5">
-            {rows.map((word, i) => (
-              <View key={`${word}-${i}`} className="flex-row items-center justify-between">
+            {rows.map(({ slot, word }, i) => (
+              <View key={slot} className="flex-row items-center justify-between">
                 {i === 0 ? (
                   <AppText className="text-sm" style={{ color: accentHex + "CC" }}>
                     {word}

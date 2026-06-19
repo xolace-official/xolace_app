@@ -25,11 +25,12 @@ export function FrostedCount({ value }: { value: number }) {
 
   return (
     <View
-      className="rounded-lg overflow-hidden"
-      style={{ width: W, height: H, borderWidth: 1, borderColor: muted + "1F" }}
+      className="rounded-lg overflow-hidden border"
+      style={{ width: W, height: H, borderColor: muted + "1F" }}
     >
       <Canvas style={{ width: W, height: H }}>
         <Rect x={0} y={0} width={W} height={H} color={accent + "12"} />
+        {/* eslint-disable-next-line react-perf/jsx-no-jsx-as-prop -- Skia <Group layer> requires a Paint JSX element; React Compiler stabilizes it */}
         <Group layer={<Paint><Blur blur={2.8} /></Paint>}>
           <Text x={x} y={y} text={label} font={font} color={muted + "E6"} />
         </Group>

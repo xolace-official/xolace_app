@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Pressable, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import Animated, {
   interpolate,
   interpolateColor,
@@ -80,25 +80,15 @@ function IntensityBar({
   if (intensity === null) {
     return (
       <View
-        style={{
-          height: BAR_MIN_H,
-          borderRadius: 6,
-          backgroundColor: accentHex + "30",
-        }}
+        className="rounded-md"
+        style={{ height: BAR_MIN_H, backgroundColor: accentHex + "30" }}
       />
     );
   }
 
   return (
     <Animated.View
-      style={[
-        {
-          borderRadius: 8,
-          borderCurve: "continuous",
-          opacity: isToday || isPeak ? 1 : 0.65,
-        },
-        rBarStyle,
-      ]}
+      style={[styles.bar, isToday || isPeak ? styles.barFull : styles.barDim, rBarStyle]}
     />
   );
 }
@@ -124,10 +114,7 @@ function EarlierWeeksGate({ width, onPress }: { width: number; onPress: () => vo
       </View>
 
       {/* Dimmed navigator sitting in the frosted region. */}
-      <View
-        className="flex-1 flex-row items-center justify-center gap-2.5"
-        style={{ opacity: 0.5 }}
-      >
+      <View className="flex-1 flex-row items-center justify-center gap-2.5 opacity-50">
         <SymbolView name="chevron.left" size={11} tintColor={muted} />
         <AppText className="text-[12px] tracking-wide" style={{ color: muted }}>
           Earlier weeks
@@ -184,9 +171,9 @@ export function WeekIntensityCard({
           <View className="flex-row" style={{ height: BAR_MAX_H + 20 }}>
             {/* Bars column */}
             <View className="flex-1 flex-row items-end gap-1.5">
-              {days.map((d, i) => (
-                <View key={i} className="flex-1 items-center gap-1.5">
-                  <View style={{ flex: 1, justifyContent: "flex-end", width: "100%" }}>
+              {days.map((d) => (
+                <View key={d.dayName} className="flex-1 items-center gap-1.5">
+                  <View className="flex-1 justify-end w-full">
                     <IntensityBar
                       intensity={d.intensity}
                       isToday={d.isToday}
@@ -237,3 +224,9 @@ export function WeekIntensityCard({
     </EaseView>
   );
 }
+
+const styles = StyleSheet.create({
+  bar: { borderRadius: 8, borderCurve: "continuous" },
+  barFull: { opacity: 1 },
+  barDim: { opacity: 0.65 },
+});

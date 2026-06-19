@@ -46,16 +46,8 @@ export function ProfileHero({ displayName, firstSessionAt, sessionCount }: Props
         transition={TRANSITION}
       >
         <View
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            backgroundColor: emberColor + "26",
-            borderWidth: 1.5,
-            borderColor: emberColor + "55",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-20 h-20 rounded-full items-center justify-center border-[1.5px]"
+          style={{ backgroundColor: emberColor + "26", borderColor: emberColor + "55" }}
         >
           <SymbolView name="flame.fill" size={34} tintColor={emberColor} />
         </View>

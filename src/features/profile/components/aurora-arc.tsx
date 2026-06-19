@@ -1,4 +1,4 @@
-import { useWindowDimensions } from "react-native";
+import { StyleSheet, useWindowDimensions } from "react-native";
 import { Canvas, Circle, RadialGradient, vec } from "@shopify/react-native-skia";
 import { useTokenColor } from "../hooks/use-token-color";
 
@@ -19,10 +19,7 @@ export function AuroraArc({ height = 320 }: Props) {
   const accentCenter = vec(width * 0.18, 0);
 
   return (
-    <Canvas
-      style={{ position: "absolute", top: 0, left: 0, width, height }}
-      pointerEvents="none"
-    >
+    <Canvas style={[styles.canvas, { width, height }]} pointerEvents="none">
       <Circle c={accentCenter} r={width * 0.62}>
         <RadialGradient
           c={accentCenter}
@@ -40,3 +37,7 @@ export function AuroraArc({ height = 320 }: Props) {
     </Canvas>
   );
 }
+
+const styles = StyleSheet.create({
+  canvas: { position: "absolute", top: 0, left: 0 },
+});

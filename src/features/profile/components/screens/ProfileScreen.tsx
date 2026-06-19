@@ -63,7 +63,7 @@ export function ProfileScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        style={{ backgroundColor: "transparent" }}
+        className="bg-transparent"
         contentContainerStyle={{
           paddingTop: insets.top + 36,
           paddingBottom: insets.bottom + 40,

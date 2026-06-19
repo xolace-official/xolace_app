@@ -70,8 +70,8 @@ export function MirrorLines({ moodDelta, typicalPattern, staggerDelay = 240 }: P
             className={`flex-row items-center gap-3.5 py-4 ${i > 0 ? "border-t border-border/50" : ""}`}
           >
             <View
-              className="items-center justify-center rounded-2xl"
-              style={{ width: 36, height: 36, backgroundColor: accent + "22" }}
+              className="items-center justify-center rounded-2xl w-9 h-9"
+              style={{ backgroundColor: accent + "22" }}
             >
               <SymbolView name={row.icon} size={18} tintColor={accent} />
             </View>
