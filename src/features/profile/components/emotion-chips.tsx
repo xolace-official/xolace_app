@@ -20,17 +20,17 @@ export function EmotionChips({ tags, staggerDelay = 180 }: Props) {
       animate={{ opacity: 1, translateY: 0 }}
       transition={{ type: "timing", duration: 280, easing: EASE, delay: staggerDelay }}
     >
-      <View className="mt-6 px-6">
-        <AppText className="text-xs text-muted mb-3 tracking-widest uppercase">
+      <View className="mt-8 px-5">
+        <AppText className="text-[11px] text-muted mb-3.5 tracking-widest uppercase">
           what keeps showing up
         </AppText>
-        <View className="flex-row flex-wrap gap-2">
+        <View className="flex-row flex-wrap gap-2.5">
           {visible.map((tag) => (
             <View
               key={tag}
-              className="px-3 py-1.5 rounded-full bg-resonance border border-resonance-foreground/10"
+              className="px-4 py-2 rounded-full bg-resonance border border-resonance-foreground/20"
             >
-              <AppText className="text-sm text-resonance-foreground lowercase">
+              <AppText className="text-[15px] text-resonance-foreground lowercase">
                 {tag}
               </AppText>
             </View>

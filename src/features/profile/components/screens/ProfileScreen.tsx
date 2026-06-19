@@ -3,8 +3,9 @@ import { Stack, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
+import { AuroraArc } from "../aurora-arc";
 import { ProfileHero } from "../profile-hero";
-import { PulseRow } from "../pulse-row";
+import { StatBand } from "../stat-band";
 import { EmotionChips } from "../emotion-chips";
 import { MirrorLines } from "../mirror-lines";
 import { WeekIntensityCard } from "../week-intensity-card";
@@ -14,6 +15,7 @@ import { useMoodDelta } from "../../hooks/use-mood-delta";
 import { useWeekIntensity } from "../../hooks/use-week-intensity";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function ProfileScreen() {
   const router = useRouter();
@@ -29,8 +31,15 @@ export function ProfileScreen() {
   const hasEnoughForChart = sessionCount >= 1;
   const hasEnoughForWords = (summary?.recentWords?.length ?? 0) > 0;
 
+  const usualDay =
+    hasEnoughForRhythm && summary?.typicalUsagePattern
+      ? SHORT_DAYS[summary.typicalUsagePattern.dayOfWeek]
+      : null;
+
   return (
-    <>
+    <View className="flex-1 bg-background">
+      <AuroraArc height={insets.top + 280} />
+
       <Stack.Screen
         options={{
           animation: "slide_from_bottom",
@@ -51,12 +60,11 @@ export function ProfileScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        style={{ backgroundColor: "transparent" }}
         contentContainerStyle={{
-          paddingTop: insets.top + 44,
-          paddingBottom: insets.bottom + 32,
-          gap: 0,
+          paddingTop: insets.top + 36,
+          paddingBottom: insets.bottom + 40,
         }}
-        className="flex-1 bg-background"
       >
         {summary && (
           <ProfileHero
@@ -67,18 +75,16 @@ export function ProfileScreen() {
         )}
 
         {sessionCount > 0 && summary && (
-          <PulseRow
+          <StatBand
             sessionCount={summary.sessionCount}
             currentStreak={summary.currentStreak}
+            usualDay={usualDay}
             staggerDelay={120}
           />
         )}
 
         {hasEnoughForChips && summary && (
-          <EmotionChips
-            tags={summary.dominantEmotionTags}
-            staggerDelay={180}
-          />
+          <EmotionChips tags={summary.dominantEmotionTags} staggerDelay={180} />
         )}
 
         {hasEnoughForMirrorLines && (
@@ -89,19 +95,18 @@ export function ProfileScreen() {
           />
         )}
 
-        {/* Section divider */}
         {hasEnoughForChart && (
           <EaseView
             initialAnimate={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ type: "timing", duration: 280, easing: EASE, delay: 280 }}
           >
-            <View className="flex-row items-center px-6 my-6 gap-3">
-              <View className="flex-1 h-px bg-border/40" />
-              <AppText className="text-[10px] text-muted/50 tracking-widest uppercase">
+            <View className="flex-row items-center px-6 mt-10 mb-6 gap-3">
+              <View className="flex-1 h-px bg-separator/50" />
+              <AppText className="text-[10px] text-muted tracking-widest uppercase">
                 your insights
               </AppText>
-              <View className="flex-1 h-px bg-border/40" />
+              <View className="flex-1 h-px bg-separator/50" />
             </View>
           </EaseView>
         )}
@@ -116,16 +121,11 @@ export function ProfileScreen() {
         )}
 
         {hasEnoughForWords && summary && (
-          <View className="mt-3">
-            <WordsTeaserCard
-              words={summary.recentWords}
-              staggerDelay={360}
-            />
+          <View className="mt-4">
+            <WordsTeaserCard words={summary.recentWords} staggerDelay={360} />
           </View>
         )}
-
-        {/* "See all your patterns" — hidden in v1 until Wave 2 insights screen */}
       </ScrollView>
-    </>
+    </View>
   );
 }

@@ -9,6 +9,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
@@ -101,17 +102,18 @@ export function WeekIntensityCard({ days, peakDay, hasData, staggerDelay = 300 }
   const accentHex = useThemeColor("accent") as string;
   const emberHex = useThemeColor("ember") as string;
   const mutedHex = useThemeColor("muted") as string;
+  const surfaceHex = useThemeColor("surface") as string;
 
   return (
     <EaseView
       initialAnimate={{ opacity: 0, translateY: 8 }}
       animate={{ opacity: 1, translateY: 0 }}
       transition={{ type: "timing", duration: 280, easing: EASE, delay: staggerDelay }}
-      className="mx-4"
+      className="mx-5"
     >
-      <View className="rounded-2xl bg-surface border border-border/40 overflow-hidden">
-        <View className="px-4 pt-4 pb-3">
-          <AppText className="text-xs font-medium text-foreground/50 mb-4 tracking-wide">
+      <View className="rounded-3xl bg-surface border border-border/60 overflow-hidden">
+        <View className="px-5 pt-5 pb-4">
+          <AppText className="text-[11px] font-medium text-muted mb-5 tracking-widest uppercase">
             This week
           </AppText>
 
@@ -175,29 +177,28 @@ export function WeekIntensityCard({ days, peakDay, hasData, staggerDelay = 300 }
           )}
         </View>
 
-        {/* Earlier-weeks premium teaser — blurred row */}
-        <View className="relative border-t border-border/25" style={{ height: 40 }}>
-          {/* Placeholder text behind the blur */}
-          <View className="absolute inset-0 flex-row items-center px-4">
-            <AppText className="text-[10px] text-muted/40 tracking-widest">
-              · · · · · · earlier weeks · · · · · ·
+        {/* Earlier-weeks premium teaser — frosted, blended into the surface */}
+        <View className="relative border-t border-border/30" style={{ height: 46 }}>
+          {/* Faint ghost data behind the frost */}
+          <View className="absolute inset-0 flex-row items-center px-5">
+            <AppText className="text-[10px] text-muted/35 tracking-[0.3em]">
+              · · · · · · · · · · · · · · · · · · ·
             </AppText>
           </View>
 
-          <BlurView
-            intensity={70}
-            tint="default"
-            className="absolute inset-0 flex-row items-center justify-center gap-1.5"
-          >
-            <SymbolView
-              name="lock.fill"
-              size={9}
-              tintColor={mutedHex + "99"}
-            />
-            <AppText className="text-[10px]" style={{ color: mutedHex + "99" }}>
+          <BlurView intensity={18} tint="default" className="absolute inset-0" />
+          {/* Surface-tinted scrim so the blur reads as a soft fade, not a grey bar */}
+          <LinearGradient
+            colors={[surfaceHex + "70", surfaceHex + "E6"]}
+            className="absolute inset-0"
+          />
+
+          <View className="absolute inset-0 flex-row items-center justify-center gap-2">
+            <SymbolView name="lock.fill" size={10} tintColor={mutedHex + "AA"} />
+            <AppText className="text-[11px] tracking-wide" style={{ color: mutedHex + "DD" }}>
               Earlier weeks
             </AppText>
-          </BlurView>
+          </View>
         </View>
       </View>
     </EaseView>

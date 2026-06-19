@@ -1,0 +1,49 @@
+import { View } from "react-native";
+import { EaseView } from "react-native-ease/uniwind";
+import { AppText } from "@/src/components/shared/app-text";
+
+type Stat = { value: string; label: string; amber?: boolean };
+
+type Props = {
+  sessionCount: number;
+  currentStreak: number;
+  usualDay: string | null;
+  staggerDelay?: number;
+};
+
+const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
+
+export function StatBand({ sessionCount, currentStreak, usualDay, staggerDelay = 120 }: Props) {
+  const stats: Stat[] = [
+    { value: String(sessionCount), label: sessionCount === 1 ? "Moment" : "Moments" },
+    { value: currentStreak > 0 ? String(currentStreak) : "—", label: "Day streak", amber: currentStreak > 0 },
+  ];
+  if (usualDay) stats.push({ value: usualDay, label: "Usual day" });
+
+  return (
+    <EaseView
+      initialAnimate={{ opacity: 0, translateY: 8 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: "timing", duration: 300, easing: EASE, delay: staggerDelay }}
+      className="px-5 mt-7"
+    >
+      <View className="flex-row rounded-3xl bg-surface border border-border/60 py-5 px-3">
+        {stats.map((s, i) => (
+          <View
+            key={s.label}
+            className={`flex-1 items-center px-1.5 ${i > 0 ? "border-l border-separator/50" : ""}`}
+          >
+            <AppText
+              className={`text-[21px] font-bold tracking-tight ${s.amber ? "text-ember" : "text-foreground"}`}
+            >
+              {s.value}
+            </AppText>
+            <AppText className="text-[10.5px] text-muted/80 tracking-wide uppercase mt-1">
+              {s.label}
+            </AppText>
+          </View>
+        ))}
+      </View>
+    </EaseView>
+  );
+}

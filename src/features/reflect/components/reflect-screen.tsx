@@ -244,12 +244,14 @@ export const ReflectScreen = () => {
   return (
     <View className="flex-1 bg-background" style={safeAreaStyle}>
       <Stack.Screen options={stackScreenOptions} />
-      <Stack.Toolbar placement="right">
+      <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
           hidden={!isIdle}
           icon="person.circle"
           onPress={() => router.push("/(protected)/profile")}
         />
+      </Stack.Toolbar>
+      <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button
           hidden={!isIdle}
           icon="lifepreserver"

@@ -1,0 +1,42 @@
+import { useWindowDimensions } from "react-native";
+import { Canvas, Circle, RadialGradient, vec } from "@shopify/react-native-skia";
+import { useThemeColor } from "heroui-native";
+
+type Props = { height?: number };
+
+/**
+ * Soft warm "aurora" sweep behind the profile hero.
+ * Two overlapping radial gradients (ember + accent) that fade to
+ * transparent — static, no animation. Sits absolutely at the top of
+ * the screen, behind the transparent header and hero.
+ */
+export function AuroraArc({ height = 320 }: Props) {
+  const { width } = useWindowDimensions();
+  const ember = useThemeColor("ember") as string;
+  const accent = useThemeColor("accent") as string;
+
+  const emberCenter = vec(width * 0.5, height * 0.04);
+  const accentCenter = vec(width * 0.18, 0);
+
+  return (
+    <Canvas
+      style={{ position: "absolute", top: 0, left: 0, width, height }}
+      pointerEvents="none"
+    >
+      <Circle c={accentCenter} r={width * 0.62}>
+        <RadialGradient
+          c={accentCenter}
+          r={width * 0.62}
+          colors={[accent + "3A", accent + "00"]}
+        />
+      </Circle>
+      <Circle c={emberCenter} r={width * 0.8}>
+        <RadialGradient
+          c={emberCenter}
+          r={width * 0.8}
+          colors={[ember + "5C", ember + "1A", ember + "00"]}
+        />
+      </Circle>
+    </Canvas>
+  );
+}
