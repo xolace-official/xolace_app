@@ -91,6 +91,7 @@ export function useVentFlow(): UseVentFlowReturn {
   // Advance to 'gone' once TTS finishes
   useEffect(() => {
     if (playerStatus.didJustFinish && state === 'heard') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to expo-audio playback completion, an external-system event
       setState('gone');
     }
   }, [playerStatus.didJustFinish, state]);

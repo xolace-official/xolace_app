@@ -110,6 +110,7 @@ export function QuotesScreen() {
 
   useEffect(() => {
     if (!needsColdStart) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- in-flight flag guarding the async coldStart() side effect; not derivable from render state
     setIsColdStarting(true);
     coldStart().catch((e) => {
       console.error(e);
@@ -120,11 +121,11 @@ export function QuotesScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needsColdStart]);
 
-  useEffect(() => {
-    if (displayedQuote && isColdStarting) {
-      setIsColdStarting(false);
-    }
-  }, [displayedQuote, isColdStarting]);
+  // Clear the cold-start spinner as soon as a quote arrives — adjusted during
+  // render rather than via a useEffect to avoid a cascading render.
+  if (displayedQuote && isColdStarting) {
+    setIsColdStarting(false);
+  }
 
   useEffect(() => {
     if (viewedTrackedRef.current || isFirstVisit || isLoading || !displayedQuote) return;

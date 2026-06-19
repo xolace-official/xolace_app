@@ -69,7 +69,7 @@ export const ReflectScreen = () => {
     useScreenTransition(state.screen);
 
   const [showSpaceNameDialog, setShowSpaceNameDialog] = useState(false);
-  const firedSpaceNameDialog = useRef(false);
+  const [spaceNameDialogFired, setSpaceNameDialogFired] = useState(false);
   const [mirrorFeedbackOpen, setMirrorFeedbackOpen] = useState(false);
   const mirrorFeedbackShown = useRef(false);
 
@@ -101,18 +101,20 @@ export const ReflectScreen = () => {
     });
   }, [context?.profile, dispatch]);
 
-  useEffect(() => {
-    if (current !== "path-selection") return;
-    if (firedSpaceNameDialog.current) return;
-    if (!context?.preferences) return;
-    if (
-      context.preferences.spaceName ||
-      context.preferences.spaceNamePromptDismissed
-    )
-      return;
-    firedSpaceNameDialog.current = true;
+  // One-shot: open the space-name dialog the first time the user reaches
+  // path-selection without a name set. Adjusted during render with a state
+  // guard (not a ref — refs can't be read during render) rather than a
+  // useEffect, which avoids a cascading render.
+  if (
+    current === "path-selection" &&
+    !spaceNameDialogFired &&
+    context?.preferences &&
+    !context.preferences.spaceName &&
+    !context.preferences.spaceNamePromptDismissed
+  ) {
+    setSpaceNameDialogFired(true);
     setShowSpaceNameDialog(true);
-  }, [current, context?.preferences]);
+  }
 
   const renderScreen = (screen: ReflectionStateName, isOutgoing = false) => {
     switch (screen) {

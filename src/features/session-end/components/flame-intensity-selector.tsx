@@ -1,5 +1,5 @@
 import { View, Dimensions, StyleSheet } from "react-native";
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { SymbolView } from "expo-symbols";
 import { LinearGradient } from "expo-linear-gradient";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -45,7 +45,9 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
   // Stable relay so the memoized gesture never goes stale and is never
   // re-registered mid-gesture (which is what caused the drag crash).
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
   const notifyDragEnd = useRef((rating: number) => {
     onChangeRef.current(rating);
     Presets.plunk();
@@ -92,6 +94,7 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
           gradientWidth.set(withSpring((rating / FLAME_COUNT) * 100, SPRING_FILL));
           updateScales(rating);
         })
+        // eslint-disable-next-line react-hooks/refs -- notifyDragEnd's ref is read on the JS thread via scheduleOnRN at gesture end, never during render
         .onEnd((e) => {
           "worklet";
           const rating = Math.max(1, Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)));
@@ -140,7 +143,7 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
   return (
     <View className="gap-2">
       <GestureDetector gesture={panGesture}>
-        <Animated.View className="h-14 rounded-2xl overflow-hidden bg-surface/60">
+        <Animated.View className="h-14 rounded-2xl overflow-hidden bg-default-soft-hover">
           {/* Gradient fill bar */}
           <Animated.View
             style={gradientStyle}

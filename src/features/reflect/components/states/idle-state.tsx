@@ -150,13 +150,14 @@ export const IdleState = ({
   const [pendingSetId, setPendingSetId] = useState<TextureSetId>(safeSetId);
   const [resolvedSetId, setResolvedSetId] = useState<TextureSetId>(safeSetId);
 
-  // Freeze the last known header height so it doesn't jump during transitions
-  const stableHeaderHeight = useRef(0);
-  if (rawHeaderHeight > 0) stableHeaderHeight.current = rawHeaderHeight;
-  const headerExtraPadding = Math.max(
-    0,
-    stableHeaderHeight.current - insets.top,
-  );
+  // Freeze the last known header height so it doesn't jump during transitions.
+  // Adjusting state during render (not in an effect) is the supported pattern
+  // for retaining a value seen on a previous render.
+  const [stableHeaderHeight, setStableHeaderHeight] = useState(0);
+  if (rawHeaderHeight > 0 && rawHeaderHeight !== stableHeaderHeight) {
+    setStableHeaderHeight(rawHeaderHeight);
+  }
+  const headerExtraPadding = Math.max(0, stableHeaderHeight - insets.top);
 
   const todayQuotes = useQuery(api.dailyQuotes.getToday);
   const hasQuote = !!(todayQuotes?.session ?? todayQuotes?.curated);
@@ -184,9 +185,11 @@ export const IdleState = ({
     return unsub;
   }, [navigation, tourState.isActive, skip]);
 
-  // Measured y-offsets for steps 2/3 anchors within the tags section
-  const tagGroupLayoutY = useRef(0);
-  const textureTabsLayoutY = useRef(0);
+  // Measured y-offsets for steps 2/3 anchors within the tags section.
+  // Stored in state and written from onLayout (an event) so the values can be
+  // read safely during render for the tour popover anchors.
+  const [tagGroupLayoutY, setTagGroupLayoutY] = useState(0);
+  const [textureTabsLayoutY, setTextureTabsLayoutY] = useState(0);
 
   useEffect(() => {
     if (!hasPlayedEntrance.current) {
@@ -225,22 +228,18 @@ export const IdleState = ({
   };
 
   const hasSelections = selectedTextures.length > 0;
-  const [buttonVisible, setButtonVisible] = useState(hasSelections);
+  // Mount the button when selections appear and keep it mounted until its exit
+  // animation finishes (onTransitionEnd). Visibility is derived directly from
+  // hasSelections, so no effect-driven state sync is needed.
   const [buttonMounted, setButtonMounted] = useState(hasSelections);
-
-  useEffect(() => {
-    if (hasSelections) {
-      setButtonMounted(true);
-      setButtonVisible(true);
-    } else {
-      setButtonVisible(false);
-    }
-  }, [hasSelections]);
+  if (hasSelections && !buttonMounted) {
+    setButtonMounted(true);
+  }
 
   const step = tourState.currentStepIndex;
 
-  const step2Top = tagGroupLayoutY.current;
-  const step3Top = textureTabsLayoutY.current;
+  const step2Top = tagGroupLayoutY;
+  const step3Top = textureTabsLayoutY;
 
   const step2TriggerStyle = [
     styles.popoverDynamicTriggerBase,
@@ -366,7 +365,7 @@ export const IdleState = ({
         {!isNight && (
           <View
             onLayout={(e) => {
-              textureTabsLayoutY.current = e.nativeEvent.layout.y;
+              setTextureTabsLayoutY(e.nativeEvent.layout.y);
             }}
           >
             <TextureSetTabs
@@ -379,7 +378,7 @@ export const IdleState = ({
 
         <View
           onLayout={(e) => {
-            tagGroupLayoutY.current = e.nativeEvent.layout.y;
+            setTagGroupLayoutY(e.nativeEvent.layout.y);
           }}
         >
           <EaseView
@@ -472,13 +471,13 @@ export const IdleState = ({
           <EaseView
             initialAnimate={BUTTON_INITIAL_ANIMATE}
             animate={
-              buttonVisible ? BUTTON_VISIBLE_ANIMATE : BUTTON_HIDDEN_ANIMATE
+              hasSelections ? BUTTON_VISIBLE_ANIMATE : BUTTON_HIDDEN_ANIMATE
             }
             transition={
-              buttonVisible ? BUTTON_TRANSITION_IN : BUTTON_TRANSITION_OUT
+              hasSelections ? BUTTON_TRANSITION_IN : BUTTON_TRANSITION_OUT
             }
             onTransitionEnd={({ finished }) => {
-              if (finished && !buttonVisible) setButtonMounted(false);
+              if (finished && !hasSelections) setButtonMounted(false);
             }}
             className="mt-5"
           >

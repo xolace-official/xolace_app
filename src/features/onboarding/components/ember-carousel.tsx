@@ -35,8 +35,11 @@ const mapWithKeys = (
 
 export const EmberCarousel = ({ slides }: Props) => {
   const keySeedRef = useRef(0);
+  // Initial keys are index-based (no ref access during render). The mount
+  // effect below immediately re-maps via the seed ref, which is the canonical
+  // place for ref mutation.
   const [extended, setExtended] = useState<CarouselItem[]>(() =>
-    mapWithKeys(slides, keySeedRef),
+    slides.map((slide, i) => ({ key: `${slide.id}-${i}`, slide })),
   );
   const { height: screenHeight } = useWindowDimensions();
   const animatedIndex = useSharedValue(0);

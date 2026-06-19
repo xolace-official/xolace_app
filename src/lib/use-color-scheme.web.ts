@@ -8,6 +8,7 @@ export function useColorScheme() {
   const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only hydration flip for web SSR; must run post-hydration, by design differs render-to-render
     setHasHydrated(true);
   }, []);
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation } from "convex/react";
 import { Presets } from "react-native-pulsar";
 import { api } from "@/convex/_generated/api";
@@ -25,9 +25,13 @@ export function ClarifyFeedbackSheet({ sessionId, turnIndex, isOpen, onClose }: 
   const [submitted, setSubmitted] = useState(false);
   const submitFeedback = useMutation(api.feedback.submit);
 
-  useEffect(() => {
+  // Reset the submitted latch each time the sheet (re)opens — adjusted during
+  // render with a prev-prop comparison rather than a useEffect.
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) setSubmitted(false);
-  }, [isOpen]);
+  }
 
   const handleChip = (key: string) => {
     if (!submitted && sessionId) {
