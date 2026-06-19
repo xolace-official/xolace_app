@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { resourceValidator } from "./lib/validators";
+import { insightFeatureValidator, resourceValidator } from "./lib/validators";
 
 // =============================================================
 // XOLACE — LAYER 1 MVP SCHEMA (MERGED)
@@ -1230,8 +1230,8 @@ export default defineSchema({
   // One row per profile per feature; idempotent on re-tap.
   insight_waitlist: defineTable({
     emotionalProfileId: v.id("emotional_profiles"),
-    // Which teaser drove the intent: "intensity_history" | "words_language" | ...
-    feature: v.string(),
+    // Which teaser drove the intent. Constrained to the known insight features.
+    feature: insightFeatureValidator,
     joinedAt: v.number(),
   }).index("by_profile_feature", ["emotionalProfileId", "feature"]),
 });

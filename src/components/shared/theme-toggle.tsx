@@ -1,6 +1,7 @@
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
-import { cn, useThemeColor } from 'heroui-native';
+import { useThemeColor } from 'heroui-native';
+import { cn } from '@/src/lib/utils';
 import { playSoftPress } from '@/src/lib/haptics';
 import { type FC } from 'react';
 import { TouchableOpacity } from 'react-native';

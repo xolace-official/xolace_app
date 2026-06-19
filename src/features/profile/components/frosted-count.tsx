@@ -1,4 +1,4 @@
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { Blur, Canvas, Group, Paint, Rect, Text, matchFont } from "@shopify/react-native-skia";
 import { useTokenColor } from "../hooks/use-token-color";
 
@@ -12,7 +12,7 @@ export function FrostedCount({ value }: { value: number }) {
   const muted = useTokenColor("muted");
 
   const font = matchFont({
-    fontFamily: Platform.select({ ios: "Helvetica", default: "sans-serif" }) as string,
+    fontFamily: "Poppins-SemiBold",
     fontSize: 13,
     fontStyle: "normal",
     fontWeight: "600",

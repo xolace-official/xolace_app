@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import { insightFeatureValidator } from "./lib/validators";
 import { generateDisplayName } from "./lib/displayName";
 
 // Premium stub — swap for hasEntitlement() when RevenueCat is wired in Wave 2.
@@ -157,7 +158,7 @@ export const getWeekIntensity = query({
  * Pre-billing desire signal — no price, no IAP. Idempotent per profile+feature.
  */
 export const joinInsightWaitlist = mutation({
-  args: { feature: v.string() },
+  args: { feature: insightFeatureValidator },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 

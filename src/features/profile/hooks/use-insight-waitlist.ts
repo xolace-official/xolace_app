@@ -18,7 +18,10 @@ export function useInsightWaitlist() {
   const joinedFeatures = useQuery(api.profile.listInsightWaitlist);
 
   const [activeFeature, setActiveFeature] = useState<TeaserFeature | null>(null);
-  const [joined, setJoined] = useState(false);
+
+  // Derived from the reactive query so it stays in sync if the data loads or
+  // changes while the sheet is open (no stale snapshot, no mirroring effect).
+  const joined = activeFeature !== null && (joinedFeatures ?? []).includes(activeFeature);
 
   // Stable for use in card mount effects (useEffect dep).
   const trackView = useCallback(
@@ -30,8 +33,8 @@ export function useInsightWaitlist() {
 
   const open = (feature: TeaserFeature) => {
     posthog.capture("teaser_tapped", { feature });
-    // Already on the list? Open straight into the confirmation state.
-    setJoined((joinedFeatures ?? []).includes(feature));
+    // `joined` derives from the query, so an already-joined feature opens
+    // straight into the confirmation state with no extra wiring.
     setActiveFeature(feature);
   };
 
@@ -41,7 +44,6 @@ export function useInsightWaitlist() {
     if (!activeFeature) return;
     posthog.capture("waitlist_joined", { feature: activeFeature });
     await join({ feature: activeFeature });
-    setJoined(true);
   };
 
   return {

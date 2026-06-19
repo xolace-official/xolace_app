@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Platform, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Blur, Canvas, Group, Paint, Text, matchFont } from "@shopify/react-native-skia";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
@@ -32,7 +32,7 @@ const WORD_H = 22;
 // just out of reach. Only the top word reads clear; the rest are fogged.
 function BlurredWord({ text, color }: { text: string; color: string }) {
   const font = matchFont({
-    fontFamily: Platform.select({ ios: "Helvetica", default: "sans-serif" }) as string,
+    fontFamily: "Poppins-Regular",
     fontSize: 14,
     fontStyle: "normal",
     fontWeight: "400",

@@ -83,7 +83,7 @@ export function InsightWaitlistSheet({ isOpen, feature, joined, onConfirm, onClo
                   accessibilityLabel="Notify me when it's ready"
                   className="mt-2 h-14 rounded-2xl items-center justify-center bg-accent"
                 >
-                  <AppText className="text-base font-medium text-white">
+                  <AppText className="text-base font-medium text-accent-foreground">
                     Notify me when it&apos;s ready
                   </AppText>
                 </PressableFeedback>

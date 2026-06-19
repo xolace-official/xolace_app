@@ -32,6 +32,7 @@ function moodRow(delta: MoodDelta): { icon: SFSymbol; text: string } | null {
 function rhythmRow(pattern: TypicalPattern): { icon: SFSymbol; text: string } | null {
   if (!pattern) return null;
   const day = DAYS[pattern.dayOfWeek];
+  if (!day) return null;
   const h = pattern.hourOfDay;
   let period: string;
   let icon: SFSymbol;

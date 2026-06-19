@@ -103,3 +103,10 @@ export const postSessionMoodValidator = v.union(
   v.literal("heavier"),
   v.literal("unsure")
 );
+
+// Premium insight teasers a user can join the waitlist for. Mirrors the
+// client-side TeaserFeature union (src/features/profile/hooks/use-insight-waitlist.ts).
+export const insightFeatureValidator = v.union(
+  v.literal("intensity_history"),
+  v.literal("words_language")
+);
