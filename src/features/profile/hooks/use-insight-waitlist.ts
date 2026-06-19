@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
 
@@ -15,6 +15,7 @@ export type TeaserFeature = "intensity_history" | "words_language";
 export function useInsightWaitlist() {
   const posthog = usePostHog();
   const join = useMutation(api.profile.joinInsightWaitlist);
+  const joinedFeatures = useQuery(api.profile.listInsightWaitlist);
 
   const [activeFeature, setActiveFeature] = useState<TeaserFeature | null>(null);
   const [joined, setJoined] = useState(false);
@@ -29,7 +30,8 @@ export function useInsightWaitlist() {
 
   const open = (feature: TeaserFeature) => {
     posthog.capture("teaser_tapped", { feature });
-    setJoined(false);
+    // Already on the list? Open straight into the confirmation state.
+    setJoined((joinedFeatures ?? []).includes(feature));
     setActiveFeature(feature);
   };
 

@@ -5,6 +5,10 @@ import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "../hooks/use-token-color";
 import { FrostedCount } from "./frosted-count";
+import { CardInfo } from "./card-info";
+
+const WORDS_INFO =
+  "These are the recurring words from your own writing — your language, not ours. The count is how often each one has returned. Seeing every word and its frequency is part of the deeper insights coming soon.";
 
 type Props = {
   words: string[];
@@ -71,10 +75,11 @@ export function WordsTeaserCard({ words, onUnlock, onView, staggerDelay = 360 }:
       >
         <View className="rounded-3xl bg-surface border border-border/60 overflow-hidden">
           {/* Header — no padlock. The teaser sells what's true about them. */}
-          <View className="px-5 pt-5 pb-3">
+          <View className="px-5 pt-5 pb-3 flex-row items-center gap-1.5">
             <AppText className="text-[11px] font-medium text-muted tracking-widest uppercase">
               Words that keep finding you
             </AppText>
+            <CardInfo title="Words that keep finding you" description={WORDS_INFO} />
           </View>
 
           {/* Rows: top word clear, others blurred — counts frosted throughout. */}

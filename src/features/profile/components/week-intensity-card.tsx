@@ -13,6 +13,10 @@ import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "../hooks/use-token-color";
 import { GateFade } from "./gate-fade";
+import { CardInfo } from "./card-info";
+
+const INTENSITY_INFO =
+  "Each bar is how heavy your moments felt that day — averaged from the intensity (1–10) of what you brought. Only this week shows in full; your longer arc across earlier weeks is part of the deeper insights coming soon.";
 
 type DayData = {
   label: string;
@@ -168,9 +172,12 @@ export function WeekIntensityCard({
     >
       <View className="rounded-3xl bg-surface border border-border/60 overflow-hidden">
         <View className="px-5 pt-5 pb-4">
-          <AppText className="text-[11px] font-medium text-muted mb-5 tracking-widest uppercase">
-            This week
-          </AppText>
+          <View className="flex-row items-center gap-1.5 mb-5">
+            <AppText className="text-[11px] font-medium text-muted tracking-widest uppercase">
+              This week
+            </AppText>
+            <CardInfo title="This week" description={INTENSITY_INFO} />
+          </View>
 
           {/* Chart — always rendered (flat baseline bars when the week is empty),
            * so the card never reads as fully gated. */}

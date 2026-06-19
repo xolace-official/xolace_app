@@ -9,14 +9,16 @@ import type { TeaserFeature } from "../hooks/use-insight-waitlist";
 // Intent-only sheet (pre-billing). Deliberately NO price and NO "Subscribe"
 // button — a fake purchase surface trips App Store 2.1 / 3.1.1. This is a
 // "notify me" waitlist that measures desire only.
-const COPY: Record<TeaserFeature, { title: string; body: string }> = {
+const COPY: Record<TeaserFeature, { title: string; body: string; joinedBody: string }> = {
   intensity_history: {
     title: "Your full arc is coming",
     body: "See your intensity across every week — not just this one — and how it shifts over time.",
+    joinedBody: "We'll let you know the moment your full intensity arc is ready. No rush, no noise.",
   },
   words_language: {
     title: "Coming soon",
     body: "See every word that keeps finding you, and how often each one returns. The patterns you didn't notice.",
+    joinedBody: "We'll let you know the moment your full word map is ready. No rush, no noise.",
   },
 };
 
@@ -55,7 +57,7 @@ export function InsightWaitlistSheet({ isOpen, feature, joined, onConfirm, onClo
                   You&apos;re on the list
                 </AppText>
                 <AppText className="text-sm font-light text-foreground/50 text-center leading-6">
-                  We&apos;ll let you know the moment it&apos;s ready. No rush, no noise.
+                  {copy?.joinedBody ?? "We'll let you know the moment it's ready. No rush, no noise."}
                 </AppText>
                 <PressableFeedback
                   onPress={onClose}

@@ -180,6 +180,22 @@ export const joinInsightWaitlist = mutation({
 });
 
 /**
+ * Features the authenticated profile has already joined the waitlist for.
+ * Lets the teaser show an "already on the list" state on re-tap.
+ */
+export const listInsightWaitlist = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    const rows = await ctx.db
+      .query("insight_waitlist")
+      .withIndex("by_profile_feature", (q) => q.eq("emotionalProfileId", profile._id))
+      .take(20);
+    return rows.map((r) => r.feature);
+  },
+});
+
+/**
  * Update displayName. Max 30 chars. Emoji and symbols allowed.
  */
 export const updateDisplayName = mutation({
