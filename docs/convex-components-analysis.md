@@ -160,7 +160,7 @@ Milestone and threshold tracking system. You register rules (factor + threshold 
 - **Heavy season acknowledgment** — Track `heavy_session` (escalation triggered or heavy tag). Threshold: 5 within a rolling window. Callback surfaces a gentle check: "You've been carrying a lot lately." Not a badge — a soft signal that the app has been paying attention.
 
 **Design principle for on-brand checkpoints**
-Xolace's checkpoints should never feel like a game score. The callback logic is yours — so instead of push notifications that say "Achievement unlocked!", the side effect is a quiet card in the timeline, a new visualization in settings, or a moment in the session-end screen. The threshold fires the mechanism; the UX determines the feeling. Keep the rewards functional (unlocking real features) or emotional (acknowledgment that lands), never cosmetic (badges for their own sake).
+Xolace's checkpoints should never feel like a game score. The callback logic is yours — so instead of push notifications that say "Achievement unlocked!", the side effect is a quiet card in the timeline, a new visualization in profile, or a moment in the session-end screen. The threshold fires the mechanism; the UX determines the feeling. Keep the rewards functional (unlocking real features) or emotional (acknowledgment that lands), never cosmetic (badges for their own sake).
 
 **vs building it manually**
 You could build a milestone tracker with a simple `userStats` table and threshold checks in mutations. The Checkpoints component earns its keep by decoupling the tracking from the side effects, making it easy to add/modify rules without touching mutation logic, and providing the HTTP webhook path for future integrations. The overhead is low; the flexibility is real.
