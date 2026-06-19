@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
+import { generateDisplayName } from "./lib/displayName";
 
 /**
  * Idempotent onboarding: find existing user by tokenIdentifier
@@ -69,6 +70,8 @@ export const getOrCreate = mutation({
       contributeByDefault: false,
       dataRetentionPreference: "indefinite",
       preferredInputType: "text",
+      displayName: generateDisplayName(),
+      avatarId: "default",
     });
 
     // Create user

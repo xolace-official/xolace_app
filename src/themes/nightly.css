@@ -70,6 +70,7 @@
 
       --warning: oklch(70% 0.09 75);
       --warning-foreground: oklch(15% 0.01 75);
+      --ember: oklch(78% 0.13 75);
 
       --danger: oklch(58% 0.12 22);
       --danger-foreground: oklch(99% 0 0);
@@ -154,6 +155,7 @@
 
       --warning: oklch(73% 0.09 75);
       --warning-foreground: oklch(13% 0.01 75);
+      --ember: oklch(80% 0.10 75);
 
       --danger: oklch(60% 0.12 22);
       --danger-foreground: oklch(99% 0 0);

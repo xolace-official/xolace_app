@@ -36,7 +36,8 @@
 @theme static {
     --color-resonance: oklch(0.796 0.0347 167.72 / 15%); 
     --resonance-foreground: oklch(0.796 0.0347 167.72);
-    
+
+    --color-ember: oklch(78% 0.13 75);
 }
 
 @layer theme {
@@ -114,6 +115,10 @@
 
     --warning: oklch(75% 0.12 75);
     --warning-foreground: oklch(16.5% 0.01 75);
+
+    /* Ember — campfire glow. Distinct from --warning (status) to avoid
+     * semantic overload. Same amber hue family, slightly richer on light. */
+    --ember: oklch(78% 0.13 75);
 
     /* Danger — soft coral, not alarming red.
      * Even destructive actions shouldn't feel aggressive
@@ -245,6 +250,10 @@
     --warning: oklch(80% 0.1 75);
     --warning-foreground: oklch(15% 0.01 75);
 
+    /* Ember — campfire glow. Same hue as --warning but semantically distinct.
+     * Used for the profile arc halo and active-day intensity bars. */
+    --ember: oklch(80% 0.10 75);
+
     /* Danger — soft coral, not screaming red.
      * Someone in crisis doesn't need their app
      * yelling at them with saturated red. */
@@ -284,4 +293,6 @@
   --color-tone-gentle: var(--tone-gentle);
   --color-tone-direct: var(--tone-direct);
   --color-tone-witnessed: var(--tone-witnessed);
+
+  --color-ember: var(--ember);
 }

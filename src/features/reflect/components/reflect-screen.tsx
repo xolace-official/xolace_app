@@ -4,7 +4,6 @@ import { Stack, useRouter } from "expo-router";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { EaseView } from "react-native-ease";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { HelpHeaderButton } from "@/src/features/reflect/components/help-header-button";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useReflectionMachine } from "@/src/features/reflect/hooks/use-reflection-machine";
@@ -31,10 +30,6 @@ import { SpaceNamePromptDialog } from "@/src/features/reflect/components/space-n
 import { ClarifyFeedbackSheet } from "@/src/features/reflect/components/states/clarify-feedback-sheet";
 
 const EASE_ANIMATE_OUT = { opacity: 0 };
-
-const HeaderRight = ({ onPress }: { onPress: () => void }) => (
-  <HelpHeaderButton onPress={onPress} />
-);
 
 export const ReflectScreen = () => {
   const router = useRouter();
@@ -227,17 +222,12 @@ export const ReflectScreen = () => {
   };
 
   const isIdle = current === "idle";
-  const handleIdleHelpPress = () => {
-    router.push("/crisis-resources?from=idle_button");
-  };
-  const idleHeaderRight = () => <HeaderRight onPress={handleIdleHelpPress} />;
   const stackScreenOptions = {
     headerShown: isIdle,
     headerTransparent: true,
     headerTitle: "",
     headerShadowVisible: false,
     headerBackVisible: false,
-    headerRight: isIdle ? idleHeaderRight : undefined,
   };
 
   if (isLoading) {
@@ -254,6 +244,18 @@ export const ReflectScreen = () => {
   return (
     <View className="flex-1 bg-background" style={safeAreaStyle}>
       <Stack.Screen options={stackScreenOptions} />
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button
+          hidden={!isIdle}
+          icon="person.circle"
+          onPress={() => router.push("/(protected)/profile")}
+        />
+        <Stack.Toolbar.Button
+          hidden={!isIdle}
+          icon="lifepreserver"
+          onPress={() => router.push("/crisis-resources?from=idle_button")}
+        />
+      </Stack.Toolbar>
       {/* Outgoing screen — fades out then unmounts */}
       {previous && previousConfig && (
         <EaseView
