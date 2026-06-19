@@ -1224,4 +1224,14 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_priority", ["priority", "startDate"]),
+
+  // Intent-only premium teaser waitlist. During the pre-billing phase, tapping a
+  // blurred insight teaser records a "notify me" intent here (no price, no IAP).
+  // One row per profile per feature; idempotent on re-tap.
+  insight_waitlist: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    // Which teaser drove the intent: "intensity_history" | "words_language" | ...
+    feature: v.string(),
+    joinedAt: v.number(),
+  }).index("by_profile_feature", ["emotionalProfileId", "feature"]),
 });

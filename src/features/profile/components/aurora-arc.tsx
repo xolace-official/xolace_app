@@ -1,6 +1,6 @@
 import { useWindowDimensions } from "react-native";
 import { Canvas, Circle, RadialGradient, vec } from "@shopify/react-native-skia";
-import { useThemeColor } from "heroui-native";
+import { useTokenColor } from "../hooks/use-token-color";
 
 type Props = { height?: number };
 
@@ -12,8 +12,8 @@ type Props = { height?: number };
  */
 export function AuroraArc({ height = 320 }: Props) {
   const { width } = useWindowDimensions();
-  const ember = useThemeColor("ember") as string;
-  const accent = useThemeColor("accent") as string;
+  const ember = useTokenColor("ember");
+  const accent = useTokenColor("accent");
 
   const emberCenter = vec(width * 0.5, height * 0.04);
   const accentCenter = vec(width * 0.18, 0);

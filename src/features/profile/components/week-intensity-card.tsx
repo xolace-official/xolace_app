@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { View, useWindowDimensions } from "react-native";
+import { useEffect, useRef } from "react";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import Animated, {
   interpolate,
   interpolateColor,
@@ -8,12 +8,11 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
+import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
+import { useTokenColor } from "../hooks/use-token-color";
+import { GateFade } from "./gate-fade";
 
 type DayData = {
   label: string;
@@ -26,11 +25,16 @@ type Props = {
   days: DayData[];
   peakDay: string | null;
   hasData: boolean;
+  momentsTotal: number;
+  onUnlock: () => void;
+  onView: () => void;
   staggerDelay?: number;
 };
 
 const BAR_MAX_H = 68;
 const BAR_MIN_H = 5;
+const GATE_H = 64;
+const CARD_INSET = 40; // card is mx-5 → 20px each side
 
 // Adapted from sample-codes/miles-bar-chart/src/components/weekly-chart/single-bar.tsx
 // Progress (0–1) drives height via interpolate and color via interpolateColor.
@@ -75,7 +79,7 @@ function IntensityBar({
         style={{
           height: BAR_MIN_H,
           borderRadius: 6,
-          backgroundColor: accentHex + "18",
+          backgroundColor: accentHex + "30",
         }}
       />
     );
@@ -95,14 +99,65 @@ function IntensityBar({
   );
 }
 
+// Frosted "earlier weeks" navigator — the single gated element (Model B). The
+// current week reads free above; only the control that pages into history is
+// blended behind a warm gradient fade, with no hard border. Tap → waitlist.
+function EarlierWeeksGate({ width, onPress }: { width: number; onPress: () => void }) {
+  const accent = useTokenColor("accent");
+  const muted = useTokenColor("muted");
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="See earlier weeks"
+      style={{ height: GATE_H }}
+    >
+      {/* Warm gradient veil — transparent at top (blends from the chart) into a
+       * soft accent frost at the bottom. No border, no hard cutoff. */}
+      <View className="absolute inset-0">
+        <GateFade width={width} height={GATE_H} color={accent} endAlpha="1F" />
+      </View>
+
+      {/* Dimmed navigator sitting in the frosted region. */}
+      <View
+        className="flex-1 flex-row items-center justify-center gap-2.5"
+        style={{ opacity: 0.5 }}
+      >
+        <SymbolView name="chevron.left" size={11} tintColor={muted} />
+        <AppText className="text-[12px] tracking-wide" style={{ color: muted }}>
+          Earlier weeks
+        </AppText>
+        <SymbolView name="chevron.right" size={11} tintColor={muted} />
+      </View>
+    </Pressable>
+  );
+}
+
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
-export function WeekIntensityCard({ days, peakDay, hasData, staggerDelay = 300 }: Props) {
+export function WeekIntensityCard({
+  days,
+  peakDay,
+  hasData,
+  momentsTotal,
+  onUnlock,
+  onView,
+  staggerDelay = 300,
+}: Props) {
   const { width } = useWindowDimensions();
-  const accentHex = useThemeColor("accent") as string;
-  const emberHex = useThemeColor("ember") as string;
-  const mutedHex = useThemeColor("muted") as string;
-  const surfaceHex = useThemeColor("surface") as string;
+  const accentHex = useTokenColor("accent");
+  const emberHex = useTokenColor("ember");
+  const mutedHex = useTokenColor("muted");
+
+  const viewed = useRef(false);
+  useEffect(() => {
+    if (viewed.current) return;
+    viewed.current = true;
+    onView();
+  }, [onView]);
+
+  const momentLabel = `${momentsTotal} ${momentsTotal === 1 ? "moment" : "moments"}`;
 
   return (
     <EaseView
@@ -117,89 +172,59 @@ export function WeekIntensityCard({ days, peakDay, hasData, staggerDelay = 300 }
             This week
           </AppText>
 
-          {hasData ? (
-            <View>
-              {/* Chart: bars + qualitative y-axis */}
-              <View
-                className="flex-row"
-                style={{ height: BAR_MAX_H + 20 }}
-              >
-                {/* Bars column */}
-                <View className="flex-1 flex-row items-end gap-1.5">
-                  {days.map((d, i) => (
-                    <View key={i} className="flex-1 items-center gap-1.5">
-                      <View style={{ flex: 1, justifyContent: "flex-end", width: "100%" }}>
-                        <IntensityBar
-                          intensity={d.intensity}
-                          isToday={d.isToday}
-                          isPeak={d.dayName === peakDay}
-                          accentHex={accentHex}
-                          emberHex={emberHex}
-                        />
-                      </View>
-                      <AppText
-                        className="text-[10px]"
-                        style={{ color: d.isToday ? emberHex : mutedHex + "88" }}
-                      >
-                        {d.label}
-                      </AppText>
-                    </View>
-                  ))}
+          {/* Chart — always rendered (flat baseline bars when the week is empty),
+           * so the card never reads as fully gated. */}
+          <View className="flex-row" style={{ height: BAR_MAX_H + 20 }}>
+            {/* Bars column */}
+            <View className="flex-1 flex-row items-end gap-1.5">
+              {days.map((d, i) => (
+                <View key={i} className="flex-1 items-center gap-1.5">
+                  <View style={{ flex: 1, justifyContent: "flex-end", width: "100%" }}>
+                    <IntensityBar
+                      intensity={d.intensity}
+                      isToday={d.isToday}
+                      isPeak={d.dayName === peakDay}
+                      accentHex={accentHex}
+                      emberHex={emberHex}
+                    />
+                  </View>
+                  <AppText
+                    className="text-[10px]"
+                    style={{ color: d.isToday ? emberHex : mutedHex + "88" }}
+                  >
+                    {d.label}
+                  </AppText>
                 </View>
-
-                {/* Qualitative y-axis */}
-                <View
-                  className="pl-3 justify-between pb-5"
-                  style={{ height: BAR_MAX_H + 20 }}
-                >
-                  {["High", "Moderate", "Mild", "Minimal"].map((lbl) => (
-                    <AppText
-                      key={lbl}
-                      className="text-[9px] text-right"
-                      style={{ color: mutedHex + "55" }}
-                    >
-                      {lbl}
-                    </AppText>
-                  ))}
-                </View>
-              </View>
-
-              {peakDay && (
-                <AppText className="text-xs text-muted mt-2">
-                  Intensity peaked {peakDay}
-                </AppText>
-              )}
+              ))}
             </View>
+
+            {/* Qualitative y-axis */}
+            <View className="pl-3 justify-between pb-5" style={{ height: BAR_MAX_H + 20 }}>
+              {["High", "Moderate", "Mild", "Minimal"].map((lbl) => (
+                <AppText
+                  key={lbl}
+                  className="text-[9px] text-right"
+                  style={{ color: mutedHex + "55" }}
+                >
+                  {lbl}
+                </AppText>
+              ))}
+            </View>
+          </View>
+
+          {hasData ? (
+            peakDay && (
+              <AppText className="text-xs text-muted mt-2">Intensity peaked {peakDay}</AppText>
+            )
           ) : (
-            <AppText className="text-xs text-muted leading-5 pb-1">
-              A few more moments and your week starts to take shape.
+            <AppText className="text-xs text-muted mt-2 leading-5">
+              {momentLabel} so far — this week&apos;s shape is still forming.
             </AppText>
           )}
         </View>
 
-        {/* Earlier-weeks premium teaser — frosted, blended into the surface */}
-        <View className="relative border-t border-border/30" style={{ height: 46 }}>
-          {/* Faint ghost data behind the frost */}
-          <View className="absolute inset-0 flex-row items-center px-5">
-            <AppText className="text-[10px] text-muted/35 tracking-[0.3em]">
-              · · · · · · · · · · · · · · · · · · ·
-            </AppText>
-          </View>
-
-          <BlurView intensity={18} tint="default" className="absolute inset-0" />
-          {/* Surface-tinted scrim so the blur reads as a soft fade, not a grey bar */}
-          <LinearGradient
-            colors={[surfaceHex + "70", surfaceHex + "E6"]}
-            className="absolute inset-0"
-          />
-
-          <View className="absolute inset-0 flex-row items-center justify-center gap-2">
-            <SymbolView name="lock.fill" size={10} tintColor={mutedHex + "AA"} />
-            <AppText className="text-[11px] tracking-wide" style={{ color: mutedHex + "DD" }}>
-              Earlier weeks
-            </AppText>
-          </View>
-        </View>
+        {/* The only gated element: paging into earlier weeks. */}
+        <EarlierWeeksGate width={width - CARD_INSET} onPress={onUnlock} />
       </View>
     </EaseView>
   );

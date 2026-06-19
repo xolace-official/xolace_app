@@ -1,8 +1,8 @@
 import { View } from "react-native";
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
+import { useTokenColor } from "../hooks/use-token-color";
 
 type Props = {
   displayName: string;
@@ -36,7 +36,7 @@ const ANIMATE = { opacity: 1, translateY: 0 };
 const TRANSITION = { type: "timing" as const, duration: 320, easing: EASE };
 
 export function ProfileHero({ displayName, firstSessionAt, sessionCount }: Props) {
-  const emberColor = useThemeColor("ember") as string;
+  const emberColor = useTokenColor("ember");
 
   return (
     <View className="items-center px-6">

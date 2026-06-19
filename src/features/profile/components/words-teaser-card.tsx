@@ -1,25 +1,61 @@
-import { View } from "react-native";
-import { BlurView } from "expo-blur";
-import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
+import { useEffect, useRef } from "react";
+import { Platform, Pressable, View } from "react-native";
+import { Blur, Canvas, Group, Paint, Text, matchFont } from "@shopify/react-native-skia";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
+import { useTokenColor } from "../hooks/use-token-color";
+import { FrostedCount } from "./frosted-count";
 
 type Props = {
   words: string[];
+  onUnlock: () => void;
+  onView: () => void;
   staggerDelay?: number;
 };
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
-// Placeholder counts behind the blur — just needs to be vaguely word-shaped
-const PLACEHOLDER_COUNTS = ["··", "···", "·"];
+// Representative counts behind the frosted badges — never real values.
+const PLACEHOLDER_COUNTS = [12, 7, 4];
+const FALLBACK_WORDS = ["still", "here", "quiet"];
 
-export function WordsTeaserCard({ words, staggerDelay = 360 }: Props) {
-  const mutedHex = useThemeColor("muted") as string;
-  const accentHex = useThemeColor("accent") as string;
+const WORD_W = 190;
+const WORD_H = 22;
 
-  const displayWords = words.length > 0 ? words.slice(0, 3) : ["still", "here", "quiet"];
+// A real recurring word rendered behind a static Skia blur — clearly a word,
+// just out of reach. Only the top word reads clear; the rest are fogged.
+function BlurredWord({ text, color }: { text: string; color: string }) {
+  const font = matchFont({
+    fontFamily: Platform.select({ ios: "Helvetica", default: "sans-serif" }) as string,
+    fontSize: 14,
+    fontStyle: "normal",
+    fontWeight: "400",
+  });
+
+  return (
+    <Canvas style={{ width: WORD_W, height: WORD_H }}>
+      <Group layer={<Paint><Blur blur={4} /></Paint>}>
+        <Text x={0} y={WORD_H / 2 + 5} text={text} font={font} color={color} />
+      </Group>
+    </Canvas>
+  );
+}
+
+export function WordsTeaserCard({ words, onUnlock, onView, staggerDelay = 360 }: Props) {
+  const mutedHex = useTokenColor("muted");
+  const accentHex = useTokenColor("accent");
+
+  const viewed = useRef(false);
+  useEffect(() => {
+    if (viewed.current) return;
+    viewed.current = true;
+    onView();
+  }, [onView]);
+
+  // Three rows: the top word reads clear; the rest are blurred. Counts stay
+  // frosted on every row (the recurrence is the premium part).
+  const source = words.length > 0 ? words : FALLBACK_WORDS;
+  const rows = [0, 1, 2].map((i) => source[i] ?? FALLBACK_WORDS[i]);
 
   return (
     <EaseView
@@ -28,53 +64,42 @@ export function WordsTeaserCard({ words, staggerDelay = 360 }: Props) {
       transition={{ type: "timing", duration: 280, easing: EASE, delay: staggerDelay }}
       className="mx-5"
     >
-      <View className="rounded-3xl bg-surface border border-border/60 overflow-hidden">
-        {/* Header row */}
-        <View className="flex-row items-center justify-between px-5 pt-5 pb-3">
-          <View className="flex-row items-center gap-2">
-            <SymbolView name="lock.fill" size={11} tintColor={mutedHex + "99"} />
+      <Pressable
+        onPress={onUnlock}
+        accessibilityRole="button"
+        accessibilityLabel="See the words that keep finding you"
+      >
+        <View className="rounded-3xl bg-surface border border-border/60 overflow-hidden">
+          {/* Header — no padlock. The teaser sells what's true about them. */}
+          <View className="px-5 pt-5 pb-3">
             <AppText className="text-[11px] font-medium text-muted tracking-widest uppercase">
               Words that keep finding you
             </AppText>
           </View>
-        </View>
 
-        {/* Words list — real words visible, counts blurred */}
-        <View className="px-5 pb-5 gap-2.5">
-          {displayWords.map((word, i) => (
-            <View key={word} className="flex-row items-center justify-between">
-              <AppText
-                className="text-sm"
-                style={{ color: accentHex + "CC" }}
-              >
-                {word}
-              </AppText>
-
-              {/* Frosted count — users can see there's data, not what it is */}
-              <View
-                className="rounded-lg overflow-hidden items-center justify-center"
-                style={{
-                  width: 42,
-                  height: 24,
-                  borderWidth: 1,
-                  borderColor: mutedHex + "1F",
-                }}
-              >
-                <AppText className="text-[11px] tracking-widest" style={{ color: mutedHex + "66" }}>
-                  {PLACEHOLDER_COUNTS[i % PLACEHOLDER_COUNTS.length]}
-                </AppText>
-                <BlurView intensity={14} tint="default" className="absolute inset-0" />
-                <View
-                  className="absolute inset-0 items-center justify-center"
-                  style={{ backgroundColor: accentHex + "10" }}
-                >
-                  <SymbolView name="lock.fill" size={9} tintColor={mutedHex + "99"} />
-                </View>
+          {/* Rows: top word clear, others blurred — counts frosted throughout. */}
+          <View className="px-5 pb-4 gap-2.5">
+            {rows.map((word, i) => (
+              <View key={`${word}-${i}`} className="flex-row items-center justify-between">
+                {i === 0 ? (
+                  <AppText className="text-sm" style={{ color: accentHex + "CC" }}>
+                    {word}
+                  </AppText>
+                ) : (
+                  <BlurredWord text={word} color={accentHex + "CC"} />
+                )}
+                <FrostedCount value={PLACEHOLDER_COUNTS[i % PLACEHOLDER_COUNTS.length]} />
               </View>
-            </View>
-          ))}
+            ))}
+          </View>
+
+          <View className="px-5 pb-5">
+            <AppText className="text-[11px] tracking-wide" style={{ color: mutedHex + "AA" }}>
+              See every word — and how often it returns
+            </AppText>
+          </View>
         </View>
-      </View>
+      </Pressable>
     </EaseView>
   );
 }

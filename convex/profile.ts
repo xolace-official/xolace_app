@@ -153,6 +153,33 @@ export const getWeekIntensity = query({
 });
 
 /**
+ * Record intent-only waitlist interest for a premium insight teaser.
+ * Pre-billing desire signal — no price, no IAP. Idempotent per profile+feature.
+ */
+export const joinInsightWaitlist = mutation({
+  args: { feature: v.string() },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    const existing = await ctx.db
+      .query("insight_waitlist")
+      .withIndex("by_profile_feature", (q) =>
+        q.eq("emotionalProfileId", profile._id).eq("feature", args.feature),
+      )
+      .unique();
+
+    if (existing) return { alreadyJoined: true };
+
+    await ctx.db.insert("insight_waitlist", {
+      emotionalProfileId: profile._id,
+      feature: args.feature,
+      joinedAt: Date.now(),
+    });
+    return { alreadyJoined: false };
+  },
+});
+
+/**
  * Update displayName. Max 30 chars. Emoji and symbols allowed.
  */
 export const updateDisplayName = mutation({
