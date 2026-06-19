@@ -91,6 +91,8 @@
       --field-shadow:
         0 1px 3px 0 rgba(20, 18, 40, 0.04),
         0 0 1px 0 rgba(20, 18, 40, 0.06);
+
+      --backdrop: oklch(0% 0 0 / 20%);
     }
 
     @variant nightly-dark {
@@ -169,6 +171,8 @@
       --surface-shadow: 0 0 0 0 transparent inset;
       --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.08) inset;
       --field-shadow: 0 0 0 0 transparent inset;
+
+      --backdrop: oklch(0% 0 0 / 20%);
     }
   }
 }

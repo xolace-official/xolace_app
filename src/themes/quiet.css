@@ -79,6 +79,8 @@
       --field-shadow:
         0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
         0 0 1px 0 rgba(0, 0, 0, 0.06);
+
+      --backdrop: oklch(0% 0 0 / 20%);
     }
 
     @variant quiet-dark {
@@ -150,6 +152,8 @@
       --surface-shadow: 0 0 0 0 transparent inset;
       --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.2) inset;
       --field-shadow: 0 0 0 0 transparent inset;
+
+      --backdrop: oklch(0% 0 0 / 20%);
     }
   }
 }
