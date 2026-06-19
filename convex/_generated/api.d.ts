@@ -58,6 +58,7 @@ import type * as monthlyEvents from "../monthlyEvents.js";
 import type * as notifications from "../notifications.js";
 import type * as posthog from "../posthog.js";
 import type * as preferences from "../preferences.js";
+import type * as productFeedback from "../productFeedback.js";
 import type * as profile from "../profile.js";
 import type * as quotes from "../quotes.js";
 import type * as reflections from "../reflections.js";
@@ -124,6 +125,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   posthog: typeof posthog;
   preferences: typeof preferences;
+  productFeedback: typeof productFeedback;
   profile: typeof profile;
   quotes: typeof quotes;
   reflections: typeof reflections;

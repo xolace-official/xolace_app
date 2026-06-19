@@ -50,6 +50,12 @@ type TogglesSlice = {
   /** One-time flag — once true, vent first-run intro never shows again. */
   ventIntroSeen: boolean;
   setVentIntroSeen: (v: boolean) => void;
+  /** One-time flag — once true, the "shake to send feedback" hint toast never shows again. */
+  shakeHintSeen: boolean;
+  setShakeHintSeen: (v: boolean) => void;
+  /** Id of the newest What's New entry the user has opened. Drives the menu's unseen badge. */
+  lastSeenVersion: string | null;
+  setLastSeenVersion: (v: string) => void;
   /** Menu item keys whose "new" glow has been acknowledged (item opened once). */
   seenMenuItems: string[];
   markMenuItemSeen: (key: string) => void;
@@ -127,6 +133,10 @@ export const useAppStore = create<AppState>()(
         setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
         ventIntroSeen: false,
         setVentIntroSeen: (v) => set({ ventIntroSeen: v }),
+        shakeHintSeen: false,
+        setShakeHintSeen: (v) => set({ shakeHintSeen: v }),
+        lastSeenVersion: null,
+        setLastSeenVersion: (v) => set({ lastSeenVersion: v }),
 
         seenMenuItems: [],
         markMenuItemSeen: (key) =>
@@ -188,6 +198,8 @@ export const useAppStore = create<AppState>()(
           bridgeEnabled: s.bridgeEnabled,
           bridgeIntroSeen: s.bridgeIntroSeen,
           ventIntroSeen: s.ventIntroSeen,
+          shakeHintSeen: s.shakeHintSeen,
+          lastSeenVersion: s.lastSeenVersion,
           seenMenuItems: s.seenMenuItems,
           lastAcknowledgedStreak: s.lastAcknowledgedStreak,
           textureSetId: s.textureSetId,

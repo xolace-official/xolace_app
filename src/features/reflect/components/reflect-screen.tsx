@@ -28,6 +28,7 @@ import { EscalationState } from "@/src/features/reflect/components/states/escala
 import { ErrorState } from "@/src/features/reflect/components/states/error-state";
 import { SpaceNamePromptDialog } from "@/src/features/reflect/components/space-name-prompt-dialog";
 import { ClarifyFeedbackSheet } from "@/src/features/reflect/components/states/clarify-feedback-sheet";
+import { useFeedbackShake } from "@/src/features/feedback-tray/feedback-tray-provider";
 
 const EASE_ANIMATE_OUT = { opacity: 0 };
 
@@ -63,6 +64,17 @@ export const ReflectScreen = () => {
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
   const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
+
+  // Shake-to-feedback on the reflect canvas: suppressed only during active
+  // articulation (typing / nudge / processing). Allowed in idle, mirror, and
+  // every other state — a shake there is signal, not noise. `enabled` is
+  // pure-derived from machine state, no syncing effect.
+  useFeedbackShake({
+    enabled:
+      state.screen !== "typing" &&
+      state.screen !== "typing-nudge" &&
+      state.screen !== "processing",
+  });
   const context = useQuery(api.users.getFullContext);
   const updatePreferences = useMutation(api.preferences.update);
   const { current, previous, isTransitioning, onOutgoingComplete } =

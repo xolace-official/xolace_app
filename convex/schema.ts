@@ -1234,4 +1234,30 @@ export default defineSchema({
     feature: insightFeatureValidator,
     joinedAt: v.number(),
   }).index("by_profile_feature", ["emotionalProfileId", "feature"]),
+
+  // ===========================================================
+  // 18. PRODUCT FEEDBACK (shake-summoned feedback tray)
+  // ===========================================================
+  //
+  // Beta product feedback — bug reports and ideas. Deliberately
+  // SEPARATE from the emotional `feedback` table: that table is
+  // welded to the reflection loop (mirror_miss / gave_up / mood),
+  // and mixing product feedback in would pollute the longitudinal
+  // emotional dataset. Different domain, different table.
+  //
+  product_feedback: defineTable({
+    // Server-derived owner scope (never accepted from client).
+    emotionalProfileId: v.id("emotional_profiles"),
+    kind: v.union(v.literal("bug"), v.literal("idea")),
+    // 1..1000 chars, trimmed + validated server-side.
+    text: v.string(),
+    // Submission context — helps triage without touching content.
+    context: v.object({
+      appVersion: v.string(), // from expo-constants
+      route: v.string(), // pathname at submit time
+      themeName: v.string(), // active color theme id
+      platform: v.string(), // process.env.EXPO_OS
+    }),
+    createdAt: v.number(),
+  }).index("by_profile_and_created", ["emotionalProfileId", "createdAt"]),
 });

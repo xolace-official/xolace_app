@@ -4,6 +4,30 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.6.0] - (2026-06-19)
+
+### Added
+
+- **Feedback Tray (shake-to-summon)** — a chrome-free way to talk back to us, with zero pixels on any screen until you summon it. Shake your phone anywhere in the app to float up a small tray over whatever you're doing: report a bug or suggest an idea, written into a single form with a bug | idea toggle. The tray is a self-contained surface with its own internal back-stack (menu → form → back) — it never touches app navigation and never routes to a real screen. It rides up with the keyboard, drags down or taps-the-backdrop to dismiss, and reads every color from theme tokens so it looks right across light, dark, and all five color themes. A blurred scrim sits behind it. Critically, the trigger is **state-aware**: a shake is honored in `idle`, on the mirror, and on every secondary screen, but suppressed during active articulation (`typing` / `typing-nudge` / `processing`) so it never interrupts you mid-thought. A one-time toast ("Shake your phone anytime to send feedback") makes it discoverable, then never repeats.
+- **What's New** — a "What's new" row in the tray opens a warm, plain-language changelog of recent releases. An accent dot marks the row when there's an update you haven't seen yet; opening the list clears it. OTA updates are tracked with their own stable key (not the store version) so the badge logic stays correct across OTA patches.
+- **Profile screen** — a personal, progressively-revealed reflection of your time in the app, reachable from the idle screen. It opens on an aurora-arc header with your name, when you started, and how many moments you've processed. As you accumulate sessions, more unfolds: a stat band (moments, current streak, your usual day), the emotions that show up most for you, and "mirror lines" that read back your mood shift and rhythm. Below an "your insights" divider sit early looks at deeper analytics — a week-intensity chart and the words you reach for — presented as teasers (softly fogged, no padlocks) with a one-tap waitlist to register interest in the full insight layer. Everything is gated by how much you've shared (1 / 3 / 5 sessions), so an empty profile never feels empty — it just shows what's there.
+
+### Changed
+
+- **Expo SDK 56 migration** — upgraded from SDK 55 to **Expo SDK 56**, bringing **React 19.2.3** and **React Native 0.85.3**, with all `expo-*` modules realigned to their SDK 56 versions. Notable companion bumps: `react-native-reanimated` 4.3.1, `react-native-worklets` 0.8.3, `react-native-gesture-handler` 2.31.1, `react-native-screens` 4.25.2, `react-native-safe-area-context` 5.7.0, `react-native-svg` 15.15.4, and `@shopify/react-native-skia` 2.6.2. HeroUI Native styling and the bottom-sheet package were bumped alongside.
+- **Settings screen restructure** — settings was reorganized into grouped navigation rows with dedicated sub-screens and custom RadioGroup icons (see the settings-refactor work), tidying the surface ahead of the profile screen linking into it.
+
+### Backend
+
+- **`product_feedback` Convex table** — bug/idea submissions land in a new, dedicated table (kept separate from the emotional `feedback` table so product feedback never pollutes the longitudinal emotional dataset). Each row carries the kind, trimmed/length-bounded text, and structural context (app version, route, theme, platform). Owner scope is derived server-side via `requireAuth` — the client never passes a user id — and submission is rate-limited (`productFeedback`, 10/day per profile) since a shake-summoned form is easy to spam.
+- **`insight_waitlist` Convex table** — registers interest when a user taps to unlock a teased insight (intensity history, words/language), so the full insight layer can be prioritized against real demand.
+
+### Analytics
+
+- Structural-only PostHog events (no free-text content): `feedback_tray_opened` (`{ source, route }`), `product_feedback_submitted` (`{ kind }`), and `whats_new_opened`.
+
+---
+
 ## [1.5.0] - (2026-06-13)
 
 ### Added

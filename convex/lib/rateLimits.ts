@@ -24,4 +24,8 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 
   // General settings feedback — 5 per 24h per profile
   generalFeedback: { kind: "fixed window", rate: 5, period: DAY },
+
+  // Product feedback (shake-summoned bug/idea tray) — shake submission is
+  // easy to spam, so this guard is not optional. 10 per 24h per profile.
+  productFeedback: { kind: "fixed window", rate: 10, period: DAY },
 });
