@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { ScrollView, StyleSheet, View, Pressable } from "react-native";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -84,15 +84,17 @@ export const SessionDetailsScreen = () => {
     sessionId ? { sessionId } : "skip",
   );
   const { isReady, isPlaying, toggle, stop } = useMirrorAudio(sessionId);
-  const stopRef = useRef(stop);
-  stopRef.current = stop;
+
+  // Stop playback when the screen unmounts. useEffectEvent reads the latest
+  // `stop` at call time, so the cleanup stays mount-once ([] deps) without a
+  // latest-ref dance. (flame-intensity-selector can't use this — its callback
+  // is dispatched from a worklet, outside any Effect.)
+  const onUnmountStop = useEffectEvent(() => stop());
 
   const topInsetStyle = { paddingTop: insets.top };
 
   useEffect(() => {
-    return () => {
-      stopRef.current();
-    };
+    return () => onUnmountStop();
   }, []);
 
   if (!id) {

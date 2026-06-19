@@ -5,7 +5,7 @@
  */
 import { useEffect, useState } from "react";
 
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused } from "expo-router/react-navigation";
 import { Portal, useThemeColor } from "heroui-native";
 import Animated, {
   measure,

@@ -19,6 +19,7 @@ export function useVentSounds(state: VentState): void {
   const prevStateRef = useRef<VentState | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.volume is a documented mutable setter
     crackle.volume = 0.7;
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
   }, [crackle]);

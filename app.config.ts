@@ -218,7 +218,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         }
       ],
       "expo-video",
+      "expo-audio",
+      "expo-asset",
       "expo-image",
+      "expo-status-bar",
       "expo-web-browser",
       "expo-sharing",
       [

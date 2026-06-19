@@ -4,7 +4,6 @@ import { Stack, useRouter } from "expo-router";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { EaseView } from "react-native-ease";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { HelpHeaderButton } from "@/src/features/reflect/components/help-header-button";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useReflectionMachine } from "@/src/features/reflect/hooks/use-reflection-machine";
@@ -31,10 +30,6 @@ import { SpaceNamePromptDialog } from "@/src/features/reflect/components/space-n
 import { ClarifyFeedbackSheet } from "@/src/features/reflect/components/states/clarify-feedback-sheet";
 
 const EASE_ANIMATE_OUT = { opacity: 0 };
-
-const HeaderRight = ({ onPress }: { onPress: () => void }) => (
-  <HelpHeaderButton onPress={onPress} />
-);
 
 export const ReflectScreen = () => {
   const router = useRouter();
@@ -74,7 +69,7 @@ export const ReflectScreen = () => {
     useScreenTransition(state.screen);
 
   const [showSpaceNameDialog, setShowSpaceNameDialog] = useState(false);
-  const firedSpaceNameDialog = useRef(false);
+  const [spaceNameDialogFired, setSpaceNameDialogFired] = useState(false);
   const [mirrorFeedbackOpen, setMirrorFeedbackOpen] = useState(false);
   const mirrorFeedbackShown = useRef(false);
 
@@ -106,18 +101,20 @@ export const ReflectScreen = () => {
     });
   }, [context?.profile, dispatch]);
 
-  useEffect(() => {
-    if (current !== "path-selection") return;
-    if (firedSpaceNameDialog.current) return;
-    if (!context?.preferences) return;
-    if (
-      context.preferences.spaceName ||
-      context.preferences.spaceNamePromptDismissed
-    )
-      return;
-    firedSpaceNameDialog.current = true;
+  // One-shot: open the space-name dialog the first time the user reaches
+  // path-selection without a name set. Adjusted during render with a state
+  // guard (not a ref — refs can't be read during render) rather than a
+  // useEffect, which avoids a cascading render.
+  if (
+    current === "path-selection" &&
+    !spaceNameDialogFired &&
+    context?.preferences &&
+    !context.preferences.spaceName &&
+    !context.preferences.spaceNamePromptDismissed
+  ) {
+    setSpaceNameDialogFired(true);
     setShowSpaceNameDialog(true);
-  }, [current, context?.preferences]);
+  }
 
   const renderScreen = (screen: ReflectionStateName, isOutgoing = false) => {
     switch (screen) {
@@ -227,17 +224,12 @@ export const ReflectScreen = () => {
   };
 
   const isIdle = current === "idle";
-  const handleIdleHelpPress = () => {
-    router.push("/crisis-resources?from=idle_button");
-  };
-  const idleHeaderRight = () => <HeaderRight onPress={handleIdleHelpPress} />;
   const stackScreenOptions = {
     headerShown: isIdle,
     headerTransparent: true,
     headerTitle: "",
     headerShadowVisible: false,
     headerBackVisible: false,
-    headerRight: isIdle ? idleHeaderRight : undefined,
   };
 
   if (isLoading) {
@@ -254,6 +246,20 @@ export const ReflectScreen = () => {
   return (
     <View className="flex-1 bg-background" style={safeAreaStyle}>
       <Stack.Screen options={stackScreenOptions} />
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.Button
+          hidden={!isIdle}
+          icon="person.circle"
+          onPress={() => router.push("/(protected)/profile")}
+        />
+      </Stack.Toolbar>
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button
+          hidden={!isIdle}
+          icon="lifepreserver"
+          onPress={() => router.push("/crisis-resources?from=idle_button")}
+        />
+      </Stack.Toolbar>
       {/* Outgoing screen — fades out then unmounts */}
       {previous && previousConfig && (
         <EaseView

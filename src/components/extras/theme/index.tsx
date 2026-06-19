@@ -6,7 +6,7 @@
  * - Use it as reference for how to integrate useAppTheme() and theme selection UI
  * - Extend availableThemes below when you add new color themes
  */
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useHeaderHeight } from "expo-router/react-navigation";
 import { LinearGradient } from 'expo-linear-gradient';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useThemeColor } from 'heroui-native';

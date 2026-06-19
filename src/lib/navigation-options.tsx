@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { NativeStackNavigationOptions } from "@react-navigation/native-stack";
+import type { NativeStackNavigationOptions } from "expo-router";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { useThemeColor } from "heroui-native";
 import { useAppTheme } from "@/src/context/app-theme-context";

@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
 import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -22,14 +21,10 @@ export function useMirrorAudio(
 
   const player = useAudioPlayer(audioUrl ?? null);
   const status = useAudioPlayerStatus(player);
-  const loadedUrlRef = useRef<string | null>(null);
-  const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    if (!audioUrl || audioUrl === loadedUrlRef.current) return;
-    loadedUrlRef.current = audioUrl;
-    setIsReady(true);
-  }, [audioUrl]);
+  // Ready once a playable URL has loaded (undefined while the query is in flight,
+  // null when the session has no mirror audio).
+  const isReady = !!audioUrl;
 
   const toggle = async () => {
     if (!isReady || !audioUrl) return;

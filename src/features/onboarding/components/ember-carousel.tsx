@@ -11,7 +11,7 @@ import type { FrameStep } from "@/src/features/onboarding/frame-steps";
 const SPRING_CONFIG = { damping: 60, stiffness: 280, mass: 6 };
 const INTERVAL_MS = 3200;
 const ABSOLUTE_OVERFLOW_STYLE = StyleSheet.create({
-  fill: { ...StyleSheet.absoluteFillObject, overflow: "hidden" },
+  fill: { ...StyleSheet.absoluteFill, overflow: "hidden" },
   row: {
     flex: 1,
     flexDirection: "row",
@@ -35,8 +35,11 @@ const mapWithKeys = (
 
 export const EmberCarousel = ({ slides }: Props) => {
   const keySeedRef = useRef(0);
+  // Initial keys are index-based (no ref access during render). The mount
+  // effect below immediately re-maps via the seed ref, which is the canonical
+  // place for ref mutation.
   const [extended, setExtended] = useState<CarouselItem[]>(() =>
-    mapWithKeys(slides, keySeedRef),
+    slides.map((slide, i) => ({ key: `${slide.id}-${i}`, slide })),
   );
   const { height: screenHeight } = useWindowDimensions();
   const animatedIndex = useSharedValue(0);

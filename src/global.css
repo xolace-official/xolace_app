@@ -36,7 +36,8 @@
 @theme static {
     --color-resonance: oklch(0.796 0.0347 167.72 / 15%); 
     --resonance-foreground: oklch(0.796 0.0347 167.72);
-    
+
+    --color-ember: oklch(78% 0.13 75);
 }
 
 @layer theme {
@@ -115,6 +116,10 @@
     --warning: oklch(75% 0.12 75);
     --warning-foreground: oklch(16.5% 0.01 75);
 
+    /* Ember — campfire glow. Distinct from --warning (status) to avoid
+     * semantic overload. Same amber hue family, slightly richer on light. */
+    --ember: oklch(78% 0.13 75);
+
     /* Danger — soft coral, not alarming red.
      * Even destructive actions shouldn't feel aggressive
      * in an emotional safety app. */
@@ -140,6 +145,8 @@
       0 12px 24px 0 rgba(60, 40, 80, 0.04);
     --field-shadow:
       0 1px 3px 0 rgba(60, 40, 80, 0.04), 0 0 1px 0 rgba(60, 40, 80, 0.06);
+
+    --backdrop: oklch(0% 0 0 / 20%);
   }
 
   /* ============================================================
@@ -243,6 +250,10 @@
     --warning: oklch(80% 0.1 75);
     --warning-foreground: oklch(15% 0.01 75);
 
+    /* Ember — campfire glow. Same hue as --warning but semantically distinct.
+     * Used for the profile arc halo and active-day intensity bars. */
+    --ember: oklch(80% 0.10 75);
+
     /* Danger — soft coral, not screaming red.
      * Someone in crisis doesn't need their app
      * yelling at them with saturated red. */
@@ -266,6 +277,8 @@
     --surface-shadow: 0 0 0 0 transparent inset;
     --overlay-shadow: 0 0 1px 0 rgba(184, 169, 232, 0.08) inset;
     --field-shadow: 0 0 0 0 transparent inset;
+
+    --backdrop: oklch(0% 0 0 / 20%);
   }
 }
 

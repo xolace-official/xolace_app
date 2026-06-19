@@ -24,8 +24,12 @@ export function useScreenTransition(screen: ReflectionStateName) {
     isTransitioning: false,
   });
 
+  // Mirror the latest committed state into a ref so the screen-change effect
+  // below can read the previous value without re-running on every state change.
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     const prev = stateRef.current;

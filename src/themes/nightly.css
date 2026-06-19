@@ -70,6 +70,7 @@
 
       --warning: oklch(70% 0.09 75);
       --warning-foreground: oklch(15% 0.01 75);
+      --ember: oklch(78% 0.13 75);
 
       --danger: oklch(58% 0.12 22);
       --danger-foreground: oklch(99% 0 0);
@@ -91,6 +92,8 @@
       --field-shadow:
         0 1px 3px 0 rgba(20, 18, 40, 0.04),
         0 0 1px 0 rgba(20, 18, 40, 0.06);
+
+      --backdrop: oklch(0% 0 0 / 20%);
     }
 
     @variant nightly-dark {
@@ -152,6 +155,7 @@
 
       --warning: oklch(73% 0.09 75);
       --warning-foreground: oklch(13% 0.01 75);
+      --ember: oklch(80% 0.10 75);
 
       --danger: oklch(60% 0.12 22);
       --danger-foreground: oklch(99% 0 0);
@@ -169,6 +173,8 @@
       --surface-shadow: 0 0 0 0 transparent inset;
       --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.08) inset;
       --field-shadow: 0 0 0 0 transparent inset;
+
+      --backdrop: oklch(0% 0 0 / 20%);
     }
   }
 }

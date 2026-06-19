@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { resourceValidator } from "./lib/validators";
+import { insightFeatureValidator, resourceValidator } from "./lib/validators";
 
 // =============================================================
 // XOLACE — LAYER 1 MVP SCHEMA (MERGED)
@@ -270,6 +270,12 @@ export default defineSchema({
     // model are you") resolve to the user's chosen name rather than exposing
     // the underlying provider.
     spaceName: v.optional(v.string()),
+
+    // Profile identity fields (added for profile screen v1).
+    // displayName: warm auto-generated default (nature/light vocabulary), user-editable. Max 30 chars.
+    // avatarId: key into the defined totem set. Defaults to "default". Change flow is Wave 2.
+    displayName: v.optional(v.string()),
+    avatarId: v.optional(v.string()),
 
     // True once the naming dialog has been shown and the user tapped "Not now".
     // Prevents re-prompting; settings entry is the only other path.
@@ -1218,4 +1224,14 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_priority", ["priority", "startDate"]),
+
+  // Intent-only premium teaser waitlist. During the pre-billing phase, tapping a
+  // blurred insight teaser records a "notify me" intent here (no price, no IAP).
+  // One row per profile per feature; idempotent on re-tap.
+  insight_waitlist: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    // Which teaser drove the intent. Constrained to the known insight features.
+    feature: insightFeatureValidator,
+    joinedAt: v.number(),
+  }).index("by_profile_feature", ["emotionalProfileId", "feature"]),
 });

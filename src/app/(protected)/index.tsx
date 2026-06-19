@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused } from "expo-router/react-navigation";
 import { StatusBar } from 'expo-status-bar';
 
 import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
