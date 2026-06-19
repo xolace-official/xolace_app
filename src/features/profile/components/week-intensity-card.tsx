@@ -35,7 +35,7 @@ type Props = {
   staggerDelay?: number;
 };
 
-const BAR_MAX_H = 68;
+const BAR_MAX_H = 80;
 const BAR_MIN_H = 5;
 const GATE_H = 64;
 const CARD_INSET = 40; // card is mx-5 → 20px each side
@@ -205,13 +205,14 @@ export function WeekIntensityCard({
               ))}
             </View>
 
-            {/* Qualitative y-axis */}
+            {/* Qualitative y-axis — bottom inset reserves the day-label row so
+             * "Minimal" lands on the bar baseline, not the M–S row. */}
             <View className="pl-3 justify-between pb-5" style={{ height: BAR_MAX_H + 20 }}>
               {["High", "Moderate", "Mild", "Minimal"].map((lbl) => (
                 <AppText
                   key={lbl}
-                  className="text-[9px] text-right"
-                  style={{ color: mutedHex + "55" }}
+                  className="text-[9px] font-medium text-right"
+                  style={{ color: mutedHex + "85" }}
                 >
                   {lbl}
                 </AppText>
