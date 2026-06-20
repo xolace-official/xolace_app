@@ -24,7 +24,7 @@ import {
   SpaceGrotesk_700Bold,
   useFonts
 } from '@expo-google-fonts/space-grotesk';
-import { ObserveRoot, useObserve } from 'expo-observe';
+import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 
 import { RootProvider } from '@/src/providers/root-provider';
 import { useAppStore } from '@/src/store/store';
@@ -32,6 +32,10 @@ import { UpdateBottomSheet, type UpdateBottomSheetMode } from '@/src/components/
 import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
 import { useVersionCheck } from '@/src/helpers/hooks/use-version-check';
 import { FullRippleLoader } from '@/src/components/shared/loader/ripple/full-ripple-loader';
+
+// Per-route navigation metrics (cold_ttr / warm_ttr / per-route tti). Must run
+// at module scope before any screen mounts — toggling it after mount throws.
+Observe.configure({ integrations: { 'expo-router': true } });
 
 SplashScreen.preventAutoHideAsync();
 

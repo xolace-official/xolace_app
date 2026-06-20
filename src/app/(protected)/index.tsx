@@ -4,6 +4,7 @@ import { EaseView } from 'react-native-ease/uniwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsFocused } from "expo-router/react-navigation";
 import { StatusBar } from 'expo-status-bar';
+import { useObserve } from 'expo-observe';
 
 import { useQuery } from 'convex/react';
 
@@ -86,10 +87,19 @@ export default function ProtectedIndex() {
   const [showWelcome, setShowWelcome] = useState(false);
   const isFocused = useIsFocused();
   const awarenessEvent = useAwarenessEvent();
+  const { markInteractive } = useObserve();
 
   // Same getFullContext query ReflectScreen subscribes to — Convex dedupes it,
   // so this is a cached read, not a second round-trip.
   const profile = useQuery(api.users.getFullContext)?.profile;
+
+  // Per-route TTI for the reflect home: the screen is genuinely ready once the
+  // user context query resolves, not at mount. markInteractive emits telemetry
+  // (a side effect), so it must run in an effect — only the first call per
+  // navigation is recorded, so the gate effectively fires it once.
+  useEffect(() => {
+    if (profile) markInteractive();
+  }, [profile, markInteractive]);
 
   // The lapsed-user greeting sits ahead of the awareness event in the home
   // sheet chain: FounderWelcome → ReturnWelcome → MonthlyEvent. It only arms

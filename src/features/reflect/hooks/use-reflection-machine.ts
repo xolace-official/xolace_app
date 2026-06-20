@@ -1,5 +1,6 @@
 import { useReducer, useCallback, useEffect, useRef } from 'react';
 import { usePostHog } from 'posthog-react-native';
+import { Observe } from 'expo-observe';
 import type { FeedbackType } from '@/src/features/reflect/types';
 import { useSession } from '@/src/features/reflect/hooks/use-session';
 import { extractErrorMessage } from '@/src/features/reflect/session-service';
@@ -101,6 +102,16 @@ export function useReflectionMachine() {
             : undefined;
           submitTimestampRef.current = null;
           posthog.capture('mirror_arrived', { duration_ms: durationMs ?? null });
+          // EAS Observe perf signal: felt AI round-trip, correlated with app
+          // version/release in the Observe dashboard. Only log a real measurement.
+          if (durationMs !== undefined) {
+            Observe.logEvent('mirror.generated', {
+              attributes: {
+                durationMs,
+                escalated: !!session?.escalationTriggered,
+              },
+            });
+          }
           if (session?.escalationTriggered) {
             posthog.capture('escalation_triggered');
             dispatch({ type: 'ESCALATION_TRIGGERED', mirror: mirrorText });
