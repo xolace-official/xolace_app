@@ -208,14 +208,14 @@ export const ActivityVariant = ({
                   className={`w-full rounded-2xl border px-5 py-4 ${
                     selectedMood === mood
                       ? "border-accent/40 bg-accent/10"
-                      : "border-border/60 bg-surface/30"
+                      : "border-default-soft-hover bg-surface/30"
                   }`}
                 >
                   <AppText
                     className={`text-base text-center ${
                       selectedMood === mood
                         ? "text-accent font-medium"
-                        : "text-foreground/50 font-light"
+                        : "text-default-soft font-light"
                     }`}
                   >
                     {MOOD_LABELS[mood]}
@@ -273,8 +273,8 @@ export const ActivityVariant = ({
             </View>
 
             {/* Distilled text card */}
-            <View className="px-8 mb-6 rounded-2xl border border-border/50 bg-surface/40 mx-8 py-4">
-              <AppText className="text-sm font-light italic leading-6 text-foreground/60">
+            <View className="px-8 mb-6 rounded-2xl border border-default-soft bg-surface/40 mx-8 py-4">
+              <AppText className="text-sm font-light italic leading-6 text-default-soft-hover">
                 {`"${distilledText}"`}
               </AppText>
             </View>
@@ -292,14 +292,14 @@ export const ActivityVariant = ({
                 className={`w-full rounded-2xl ${
                   contributeByDefault
                     ? "border-accent/40 bg-accent/10"
-                    : "border-border/60 bg-surface/30"
+                    : "border-border/6 bg-surface/30"
                 }`}
               >
                 <Button.Label
                   className={`text-base ${
                     contributeByDefault
                       ? "text-accent font-medium"
-                      : "text-foreground/50 font-light"
+                      : "text-default-soft font-light"
                   }`}
                 >
                   Yes, anonymously
@@ -359,7 +359,7 @@ export const ActivityVariant = ({
               accessibilityLabel="Have more? I'm here."
               className="w-full"
             >
-              <Button.Label className="font-light text-foreground/50">
+              <Button.Label className="font-light text-default-soft">
                 Have more? I&apos;m here.
               </Button.Label>
             </Button>
