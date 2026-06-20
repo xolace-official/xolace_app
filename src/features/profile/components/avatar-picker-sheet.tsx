@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { Image } from "expo-image";
 import Animated, {
   useAnimatedStyle,
@@ -14,6 +14,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
 import { AppText } from "@/src/components/shared/app-text";
+import { cn } from "@/src/lib/utils";
 import { useTokenColor } from "../hooks/use-token-color";
 import { resolveAvatar, type AvatarOption } from "../hooks/use-avatars";
 
@@ -34,6 +35,8 @@ const DIP_SCALE = 0.55;
 const SLIDE_OUT_MS = 150;
 const SPRING = { damping: 18, stiffness: 150, mass: 1 } as const;
 
+
+
 // Inner content is remounted on each open (keyed by currentKey in the parent),
 // so the local draft selection always starts from the user's current avatar.
 function AvatarPickerContent({
@@ -51,7 +54,9 @@ function AvatarPickerContent({
   const setAvatar = useMutation(api.avatars.setAvatar);
 
   const initial = resolveAvatar(avatars, currentKey);
-  const [selectedKey, setSelectedKey] = useState(initial?.key ?? avatars[0].key);
+  const [selectedKey, setSelectedKey] = useState(
+    initial?.key ?? avatars[0].key,
+  );
   const [animating, setAnimating] = useState(false);
 
   const selected = resolveAvatar(avatars, selectedKey) ?? avatars[0];
@@ -64,6 +69,8 @@ function AvatarPickerContent({
     transform: [{ translateX: translateX.get() }, { scale: scale.get() }],
   }));
 
+  const accentSoftStyle = { backgroundColor: `${accent}14` };
+
   function handleSelect(key: string) {
     if (key === selectedKey || animating) return;
     const fromIdx = avatars.findIndex((a) => a.key === selectedKey);
@@ -73,7 +80,9 @@ function AvatarPickerContent({
     setAnimating(true);
 
     // Phase 1: shrink + slide the current avatar out toward the travel direction.
-    translateX.set(withTiming(-direction * width * 0.32, { duration: SLIDE_OUT_MS }));
+    translateX.set(
+      withTiming(-direction * width * 0.32, { duration: SLIDE_OUT_MS }),
+    );
     scale.set(
       withTiming(DIP_SCALE, { duration: SLIDE_OUT_MS }, (finished) => {
         "worklet";
@@ -109,35 +118,27 @@ function AvatarPickerContent({
       <AppText className="font-serif text-xl text-foreground text-center">
         Choose your face by the fire
       </AppText>
-      <AppText className="text-sm font-light text-foreground/50 text-center mt-1.5 leading-6">
+      <AppText className="text-sm font-light text-default-soft text-center mt-1.5 leading-6">
         Pick the one that feels like you today.
       </AppText>
 
       {/* Large preview — current avatar slides out and the new one springs in. */}
       <View className="items-center mt-6 mb-7 overflow-hidden">
         <Animated.View
-          style={[
-            previewStyle,
-            {
-              width: PREVIEW,
-              height: PREVIEW,
-              borderRadius: PREVIEW / 2,
-              borderCurve: "continuous",
-              overflow: "hidden",
-              backgroundColor: accent + "14",
-            },
-          ]}
+          style={[previewStyle, styles.previewFrame, accentSoftStyle]}
         >
           <Image
             source={{ uri: selected.url }}
-            style={{ width: PREVIEW, height: PREVIEW }}
+            style={styles.previewImage}
             recyclingKey={selected.key}
             cachePolicy="memory-disk"
             contentFit="cover"
             transition={120}
           />
         </Animated.View>
-        <AppText className="text-[13px] text-muted mt-3">{selected.label}</AppText>
+        <AppText className="text-[13px] text-muted mt-3">
+          {selected.label}
+        </AppText>
       </View>
 
       {/* Thumbnail grid. */}
@@ -154,28 +155,18 @@ function AvatarPickerContent({
               accessibilityRole="button"
               accessibilityLabel={a.label}
               accessibilityState={{ selected: isSelected }}
-              className="rounded-full"
-              style={{
-                padding: 3,
-                borderRadius: (THUMB + 6) / 2,
-                borderWidth: 2,
-                borderColor: isSelected ? accent : "transparent",
-              }}
+              className={cn(
+                "rounded-full p-0.75 border-2",
+                isSelected ? "border-accent" : "border-border",
+              )}
             >
               <View
-                style={{
-                  width: THUMB,
-                  height: THUMB,
-                  borderRadius: THUMB / 2,
-                  borderCurve: "continuous",
-                  overflow: "hidden",
-                  opacity: locked ? 0.4 : 1,
-                  backgroundColor: accent + "14",
-                }}
+                style={[styles.thumbFrame, accentSoftStyle]}
+                className={locked ? "opacity-40" : "opacity-100"}
               >
                 <Image
                   source={{ uri: a.url }}
-                  style={{ width: THUMB, height: THUMB }}
+                  style={styles.thumbImage}
                   recyclingKey={a.key}
                   cachePolicy="memory-disk"
                   contentFit="cover"
@@ -205,7 +196,12 @@ function AvatarPickerContent({
   );
 }
 
-export function AvatarPickerSheet({ isOpen, avatars, currentKey, onClose }: Props) {
+export function AvatarPickerSheet({
+  isOpen,
+  avatars,
+  currentKey,
+  onClose,
+}: Props) {
   const ready = avatars && avatars.length > 0;
 
   return (
@@ -232,7 +228,10 @@ export function AvatarPickerSheet({ isOpen, avatars, currentKey, onClose }: Prop
               onClose={onClose}
             />
           ) : (
-            <View className="px-6 pt-2 pb-10 items-center justify-center" style={{ minHeight: 200 }}>
+            <View
+              className="px-6 pt-2 pb-10 items-center justify-center"
+              style={styles.loadingState}
+            >
               <AppText className="text-sm text-muted">Loading avatars…</AppText>
             </View>
           )}
@@ -241,3 +240,32 @@ export function AvatarPickerSheet({ isOpen, avatars, currentKey, onClose }: Prop
     </BottomSheet>
   );
 }
+
+
+const styles = StyleSheet.create({
+  previewFrame: {
+    width: PREVIEW,
+    height: PREVIEW,
+    borderRadius: PREVIEW / 2,
+    borderCurve: "continuous",
+    overflow: "hidden",
+  },
+  previewImage: {
+    width: PREVIEW,
+    height: PREVIEW,
+  },
+  thumbFrame: {
+    width: THUMB,
+    height: THUMB,
+    borderRadius: THUMB / 2,
+    borderCurve: "continuous",
+    overflow: "hidden",
+  },
+  thumbImage: {
+    width: THUMB,
+    height: THUMB,
+  },
+  loadingState: {
+    minHeight: 200,
+  },
+});
