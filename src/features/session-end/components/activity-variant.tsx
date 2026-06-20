@@ -292,7 +292,7 @@ export const ActivityVariant = ({
                 className={`w-full rounded-2xl ${
                   contributeByDefault
                     ? "border-accent/40 bg-accent/10"
-                    : "border-border/6 bg-surface/30"
+                    : "border-default-soft-hover bg-surface/30"
                 }`}
               >
                 <Button.Label
