@@ -152,15 +152,15 @@ export function QuotesScreen() {
     if (coldStartIssuedRef.current) return;
     coldStartIssuedRef.current = true;
     setIsManualColdStarting(true);
-    try {
-      await coldStart();
-    } catch (e) {
-      console.error(e);
-      coldStartIssuedRef.current = false;
-      setColdStartError(true);
-    } finally {
-      setIsManualColdStarting(false);
-    }
+    await coldStart()
+      .catch((e) => {
+        console.error(e);
+        coldStartIssuedRef.current = false;
+        setColdStartError(true);
+      })
+      .finally(() => {
+        setIsManualColdStarting(false);
+      });
   };
 
   const handlePrefsComplete = async (
