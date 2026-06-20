@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,10 +12,12 @@ import { MirrorLines } from "../mirror-lines";
 import { WeekIntensityCard } from "../week-intensity-card";
 import { WordsTeaserCard } from "../words-teaser-card";
 import { InsightWaitlistSheet } from "../insight-waitlist-sheet";
+import { AvatarPickerSheet } from "../avatar-picker-sheet";
 import { useProfileSummary } from "../../hooks/use-profile-summary";
 import { useMoodDelta } from "../../hooks/use-mood-delta";
 import { useWeekIntensity } from "../../hooks/use-week-intensity";
 import { useInsightWaitlist } from "../../hooks/use-insight-waitlist";
+import { useAvatars, resolveAvatar } from "../../hooks/use-avatars";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -26,6 +29,10 @@ export function ProfileScreen() {
   const moodDelta = useMoodDelta();
   const weekIntensity = useWeekIntensity();
   const waitlist = useInsightWaitlist();
+  const avatars = useAvatars();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const currentAvatar = resolveAvatar(avatars, summary?.avatarId);
 
   const sessionCount = summary?.sessionCount ?? 0;
   const hasEnoughForChips = sessionCount >= 1 && (summary?.dominantEmotionTags?.length ?? 0) > 0;
@@ -74,6 +81,10 @@ export function ProfileScreen() {
             displayName={summary.displayName}
             firstSessionAt={summary.firstSessionAt}
             sessionCount={summary.sessionCount}
+            avatarUrl={currentAvatar?.url ?? null}
+            avatarKey={currentAvatar?.key ?? null}
+            avatarLabel={currentAvatar?.label}
+            onAvatarPress={avatars && avatars.length > 0 ? () => setPickerOpen(true) : undefined}
           />
         )}
 
@@ -144,6 +155,13 @@ export function ProfileScreen() {
         joined={waitlist.joined}
         onConfirm={waitlist.confirm}
         onClose={waitlist.close}
+      />
+
+      <AvatarPickerSheet
+        isOpen={pickerOpen}
+        avatars={avatars}
+        currentKey={summary?.avatarId ?? null}
+        onClose={() => setPickerOpen(false)}
       />
     </View>
   );

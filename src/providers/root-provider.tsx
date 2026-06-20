@@ -9,6 +9,7 @@ import { AppThemeProvider } from "@/src/context/app-theme-context";
 import { SessionModeProvider } from "@/src/context/session-mode-context";
 import { ConvexClientProvider } from "./convex-provider";
 import { posthog } from "@/src/config/posthog";
+import { FeedbackTrayProvider } from "@/src/features/feedback-tray/feedback-tray-provider";
 
 /**
  * Root provider that composes all app-wide providers in the correct order.
@@ -57,7 +58,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
             <PostHogProvider client={posthog} autocapture={AUTO_CAPTURE}>
               <ConvexClientProvider>
                 <HeroUINativeProvider config={config}>
-                  {children}
+                  <FeedbackTrayProvider>{children}</FeedbackTrayProvider>
                 </HeroUINativeProvider>
               </ConvexClientProvider>
             </PostHogProvider>

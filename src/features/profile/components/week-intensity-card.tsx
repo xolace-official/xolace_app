@@ -110,7 +110,7 @@ function EarlierWeeksGate({ width, onPress }: { width: number; onPress: () => vo
       {/* Warm gradient veil — transparent at top (blends from the chart) into a
        * soft accent frost at the bottom. No border, no hard cutoff. */}
       <View className="absolute inset-0">
-        <GateFade width={width} height={GATE_H} color={accent} endAlpha="1F" />
+        <GateFade width={width} height={GATE_H} color={accent} endAlpha="42" />
       </View>
 
       {/* Dimmed navigator sitting in the frosted region. */}

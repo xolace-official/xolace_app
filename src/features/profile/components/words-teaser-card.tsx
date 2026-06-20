@@ -32,7 +32,7 @@ const WORD_H = 22;
 // just out of reach. Only the top word reads clear; the rest are fogged.
 function BlurredWord({ text, color }: { text: string; color: string }) {
   const font = matchFont({
-    fontFamily: "Poppins-Regular",
+    fontFamily: "Poppins",
     fontSize: 14,
     fontStyle: "normal",
     fontWeight: "400",
@@ -41,7 +41,7 @@ function BlurredWord({ text, color }: { text: string; color: string }) {
   return (
     <Canvas style={{ width: WORD_W, height: WORD_H }}>
       {/* eslint-disable-next-line react-perf/jsx-no-jsx-as-prop -- Skia <Group layer> requires a Paint JSX element; React Compiler stabilizes it */}
-      <Group layer={<Paint><Blur blur={4} /></Paint>}>
+      <Group layer={<Paint><Blur blur={6} /></Paint>}>
         <Text x={0} y={WORD_H / 2 + 5} text={text} font={font} color={color} />
       </Group>
     </Canvas>
