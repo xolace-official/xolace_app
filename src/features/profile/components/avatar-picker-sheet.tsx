@@ -1,7 +1,13 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { Image } from "expo-image";
-import Animated, { FadeIn } from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { BottomSheet, PressableFeedback } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { useMutation } from "convex/react";
@@ -21,6 +27,13 @@ type Props = {
 const PREVIEW = 140;
 const THUMB = 60;
 
+// Carousel swap feel (ported from the source ChooseProfilePicture flow):
+// the current avatar shrinks and slides out toward the travel direction, then
+// the incoming avatar enters from the opposite side and springs back to center.
+const DIP_SCALE = 0.55;
+const SLIDE_OUT_MS = 150;
+const SPRING = { damping: 18, stiffness: 150, mass: 1 } as const;
+
 // Inner content is remounted on each open (keyed by currentKey in the parent),
 // so the local draft selection always starts from the user's current avatar.
 function AvatarPickerContent({
@@ -32,15 +45,53 @@ function AvatarPickerContent({
   currentKey: string | null;
   onClose: () => void;
 }) {
+  const { width } = useWindowDimensions();
   const accent = useTokenColor("accent");
   const muted = useTokenColor("muted");
   const setAvatar = useMutation(api.avatars.setAvatar);
 
   const initial = resolveAvatar(avatars, currentKey);
   const [selectedKey, setSelectedKey] = useState(initial?.key ?? avatars[0].key);
+  const [animating, setAnimating] = useState(false);
 
   const selected = resolveAvatar(avatars, selectedKey) ?? avatars[0];
   const changed = selectedKey !== (initial?.key ?? null);
+
+  const translateX = useSharedValue(0);
+  const scale = useSharedValue(1);
+
+  const previewStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.get() }, { scale: scale.get() }],
+  }));
+
+  function handleSelect(key: string) {
+    if (key === selectedKey || animating) return;
+    const fromIdx = avatars.findIndex((a) => a.key === selectedKey);
+    const toIdx = avatars.findIndex((a) => a.key === key);
+    const direction = toIdx > fromIdx ? 1 : -1;
+
+    setAnimating(true);
+
+    // Phase 1: shrink + slide the current avatar out toward the travel direction.
+    translateX.set(withTiming(-direction * width * 0.32, { duration: SLIDE_OUT_MS }));
+    scale.set(
+      withTiming(DIP_SCALE, { duration: SLIDE_OUT_MS }, (finished) => {
+        "worklet";
+        if (!finished) return;
+        // Phase 2: swap the image, drop the incoming one in on the far side,
+        // then spring it back to center at full scale.
+        scheduleOnRN(setSelectedKey, key);
+        translateX.set(direction * width * 0.4);
+        translateX.set(withSpring(0, SPRING));
+        scale.set(
+          withSpring(1, SPRING, (done) => {
+            "worklet";
+            if (done) scheduleOnRN(setAnimating, false);
+          }),
+        );
+      }),
+    );
+  }
 
   async function handleSave() {
     if (changed) {
@@ -62,19 +113,20 @@ function AvatarPickerContent({
         Pick the one that feels like you today.
       </AppText>
 
-      {/* Large preview — swaps with a soft fade on selection. */}
-      <View className="items-center mt-6 mb-7">
+      {/* Large preview — current avatar slides out and the new one springs in. */}
+      <View className="items-center mt-6 mb-7 overflow-hidden">
         <Animated.View
-          key={selected.key}
-          entering={FadeIn.duration(220)}
-          style={{
-            width: PREVIEW,
-            height: PREVIEW,
-            borderRadius: PREVIEW / 2,
-            borderCurve: "continuous",
-            overflow: "hidden",
-            backgroundColor: accent + "14",
-          }}
+          style={[
+            previewStyle,
+            {
+              width: PREVIEW,
+              height: PREVIEW,
+              borderRadius: PREVIEW / 2,
+              borderCurve: "continuous",
+              overflow: "hidden",
+              backgroundColor: accent + "14",
+            },
+          ]}
         >
           <Image
             source={{ uri: selected.url }}
@@ -97,7 +149,7 @@ function AvatarPickerContent({
             <PressableFeedback
               key={a.key}
               onPress={() => {
-                if (!locked) setSelectedKey(a.key);
+                if (!locked) handleSelect(a.key);
               }}
               accessibilityRole="button"
               accessibilityLabel={a.label}
