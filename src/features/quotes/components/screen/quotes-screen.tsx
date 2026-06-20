@@ -59,10 +59,7 @@ export function QuotesScreen() {
   const [isManualColdStarting, setIsManualColdStarting] = useState(false);
   const [coldStartError, setColdStartError] = useState(false);
   const viewedTrackedRef = useRef(false);
-  // Locks coldStart() to a single in-flight dispatch. coldStart() only enqueues
-  // a background job and resolves immediately, so without this gate the manual
-  // path's flag reset would reopen needsColdStart and re-fire the auto effect,
-  // dispatching a second (wasted) generation. Shared by both paths.
+
   const coldStartIssuedRef = useRef(false);
 
   const isLoading = todayQuotes === undefined || quotePrefs === undefined;
