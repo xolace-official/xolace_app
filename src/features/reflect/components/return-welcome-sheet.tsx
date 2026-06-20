@@ -66,7 +66,7 @@ export const ReturnWelcomeSheet = ({ isOpen, tier, onClose }: Props) => {
               accessibilityLabel={copy.cta}
               className="mt-7 h-13 w-full items-center justify-center rounded-2xl bg-accent"
             >
-              <AppText className="text-base font-[Poppins-Medium] text-white">
+              <AppText className="text-base font-[Poppins-Medium] text-accent-foreground">
                 {copy.cta}
               </AppText>
             </PressableFeedback>

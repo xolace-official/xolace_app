@@ -55,7 +55,7 @@ export function useReturnWelcome({
 
   const eligible =
     active &&
-    (quietReturn !== null || variant.kind === "returning") &&
+    variant.kind === "returning" &&
     !!lastSessionAt &&
     lastSessionAt !== seenAt;
 
