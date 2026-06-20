@@ -157,7 +157,7 @@ export function WeekIntensityCard({
       transition={{ type: "timing", duration: 280, easing: EASE, delay: staggerDelay }}
       className="mx-5"
     >
-      <View className="rounded-3xl bg-surface border border-border/60 overflow-hidden">
+      <View className="rounded-3xl bg-surface border border-border/65 overflow-hidden">
         <View className="px-5 pt-5 pb-4">
           <View className="flex-row items-center gap-1.5 mb-5">
             <AppText className="text-[11px] font-medium text-muted tracking-widest uppercase">

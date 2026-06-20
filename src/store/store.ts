@@ -53,6 +53,9 @@ type TogglesSlice = {
   /** One-time flag — once true, the "shake to send feedback" hint toast never shows again. */
   shakeHintSeen: boolean;
   setShakeHintSeen: (v: boolean) => void;
+  /** `lastSessionAt` value the Return Welcome greeting was last shown against. Keys "once per return episode". */
+  returnWelcomeSeenAt: number | null;
+  setReturnWelcomeSeenAt: (n: number) => void;
   /** Id of the newest What's New entry the user has opened. Drives the menu's unseen badge. */
   lastSeenVersion: string | null;
   setLastSeenVersion: (v: string) => void;
@@ -135,6 +138,8 @@ export const useAppStore = create<AppState>()(
         setVentIntroSeen: (v) => set({ ventIntroSeen: v }),
         shakeHintSeen: false,
         setShakeHintSeen: (v) => set({ shakeHintSeen: v }),
+        returnWelcomeSeenAt: null,
+        setReturnWelcomeSeenAt: (n) => set({ returnWelcomeSeenAt: n }),
         lastSeenVersion: null,
         setLastSeenVersion: (v) => set({ lastSeenVersion: v }),
 
@@ -199,6 +204,7 @@ export const useAppStore = create<AppState>()(
           bridgeIntroSeen: s.bridgeIntroSeen,
           ventIntroSeen: s.ventIntroSeen,
           shakeHintSeen: s.shakeHintSeen,
+          returnWelcomeSeenAt: s.returnWelcomeSeenAt,
           lastSeenVersion: s.lastSeenVersion,
           seenMenuItems: s.seenMenuItems,
           lastAcknowledgedStreak: s.lastAcknowledgedStreak,

@@ -5,12 +5,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsFocused } from "expo-router/react-navigation";
 import { StatusBar } from 'expo-status-bar';
 
+import { useQuery } from 'convex/react';
+
+import { api } from '@/convex/_generated/api';
 import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppStore } from '@/src/store/store';
 import { FounderWelcomeSheet } from '@/src/features/founder-welcome/components/founder-welcome-sheet';
 import { MonthlyEventSheet } from '@/src/features/awareness-events/components/monthly-event-sheet';
 import { useAwarenessEvent } from '@/src/features/awareness-events/hooks/use-awareness-event';
+import { ReturnWelcomeSheet } from '@/src/features/reflect/components/return-welcome-sheet';
+import { useReturnWelcome } from '@/src/features/reflect/hooks/use-return-welcome';
+import {
+  computeUserVariant,
+  computeQuietReturn,
+} from '@/src/helpers/utils/user-variant';
 
 const BANNER_INITIAL = { opacity: 0 };
 
@@ -78,6 +87,20 @@ export default function ProtectedIndex() {
   const isFocused = useIsFocused();
   const awarenessEvent = useAwarenessEvent();
 
+  // Same getFullContext query ReflectScreen subscribes to — Convex dedupes it,
+  // so this is a cached read, not a second round-trip.
+  const profile = useQuery(api.users.getFullContext)?.profile;
+
+  // The lapsed-user greeting sits ahead of the awareness event in the home
+  // sheet chain: FounderWelcome → ReturnWelcome → MonthlyEvent. It only arms
+  // once founder welcome is resolved and the screen is focused.
+  const returnWelcome = useReturnWelcome({
+    active: founderWelcomeSeen && !showWelcome && isFocused && !!profile,
+    variant: profile ? computeUserVariant(profile) : { kind: 'first-time' },
+    quietReturn: profile ? computeQuietReturn(profile) : null,
+    lastSessionAt: profile?.lastSessionAt,
+  });
+
   useEffect(() => {
     if (founderWelcomeSeen) return;
     const t = setTimeout(() => setShowWelcome(true), 400);
@@ -101,7 +124,18 @@ export default function ProtectedIndex() {
         />
       )}
       <FounderWelcomeSheet isOpen={showWelcome} onDismiss={handleWelcomeDismiss} />
-      <MonthlyEventSheet event={founderWelcomeSeen && isFocused ? awarenessEvent : null} />
+      <ReturnWelcomeSheet
+        isOpen={returnWelcome.isOpen}
+        tier={returnWelcome.tier}
+        onClose={returnWelcome.dismiss}
+      />
+      <MonthlyEventSheet
+        event={
+          founderWelcomeSeen && isFocused && !returnWelcome.blocking
+            ? awarenessEvent
+            : null
+        }
+      />
     </View>
     </>
   );
