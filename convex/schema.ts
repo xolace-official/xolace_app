@@ -1260,4 +1260,42 @@ export default defineSchema({
     }),
     createdAt: v.number(),
   }).index("by_profile_and_created", ["emotionalProfileId", "createdAt"]),
+
+  // ===========================================================
+  // 19. AVATARS (curated default-avatar catalog)
+  // ===========================================================
+  //
+  // Team-curated avatar catalog — NOT user uploads. Images live in
+  // Convex file storage; we upload them via the dashboard and seed a
+  // row per avatar with `seedAvatar` (internal). The user's selected
+  // avatar key is stored on `preferences.avatarId`; this table maps
+  // that key to a renderable image.
+  //
+  // `storageId` is the canonical handle; `url` is denormalized at seed
+  // time (Convex storage URLs are stable, not expiring) so the client
+  // reads a plain row with no per-request getUrl() resolution. Because
+  // the URL embeds the deployment domain, the catalog is seeded
+  // per-environment (dev URLs differ from prod).
+  //
+  // `tier` is a forward seam for Xolace+ premium avatars; all launch
+  // avatars are "free". Exactly one row should have isDefault: true —
+  // it's the fallback shown when a user has no avatarId set.
+  //
+  avatars: defineTable({
+    // Stable id stored in preferences.avatarId (e.g. "ember", "tide").
+    key: v.string(),
+    tier: v.union(v.literal("free"), v.literal("premium")),
+    // Source of truth for the image file.
+    storageId: v.id("_storage"),
+    // Denormalized renderable URL, resolved from storageId at seed time.
+    url: v.string(),
+    // Sort order within a tier.
+    order: v.number(),
+    // Display caption + accessibility label (e.g. "Ember").
+    label: v.string(),
+    // Exactly one true → the default avatar (fallback when unset).
+    isDefault: v.boolean(),
+  })
+    .index("by_key", ["key"])
+    .index("by_tier_order", ["tier", "order"]),
 });
