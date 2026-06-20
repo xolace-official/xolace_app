@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
@@ -24,8 +24,20 @@ function getGreeting(name: string): string {
   return `Quiet hours, ${name}`;
 }
 
-const MONTHS = ["January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"];
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 function formatSinceDate(ts: number): string {
   const d = new Date(ts);
@@ -40,6 +52,13 @@ const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const INITIAL = { opacity: 0, translateY: 8 };
 const ANIMATE = { opacity: 1, translateY: 0 };
 const TRANSITION = { type: "timing" as const, duration: 320, easing: EASE };
+
+const styles = StyleSheet.create({
+  avatarImage: {
+    width: 80,
+    height: 80,
+  },
+});
 
 export function ProfileHero({
   displayName,
@@ -64,16 +83,23 @@ export function ProfileHero({
           onPress={onAvatarPress}
           isDisabled={!onAvatarPress}
           accessibilityRole="button"
-          accessibilityLabel={avatarLabel ? `Change avatar, current: ${avatarLabel}` : "Change avatar"}
+          accessibilityLabel={
+            avatarLabel
+              ? `Change avatar, current: ${avatarLabel}`
+              : "Change avatar"
+          }
         >
           <View
             className="w-20 h-20 rounded-full items-center justify-center border-[1.5px] overflow-hidden"
-            style={{ backgroundColor: emberColor + "26", borderColor: emberColor + "55" }}
+            style={{
+              backgroundColor: emberColor + "26",
+              borderColor: emberColor + "55",
+            }}
           >
             {avatarUrl ? (
               <Image
                 source={{ uri: avatarUrl }}
-                style={{ width: 80, height: 80 }}
+                style={styles.avatarImage}
                 recyclingKey={avatarKey ?? avatarUrl}
                 cachePolicy="memory-disk"
                 contentFit="cover"
