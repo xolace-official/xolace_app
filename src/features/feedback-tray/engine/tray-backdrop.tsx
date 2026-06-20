@@ -1,6 +1,7 @@
 import { use } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Animated, {
+  useAnimatedProps,
   useAnimatedStyle,
   useDerivedValue,
   withTiming,
@@ -30,12 +31,16 @@ export const TrayBackdrop = () => {
     opacity: withTiming(state.isActive.get() ? 1 : 0, {
       duration: BACKDROP_DURATION,
     }),
-    pointerEvents: state.isActive.get() ? "auto" : "none",
+  }));
+
+  const animatedProps = useAnimatedProps(() => ({
+    pointerEvents: state.isActive.get() ? ("auto" as const) : ("none" as const),
   }));
 
   return (
     <AnimatedPressable
       onPress={actions.dismiss}
+      animatedProps={animatedProps}
       style={[StyleSheet.absoluteFill, rStyle]}
     >
       <AnimatedBlurView

@@ -71,6 +71,7 @@ export function ProfileHero({
 }: Props) {
   const emberColor = useTokenColor("ember");
   const accentColor = useTokenColor("accent");
+  const accentForeground = useTokenColor("accent-foreground");
 
   return (
     <View className="items-center px-6">
@@ -116,7 +117,7 @@ export function ProfileHero({
               className="absolute bottom-0 right-0 w-6 h-6 rounded-full items-center justify-center border-2 border-background"
               style={{ backgroundColor: accentColor }}
             >
-              <SymbolView name="pencil" size={11} tintColor="#FFFFFF" />
+              <SymbolView name="pencil" size={11} tintColor={accentForeground} />
             </View>
           )}
         </PressableFeedback>
