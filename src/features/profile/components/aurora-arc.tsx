@@ -24,14 +24,14 @@ export function AuroraArc({ height = 320 }: Props) {
         <RadialGradient
           c={accentCenter}
           r={width * 0.62}
-          colors={[accent + "3A", accent + "00"]}
+          colors={[accent + "24", accent + "00"]}
         />
       </Circle>
       <Circle c={emberCenter} r={width * 0.8}>
         <RadialGradient
           c={emberCenter}
           r={width * 0.8}
-          colors={[ember + "5C", ember + "1A", ember + "00"]}
+          colors={[ember + "3A", ember + "10", ember + "00"]}
         />
       </Circle>
     </Canvas>
