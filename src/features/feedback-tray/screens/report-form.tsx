@@ -135,7 +135,7 @@ export const ReportForm = ({ kind: initialKind }: { kind: Kind }) => {
 
       {isRateLimited && (
         <AppText className="text-xs text-foreground/50">
-          You&apos;ve sent a lot of feedback today — come back tomorrow.
+          You&apos;ve sent a lot of feedback today. Come back tomorrow.
         </AppText>
       )}
 

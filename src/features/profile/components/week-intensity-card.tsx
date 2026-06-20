@@ -16,7 +16,7 @@ import { GateFade } from "./gate-fade";
 import { CardInfo } from "./card-info";
 
 const INTENSITY_INFO =
-  "Each bar is how heavy your moments felt that day — averaged from the intensity (1–10) of what you brought. Only this week shows in full; your longer arc across earlier weeks is part of the deeper insights coming soon.";
+  "Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Only this week shows in full; your longer arc across earlier weeks is part of the deeper insights coming soon.";
 
 type DayData = {
   label: string;

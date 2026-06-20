@@ -8,7 +8,7 @@ import { FrostedCount } from "./frosted-count";
 import { CardInfo } from "./card-info";
 
 const WORDS_INFO =
-  "These are the recurring words from your own writing — your language, not ours. The count is how often each one has returned. Seeing every word and its frequency is part of the deeper insights coming soon.";
+  "These are the recurring words from your own writing; your language, not ours. The count is how often each one has returned. Seeing every word and its frequency is part of the deeper insights coming soon.";
 
 type Props = {
   words: string[];

@@ -38,7 +38,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
     {
       label: "Vent",
       iconName: { ios: "mic", android: "mic" },
-      accessibilityLabel: "Open voice vent — speak your weight",
+      accessibilityLabel: "Open voice vent, speak your weight",
       newKey: "vent",
       onPress: () => {
         onClose();

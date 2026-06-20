@@ -83,7 +83,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
       {
         icon: { ios: "quote.bubble.fill", android: "format_quote" },
         title: "Daily quotes",
-        body: "A personalized line each day, distilled from your sessions — never your raw words.",
+        body: "A personalized line each day, distilled from your sessions. Never your raw words.",
       },
       {
         icon: { ios: "square.and.arrow.up", android: "share" },

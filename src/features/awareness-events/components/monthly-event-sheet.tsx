@@ -195,7 +195,7 @@ export const MonthlyEventSheet = ({ event }: Props) => {
                   source={{ uri: event!.imageUrl }}
                   contentFit="cover"
                   style={styles.image}
-                  accessibilityLabel={`${event!.title} — awareness event image`}
+                  accessibilityLabel={`${event!.title}, awareness event image`}
                   onLoadEnd={() => setImageLoading(false)}
                   onError={() => setImageFailed(true)}
                 />
