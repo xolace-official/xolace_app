@@ -200,7 +200,7 @@ function Step0({
       <AppText className="text-3xl font-semibold text-foreground mb-2">
         What matters to you?
       </AppText>
-      <AppText className="text-base text-foreground/50 mb-8">
+      <AppText className="text-base text-foreground/55 mb-8">
         Pick 2–4 themes. Your daily quote will reflect them.
       </AppText>
 
@@ -227,7 +227,7 @@ function Step0({
                 {() => (
                   <TagGroup.ItemLabel
                     className={
-                      isSelected ? "text-accent" : "text-foreground/60"
+                      isSelected ? "text-accent" : "text-foreground/65"
                     }
                   >
                     {slug}
@@ -264,7 +264,7 @@ function Step1({
       <AppText className="text-3xl font-semibold text-foreground mb-2">
         When should Flux reach you?
       </AppText>
-      <AppText className="text-base text-foreground/50 mb-8">
+      <AppText className="text-base text-foreground/55 mb-8">
         A gentle nudge when your daily quote is ready.
       </AppText>
 
@@ -289,7 +289,7 @@ function Step1({
                 {() => (
                   <TagGroup.ItemLabel
                     className={
-                      isSelected ? "text-accent" : "text-foreground/60"
+                      isSelected ? "text-accent" : "text-foreground/65"
                     }
                   >
                     {label}

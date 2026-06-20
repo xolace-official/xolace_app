@@ -83,7 +83,7 @@ export const ExitVariant = ({ onHaveMore, isNight = false, mirrorText, onComplet
                 It&apos;s saved to{" "}
               </AppText>
               <LinkButton size="sm" onPress={handleTimelinePress}>
-                <LinkButton.Label className="text-base font-light text-accent/60">
+                <LinkButton.Label className="text-base font-light text-accent/65">
                   your timeline
                 </LinkButton.Label>
               </LinkButton>
@@ -122,7 +122,7 @@ export const ExitVariant = ({ onHaveMore, isNight = false, mirrorText, onComplet
               accessibilityLabel="Have more? I'm here."
               className="w-full"
             >
-              <Button.Label className="font-light text-foreground/50">
+              <Button.Label className="font-light text-foreground/55">
                 Have more? I&apos;m here.
               </Button.Label>
             </Button>

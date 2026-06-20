@@ -127,7 +127,7 @@ export function SitWithThisScreen() {
         className="flex-1 items-center justify-center gap-8 bg-background px-8"
         style={insetsStyle}
       >
-        <AppText className="text-center text-base text-foreground/60">
+        <AppText className="text-center text-base text-foreground/65">
           No exercise available right now.
         </AppText>
         <AppText

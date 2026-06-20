@@ -39,7 +39,7 @@ export const TextureSetTabs = ({ activeSet, onSelect, disabled }: Props) => {
             accessibilityLabel={TEXTURE_SET_LABELS[id]}
             className={`rounded-full px-3 py-1 border ${
               isActive
-                ? "bg-accent/10 border-accent/50"
+                ? "bg-accent/10 border-accent/55"
                 : "bg-transparent border-foreground/10"
             }`}
           >

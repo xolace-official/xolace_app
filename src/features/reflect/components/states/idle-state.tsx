@@ -514,7 +514,7 @@ export const IdleState = ({
             hitSlop={8}
             className="p-3"
           >
-            <AppText className="text-foreground/60 text-sm">Skip</AppText>
+            <AppText className="text-foreground/65 text-sm">Skip</AppText>
           </PressableFeedback>
         </Animated.View>
       )}

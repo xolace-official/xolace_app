@@ -132,7 +132,7 @@ export function TextBeat({
         accessibilityLiveRegion="polite"
       >
         <PacedOrb ref={orbRef} reducedMotion={reducedMotion} />
-        <AppText className="text-center text-base text-foreground/60">
+        <AppText className="text-center text-base text-foreground/65">
           {content}
         </AppText>
       </EaseView>

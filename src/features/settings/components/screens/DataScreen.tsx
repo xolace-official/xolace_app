@@ -145,7 +145,7 @@ export const DataScreen = () => {
                           <AppText className="text-base font-medium text-foreground">
                             {opt.label}
                           </AppText>
-                          <AppText className="text-sm text-foreground/50">
+                          <AppText className="text-sm text-foreground/55">
                             {opt.description}
                           </AppText>
                         </View>

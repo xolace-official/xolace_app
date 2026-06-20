@@ -169,10 +169,10 @@ export const SessionDetailsScreen = () => {
 
         {/* Date + time */}
         <View className="px-6 pb-8 pt-5">
-          <AppText className="text-base font-medium text-foreground/50">
+          <AppText className="text-base font-medium text-foreground/55">
             {day}
           </AppText>
-          <AppText className="mt-0.5 text-base font-medium text-foreground/50">
+          <AppText className="mt-0.5 text-base font-medium text-foreground/55">
             {time}
           </AppText>
         </View>
@@ -248,7 +248,7 @@ export const SessionDetailsScreen = () => {
           {/* Emotion row */}
           <View className="flex-row items-center gap-2">
             <AppText className="text-base">{emoji}</AppText>
-            <AppText className="text-sm text-foreground/60">
+            <AppText className="text-sm text-foreground/65">
               {emotionLabel}
             </AppText>
             {pathLabel ? (

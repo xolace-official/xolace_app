@@ -133,7 +133,7 @@ export function BreathBeat({
     >
       <DualBreathCanvas ref={orbRef} reducedMotion={reducedMotion} />
       <AppText
-        className="text-center text-sm text-foreground/50 px-8 py-4"
+        className="text-center text-sm text-foreground/55 px-8 py-4"
         accessibilityLiveRegion="polite"
       >
         {content}

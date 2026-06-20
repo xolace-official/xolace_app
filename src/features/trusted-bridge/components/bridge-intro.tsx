@@ -66,7 +66,7 @@ export function BridgeIntro({ onBegin }: Props) {
           <AppText className="text-3xl leading-10 text-foreground">
             Felt it.{"\n"}Now find the words.
           </AppText>
-          <AppText className="text-sm font-light leading-6 text-foreground/50">
+          <AppText className="text-sm font-light leading-6 text-foreground/55">
             Processing is one thing. Telling someone who matters is another.
             Trusted Bridge turns what you felt into something you can actually say.
           </AppText>

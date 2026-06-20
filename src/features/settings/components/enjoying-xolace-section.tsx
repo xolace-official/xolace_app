@@ -79,7 +79,7 @@ export const EnjoyingXolaceSection = () => {
           </Accordion.Trigger>
           <Accordion.Content>
             <View className="pb-2">
-              <AppText className="text-sm font-light leading-5 text-foreground/50 px-5 pb-4">
+              <AppText className="text-sm font-light leading-5 text-foreground/55 px-5 pb-4">
                 If Xolace has helped you sit with something heavy, a review
                 helps others find it when they need it most. You can also reach
                 us directly, we read everything.

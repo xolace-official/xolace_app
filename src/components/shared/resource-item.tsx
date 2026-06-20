@@ -105,7 +105,7 @@ export function ResourceItem({ resource, index, onTap }: Props) {
         </AppText>
       )}
       {resource.type === "text" && (
-        <AppText className="mt-1 text-xs font-light text-foreground/60">
+        <AppText className="mt-1 text-xs font-light text-foreground/65">
           {resource.value}
         </AppText>
       )}

@@ -1,5 +1,5 @@
 import { View, Dimensions, StyleSheet } from "react-native";
-import { useRef, useMemo, useEffect } from "react";
+import { useMemo, useCallback } from "react";
 import { SymbolView } from "expo-symbols";
 import { LinearGradient } from "expo-linear-gradient";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -35,32 +35,34 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
   const accent = useThemeColor("accent") as string;
   const foreground = useThemeColor("foreground") as string;
 
-  const gradientWidth = useSharedValue(value > 0 ? (value / FLAME_COUNT) * 100 : 0);
+  const gradientWidth = useSharedValue(
+    value > 0 ? (value / FLAME_COUNT) * 100 : 0,
+  );
   const s1 = useSharedValue(value >= 1 ? 1 : 0.75);
   const s2 = useSharedValue(value >= 2 ? 1 : 0.75);
   const s3 = useSharedValue(value >= 3 ? 1 : 0.75);
   const s4 = useSharedValue(value >= 4 ? 1 : 0.75);
   const s5 = useSharedValue(value >= 5 ? 1 : 0.75);
 
-  // Stable relay so the memoized gesture never goes stale and is never
-  // re-registered mid-gesture (which is what caused the drag crash).
-  const onChangeRef = useRef(onChange);
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  });
-  const notifyDragEnd = useRef((rating: number) => {
-    onChangeRef.current(rating);
-    Presets.plunk();
-  }).current;
+  const notifyDragEnd = useMemo(
+    () => (rating: number) => {
+      onChange(rating);
+      Presets.plunk();
+    },
+    [onChange],
+  );
 
-  const updateScales = (rating: number) => {
-    "worklet";
-    s1.set(withSpring(rating >= 1 ? 1 : 0.75, SPRING_SETTLE));
-    s2.set(withSpring(rating >= 2 ? 1 : 0.75, SPRING_SETTLE));
-    s3.set(withSpring(rating >= 3 ? 1 : 0.75, SPRING_SETTLE));
-    s4.set(withSpring(rating >= 4 ? 1 : 0.75, SPRING_SETTLE));
-    s5.set(withSpring(rating >= 5 ? 1 : 0.75, SPRING_SETTLE));
-  };
+  const updateScales = useCallback(
+    (rating: number) => {
+      "worklet";
+      s1.set(withSpring(rating >= 1 ? 1 : 0.75, SPRING_SETTLE));
+      s2.set(withSpring(rating >= 2 ? 1 : 0.75, SPRING_SETTLE));
+      s3.set(withSpring(rating >= 3 ? 1 : 0.75, SPRING_SETTLE));
+      s4.set(withSpring(rating >= 4 ? 1 : 0.75, SPRING_SETTLE));
+      s5.set(withSpring(rating >= 5 ? 1 : 0.75, SPRING_SETTLE));
+    },
+    [s1, s2, s3, s4, s5],
+  );
 
   const bounceFlame = (index: number) => {
     "worklet";
@@ -84,24 +86,35 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
         .failOffsetY([-5, 5])
         .onStart((e) => {
           "worklet";
-          const rating = Math.max(1, Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)));
-          gradientWidth.set(withSpring((rating / FLAME_COUNT) * 100, SPRING_FILL));
+          const rating = Math.max(
+            1,
+            Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)),
+          );
+          gradientWidth.set(
+            withSpring((rating / FLAME_COUNT) * 100, SPRING_FILL),
+          );
           updateScales(rating);
         })
         .onUpdate((e) => {
           "worklet";
-          const rating = Math.max(1, Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)));
-          gradientWidth.set(withSpring((rating / FLAME_COUNT) * 100, SPRING_FILL));
+          const rating = Math.max(
+            1,
+            Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)),
+          );
+          gradientWidth.set(
+            withSpring((rating / FLAME_COUNT) * 100, SPRING_FILL),
+          );
           updateScales(rating);
         })
-        // eslint-disable-next-line react-hooks/refs -- notifyDragEnd's ref is read on the JS thread via scheduleOnRN at gesture end, never during render
         .onEnd((e) => {
           "worklet";
-          const rating = Math.max(1, Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)));
+          const rating = Math.max(
+            1,
+            Math.min(FLAME_COUNT, Math.ceil(e.x / FLAME_WIDTH)),
+          );
           scheduleOnRN(notifyDragEnd, rating);
         }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [gradientWidth, notifyDragEnd, updateScales],
   );
 
   const handleTap = (intensity: number) => {
@@ -189,7 +202,11 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
       {/* Slider affordance hint */}
       <View className="flex-row items-center justify-center gap-1.5">
         <SymbolView
-          name={{ ios: "arrow.left.and.right", android: "swap_horiz", web: "swap_horiz" }}
+          name={{
+            ios: "arrow.left.and.right",
+            android: "swap_horiz",
+            web: "swap_horiz",
+          }}
           size={10}
           tintColor={`${foreground}40`}
           resizeMode="scaleAspectFit"

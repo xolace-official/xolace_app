@@ -71,7 +71,7 @@ export const ErrorState = ({ errorMessage, onRetry, onReset }: Props) => {
             size="md"
             className="self-start"
           >
-            <LinkButton.Label className="text-foreground/50">
+            <LinkButton.Label className="text-foreground/55">
               Start fresh
             </LinkButton.Label>
           </LinkButton>
