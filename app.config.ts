@@ -156,6 +156,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       blockedPermissions: [
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.ACTIVITY_RECOGNITION",
       ]
     },
     web: {
