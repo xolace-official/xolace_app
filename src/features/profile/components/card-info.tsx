@@ -25,7 +25,7 @@ export function CardInfo({ title, description }: Props) {
           accessibilityRole="button"
           accessibilityLabel={`About ${title}`}
         >
-          <SymbolView name="info.circle" size={13} tintColor={muted + "AA"} />
+          <SymbolView name={{ ios: "info.circle", android: "info", web: "info" }} size={13} tintColor={muted + "AA"} />
         </Pressable>
       </Popover.Trigger>
       <Popover.Portal>

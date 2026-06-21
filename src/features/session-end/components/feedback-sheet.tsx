@@ -112,7 +112,7 @@ function FeedbackSheetChips({ chips, selected, onSelect }: ChipsProps) {
           className={`w-full py-4 rounded-2xl border items-center ${
             selected === key
               ? "border-accent/40 bg-accent/10"
-              : "border-border/60 bg-surface/40"
+              : "border-border/65 bg-surface/40"
           }`}
         >
           <AppText

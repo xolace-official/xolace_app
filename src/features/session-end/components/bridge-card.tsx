@@ -44,7 +44,7 @@ export const BridgeCard = ({ onPress }: Props) => {
       <AppText className="font-serif text-xl text-foreground leading-7 mb-1.5">
         Find the words for someone who matters.
       </AppText>
-      <AppText className="text-sm font-light text-foreground/50 leading-5">
+      <AppText className="text-sm font-light text-foreground/55 leading-5">
         Turn what you felt into something you can say.
       </AppText>
 

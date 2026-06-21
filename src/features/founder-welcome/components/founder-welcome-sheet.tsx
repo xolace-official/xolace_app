@@ -63,7 +63,7 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
           {/* Founder photo — floats above the sheet top edge */}
           <View
             style={styles.photoWrapper}
-            className="bg-surface border-2 border-accent/50"
+            className="bg-surface border-2 border-accent/55"
             accessibilityLabel="Nathaniel, Founder of Xolace"
           >
             {/* Placeholder — swap for expo-image with founder-photo.jpg when asset is ready */}
@@ -103,11 +103,11 @@ export const FounderWelcomeSheet = ({ isOpen, onDismiss }: Props) => {
             ))}
 
             <View style={styles.signatureBlock}>
-              <AppText style={styles.signatureClosing} className="text-foreground/60">
+              <AppText style={styles.signatureClosing} className="text-foreground/65">
                 with care,
               </AppText>
               {/* Placeholder — swap for expo-image with founder-signature.png when asset is ready */}
-              <AppText style={styles.signatureName} className="text-foreground/50">
+              <AppText style={styles.signatureName} className="text-foreground/55">
                 Nathaniel & the Xolace team ♡
               </AppText>
             </View>

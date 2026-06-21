@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useObserve } from "expo-observe";
 import { LegendList } from "@legendapp/list/react-native";
 import { TimelineEntryCard } from "@/src/features/timeline/components/timeline-entry-card";
 import { TimelineSectionHeader } from "@/src/features/timeline/components/timeline-section-header";
@@ -43,6 +45,14 @@ const LoadingFooter = () => <ActivityIndicator style={styles.footerLoader} />;
 export const TimelineScreen = () => {
   const { sections, isLoading, canLoadMore, isLoadingMore, loadMore } =
     useTimeline();
+  const { markInteractive } = useObserve();
+
+  // Per-route TTI for /timeline: ready once the first page resolves, not at
+  // mount. Hook stays above the early return to satisfy rules-of-hooks; the
+  // metric is recorded only on the first call per navigation.
+  useEffect(() => {
+    if (!isLoading) markInteractive();
+  }, [isLoading, markInteractive]);
 
   if (isLoading) {
     return <ActiveLoader />;

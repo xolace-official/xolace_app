@@ -10,7 +10,10 @@ import { usePostHog } from "posthog-react-native";
 // Set EXPO_PUBLIC_FB_APP_ID in your .env to enable Stories sharing.
 const FB_APP_ID = process.env.EXPO_PUBLIC_FB_APP_ID ?? "";
 
-export function useQuoteShareActions(imageUri: string | null, quoteType: "session" | "curated") {
+export function useQuoteShareActions(
+  imageUri: string | null,
+  quoteType: "session" | "curated",
+) {
   const { toast } = useToast();
   const posthog = usePostHog();
 
@@ -38,7 +41,10 @@ export function useQuoteShareActions(imageUri: string | null, quoteType: "sessio
   const shareViaWhatsApp = async () => {
     Presets.flick();
     if (!imageUri) return;
-    posthog.capture('quote_shared', { platform: 'whatsapp', quote_type: quoteType });
+    posthog.capture("quote_shared", {
+      platform: "whatsapp",
+      quote_type: quoteType,
+    });
     // WhatsApp's iOS URL scheme only accepts text — it silently ignores files.
     // UI hides this button on iOS; fall back defensively for any stray callers.
     if (Platform.OS === "ios") {
@@ -50,7 +56,7 @@ export function useQuoteShareActions(imageUri: string | null, quoteType: "sessio
         social: Social.Whatsapp,
         url: imageUri,
         type: "image/png",
-        });
+      });
     } catch {
       await shareGeneric();
     }
@@ -59,7 +65,10 @@ export function useQuoteShareActions(imageUri: string | null, quoteType: "sessio
   const shareViaTelegram = async () => {
     Presets.flick();
     if (!imageUri) return;
-    posthog.capture('quote_shared', { platform: 'telegram', quote_type: quoteType });
+    posthog.capture("quote_shared", {
+      platform: "telegram",
+      quote_type: quoteType,
+    });
     // Telegram's iOS URL scheme stringifies the file path into the chat — not
     // an actual image. UI hides this button on iOS; defensive fallback here.
     if (Platform.OS === "ios") {
@@ -71,16 +80,23 @@ export function useQuoteShareActions(imageUri: string | null, quoteType: "sessio
         social: Social.Telegram,
         url: imageUri,
         type: "image/png",
-        });
+      });
     } catch {
       await shareGeneric();
     }
   };
 
+  const createMediaAsset = async (uri: string) => {
+    await MediaLibrary.Asset.create(uri);
+  };
+
   const shareViaInstagram = async () => {
     Presets.flick();
     if (!imageUri) return;
-    posthog.capture('quote_shared', { platform: 'instagram', quote_type: quoteType });
+    posthog.capture("quote_shared", {
+      platform: "instagram",
+      quote_type: quoteType,
+    });
 
     // Instagram Feed on iOS reads the latest item from the camera roll rather
     // than the URL we pass — so we save first so it picks up our quote image.
@@ -90,13 +106,14 @@ export function useQuoteShareActions(imageUri: string | null, quoteType: "sessio
         if (status !== "granted") {
           toast.show({
             label: "Photo access needed",
-            description: "Allow photo access so we can hand the image to Instagram.",
+            description:
+              "Allow photo access so we can hand the image to Instagram.",
             variant: "default",
           });
           await shareGeneric();
           return;
         }
-        await MediaLibrary.saveToLibraryAsync(imageUri);
+        await createMediaAsset(imageUri);
         toast.show({
           label: "Saved to Photos",
           description: "Opening Instagram…",
@@ -121,14 +138,14 @@ export function useQuoteShareActions(imageUri: string | null, quoteType: "sessio
           social: Social.InstagramStories,
           backgroundImage: imageUri,
           appId: FB_APP_ID,
-            });
+        });
       } else {
         // Android: Instagram Feed share works directly with the file URI.
         await RNShare.shareSingle({
           social: Social.Instagram,
           url: imageUri,
           type: "image/*",
-            });
+        });
       }
     } catch {
       await shareGeneric();
@@ -137,26 +154,46 @@ export function useQuoteShareActions(imageUri: string | null, quoteType: "sessio
 
   const shareMore = async () => {
     Presets.flick();
-    posthog.capture('quote_shared', { platform: 'more', quote_type: quoteType });
+    posthog.capture("quote_shared", {
+      platform: "more",
+      quote_type: quoteType,
+    });
     await shareGeneric();
   };
 
   const saveToLibrary = async () => {
     if (!imageUri) return;
     Presets.flick();
-    posthog.capture('quote_shared', { platform: 'save_to_library', quote_type: quoteType });
+    posthog.capture("quote_shared", {
+      platform: "save_to_library",
+      quote_type: quoteType,
+    });
     const { status } = await MediaLibrary.requestPermissionsAsync(false);
     if (status !== "granted") {
-      toast.show({ label: "Permission denied", description: "Allow photo access in Settings to save images.", variant: "default" });
+      toast.show({
+        label: "Permission denied",
+        description: "Allow photo access in Settings to save images.",
+        variant: "default",
+      });
       return;
     }
     try {
-      await MediaLibrary.saveToLibraryAsync(imageUri);
+      await createMediaAsset(imageUri);
       toast.show({ label: "Saved to Photos", variant: "default" });
     } catch {
-      toast.show({ label: "Couldn't save image", description: "Something went wrong. Try again.", variant: "default" });
+      toast.show({
+        label: "Couldn't save image",
+        description: "Something went wrong. Try again.",
+        variant: "default",
+      });
     }
   };
 
-  return { shareViaWhatsApp, shareViaTelegram, shareViaInstagram, shareMore, saveToLibrary };
+  return {
+    shareViaWhatsApp,
+    shareViaTelegram,
+    shareViaInstagram,
+    shareMore,
+    saveToLibrary,
+  };
 }

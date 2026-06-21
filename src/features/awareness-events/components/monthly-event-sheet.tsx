@@ -122,7 +122,7 @@ export const MonthlyEventSheet = ({ event }: Props) => {
           <AppText
             className={cn(
               'text-center text-[13px] font-[Poppins-Medium]',
-              hasCta ? 'text-foreground/50' : 'text-foreground/70',
+              hasCta ? 'text-foreground/55' : 'text-foreground/70',
             )}
           >
             {hasCta ? 'Not right now' : 'I see this'}
@@ -195,7 +195,7 @@ export const MonthlyEventSheet = ({ event }: Props) => {
                   source={{ uri: event!.imageUrl }}
                   contentFit="cover"
                   style={styles.image}
-                  accessibilityLabel={`${event!.title} — awareness event image`}
+                  accessibilityLabel={`${event!.title}, awareness event image`}
                   onLoadEnd={() => setImageLoading(false)}
                   onError={() => setImageFailed(true)}
                 />

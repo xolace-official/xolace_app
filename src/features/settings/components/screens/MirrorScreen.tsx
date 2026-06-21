@@ -36,7 +36,7 @@ const TONE_OPTIONS: ToneOption[] = [
   {
     value: "direct",
     label: "Direct",
-    description: "Clear, minimal — no metaphors",
+    description: "Clear and minimal, no metaphors",
     symbol: { ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" },
   },
   {
@@ -82,7 +82,7 @@ export const MirrorScreen = () => {
                         <AppText className="text-base font-medium text-foreground">
                           {opt.label}
                         </AppText>
-                        <AppText className="text-sm text-foreground/50">
+                        <AppText className="text-sm text-foreground/55">
                           {opt.description}
                         </AppText>
                       </View>

@@ -30,7 +30,7 @@ const TONE_OPTIONS: ToneOption[] = [
   {
     value: "direct",
     label: "Direct",
-    description: "Clear, minimal — no metaphors",
+    description: "Clear and minimal, no metaphors",
   },
   {
     value: "witnessed",

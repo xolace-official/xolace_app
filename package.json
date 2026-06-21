@@ -23,6 +23,7 @@
     "@convex-dev/rate-limiter": "^0.3.2",
     "@convex-dev/react-query": "^0.1.0",
     "@expo-google-fonts/space-grotesk": "^0.4.1",
+    "@expo/material-symbols": "^0.1.1",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@legendapp/list": "^3.0.0-beta.43",
     "@posthog/convex": "^2.0.28",

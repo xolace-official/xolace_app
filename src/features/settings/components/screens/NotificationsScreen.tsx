@@ -27,19 +27,19 @@ const REACH_OPTIONS: {
   {
     value: "warm",
     label: "Warm",
-    description: "Gentle recognition — a friend who notices without demanding",
+    description: "Gentle recognition, like a friend who notices without demanding",
     symbol: { ios: "heart", android: "favorite", web: "favorite" },
   },
   {
     value: "direct",
     label: "Direct",
-    description: "Honest and pattern-aware — gets to the point",
+    description: "Honest and pattern-aware, gets to the point",
     symbol: { ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" },
   },
   {
     value: "quiet",
     label: "Quiet",
-    description: "Minimal presence — often just a word or two",
+    description: "Minimal presence, often just a word or two",
     symbol: { ios: "speaker.wave.1", android: "volume_down", web: "volume_down" },
   },
 ];
@@ -162,7 +162,7 @@ export const NotificationsScreen = () => {
                             <AppText className="text-base font-medium text-foreground">
                               {opt.label}
                             </AppText>
-                            <AppText className="text-sm text-foreground/50">
+                            <AppText className="text-sm text-foreground/55">
                               {opt.description}
                             </AppText>
                           </View>

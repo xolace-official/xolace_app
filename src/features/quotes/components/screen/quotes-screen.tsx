@@ -56,21 +56,26 @@ export function QuotesScreen() {
 
   const { state: notifState, scheduleNotification } = useQuoteNotifications();
 
-  const [isColdStarting, setIsColdStarting] = useState(false);
+  const [isManualColdStarting, setIsManualColdStarting] = useState(false);
   const [coldStartError, setColdStartError] = useState(false);
   const viewedTrackedRef = useRef(false);
+
+  const coldStartIssuedRef = useRef(false);
 
   const isLoading = todayQuotes === undefined || quotePrefs === undefined;
   const displayedQuote = todayQuotes?.session ?? todayQuotes?.curated ?? null;
   const showNudge =
-    !isLoading && displayedQuote !== null && todayQuotes?.hasSessionToday === false;
+    !isLoading &&
+    displayedQuote !== null &&
+    todayQuotes?.hasSessionToday === false;
   const isFirstVisit = !isLoading && quotePrefs === null;
   const needsColdStart =
     !isLoading &&
     !isFirstVisit &&
     displayedQuote === null &&
-    !isColdStarting &&
+    !isManualColdStarting &&
     !coldStartError;
+  const isColdStarting = isManualColdStarting || needsColdStart;
 
   console.log(`[quotesScreen:needsColdStart] needsColdStart=${needsColdStart}`);
 
@@ -98,71 +103,86 @@ export function QuotesScreen() {
   const triggerHeartBurst = () => {
     heartScale.set(0);
     heartOpacity.set(1);
-    heartScale.set(withSequence(
-      withSpring(1.5, { damping: 6, stiffness: 200 }),
-      withDelay(180, withTiming(0, { duration: 320 })),
-    ));
-    heartOpacity.set(withSequence(
-      withTiming(1, { duration: 40 }),
-      withDelay(350, withTiming(0, { duration: 270 })),
-    ));
+    heartScale.set(
+      withSequence(
+        withSpring(1.5, { damping: 6, stiffness: 200 }),
+        withDelay(180, withTiming(0, { duration: 320 })),
+      ),
+    );
+    heartOpacity.set(
+      withSequence(
+        withTiming(1, { duration: 40 }),
+        withDelay(350, withTiming(0, { duration: 270 })),
+      ),
+    );
   };
 
   useEffect(() => {
-    if (!needsColdStart) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- in-flight flag guarding the async coldStart() side effect; not derivable from render state
-    setIsColdStarting(true);
+    if (!needsColdStart || coldStartIssuedRef.current) return;
+    coldStartIssuedRef.current = true;
     coldStart().catch((e) => {
       console.error(e);
+      coldStartIssuedRef.current = false;
       setColdStartError(true);
-      setIsColdStarting(false);
     });
-    // coldStart is a stable Convex action ref — safe to omit
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needsColdStart]);
-
-  // Clear the cold-start spinner as soon as a quote arrives — adjusted during
-  // render rather than via a useEffect to avoid a cascading render.
-  if (displayedQuote && isColdStarting) {
-    setIsColdStarting(false);
-  }
+  }, [needsColdStart, coldStart]);
 
   useEffect(() => {
-    if (viewedTrackedRef.current || isFirstVisit || isLoading || !displayedQuote) return;
+    if (
+      viewedTrackedRef.current ||
+      isFirstVisit ||
+      isLoading ||
+      !displayedQuote
+    )
+      return;
     viewedTrackedRef.current = true;
-    posthog.capture('quote_viewed', {
+    posthog.capture("quote_viewed", {
       quote_type: displayedQuote.type,
       has_session_today: todayQuotes?.hasSessionToday ?? false,
     });
-  }, [isFirstVisit, isLoading, displayedQuote, todayQuotes?.hasSessionToday, posthog]);
+  }, [
+    isFirstVisit,
+    isLoading,
+    displayedQuote,
+    todayQuotes?.hasSessionToday,
+    posthog,
+  ]);
+
+  const runManualColdStart = async () => {
+    if (coldStartIssuedRef.current) return;
+    coldStartIssuedRef.current = true;
+    setIsManualColdStarting(true);
+    await coldStart()
+      .catch((e) => {
+        console.error(e);
+        coldStartIssuedRef.current = false;
+        setColdStartError(true);
+      })
+      .finally(() => {
+        setIsManualColdStarting(false);
+      });
+  };
 
   const handlePrefsComplete = async (
     themes: string[],
     notifEnabled: boolean,
     notifTime?: string,
   ) => {
-    posthog.capture('quote_preferences_set', {
+    posthog.capture("quote_preferences_set", {
       theme_count: themes.length,
       themes,
       notifications_enabled: notifEnabled,
       notification_time: notifTime ?? null,
     });
     await scheduleNotification(themes, notifEnabled, notifTime);
-    setIsColdStarting(true);
-    coldStart().catch(() => {
-      setColdStartError(true);
-      setIsColdStarting(false);
-    });
+    setColdStartError(false);
+    await runManualColdStart();
   };
 
   const handleRetry = () => {
     setColdStartError(false);
-    setIsColdStarting(true);
-    coldStart().catch((e) => {
-      console.error(e);
-      setColdStartError(true);
-      setIsColdStarting(false);
-    });
+    coldStartIssuedRef.current = false;
+    void runManualColdStart();
   };
 
   const handleReact = async (
@@ -170,13 +190,13 @@ export function QuotesScreen() {
   ) => {
     if (!displayedQuote) return;
     if (!reaction) {
-      posthog.capture('quote_reaction_cleared', {
+      posthog.capture("quote_reaction_cleared", {
         previous_reaction: displayedQuote.reaction ?? null,
         quote_type: displayedQuote.type,
       });
       await clearReaction({ quoteId: displayedQuote._id });
     } else {
-      posthog.capture('quote_reacted', {
+      posthog.capture("quote_reacted", {
         reaction,
         quote_type: displayedQuote.type,
       });
@@ -296,7 +316,7 @@ export function QuotesScreen() {
         <QuoteShareSheet
           visible={showShareSheet}
           imageUri={shareImageUri}
-          quoteType={displayedQuote?.type ?? 'curated'}
+          quoteType={displayedQuote?.type ?? "curated"}
           onClose={() => {
             setShowShareSheet(false);
             setShareImageUri(null);

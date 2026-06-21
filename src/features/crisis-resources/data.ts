@@ -33,7 +33,7 @@ export const COUNTRY_RESOURCES: Record<CountryCode, CountryData> = {
       { type: 'phone', source: 'crisis_line', priority: 3, label: 'Trans Lifeline', value: '877-565-8860' },
       { type: 'phone', source: 'crisis_line', priority: 3, label: 'TREVOR Crisis Hotline', value: '1-866-221-7044' },
       { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Eating Disorders (NEDA)', value: '866-662-1235' },
-      { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Crisis Line — Anorexia & Bulimia', value: '1-800-233-4357' },
+      { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Crisis Line: Anorexia & Bulimia', value: '1-800-233-4357' },
       { type: 'phone', source: 'crisis_line', priority: 4, label: 'National Alcohol & Drug Dependency Hope Line', value: '1-800-622-2255' },
       { type: 'phone', source: 'local_service', priority: 4, label: 'Essential Local & Community Services', value: '211' },
       { type: 'url', source: 'online_resource', priority: 5, label: 'Veterans Crisis Line', value: 'https://www.veteranscrisisline.net' },

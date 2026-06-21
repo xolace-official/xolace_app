@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, type ViewStyle, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
+import AccountCircle from "@expo/material-symbols/account_circle.xml";
+import CrisisAlert from "@expo/material-symbols/crisis_alert.xml";
+import { useThemeColor } from "heroui-native";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { EaseView } from "react-native-ease";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -64,6 +67,9 @@ export const ReflectScreen = () => {
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
   const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
+  // Warm amber 'warning' tint sets the crisis button apart without the alarm of
+  // a hard red — gentle but present, in keeping with the campfire palette.
+  const crisisTint = useThemeColor("warning") as string;
 
   // Shake-to-feedback on the reflect canvas: suppressed only during active
   // articulation (typing / nudge / processing). Allowed in idle, mirror, and
@@ -261,14 +267,15 @@ export const ReflectScreen = () => {
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
           hidden={!isIdle}
-          icon="person.circle"
+          icon={process.env.EXPO_OS === "ios" ? "person.circle" : AccountCircle}
           onPress={() => router.push("/(protected)/profile")}
         />
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button
           hidden={!isIdle}
-          icon="lifepreserver"
+          icon={process.env.EXPO_OS === "ios" ? "lifepreserver" : CrisisAlert}
+          tintColor={crisisTint}
           onPress={() => router.push("/crisis-resources?from=idle_button")}
         />
       </Stack.Toolbar>

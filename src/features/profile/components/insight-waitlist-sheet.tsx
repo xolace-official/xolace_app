@@ -12,7 +12,7 @@ import type { TeaserFeature } from "../hooks/use-insight-waitlist";
 const COPY: Record<TeaserFeature, { title: string; body: string; joinedBody: string }> = {
   intensity_history: {
     title: "Your full arc is coming",
-    body: "See your intensity across every week — not just this one — and how it shifts over time.",
+    body: "See your intensity across every week, not just this one, and how it shifts over time.",
     joinedBody: "We'll let you know the moment your full intensity arc is ready. No rush, no noise.",
   },
   words_language: {
@@ -52,18 +52,18 @@ export function InsightWaitlistSheet({ isOpen, feature, joined, onConfirm, onClo
           <View className="px-6 pt-3 pb-10">
             {joined ? (
               <View className="items-center gap-3 py-4">
-                <SymbolView name="checkmark.seal.fill" size={34} tintColor={accent} />
+                <SymbolView name={{ ios: "checkmark.seal.fill", android: "verified", web: "verified" }} size={34} tintColor={accent} />
                 <AppText className="font-serif text-xl text-foreground text-center">
                   You&apos;re on the list
                 </AppText>
-                <AppText className="text-sm font-light text-foreground/50 text-center leading-6">
+                <AppText className="text-sm font-light text-foreground/55 text-center leading-6">
                   {copy?.joinedBody ?? "We'll let you know the moment it's ready. No rush, no noise."}
                 </AppText>
                 <PressableFeedback
                   onPress={onClose}
                   accessibilityRole="button"
                   accessibilityLabel="Close"
-                  className="mt-3 self-stretch h-12 rounded-2xl items-center justify-center bg-surface border border-border/60"
+                  className="mt-3 self-stretch h-12 rounded-2xl items-center justify-center bg-surface border border-border/65"
                 >
                   <AppText className="text-sm font-medium text-foreground/70">Close</AppText>
                 </PressableFeedback>
@@ -73,7 +73,7 @@ export function InsightWaitlistSheet({ isOpen, feature, joined, onConfirm, onClo
                 <AppText className="font-serif text-xl text-foreground">
                   {copy?.title ?? "These insights are coming"}
                 </AppText>
-                <AppText className="text-sm font-light text-foreground/50 leading-6">
+                <AppText className="text-sm font-light text-foreground/55 leading-6">
                   {copy?.body ?? "Want to be first to see them?"}
                 </AppText>
 

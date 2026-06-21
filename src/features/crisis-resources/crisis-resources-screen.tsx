@@ -181,7 +181,7 @@ export function CrisisResourcesScreen() {
           <PressableFeedback
             onPress={handleEmergencyCall}
             accessibilityRole="button"
-            accessibilityLabel={`Call emergency services — ${countryData.emergencyNumber}`}
+            accessibilityLabel={`Call emergency services: ${countryData.emergencyNumber}`}
             accessibilityHint="Opens your phone dialer"
           >
             <View className="w-full rounded-2xl border border-warning/30 bg-warning/10 px-5 py-5 flex-row items-center gap-3">

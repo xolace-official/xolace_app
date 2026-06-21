@@ -126,7 +126,7 @@ function ResourceItem({
         </AppText>
       )}
       {resource.type === "text" && (
-        <AppText className="mt-1 text-xs font-light text-foreground/60">
+        <AppText className="mt-1 text-xs font-light text-foreground/65">
           {resource.value}
         </AppText>
       )}
@@ -186,7 +186,7 @@ export const EscalationState = ({
           <AppText className="mb-1 text-xs uppercase tracking-widest text-foreground/20">
             Support resources
           </AppText>
-          <AppText className="text-base font-light leading-7 text-foreground/60">
+          <AppText className="text-base font-light leading-7 text-foreground/65">
             These are here whenever you need them.
           </AppText>
         </EaseView>
@@ -249,7 +249,7 @@ export const EscalationState = ({
           I hear you. What you&apos;re carrying right now sounds really heavy,
           heavier than a regular tough day.
         </AppText>
-        <AppText className="text-base font-light leading-7 text-foreground/50">
+        <AppText className="text-base font-light leading-7 text-foreground/55">
           There are people who are trained specifically for moments like this.
           Would you like me to help you find the right support?
         </AppText>
@@ -291,7 +291,7 @@ export const EscalationState = ({
             accessibilityLabel="Not right now, but thank you"
             className="rounded-xl border border-foreground/10 bg-transparent px-6 py-3.5"
           >
-            <AppText className="text-sm font-light text-foreground/50">
+            <AppText className="text-sm font-light text-foreground/55">
               Not right now, but thank you
             </AppText>
           </Pressable>

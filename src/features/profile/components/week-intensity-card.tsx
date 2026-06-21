@@ -16,7 +16,7 @@ import { GateFade } from "./gate-fade";
 import { CardInfo } from "./card-info";
 
 const INTENSITY_INFO =
-  "Each bar is how heavy your moments felt that day — averaged from the intensity (1–10) of what you brought. Only this week shows in full; your longer arc across earlier weeks is part of the deeper insights coming soon.";
+  "Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Only this week shows in full; your longer arc across earlier weeks is part of the deeper insights coming soon.";
 
 type DayData = {
   label: string;
@@ -115,11 +115,11 @@ function EarlierWeeksGate({ width, onPress }: { width: number; onPress: () => vo
 
       {/* Dimmed navigator sitting in the frosted region. */}
       <View className="flex-1 flex-row items-center justify-center gap-2.5 opacity-50">
-        <SymbolView name="chevron.left" size={11} tintColor={muted} />
+        <SymbolView name={{ ios: "chevron.left", android: "chevron_left", web: "chevron_left" }} size={11} tintColor={muted} />
         <AppText className="text-[12px] tracking-wide" style={{ color: muted }}>
           Earlier weeks
         </AppText>
-        <SymbolView name="chevron.right" size={11} tintColor={muted} />
+        <SymbolView name={{ ios: "chevron.right", android: "chevron_right", web: "chevron_right" }} size={11} tintColor={muted} />
       </View>
     </Pressable>
   );
@@ -157,7 +157,7 @@ export function WeekIntensityCard({
       transition={{ type: "timing", duration: 280, easing: EASE, delay: staggerDelay }}
       className="mx-5"
     >
-      <View className="rounded-3xl bg-surface border border-border/60 overflow-hidden">
+      <View className="rounded-3xl bg-surface border border-border/65 overflow-hidden">
         <View className="px-5 pt-5 pb-4">
           <View className="flex-row items-center gap-1.5 mb-5">
             <AppText className="text-[11px] font-medium text-muted tracking-widest uppercase">

@@ -208,14 +208,14 @@ export const ActivityVariant = ({
                   className={`w-full rounded-2xl border px-5 py-4 ${
                     selectedMood === mood
                       ? "border-accent/40 bg-accent/10"
-                      : "border-default-soft-hover bg-surface/30"
+                      : "border-border/65 bg-surface/30"
                   }`}
                 >
                   <AppText
                     className={`text-base text-center ${
                       selectedMood === mood
                         ? "text-accent font-medium"
-                        : "text-default-soft font-light"
+                        : "text-foreground/55 font-light"
                     }`}
                   >
                     {MOOD_LABELS[mood]}
@@ -292,14 +292,14 @@ export const ActivityVariant = ({
                 className={`w-full rounded-2xl ${
                   contributeByDefault
                     ? "border-accent/40 bg-accent/10"
-                    : "border-default-soft-hover bg-surface/30"
+                    : "border-foreground/55 bg-surface/30"
                 }`}
               >
                 <Button.Label
                   className={`text-base ${
                     contributeByDefault
                       ? "text-accent font-medium"
-                      : "text-default-soft font-light"
+                      : "text-foreground/55 font-light"
                   }`}
                 >
                   Yes, anonymously
@@ -359,7 +359,7 @@ export const ActivityVariant = ({
               accessibilityLabel="Have more? I'm here."
               className="w-full"
             >
-              <Button.Label className="font-light text-default-soft">
+              <Button.Label className="font-light text-foreground/65">
                 Have more? I&apos;m here.
               </Button.Label>
             </Button>
@@ -370,7 +370,7 @@ export const ActivityVariant = ({
               variant="ghost"
               size="sm"
             >
-              <Button.Label className="text-sm text-foreground/20">Done</Button.Label>
+              <Button.Label className="text-sm text-foreground/30">Done</Button.Label>
             </Button>
           </EaseView>
         </View>

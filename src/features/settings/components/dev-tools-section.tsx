@@ -11,6 +11,8 @@ import { useThemeColor, useToast } from "heroui-native";
 
 import { api } from "@/convex/_generated/api";
 import { useAppStore } from "@/src/store/store";
+import { ReturnWelcomeSheet } from "@/src/features/reflect/components/return-welcome-sheet";
+import type { ReturnWelcomeTier } from "@/src/features/reflect/return-welcome-copy";
 import { SettingsRow } from "./settings-row";
 import { SettingsSection } from "./settings-section";
 import type { CrossPlatformSymbol } from "./settings-icons";
@@ -35,6 +37,19 @@ const AWARENESS_ICON: CrossPlatformSymbol = {
   android: "event_repeat",
   web: "event_repeat",
 };
+const RETURN_ICON: CrossPlatformSymbol = {
+  ios: "hand.wave",
+  android: "waving_hand",
+  web: "waving_hand",
+};
+
+const RETURN_WELCOME_TIERS: { tier: ReturnWelcomeTier; label: string }[] = [
+  { tier: "recent", label: "Return welcome · recent" },
+  { tier: "away-14-30", label: "Return welcome · 14–30d" },
+  { tier: "away-30-90", label: "Return welcome · 30–90d" },
+  { tier: "away-90-plus", label: "Return welcome · 90d+" },
+  { tier: "anniversary", label: "Return welcome · anniversary" },
+];
 
 export const DevToolsSection = () => {
   const { toast } = useToast();
@@ -50,6 +65,7 @@ export const DevToolsSection = () => {
   };
   const setStreak = useMutation(api.devTools.setStreak);
   const [busy, setBusy] = useState(false);
+  const [previewTier, setPreviewTier] = useState<ReturnWelcomeTier | null>(null);
 
   const icon = (name: CrossPlatformSymbol) => (
     <SymbolView name={name} size={17} tintColor={mutedIconColor} />
@@ -110,7 +126,22 @@ export const DevToolsSection = () => {
         icon={icon(AWARENESS_ICON)}
         label="Reset awareness events"
         onPress={resetAwarenessEvents}
-        isLast
+      />
+      {RETURN_WELCOME_TIERS.map(({ tier, label }, i) => (
+        <SettingsRow
+          key={tier}
+          variant="action"
+          icon={icon(RETURN_ICON)}
+          label={label}
+          onPress={() => setPreviewTier(tier)}
+          isLast={i === RETURN_WELCOME_TIERS.length - 1}
+        />
+      ))}
+
+      <ReturnWelcomeSheet
+        isOpen={previewTier !== null}
+        tier={previewTier ?? "recent"}
+        onClose={() => setPreviewTier(null)}
       />
     </SettingsSection>
   );

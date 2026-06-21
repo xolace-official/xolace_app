@@ -18,7 +18,7 @@ const WEEKLY_MESSAGES: { title: string; body: string }[] = [
   { title: "Today's reflection.",         body: "Open Xolace when you have a quiet moment." },
   { title: "Something to sit with.",      body: "A quote picked just for you is waiting." },
   { title: "Words for today.",            body: "Your quote is here whenever you need it." },
-  { title: "A thought is waiting.",       body: "Today's reflection — open it when the time feels right." },
+  { title: "A thought is waiting.",       body: "Today's reflection. Open it when the time feels right." },
 ];
 
 export type NotifSetupState =

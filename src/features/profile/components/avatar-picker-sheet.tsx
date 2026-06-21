@@ -174,7 +174,7 @@ function AvatarPickerContent({
               </View>
               {locked && (
                 <View className="absolute inset-0 items-center justify-center">
-                  <SymbolView name="lock.fill" size={16} tintColor={muted} />
+                  <SymbolView name={{ ios: "lock.fill", android: "lock", web: "lock" }} size={16} tintColor={muted} />
                 </View>
               )}
             </PressableFeedback>

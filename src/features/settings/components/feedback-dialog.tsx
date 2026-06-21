@@ -89,8 +89,8 @@ const FeedbackForm = ({ onOpenChange }: { onOpenChange: (open: boolean) => void 
       </AppText>
 
       {isRateLimited && (
-        <AppText className="text-xs text-foreground/50 mt-1 mb-2">
-          You&apos;ve sent feedback today — come back tomorrow.
+        <AppText className="text-xs text-foreground/55 mt-1 mb-2">
+          You&apos;ve sent feedback today. Come back tomorrow.
         </AppText>
       )}
 

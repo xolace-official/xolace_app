@@ -31,7 +31,7 @@ export const GaveUpState = ({ onPathSelection, onReset, sessionId }: Props) => {
   return (
   <View className="flex-1 justify-center px-6">
     <AppText className="text-xl leading-8 text-foreground">
-      Sometimes words can&apos;t quite capture what we feel — and that&apos;s okay.
+      Sometimes words can&apos;t quite capture what we feel, and that&apos;s okay.
     </AppText>
 
     <AppText className="mt-4 text-base leading-6 text-foreground/40">

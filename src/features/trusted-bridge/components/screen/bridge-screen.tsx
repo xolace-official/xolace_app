@@ -226,10 +226,10 @@ export function BridgeScreen({ sessionId }: Props) {
                         accessibilityLabel={rel}
                         accessibilityRole="button"
                         accessibilityState={{ selected: relationship === rel }}
-                        className={`rounded-full border px-4 py-2 ${relationship === rel ? "border-accent/40 bg-accent/10" : "border-border/50 bg-surface/30"}`}
+                        className={`rounded-full border px-4 py-2 ${relationship === rel ? "border-accent/40 bg-accent/10" : "border-border/55 bg-surface/30"}`}
                       >
                         <AppText
-                          className={`text-sm ${relationship === rel ? "text-accent font-medium" : "text-foreground/50 font-light"}`}
+                          className={`text-sm ${relationship === rel ? "text-accent font-medium" : "text-foreground/55 font-light"}`}
                         >
                           {rel}
                         </AppText>
@@ -265,10 +265,10 @@ export function BridgeScreen({ sessionId }: Props) {
                             accessibilityState={{
                               selected: addressTerm === term,
                             }}
-                            className={`rounded-full border px-4 py-2 ${addressTerm === term ? "border-accent/40 bg-accent/10" : "border-border/50 bg-surface/30"}`}
+                            className={`rounded-full border px-4 py-2 ${addressTerm === term ? "border-accent/40 bg-accent/10" : "border-border/55 bg-surface/30"}`}
                           >
                             <AppText
-                              className={`text-sm ${addressTerm === term ? "text-accent font-medium" : "text-foreground/50 font-light"}`}
+                              className={`text-sm ${addressTerm === term ? "text-accent font-medium" : "text-foreground/55 font-light"}`}
                             >
                               {term}
                             </AppText>
@@ -378,7 +378,7 @@ export function BridgeScreen({ sessionId }: Props) {
                         size={15}
                         tintColor={mutedColor}
                       />
-                      <AppText className="text-xs font-light text-foreground/50 flex-1 leading-4">
+                      <AppText className="text-xs font-light text-foreground/55 flex-1 leading-4">
                         Couldn&apos;t personalize this time, but the template
                         below is yours to edit.
                       </AppText>

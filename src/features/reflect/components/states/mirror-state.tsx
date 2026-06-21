@@ -235,7 +235,7 @@ export const MirrorState = ({
             size="md"
             className="self-start"
           >
-            <LinkButton.Label className="text-foreground/50">
+            <LinkButton.Label className="text-foreground/55">
               Not quite
             </LinkButton.Label>
           </LinkButton>
@@ -251,7 +251,7 @@ export const MirrorState = ({
             size="md"
             className="self-start"
           >
-            <LinkButton.Label className="text-foreground/50">
+            <LinkButton.Label className="text-foreground/55">
               Say more
             </LinkButton.Label>
           </LinkButton>
