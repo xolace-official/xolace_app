@@ -52,7 +52,7 @@ export function InsightWaitlistSheet({ isOpen, feature, joined, onConfirm, onClo
           <View className="px-6 pt-3 pb-10">
             {joined ? (
               <View className="items-center gap-3 py-4">
-                <SymbolView name="checkmark.seal.fill" size={34} tintColor={accent} />
+                <SymbolView name={{ ios: "checkmark.seal.fill", android: "verified", web: "verified" }} size={34} tintColor={accent} />
                 <AppText className="font-serif text-xl text-foreground text-center">
                   You&apos;re on the list
                 </AppText>

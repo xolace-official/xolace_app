@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
+import Settings from "@expo/material-symbols/settings.xml";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
@@ -63,7 +64,7 @@ export function ProfileScreen() {
       />
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button
-          icon="gearshape"
+          icon={process.env.EXPO_OS === "ios" ? "gearshape" : Settings}
           onPress={() => router.push("/settings")}
         />
       </Stack.Toolbar>

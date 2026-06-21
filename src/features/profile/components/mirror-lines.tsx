@@ -20,11 +20,11 @@ type SFSymbol = React.ComponentProps<typeof SymbolView>["name"];
 
 function moodRow(delta: MoodDelta): { icon: SFSymbol; text: string } | null {
   switch (delta) {
-    case "lighter": return { icon: "arrow.up.circle", text: "Most of your sessions end lighter." };
-    case "same": return { icon: "circle.lefthalf.filled", text: "You tend to leave feeling much the same." };
-    case "heavier": return { icon: "arrow.down.circle", text: "Some sessions surface things that feel heavier at close." };
-    case "unsure": return { icon: "questionmark.circle", text: "You often sit with uncertainty after." };
-    case "mixed": return { icon: "circle.dotted", text: "Sessions land differently each time — that's honest." };
+    case "lighter": return { icon: { ios: "arrow.up.circle", android: "arrow_circle_up", web: "arrow_circle_up" }, text: "Most of your sessions end lighter." };
+    case "same": return { icon: { ios: "circle.lefthalf.filled", android: "contrast", web: "contrast" }, text: "You tend to leave feeling much the same." };
+    case "heavier": return { icon: { ios: "arrow.down.circle", android: "arrow_circle_down", web: "arrow_circle_down" }, text: "Some sessions surface things that feel heavier at close." };
+    case "unsure": return { icon: { ios: "questionmark.circle", android: "help", web: "help" }, text: "You often sit with uncertainty after." };
+    case "mixed": return { icon: { ios: "circle.dotted", android: "data_usage", web: "data_usage" }, text: "Sessions land differently each time — that's honest." };
     default: return null;
   }
 }
@@ -36,10 +36,10 @@ function rhythmRow(pattern: TypicalPattern): { icon: SFSymbol; text: string } | 
   const h = pattern.hourOfDay;
   let period: string;
   let icon: SFSymbol;
-  if (h >= 5 && h < 12) { period = "mornings"; icon = "sunrise"; }
-  else if (h >= 12 && h < 17) { period = "afternoons"; icon = "sun.max"; }
-  else if (h >= 17 && h < 21) { period = "evenings"; icon = "sunset"; }
-  else { period = "late nights"; icon = "moon.stars"; }
+  if (h >= 5 && h < 12) { period = "mornings"; icon = { ios: "sunrise", android: "wb_twilight", web: "wb_twilight" }; }
+  else if (h >= 12 && h < 17) { period = "afternoons"; icon = { ios: "sun.max", android: "light_mode", web: "light_mode" }; }
+  else if (h >= 17 && h < 21) { period = "evenings"; icon = { ios: "sunset", android: "wb_twilight", web: "wb_twilight" }; }
+  else { period = "late nights"; icon = { ios: "moon.stars", android: "moon_stars", web: "moon_stars" }; }
   return { icon, text: `You arrive most on ${day} ${period}.` };
 }
 

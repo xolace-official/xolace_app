@@ -115,11 +115,11 @@ function EarlierWeeksGate({ width, onPress }: { width: number; onPress: () => vo
 
       {/* Dimmed navigator sitting in the frosted region. */}
       <View className="flex-1 flex-row items-center justify-center gap-2.5 opacity-50">
-        <SymbolView name="chevron.left" size={11} tintColor={muted} />
+        <SymbolView name={{ ios: "chevron.left", android: "chevron_left", web: "chevron_left" }} size={11} tintColor={muted} />
         <AppText className="text-[12px] tracking-wide" style={{ color: muted }}>
           Earlier weeks
         </AppText>
-        <SymbolView name="chevron.right" size={11} tintColor={muted} />
+        <SymbolView name={{ ios: "chevron.right", android: "chevron_right", web: "chevron_right" }} size={11} tintColor={muted} />
       </View>
     </Pressable>
   );

@@ -107,7 +107,7 @@ export function ProfileHero({
                 transition={150}
               />
             ) : (
-              <SymbolView name="flame.fill" size={34} tintColor={emberColor} />
+              <SymbolView name={{ ios: "flame.fill", android: "local_fire_department", web: "local_fire_department" }} size={34} tintColor={emberColor} />
             )}
           </View>
 
@@ -117,7 +117,7 @@ export function ProfileHero({
               className="absolute bottom-0 right-0 w-6 h-6 rounded-full items-center justify-center border-2 border-background"
               style={{ backgroundColor: accentColor }}
             >
-              <SymbolView name="pencil" size={11} tintColor={accentForeground} />
+              <SymbolView name={{ ios: "pencil", android: "edit", web: "edit" }} size={11} tintColor={accentForeground} />
             </View>
           )}
         </PressableFeedback>
