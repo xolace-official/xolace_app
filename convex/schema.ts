@@ -139,10 +139,13 @@ export default defineSchema({
     averageSessionDuration: v.optional(v.number()),
 
     // --- Streak ---
-    // NOT gamified. No badges, no guilt.
-    // Just a quiet "Day 12" on the home screen.
-    // Resets after 48 hours (generous, not punishing).
+    // Current run of consecutive active days. Resets after 48 hours.
     currentStreak: v.number(),
+
+    // Longest streak ever reached. A record — it never decays, only grows
+    // via Math.max on session completion. Optional for rows created before
+    // this field existed; backfilled to currentStreak by migration.
+    longestStreak: v.optional(v.number()),
 
     // --- Learned Patterns ---
 

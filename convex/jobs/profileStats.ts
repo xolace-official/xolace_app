@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { isStreakExpired } from "../lib/streak";
 
 /**
  * Update emotional profile stats after a session completes.
@@ -35,13 +36,12 @@ export const updateAfterSession = internalMutation({
       }
     }
 
-    // Update streak: +1 per calendar day, reset after 48h gap
-    const STREAK_WINDOW_MS = 48 * 60 * 60 * 1000;
+    // Update streak: +1 per calendar day, reset after the shared window gap
     let newStreak = profile.currentStreak;
     if (!profile.lastSessionAt) {
       // First ever session
       newStreak = 1;
-    } else if (now - profile.lastSessionAt > STREAK_WINDOW_MS) {
+    } else if (isStreakExpired(profile.lastSessionAt, now)) {
       // Been away too long — reset
       newStreak = 1;
     } else {
@@ -57,6 +57,13 @@ export const updateAfterSession = internalMutation({
       }
       // else: same day, streak stays the same
     }
+
+    // Longest streak is a record — only grows. Fall back to currentStreak for
+    // rows predating the field (migration backfills the rest).
+    const newLongestStreak = Math.max(
+      newStreak,
+      profile.longestStreak ?? profile.currentStreak,
+    );
 
     // Update dominant emotion tags from recent metadata
     const recentMetadata = await ctx.db
@@ -126,6 +133,7 @@ export const updateAfterSession = internalMutation({
     await ctx.db.patch(args.emotionalProfileId, {
       sessionCount: newSessionCount,
       currentStreak: newStreak,
+      longestStreak: newLongestStreak,
       dominantEmotionTags:
         dominantEmotionTags.length > 0
           ? dominantEmotionTags

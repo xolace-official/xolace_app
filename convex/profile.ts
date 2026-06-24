@@ -3,6 +3,7 @@ import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { insightFeatureValidator } from "./lib/validators";
 import { generateDisplayName } from "./lib/displayName";
+import { displayStreak } from "./lib/streak";
 
 // Premium stub — swap for hasEntitlement() when RevenueCat is wired in Wave 2.
 // Gate server-side so client never receives locked data, only null + premiumRequired.
@@ -50,7 +51,13 @@ export const getSummary = query({
       avatarId: prefs?.avatarId ?? "default",
       firstSessionAt: profile.firstSessionAt ?? null,
       sessionCount: profile.sessionCount,
-      currentStreak: profile.currentStreak,
+      // Derive live: the stored streak goes stale once the 48h window lapses
+      // (only rewritten on session completion). Reset to 0 for display so the
+      // profile screen agrees with the home screen's live computation.
+      currentStreak: displayStreak(profile.currentStreak, profile.lastSessionAt),
+      // Raw, not live-derived: longest is a record and never decays. Fall back
+      // to the stored streak for rows predating the field (pre-backfill).
+      longestStreak: profile.longestStreak ?? profile.currentStreak,
       dominantEmotionTags: profile.dominantEmotionTags,
       typicalUsagePattern: profile.typicalUsagePattern ?? null,
       recentWords,

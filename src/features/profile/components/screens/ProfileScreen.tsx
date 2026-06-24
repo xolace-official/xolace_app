@@ -93,6 +93,7 @@ export function ProfileScreen() {
           <StatBand
             sessionCount={summary.sessionCount}
             currentStreak={summary.currentStreak}
+            longestStreak={summary.longestStreak}
             usualDay={usualDay}
             staggerDelay={120}
           />
