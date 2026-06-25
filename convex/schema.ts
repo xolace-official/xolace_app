@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { vWorkflowId } from "@convex-dev/workflow";
 import { insightFeatureValidator, resourceValidator } from "./lib/validators";
 
 // =============================================================
@@ -528,6 +529,31 @@ export default defineSchema({
     // Error message when state is "error" (AI processing failure).
     errorMessage: v.optional(v.string()),
 
+    // --- Follow-Up System ---
+
+    // Safeguard level computed at mirror delivery. Persisted so the follow-up
+    // cadence can distinguish crisis (→ Acute tier) from elevated. Stored for
+    // all sessions, not just escalations.
+    safeguardLevel: v.optional(
+      v.union(
+        v.literal("none"),
+        v.literal("gentle"),
+        v.literal("elevated"),
+        v.literal("crisis"),
+      ),
+    ),
+
+    // Was a follow-up warranted for this session? Set at completion from
+    // the preliminary AI/escalation flag (deliverMirror) combined with
+    // gave_up. Drives the profile Follow-Ups section and the workflow gate.
+    requiresFollowUp: v.optional(v.boolean()),
+
+    // Workflow ID returned by workflow.start(). Stored here so:
+    // (1) markReturn can target the right workflow on app open
+    // (2) the workflow can be cancelled early (return / supersede / wipe).
+    // Uses the component's branded WorkflowId validator, not v.string().
+    followUpWorkflowId: v.optional(vWorkflowId),
+
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated
     completedAt: v.optional(v.number()), // Session closed
@@ -674,6 +700,13 @@ export default defineSchema({
 
     // --- Safety ---
     riskFlag: v.boolean(),
+
+    // --- Follow-Up ---
+    // Brief internal sentence explaining why the classifier flagged this
+    // session for a follow-up. Never shown to the user — debugging + prompt
+    // tuning only. Co-located here with all other classifier output.
+    // null/undefined when the classifier did not request a follow-up.
+    followUpReason: v.optional(v.string()),
 
     // --- Timestamps ---
     createdAt: v.number(),
@@ -953,6 +986,7 @@ export default defineSchema({
       v.literal("pattern_nudge"), // "Sunday evening..."
       v.literal("milestone"), // "30 days of showing up"
       v.literal("affirmation"), // "Being tired doesn't mean you're failing."
+      v.literal("follow_up"), // Follow-up nudge for a specific unresolved session.
     ),
 
     // AI-generated, contextual notification text.
@@ -1311,4 +1345,85 @@ export default defineSchema({
   })
     .index("by_key", ["key"])
     .index("by_tier_order", ["tier", "order"]),
+
+  // ===========================================================
+  // 20. FOLLOW-UP CARDS
+  // ===========================================================
+  //
+  // One row per follow-up workflow execution. A session that left
+  // something unresolved (escalation, gave_up, or AI-flagged) earns a
+  // durable check-in. The Workflow owns this card's lifecycle; the app
+  // reads it on open and surfaces a detached BottomSheet when it is "ready".
+  //
+  // At most ONE active (pending|ready) card exists per profile at a time
+  // (enforced by startFollowUpWorkflow's idempotency + weight-aware
+  // supersede). Privacy: rows + the owning workflow are purged in
+  // dataWipe / accountDeletion.
+  //
+  follow_up_cards: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+
+    // The session that triggered this follow-up.
+    sessionId: v.id("sessions"),
+
+    // The Workflow that owns this card's lifecycle. Branded WorkflowId.
+    workflowId: vWorkflowId,
+
+    // The follow-up cadence tier, computed at workflow start from session
+    // weight. Drives sleep durations, push content, and the UI variant.
+    tier: v.union(
+      v.literal("acute"), // safeguard crisis — presence-first, wound-free push
+      v.literal("elevated"), // elevated / grief|shame intensity≥7 / gave_up
+      v.literal("standard"), // classifier flag, intensity < 7
+    ),
+
+    // What the card should say in-app. Generated (Haiku) at workflow start
+    // from the session's mirror + classifier data, or FALLBACK_FOLLOWUP_CARD
+    // on outage — so the sheet always has text and never renders a spinner.
+    cardText: v.string(),
+
+    // Whether the triggering session was escalation-derived. Gates the
+    // "resources are still here" link in the UI.
+    escalationDerived: v.boolean(),
+
+    // "pending"    — workflow active, card not yet due
+    // "ready"      — user returned (or nudge fired); show on next open
+    // "shown"      — card was rendered in-app, awaiting user response
+    // "resolved"   — user tapped a response or dismissed
+    // "expired"    — workflow timed out with no return
+    // "superseded" — a newer, equal-or-higher-weight session replaced it;
+    //                stays visible/tappable until an explicit user dismiss
+    status: v.union(
+      v.literal("pending"),
+      v.literal("ready"),
+      v.literal("shown"),
+      v.literal("resolved"),
+      v.literal("expired"),
+      v.literal("superseded"),
+    ),
+
+    // User's response to the check-in card. null until resolved/dismissed.
+    userResponse: v.optional(
+      v.union(
+        v.literal("lighter"), // "Feeling lighter now"
+        v.literal("still_here"), // "Still sitting with it"
+        v.literal("heavier"), // "Got heavier actually"
+        v.literal("processed"), // "I worked through it"
+        v.literal("vent"), // "Let it out" → opened a fresh reflect session
+        v.literal("dismissed"), // Tapped away without responding
+      ),
+    ),
+
+    createdAt: v.number(),
+    shownAt: v.optional(v.number()),
+    resolvedAt: v.optional(v.number()),
+  })
+    // App open query: "is there a ready/pending card for this user?"
+    .index("by_profile_status", ["emotionalProfileId", "status", "createdAt"])
+
+    // Profile screen: follow-up history, newest first.
+    .index("by_profile_created", ["emotionalProfileId", "createdAt"])
+
+    // Workflow cancellation / onComplete lookup.
+    .index("by_workflow", ["workflowId"]),
 });

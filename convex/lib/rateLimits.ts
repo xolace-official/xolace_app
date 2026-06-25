@@ -13,6 +13,10 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // Notification spam prevention — 1 per 24 hours
   notification: { kind: "fixed window", rate: 1, period: DAY },
 
+  // Follow-up nudge — SEPARATE bucket so a follow-up check-in never starves
+  // (or is starved by) gentle_return / pattern_nudge. 1 per 24h per profile.
+  followUpNudge: { kind: "fixed window", rate: 1, period: DAY },
+
   // Resonance toggle abuse prevention
   resonanceToggle: { kind: "token bucket", rate: 20, period: MINUTE, capacity: 5 },
 

@@ -145,7 +145,25 @@ export const getFullContext = query({
       )
       .unique();
 
-    return { user, profile, preferences };
+    // Is there an active follow-up card? The client uses this to (a) call
+    // markReturn (emit the return event) only when needed — not a write on
+    // every foreground — and (b) decide reopen precedence (the follow-up sheet
+    // out-prioritizes ReturnWelcomeSheet). Cheap: ≤3 bounded index lookups.
+    let hasPendingFollowUp = false;
+    for (const status of ["pending", "ready", "shown"] as const) {
+      const card = await ctx.db
+        .query("follow_up_cards")
+        .withIndex("by_profile_status", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("status", status)
+        )
+        .first();
+      if (card) {
+        hasPendingFollowUp = true;
+        break;
+      }
+    }
+
+    return { user, profile, preferences, hasPendingFollowUp };
   },
 });
 

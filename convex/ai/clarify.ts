@@ -114,6 +114,9 @@ export const handleClarification = internalAction({
           thematicTags: metadata.thematicTags,
           userLanguageTags: metadata.userLanguageTags,
           temporalContext: metadata.temporalContext,
+          // Clarify only re-articulates; the follow-up flag was finalized on
+          // the initial pass and is not an articulation input.
+          requiresFollowUp: false,
         },
         patternSummary,
         safeguardLevel: "none", // Already evaluated on initial pass

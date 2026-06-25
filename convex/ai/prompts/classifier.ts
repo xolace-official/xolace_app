@@ -46,7 +46,9 @@ The JSON must have this exact shape:
   "specificity": number,
   "thematicTags": string[],
   "userLanguageTags": string[],
-  "temporalContext": "past_focused" | "present_focused" | "future_focused" | null
+  "temporalContext": "past_focused" | "present_focused" | "future_focused" | null,
+  "requiresFollowUp": boolean,
+  "followUpReason": string | null
 }
 
 ## Field Definitions
@@ -112,6 +114,22 @@ For body areas: Return the areas as tags ("chest", "stomach").
 - Past: "I keep thinking about what happened", "I miss how things were"
 - Present: "Right now I feel...", texture words (implicitly present)
 - Future: "I'm dreading tomorrow", "What if..."
+
+**requiresFollowUp**: Should the system check in on this person within a day or so? This is the EXCEPTION, not the default. Default to false and reserve true for genuinely unresolved, high-stakes moments where the emotion has no natural release.
+true when:
+- Grief, loss, or bereavement content — especially when past-focused
+- Shame or guilt with intensity >= 6
+- Relational rupture (conflict, abandonment, rejection) with no resolution language
+- Identity or self-worth themes with present-focused despair
+- Any input where the person seems stuck and the emotion has no natural release
+false when:
+- The person seems to have discharged the emotion (vent complete)
+- Low intensity (<= 4) regardless of theme
+- Future-focused anxiety (worry about what hasn't happened yet — they need grounding, not follow-up)
+- Positive check-ins
+- General stress without acute personal distress
+
+**followUpReason**: One short sentence explaining why requiresFollowUp is true. null when requiresFollowUp is false. Internal only — never shown to the user.
 
 ## Guidelines
 - Classify THIS input on its own merit. The pattern summary below is background context, not a prediction.

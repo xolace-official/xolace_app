@@ -5,6 +5,7 @@ import actionCache from "@convex-dev/action-cache/convex.config.js";
 import migrations from "@convex-dev/migrations/convex.config.js";
 import pushNotifications from "@convex-dev/expo-push-notifications/convex.config.js";
 import posthog from "@posthog/convex/convex.config.js";
+import workflow from "@convex-dev/workflow/convex.config.js";
 
 const app = defineApp({
   env: {
@@ -18,6 +19,7 @@ app.use(rateLimiter);
 app.use(actionCache);
 app.use(migrations);
 app.use(pushNotifications);
+app.use(workflow);
 app.use(posthog, {
   env: {
     POSTHOG_PROJECT_TOKEN: app.env.POSTHOG_PROJECT_TOKEN,

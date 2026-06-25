@@ -194,6 +194,11 @@ export const generateMirror = internalAction({
         (safeguard.level === "crisis" || safeguard.level === "elevated") &&
         !!safeguard.triggerType;
 
+      // Preliminary follow-up flag (the gave_up rule is folded in later, at
+      // session completion — confirmationState isn't known yet here).
+      const requiresFollowUp =
+        isEscalation || classification.requiresFollowUp === true;
+
       await ctx.runMutation(internal.sessions.deliverMirror, {
         sessionId: args.sessionId,
         mirrorText,
@@ -204,12 +209,14 @@ export const generateMirror = internalAction({
           | "direct"
           | "adaptive"
           | "witnessed",
+        safeguardLevel: safeguard.level,
         ...(isEscalation
           ? {
               escalationTriggered: true,
               escalationResources: safeguard.resourcesPresented,
             }
           : {}),
+        ...(requiresFollowUp ? { requiresFollowUp: true } : {}),
       });
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,
@@ -259,6 +266,9 @@ export const generateMirror = internalAction({
         riskFlag:
           (safeguard.level === "crisis" || safeguard.level === "elevated") &&
           safeguard.triggerType !== "pattern_escalation",
+        ...(classification.followUpReason
+          ? { followUpReason: classification.followUpReason }
+          : {}),
       });
 
       // 8.5. Match exercise from emotional classification.

@@ -22,6 +22,7 @@
     "@convex-dev/migrations": "^0.3.3",
     "@convex-dev/rate-limiter": "^0.3.2",
     "@convex-dev/react-query": "^0.1.0",
+    "@convex-dev/workflow": "^0.4.4",
     "@expo-google-fonts/space-grotesk": "^0.4.1",
     "@expo/material-symbols": "^0.1.1",
     "@gorhom/bottom-sheet": "^5.2.14",

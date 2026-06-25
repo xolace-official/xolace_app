@@ -13,6 +13,7 @@ import { MirrorLines } from "../mirror-lines";
 import { WeekIntensityCard } from "../week-intensity-card";
 import { WordsTeaserCard } from "../words-teaser-card";
 import { WordsTeaserEmpty } from "../words-teaser-empty";
+import { FollowUpsSection } from "../follow-ups-section";
 import { InsightWaitlistSheet } from "../insight-waitlist-sheet";
 import { AvatarPickerSheet } from "../avatar-picker-sheet";
 import { useProfileSummary } from "../../hooks/use-profile-summary";
@@ -161,6 +162,8 @@ export function ProfileScreen() {
             <WordsTeaserEmpty staggerDelay={360} />
           </View>
         )}
+
+        <FollowUpsSection staggerDelay={420} />
       </ScrollView>
 
       <InsightWaitlistSheet

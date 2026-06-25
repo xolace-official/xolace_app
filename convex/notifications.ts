@@ -17,7 +17,8 @@ export const schedule = internalMutation({
       v.literal("gentle_return"),
       v.literal("pattern_nudge"),
       v.literal("milestone"),
-      v.literal("affirmation")
+      v.literal("affirmation"),
+      v.literal("follow_up")
     ),
     content: v.string(),
     triggerReason: v.string(),
@@ -33,8 +34,11 @@ export const schedule = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Rate limit: 1 notification per 24 hours per profile
-    const { ok } = await rateLimiter.limit(ctx, "notification", {
+    // Rate limit: select the bucket by type so follow-up nudges have their
+    // own 24h budget and never starve (or get starved by) the cron nudges.
+    const bucket =
+      args.type === "follow_up" ? "followUpNudge" : "notification";
+    const { ok } = await rateLimiter.limit(ctx, bucket, {
       key: args.emotionalProfileId,
     });
 

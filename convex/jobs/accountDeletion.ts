@@ -105,6 +105,13 @@ export const purge = internalMutation({
         .unique();
       if (preferences) await ctx.db.delete(preferences._id);
 
+      // Cancel any live follow-up workflow + purge its cards (privacy: a
+      // deleted user must never receive a follow-up nudge). Scheduled because
+      // it cancels component workflows and is independently bounded.
+      await ctx.scheduler.runAfter(0, internal.followUps.purgeForProfile, {
+        emotionalProfileId: profileId,
+      });
+
       // Delete emotional profile
       await ctx.db.delete(profileId);
 
