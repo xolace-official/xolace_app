@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Presets } from 'react-native-pulsar';
 import { EaseView } from 'react-native-ease/uniwind';
 import { TextArea, LinkButton } from 'heroui-native';
@@ -63,9 +63,15 @@ export const ClarifyState = ({
           animate={EASE_ANIMATE_FADE}
           transition={EASE_MIRROR_TRANSITION}
         >
-          <AppText className="mb-6 text-center text-base italic leading-7 text-foreground/30">
-            {previousMirror}
-          </AppText>
+          <ScrollView
+            className="mb-6 max-h-[160]"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <AppText className="text-center text-base italic leading-7 text-foreground/30">
+              {previousMirror}
+            </AppText>
+          </ScrollView>
         </EaseView>
 
         <EaseView
@@ -78,7 +84,7 @@ export const ClarifyState = ({
           </AppText>
         </EaseView>
 
-        <View className="flex-1">
+        <View className="flex-1 overflow-hidden">
           <TextArea
             autoFocus={autoFocus}
             placeholder="Help me understand better..."
@@ -87,7 +93,7 @@ export const ClarifyState = ({
               dispatch({ type: 'CLARIFY_TEXT_CHANGE', text })
             }
             variant="secondary"
-            className="min-h-[120] border-0 bg-transparent text-base text-foreground"
+            className="min-h-[120] flex-1 border-0 bg-transparent text-base text-foreground"
           />
         </View>
 

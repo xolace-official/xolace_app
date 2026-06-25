@@ -3,6 +3,7 @@ import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { insightFeatureValidator } from "./lib/validators";
 import { generateDisplayName } from "./lib/displayName";
+import { displayStreak } from "./lib/streak";
 
 // Premium stub — swap for hasEntitlement() when RevenueCat is wired in Wave 2.
 // Gate server-side so client never receives locked data, only null + premiumRequired.
@@ -37,20 +38,25 @@ export const getSummary = query({
       .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
       .unique();
 
-    // Recent language tags for the P5 words teaser — bounded 5-entry scan.
-    const recentMeta = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_profile_theme", (q) => q.eq("emotionalProfileId", profile._id))
-      .order("desc")
-      .take(5);
-    const recentWords = [...new Set(recentMeta.flatMap((m) => m.userLanguageTags))].slice(0, 4);
+    // Frequency-ranked language for the P5 words teaser. Read from the
+    // denormalized profile field (recomputed in profileStats after each
+    // session) — no scan on this hot, reactive query. Counts stay
+    // server-side while the feature is premium-gated; only the ranked
+    // display words cross the wire. Top 4 for the teaser rows.
+    const recentWords = (profile.frequentWords ?? []).slice(0, 4).map((w) => w.word);
 
     return {
       displayName: prefs?.displayName ?? seededDisplayName(profile._id),
       avatarId: prefs?.avatarId ?? "default",
       firstSessionAt: profile.firstSessionAt ?? null,
       sessionCount: profile.sessionCount,
-      currentStreak: profile.currentStreak,
+      // Derive live: the stored streak goes stale once the 48h window lapses
+      // (only rewritten on session completion). Reset to 0 for display so the
+      // profile screen agrees with the home screen's live computation.
+      currentStreak: displayStreak(profile.currentStreak, profile.lastSessionAt),
+      // Raw, not live-derived: longest is a record and never decays. Fall back
+      // to the stored streak for rows predating the field (pre-backfill).
+      longestStreak: profile.longestStreak ?? profile.currentStreak,
       dominantEmotionTags: profile.dominantEmotionTags,
       typicalUsagePattern: profile.typicalUsagePattern ?? null,
       recentWords,

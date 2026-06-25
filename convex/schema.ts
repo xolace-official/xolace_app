@@ -139,10 +139,13 @@ export default defineSchema({
     averageSessionDuration: v.optional(v.number()),
 
     // --- Streak ---
-    // NOT gamified. No badges, no guilt.
-    // Just a quiet "Day 12" on the home screen.
-    // Resets after 48 hours (generous, not punishing).
+    // Current run of consecutive active days. Resets after 48 hours.
     currentStreak: v.number(),
+
+    // Longest streak ever reached. A record — it never decays, only grows
+    // via Math.max on session completion. Optional for rows created before
+    // this field existed; backfilled to currentStreak by migration.
+    longestStreak: v.optional(v.number()),
 
     // --- Learned Patterns ---
 
@@ -150,6 +153,16 @@ export default defineSchema({
     // Updated incrementally after each session.
     // Powers faster pattern matching and context building.
     dominantEmotionTags: v.array(v.string()),
+
+    // Top recurring words from the user's own language, by frequency.
+    // Display forms are normalized (lowercased + trimmed) so "Stuck" and
+    // "stuck" count as one. Recomputed after each session from a bounded
+    // window. Powers the P5 words teaser (shows top 4); store ~10 to give
+    // the future premium words screen headroom. Counts stay server-side —
+    // never returned to the client while the feature is premium-gated.
+    frequentWords: v.optional(
+      v.array(v.object({ word: v.string(), count: v.number() })),
+    ),
 
     // When the user typically processes. Learned from
     // session timestamps. Null until 5+ sessions.

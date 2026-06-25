@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { isStreakExpired } from "../lib/streak";
 
 /**
  * Update emotional profile stats after a session completes.
@@ -35,13 +36,12 @@ export const updateAfterSession = internalMutation({
       }
     }
 
-    // Update streak: +1 per calendar day, reset after 48h gap
-    const STREAK_WINDOW_MS = 48 * 60 * 60 * 1000;
+    // Update streak: +1 per calendar day, reset after the shared window gap
     let newStreak = profile.currentStreak;
     if (!profile.lastSessionAt) {
       // First ever session
       newStreak = 1;
-    } else if (now - profile.lastSessionAt > STREAK_WINDOW_MS) {
+    } else if (isStreakExpired(profile.lastSessionAt, now)) {
       // Been away too long — reset
       newStreak = 1;
     } else {
@@ -58,24 +58,48 @@ export const updateAfterSession = internalMutation({
       // else: same day, streak stays the same
     }
 
-    // Update dominant emotion tags from recent metadata
+    // Longest streak is a record — only grows. Fall back to currentStreak for
+    // rows predating the field (migration backfills the rest).
+    const newLongestStreak = Math.max(
+      newStreak,
+      profile.longestStreak ?? profile.currentStreak,
+    );
+
+    // Update dominant emotion tags + frequent words from recent metadata.
+    // One bounded scan feeds both — words ride along on the emotion loop.
     const recentMetadata = await ctx.db
       .query("emotional_metadata")
       .withIndex("by_profile_theme", (q) =>
         q.eq("emotionalProfileId", args.emotionalProfileId)
       )
       .order("desc")
-      .take(20);
+      .take(50);
 
     const emotionCounts: Record<string, number> = {};
+    // Normalized word frequency: lowercase+trim key so "Stuck"/"stuck" merge.
+    const wordCounts = new Map<string, number>();
     for (const m of recentMetadata) {
       emotionCounts[m.primaryEmotion] =
         (emotionCounts[m.primaryEmotion] ?? 0) + 1;
+      for (const raw of m.userLanguageTags) {
+        const key = raw.toLowerCase().trim();
+        if (!key) continue;
+        wordCounts.set(key, (wordCounts.get(key) ?? 0) + 1);
+      }
     }
     const dominantEmotionTags = Object.entries(emotionCounts)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([emotion]) => emotion);
+
+    // Top 10 by count; store extras beyond the teaser's 4 for future use.
+    // Only persist genuinely recurring words — singletons (count 1) aren't
+    // repetition, so the teaser stays empty until a word actually repeats.
+    const frequentWords = [...wordCounts.entries()]
+      .filter(([, count]) => count > 1)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([word, count]) => ({ word, count }));
 
     // Compute typicalUsagePattern after 5+ sessions
     let typicalUsagePattern = profile.typicalUsagePattern;
@@ -126,10 +150,13 @@ export const updateAfterSession = internalMutation({
     await ctx.db.patch(args.emotionalProfileId, {
       sessionCount: newSessionCount,
       currentStreak: newStreak,
+      longestStreak: newLongestStreak,
       dominantEmotionTags:
         dominantEmotionTags.length > 0
           ? dominantEmotionTags
           : profile.dominantEmotionTags,
+      frequentWords:
+        frequentWords.length > 0 ? frequentWords : profile.frequentWords,
       averageSessionDuration: newAvgDuration,
       typicalUsagePattern,
       lastSessionAt: now,

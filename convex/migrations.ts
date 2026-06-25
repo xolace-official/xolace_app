@@ -22,10 +22,23 @@ export const renameUserInput = migrations.define({
   migrateOne: async (_ctx, _doc) => {},
 });
 
+// Backfill longestStreak from currentStreak for profiles created before the
+// field existed. Idempotent — skips rows that already have a value.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillLongestStreak"}'
+export const backfillLongestStreak = migrations.define({
+  table: "emotional_profiles",
+  migrateOne: async (_ctx, doc) => {
+    if (doc.longestStreak === undefined) {
+      return { longestStreak: doc.currentStreak };
+    }
+  },
+});
+
 // Run both in sequence (renameRawInput first, then renameUserInput):
 //   bunx convex run migrations:runAll
 import { internal } from "./_generated/api";
 export const runAll = migrations.runner([
   internal.migrations.renameRawInput,
   internal.migrations.renameUserInput,
+  internal.migrations.backfillLongestStreak,
 ]);
