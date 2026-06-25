@@ -77,23 +77,31 @@ export const FollowUpCheckInSheet = ({
   // completes, then release it (no setTimeout — driven by onTransitionEnd).
   const [released, setReleased] = useState(false);
 
-  // The sheet stays mounted across cards (so the BottomSheet gets a clean
-  // false→true open transition), so per-card local state must be reset when a
-  // new card surfaces — otherwise a prior resolution's `released` flag would
-  // permanently suppress the next check-in. Render-time reset (React's
-  // "adjust state on prop change" pattern), not an effect.
-  const cardId = card?._id ?? null;
-  const [prevCardId, setPrevCardId] = useState(cardId);
-  if (cardId !== prevCardId) {
-    setPrevCardId(cardId);
+  // Tapping a chip resolves the card server-side, so the live `card` prop drops
+  // to null on the next query tick — which would yank the whole sheet shut
+  // before the ack can play. To keep the sheet up through the ack, we snapshot
+  // the card locally and render from the snapshot, driving open/close from the
+  // local phase machine instead of the live query. A genuinely new card (new
+  // id) is adopted and resets per-card state; the live card going null is
+  // ignored (we're mid-ack). Render-time "adjust state on prop change" pattern.
+  const [shownCard, setShownCard] =
+    useState<Doc<"follow_up_cards"> | null>(card);
+  const liveId = card?._id ?? null;
+  const shownId = shownCard?._id ?? null;
+  if (liveId !== null && liveId !== shownId) {
+    setShownCard(card);
     setReleased(false);
     setPhase("asking");
     setAckStage("in");
     setSelected(null);
   }
 
-  const showResources = !!card && (card.tier === "acute" || card.escalationDerived);
-  const effectiveOpen = !!card && (isOpen || phase === "ack") && !released;
+  const showResources =
+    !!shownCard && (shownCard.tier === "acute" || shownCard.escalationDerived);
+  // Asking: track the live query (so a resolve/dismiss closes it). Ack: stay up
+  // until the ack fade-out releases it, regardless of the live card going null.
+  const effectiveOpen =
+    !!shownCard && (phase === "ack" ? !released : isOpen);
 
   // Status chips play the ack micro-state first; the sheet releases after it.
   const handleChip = (key: string) => {
@@ -130,7 +138,7 @@ export const FollowUpCheckInSheet = ({
           handleIndicatorClassName="opacity-0"
           accessibilityViewIsModal
         >
-          {card == null ? null : phase === "asking" ? (
+          {shownCard == null ? null : phase === "asking" ? (
             <View className="items-center px-6 pb-7 pt-1">
               <Image
                 source={MASCOT}
@@ -139,12 +147,12 @@ export const FollowUpCheckInSheet = ({
                 accessibilityLabel={FOLLOW_UP_MASCOT_LABEL}
               />
               <BottomSheet.Title className="mt-1 text-center font-serif text-2xl leading-8 text-foreground">
-                {card.cardText}
+                {shownCard.cardText}
               </BottomSheet.Title>
 
               <View className="mt-6 w-full">
                 <FeedbackSheet.Chips
-                  chips={chipsForTier(card.tier)}
+                  chips={chipsForTier(shownCard.tier)}
                   selected={selected}
                   onSelect={handleChip}
                 />
