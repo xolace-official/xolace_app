@@ -44,15 +44,6 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
     useQuery(api.followUps.getReadyCard, active && hasPendingFollowUp ? {} : "skip") ??
     null;
 
-  console.log(
-    "[followUpCheckIn] " +
-      JSON.stringify({
-        active,
-        hasPendingFollowUp,
-        cardStatus: card?.status ?? null,
-      }),
-  );
-
   // Fire markReturn once per activation when a pending follow-up exists.
   const returnedRef = useRef(false);
   useEffect(() => {
@@ -78,8 +69,8 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
     (response: FollowUpResponse) => {
       if (!card) return;
       void resolveCard({ cardId: card._id, response });
-      // "Let it out" → the card resolves and the user is left on the reflect
-      // home, which IS a fresh (un-seeded) session. No navigation needed.
+      // For "vent" the sheet also navigates to the voice-vent screen (handled
+      // in the sheet, which owns the router).
     },
     [card, resolveCard],
   );
