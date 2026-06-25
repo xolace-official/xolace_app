@@ -4,6 +4,63 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P3 — Pre-seed the vent session with prior card context
+
+**What:** When a user taps "Let it out" on a follow-up check-in card, open the new reflect session **pre-seeded** with the prior session's theme (e.g. "Picking up what you left with about your mother…") instead of a blank session.
+
+**Why:** Surfaced during the follow-up-system design review (Issue 2b). The vent chip (task D3) ships opening a *blank* reflect session this sprint — the user re-explains context they already processed minutes/days ago. Pre-seeding makes the doorway feel continuous, but it pulls in the deferred "tap card response → open reflect with pre-seeded context" item, so it was held back from v1.
+
+**How to start:**
+1. The `follow_up_cards` row already carries `sessionId` + the source theme; thread it into the reflect session `initiate` path as an optional seed.
+2. Gate the in-app copy/UX so the seed reads as a gentle continuation, not a re-litigation.
+3. Decide whether to build only after seeing real "vent"-tap rates from D3 (recommended — don't pre-build continuity nobody uses).
+
+**Key files:** `convex/followUps.ts`, `convex/sessions.ts` (initiate), `src/features/reflect/`
+
+**Effort:** M (human ~2h / CC ~25min)
+**Priority:** P3 — fast-follow after D3, gated on vent-tap usage
+**Depends on:** D3 (vent chip shipped)
+
+---
+
+## P3 — Extract shared notification-gating helper
+
+**What:** Extract a `shouldDeliverNotification(prefs, type)` helper and refactor `checkGentleReturn` and `checkPatternNudge` to use it.
+
+**Why:** Both triggers inline the same enabled + per-type toggle + quiet-window gate (`convex/jobs/notificationTriggers.ts:72-83` and `:148-159`). Two literal copies that drift the day someone edits one and not the other. Surfaced during the follow-up-system eng review; follow-up itself does NOT add a third copy (its nudge is gated by `notifications.enabled` only, by deliberate early-stage choice), so this is pure debt paydown, not blocking.
+
+**How to start:**
+1. Add `shouldDeliverNotification(prefs, type): { ok: boolean; suppressedReason?: string }` to `convex/lib/notificationPrefs.ts` — encapsulate `notifications.enabled`, the per-type toggle lookup, and `isInQuietWindow(...)`.
+2. Refactor `checkGentleReturn` and `checkPatternNudge` to call it.
+3. Verify existing notification behavior is unchanged (no eval/test harness for these today — manual check against current gating).
+
+**Key files:** `convex/jobs/notificationTriggers.ts`, `convex/lib/notificationPrefs.ts`
+
+**Effort:** S (human ~45min / CC ~10min)
+**Priority:** P3 — cleanup, not blocking
+**Depends on:** —
+
+---
+
+## P3 — Follow-up card-writer quality eval
+
+**What:** Add `cardWriter.eval.ts` — an LLM-judge rubric eval for the `followUpCardWriter` prompt (scores specificity, warmth, non-generic 1-5).
+
+**Why:** The follow-up system ships a classifier-flag eval (`requiresFollowUp.eval.ts`) this sprint, but the card-writer prompt — whose whole job is "never generic, references the actual content" — gets manual review only. A prompt edit that drifts the card generic would go uncaught. Deferred deliberately: build it after the first feedback round, once real card output exists to calibrate the rubric bar against.
+
+**What to include:**
+1. Rubric judge (Haiku) scoring each generated card on: references the actual processed content, warm tone, not generic, ≤2 sentences.
+2. Cases must cover the `gave_up` branch (mirror-free copy — no resonant mirror to reference) and the `FALLBACK_FOLLOWUP_CARD` static path.
+3. Run via `bun test` alongside `requiresFollowUp.eval.ts`.
+
+**Key files:** `convex/ai/prompts/followUpCardWriter.ts`, `convex/ai/prompts/__evals__/cardWriter.eval.ts` (new)
+
+**Effort:** M (human ~half day / CC ~30min)
+**Priority:** P3 — fast-follow after first feedback round
+**Depends on:** follow-up system shipped + real card output to calibrate against
+
+---
+
 ## P3 — Awareness Events: E2E Test Coverage
 
 **What:** Add E2E tests for the 3 critical awareness event flows once a mobile test framework is chosen (Detox or Maestro).
