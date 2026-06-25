@@ -93,7 +93,10 @@ export const updateAfterSession = internalMutation({
       .map(([emotion]) => emotion);
 
     // Top 10 by count; store extras beyond the teaser's 4 for future use.
+    // Only persist genuinely recurring words — singletons (count 1) aren't
+    // repetition, so the teaser stays empty until a word actually repeats.
     const frequentWords = [...wordCounts.entries()]
+      .filter(([, count]) => count > 1)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
       .map(([word, count]) => ({ word, count }));

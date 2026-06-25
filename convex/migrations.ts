@@ -40,4 +40,5 @@ import { internal } from "./_generated/api";
 export const runAll = migrations.runner([
   internal.migrations.renameRawInput,
   internal.migrations.renameUserInput,
+  internal.migrations.backfillLongestStreak,
 ]);
