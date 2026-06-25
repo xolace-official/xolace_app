@@ -360,3 +360,30 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 **Effort:** XS (CC ~5min)
 **Priority:** P3 — gated on symptom; no change while current behavior is correct
 **Depends on:** Nothing
+
+---
+
+## P3 — Streak Reveal: Misses after Xolace Bridge flow (single-shot measure race)
+
+**What:** The streak-reveal animation does not play when the user returns home via the Trusted Bridge path (session-end → "bridge" → `trusted-bridge` → `router.replace("/")`). It plays correctly on every normal path (exit / solo / peers) and the dev "Replay streak reveal" button works fine — so the animation itself is not broken. Low priority: as long as users don't go through bridge, the reveal works.
+
+**Why (root cause):** The reveal is armed by a single `setTimeout(700ms)` → `measure(miniRef)` in `streak-calendar.tsx`. If `measure` returns `null` (mini card not laid out yet), the worklet silently gives up — **there is no retry**, and the effect only re-runs if a dependency changes (`currentStreak`, `isFocused`, `lastAcknowledgedStreak`, `reducedMotion`).
+
+In the normal flow, `useSessionEnd` does `await completePath()` then `router.replace("/")` immediately, so the reflect screen remounts while `getFullContext` still serves the cached streak `N`. The reactive query then ticks `N → N+1`, which **re-runs the effect after layout has settled** — masking the measure race.
+
+In the bridge flow, `completeAndBridge` completes the session, then the user spends a long time in `trusted-bridge`. By the time bridge calls `router.replace("/")`, the streak query is long-settled at `N+1`, so the fresh reflect screen mounts with `revealPending` already true on first render. The effect runs **once**, the mini card isn't measurable yet (mid screen-enter after a deep nav replace), `measure` returns null → silent give-up. No dependency changes afterward → effect never re-runs → reveal is dead.
+
+**How to start (fix options):**
+1. Drive arming off the mini card's `onLayout` (measure when it reports a real frame) instead of a fixed `setTimeout`, **or**
+2. retry `measure` in a bounded RAF loop until it returns non-null (~up to 1s), **or**
+3. re-attempt whenever `revealPending && isFocused && !revealing` and the previous measure was null.
+
+Verify on simulator by running a full session through the bridge path and confirming the reveal fires.
+
+**Edge cases that also suppress the reveal (for reference):** `reducedMotion` on (intentional silent skip); StreakCalendar unmounted when variant isn't `active` / night mode / a quiet-return tier is active / not in idle state; `currentStreak <= lastAcknowledgedStreak`.
+
+**Key files:** `src/features/reflect/components/streak-calendar/streak-calendar.tsx` (arming effect + `measure`), `src/features/reflect/components/streak-calendar/constants.ts` (`REVEAL_START_DELAY_MS`), `src/features/session-end/hooks/use-session-end.ts` (`completeAndBridge`)
+
+**Effort:** S (CC ~30min incl. simulator verification)
+**Priority:** P3 — not blocking; normal flow works, only the bridge path misses
+**Depends on:** Nothing
