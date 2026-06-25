@@ -12,6 +12,7 @@ import { EmotionChips } from "../emotion-chips";
 import { MirrorLines } from "../mirror-lines";
 import { WeekIntensityCard } from "../week-intensity-card";
 import { WordsTeaserCard } from "../words-teaser-card";
+import { WordsTeaserEmpty } from "../words-teaser-empty";
 import { InsightWaitlistSheet } from "../insight-waitlist-sheet";
 import { AvatarPickerSheet } from "../avatar-picker-sheet";
 import { useProfileSummary } from "../../hooks/use-profile-summary";
@@ -40,7 +41,12 @@ export function ProfileScreen() {
   const hasEnoughForMirrorLines = sessionCount >= 3;
   const hasEnoughForRhythm = sessionCount >= 5;
   const hasEnoughForChart = sessionCount >= 1;
-  const hasEnoughForWords = (summary?.recentWords?.length ?? 0) > 0;
+  // Need 3 distinct recurring words so every teaser row is genuine — no
+  // fabricated fallbacks. Below that, show the honest empty state once the
+  // user has at least one session (their language just hasn't repeated yet).
+  const wordCount = summary?.recentWords?.length ?? 0;
+  const hasEnoughForWords = wordCount >= 3;
+  const showWordsEmpty = sessionCount >= 1 && !hasEnoughForWords;
 
   const usualDay =
     hasEnoughForRhythm && summary?.typicalUsagePattern
@@ -147,6 +153,12 @@ export function ProfileScreen() {
               onUnlock={() => waitlist.open("words_language")}
               staggerDelay={360}
             />
+          </View>
+        )}
+
+        {showWordsEmpty && (
+          <View className="mt-4">
+            <WordsTeaserEmpty staggerDelay={360} />
           </View>
         )}
       </ScrollView>
