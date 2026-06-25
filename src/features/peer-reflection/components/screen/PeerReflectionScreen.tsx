@@ -186,7 +186,7 @@ export const PeerReflectionScreen = () => {
           transition={EASE_HEADER_TRANSITION}
           className="mb-4"
         >
-          <AppText className="text-lg leading-7 text-foreground/50">
+          <AppText className="text-lg leading-7 text-foreground/55">
             Others have felt{"\n"}something like this.
           </AppText>
           {isFallback && (
@@ -194,7 +194,7 @@ export const PeerReflectionScreen = () => {
               <AppText className="text-xs font-medium uppercase tracking-widest text-warning/70">
                 No close match found
               </AppText>
-              <AppText className="mt-1 text-sm leading-6 text-foreground/50">
+              <AppText className="mt-1 text-sm leading-6 text-foreground/55">
                 We couldn&apos;t find a close match for what you&apos;re feeling right now.
                 {"\n"}These are recent reflections from others; yours could be the first of its kind here.
               </AppText>

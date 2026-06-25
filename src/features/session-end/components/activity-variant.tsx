@@ -273,8 +273,8 @@ export const ActivityVariant = ({
             </View>
 
             {/* Distilled text card */}
-            <View className="px-8 mb-6 rounded-2xl border border-default-soft bg-surface/40 mx-8 py-4">
-              <AppText className="text-sm font-light italic leading-6 text-default-soft-hover">
+            <View className="px-8 mb-6 rounded-2xl border border-foreground/55 bg-surface/40 mx-8 py-4">
+              <AppText className="text-sm font-light italic leading-6 text-foreground/55">
                 {`"${distilledText}"`}
               </AppText>
             </View>
