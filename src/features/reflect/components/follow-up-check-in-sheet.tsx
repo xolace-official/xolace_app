@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useReducer } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,6 +11,10 @@ import { EaseView } from "react-native-ease/uniwind";
 import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
 import { AppText } from "@/src/components/shared/app-text";
 import { FeedbackSheet } from "@/src/features/session-end/components/feedback-sheet";
+import {
+  followUpReducer,
+  initFollowUpState,
+} from "@/src/features/reflect/components/follow-up-check-in-reducer";
 import type { Doc } from "@/convex/_generated/dataModel";
 import {
   chipsForTier,
@@ -81,33 +85,20 @@ export const FollowUpCheckInSheet = ({
   // devices; the content scrolls inside once it exceeds this. Above this it
   // still hugs its content (dynamic sizing).
   const maxSheetContent = windowHeight - insets.top - insets.bottom - 32;
-  const [phase, setPhase] = useState<"asking" | "ack">("asking");
-  // Ack sub-stage: "in" fades the ack up, "out" holds then fades it down and
-  // releases the sheet on completion.
-  const [ackStage, setAckStage] = useState<"in" | "out">("in");
-  const [selected, setSelected] = useState<string | null>(null);
-  // Once in the ack phase we keep the sheet open locally until the ack fade-out
-  // completes, then release it (no setTimeout — driven by onTransitionEnd).
-  const [released, setReleased] = useState(false);
 
+  // The sheet runs a small state machine (snapshot card + ack animation phases).
   // Tapping a chip resolves the card server-side, so the live `card` prop drops
   // to null on the next query tick — which would yank the whole sheet shut
   // before the ack can play. To keep the sheet up through the ack, we snapshot
-  // the card locally and render from the snapshot, driving open/close from the
-  // local phase machine instead of the live query. A genuinely new card (new
-  // id) is adopted and resets per-card state; the live card going null is
-  // ignored (we're mid-ack). Render-time "adjust state on prop change" pattern.
-  const [shownCard, setShownCard] = useState<Doc<"follow_up_cards"> | null>(
-    card,
-  );
-  const liveId = card?._id ?? null;
+  // the card locally and render from the snapshot, driving open/close from this
+  // machine instead of the live query. A genuinely new card (new id) is adopted
+  // and resets per-card state; the live card going null is ignored (we're
+  // mid-ack). Render-time "adjust state on prop change" pattern.
+  const [state, dispatch] = useReducer(followUpReducer, card, initFollowUpState);
+  const { shownCard, phase, ackStage, selected, released } = state;
   const shownId = shownCard?._id ?? null;
-  if (liveId !== null && liveId !== shownId) {
-    setShownCard(card);
-    setReleased(false);
-    setPhase("asking");
-    setAckStage("in");
-    setSelected(null);
+  if (card !== null && card._id !== shownId) {
+    dispatch({ type: "adoptCard", card });
   }
 
   const showResources =
@@ -118,17 +109,15 @@ export const FollowUpCheckInSheet = ({
 
   // Status chips play the ack micro-state first; the sheet releases after it.
   const handleChip = (key: string) => {
-    setSelected(key);
     onResolve(key as FollowUpResponse);
-    setAckStage("in");
-    setPhase("ack");
+    dispatch({ type: "selectChip", key });
   };
 
   // "Let it out" is a different kind of action — the doorway into the voice-vent
   // flow. Resolve the card, close immediately, open the vent screen. No ack.
   const handleVent = () => {
     onResolve("vent");
-    setReleased(true);
+    dispatch({ type: "release" });
     router.push("/(protected)/voice-vent");
   };
 
@@ -236,8 +225,8 @@ export const FollowUpCheckInSheet = ({
               onTransitionEnd={({ finished }) => {
                 if (!finished) return;
                 // Fade-in done → hold + fade out; fade-out done → release.
-                if (ackStage === "in") setAckStage("out");
-                else setReleased(true);
+                if (ackStage === "in") dispatch({ type: "ackInDone" });
+                else dispatch({ type: "release" });
               }}
             >
               <View className="items-center justify-center px-6 py-16">
