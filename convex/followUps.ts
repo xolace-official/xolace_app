@@ -341,6 +341,7 @@ export const sendFollowUpNudge = internalMutation({
       type: "follow_up",
       content: body,
       triggerReason: `follow_up_${card.tier}`,
+      followUpTier: card.tier,
       scheduledFor: Date.now(),
     });
     return null;

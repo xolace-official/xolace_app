@@ -35,12 +35,12 @@ export function buildFollowUpCardPrompt(ctx: FollowUpCardContext): {
 } {
   const toneLine =
     ctx.tier === "acute"
-      ? `This is a PRESENCE check, not a processing prompt. The person processed something heavy a short while ago. Your job is to let them feel quietly accompanied — warm, unhurried, "I'm here". Do not re-open the wound or name specifics sharply. Lead with care, not curiosity.`
-      : `This is a gentle check-in on something the person left unresolved. Reference what they actually processed so it reads as "you were heard", then ask softly how it is sitting now.`;
+      ? `This is a PRESENCE check, not a processing prompt. The person processed something heavy a short while ago. Your job is to let them feel quietly accompanied, warm, unhurried. Do not re-open the wound or name specifics sharply. Lead with care, not curiosity.`
+      : `This is a gentle check-in on something the person left unresolved. Reference what they actually processed so it reads as "you were heard", then check softly how they are feeling now or how it is sitting with them.`;
 
   const sourceRule = ctx.gaveUp
-    ? `The mirror never landed for this person — there is NO articulation to quote back. Reference the *act* of trying to put something into words that wouldn't quite come, not a specific feeling you are unsure of. Stay open and humble.`
-    : `Ground the sentence in the mirror text below — echo its emotional essence in fresh words. Do NOT quote it verbatim.`;
+    ? `The mirror never landed for this person, there is NO articulation to quote back. Reference the *act* of trying to put something into words that wouldn't quite come, not a specific feeling you are unsure of. Stay open and humble.`
+    : `Ground the sentence in the mirror text below, echo its emotional essence in fresh words. Do NOT quote it verbatim.`;
 
   const system = `You are the voice of Xolace writing a single, quiet follow-up check-in.
 
@@ -85,7 +85,7 @@ ${sourceRule}
   }
 
   const user = `Write the check-in.\n\n${
-    facts.length > 0 ? facts.join("\n") : "No specific context available — keep it warm, present, and non-specific."
+    facts.length > 0 ? facts.join("\n") : "No specific context available, keep it warm, present, and non-specific."
   }`;
 
   return { system, user };
