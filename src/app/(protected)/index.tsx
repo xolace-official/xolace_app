@@ -96,6 +96,7 @@ export default function ProtectedIndex() {
   const fullContext = useQuery(api.users.getFullContext);
   const profile = fullContext?.profile;
   const hasPendingFollowUp = fullContext?.hasPendingFollowUp ?? false;
+  console.log("hasPendingFollowUp", hasPendingFollowUp)
 
   // Follow-up check-in surfaces on reopen when a session left something
   // unresolved. It OUT-PRIORITIZES ReturnWelcomeSheet (reopen precedence): when

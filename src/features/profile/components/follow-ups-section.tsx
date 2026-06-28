@@ -114,8 +114,8 @@ export function FollowUpsSection({ staggerDelay = 420 }: { staggerDelay?: number
       transition={{ type: "timing", duration: 280, easing: EASE, delay: staggerDelay }}
     >
       <View className="px-5 mt-8">
-        <AppText className="font-serif text-lg text-foreground mb-3">
-          Check-ins
+        <AppText className="text-lg text-foreground mb-3">
+          Follow-Ups
         </AppText>
         <View className="gap-2.5">
           {cards.map((card) => (

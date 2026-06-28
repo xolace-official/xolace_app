@@ -44,6 +44,9 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
     useQuery(api.followUps.getReadyCard, active && hasPendingFollowUp ? {} : "skip") ??
     null;
 
+  console.log("card ", card)
+  console.log("active", active, "hasPendingFollowUp", hasPendingFollowUp)
+
   // Fire markReturn once per activation when a pending follow-up exists.
   const returnedRef = useRef(false);
   useEffect(() => {
