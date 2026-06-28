@@ -87,7 +87,6 @@ export function useVentFlow(): UseVentFlowReturn {
     setAudioUrl(result.audioUrl);
     setIsCrisis(result.isCrisis);
     posthog.capture('vent_heard', {
-      is_crisis: result.isCrisis,
       has_audio: !!result.audioUrl,
       duration_ms: durationAtStopRef.current,
     });
@@ -124,7 +123,9 @@ export function useVentFlow(): UseVentFlowReturn {
 
   const startVent = async () => {
     if (state !== 'idle') return;
-    await startRecording();
+
+    const started = await startRecording();
+    if (!started) return;
     setState('recording');
     posthog.capture('vent_started');
   };

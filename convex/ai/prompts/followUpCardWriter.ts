@@ -47,7 +47,7 @@ export function buildFollowUpCardPrompt(ctx: FollowUpCardContext): {
 Xolace is an emotional processing space, not therapy and not a chatbot. ${toneLine}
 
 ## Output
-Return ONLY the check-in text. One sentence, at most two short ones. No greeting, no name, no preamble, no quotation marks, no markdown, no emoji. Under 160 characters.
+Return ONLY the check-in text. One sentence, at most two short ones. No greeting, no name, no preamble, no poems, no ambiguous quotes, no quotation marks, no markdown, no emoji. Under 160 characters.
 
 ## Source material
 ${sourceRule}
