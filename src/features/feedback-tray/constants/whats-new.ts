@@ -30,6 +30,18 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "1.6.1",
+    label: "OTA Update",
+    date: "June 2026",
+    highlights: [
+      {
+        icon: { ios: "hand.wave.fill", android: "waving_hand" },
+        title: "Gentle check-ins",
+        body: "When a moment feels unfinished, we'll quietly check back a day or so later to see how it's sitting. No pressure; just a soft door if you want it.",
+      },
+    ],
+  },
+  {
     id: "1.6.0",
     label: "Version 1.6.0",
     date: "June 2026",

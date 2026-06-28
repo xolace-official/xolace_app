@@ -439,18 +439,26 @@ export const resolveCard = mutation({
 // Profile teaser default. The full history will live on a dedicated
 // "See all check-ins" screen (TODO) which can pass a larger limit.
 const PROFILE_FOLLOWUP_LIMIT = 5;
+// Hard ceiling so a client-supplied limit can never request unbounded rows.
+const MAX_FOLLOWUP_LIMIT = 50;
 
 export const listForProfile = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+    // Clamp the client-provided limit: floor to an int, bound to [1, MAX],
+    // and fall back to the default for missing/NaN/Infinity values.
+    const requested = args.limit ?? PROFILE_FOLLOWUP_LIMIT;
+    const effectiveLimit = Number.isFinite(requested)
+      ? Math.min(Math.max(1, Math.floor(requested)), MAX_FOLLOWUP_LIMIT)
+      : PROFILE_FOLLOWUP_LIMIT;
     return await ctx.db
       .query("follow_up_cards")
       .withIndex("by_profile_created", (q) =>
         q.eq("emotionalProfileId", profile._id),
       )
       .order("desc")
-      .take(args.limit ?? PROFILE_FOLLOWUP_LIMIT);
+      .take(effectiveLimit);
   },
 });
 
