@@ -436,9 +436,13 @@ export const resolveCard = mutation({
 });
 
 /** Profile Follow-Ups section — full history, newest first. */
+// Profile teaser default. The full history will live on a dedicated
+// "See all check-ins" screen (TODO) which can pass a larger limit.
+const PROFILE_FOLLOWUP_LIMIT = 5;
+
 export const listForProfile = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     return await ctx.db
       .query("follow_up_cards")
@@ -446,7 +450,7 @@ export const listForProfile = query({
         q.eq("emotionalProfileId", profile._id),
       )
       .order("desc")
-      .take(50);
+      .take(args.limit ?? PROFILE_FOLLOWUP_LIMIT);
   },
 });
 

@@ -4,6 +4,24 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P3 — Dedicated "See all check-ins" screen
+
+**What:** A full-list screen for follow-up check-ins, reached via a "See all check-ins" row on the profile. The profile's Follow-Ups section is now capped at the 5 most recent (`PROFILE_FOLLOWUP_LIMIT` in `convex/followUps.ts`) so it can't grow unbounded; the rest of the history needs a home.
+
+**Why:** Before the cap, `FollowUpsSection` rendered up to 50 mixed-status cards inline, so the profile became very long and repetitive once check-ins accumulated. Capping fixed the bloat but truncates history — older/resolved check-ins are no longer reachable.
+
+**How to start:**
+1. Add a route under `src/app/(protected)/` (e.g. `check-ins/index.tsx`) — thin wrapper rendering a feature screen per the route-screen-separation convention.
+2. `listForProfile` already takes an optional `limit`; the screen can pass a larger value or switch it to `usePaginatedQuery` for the full list.
+3. Add a "See all check-ins" row at the bottom of `FollowUpsSection` (only when `cards.length === PROFILE_FOLLOWUP_LIMIT`) that routes to the new screen.
+
+**Key files:** `convex/followUps.ts` (`listForProfile`), `src/features/profile/components/follow-ups-section.tsx`, new `src/features/profile/components/screens/`
+
+**Effort:** S–M (CC ~25min)
+**Priority:** P3 — only matters once users have >5 check-ins worth revisiting
+
+---
+
 ## P3 — Pre-seed the vent session with prior card context
 
 **What:** When a user taps "Let it out" on a follow-up check-in card, open the new reflect session **pre-seeded** with the prior session's theme (e.g. "Picking up what you left with about your mother…") instead of a blank session.

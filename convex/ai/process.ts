@@ -316,7 +316,9 @@ export const generateMirror = internalAction({
 
       // 9. Schedule speculative distillation (for reflection pool)
       //    Skip if mirror is the fallback — nothing meaningful to distill.
-      if (mirrorText !== FALLBACK_MIRROR) {
+      //    Skip entirely for crisis sessions
+      const isCrisis = safeguard.level === "crisis";
+      if (mirrorText !== FALLBACK_MIRROR && !isCrisis) {
         await ctx.scheduler.runAfter(
           0,
           internal.jobs.reflectionDistiller.distill,

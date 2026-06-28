@@ -43,6 +43,9 @@ export const anonymize = internalAction({
     if (session.kept !== true) return;
     if (!metadata) return;
 
+    // Safety gate: crisis sessions must never enter the anonymous pool.
+    if (session.safeguardLevel === "crisis") return;
+
     // Prefer distilled text (first-person, voice-preserving)
     // Fall back to mirror text (second-person, AI voice)
     const displayText =
