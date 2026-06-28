@@ -4,7 +4,7 @@ import {
   computeRequiresFollowUp,
   followUpCadence,
   followUpTier,
-  MIN_RETURN_GAP_MS,
+  minReturnGapForTier,
   shouldEmitReturn,
   shouldSupersede,
   TIER_WEIGHT,
@@ -168,13 +168,15 @@ describe("abandonRequiresFollowUp — IRON rule (T13 regression)", () => {
 
 describe("shouldEmitReturn (gap guard)", () => {
   const created = 1_000_000;
+  const gap = 8 * 60 * 60 * 1000; // arbitrary explicit tier gap for these cases
 
   it("does not emit before the min gap", () => {
     expect(
       shouldEmitReturn({
         cardStatus: "pending",
         cardCreatedAt: created,
-        now: created + MIN_RETURN_GAP_MS - 1,
+        now: created + gap - 1,
+        minGapMs: gap,
       }),
     ).toBe(false);
   });
@@ -184,7 +186,8 @@ describe("shouldEmitReturn (gap guard)", () => {
       shouldEmitReturn({
         cardStatus: "pending",
         cardCreatedAt: created,
-        now: created + MIN_RETURN_GAP_MS,
+        now: created + gap,
+        minGapMs: gap,
       }),
     ).toBe(true);
   });
@@ -194,7 +197,8 @@ describe("shouldEmitReturn (gap guard)", () => {
       shouldEmitReturn({
         cardStatus: "ready",
         cardCreatedAt: created,
-        now: created + 10 * MIN_RETURN_GAP_MS,
+        now: created + 10 * gap,
+        minGapMs: gap,
       }),
     ).toBe(false);
   });
@@ -208,5 +212,14 @@ describe("shouldEmitReturn (gap guard)", () => {
         minGapMs: 50,
       }),
     ).toBe(true);
+  });
+});
+
+describe("minReturnGapForTier", () => {
+  it("returns the test override for every tier while testing", () => {
+    // TODO(test): this asserts the QA override is active — flip when restoring.
+    expect(minReturnGapForTier("acute")).toBe(60 * 1000);
+    expect(minReturnGapForTier("elevated")).toBe(60 * 1000);
+    expect(minReturnGapForTier("standard")).toBe(60 * 1000);
   });
 });

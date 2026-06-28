@@ -7,6 +7,7 @@ import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import type { WorkflowId } from "@convex-dev/workflow";
 import { requireAuth } from "./lib/auth";
+import { workflow } from "./followUps";
 
 function assertDevToolsEnabled() {
   if (process.env.DEV_TOOLS_ENABLED !== "true") {
@@ -99,5 +100,49 @@ export const seedFollowUpCard = mutation({
       status: "ready",
       createdAt: Date.now(),
     });
+  },
+});
+
+/**
+ * Cancel + retire any stuck follow-up cards for the caller. Use this to clear
+ * the deadlocked workflow/card left behind by the old `Promise.race` cadence:
+ * it cancels each active card's workflow (no-op for qa-seed placeholders and
+ * already-terminal workflows), marks the card `expired`, and clears the
+ * `followUpWorkflowId` pin on the linked session so a fresh follow-up can start.
+ * Returns the number of cards retired.
+ */
+export const cleanupStuckFollowUps = mutation({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    assertDevToolsEnabled();
+    const { profile } = await requireAuth(ctx);
+
+    let retired = 0;
+    for (const status of ["pending", "ready", "shown"] as const) {
+      const cards = await ctx.db
+        .query("follow_up_cards")
+        .withIndex("by_profile_status", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("status", status),
+        )
+        .collect();
+
+      for (const card of cards) {
+        try {
+          await workflow.cancel(ctx, card.workflowId);
+        } catch {
+          // Placeholder workflowId or already-terminal workflow — nothing to do.
+        }
+        await ctx.db.patch(card._id, { status: "expired" });
+
+        // Unpin the session so getStartContext won't treat it as already-started.
+        const session = await ctx.db.get(card.sessionId);
+        if (session?.followUpWorkflowId) {
+          await ctx.db.patch(card.sessionId, { followUpWorkflowId: undefined });
+        }
+        retired += 1;
+      }
+    }
+    return retired;
   },
 });

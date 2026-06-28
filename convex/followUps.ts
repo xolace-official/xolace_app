@@ -3,7 +3,6 @@ import {
   WorkflowManager,
   vWorkflowId,
   vResultValidator,
-  type WorkflowCtx,
 } from "@convex-dev/workflow";
 import { components, internal } from "./_generated/api";
 import {
@@ -19,6 +18,7 @@ import { requireAuth } from "./lib/auth";
 import {
   followUpCadence,
   followUpTier,
+  minReturnGapForTier,
   shouldEmitReturn,
   shouldSupersede,
 } from "./lib/followUpCadence";
@@ -55,6 +55,14 @@ const ACTIVE_STATUSES = new Set(["pending", "ready", "shown"]);
 //
 // Sleep durations are passed as args (never in-body constants) so cadence
 // tuning never reshapes the function — deterministic journal replay.
+//
+// NOTE: this is a strictly sequential sleep chain — do NOT reintroduce a
+// `Promise.race([awaitEvent, sleep])` here. @convex-dev/workflow refuses to
+// replay the handler while ANY journal step is in progress, so racing a
+// long-lived `awaitEvent` against a `sleep` deadlocks the workflow the moment
+// the sleep fires (the still-pending event step blocks every future poll).
+// The "user returned" path is handled in `markReturn`, which flips the card to
+// `ready` and cancels this workflow directly — no event needed.
 export const followUpWorkflow = workflow
   .define({
     args: {
@@ -68,38 +76,18 @@ export const followUpWorkflow = workflow
   .handler(async (step, args): Promise<void> => {
     const workflowId = step.workflowId;
 
-    // Stage 1: first check window — return early OR the first delay elapses.
-    if (await raceReturnOrSleep(step, args.stage1Ms)) {
-      await step.runMutation(internal.followUps.markCardReady, { workflowId });
-      return;
-    }
+    // Stage 1: wait, then nudge if the user hasn't returned (card still pending).
+    await step.sleep(args.stage1Ms, { name: "stage1" });
     await step.runMutation(internal.followUps.sendFollowUpNudge, { workflowId });
 
-    // Stage 2: second window — return OR the second delay elapses.
-    if (await raceReturnOrSleep(step, args.stage2Ms)) {
-      await step.runMutation(internal.followUps.markCardReady, { workflowId });
-      return;
-    }
+    // Stage 2: wait again, nudge again if still pending.
+    await step.sleep(args.stage2Ms, { name: "stage2" });
     await step.runMutation(internal.followUps.sendFollowUpNudge, { workflowId });
 
-    // Expiry: no return after both nudges.
+    // Expiry: no return after both nudges → retire the card.
     await step.sleep(args.expiryMs, { name: "expiry" });
     await step.runMutation(internal.followUps.markCardExpired, { workflowId });
   });
-
-/**
- * Wait for a "userReturned" event OR a timeout, whichever fires first.
- * Returns true if the user returned, false if the timer elapsed.
- */
-async function raceReturnOrSleep(
-  step: WorkflowCtx,
-  ms: number,
-): Promise<boolean> {
-  return Promise.race([
-    step.awaitEvent({ name: "userReturned" }).then(() => true),
-    step.sleep(ms, { name: "stage" }).then(() => false),
-  ]);
-}
 
 // =============================================================
 // Workflow start (called from a node action that wrote cardText)
@@ -290,17 +278,6 @@ export const createAndStart = internalMutation({
 // Workflow-driven card transitions (all idempotent on status === "pending")
 // =============================================================
 
-export const markCardReady = internalMutation({
-  args: { workflowId: vWorkflowId },
-  handler: async (ctx, args) => {
-    const card = await getCardByWorkflow(ctx, args.workflowId);
-    // Only a still-pending card flips to ready — never downgrade ready/shown.
-    if (!card || card.status !== "pending") return null;
-    await ctx.db.patch(card._id, { status: "ready" });
-    return null;
-  },
-});
-
 export const markCardExpired = internalMutation({
   args: { workflowId: vWorkflowId },
   handler: async (ctx, args) => {
@@ -366,10 +343,10 @@ export const onFollowUpComplete = internalMutation({
 // =============================================================
 
 /**
- * Called on app open when a pending follow-up exists. Emits `userReturned`
- * to the owning workflow, guarded so it can only resolve after the gap (never
- * in the same sitting) and only for a still-pending card (no re-send after
- * ready). The guard lives here, not in the client, for robustness.
+ * Called on app open when a pending follow-up exists. Flips the card to `ready`
+ * (so the check-in sheet surfaces) and cancels the cadence workflow, guarded so
+ * it only fires after the gap (never in the same sitting) and only for a
+ * still-pending card. The guard lives here, not in the client, for robustness.
  */
 export const markReturn = mutation({
   args: {},
@@ -378,17 +355,22 @@ export const markReturn = mutation({
     const card = await getActiveCardForProfile(ctx, profile._id);
     if (!card) return null;
 
+    // shouldEmitReturn already requires status === "pending" + gap elapsed.
     if (
       shouldEmitReturn({
         cardStatus: card.status,
         cardCreatedAt: card.createdAt,
         now: Date.now(),
+        minGapMs: minReturnGapForTier(card.tier),
       })
     ) {
-      await workflow.sendEvent(ctx, {
-        workflowId: card.workflowId,
-        name: "userReturned",
-      });
+      await ctx.db.patch(card._id, { status: "ready" });
+      // Stop the nudge/expiry cadence — the user is back.
+      try {
+        await workflow.cancel(ctx, card.workflowId);
+      } catch {
+        // Already terminal — nothing to cancel.
+      }
     }
     return null;
   },

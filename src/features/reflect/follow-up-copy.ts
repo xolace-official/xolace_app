@@ -48,8 +48,8 @@ export function chipsForTier(tier: FollowUpTier): Chip[] {
 
 /** The vent doorway — a separate kind of action from the status chips. */
 export const VENT_LABEL = "Let it out";
-export const VENT_SUBLABEL = "Say it out loud — nothing is kept";
-export const VENT_A11Y_LABEL = "Let it out — open voice vent, your voice is never stored";
+export const VENT_SUBLABEL = "Say it out loud - nothing is kept";
+export const VENT_A11Y_LABEL = "Let it out - open voice vent, your voice is never stored";
 
 /** One-line acknowledgment shown after a chip tap, before the sheet closes. */
 export const FOLLOW_UP_ACK = "Thanks for checking back in.";

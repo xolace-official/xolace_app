@@ -143,22 +143,43 @@ export function abandonRequiresFollowUp(args: {
 // Return-event gap guard
 // =============================================================
 
-/** ~8h floor; tuned to "next day" so a return never resolves in the same sitting. */
-export const MIN_RETURN_GAP_MS = 8 * HOUR;
+/**
+ * Per-tier return-gap guard. Each tier's gap sits below its stage1 nudge so the
+ * in-app check-in card can surface as soon as the first push lands — most
+ * importantly for acute (gap < 45min stage1) — while longer tiers keep a
+ * next-day guard so a return never resolves in the same sitting.
+ */
+const MIN_RETURN_GAP_MS_BY_TIER: Record<FollowUpTier, number> = {
+  acute: 30 * MINUTE, // below the 45min stage1 push
+  elevated: 8 * HOUR,
+  standard: 8 * HOUR,
+};
+
+// TODO(test): set back to null before shipping. Forces a 1-minute gap for every
+// tier so the check-in card surfaces within a minute during manual QA.
+const TEST_RETURN_GAP_OVERRIDE_MS: number | null = 1 * MINUTE;
 
 /**
- * Should markReturn emit the `userReturned` event for this card?
- * Only for a still-pending card, and only once enough time has passed since
- * the card was created (≈ session completion time). This stops the event from
- * resolving while the user is still in the app that created the workflow.
+ * The minimum time since card creation before a reopen may surface the card,
+ * for the given tier. Honours the test override when set.
+ */
+export function minReturnGapForTier(tier: FollowUpTier): number {
+  return TEST_RETURN_GAP_OVERRIDE_MS ?? MIN_RETURN_GAP_MS_BY_TIER[tier];
+}
+
+/**
+ * Should a reopen surface this card? Only for a still-pending card, and only
+ * once enough time has passed since the card was created (≈ session completion
+ * time). This stops the card from resolving while the user is still in the app
+ * that created the workflow. `minGapMs` is the tier's gap (see
+ * `minReturnGapForTier`).
  */
 export function shouldEmitReturn(args: {
   cardStatus: string;
   cardCreatedAt: number;
   now: number;
-  minGapMs?: number;
+  minGapMs: number;
 }): boolean {
   if (args.cardStatus !== "pending") return false;
-  const minGap = args.minGapMs ?? MIN_RETURN_GAP_MS;
-  return args.now - args.cardCreatedAt >= minGap;
+  return args.now - args.cardCreatedAt >= args.minGapMs;
 }
