@@ -9,7 +9,9 @@ import { useEffect } from 'react';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 
 export type UseVentRecorderReturn = {
-  startRecording: () => Promise<void>;
+  // Resolves true only when recording actually began (permission granted and
+  // the recorder started); false on denial or any setup failure.
+  startRecording: () => Promise<boolean>;
   stopRecording: () => Promise<string | null>;
   // SharedValue so the Skia particle system reads it on the UI thread via
   // useDerivedValue — no JS bridge overhead on every animation frame.
@@ -43,19 +45,21 @@ export function useVentRecorder(): UseVentRecorderReturn {
     meteringValue.set(Math.max(0, Math.min(1, (raw + 160) / 160)));
   }, [recorderState.metering, meteringValue]);
 
-  const startRecording = async () => {
+  const startRecording = async (): Promise<boolean> => {
     try {
       const { granted } = await AudioModule.requestRecordingPermissionsAsync();
       if (!granted) {
         console.warn('[vent-recorder] Microphone permission denied');
-        return;
+        return false;
       }
 
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
+      return true;
     } catch (err) {
       console.error('[vent-recorder] startRecording failed:', err);
+      return false;
     }
   };
 

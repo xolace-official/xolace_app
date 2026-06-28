@@ -287,19 +287,19 @@ export const ActivityVariant = ({
               <Button
                 onPress={() => setPhase("contributed")}
                 accessibilityLabel="Yes, share anonymously"
-                variant="outline"
+                variant={contributeByDefault ? "outline" : "primary"}
                 size="lg"
                 className={`w-full rounded-2xl ${
                   contributeByDefault
-                    ? "border-accent/40 bg-accent/10"
-                    : "border-foreground/55 bg-surface/30"
+                    ? "border-accent/40 bg-accent/20"
+                    : ""
                 }`}
               >
                 <Button.Label
                   className={`text-base ${
                     contributeByDefault
                       ? "text-accent font-medium"
-                      : "text-foreground/55 font-light"
+                      : ""
                   }`}
                 >
                   Yes, anonymously

@@ -5,7 +5,9 @@
  */
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
+import type { WorkflowId } from "@convex-dev/workflow";
 import { requireAuth } from "./lib/auth";
+import { workflow } from "./followUps";
 
 function assertDevToolsEnabled() {
   if (process.env.DEV_TOOLS_ENABLED !== "true") {
@@ -37,5 +39,110 @@ export const setStreak = mutation({
       sessionCount: Math.max(profile.sessionCount, 1),
     });
     return newStreak;
+  },
+});
+
+/**
+ * Seed a `ready` follow-up card for the caller so the check-in sheet can be
+ * QA'd in the simulator without waiting for a real workflow ladder. Clears any
+ * existing active cards first for a clean run. The workflowId is a placeholder
+ * (the read path — sheet render, markShown, resolve — never touches it).
+ */
+export const seedFollowUpCard = mutation({
+  args: {
+    tier: v.union(
+      v.literal("acute"),
+      v.literal("elevated"),
+      v.literal("standard"),
+    ),
+    escalationDerived: v.optional(v.boolean()),
+    cardText: v.optional(v.string()),
+  },
+  returns: v.id("follow_up_cards"),
+  handler: async (ctx, args) => {
+    assertDevToolsEnabled();
+    const { profile } = await requireAuth(ctx);
+
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_profile_time", (q) =>
+        q.eq("emotionalProfileId", profile._id),
+      )
+      .order("desc")
+      .first();
+    if (!session) {
+      throw new Error("No session to attach a follow-up card to — process one moment first.");
+    }
+
+    // Clear existing active cards so QA always shows exactly this one.
+    for (const status of ["pending", "ready", "shown"] as const) {
+      const existing = await ctx.db
+        .query("follow_up_cards")
+        .withIndex("by_profile_status", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("status", status),
+        )
+        .collect();
+      for (const c of existing) await ctx.db.delete(c._id);
+    }
+
+    const defaultText =
+      args.tier === "acute"
+        ? "Just checking in on you. We're here, no rush."
+        : "A couple of days ago you let something heavy out here. How's it sitting now?";
+
+    return await ctx.db.insert("follow_up_cards", {
+      emotionalProfileId: profile._id,
+      sessionId: session._id,
+      workflowId: `qa-seed-${Date.now()}` as WorkflowId,
+      tier: args.tier,
+      cardText: args.cardText ?? defaultText,
+      escalationDerived: args.escalationDerived ?? args.tier === "acute",
+      status: "ready",
+      createdAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * Cancel + retire any stuck follow-up cards for the caller. Use this to clear
+ * the deadlocked workflow/card left behind by the old `Promise.race` cadence:
+ * it cancels each active card's workflow (no-op for qa-seed placeholders and
+ * already-terminal workflows), marks the card `expired`, and clears the
+ * `followUpWorkflowId` pin on the linked session so a fresh follow-up can start.
+ * Returns the number of cards retired.
+ */
+export const cleanupStuckFollowUps = mutation({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    assertDevToolsEnabled();
+    const { profile } = await requireAuth(ctx);
+
+    let retired = 0;
+    for (const status of ["pending", "ready", "shown"] as const) {
+      const cards = await ctx.db
+        .query("follow_up_cards")
+        .withIndex("by_profile_status", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("status", status),
+        )
+        .collect();
+
+      for (const card of cards) {
+        try {
+          await workflow.cancel(ctx, card.workflowId);
+        } catch {
+          // Placeholder workflowId or already-terminal workflow — nothing to do.
+        }
+        await ctx.db.patch(card._id, { status: "expired" });
+
+        // Unpin the session so getStartContext won't treat it as already-started.
+        const session = await ctx.db.get(card.sessionId);
+        if (session?.followUpWorkflowId) {
+          await ctx.db.patch(card.sessionId, { followUpWorkflowId: undefined });
+        }
+        retired += 1;
+      }
+    }
+    return retired;
   },
 });

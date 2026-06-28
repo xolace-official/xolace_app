@@ -18,11 +18,43 @@ import {
 } from "./lib/validators";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
 import { rateLimiter } from "./lib/rateLimits";
+import {
+  abandonRequiresFollowUp,
+  computeRequiresFollowUp,
+} from "./lib/followUpCadence";
+import type { Doc } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 
 const ABANDON_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 
 // Terminal states — sessions in these states cannot be transitioned further.
 const TERMINAL_STATES = new Set(["completed", "abandoned"]);
+
+/**
+ * Finalize the follow-up gate at session close and (idempotently) kick off the
+ * durable follow-up workflow when warranted.
+ *
+ * `requiresFollowUp` is the gate the caller computed:
+ * - completion paths use `computeRequiresFollowUp` (folds in gave_up);
+ * - the abandon path gates strictly on `escalationTriggered` (escalation-then-
+ *   abandon is the highest-value check-in; a plain abandon never starts one).
+ */
+async function finalizeFollowUp(
+  ctx: MutationCtx,
+  session: Doc<"sessions">,
+  requiresFollowUp: boolean,
+): Promise<void> {
+  if (session.requiresFollowUp !== requiresFollowUp) {
+    await ctx.db.patch(session._id, { requiresFollowUp });
+  }
+  // One-active-per-profile + idempotency are enforced in followUps; here we
+  // only guard against the obvious double-start on the same session.
+  if (requiresFollowUp && !session.followUpWorkflowId) {
+    await ctx.scheduler.runAfter(0, internal.followUps.startFollowUpWorkflow, {
+      sessionId: session._id,
+    });
+  }
+}
 
 // --- Public Mutations ---
 
@@ -235,6 +267,17 @@ export const completePath = mutation({
       );
     }
 
+    // Finalize follow-up gate + maybe start the check-in workflow.
+    await finalizeFollowUp(
+      ctx,
+      session,
+      computeRequiresFollowUp({
+        storedFlag: session.requiresFollowUp,
+        confirmationState: session.confirmationState,
+        escalationTriggered: session.escalationTriggered,
+      }),
+    );
+
     return null;
   },
 });
@@ -271,6 +314,17 @@ export const completeSession = mutation({
         emotionalProfileId: session.emotionalProfileId,
         sessionId: args.sessionId,
       },
+    );
+
+    // Finalize follow-up gate + maybe start the check-in workflow.
+    await finalizeFollowUp(
+      ctx,
+      session,
+      computeRequiresFollowUp({
+        storedFlag: session.requiresFollowUp,
+        confirmationState: session.confirmationState,
+        escalationTriggered: session.escalationTriggered,
+      }),
     );
 
     return null;
@@ -328,6 +382,11 @@ export const abandon = mutation({
       state: "abandoned",
       updatedAt: Date.now(),
     });
+
+    // Abandon only earns a follow-up when escalation fired at the mirror
+    // (escalation-then-abandon). A plain abandon never starts one — even if the
+    // AI flag was set at mirror delivery. This is the IRON rule (T13).
+    await finalizeFollowUp(ctx, session, abandonRequiresFollowUp(session));
 
     return null;
   },
@@ -493,8 +552,18 @@ export const deliverMirror = internalMutation({
     mirrorText: v.string(),
     mirrorModelVersion: v.string(),
     toneUsed: mirrorToneValidator,
+    safeguardLevel: v.optional(
+      v.union(
+        v.literal("none"),
+        v.literal("gentle"),
+        v.literal("elevated"),
+        v.literal("crisis"),
+      ),
+    ),
     escalationTriggered: v.optional(v.boolean()),
     escalationResources: v.optional(v.array(resourceValidator)),
+    // Preliminary follow-up flag (AI + escalation). Finalized at completion.
+    requiresFollowUp: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
@@ -512,10 +581,12 @@ export const deliverMirror = internalMutation({
       mirrorText: args.mirrorText,
       mirrorModelVersion: args.mirrorModelVersion,
       toneUsed: args.toneUsed,
+      ...(args.safeguardLevel ? { safeguardLevel: args.safeguardLevel } : {}),
       ...(args.escalationTriggered ? { escalationTriggered: true } : {}),
       ...(args.escalationResources
         ? { escalationResources: args.escalationResources }
         : {}),
+      ...(args.requiresFollowUp ? { requiresFollowUp: true } : {}),
       updatedAt: Date.now(),
     });
   },
@@ -682,6 +753,8 @@ export const checkAbandoned = internalMutation({
           state: "abandoned",
           updatedAt: Date.now(),
         });
+        // Same gate as the manual abandon path: escalation-then-abandon only.
+        await finalizeFollowUp(ctx, session, abandonRequiresFollowUp(session));
       }
     }
   },

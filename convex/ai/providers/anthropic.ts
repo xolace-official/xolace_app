@@ -43,6 +43,10 @@ export interface ClassificationResult {
   thematicTags: string[];
   userLanguageTags: string[];
   temporalContext?: "past_focused" | "present_focused" | "future_focused";
+  // Follow-up system: does this session warrant a later check-in? Defaults to
+  // false. followUpReason is a brief internal sentence (never shown to user).
+  requiresFollowUp: boolean;
+  followUpReason?: string;
 }
 
 // --- Valid primary emotions (must match the classifier prompt enum) ---
@@ -120,6 +124,8 @@ export function parseClassificationResponse(
     userLanguageTags: Array.isArray(parsed.userLanguageTags)
       ? parsed.userLanguageTags.filter((t: unknown) => typeof t === "string").slice(0, 5)
       : [],
+    // Default false — follow-up is the exception, never assume it.
+    requiresFollowUp: parsed.requiresFollowUp === true,
   };
 
   // Optional fields
@@ -135,6 +141,14 @@ export function parseClassificationResponse(
     parsed.temporalContext === "future_focused"
   ) {
     result.temporalContext = parsed.temporalContext;
+  }
+  // Only keep a reason when a follow-up was actually requested.
+  if (
+    result.requiresFollowUp &&
+    typeof parsed.followUpReason === "string" &&
+    parsed.followUpReason.trim()
+  ) {
+    result.followUpReason = parsed.followUpReason.trim();
   }
 
   return result;

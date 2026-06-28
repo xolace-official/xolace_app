@@ -19,6 +19,7 @@ import type * as ai_process from "../ai/process.js";
 import type * as ai_prompts_articulator from "../ai/prompts/articulator.js";
 import type * as ai_prompts_classifier from "../ai/prompts/classifier.js";
 import type * as ai_prompts_distiller from "../ai/prompts/distiller.js";
+import type * as ai_prompts_followUpCardWriter from "../ai/prompts/followUpCardWriter.js";
 import type * as ai_prompts_notificationTemplates from "../ai/prompts/notificationTemplates.js";
 import type * as ai_prompts_notificationWriter from "../ai/prompts/notificationWriter.js";
 import type * as ai_providers_anthropic from "../ai/providers/anthropic.js";
@@ -38,6 +39,7 @@ import type * as escalation from "../escalation.js";
 import type * as exercises from "../exercises.js";
 import type * as exercises_match from "../exercises/match.js";
 import type * as feedback from "../feedback.js";
+import type * as followUps from "../followUps.js";
 import type * as jobs_accountDeletion from "../jobs/accountDeletion.js";
 import type * as jobs_dataRetention from "../jobs/dataRetention.js";
 import type * as jobs_dataWipe from "../jobs/dataWipe.js";
@@ -48,6 +50,7 @@ import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js
 import type * as jobs_reflectionDistiller from "../jobs/reflectionDistiller.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_displayName from "../lib/displayName.js";
+import type * as lib_followUpCadence from "../lib/followUpCadence.js";
 import type * as lib_notificationPrefs from "../lib/notificationPrefs.js";
 import type * as lib_pushNotifications from "../lib/pushNotifications.js";
 import type * as lib_rateLimits from "../lib/rateLimits.js";
@@ -88,6 +91,7 @@ declare const fullApi: ApiFromModules<{
   "ai/prompts/articulator": typeof ai_prompts_articulator;
   "ai/prompts/classifier": typeof ai_prompts_classifier;
   "ai/prompts/distiller": typeof ai_prompts_distiller;
+  "ai/prompts/followUpCardWriter": typeof ai_prompts_followUpCardWriter;
   "ai/prompts/notificationTemplates": typeof ai_prompts_notificationTemplates;
   "ai/prompts/notificationWriter": typeof ai_prompts_notificationWriter;
   "ai/providers/anthropic": typeof ai_providers_anthropic;
@@ -107,6 +111,7 @@ declare const fullApi: ApiFromModules<{
   exercises: typeof exercises;
   "exercises/match": typeof exercises_match;
   feedback: typeof feedback;
+  followUps: typeof followUps;
   "jobs/accountDeletion": typeof jobs_accountDeletion;
   "jobs/dataRetention": typeof jobs_dataRetention;
   "jobs/dataWipe": typeof jobs_dataWipe;
@@ -117,6 +122,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/reflectionDistiller": typeof jobs_reflectionDistiller;
   "lib/auth": typeof lib_auth;
   "lib/displayName": typeof lib_displayName;
+  "lib/followUpCadence": typeof lib_followUpCadence;
   "lib/notificationPrefs": typeof lib_notificationPrefs;
   "lib/pushNotifications": typeof lib_pushNotifications;
   "lib/rateLimits": typeof lib_rateLimits;
@@ -171,5 +177,6 @@ export declare const components: {
   actionCache: import("@convex-dev/action-cache/_generated/component.js").ComponentApi<"actionCache">;
   migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
   pushNotifications: import("@convex-dev/expo-push-notifications/_generated/component.js").ComponentApi<"pushNotifications">;
+  workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
 };

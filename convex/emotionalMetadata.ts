@@ -26,6 +26,9 @@ export const store = internalMutation({
       )
     ),
     riskFlag: v.boolean(),
+    // Follow-up system: brief internal reason from the classifier. Never
+    // shown to the user. Present only when the classifier flagged a follow-up.
+    followUpReason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("emotional_metadata", {

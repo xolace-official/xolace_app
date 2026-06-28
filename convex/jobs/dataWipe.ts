@@ -90,6 +90,14 @@ export const wipe = internalMutation({
       await ctx.db.patch(e._id, { emotionalProfileId: undefined });
     }
 
+    // ── Cancel + purge follow-up cards (and their live workflows) ─
+    // Only on the final batch, since the dedicated purge is itself bounded.
+    if (!hasMore) {
+      await ctx.scheduler.runAfter(0, internal.followUps.purgeForProfile, {
+        emotionalProfileId,
+      });
+    }
+
     // ── Reset emotional profile counters ─────────────────────────
     // Only reset on the final batch (no more sessions to delete)
     if (!hasMore) {

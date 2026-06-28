@@ -4,6 +4,31 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.6.1] - OTA Update (2026-06-27)
+
+### Added
+
+- **Follow-Up Check-In** — sessions that leave something unresolved now trigger a warm check-in card a day or so later. The AI classifier flags sessions that qualify (escalation, grief/shame at high intensity, unconfirmed mirrors, or a `gave_up` — where the AI couldn't reflect you back); a Haiku-generated card text, written per-session and referencing the actual moment, surfaces in a bottom sheet the next time you open the app. The sheet asks one question ("how's it sitting now?") with tier-aware response chips: acute/crisis cards surface only "Still sitting with it" / "Feeling lighter" (anything more would read glib at 45 minutes); elevated and standard cards add "Got heavier" and "I worked through it". A separate "Let it out" doorway routes to Voice Vent for those who need to speak rather than tap. A resources link appears on cards derived from escalation sessions. Tapping any chip logs the response and closes the sheet gracefully.
+- **Weight-tiered follow-up cadence** — check-in timing adapts to what was shared. Acute (crisis): first ping at 45 min, second at +4 h, expires at 48 h. Elevated (grief/shame intensity ≥ 7, `gave_up`, elevated safeguard): 12 h / +1 d / 7 d. Standard: 24 h / +3 d / 14 d. Push notifications for Elevated and Standard include the card text; Acute pushes use presence-anchored copy that references *when* something was processed without naming the wound.
+- **Follow-up section on the Profile screen** — active and recently resolved check-in cards are visible in the Profile screen's new "Follow-Ups" section, so you can return to a card even if you dismissed the sheet early or missed the push.
+- **Supersede policy** — a new qualifying session cancels the active follow-up workflow and starts a fresh one, but only when the new session's weight tier is equal to or higher than the active tier. A casual standard session cannot silently cancel an active crisis check-in. Superseded cards remain visible in the Profile (labelled "unresolved, no check-in coming") until explicitly dismissed.
+
+### Backend
+
+- **`follow_up_cards` Convex table** — stores per-session check-in cards (`profileId`, `sessionId`, `tier`, `cardText`, `status`: pending → ready → resolved/expired/superseded, push timestamps, and response). Indexed `by_profile_created` and `by_profile_status`.
+- **`startFollowUpWorkflow` / `followUpCadence`** — durable `@convex-dev/workflow` orchestrates the sleep-and-nudge ladder. Sleep durations are passed as `workflow.start` args (not in-body constants) so cadence tuning never reshapes the workflow journal. At most one active follow-up per profile; idempotent `status === "pending"` guard prevents double-fires on multi-device foreground events.
+- **`followUpCardWriter` prompt** — Haiku action writes the card text off the critical path after session completion, referencing the mirror and classifier output. Falls back to a static `FALLBACK_FOLLOWUP_CARD` on model outage so safety-relevant follow-ups are never silently dropped.
+- **`follow_up` notification type** — `notifications.ts` gains a dedicated `followUpNudge` rate-limit bucket (separate from `gentle_return` / `pattern_nudge`) so follow-up pushes never starve or are starved by other nudge types. Follow-up notifications are gated only by `notifications.enabled` — no per-type toggle at this stage.
+- **`requiresFollowUp` classifier flag** — finalized at session completion (not mirror delivery), because `gave_up` is only known after the clarify loop closes. Stored on `emotional_metadata` alongside other classifier output; the operational gate lives on `sessions`.
+- **Eval coverage** — `requiresFollowUp.eval.test.ts` covers ~15–20 labeled inputs (live Haiku, `bun:test`) to catch prompt regressions.
+
+### Changed
+
+- **Activity variant** — minor copy and layout adjustments on the session-end activity screen.
+- **`auth.ts`** — minor internal fix.
+
+---
+
 ## [1.6.0] - Released (2026-06-19)
 
 ### Added

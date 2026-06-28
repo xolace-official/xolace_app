@@ -17,6 +17,8 @@ import { MonthlyEventSheet } from '@/src/features/awareness-events/components/mo
 import { useAwarenessEvent } from '@/src/features/awareness-events/hooks/use-awareness-event';
 import { ReturnWelcomeSheet } from '@/src/features/reflect/components/return-welcome-sheet';
 import { useReturnWelcome } from '@/src/features/reflect/hooks/use-return-welcome';
+import { FollowUpCheckInSheet } from '@/src/features/reflect/components/follow-up-check-in-sheet';
+import { useFollowUpCheckIn } from '@/src/features/reflect/hooks/use-follow-up-check-in';
 import {
   computeUserVariant,
   computeQuietReturn,
@@ -91,7 +93,18 @@ export default function ProtectedIndex() {
 
   // Same getFullContext query ReflectScreen subscribes to — Convex dedupes it,
   // so this is a cached read, not a second round-trip.
-  const profile = useQuery(api.users.getFullContext)?.profile;
+  const fullContext = useQuery(api.users.getFullContext);
+  const profile = fullContext?.profile;
+  const hasPendingFollowUp = fullContext?.hasPendingFollowUp ?? false;
+  console.log("hasPendingFollowUp", hasPendingFollowUp)
+
+  // Follow-up check-in surfaces on reopen when a session left something
+  // unresolved. It OUT-PRIORITIZES ReturnWelcomeSheet (reopen precedence): when
+  // a follow-up is pending/ready we suppress the return-welcome for this reopen.
+  const followUp = useFollowUpCheckIn({
+    active: founderWelcomeSeen && !showWelcome && isFocused && !!profile,
+    hasPendingFollowUp,
+  });
 
   // Per-route TTI for the reflect home: the screen is genuinely ready once the
   // user context query resolves, not at mount. markInteractive emits telemetry
@@ -105,7 +118,7 @@ export default function ProtectedIndex() {
   // sheet chain: FounderWelcome → ReturnWelcome → MonthlyEvent. It only arms
   // once founder welcome is resolved and the screen is focused.
   const returnWelcome = useReturnWelcome({
-    active: founderWelcomeSeen && !showWelcome && isFocused && !!profile,
+    active: founderWelcomeSeen && !showWelcome && isFocused && !!profile && !followUp.blocking,
     variant: profile ? computeUserVariant(profile) : { kind: 'first-time' },
     quietReturn: profile ? computeQuietReturn(profile) : null,
     lastSessionAt: profile?.lastSessionAt,
@@ -139,9 +152,15 @@ export default function ProtectedIndex() {
         tier={returnWelcome.tier}
         onClose={returnWelcome.dismiss}
       />
+      <FollowUpCheckInSheet
+        card={followUp.card}
+        isOpen={followUp.isOpen}
+        onResolve={followUp.resolve}
+        onDismiss={followUp.dismiss}
+      />
       <MonthlyEventSheet
         event={
-          founderWelcomeSeen && isFocused && !returnWelcome.blocking
+          founderWelcomeSeen && isFocused && !returnWelcome.blocking && !followUp.blocking
             ? awarenessEvent
             : null
         }

@@ -17,11 +17,17 @@ export const schedule = internalMutation({
       v.literal("gentle_return"),
       v.literal("pattern_nudge"),
       v.literal("milestone"),
-      v.literal("affirmation")
+      v.literal("affirmation"),
+      v.literal("follow_up")
     ),
     content: v.string(),
     triggerReason: v.string(),
     scheduledFor: v.number(),
+    // For type "follow_up" only: the cadence tier, so acute (crisis) follow-ups
+    // route to their own rate-limit bucket instead of the 1/day gentle cap.
+    followUpTier: v.optional(
+      v.union(v.literal("acute"), v.literal("elevated"), v.literal("standard"))
+    ),
     reachUsed: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
     patternContextUsed: v.optional(v.boolean()),
     generatedBy: v.optional(v.union(
@@ -33,8 +39,17 @@ export const schedule = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Rate limit: 1 notification per 24 hours per profile
-    const { ok } = await rateLimiter.limit(ctx, "notification", {
+    // Rate limit: select the bucket by type so follow-up nudges have their
+    // own budget and never starve (or get starved by) the cron nudges. Acute
+    // follow-ups fire two presence checks within ~5h, so they get a dedicated
+    // bucket rather than the gentler 1/day followUpNudge cap.
+    const bucket =
+      args.type === "follow_up"
+        ? args.followUpTier === "acute"
+          ? "followUpAcute"
+          : "followUpNudge"
+        : "notification";
+    const { ok } = await rateLimiter.limit(ctx, bucket, {
       key: args.emotionalProfileId,
     });
 

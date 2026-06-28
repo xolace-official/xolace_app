@@ -85,6 +85,12 @@
       "skillPath": "skills/attribution-setup/SKILL.md",
       "computedHash": "ea6f8bb64b3922f53789578ef2458eab43fee0ea1c354a2e8d824bba45d769c8"
     },
+    "avoid-feature-creep": {
+      "source": "waynesutton/convexskills",
+      "sourceType": "github",
+      "skillPath": "skills/avoid-feature-creep/SKILL.md",
+      "computedHash": "e63392840c3a80cbd9ec7b27888bf8d433b09bf6c9077ee3a6f882668057a390"
+    },
     "category-positioning": {
       "source": "eronred/aso-skills",
       "sourceType": "github",
@@ -149,6 +155,12 @@
       "skillPath": "skills/convex/SKILL.md",
       "computedHash": "c5f3622c64ef550aac27d1dbc041f0c7c40d9119863c9fb8bac180b0498ee8ed"
     },
+    "convex-best-practices": {
+      "source": "waynesutton/convexskills",
+      "sourceType": "github",
+      "skillPath": "skills/convex-best-practices/SKILL.md",
+      "computedHash": "3b24d2afbb5859e3a3640c1e47e2ac9ace81e9737ec76b891951999361c92ab1"
+    },
     "convex-create-component": {
       "source": "get-convex/agent-skills",
       "sourceType": "github",
@@ -165,7 +177,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-performance-audit/SKILL.md",
-      "computedHash": "d4f372ad6bed01b3a83983f5e8386017606e1bf8a97833c016af07f277157f96"
+      "computedHash": "2eaf22b20f74ab39f336b41845b834b8796b6d2b380bc078a1ab54769c3f233c"
     },
     "convex-quickstart": {
       "source": "get-convex/agent-skills",

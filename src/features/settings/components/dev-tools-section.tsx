@@ -42,6 +42,17 @@ const RETURN_ICON: CrossPlatformSymbol = {
   android: "waving_hand",
   web: "waving_hand",
 };
+const FOLLOW_UP_ICON: CrossPlatformSymbol = {
+  ios: "bell.badge",
+  android: "notifications_active",
+  web: "notifications_active",
+};
+
+const FOLLOW_UP_TIERS: { tier: "acute" | "elevated" | "standard"; label: string }[] = [
+  { tier: "standard", label: "Seed follow-up · standard" },
+  { tier: "elevated", label: "Seed follow-up · elevated" },
+  { tier: "acute", label: "Seed follow-up · acute" },
+];
 
 const RETURN_WELCOME_TIERS: { tier: ReturnWelcomeTier; label: string }[] = [
   { tier: "recent", label: "Return welcome · recent" },
@@ -64,7 +75,29 @@ export const DevToolsSection = () => {
     toast.show({ label: "Awareness events reset", description: "Reopen home to see the card." });
   };
   const setStreak = useMutation(api.devTools.setStreak);
+  const seedFollowUpCard = useMutation(api.devTools.seedFollowUpCard);
   const [busy, setBusy] = useState(false);
+
+  const seedFollowUp = (tier: "acute" | "elevated" | "standard") => {
+    if (busy) return;
+    setBusy(true);
+    seedFollowUpCard({ tier })
+      .then(() => {
+        toast.show({
+          label: `Follow-up card seeded · ${tier}`,
+          description: "Go back to the reflect home to see the check-in.",
+        });
+      })
+      .catch((e) => {
+        toast.show({
+          variant: "danger",
+          label: "Seed failed",
+          description:
+            e instanceof Error ? e.message : "Is DEV_TOOLS_ENABLED set?",
+        });
+      })
+      .finally(() => setBusy(false));
+  };
   const [previewTier, setPreviewTier] = useState<ReturnWelcomeTier | null>(null);
 
   const icon = (name: CrossPlatformSymbol) => (
@@ -127,14 +160,23 @@ export const DevToolsSection = () => {
         label="Reset awareness events"
         onPress={resetAwarenessEvents}
       />
-      {RETURN_WELCOME_TIERS.map(({ tier, label }, i) => (
+      {RETURN_WELCOME_TIERS.map(({ tier, label }) => (
         <SettingsRow
           key={tier}
           variant="action"
           icon={icon(RETURN_ICON)}
           label={label}
           onPress={() => setPreviewTier(tier)}
-          isLast={i === RETURN_WELCOME_TIERS.length - 1}
+        />
+      ))}
+      {FOLLOW_UP_TIERS.map(({ tier, label }, i) => (
+        <SettingsRow
+          key={tier}
+          variant="action"
+          icon={icon(FOLLOW_UP_ICON)}
+          label={label}
+          onPress={() => seedFollowUp(tier)}
+          isLast={i === FOLLOW_UP_TIERS.length - 1}
         />
       ))}
 
