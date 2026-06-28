@@ -43,10 +43,14 @@ export type UseVentFlowReturn = {
 };
 
 export function useVentFlow(): UseVentFlowReturn {
+  const posthog = usePostHog();
   const router = useRouter();
   const busyRef = useRef(false);
   const resultRef = useRef<VentResult | 'error' | null>(null);
   const burnDoneRef = useRef(false);
+  // Snapshot of durationMs at stop time — used in post-stop events where
+  // the recorder state has already been cleared.
+  const durationAtStopRef = useRef(0);
 
   const [state, setState] = useState<VentState>('idle');
   const [words, setWords] = useState<string | null>(null);
@@ -70,15 +74,25 @@ export function useVentFlow(): UseVentFlowReturn {
     if (result === null) return; // pipeline still in flight — dark screen waits
 
     if (result === 'error' || !result.words) {
-      if (result !== 'error' && result.capReached) setCapReached(true);
+      if (result !== 'error' && result.capReached) {
+        setCapReached(true);
+        posthog.capture('vent_cap_reached', { duration_ms: durationAtStopRef.current });
+      } else {
+        posthog.capture('vent_error', { duration_ms: durationAtStopRef.current });
+      }
       setState((prev) => (prev === 'processing' ? 'gone' : prev));
       return;
     }
     setWords(result.words);
     setAudioUrl(result.audioUrl);
     setIsCrisis(result.isCrisis);
+    posthog.capture('vent_heard', {
+      is_crisis: result.isCrisis,
+      has_audio: !!result.audioUrl,
+      duration_ms: durationAtStopRef.current,
+    });
     setState((prev) => (prev === 'processing' ? 'heard' : prev));
-  }, []);
+  }, [posthog]);
 
   // Play TTS simultaneously with the text reveal (design spec: the coda).
   useEffect(() => {
@@ -92,22 +106,27 @@ export function useVentFlow(): UseVentFlowReturn {
   // Advance to 'gone' once TTS finishes
   useEffect(() => {
     if (playerStatus.didJustFinish && state === 'heard') {
+      posthog.capture('vent_completed', { duration_ms: durationAtStopRef.current });
       // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to expo-audio playback completion, an external-system event
       setState('gone');
     }
-  }, [playerStatus.didJustFinish, state]);
+  }, [playerStatus.didJustFinish, state, posthog]);
 
   // Fallback: advance to 'gone' after 3.5s when words arrived but no audio
   useEffect(() => {
     if (state !== 'heard' || audioUrl) return;
-    const t = setTimeout(() => setState('gone'), 3500);
+    const t = setTimeout(() => {
+      posthog.capture('vent_completed', { duration_ms: durationAtStopRef.current });
+      setState('gone');
+    }, 3500);
     return () => clearTimeout(t);
-  }, [state, audioUrl]);
+  }, [state, audioUrl, posthog]);
 
   const startVent = async () => {
     if (state !== 'idle') return;
     await startRecording();
     setState('recording');
+    posthog.capture('vent_started');
   };
 
   const stopVent = async () => {
@@ -115,6 +134,12 @@ export function useVentFlow(): UseVentFlowReturn {
     busyRef.current = true;
     burnDoneRef.current = false;
     resultRef.current = null;
+
+    durationAtStopRef.current = durationMs;
+    posthog.capture('vent_stopped', {
+      duration_ms: durationMs,
+      max_duration_reached: durationMs >= MAX_VENT_DURATION_MS,
+    });
 
     setState('processing');
     const uri = await stopRecording();

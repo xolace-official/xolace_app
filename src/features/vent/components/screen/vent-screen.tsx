@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SymbolView } from 'expo-symbols';
+import { usePostHog } from 'posthog-react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -42,6 +43,7 @@ const STAGE_FOR_STATE: Record<string, ParticleStage> = {
 };
 
 export function VentScreen() {
+  const posthog = usePostHog();
   const router = useRouter();
   const ventIntroSeen = useAppStore((s) => s.ventIntroSeen);
   const setVentIntroSeen = useAppStore((s) => s.setVentIntroSeen);
@@ -103,6 +105,7 @@ export function VentScreen() {
 
   const handleClose = () => {
     playSoftPress();
+    posthog.capture('vent_closed', { state });
     router.back();
   };
 
@@ -112,6 +115,7 @@ export function VentScreen() {
         <StatusBar hidden />
         <VentIntro
           onUnderstand={() => {
+            posthog.capture('vent_intro_completed');
             setVentIntroSeen(true);
             setShowIntro(false);
           }}
