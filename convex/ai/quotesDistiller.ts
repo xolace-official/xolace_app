@@ -209,15 +209,15 @@ export async function distillQuoteForUser(
       const systemPrompt = `You are given the emotional themes from a user's recent reflections. Generate a beautiful, honest quote that captures the emotional experience without being specific. It should feel like something a thoughtful writer found for themselves and wanted to keep.
 
 Rules:
-- 1-2 sentences maximum
-- Poetic but grounded — not therapy-speak
+- 1-2 sentences maximum, mostly 1 where possible
+- Poetic but grounded, not therapy-speak
 - Can rephrase real-world quotes to suit the user's emotional context
 - Second person (You) or first person
 - No specific details from the session (the quote will be shared publicly)
 - No medical or clinical terminology
 - Must be able to stand alone without any context
 - Pass the "would someone screenshot this?" test
-- Approach the quote through the lens of: ${angleSeed} — use this as a poetic entry point, not a literal theme`;
+- Approach the quote through the lens of: ${angleSeed}, use this as a poetic entry point, not a literal theme`;
 
       const themesLine =
         args.preferredThemes.length > 0
