@@ -299,7 +299,7 @@ export const ActivityVariant = ({
                   className={`text-base ${
                     contributeByDefault
                       ? "text-accent font-medium"
-                      : "font-light"
+                      : ""
                   }`}
                 >
                   Yes, anonymously
