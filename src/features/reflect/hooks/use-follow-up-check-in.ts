@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
+import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import type { FollowUpResponse } from "@/src/features/reflect/follow-up-copy";
@@ -35,6 +36,7 @@ type Result = {
  * `getReadyCard`. When the sheet mounts, the card is marked `shown`.
  */
 export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result {
+  const posthog = usePostHog();
   const markReturn = useMutation(api.followUps.markReturn);
   const markShown = useMutation(api.followUps.markShown);
   const resolveCard = useMutation(api.followUps.resolveCard);
@@ -65,23 +67,36 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
     if (card && card.status === "ready" && shownRef.current !== card._id) {
       shownRef.current = card._id;
       void markShown({ cardId: card._id });
+      posthog.capture('follow_up_shown', {
+        tier: card.tier,
+        escalation_derived: card.escalationDerived,
+      });
     }
-  }, [card, markShown]);
+  }, [card, markShown, posthog]);
 
   const resolve = useCallback(
     (response: FollowUpResponse) => {
       if (!card) return;
       void resolveCard({ cardId: card._id, response });
+      posthog.capture('follow_up_responded', {
+        response,
+        tier: card.tier,
+        escalation_derived: card.escalationDerived,
+      });
       // For "vent" the sheet also navigates to the voice-vent screen (handled
       // in the sheet, which owns the router).
     },
-    [card, resolveCard],
+    [card, resolveCard, posthog],
   );
 
   const dismiss = useCallback(() => {
     if (!card) return;
     void resolveCard({ cardId: card._id, response: "dismissed" });
-  }, [card, resolveCard]);
+    posthog.capture('follow_up_dismissed', {
+      tier: card.tier,
+      escalation_derived: card.escalationDerived,
+    });
+  }, [card, resolveCard, posthog]);
 
   return {
     card,

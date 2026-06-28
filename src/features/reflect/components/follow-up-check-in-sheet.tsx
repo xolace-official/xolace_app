@@ -2,6 +2,7 @@ import { useReducer } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePostHog } from "posthog-react-native";
 import { BottomSheet, PressableFeedback, useThemeColor } from "heroui-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
@@ -76,6 +77,7 @@ export const FollowUpCheckInSheet = ({
   onResolve,
   onDismiss,
 }: Props) => {
+  const posthog = usePostHog();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const router = useRouter();
@@ -202,7 +204,10 @@ export const FollowUpCheckInSheet = ({
 
                 {showResources && (
                   <PressableFeedback
-                    onPress={() => router.push("/crisis-resources")}
+                    onPress={() => {
+                      posthog.capture('follow_up_resources_tapped', { tier: shownCard.tier });
+                      router.push("/crisis-resources");
+                    }}
                     accessibilityRole="link"
                     accessibilityLabel={FOLLOW_UP_RESOURCES_LABEL}
                     hitSlop={12}

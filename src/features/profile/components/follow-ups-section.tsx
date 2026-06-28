@@ -98,7 +98,7 @@ function FollowUpRow({ card, onDismiss }: RowProps) {
  * history. Superseded rows stay visible/tappable until an explicit dismiss.
  */
 export function FollowUpsSection({ staggerDelay = 420 }: { staggerDelay?: number }) {
-  const cards = useQuery(api.followUps.listForProfile);
+  const cards = useQuery(api.followUps.listForProfile, {});
   const resolveCard = useMutation(api.followUps.resolveCard);
 
   if (!cards || cards.length === 0) return null;
