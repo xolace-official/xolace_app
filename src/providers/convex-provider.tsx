@@ -5,6 +5,7 @@ import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ReactNode } from "react";
 import { tokenCache } from "@clerk/expo/token-cache";
+import { AuthSyncGuard } from "./auth-sync-guard";
 
 // Clerk's native JS bundle checks navigator.onLine before making network
 // requests to mint JWTs. In React Native this property is undefined/false,
@@ -35,6 +36,7 @@ export function ConvexClientProvider({
       tokenCache={tokenCache}
     >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <AuthSyncGuard />
         {children}
       </ConvexProviderWithClerk>
     </ClerkProvider>

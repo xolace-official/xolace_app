@@ -5,6 +5,7 @@ import { EaseView } from 'react-native-ease/uniwind';
 import { FadeIn, LinearTransition } from 'react-native-reanimated';
 import { Button , Spinner, useThemeColor} from 'heroui-native';
 import { playSoftPress } from '@/src/lib/haptics';
+import { useAuth } from '@clerk/expo';
 import { useSignInWithGoogle } from '@clerk/expo/google';
 import { useSignInWithApple } from '@clerk/expo/apple';
 import { useMutation } from 'convex/react';
@@ -37,6 +38,7 @@ const SPINNER_ENTERING = FadeIn.delay(50);
 export const AuthScreen = () => {
   const insets = useSafeAreaInsets();
   const themeColorAccentForeground = useThemeColor('accent-foreground');
+  const { isSignedIn, signOut } = useAuth();
   const { startGoogleAuthenticationFlow } = useSignInWithGoogle();
   const { startAppleAuthenticationFlow } = useSignInWithApple();
   const getOrCreate = useMutation(api.users.getOrCreate);
@@ -48,6 +50,13 @@ export const AuthScreen = () => {
 
     try {
       setLoadingProvider('apple');
+
+      // A stale Clerk session (active client-side but never validated by
+      // Convex) makes the SSO flow throw "You're already signed in" and
+      // dead-ends the user here. Clear it first so a fresh sign-in proceeds.
+      if (isSignedIn) {
+        await signOut();
+      }
 
       const { createdSessionId, setActive, signUp } =
         await startAppleAuthenticationFlow();
@@ -101,13 +110,20 @@ export const AuthScreen = () => {
     } finally {
       setLoadingProvider(null);
     }
-  }, [startAppleAuthenticationFlow, getOrCreate, posthog]);
+  }, [startAppleAuthenticationFlow, getOrCreate, posthog, isSignedIn, signOut]);
 
   const handleGoogleAuth = useCallback(async () => {
     playSoftPress();
 
     try {
       setLoadingProvider('google');
+
+      // A stale Clerk session (active client-side but never validated by
+      // Convex) makes the SSO flow throw "You're already signed in" and
+      // dead-ends the user here. Clear it first so a fresh sign-in proceeds.
+      if (isSignedIn) {
+        await signOut();
+      }
 
       const { createdSessionId, setActive, signUp } =
         await startGoogleAuthenticationFlow();
@@ -167,7 +183,7 @@ export const AuthScreen = () => {
     } finally {
       setLoadingProvider(null);
     }
-  }, [startGoogleAuthenticationFlow, getOrCreate, posthog]);
+  }, [startGoogleAuthenticationFlow, getOrCreate, posthog, isSignedIn, signOut]);
 
 
   const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
