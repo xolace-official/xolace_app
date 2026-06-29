@@ -4,6 +4,7 @@
  * Provider order: RootProvider (gestures, keyboard, theme, HeroUI) → ThemeProvider (React Navigation).
  * See src/providers/root-provider.tsx to add your own providers (auth, analytics, etc.).
  */
+import '@/src/lib/clerk-online-polyfill';
 import '@/src/global.css';
 import '@/src/lib/theme-bootstrap';
 
