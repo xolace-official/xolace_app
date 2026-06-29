@@ -14,11 +14,15 @@ export const PRIVACY_POLICY: LegalDocument = {
     },
     {
       heading: 'AI Processing',
-      body: 'Your emotional input is processed by a third-party AI service to generate reflections. This data is transmitted securely and is not used to train AI models. Content is also automatically screened for safety signals to detect potential crisis situations.',
+      body: 'Your emotional input is processed by Anthropic (Claude) to generate reflections. This data is transmitted securely and is not used to train AI models. Content is also automatically screened for safety signals to detect potential crisis situations. Voice features use ElevenLabs for audio generation.',
     },
     {
       heading: 'Analytics',
-      body: 'We use PostHog, a third-party product analytics service, to understand how the app is used. PostHog records screen views(nothing personal is shown), button taps, and app lifecycle events (open/close), linked to your account ID. We do not use this data for advertising and never sell it. You can request deletion of analytics data along with your account.',
+      body: 'We use PostHog, a third-party product analytics service, to understand how the app is used. PostHog records screen views (nothing personal is shown), button taps, and app lifecycle events (open/close), linked to your account ID. We do not use this data for advertising and never sell it. You can request deletion of analytics data along with your account.',
+    },
+    {
+      heading: 'Third-Party Services',
+      body: 'We use the following sub-processors to operate the service: Anthropic (AI reflection generation), Convex (database and backend infrastructure), Clerk (authentication), ElevenLabs (voice audio generation), PostHog (product analytics), and Apple / Google (sign-in). Each processes only the data necessary for their function.',
     },
     {
       heading: 'How We Use It',
@@ -30,11 +34,11 @@ export const PRIVACY_POLICY: LegalDocument = {
     },
     {
       heading: 'Data Retention & Security',
-      body: 'Your data is encrypted in transit and at rest. Session data is retained per your settings. You can request deletion of your account and all associated data at any time by contacting us.',
+      body: 'Your data is encrypted in transit and at rest. Session data is retained per your settings. When you delete your account, all personal data is permanently purged — with one exception: if the app detected a potential safety concern during a session, a fully anonymised record of that event (containing no text you wrote, no name, and no account reference) is retained indefinitely for safety auditing purposes. This is the only data that survives account deletion.',
     },
     {
       heading: 'Your Rights',
-      body: 'Depending on your location, you have the right to access, correct, delete, or export your data. Contact us at privacy@xolaceinc.com. We respond within 5 business days.',
+      body: 'You have the right to access or correct your data, delete your account and associated data, and withdraw any optional consent (such as anonymous sharing or notifications) at any time from Settings. To request a copy of your data or raise a concern, contact us at privacy@xolaceinc.com. We respond within 5 business days.',
     },
     {
       heading: 'Children & Changes',
