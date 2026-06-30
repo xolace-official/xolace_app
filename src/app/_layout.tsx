@@ -17,6 +17,7 @@ import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
 import { useUniwind } from 'uniwind'
 import * as SplashScreen from 'expo-splash-screen';
 import { useConvexAuth } from 'convex/react';
+import { useAuth } from '@clerk/expo';
 import { usePostHog } from 'posthog-react-native';
 import {
   SpaceGrotesk_400Regular,
@@ -33,6 +34,26 @@ import { UpdateBottomSheet, type UpdateBottomSheetMode } from '@/src/components/
 import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
 import { useVersionCheck } from '@/src/helpers/hooks/use-version-check';
 import { FullRippleLoader } from '@/src/components/shared/loader/ripple/full-ripple-loader';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://f13df9bdd1c4194ed3439f302178374e@o4511650667298816.ingest.us.sentry.io/4511650758983680',
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Enable Logs
+  enableLogs: true,
+
+  // Configure Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 
 // Per-route navigation metrics (cold_ttr / warm_ttr / per-route tti). Must run
 // at module scope before any screen mounts — toggling it after mount throws.
@@ -57,12 +78,44 @@ Settings.preloadPresets([
   'Breath',    // processingBreath fallback
 ]);
 
+// Surface any route-subtree render crash to Sentry. metro.config.js uses
+// getSentryExpoConfig, which auto-wraps this re-export so the error is captured
+// (with route context) before Expo Router shows its fallback — otherwise a
+// cold-start render throw is swallowed silently.
+export { ErrorBoundary } from 'expo-router';
+
 const NO_HEADER = { headerShown: false };
 
 const AppContent = () => {
   const introSeen = useAppStore((s) => s.introSeen);
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  const { isSignedIn, isLoaded: isClerkLoaded, userId } = useAuth();
   const posthog = usePostHog();
+
+  // Record the exact inputs to the route-group guard on every change. On a prod
+  // cold start where the user is wrongly sent to (auth), this breadcrumb trail
+  // shows whether Clerk loaded signed-out (cache miss) or Clerk is signed-in
+  // while Convex never authenticated (desync) — the two have different fixes.
+  useEffect(() => {
+    Sentry.setUser(userId ? { id: userId } : null);
+    const group = !introSeen
+      ? "(onboarding)"
+      : !isAuthenticated
+        ? "(auth)"
+        : "(protected)";
+    Sentry.addBreadcrumb({
+      category: "auth.guard",
+      level: isClerkLoaded && isSignedIn && !isAuthenticated ? "warning" : "info",
+      message: `route guard → ${group}`,
+      data: {
+        introSeen,
+        clerkLoaded: isClerkLoaded,
+        clerkSignedIn: !!isSignedIn,
+        convexAuthenticated: isAuthenticated,
+        convexAuthLoading: isAuthLoading,
+      },
+    });
+  }, [introSeen, isAuthenticated, isAuthLoading, isClerkLoaded, isSignedIn, userId]);
   const pathname = usePathname();
   const params = useGlobalSearchParams();
   const previousPathname = useRef<string | undefined>(undefined);
@@ -163,4 +216,4 @@ function RootLayout() {
   );
 }
 
-export default ObserveRoot.wrap(RootLayout);
+export default Sentry.wrap(ObserveRoot.wrap(RootLayout));

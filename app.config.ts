@@ -245,6 +245,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
             "com.twitter.android"
           ]
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "xolace-inc"
+        }
       ]
     ],
     experiments: {
