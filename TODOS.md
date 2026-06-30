@@ -380,7 +380,7 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
-## P2 — Settings: Restructure into Per-Section Sub-Screens
+## P2 — Settings: Restructure into Per-Section Sub-Screens ✅
 
 **What:** Break the single monolithic settings scroll into a root screen with ~6 navigation rows, each pushing to a dedicated sub-screen (Appearance, Mirror, Notifications, Privacy & Data, Account, Follow & Support).
 
