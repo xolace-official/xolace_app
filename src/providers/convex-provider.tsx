@@ -1,10 +1,11 @@
 "use client";
 
-import { ClerkProvider, useAuth } from "@clerk/expo";
+import { ClerkProvider } from "@clerk/expo";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ReactNode } from "react";
-import { tokenCache } from "@clerk/expo/token-cache";
+import { instrumentedTokenCache } from "@/src/lib/instrumented-token-cache";
+import { useInstrumentedClerkAuth } from "./use-instrumented-clerk-auth";
 import { AuthSyncGuard } from "./auth-sync-guard";
 // Force navigator.onLine=true so Clerk's offline gate doesn't block JWT minting
 // in React Native. Primary install is the first import in app/_layout.tsx; this
@@ -26,9 +27,9 @@ export function ConvexClientProvider({
   return (
     <ClerkProvider
       publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
-      tokenCache={tokenCache}
+      tokenCache={instrumentedTokenCache}
     >
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+      <ConvexProviderWithClerk client={convex} useAuth={useInstrumentedClerkAuth}>
         <AuthSyncGuard />
         {children}
       </ConvexProviderWithClerk>
