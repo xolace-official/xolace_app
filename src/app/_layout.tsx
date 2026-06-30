@@ -37,19 +37,22 @@ import { FullRippleLoader } from '@/src/components/shared/loader/ripple/full-rip
 import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
-  dsn: 'https://f13df9bdd1c4194ed3439f302178374e@o4511650667298816.ingest.us.sentry.io/4511650758983680',
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DNS,
 
-  // Adds more context data to events (IP address, cookies, user, etc.)
-  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-  sendDefaultPii: true,
+  // Label events so dev traffic never mixes with production in the dashboard.
+  environment: __DEV__ ? 'development' : 'production',
+
+  // Don't auto-collect IP/cookies/device PII. We attach only the userId we
+  // need for the auth-guard breadcrumb trail via Sentry.setUser below.
+  sendDefaultPii: false,
 
   // Enable Logs
   enableLogs: true,
 
-  // Configure Session Replay
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1,
-  integrations: [Sentry.mobileReplayIntegration()],
+  // Session Replay — production only, so dev sessions don't pollute prod data.
+  replaysSessionSampleRate: __DEV__ ? 0 : 0.1,
+  replaysOnErrorSampleRate: __DEV__ ? 0 : 1,
+  integrations: __DEV__ ? [] : [Sentry.mobileReplayIntegration()],
 
   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: __DEV__,

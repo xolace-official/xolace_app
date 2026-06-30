@@ -21,8 +21,12 @@ export const PRIVACY_POLICY: LegalDocument = {
       body: 'We use PostHog, a third-party product analytics service, to understand how the app is used. PostHog records screen views (nothing personal is shown), button taps, and app lifecycle events (open/close), linked to your account ID. We do not use this data for advertising and never sell it. You can request deletion of analytics data along with your account.',
     },
     {
+      heading: 'Crash & Error Monitoring',
+      body: 'We use Sentry (@sentry/react-native) to capture crashes and errors so we can fix them. It collects technical error telemetry (stack traces, device and app version, breadcrumbs) linked to your account ID, and — on production builds only — session replays with all text and images masked. We disable Sentry\'s default personal-data collection (your IP address is not stored), and this data is never used for advertising or sold.',
+    },
+    {
       heading: 'Third-Party Services',
-      body: 'We use the following sub-processors to operate the service: Anthropic (AI reflection generation), Convex (database and backend infrastructure), Clerk (authentication), ElevenLabs (voice audio generation), PostHog (product analytics), and Apple / Google (sign-in). Each processes only the data necessary for their function.',
+      body: 'We use the following sub-processors to operate the service: Anthropic (AI reflection generation), Convex (database and backend infrastructure), Clerk (authentication), ElevenLabs (voice audio generation), PostHog (product analytics), Sentry (crash and error monitoring), and Apple / Google (sign-in). Each processes only the data necessary for their function.',
     },
     {
       heading: 'How We Use It',
