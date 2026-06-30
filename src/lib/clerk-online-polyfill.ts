@@ -20,30 +20,13 @@
  *
  * Imported for its side effect; must run before `@clerk/expo` is first used.
  */
-/**
- * Outcome of the patch attempt, read back in instrumentation so we can prove —
- * from a prod device — whether the override actually took effect in the Hermes
- * release runtime. A value like `before=false after=false` means the patch
- * silently failed (non-configurable property) and Clerk's refresh path still
- * sees the device as offline — the exact cold-start desync we are hunting.
- */
-export let onlinePolyfillStatus = "not-run";
-
 try {
-  const before =
-    typeof navigator !== "undefined" ? String(navigator.onLine) : "no-navigator";
   if (typeof navigator !== "undefined" && navigator.onLine !== true) {
     Object.defineProperty(navigator, "onLine", {
       configurable: true,
       get: () => true,
     });
   }
-  const after =
-    typeof navigator !== "undefined" ? String(navigator.onLine) : "no-navigator";
-  onlinePolyfillStatus = `before=${before} after=${after}`;
-} catch (error) {
+} catch {
   // `navigator.onLine` is non-configurable in this runtime — nothing to do.
-  onlinePolyfillStatus = `threw:${
-    error instanceof Error ? error.message : String(error)
-  }`;
 }
