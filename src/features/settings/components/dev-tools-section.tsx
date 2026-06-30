@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor, useToast } from "heroui-native";
+import * as Sentry from "@sentry/react-native";
 
 import { api } from "@/convex/_generated/api";
 import { useAppStore } from "@/src/store/store";
@@ -46,6 +47,11 @@ const FOLLOW_UP_ICON: CrossPlatformSymbol = {
   ios: "bell.badge",
   android: "notifications_active",
   web: "notifications_active",
+};
+const SENTRY_ICON: CrossPlatformSymbol = {
+  ios: "ant.circle",
+  android: "bug_report",
+  web: "bug_report",
 };
 
 const FOLLOW_UP_TIERS: { tier: "acute" | "elevated" | "standard"; label: string }[] = [
@@ -176,9 +182,16 @@ export const DevToolsSection = () => {
           icon={icon(FOLLOW_UP_ICON)}
           label={label}
           onPress={() => seedFollowUp(tier)}
-          isLast={i === FOLLOW_UP_TIERS.length - 1}
         />
       ))}
+
+      <SettingsRow
+        variant="action"
+        icon={icon(SENTRY_ICON)}
+        label="Send Sentry test error"
+        isLast
+        onPress={() => Sentry.captureException(new Error("Sentry test error"))}
+      />
 
       <ReturnWelcomeSheet
         isOpen={previewTier !== null}

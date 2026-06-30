@@ -4,6 +4,7 @@
  * Provider order: RootProvider (gestures, keyboard, theme, HeroUI) → ThemeProvider (React Navigation).
  * See src/providers/root-provider.tsx to add your own providers (auth, analytics, etc.).
  */
+import '@/src/lib/clerk-online-polyfill';
 import '@/src/global.css';
 import '@/src/lib/theme-bootstrap';
 
@@ -16,6 +17,7 @@ import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
 import { useUniwind } from 'uniwind'
 import * as SplashScreen from 'expo-splash-screen';
 import { useConvexAuth } from 'convex/react';
+import { useAuth } from '@clerk/expo';
 import { usePostHog } from 'posthog-react-native';
 import {
   SpaceGrotesk_400Regular,
@@ -32,6 +34,29 @@ import { UpdateBottomSheet, type UpdateBottomSheetMode } from '@/src/components/
 import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
 import { useVersionCheck } from '@/src/helpers/hooks/use-version-check';
 import { FullRippleLoader } from '@/src/components/shared/loader/ripple/full-ripple-loader';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DNS,
+
+  // Label events so dev traffic never mixes with production in the dashboard.
+  environment: __DEV__ ? 'development' : 'production',
+
+  // Don't auto-collect IP/cookies/device PII. We attach only the userId we
+  // need for the auth-guard breadcrumb trail via Sentry.setUser below.
+  sendDefaultPii: false,
+
+  // Enable Logs
+  enableLogs: true,
+
+  // Session Replay — production only, so dev sessions don't pollute prod data.
+  replaysSessionSampleRate: __DEV__ ? 0 : 0.1,
+  replaysOnErrorSampleRate: __DEV__ ? 0 : 1,
+  integrations: __DEV__ ? [] : [Sentry.mobileReplayIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 
 // Per-route navigation metrics (cold_ttr / warm_ttr / per-route tti). Must run
 // at module scope before any screen mounts — toggling it after mount throws.
@@ -56,12 +81,44 @@ Settings.preloadPresets([
   'Breath',    // processingBreath fallback
 ]);
 
+// Surface any route-subtree render crash to Sentry. metro.config.js uses
+// getSentryExpoConfig, which auto-wraps this re-export so the error is captured
+// (with route context) before Expo Router shows its fallback — otherwise a
+// cold-start render throw is swallowed silently.
+export { ErrorBoundary } from 'expo-router';
+
 const NO_HEADER = { headerShown: false };
 
 const AppContent = () => {
   const introSeen = useAppStore((s) => s.introSeen);
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  const { isSignedIn, isLoaded: isClerkLoaded, userId } = useAuth();
   const posthog = usePostHog();
+
+  // Record the exact inputs to the route-group guard on every change. On a prod
+  // cold start where the user is wrongly sent to (auth), this breadcrumb trail
+  // shows whether Clerk loaded signed-out (cache miss) or Clerk is signed-in
+  // while Convex never authenticated (desync) — the two have different fixes.
+  useEffect(() => {
+    Sentry.setUser(userId ? { id: userId } : null);
+    const group = !introSeen
+      ? "(onboarding)"
+      : !isAuthenticated
+        ? "(auth)"
+        : "(protected)";
+    Sentry.addBreadcrumb({
+      category: "auth.guard",
+      level: isClerkLoaded && isSignedIn && !isAuthenticated ? "warning" : "info",
+      message: `route guard → ${group}`,
+      data: {
+        introSeen,
+        clerkLoaded: isClerkLoaded,
+        clerkSignedIn: !!isSignedIn,
+        convexAuthenticated: isAuthenticated,
+        convexAuthLoading: isAuthLoading,
+      },
+    });
+  }, [introSeen, isAuthenticated, isAuthLoading, isClerkLoaded, isSignedIn, userId]);
   const pathname = usePathname();
   const params = useGlobalSearchParams();
   const previousPathname = useRef<string | undefined>(undefined);
@@ -162,4 +219,4 @@ function RootLayout() {
   );
 }
 
-export default ObserveRoot.wrap(RootLayout);
+export default Sentry.wrap(ObserveRoot.wrap(RootLayout));

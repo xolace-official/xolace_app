@@ -111,7 +111,7 @@ export const QuietReturnHeader = ({
       <AppText
         className={cn(
           "font-semibold text-foreground",
-          isLongPrompt ? "text-xl leading-9" : "text-4xl",
+          isLongPrompt ? "text-2xl leading-9" : "text-4xl",
           (encouragement || showStreakCalendar || showEventPrompt) && "mt-4",
         )}
       >
