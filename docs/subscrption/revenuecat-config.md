@@ -1,0 +1,174 @@
+# RevenueCat Configuration Guide
+
+_Last updated: 2026-07-01_
+
+This document explains what RevenueCat Entitlements, Products, and Offerings are, then gives the exact names and values to configure in the RC dashboard for Xolace+.
+
+---
+
+## Concepts First
+
+### Entitlements — "What is the user allowed to do?"
+
+An Entitlement is a **feature gate** you define once in RevenueCat. It is platform-agnostic: it doesn't care whether the user bought a monthly iOS subscription or an annual Android subscription. If any active product grants this entitlement, `hasEntitlement()` returns `true`.
+
+Think of it as a permission level, not a product. You check entitlements in your code; you never check product IDs directly.
+
+**You define entitlements in the RC dashboard, then attach products to them.**
+
+### Products — "What exactly did the user buy?"
+
+A Product is the actual SKU — the thing with a price, registered in App Store Connect (iOS) or Google Play Console (Android). Each platform has its own product IDs and must be configured separately in both the store and RC.
+
+A product maps to exactly one entitlement. When the product is active (user paid, subscription not expired), the entitlement is granted.
+
+**Products live in the app store dashboards first, then you reference them in RC.**
+
+### Offerings — "What do you show on the paywall?"
+
+An Offering is what RC sends to your app when you call `Purchases.getOfferings()`. It groups **Packages** (each Package = one Product + its metadata). You display an Offering's packages as the options on your paywall screen.
+
+The power of Offerings: you can create multiple Offerings in RC (e.g., "default", "black_friday", "win_back") and switch between them remotely without an app update. Your code always asks for `offerings.current` — RC decides which one to serve.
+
+**Offerings are configured entirely in RC. Your app code just renders what RC sends.**
+
+---
+
+## What to Configure in RevenueCat
+
+### Step 1 — Create the Entitlement
+
+| Field | Value |
+|-------|-------|
+| Identifier | `xolace-plus` |
+| Display Name | Xolace+ |
+| Description | Full Xolace+ access: insights, semantic peer matching |
+
+This is the string your code queries: `hasEntitlement(ctx, { appUserId, entitlementId: "xolace-plus" })`.
+
+---
+
+### Step 2 — Create Products (in App Store Connect + Google Play first)
+
+#### iOS — App Store Connect
+
+Create two Auto-Renewable Subscriptions under your app, in a Subscription Group called **"Xolace+"**:
+
+| Product ID | Duration | Price | Trial | Display Name |
+|------------|----------|-------|-------|--------------|
+| `com.xolaceincorg.xolace.plus.annual` | 1 year | $44.99 | 7 days | Xolace+ Annual |
+| `com.xolaceincorg.xolace.plus.monthly` | 1 month | $7.99 | None | Xolace+ Monthly |
+
+Set annual as the **higher tier** in the subscription group (it should be ranked above monthly so Apple handles upgrade/downgrade correctly).
+
+> For development builds (`com.xolaceincorg.xolace.dev`), you'll also need dev product IDs in a sandbox app on App Store Connect. RC handles sandbox automatically in `__DEV__` mode when you use the sandbox API key.
+
+#### Android — Google Play Console
+
+Create two Subscriptions under your app's "Monetize → Subscriptions" section:
+
+| Product ID | Billing Period | Price | Trial | Display Name |
+|------------|---------------|-------|-------|--------------|
+| `com.xolaceincorg.xolace.plus.annual` | Annual | $44.99 | 7 days (free trial base plan) | Xolace+ Annual |
+| `com.xolaceincorg.xolace.plus.monthly` | Monthly | $7.99 | None | Xolace+ Monthly |
+
+On Android, each Subscription has **base plans** and **offers**. Configure:
+- Annual base plan: `annual`
+- Annual offer (for trial): `annual-trial` — 7-day free trial → then $44.99/yr
+- Monthly base plan: `monthly`
+
+#### Add products to RC
+
+In RC dashboard → **Products**, add both product IDs for both platforms and link them to your app.
+
+---
+
+### Step 3 — Attach Products to Entitlement
+
+In RC dashboard → **Entitlements** → `xolace-plus` → **Attach Products**:
+
+Attach all four (iOS annual, iOS monthly, Android annual, Android monthly).
+
+---
+
+### Step 4 — Create the Offering
+
+| Field | Value |
+|-------|-------|
+| Identifier | `default` |
+| Display Name | Default |
+| Description | Standard Xolace+ paywall |
+
+Under this Offering, create two **Packages**:
+
+| Package Identifier | Display Name | Product (iOS) | Product (Android) |
+|-------------------|-------------|---------------|------------------|
+| `$rc_annual` | Annual | `com.xolaceincorg.xolace.plus.annual` | `com.xolaceincorg.xolace.plus.annual` |
+| `$rc_monthly` | Monthly | `com.xolaceincorg.xolace.plus.monthly` | `com.xolaceincorg.xolace.plus.monthly` |
+
+`$rc_annual` and `$rc_monthly` are RC's reserved identifiers — using them means RC automatically knows the package type without custom logic.
+
+Set the **default package** to `$rc_annual`.
+
+---
+
+### Step 5 — Configure Webhook (for `convex-revenuecat` component)
+
+In RC dashboard → **Project Settings** → **Integrations** → **Webhooks** → **+ New**:
+
+| Field | Value |
+|-------|-------|
+| Name | Convex |
+| Webhook URL | `https://<your-convex-deployment>.convex.site/webhooks/revenuecat` |
+| Authorization header | A secure random string (generate with `openssl rand -base64 32`) |
+
+Store the authorization string in Convex env:
+```bash
+bunx convex env set REVENUECAT_WEBHOOK_AUTH "your-generated-secret"
+```
+
+---
+
+### Step 6 — API Keys
+
+RC generates separate API keys per platform and environment. You need four:
+
+| Key | Used for |
+|-----|----------|
+| iOS Production API Key | Production iOS builds |
+| iOS Sandbox/Test API Key | Development iOS builds (`__DEV__`) |
+| Android Production API Key | Production Android builds |
+| Android Test API Key | Development Android builds (`__DEV__`) |
+
+Find these in RC dashboard → **Project Settings** → **API Keys**.
+
+In the app, these go into `app.config.ts` under `extra.revenueCat.*` (not hardcoded, referenced from env).
+
+---
+
+## RC Dashboard Checklist
+
+- [ ] Entitlement `xolace-plus` created
+- [ ] iOS subscription group "Xolace+" created in App Store Connect
+- [ ] `com.xolaceincorg.xolace.plus.annual` (iOS) created with 7-day trial
+- [ ] `com.xolaceincorg.xolace.plus.monthly` (iOS) created
+- [ ] Android subscriptions created in Google Play Console with matching product IDs
+- [ ] All 4 products added to RC and attached to `xolace-plus` entitlement
+- [ ] `default` Offering created with `$rc_annual` and `$rc_monthly` packages
+- [ ] Convex webhook URL configured with auth header
+- [ ] `REVENUECAT_WEBHOOK_AUTH` set in Convex env
+- [ ] RC API keys added to app config (iOS prod, iOS sandbox, Android prod, Android test)
+- [ ] Test webhook sent from RC dashboard and verified in Convex logs
+
+---
+
+## appUserId Convention
+
+The `appUserId` passed to `Purchases.logIn()` must match what `hasEntitlement()` is queried with. Use the user's **`tokenIdentifier`** from Convex auth — it is stable, unique, and already used as the distinctId in PostHog.
+
+```ts
+// After auth resolves:
+await Purchases.logIn(user.tokenIdentifier);
+```
+
+This ties RC's customer record to your Convex user record cleanly.
