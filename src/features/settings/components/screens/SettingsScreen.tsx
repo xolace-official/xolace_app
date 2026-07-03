@@ -74,16 +74,23 @@ export const SettingsScreen = () => {
     >
       {/* ── XOLACE+ ─────────────────────────────────────────── */}
       <SettingsSection title="Xolace+">
-        <SettingsRow
-          variant="nav"
-          icon={icon(PLUS_TIER_ICON)}
-          label="Xolace+"
-          value={isPlus ? "Active" : undefined}
-          onPress={() => {
-            if (!isPlus) openPaywall("settings_row");
-          }}
-          isLast
-        />
+        {isPlus ? (
+          <SettingsRow
+            variant="value"
+            icon={icon(PLUS_TIER_ICON)}
+            label="Xolace+"
+            value="Active"
+            isLast
+          />
+        ) : (
+          <SettingsRow
+            variant="nav"
+            icon={icon(PLUS_TIER_ICON)}
+            label="Xolace+"
+            onPress={() => openPaywall("settings_row")}
+            isLast
+          />
+        )}
       </SettingsSection>
 
       {/* ── PREFERENCES ─────────────────────────────────────── */}
