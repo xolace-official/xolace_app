@@ -1,6 +1,6 @@
 # RevenueCat Configuration Guide
 
-_Last updated: 2026-07-01_
+_Last updated: 2026-07-02_
 
 This document explains what RevenueCat Entitlements, Products, and Offerings are, then gives the exact names and values to configure in the RC dashboard for Xolace+.
 
@@ -57,11 +57,21 @@ Create two Auto-Renewable Subscriptions under your app, in a Subscription Group 
 | Product ID | Duration | Price | Trial | Display Name |
 |------------|----------|-------|-------|--------------|
 | `com.xolaceincorg.xolace.plus.annual` | 1 year | $44.99 | 7 days | Xolace+ Annual |
-| `com.xolaceincorg.xolace.plus.monthly` | 1 month | $7.99 | None | Xolace+ Monthly |
+| `com.xolaceincorg.xolace.plus.monthly` | 1 month | $9.99 | None | Xolace+ Monthly |
 
 Set annual as the **higher tier** in the subscription group (it should be ranked above monthly so Apple handles upgrade/downgrade correctly).
 
-> For development builds (`com.xolaceincorg.xolace.dev`), you'll also need dev product IDs in a sandbox app on App Store Connect. RC handles sandbox automatically in `__DEV__` mode when you use the sandbox API key.
+> **⚠️ Build-variant / bundle-ID gotcha — read this before you lose an afternoon.**
+> StoreKit products are scoped to a **bundle ID**. This app ships three variants with *different* bundle IDs (`com.xolaceincorg.xolace.dev` / `.preview` / base — see `app.config.ts`). That means a `.dev` build **cannot fetch products** configured under the production app record — `getOfferings()` returns empty and RC looks "broken" when it isn't. Two valid paths:
+>
+> 1. **Separate App Store Connect app record + separate RC app for the `.dev` bundle**, with its own products, or
+> 2. **Do all sandbox/StoreKit testing on the `preview` or `production` bundle only**, and use a **StoreKit configuration file** (below) for offline paywall UI work on `.dev`.
+>
+> Recommended: option 2 — don't duplicate products across app records; iterate paywall UI locally with a StoreKit config file and do real purchase testing on `preview`. If this bites during setup, log it in `docs/bug-log.md`.
+
+#### Local paywall testing — StoreKit configuration file (iOS)
+
+For iterating on the **custom paywall UI** without a sandbox account or real store products, add a **StoreKit configuration file** (`.storekit`) to the Xcode scheme. It defines the two products locally so `getOfferings()` resolves in the simulator. This is purely for UI/flow iteration — it does **not** validate real receipts or webhooks. Real purchase + entitlement + webhook validation still happens on a `preview`/sandbox build.
 
 #### Android — Google Play Console
 
@@ -70,7 +80,7 @@ Create two Subscriptions under your app's "Monetize → Subscriptions" section:
 | Product ID | Billing Period | Price | Trial | Display Name |
 |------------|---------------|-------|-------|--------------|
 | `com.xolaceincorg.xolace.plus.annual` | Annual | $44.99 | 7 days (free trial base plan) | Xolace+ Annual |
-| `com.xolaceincorg.xolace.plus.monthly` | Monthly | $7.99 | None | Xolace+ Monthly |
+| `com.xolaceincorg.xolace.plus.monthly` | Monthly | $9.99 | None | Xolace+ Monthly |
 
 On Android, each Subscription has **base plans** and **offers**. Configure:
 - Annual base plan: `annual`
@@ -109,6 +119,25 @@ Under this Offering, create two **Packages**:
 `$rc_annual` and `$rc_monthly` are RC's reserved identifiers — using them means RC automatically knows the package type without custom logic.
 
 Set the **default package** to `$rc_annual`.
+
+---
+
+### Step 4b — (Optional) Early-Bird / Founding Offering
+
+For the launch FOMO window (see `confirmed-offers.md` → Early-Bird Pricing), create a **second Offering** rather than editing `default`:
+
+| Field | Value |
+|-------|-------|
+| Identifier | `founding` |
+| Display Name | Founding |
+| Description | Time-boxed founding-member pricing |
+
+- Your app always calls `offerings.current`. During the window, set `founding` as **current** in RC (Offering → "Make current"); after it closes, switch back to `default` — **no app update needed**.
+- **iOS one-intro-offer rule:** a user is eligible for only *one* introductory offer per subscription. So the founding annual is a fork — pick one:
+  - **Discounted first year, no trial** (recommended for the engaged cohort): configure an **Introductory Offer** on `com.xolaceincorg.xolace.plus.annual` = e.g. `$34.99` for the first year (pay-up-front), then renews at $44.99. In this mode the annual has **no** free trial during the window.
+  - **Keep the trial**, and run the founding discount on **monthly** or via **Offer Codes** distributed to early users instead.
+- Android: model the founding discount as a separate **offer** on the annual base plan (e.g. `annual-founding`) with an eligibility/end date.
+- Always show list price struck-through in the paywall UI (RC returns both the intro and the standard price on the package — render both).
 
 ---
 
@@ -155,6 +184,10 @@ In the app, these go into `app.config.ts` under `extra.revenueCat.*` (not hardco
 - [ ] Android subscriptions created in Google Play Console with matching product IDs
 - [ ] All 4 products added to RC and attached to `xolace-plus` entitlement
 - [ ] `default` Offering created with `$rc_annual` and `$rc_monthly` packages
+- [ ] (Optional) `founding` Offering created for the early-bird window; intro-offer fork decided (discounted first year *or* trial, not both on iOS)
+- [ ] StoreKit configuration file added to Xcode scheme for local paywall UI testing
+- [ ] Build-variant/bundle-ID scoping decided (test on `preview`/`prod` bundle, not `.dev`)
+- [ ] Grace-period entitlement behavior confirmed (keep `xolace-plus` active during grace)
 - [ ] Convex webhook URL configured with auth header
 - [ ] `REVENUECAT_WEBHOOK_AUTH` set in Convex env
 - [ ] RC API keys added to app config (iOS prod, iOS sandbox, Android prod, Android test)
@@ -172,3 +205,17 @@ await Purchases.logIn(user.tokenIdentifier);
 ```
 
 This ties RC's customer record to your Convex user record cleanly.
+
+---
+
+## Entitlement Behavior — decisions to make
+
+### Grace period / billing retry
+When a renewal payment fails, Apple/Google enter a **billing grace / retry** window before the subscription actually lapses. RC exposes this state. **Decision:** keep `xolace-plus` **active during grace** (standard, user-friendly) so a transient card failure doesn't yank someone's insights mid-month. RC's `entitlements.active` already reflects grace when configured; the Convex webhook state should mirror it. Don't hard-cut entitlement the instant a renewal fails.
+
+### Trial → entitlement
+The entitlement is granted **during** the 7-day trial (the user has full Plus access while trialing). On trial cancellation before day 7, the webhook fires `CANCELLATION` / expiry — entitlement drops at period end, not immediately. Make sure the gated Convex data respects the expiry timestamp, not the cancellation event.
+
+### Client fast-path vs. server truth
+- **Server (Convex) is authoritative** for anything that gates *data* — always resolve via the `convex-revenuecat` webhook state, never trust a client claim. This is already the plan.
+- **Client may read `customerInfo.entitlements.active`** for *instant UI* (show the unlocked paywall state immediately after purchase) so the UI doesn't stall waiting on a webhook round-trip. Treat it as an optimistic hint, not the source of truth for gated queries.

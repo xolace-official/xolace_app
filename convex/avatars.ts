@@ -1,15 +1,9 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import { requirePremium } from "./lib/premium";
 
 const tierValidator = v.union(v.literal("free"), v.literal("premium"));
-
-// Premium stub — mirrors profile.ts. Swap for hasEntitlement() when
-// RevenueCat lands. Gated server-side so a plus avatar can never be
-// selected by a non-entitled client.
-function hasPremium(): boolean {
-  return false;
-}
 
 /**
  * The curated avatar catalog, free tier first (tier "free" < "premium").
@@ -46,8 +40,8 @@ export const setAvatar = mutation({
       .unique();
     if (!avatar) throw new Error(`Unknown avatar: ${args.key}`);
 
-    if (avatar.tier === "premium" && !hasPremium()) {
-      throw new Error("This avatar requires Xolace+");
+    if (avatar.tier === "premium") {
+      await requirePremium(ctx, profile, "premium avatar");
     }
 
     const prefs = await ctx.db

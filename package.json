@@ -15,11 +15,13 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@ai-sdk/openai": "3.0.80",
     "@anthropic-ai/sdk": "^0.80.0",
     "@clerk/expo": "3.6.3",
     "@convex-dev/action-cache": "^0.3.0",
     "@convex-dev/expo-push-notifications": "^0.3.1",
     "@convex-dev/migrations": "^0.3.3",
+    "@convex-dev/rag": "^0.7.5",
     "@convex-dev/rate-limiter": "^0.3.2",
     "@convex-dev/react-query": "^0.1.0",
     "@convex-dev/workflow": "^0.4.4",
@@ -34,6 +36,7 @@
     "@tanstack/react-query": "^5.90.21",
     "clsx": "^2.1.1",
     "convex": "1.39.1",
+    "convex-revenuecat": "^0.3.2",
     "expo": "^56",
     "expo-apple-authentication": "~56.0.4",
     "expo-application": "~56.0.3",

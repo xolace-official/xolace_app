@@ -6,6 +6,8 @@ import migrations from "@convex-dev/migrations/convex.config.js";
 import pushNotifications from "@convex-dev/expo-push-notifications/convex.config.js";
 import posthog from "@posthog/convex/convex.config.js";
 import workflow from "@convex-dev/workflow/convex.config.js";
+import rag from "@convex-dev/rag/convex.config.js";
+import revenuecat from "convex-revenuecat/convex.config.js";
 
 const app = defineApp({
   env: {
@@ -20,6 +22,8 @@ app.use(actionCache);
 app.use(migrations);
 app.use(pushNotifications);
 app.use(workflow);
+app.use(rag);
+app.use(revenuecat);
 app.use(posthog, {
   env: {
     POSTHOG_PROJECT_TOKEN: app.env.POSTHOG_PROJECT_TOKEN,
