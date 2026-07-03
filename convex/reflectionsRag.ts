@@ -40,8 +40,9 @@ export const getReflectionForRag = internalQuery({
 /**
  * Embed one reflection into the shared pool namespace. Keyed on the
  * reflection id → replaces cleanly on re-run. Only active rows are
- * indexed; flagged/removed rows are skipped (and superseded if the
- * status later flips, via re-ingest).
+ * indexed; when a row is missing or no longer active, any previously
+ * indexed entry is purged so flagged/removed text doesn't linger in
+ * the vector store.
  */
 export const ingestReflection = internalAction({
   args: { reflectionId: v.id("reflections") },
@@ -50,7 +51,18 @@ export const ingestReflection = internalAction({
       internal.reflectionsRag.getReflectionForRag,
       { reflectionId: args.reflectionId },
     );
-    if (!r || r.status !== "active") return;
+    if (!r || r.status !== "active") {
+      const namespace = await rag.getNamespace(ctx, {
+        namespace: REFLECTION_POOL_NAMESPACE,
+      });
+      if (namespace) {
+        await rag.deleteByKey(ctx, {
+          namespaceId: namespace.namespaceId,
+          key: args.reflectionId,
+        });
+      }
+      return;
+    }
 
     await rag.add(ctx, {
       namespace: REFLECTION_POOL_NAMESPACE,

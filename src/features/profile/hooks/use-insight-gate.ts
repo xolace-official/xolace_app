@@ -19,7 +19,7 @@ const SURFACE: Record<TeaserFeature, PaywallSurface> = {
  */
 export function useInsightGate(sessionCount: number) {
   const posthog = usePostHog();
-  const { isPlus } = usePlusEntitlement();
+  const { isPlus, isLoading } = usePlusEntitlement();
   const openPaywall = usePaywall((s) => s.open);
 
   // Stable for use in card mount effects (useEffect dep).
@@ -31,6 +31,7 @@ export function useInsightGate(sessionCount: number) {
   );
 
   const open = (feature: TeaserFeature) => {
+    if (isLoading) return; // entitlement unresolved — don't gate a maybe-Plus user
     if (isPlus) return; // nothing locked — unlocked depth views are a follow-up
     posthog.capture("premium_gate_hit", {
       feature,

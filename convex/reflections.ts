@@ -235,6 +235,10 @@ export const reportReflection = mutation({
 
     if (reports.length >= 3 && reflection.status === "active") {
       await ctx.db.patch(args.reflectionId, { status: "flagged" });
+      // Re-run ingest so the now-flagged entry is purged from the RAG pool.
+      await ctx.scheduler.runAfter(0, internal.reflectionsRag.ingestReflection, {
+        reflectionId: args.reflectionId,
+      });
     }
 
     return { reported: true };

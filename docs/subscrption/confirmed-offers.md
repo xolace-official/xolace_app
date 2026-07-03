@@ -107,6 +107,7 @@ Plus is intentionally **multi-driver** — insights are the anchor, but not the 
 - **Special mirror tones** — additional mirror voice/personality tones.
 - **More expressive mirror audio** — richer TTS driven by ElevenLabs audio tags, the same technique already used on the vent side.
 - **Better voice transcription with emotional context** — higher-quality, emotion-aware transcribe for spoken input.
+- **Select your own mirror voice** — customize your mirror voice to match your personality or preferences.
 
 ### E. Peer matching _(gate under review — see Free section note)_
 - **Semantic matching** — RAG-powered (`@convex-dev/rag`) instead of tag cascade. If gated, it's the likely "precision boost framed as a bonus"; if not, it's table-stakes for all tiers.
