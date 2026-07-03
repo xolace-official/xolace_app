@@ -1,6 +1,8 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import { hasPremium } from "./lib/premium";
 import { rateLimiter } from "./lib/rateLimits";
 
 /**
@@ -12,7 +14,23 @@ export const matchForSession = query({
     sessionId: v.id("sessions"),
   },
   handler: async (ctx, args) => {
-    await requireSessionOwnership(ctx, args.sessionId);
+    const { profile, session } = await requireSessionOwnership(
+      ctx,
+      args.sessionId,
+    );
+
+    // Xolace+: return the precomputed semantic matches when present. Falls
+    // through to the tag cascade below if empty (embed not ready yet / failed)
+    // or the user isn't premium — so the free path is byte-for-byte unchanged.
+    if (session.semanticMatchIds?.length && (await hasPremium(ctx, profile))) {
+      const docs = await Promise.all(
+        session.semanticMatchIds.map((id) => ctx.db.get(id)),
+      );
+      const active = docs.filter(
+        (r): r is NonNullable<typeof r> => r !== null && r.status === "active",
+      );
+      if (active.length > 0) return active.slice(0, 4);
+    }
 
     // Get emotional metadata for this session
     const metadata = await ctx.db
@@ -242,7 +260,7 @@ export const contribute = internalMutation({
     const roundedDay = Math.floor(now / 86400000) * 86400000;
     const jitter = Math.floor(Math.random() * 86400000);
 
-    await ctx.db.insert("reflections", {
+    const reflectionId = await ctx.db.insert("reflections", {
       displayText: args.displayText,
       primaryEmotion: args.primaryEmotion,
       granularLabel: args.granularLabel,
@@ -252,6 +270,11 @@ export const contribute = internalMutation({
       status: "active",
       isSeed: false,
       addedAt: roundedDay + jitter,
+    });
+
+    // Embed into the RAG pool so it's semantically searchable for Plus.
+    await ctx.scheduler.runAfter(0, internal.reflectionsRag.ingestReflection, {
+      reflectionId,
     });
   },
 });

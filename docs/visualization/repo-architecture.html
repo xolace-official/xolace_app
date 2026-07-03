@@ -1,0 +1,308 @@
+<title>Xolace Repo Architecture</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --panel: #f8f9fb;
+    --accent: #7c5cff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14141a;
+      --fg: #e8e8ee;
+      --muted: #9a9aa8;
+      --border: #2a2a35;
+      --panel: #1b1b24;
+      --accent: #a78bfa;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14141a; --fg: #e8e8ee; --muted: #9a9aa8; --border: #2a2a35; --panel: #1b1b24; --accent: #a78bfa;
+  }
+  :root[data-theme="light"] {
+    --bg: #ffffff; --fg: #1a1a1a; --muted: #6b7280; --border: #e5e7eb; --panel: #f8f9fb; --accent: #7c5cff;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+  header {
+    max-width: 1100px;
+    margin: 0 auto 2rem;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin: 0 0 0.35rem;
+    letter-spacing: -0.01em;
+  }
+  p.sub {
+    color: var(--muted);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  nav.tabs {
+    max-width: 1100px;
+    margin: 1.5rem auto 0;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  nav.tabs button {
+    background: var(--panel);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  nav.tabs button:hover { border-color: var(--accent); }
+  nav.tabs button.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  main {
+    max-width: 1100px;
+    margin: 1.5rem auto 0;
+  }
+  section.diagram {
+    display: none;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    overflow-x: auto;
+  }
+  section.diagram.active { display: block; }
+  section.diagram .mermaid {
+    display: flex;
+    justify-content: center;
+    min-width: fit-content;
+  }
+  footer {
+    max-width: 1100px;
+    margin: 2rem auto 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+</style>
+
+<header>
+  <h1>Xolace — Repo Architecture</h1>
+  <p class="sub">Generated diagrams of app flow, provider hierarchy, folder structure, and Convex backend. Source: CLAUDE.md + repo scan, 2026-07-03.</p>
+</header>
+
+<nav class="tabs">
+  <button data-target="flow" class="active">App Flow (State Machine)</button>
+  <button data-target="providers">Provider Hierarchy</button>
+  <button data-target="folders">Folder Structure</button>
+  <button data-target="convex">Convex Backend</button>
+</nav>
+
+<main>
+  <section id="flow" class="diagram active">
+    <div class="mermaid">
+graph TD
+  Start((App Launch)) --> Guard{Stack.Protected guards}
+  Guard -->|not introSeen| Onboarding
+  Guard -->|introSeen and not auth| Auth
+  Guard -->|introSeen and auth| Protected
+
+  subgraph Onboarding[Phase 1 - Onboarding]
+    O1["Promise Screen<br/>onboarding index"] -->|Continue| O2["Frame Screen<br/>onboarding frame"]
+    O2 -->|"Continue button, sets introSeen true"| AuthEntry(( ))
+  end
+
+  subgraph Auth[Phase 2 - Authentication]
+    A1["Auth Screen<br/>Google OAuth via Clerk"] -->|"success, calls getOrCreate"| ProtEntry(( ))
+  end
+
+  subgraph Protected[Phase 3 - Core Loop]
+    direction TB
+    Idle["Idle<br/>Whats here right now, plus texture tags"] --> Typing["Typing<br/>8s pause triggers gentle nudge"]
+    Typing -->|submit| Processing["Processing<br/>Anthropic mirror generation"]
+    Processing --> Mirror["Mirror<br/>AI reflection shown"]
+    Mirror -->|confirm| PathSel["Path Selection"]
+    Mirror -->|clarify| Clarify["Clarify<br/>max 2 turns"]
+    Clarify -->|confirmed| PathSel
+    Clarify -->|"2 turns, no confirm"| GaveUp["Gave Up"]
+    GaveUp -->|see options| PathSel
+    GaveUp -->|start fresh| Idle
+    Processing -.->|escalation triggered| Escalation["Escalation (conditional)"]
+
+    PathSel -->|Solo| Solo["sit-with-this<br/>breathing / guided exercise"]
+    PathSel -->|Peers| Peers["peer-reflections<br/>matched anonymous reflections"]
+    PathSel -->|Exit| SessionEnd
+    Solo --> SessionEnd["Session End"]
+    Peers --> SessionEnd
+
+    SessionEnd -->|Exit variant| Heard["Heard, plus timeline link"]
+    SessionEnd -->|Activity variant| Activity["You showed up for yourself today<br/>plus mood check plus anon toggle"]
+    Heard -->|start new session| Idle
+    Activity -->|start new session| Idle
+
+    Timeline["Timeline<br/>past sessions list"] --> SessionDetail["Session Detail"]
+    Settings["Settings"]
+  end
+
+  AuthEntry --> A1
+  ProtEntry --> Idle
+
+  classDef phase fill:transparent,stroke:#7c5cff,stroke-width:1px,color:#7c5cff,font-weight:bold;
+  class Onboarding,Auth,Protected phase;
+    </div>
+  </section>
+
+  <section id="providers" class="diagram">
+    <div class="mermaid">
+graph TD
+  Root["_layout.tsx (root)"] --> RP["RootProvider<br/>src providers root-provider"]
+  RP --> TP["ThemeProvider"]
+  TP --> Stack["Stack (Expo Router)<br/>with Stack.Protected guards"]
+
+  RP -.composes.-> C1["1 - ClerkProvider plus<br/>ConvexProviderWithClerk<br/>auth and backend"]
+  RP -.composes.-> C2["2 - GestureHandlerRootView<br/>gesture support"]
+  RP -.composes.-> C3["3 - KeyboardProvider plus<br/>KeyboardAvoidingView<br/>react-native-keyboard-controller"]
+  RP -.composes.-> C4["4 - AppThemeProvider<br/>multi-theme context<br/>quiet reverie human nightly alpha"]
+  RP -.composes.-> C5["5 - HeroUINativeProvider<br/>component lib plus toast config"]
+
+  Stack --> G1{{not introSeen}}
+  Stack --> G2{{introSeen and not auth}}
+  Stack --> G3{{introSeen and auth}}
+  G1 --> OG["onboarding route group"]
+  G2 --> AG["auth route group"]
+  G3 --> PG["protected route group<br/>nested Stack layouts: timeline, settings"]
+
+  classDef comp fill:#7c5cff20,stroke:#7c5cff,color:inherit;
+  class C1,C2,C3,C4,C5 comp;
+    </div>
+  </section>
+
+  <section id="folders" class="diagram">
+    <div class="mermaid">
+graph LR
+  Root[xolace_app]
+
+  Root --> Src[src]
+  Root --> Convex[convex]
+  Root --> Assets[assets]
+  Root --> Docs[docs]
+  Root --> Native["ios, android, modules"]
+
+  Src --> App["app - Expo Router pages<br/>onboarding, auth, protected"]
+  Src --> Components["components<br/>shared, ui, icons"]
+  Src --> Features["features<br/>reflect, timeline, settings,<br/>peer-reflection, sit-with-this,<br/>session-end, onboarding, auth,<br/>profile, vent, quotes,<br/>crisis-resources, trusted-bridge,<br/>idle-menu, feedback-tray,<br/>founder-welcome, awareness-events"]
+  Src --> Providers["providers<br/>RootProvider composition"]
+  Src --> Store["store - Zustand<br/>persist: theme, toggles"]
+  Src --> Hooks["hooks plus helpers<br/>useReflectionMachine, useSession,<br/>usePathSession, useSessionEnd"]
+  Src --> Lib["lib<br/>utils, storage, haptics"]
+  Src --> Themes["themes<br/>quiet, reverie, human,<br/>nightly, alpha - light and dark each"]
+  Src --> Context["context<br/>AppThemeContext"]
+
+  Convex --> Schema["schema.ts<br/>9-table privacy-first design"]
+  Convex --> CLib["lib<br/>auth.ts, validators.ts"]
+  Convex --> AI["ai<br/>process, safeguard, context,<br/>clarify, providers, prompts"]
+  Convex --> Jobs["jobs<br/>reflectionAnonymizer, reflectionDistiller,<br/>dataRetention, dataWipe,<br/>accountDeletion, profileStats"]
+  Convex --> Domain["sessions, reflections,<br/>sessionTurns, users,<br/>preferences, revenuecat, rag"]
+  Convex --> Crons["crons.ts<br/>abandoned sessions, data retention,<br/>account deletion"]
+
+  classDef dir fill:#7c5cff15,stroke:#7c5cff,color:inherit;
+  class Src,Convex,Assets,Docs,Native dir;
+    </div>
+  </section>
+
+  <section id="convex" class="diagram">
+    <div class="mermaid">
+graph TD
+  Client["React Native client<br/>useQuery / useMutation"] -->|JWT via Clerk| Auth["auth.config.ts<br/>Clerk JWT provider"]
+  Auth --> RequireAuth["lib auth.ts<br/>requireAuth and requireSessionOwnership"]
+
+  RequireAuth --> Sessions["sessions.ts<br/>initiate, submit, confirmMirror,<br/>selectPath, startPath, completePath,<br/>submitRefinement, abandon, retry"]
+  RequireAuth --> Reflections["reflections.ts<br/>reflectionsRag.ts"]
+  RequireAuth --> Turns["sessionTurns.ts"]
+  RequireAuth --> Users["users.ts / profile.ts / preferences.ts"]
+  RequireAuth --> Premium["premium.ts / revenuecat.ts"]
+
+  Sessions --> Process["ai process.ts<br/>main processing orchestrator"]
+  Process --> Safeguard["ai safeguard.ts<br/>moderation plus escalation detection"]
+  Process --> Context["ai context.ts<br/>conversation context assembly"]
+  Process --> Clarify["ai clarify.ts<br/>mirror refinement"]
+  Process --> Providers["ai providers<br/>Anthropic provider, moderation"]
+  Providers --> Prompts["ai prompts<br/>articulator, distiller, classifier"]
+
+  Safeguard -.escalation triggered.-> Escalation["escalation.ts"]
+
+  Crons["crons.ts (scheduled)"] --> J1["jobs dataRetention.ts"]
+  Crons --> J2["jobs dataWipe.ts"]
+  Crons --> J3["jobs accountDeletion.ts"]
+  Crons --> J4["jobs reflectionAnonymizer.ts"]
+  Crons --> J5["jobs reflectionDistiller.ts"]
+  Crons --> J6["jobs profileStats.ts"]
+  Crons --> J7["jobs notificationTriggers.ts"]
+  Crons --> J8["jobs quotesGenerator.ts"]
+
+  Reflections --> Schema["schema.ts<br/>9-table privacy-first schema"]
+  J4 -->|anonymize and pool| PeerPool["Peer reflection pool<br/>crisis sessions excluded"]
+  PeerPool --> PeerFeature["client: features peer-reflection"]
+
+  classDef ai fill:#a78bfa20,stroke:#a78bfa,color:inherit;
+  class Process,Safeguard,Context,Clarify,Providers,Prompts ai;
+  classDef job fill:#7c5cff15,stroke:#7c5cff,color:inherit;
+  class J1,J2,J3,J4,J5,J6,J7,J8 job;
+    </div>
+  </section>
+</main>
+
+<footer>
+  Xolace — emotional processing infrastructure. Diagram reflects repo state as of 2026-07-03; re-generate after structural changes.
+</footer>
+
+<script type="module">
+  import mermaid from "https://esm.sh/mermaid@11?bundle";
+
+  function currentTheme() {
+    const attr = document.documentElement.getAttribute("data-theme");
+    if (attr === "dark" || attr === "light") return attr;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function initMermaid() {
+    const dark = currentTheme() === "dark";
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark ? "dark" : "default",
+      securityLevel: "loose",
+      themeVariables: dark
+        ? { primaryColor: "#2a2a3a", primaryTextColor: "#e8e8ee", primaryBorderColor: "#a78bfa", lineColor: "#6b6b7a", background: "#1b1b24" }
+        : { primaryColor: "#f3f0ff", primaryTextColor: "#1a1a1a", primaryBorderColor: "#7c5cff", lineColor: "#9ca3af", background: "#f8f9fb" },
+    });
+    document.querySelectorAll(".mermaid[data-processed]").forEach((el) => el.removeAttribute("data-processed"));
+    mermaid.run({ querySelector: ".mermaid" });
+  }
+
+  initMermaid();
+
+  const tabs = document.querySelectorAll("nav.tabs button");
+  const panels = document.querySelectorAll("section.diagram");
+  tabs.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabs.forEach((b) => b.classList.remove("active"));
+      panels.forEach((p) => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(btn.dataset.target).classList.add("active");
+    });
+  });
+
+  const mql = window.matchMedia("(prefers-color-scheme: dark)");
+  mql.addEventListener("change", initMermaid);
+  new MutationObserver(initMermaid).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+</script>

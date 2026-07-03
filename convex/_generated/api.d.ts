@@ -71,6 +71,7 @@ import type * as profile from "../profile.js";
 import type * as quotes from "../quotes.js";
 import type * as rag from "../rag.js";
 import type * as reflections from "../reflections.js";
+import type * as reflectionsRag from "../reflectionsRag.js";
 import type * as revenuecat from "../revenuecat.js";
 import type * as seed from "../seed.js";
 import type * as sessionTurns from "../sessionTurns.js";
@@ -148,6 +149,7 @@ declare const fullApi: ApiFromModules<{
   quotes: typeof quotes;
   rag: typeof rag;
   reflections: typeof reflections;
+  reflectionsRag: typeof reflectionsRag;
   revenuecat: typeof revenuecat;
   seed: typeof seed;
   sessionTurns: typeof sessionTurns;
