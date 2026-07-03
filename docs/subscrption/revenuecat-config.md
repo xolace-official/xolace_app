@@ -197,11 +197,12 @@ In the app, these go into `app.config.ts` under `extra.revenueCat.*` (not hardco
 
 ## appUserId Convention
 
-The `appUserId` passed to `Purchases.logIn()` must match what `hasEntitlement()` is queried with. Use the user's **`tokenIdentifier`** from Convex auth — it is stable, unique, and already used as the distinctId in PostHog.
+The `appUserId` passed to `Purchases.logIn()` must match what `hasEntitlement()` is queried with. Use the user's **`emotionalProfileId`** (`profile._id`) — stable across data wipes (`dataWipe.ts` never deletes the profile row), auth-provider-independent (unlike `tokenIdentifier`, which embeds the Clerk issuer), opaque to RevenueCat, and already the distinctId in PostHog.
 
 ```ts
 // After auth resolves:
-await Purchases.logIn(user.tokenIdentifier);
+// appUserId comes from api.premium.getEntitlement (= profile._id)
+await Purchases.logIn(appUserId);
 ```
 
 This ties RC's customer record to your Convex user record cleanly.

@@ -4,6 +4,8 @@ import { api } from "@/convex/_generated/api";
 import { useAppStore } from "@/src/store/store";
 import { useAppTheme } from "@/src/context/app-theme-context";
 import { usePreferenceMutation } from "./use-preference-mutation";
+import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+import { THEME_BY_ID } from "@/src/lib/themes";
 
 export type ThemeMode = "system" | "light" | "dark";
 
@@ -12,6 +14,7 @@ export const useAppearanceSettings = () => {
   const updatePreferences = usePreferenceMutation();
   const { theme: storedTheme, setTheme: storeSetTheme, colorThemeId, setColorThemeId } = useAppStore();
   const { currentTheme, isLight } = useAppTheme();
+  const { isPlus } = usePlusEntitlement();
   const nightModeEnabled = useAppStore((s) => s.nightModeEnabled);
   const setNightModeEnabled = useAppStore((s) => s.setNightModeEnabled);
 
@@ -39,6 +42,10 @@ export const useAppearanceSettings = () => {
   };
 
   const setColorTheme = (themeId: string) => {
+    // Premium themes need an active Xolace+ entitlement (and shipped CSS) —
+    // the picker gates the tap, this guards any other caller.
+    const entry = THEME_BY_ID[themeId];
+    if (entry?.tier === "premium" && (!isPlus || entry.available === false)) return;
     const mode = storedTheme === "system" ? (isLight ? "light" : "dark") : storedTheme;
     const nextVariant = themeId === "default" ? mode : (`${themeId}-${mode}` as never);
     Uniwind.setTheme(nextVariant);

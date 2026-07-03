@@ -18,7 +18,10 @@ import {
   SHIELD_ICON,
   ACCOUNT_ICON,
   HEART_ICON,
+  PLUS_TIER_ICON,
 } from "@/src/features/settings/components/settings-icons";
+import { usePaywall } from "@/src/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 
 const styles = StyleSheet.create({
   contentContainer: { paddingTop: 20, paddingBottom: 48 },
@@ -30,6 +33,8 @@ export const SettingsScreen = () => {
 
   const preferences = useQuery(api.preferences.get);
   const { user } = useUser();
+  const { isPlus } = usePlusEntitlement();
+  const openPaywall = usePaywall((s) => s.open);
   const storedTheme = useAppStore((s) => s.theme);
 
   const themeDisplay =
@@ -67,6 +72,20 @@ export const SettingsScreen = () => {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.contentContainer}
     >
+      {/* ── XOLACE+ ─────────────────────────────────────────── */}
+      <SettingsSection title="Xolace+">
+        <SettingsRow
+          variant="nav"
+          icon={icon(PLUS_TIER_ICON)}
+          label="Xolace+"
+          value={isPlus ? "Active" : undefined}
+          onPress={() => {
+            if (!isPlus) openPaywall("settings_row");
+          }}
+          isLast
+        />
+      </SettingsSection>
+
       {/* ── PREFERENCES ─────────────────────────────────────── */}
       <SettingsSection title="Preferences">
         <SettingsRow

@@ -28,7 +28,7 @@ RevenueCat ─webhook─▶ convex/http.ts ─▶ convex-revenuecat component (m
                     usePlusEntitlement() = api.premium.getEntitlement (server truth)
                                            ∥ RevenueCatContext.isProUser (optimistic)
                                            ∥ appConfig.devIsPlus (payments=false)
-                    RevenueCatContext: configure → logIn(tokenIdentifier) → offerings
+                    RevenueCatContext: configure → logIn(emotionalProfileId) → offerings
                                            → purchase()/restore() → PaywallSheet
                     └─────────────────────────────────────────────────────────────────┘
 ```
@@ -133,6 +133,8 @@ No vector index on `reflections` (deliberate deviation from setup-doc wording): 
 - `matchForSession`: premium + `semanticMatchIds?.length` → return those docs; else existing tag cascade unchanged (also the graceful fallback if the embed action failed). Free path untouched.
 
 ## Step 6 — Drop insight_waitlist (ordered)
+
+> **Removal log (2026-07-03, client half done):** deleted `src/features/profile/hooks/use-insight-waitlist.ts` (pre-billing intent hook: fired `teaser_viewed`/`teaser_tapped`/`waitlist_joined` PostHog events + `joinInsightWaitlist` mutation) and `src/features/profile/components/insight-waitlist-sheet.tsx` ("notify me" bottom sheet). Replaced by `use-insight-gate.ts` → real paywall. Server functions + `insight_waitlist` table intentionally kept until the store release ships (stale-client protection).
 
 1. Client: rewrite `ProfileScreen.tsx` onto `use-paywall` + `PaywallSheet` (step 8); DELETE `use-insight-waitlist.ts` + `insight-waitlist-sheet.tsx`.
 2. Server: delete `joinInsightWaitlist` (profile.ts:166), `listInsightWaitlist` (profile.ts:193), `insightFeatureValidator` (lib/validators.ts:107-112).
@@ -245,7 +247,7 @@ Help me integrate RevenueCat SDK into my Xolace: AI Mood & Feelings app. I need 
    - npm: npm install --save react-native-purchases react-native-purchases-ui
    - Documentation: https://www.revenuecat.com/docs/getting-started/installation/reactnative#installation
 
-2. Configure it with my API key: test_wASVskTzgvGuhdADxRhFsOfNmBu
+2. Configure it with my test-store API key (set REVENUECAT_IOS_TEST_KEY / REVENUECAT_ANDROID_TEST_KEY in .env — never commit keys to this doc)
 
 3. Set up basic subscription functionality in React Native
 

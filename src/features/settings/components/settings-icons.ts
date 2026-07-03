@@ -99,3 +99,8 @@ export const HEART_ICON: CrossPlatformSymbol = {
   android: "favorite",
   web: "favorite",
 };
+export const PLUS_TIER_ICON: CrossPlatformSymbol = {
+  ios: "sparkles",
+  android: "auto_awesome",
+  web: "auto_awesome",
+};

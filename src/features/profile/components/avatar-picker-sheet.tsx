@@ -17,6 +17,8 @@ import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
 import { useTokenColor } from "../hooks/use-token-color";
 import { resolveAvatar, type AvatarOption } from "../hooks/use-avatars";
+import { usePaywall } from "@/src/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 
 type Props = {
   isOpen: boolean;
@@ -52,6 +54,8 @@ function AvatarPickerContent({
   const accent = useTokenColor("accent");
   const muted = useTokenColor("muted");
   const setAvatar = useMutation(api.avatars.setAvatar);
+  const { isPlus } = usePlusEntitlement();
+  const openPaywall = usePaywall((s) => s.open);
 
   const initial = resolveAvatar(avatars, currentKey);
   const [selectedKey, setSelectedKey] = useState(
@@ -145,12 +149,19 @@ function AvatarPickerContent({
       <View className="flex-row flex-wrap justify-center gap-4">
         {avatars.map((a) => {
           const isSelected = a.key === selectedKey;
-          const locked = a.tier === "premium";
+          const locked = a.tier === "premium" && !isPlus;
           return (
             <PressableFeedback
               key={a.key}
               onPress={() => {
-                if (!locked) handleSelect(a.key);
+                if (!locked) {
+                  handleSelect(a.key);
+                  return;
+                }
+                // Close the picker first — two stacked bottom sheets fight
+                // over gestures — then surface the paywall.
+                onClose();
+                openPaywall("premium_avatar");
               }}
               accessibilityRole="button"
               accessibilityLabel={a.label}

@@ -31,7 +31,7 @@ RC dashboard configuration is pending (requires App Store Connect + Google Play 
 ### 3. RevenueCat client integration
 - `RevenueCatContext` wrapping `react-native-purchases` SDK.
 - Feature flag (`features.payments`) — when `false` (dev), `isProUser` reads from dev constant. When `true`, full RC flow.
-- `appUserId` = user's `tokenIdentifier` from Convex auth.
+- `appUserId` = user's `emotionalProfileId` (`profile._id`, returned by `api.premium.getEntitlement`).
 - Custom paywall screen (not RC's built-in UI). RC built-in paywall used during development/testing only; custom ships.
 - `convex-revenuecat` Convex component for server-side webhook state sync.
 
@@ -109,7 +109,7 @@ Steps 1–2 are OTA-safe. Steps 3–4 require Convex deploy (not OTA). Steps 6�
 | Decision | Choice | Reason |
 |----------|--------|--------|
 | Paywall UI | Custom (RC built-in for dev testing only) | Brand control, campfire tone doesn't fit RC generic paywall |
-| `appUserId` for RC | `tokenIdentifier` from Convex auth | Already stable identifier, matches PostHog distinctId |
+| `appUserId` for RC | `emotionalProfileId` (`profile._id`) | Stable across data wipes, auth-provider-independent, matches PostHog distinctId |
 | Server-side gate | `convex-revenuecat` webhook component | Never trust client claims for gated server data |
 | Tier name | Xolace+ | Not "Premium" — product identity |
 | Entitlement ID | `xolace-plus` | Matches tier name, used in `hasEntitlement()` |
