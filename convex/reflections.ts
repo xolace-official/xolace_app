@@ -3,6 +3,7 @@ import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
+import { loadSemanticMatches, matchByTags } from "./lib/reflectionMatching";
 import { rateLimiter } from "./lib/rateLimits";
 
 /**
@@ -19,63 +20,21 @@ export const matchForSession = query({
       args.sessionId,
     );
 
-    // Xolace+: return the precomputed semantic matches when present. Falls
-    // through to the tag cascade below if empty (embed not ready yet / failed)
-    // or the user isn't premium — so the free path is byte-for-byte unchanged.
-    if (session.semanticMatchIds?.length && (await hasPremium(ctx, profile))) {
-      const docs = await Promise.all(
-        session.semanticMatchIds.map((id) => ctx.db.get(id)),
-      );
-      const active = docs.filter(
-        (r): r is NonNullable<typeof r> => r !== null && r.status === "active",
-      );
-      if (active.length > 0) return active.slice(0, 4);
-    }
+    // Xolace+: precomputed semantic matches lead. Empty when nothing was
+    // precomputed or the user isn't premium — the free path is unchanged.
+    const semantic =
+      session.semanticMatchIds?.length && (await hasPremium(ctx, profile))
+        ? await loadSemanticMatches(ctx, session)
+        : [];
+    if (semantic.length >= 4) return semantic.slice(0, 4);
 
-    // Get emotional metadata for this session
-    const metadata = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-      .unique();
-
-    if (!metadata) {
-      return [];
-    }
-
-    // Try granular match first
-    let reflections = await ctx.db
-      .query("reflections")
-      .withIndex("by_granular", (q) =>
-        q
-          .eq("granularLabel", metadata.granularLabel ?? undefined)
-          .eq("status", "active")
-      )
-      .take(10);
-
-    // Fall back to broad emotion match
-    if (reflections.length < 3) {
-      const broadMatches = await ctx.db
-        .query("reflections")
-        .withIndex("by_emotion", (q) =>
-          q.eq("primaryEmotion", metadata.primaryEmotion).eq("status", "active")
-        )
-        .take(10);
-
-      // Merge without duplicates
-      const existingIds = new Set(reflections.map((r) => r._id));
-      for (const match of broadMatches) {
-        if (!existingIds.has(match._id)) {
-          reflections.push(match);
-        }
-      }
-    }
-
-    // Filter by intensity proximity (within ±3 of session intensity)
-    const intensityFiltered = reflections.filter(
-      (r) => Math.abs(r.intensity - metadata.intensity) <= 3
-    );
-
-    return intensityFiltered.slice(0, 4);
+    // Top up from the tag cascade, deduping against the semantic results.
+    const fallback = await matchByTags(ctx, args.sessionId);
+    const semanticIds = new Set(semantic.map((r) => r._id));
+    return [
+      ...semantic,
+      ...fallback.filter((r) => !semanticIds.has(r._id)),
+    ].slice(0, 4);
   },
 });
 

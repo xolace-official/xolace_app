@@ -56,6 +56,7 @@ import type * as lib_notificationPrefs from "../lib/notificationPrefs.js";
 import type * as lib_premium from "../lib/premium.js";
 import type * as lib_pushNotifications from "../lib/pushNotifications.js";
 import type * as lib_rateLimits from "../lib/rateLimits.js";
+import type * as lib_reflectionMatching from "../lib/reflectionMatching.js";
 import type * as lib_spaceName from "../lib/spaceName.js";
 import type * as lib_streak from "../lib/streak.js";
 import type * as lib_timeOfDay from "../lib/timeOfDay.js";
@@ -134,6 +135,7 @@ declare const fullApi: ApiFromModules<{
   "lib/premium": typeof lib_premium;
   "lib/pushNotifications": typeof lib_pushNotifications;
   "lib/rateLimits": typeof lib_rateLimits;
+  "lib/reflectionMatching": typeof lib_reflectionMatching;
   "lib/spaceName": typeof lib_spaceName;
   "lib/streak": typeof lib_streak;
   "lib/timeOfDay": typeof lib_timeOfDay;
