@@ -266,6 +266,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
       posthogProjectToken: process.env.POSTHOG_PROJECT_TOKEN,
       posthogHost: process.env.POSTHOG_HOST,
+      // Optional until the RevenueCat dashboard exists — gates stay inert
+      // while appConfig.features.payments is false, so no requireEnv here.
+      revenueCat: {
+        iosKey: process.env.REVENUECAT_IOS_KEY,
+        androidKey: process.env.REVENUECAT_ANDROID_KEY,
+        iosTestKey: process.env.REVENUECAT_IOS_TEST_KEY,
+        androidTestKey: process.env.REVENUECAT_ANDROID_TEST_KEY,
+      },
       EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME", process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME),
       EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID", process.env.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID),
       EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID", process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID),

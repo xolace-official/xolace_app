@@ -10,8 +10,10 @@ import { RadioIconIndicator } from "@/src/features/settings/components/radio-ico
 import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
 import { ThemePreviewCard } from "@/src/features/settings/components/theme-preview-card";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { FREE_THEMES } from "@/src/lib/themes";
+import { FREE_THEMES, PREMIUM_THEMES } from "@/src/lib/themes";
 import { useAppearanceSettings, type ThemeMode } from "@/src/features/settings/hooks/use-appearance-settings";
+import { usePaywall } from "@/src/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { useAppStore } from "@/src/store/store";
 import { Presets } from "react-native-pulsar";
 
@@ -62,8 +64,20 @@ export const AppearanceScreen = () => {
 
   const setIntroSeen = useAppStore((s) => s.setIntroSeen);
   const [replayIntroOpen, setReplayIntroOpen] = useState(false);
+  const { isPlus } = usePlusEntitlement();
+  const openPaywall = usePaywall((s) => s.open);
 
   const handleFreeThemePress = (themeId: string) => {
+    Presets.sonar();
+    setColorTheme(themeId);
+  };
+
+  const handlePremiumThemePress = (themeId: string, available: boolean) => {
+    if (!isPlus) {
+      openPaywall("premium_theme");
+      return;
+    }
+    if (!available) return; // Plus, but this theme's CSS hasn't shipped yet
     Presets.sonar();
     setColorTheme(themeId);
   };
@@ -146,6 +160,17 @@ export const AppearanceScreen = () => {
                 theme={theme}
                 isActive={colorThemeId === theme.id}
                 onPress={() => handleFreeThemePress(theme.id)}
+              />
+            ))}
+            {PREMIUM_THEMES.map((theme) => (
+              <ThemePreviewCard
+                key={theme.id}
+                theme={theme}
+                isActive={colorThemeId === theme.id}
+                isLocked={!isPlus || theme.available === false}
+                onPress={() =>
+                  handlePremiumThemePress(theme.id, theme.available !== false)
+                }
               />
             ))}
           </ScrollView>

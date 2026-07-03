@@ -8,6 +8,7 @@ import {
 import { internal } from "./_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import { hasPremium } from "./lib/premium";
 import {
   entryTypeValidator,
   confirmationStateValidator,
@@ -169,7 +170,10 @@ export const selectPath = mutation({
     pathChosen: pathChosenValidator,
   },
   handler: async (ctx, args) => {
-    const { session } = await requireSessionOwnership(ctx, args.sessionId);
+    const { profile, session } = await requireSessionOwnership(
+      ctx,
+      args.sessionId,
+    );
 
     if (session.state !== "confirmed") {
       throw new Error(`Cannot select path in state "${session.state}"`);
@@ -180,6 +184,17 @@ export const selectPath = mutation({
       pathChosen: args.pathChosen,
       updatedAt: Date.now(),
     });
+
+    // Xolace+: precompute semantic peer matches while the user transitions to
+    // the peers screen. matchForSession is reactive, so it upgrades from the
+    // tag cascade to these results live once the embed action lands.
+    if (args.pathChosen === "peers" && (await hasPremium(ctx, profile))) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.reflectionsRag.computeSemanticMatches,
+        { sessionId: args.sessionId },
+      );
+    }
 
     return null;
   },

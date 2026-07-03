@@ -1,15 +1,10 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import { hasPremium } from "./lib/premium";
 import { insightFeatureValidator } from "./lib/validators";
 import { generateDisplayName } from "./lib/displayName";
 import { displayStreak } from "./lib/streak";
-
-// Premium stub — swap for hasEntitlement() when RevenueCat is wired in Wave 2.
-// Gate server-side so client never receives locked data, only null + premiumRequired.
-function hasPremium(): boolean {
-  return false;
-}
 
 // Deterministic fallback name for users created before displayName existed.
 // Consistent per-profile so the same user always sees the same name.
@@ -154,7 +149,7 @@ export const getWeekIntensity = query({
       days,
       peakDay: peakIdx !== null ? days[peakIdx].dayName : null,
       hasData: days.some((d) => d.intensity !== null),
-      premiumRequired: !hasPremium(),
+      premiumRequired: !(await hasPremium(ctx, profile)),
     };
   },
 });

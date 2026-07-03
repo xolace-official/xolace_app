@@ -554,6 +554,13 @@ export default defineSchema({
     // Uses the component's branded WorkflowId validator, not v.string().
     followUpWorkflowId: v.optional(vWorkflowId),
 
+    // --- Semantic matching (Xolace+) ---
+    // Precomputed peer-reflection ids from RAG vector search, written by
+    // computeSemanticMatches for premium users when the peers path is chosen.
+    // matchForSession returns these when present; otherwise it falls back to
+    // the tag-based cascade (also the graceful path if the embed action failed).
+    semanticMatchIds: v.optional(v.array(v.id("reflections"))),
+
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated
     completedAt: v.optional(v.number()), // Session closed
