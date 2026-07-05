@@ -134,7 +134,7 @@ export const DataScreen = () => {
               isLast
             />
             <AppText className="px-5 pt-2 text-sm text-foreground/55">
-              The fire remembers what you&apos;ve shared with it — that&apos;s
+              The fire remembers what you&apos;ve shared with it, that&apos;s
               how it knows you. Turn this off and new reflections are kept
               without their words.
             </AppText>

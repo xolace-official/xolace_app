@@ -41,6 +41,17 @@ export const store = internalMutation({
     followUpReason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Idempotent per session: the pipeline can legitimately re-run (a retry
+    // after a partial failure past this step) and every reader assumes a
+    // 1:1 session→row invariant via .unique(). Upsert to guarantee it.
+    const existing = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return;
+    }
     await ctx.db.insert("emotional_metadata", {
       ...args,
       createdAt: Date.now(),

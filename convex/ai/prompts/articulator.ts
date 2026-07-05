@@ -144,7 +144,7 @@ ${semanticProfile}`);
 
   if (episodicRecall && episodicRecall.length > 0) {
     parts.push(`## Past Moments Like This One (their own earlier words and mirrors, retrieved because they resemble tonight's input)
-${episodicRecall.map((m, i) => `--- moment ${i + 1} ---\n${m}`).join("\n")}
+${episodicRecall.map((m, i) => `-- moment ${i + 1} -- \n${m}`).join("\n")}
 Use these for continuity: if the same situation or feeling has clearly returned, you may acknowledge that quietly, and you may reuse the user's own exact words from a past moment when they name it better than anything else could.
 - Never recall something not present in these moments, and never guess at details beyond them
 - Never recite history back ("last time you said...", dates, session counts)
