@@ -131,6 +131,7 @@ export const wipe = internalMutation({
         typicalUsagePattern: undefined,
         dataWipeInProgress: undefined,
         currentSemanticProfileId: undefined,
+        lastConsolidationAt: undefined,
         updatedAt: Date.now(),
       });
     }

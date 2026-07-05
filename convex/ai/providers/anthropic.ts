@@ -31,6 +31,15 @@ export const ARTICULATOR_VERSION = "articulator-v1-sonnet-4.6";
 export const DISTILLER_MODEL = "claude-haiku-4-5-20251001";
 export const DISTILLER_VERSION = "distiller-v1-haiku-4.5";
 
+// Reflection Agent (Cognition Layer Phase 3). writerVersion mirrors the
+// mirrorModelVersion format ("{writer}-v{N}-{model}").
+export const REFLECTION_LIGHT_MODEL = "claude-haiku-4-5-20251001";
+export const REFLECTION_LIGHT_VERSION = "reflect-light-v1-haiku-4.5";
+
+export const REFLECTION_CONSOLIDATION_MODEL = "claude-sonnet-4-6";
+export const REFLECTION_CONSOLIDATION_VERSION =
+  "reflect-consolidation-v1-sonnet-4.6";
+
 // --- Types ---
 
 export interface ClassificationResult {

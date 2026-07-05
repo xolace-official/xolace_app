@@ -45,6 +45,7 @@ export function useReflectionMachine() {
     initiateAndSubmit,
     confirmMirror,
     selectPath,
+    completeAsExit,
     submitRefinement,
     recordEscalationResponse,
     abandon,
@@ -281,14 +282,17 @@ export function useReflectionMachine() {
     if (busyRef.current) return;
     busyRef.current = true;
     try {
-      await selectPath('exit');
+      // Exit has no activity: selection and completion collapse into one
+      // terminal transition here, so the session is durably complete before
+      // the "Heard." screen renders (which reads it by id, not getActive).
+      await completeAsExit();
       posthog.capture('path_selected', { path: 'exit' });
     } catch (error) {
       dispatchError(extractErrorMessage(error));
     } finally {
       busyRef.current = false;
     }
-  }, [selectPath, posthog, dispatchError]);
+  }, [completeAsExit, posthog, dispatchError]);
 
   const handleSelectSolo = useCallback(async () => {
     if (busyRef.current) return;

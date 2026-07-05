@@ -4,6 +4,29 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.7.0] - (2026-07-05)
+
+### Added
+
+- **Cognition Layer: episodic & semantic memory** — the app now remembers you across sessions instead of re-deriving who you are from scratch each time. Every mirror-generating session is composited into an episodic memory (stored in a per-profile vector namespace) so relevant past moments can be recalled during mirror generation, not just the immediately preceding turn. Alongside this, a **semantic profile** — a versioned, AI-written narrative covering recurring themes, emotional signatures, and emotional trajectory — is now built per person and included in mirror prompts. A new "Personal memory" toggle in Settings → Data (on by default) lets anyone opt out; disabling it stops new episodic/semantic writes without touching history already gathered under the Constitution's data rules.
+- **Reflection Agent (Phase 3): light pass + consolidation** — the semantic profile updates itself in two tiers, off the critical path. A **light pass** (Haiku) runs after every completed session: it bootstraps a v1 profile on someone's first qualifying session, or patches the existing trajectory in place afterward — cheap, frequent, trajectory-only. A **consolidation pass** (Sonnet, tool-use loop) runs on a longer gate: it gathers evidence from recent sessions and commits a new full profile version (recurring themes, emotional signatures, and trajectory together), advancing the profile's version pointer. Both passes respect the privacy/data-wipe guard used by the rest of the Cognition Layer, and a version can be rolled back via `revertToVersion` without losing prior history.
+
+### Changed
+
+- **Session completion is now durable** — completing a session (finishing the solo exercise, the peer-reflection screen, or choosing "I just needed to say it") now flips the session to `completed` at the moment that work ends, *before* navigating to the session-end screen — not when the user later taps something on session-end. This means closing the app on session-end can no longer strand a session at `path_selected` / `path_in_progress`. Post-session enrichment (mood check, peer-pool contribution toggle) is now recorded separately, as an optional, best-effort patch onto an already-completed session — so skipping it (or closing the app) never costs you the completed state. The peer-pool anonymizer job is now guarded against double-firing if feedback is submitted more than once.
+- **Abandoned-session cron reconciliation** — since `path_selected` / `path_in_progress` are now transient (a session should only be caught there if the app died mid-navigation), the abandoned-session sweep reconciles sessions stranded in those states to `completed` (path not finished) instead of `abandoned`, since the mirror was already confirmed by that point.
+
+### Backend
+
+- **`finalizeCompletion` (convex/sessions.ts)** — single source of truth for flipping a session terminal and firing the post-session job tail (profile stats update, Reflection Agent trigger, follow-up gate). Called from `completePath`, `completeSession`, and the abandoned-session reconciliation path.
+- **`recordPostSessionFeedback`** — new mutation for optional post-session mood/contribution, replacing the fields that used to live on `completePath`'s args. For backward compatibility, `completePath` still accepts `contributedReflection` / `postSessionMood` (deprecated) from 1.6.x store clients and applies them through the same guarded path, and is idempotent when the session is already `completed` (e.g. cron-reconciled) — so deploying this backend ahead of store review can't strand old clients on the session-end screen.
+- **`semantic_profiles` refactor** — `createVersion` reworked; new `updateTrajectory` supports both bootstrap and in-place patch, with the same wipe-guard as the trusted `createVersion` path. `emotional_profiles.lastConsolidationAt` tracks the consolidation gate; cleared by `dataWipe` alongside existing profile-version purging.
+- **Rate limits** for the light and consolidation passes, so the Reflection Agent can't be triggered into a runaway loop.
+- **`patternSummary` split** for targeted usage — the classifier and mirror generator now request differently-scoped summaries instead of sharing one general-purpose blob.
+- Minor RAG fixes across `episodicMemory.ts`, `rag.ts`, and `reflectionsRag.ts`.
+
+---
+
 ## [1.6.1] - OTA Update (2026-06-27)
 
 ### Added

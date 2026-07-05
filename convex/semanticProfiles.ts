@@ -1,5 +1,9 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery } from "./_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  type MutationCtx,
+} from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 
 // =============================================================
@@ -52,32 +56,91 @@ export const createVersion = internalMutation({
     trajectory: v.optional(v.string()),
     writerVersion: v.string(),
   },
-  handler: async (ctx, args): Promise<Id<"semantic_profiles">> => {
+  handler: async (ctx, args): Promise<Id<"semantic_profiles"> | null> => {
+    return await createVersionInternal(ctx, args);
+  },
+});
+
+/**
+ * Shared version-append logic — reused by createVersion (the sanctioned
+ * mutation) and updateTrajectory's v1 bootstrap so neither has to call the
+ * other through the registered API from inside a mutation.
+ */
+async function createVersionInternal(
+  ctx: MutationCtx,
+  args: {
+    emotionalProfileId: Id<"emotional_profiles">;
+    recurringThemes?: string;
+    emotionalSignatures?: string;
+    calibration?: string;
+    trajectory?: string;
+    writerVersion: string;
+  },
+): Promise<Id<"semantic_profiles"> | null> {
+  const profile = await ctx.db.get(args.emotionalProfileId);
+  if (!profile) throw new Error("Profile not found");
+
+  // Privacy guard: a mid-wipe consolidation must not re-materialize derived
+  // PII after the wipe swept the rows. No-op while a wipe is in progress.
+  if (profile.dataWipeInProgress === true) return null;
+
+  const current = profile.currentSemanticProfileId
+    ? await ctx.db.get(profile.currentSemanticProfileId)
+    : null;
+
+  const newId = await ctx.db.insert("semantic_profiles", {
+    emotionalProfileId: args.emotionalProfileId,
+    version: (current?.version ?? 0) + 1,
+    recurringThemes: args.recurringThemes ?? current?.recurringThemes,
+    emotionalSignatures:
+      args.emotionalSignatures ?? current?.emotionalSignatures,
+    calibration: args.calibration ?? current?.calibration,
+    trajectory: args.trajectory ?? current?.trajectory,
+    writerVersion: args.writerVersion,
+    createdAt: Date.now(),
+  });
+
+  await ctx.db.patch(args.emotionalProfileId, {
+    currentSemanticProfileId: newId,
+    updatedAt: Date.now(),
+  });
+
+  return newId;
+}
+
+/**
+ * Patch the current version's trajectory IN PLACE — no new version. The
+ * post-session light pass calls this: trajectory is the fast-moving line, and
+ * appending a version per session would make version numbers meaningless for
+ * rollback / "confirmation dropped after v14" attribution (those stay = the
+ * consolidation snapshots). Falls back to createVersion for the v1 bootstrap
+ * when the user has no profile yet. Wipe-guarded like createVersion.
+ */
+export const updateTrajectory = internalMutation({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+    trajectory: v.string(),
+    writerVersion: v.string(),
+  },
+  handler: async (ctx, args): Promise<Id<"semantic_profiles"> | null> => {
     const profile = await ctx.db.get(args.emotionalProfileId);
     if (!profile) throw new Error("Profile not found");
+    if (profile.dataWipeInProgress === true) return null;
 
-    const current = profile.currentSemanticProfileId
-      ? await ctx.db.get(profile.currentSemanticProfileId)
-      : null;
+    // Bootstrap: no current version yet → mint v1 with just the trajectory.
+    if (!profile.currentSemanticProfileId) {
+      return await createVersionInternal(ctx, {
+        emotionalProfileId: args.emotionalProfileId,
+        trajectory: args.trajectory,
+        writerVersion: args.writerVersion,
+      });
+    }
 
-    const newId = await ctx.db.insert("semantic_profiles", {
-      emotionalProfileId: args.emotionalProfileId,
-      version: (current?.version ?? 0) + 1,
-      recurringThemes: args.recurringThemes ?? current?.recurringThemes,
-      emotionalSignatures:
-        args.emotionalSignatures ?? current?.emotionalSignatures,
-      calibration: args.calibration ?? current?.calibration,
-      trajectory: args.trajectory ?? current?.trajectory,
-      writerVersion: args.writerVersion,
-      createdAt: Date.now(),
+    await ctx.db.patch(profile.currentSemanticProfileId, {
+      trajectory: args.trajectory,
     });
-
-    await ctx.db.patch(args.emotionalProfileId, {
-      currentSemanticProfileId: newId,
-      updatedAt: Date.now(),
-    });
-
-    return newId;
+    await ctx.db.patch(args.emotionalProfileId, { updatedAt: Date.now() });
+    return profile.currentSemanticProfileId;
   },
 });
 

@@ -14,7 +14,7 @@ import type { Id } from '@/convex/_generated/dataModel';
  *  - `session` - the full active session object or `undefined` while loading.
  *  - `isLoading` - `true` when the active session is still being fetched, `false` otherwise.
  *  - `startPath` - a function `(exerciseId?: Id<'exercises'>) => Promise<void>` that starts the path for the active session when the session state is `'path_selected'`; no-op if there is no active session or another mutation is in progress.
- *  - `completePath` - a function `(pathCompleted: boolean, contributedReflection?: boolean) => Promise<void>` that marks the current path as completed for the active session; no-op if there is no active session or another mutation is in progress.
+ *  - `completePath` - a function `(pathCompleted: boolean) => Promise<boolean>` that flips the session terminal (→ completed) the moment the activity ends, before navigating to session-end; no-op if there is no active session or another mutation is in progress.
  */
 export function usePathSession() {
   const activeSession = useQuery(api.sessions.getActive);
@@ -48,25 +48,20 @@ export function usePathSession() {
   );
 
   /**
-   * Complete the current path and mark the session as completed.
+   * Flip the session terminal (→ completed). Called from the activity screen
+   * the moment the exercise/peer view is done, before navigating to
+   * session-end — so completion is durable even if the user closes the app on
+   * the session-end screen. Post-session mood + contribution are recorded
+   * separately from session-end via recordPostSessionFeedback.
    */
   const completePath = useCallback(
-    async (
-      pathCompleted: boolean,
-      contributedReflection?: boolean,
-      postSessionMood?: 'lighter' | 'same' | 'heavier' | 'unsure',
-    ): Promise<boolean> => {
+    async (pathCompleted: boolean): Promise<boolean> => {
       if (!sessionId || busyRef.current) return false;
       const s = session?.state;
       if (s !== 'path_in_progress' && s !== 'path_selected' && s !== 'confirmed') return false;
       busyRef.current = true;
       try {
-        await completePathMutation({
-          sessionId,
-          pathCompleted,
-          contributedReflection,
-          postSessionMood,
-        });
+        await completePathMutation({ sessionId, pathCompleted });
         return true;
       } catch {
         return false;
