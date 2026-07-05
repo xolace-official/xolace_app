@@ -24,7 +24,7 @@ const TURN_RELEVANT_STATES = new Set([
  * - `completeAsExit()`
  * - `selectPath(pathChosen)`
  * - `startPath(exerciseId?)`
- * - `completePath(pathCompleted, contributedReflection?)`
+ * - `completePath(pathCompleted)`
  * - `submitRefinement(userFeedback, additionalRawText?)`
  * - `abandon()`
  * - `retry()`
@@ -153,13 +153,9 @@ export function useSession() {
   );
 
   const completePath = useCallback(
-    async (pathCompleted: boolean, contributedReflection?: boolean) => {
+    async (pathCompleted: boolean) => {
       if (!sessionId) return;
-      await completePathMutation({
-        sessionId,
-        pathCompleted,
-        contributedReflection,
-      });
+      await completePathMutation({ sessionId, pathCompleted });
     },
     [sessionId, completePathMutation],
   );

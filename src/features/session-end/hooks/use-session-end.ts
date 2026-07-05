@@ -1,32 +1,41 @@
 import { useCallback, useRef, useEffect } from "react";
 import { useRouter } from "expo-router";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
 import { useAppStore } from "@/src/store/store";
 
+type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
+
 /**
- * Prepare and expose session completion and navigation utilities for the session-end screen.
+ * Drive the session-end screen for an already-completed session.
  *
- * Exposes `dismiss` and `haveMore` callbacks that complete the active session (optionally recording
- * whether the user contributed a reflection) and then navigate to the home screen. Automatically
- * navigates home if loading finishes with no active session. Also provides the active `sessionId`,
- * a loading flag, the session's distilled text (or `null`), and the user's `contributeByDefault`
- * preference (defaults to `false` while the preference is unavailable).
+ * The path screens complete the session before navigating here and pass its id.
+ * This hook reads that session by id (not `getActive`, which is now null) and
+ * exposes callbacks that record optional post-session enrichment (mood +
+ * peer-pool contribution) onto the completed session, then navigate. Because
+ * completion already happened, closing the app on this screen loses nothing but
+ * the optional feedback — the session is already terminal and on the timeline.
  *
  * @returns An object containing:
  * - `sessionId` — the current session identifier, if any
  * - `isLoading` — `true` while session data is loading
  * - `distilledText` — the session's distilled text, or `null` if unavailable
+ * - `mirrorText` — the session's mirror text, or `null` if unavailable
  * - `contributeByDefault` — whether contributions are enabled by default (defaults to `false`)
- * - `dismiss` — callback accepting an optional `contributedReflection` boolean to complete the session and navigate home
- * - `haveMore` — callback accepting an optional `contributedReflection` boolean to complete the session and navigate home
+ * - `sessionCount` — the user's completed-session count
+ * - `dismiss` — record feedback and navigate home
+ * - `haveMore` — record feedback and navigate home
+ * - `completeAndBridge` — record feedback and navigate to the trusted bridge
  */
-export function useSessionEnd(pathCompleted: boolean = true) {
+export function useSessionEnd(sessionId: Id<"sessions"> | null) {
   const router = useRouter();
-  const { sessionId, session, isLoading, completePath } = usePathSession();
+  const session = useQuery(
+    api.sessions.getById,
+    sessionId ? { sessionId } : "skip",
+  );
+  const recordFeedback = useMutation(api.sessions.recordPostSessionFeedback);
   const contributeByDefaultQuery = useQuery(
     api.preferences.getContributeByDefault,
   );
@@ -36,102 +45,106 @@ export function useSessionEnd(pathCompleted: boolean = true) {
   const busyRef = useRef(false);
   const navigatedRef = useRef(false);
 
+  const isLoading = sessionId != null && session === undefined;
+
   const navigateHome = useCallback(() => {
     if (navigatedRef.current) return;
     navigatedRef.current = true;
     router.replace("/");
   }, [router]);
 
-  // Guard: if no active session after loading (e.g. session abandoned externally)
+  // Guard: no session id, or it resolved to nothing (not owned / not found).
   useEffect(() => {
-    if (!isLoading && !sessionId) {
+    if (!sessionId || session === null) {
       navigateHome();
     }
-  }, [isLoading, sessionId, navigateHome]);
+  }, [sessionId, session, navigateHome]);
+
+  // Record optional feedback onto the already-completed session. Best-effort:
+  // failures never block navigation, since completion already happened.
+  const record = useCallback(
+    async (
+      contributedReflection: boolean | null,
+      postSessionMood?: PostSessionMood,
+    ) => {
+      if (!sessionId) return;
+      try {
+        await recordFeedback({
+          sessionId,
+          contributedReflection: contributedReflection ?? undefined,
+          postSessionMood,
+        });
+      } catch {
+        // best-effort enrichment — session is already terminal
+      }
+    },
+    [sessionId, recordFeedback],
+  );
 
   const dismiss = async (
     contributedReflection: boolean | null = null,
-    postSessionMood?: "lighter" | "same" | "heavier" | "unsure",
+    postSessionMood?: PostSessionMood,
   ) => {
     if (busyRef.current) return;
     busyRef.current = true;
-    const ok = await completePath(
-      pathCompleted,
-      contributedReflection ?? undefined,
-      postSessionMood,
-    ).finally(() => {
+    await record(contributedReflection, postSessionMood).finally(() => {
       busyRef.current = false;
     });
-    if (ok) {
-      setPendingEventPrompt(null);
-      posthog.capture("session_completed", {
-        post_session_mood: postSessionMood ?? null,
-        contributed_reflection: contributedReflection,
-        action: "dismiss",
-      });
-      navigateHome();
-    }
+    setPendingEventPrompt(null);
+    posthog.capture("session_completed", {
+      post_session_mood: postSessionMood ?? null,
+      contributed_reflection: contributedReflection,
+      action: "dismiss",
+    });
+    navigateHome();
   };
 
   const haveMore = async (
     contributedReflection: boolean | null = null,
-    postSessionMood?: "lighter" | "same" | "heavier" | "unsure",
+    postSessionMood?: PostSessionMood,
   ) => {
     if (busyRef.current) return;
     busyRef.current = true;
-    const ok = await completePath(
-      pathCompleted,
-      contributedReflection ?? undefined,
-      postSessionMood,
-    ).finally(() => {
+    await record(contributedReflection, postSessionMood).finally(() => {
       busyRef.current = false;
     });
-    if (ok) {
-      setPendingEventPrompt(null);
-      posthog.capture("session_completed", {
-        post_session_mood: postSessionMood ?? null,
-        contributed_reflection: contributedReflection,
-        action: "have_more",
-      });
-      navigateHome();
-    }
+    setPendingEventPrompt(null);
+    posthog.capture("session_completed", {
+      post_session_mood: postSessionMood ?? null,
+      contributed_reflection: contributedReflection,
+      action: "have_more",
+    });
+    navigateHome();
   };
 
   const completeAndBridge = async (
     contributedReflection: boolean | null = null,
-    postSessionMood?: "lighter" | "same" | "heavier" | "unsure",
+    postSessionMood?: PostSessionMood,
   ) => {
     if (busyRef.current) return;
     busyRef.current = true;
-    const ok = await completePath(
-      pathCompleted,
-      contributedReflection ?? undefined,
-      postSessionMood,
-    ).finally(() => {
+    await record(contributedReflection, postSessionMood).finally(() => {
       busyRef.current = false;
     });
-    if (ok) {
-      setPendingEventPrompt(null);
-      posthog.capture("session_completed", {
-        post_session_mood: postSessionMood ?? null,
-        contributed_reflection: contributedReflection,
-        action: "bridge",
-      });
-      // Completing the session flips it terminal, so getActive goes null and the
-      // "no active session" guard would otherwise race us home. We're navigating
-      // to the bridge ourselves — claim navigation so navigateHome() no-ops.
-      navigatedRef.current = true;
-      router.push({
-        pathname: "/(protected)/trusted-bridge",
-        // The bridge re-derives mirror text (and the rest of the emotional
-        // context) server-side from the session, so only the id needs to ride along.
-        params: { sessionId: sessionId as Id<"sessions"> },
-      });
-    }
+    setPendingEventPrompt(null);
+    posthog.capture("session_completed", {
+      post_session_mood: postSessionMood ?? null,
+      contributed_reflection: contributedReflection,
+      action: "bridge",
+    });
+    // Claim navigation so the "no session" guard doesn't race us to home.
+    navigatedRef.current = true;
+    router.push({
+      pathname: "/(protected)/trusted-bridge",
+      // The bridge re-derives mirror text (and the rest of the emotional
+      // context) server-side from the session, so only the id needs to ride along.
+      params: { sessionId: sessionId as Id<"sessions"> },
+    });
   };
 
   const sessionData = session as
     | { distilledText?: string; mirrorText?: string }
+    | null
     | undefined;
   const distilledText = sessionData?.distilledText ?? null;
   const mirrorText = sessionData?.mirrorText ?? null;

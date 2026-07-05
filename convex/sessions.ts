@@ -57,6 +57,68 @@ async function finalizeFollowUp(
   }
 }
 
+/**
+ * Flip a session terminal (→ completed) and fire the post-session job tail.
+ *
+ * This is the single source of truth for "the reflective work is done." It is
+ * called the moment that work ends — at the Exit tap, when a solo exercise
+ * finishes, when the peer screen is done — NOT when the user later interacts
+ * with the session-end screen. Post-session enrichment (mood, contribution)
+ * lands separately via `recordPostSessionFeedback` as a patch on the already-
+ * completed session, so closing the app on the session-end screen can never
+ * strand a session at `path_selected` / `path_in_progress`.
+ */
+async function finalizeCompletion(
+  ctx: MutationCtx,
+  session: Doc<"sessions">,
+  opts: {
+    pathCompleted: boolean;
+    pathChosen?: Doc<"sessions">["pathChosen"];
+  },
+): Promise<void> {
+  const now = Date.now();
+
+  await ctx.db.patch(session._id, {
+    state: "completed",
+    pathCompleted: opts.pathCompleted,
+    ...(opts.pathChosen ? { pathChosen: opts.pathChosen } : {}),
+    completedAt: now,
+    sessionDuration: now - session.createdAt,
+    updatedAt: now,
+  });
+
+  // Schedule post-session jobs.
+  await ctx.scheduler.runAfter(
+    0,
+    internal.jobs.profileStats.updateAfterSession,
+    {
+      emotionalProfileId: session.emotionalProfileId,
+      sessionId: session._id,
+    },
+  );
+  // Reflection Agent (Cognition Layer Phase 3): light pass + consolidation
+  // gate. Off the critical path, best-effort, completion-only.
+  await ctx.scheduler.runAfter(
+    0,
+    internal.ai.reflectionAgent.trigger.onSessionComplete,
+    {
+      emotionalProfileId: session.emotionalProfileId,
+      sessionId: session._id,
+    },
+  );
+
+  // Finalize follow-up gate + maybe start the check-in workflow.
+  await finalizeFollowUp(
+    ctx,
+    session,
+    computeRequiresFollowUp({
+      storedFlag: session.requiresFollowUp,
+      confirmationState: session.confirmationState,
+      escalationTriggered: session.escalationTriggered,
+    }),
+  );
+}
+
 // --- Public Mutations ---
 
 /**
@@ -226,14 +288,17 @@ export const startPath = mutation({
 });
 
 /**
- * Complete a path. → completed. Schedules post-session jobs.
+ * Complete an activity path (solo/peers). → completed.
+ *
+ * Called from the activity screen the moment the exercise/peer view is done,
+ * BEFORE navigating to session-end — so completion is durable even if the user
+ * closes the app on the session-end screen. Post-session mood + contribution
+ * are recorded afterwards via `recordPostSessionFeedback`.
  */
 export const completePath = mutation({
   args: {
     sessionId: v.id("sessions"),
     pathCompleted: v.boolean(),
-    contributedReflection: v.optional(v.boolean()),
-    postSessionMood: v.optional(postSessionMoodValidator),
   },
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
@@ -246,43 +311,49 @@ export const completePath = mutation({
       throw new Error(`Cannot complete path in state "${session.state}"`);
     }
 
-    const now = Date.now();
     // A confirmed session was never path-selected, so the path was not completed.
     const pathCompleted =
       session.state === "confirmed" ? false : args.pathCompleted;
 
+    await finalizeCompletion(ctx, session, { pathCompleted });
+
+    return null;
+  },
+});
+
+/**
+ * Record optional post-session enrichment (mood + peer-pool contribution) onto
+ * an already-completed session. Idempotent; safe to skip entirely (which is
+ * exactly what happens when the user closes the app on the session-end screen).
+ */
+export const recordPostSessionFeedback = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    contributedReflection: v.optional(v.boolean()),
+    postSessionMood: v.optional(postSessionMoodValidator),
+  },
+  handler: async (ctx, args) => {
+    const { session } = await requireSessionOwnership(ctx, args.sessionId);
+
+    if (session.state !== "completed") {
+      throw new Error(
+        `Cannot record post-session feedback in state "${session.state}"`,
+      );
+    }
+
     await ctx.db.patch(args.sessionId, {
-      state: "completed",
-      pathCompleted,
-      contributedReflection: args.contributedReflection,
+      ...(args.contributedReflection !== undefined
+        ? { contributedReflection: args.contributedReflection }
+        : {}),
       ...(args.postSessionMood
         ? { postSessionMood: args.postSessionMood }
         : {}),
-      completedAt: now,
-      sessionDuration: now - session.createdAt,
-      updatedAt: now,
+      updatedAt: Date.now(),
     });
 
-    // Schedule post-session jobs
-    await ctx.scheduler.runAfter(
-      0,
-      internal.jobs.profileStats.updateAfterSession,
-      {
-        emotionalProfileId: session.emotionalProfileId,
-        sessionId: args.sessionId,
-      },
-    );
-    // Reflection Agent (Cognition Layer Phase 3): light pass + consolidation
-    // gate. Off the critical path, best-effort, completion-only.
-    await ctx.scheduler.runAfter(
-      0,
-      internal.ai.reflectionAgent.trigger.onSessionComplete,
-      {
-        emotionalProfileId: session.emotionalProfileId,
-        sessionId: args.sessionId,
-      },
-    );
-    if (args.contributedReflection) {
+    // Schedule the anonymizer only on a fresh opt-in, so repeated feedback
+    // writes (or a re-tap) never double-contribute to the peer pool.
+    if (args.contributedReflection && session.contributedReflection !== true) {
       await ctx.scheduler.runAfter(
         0,
         internal.jobs.reflectionAnonymizer.anonymize,
@@ -292,23 +363,17 @@ export const completePath = mutation({
       );
     }
 
-    // Finalize follow-up gate + maybe start the check-in workflow.
-    await finalizeFollowUp(
-      ctx,
-      session,
-      computeRequiresFollowUp({
-        storedFlag: session.requiresFollowUp,
-        confirmationState: session.confirmationState,
-        escalationTriggered: session.escalationTriggered,
-      }),
-    );
-
     return null;
   },
 });
 
 /**
- * Direct complete for "exit" path from confirmed state. → completed
+ * Direct complete for the "exit" path, straight from `confirmed`. → completed.
+ *
+ * The exit path has no activity, so selection and completion collapse into one
+ * terminal transition at the Exit tap. The session-end "Heard." screen then
+ * renders off an already-completed session (fetched by id), never leaving it
+ * dangling at `path_selected`.
  */
 export const completeSession = mutation({
   args: {
@@ -321,46 +386,10 @@ export const completeSession = mutation({
       throw new Error(`Cannot complete session in state "${session.state}"`);
     }
 
-    const now = Date.now();
-
-    await ctx.db.patch(args.sessionId, {
-      state: "completed",
-      pathChosen: "exit",
+    await finalizeCompletion(ctx, session, {
       pathCompleted: true,
-      completedAt: now,
-      sessionDuration: now - session.createdAt,
-      updatedAt: now,
+      pathChosen: "exit",
     });
-
-    await ctx.scheduler.runAfter(
-      0,
-      internal.jobs.profileStats.updateAfterSession,
-      {
-        emotionalProfileId: session.emotionalProfileId,
-        sessionId: args.sessionId,
-      },
-    );
-    // Reflection Agent (Cognition Layer Phase 3): light pass + consolidation
-    // gate. Off the critical path, best-effort, completion-only.
-    await ctx.scheduler.runAfter(
-      0,
-      internal.ai.reflectionAgent.trigger.onSessionComplete,
-      {
-        emotionalProfileId: session.emotionalProfileId,
-        sessionId: args.sessionId,
-      },
-    );
-
-    // Finalize follow-up gate + maybe start the check-in workflow.
-    await finalizeFollowUp(
-      ctx,
-      session,
-      computeRequiresFollowUp({
-        storedFlag: session.requiresFollowUp,
-        confirmationState: session.confirmationState,
-        escalationTriggered: session.escalationTriggered,
-      }),
-    );
 
     return null;
   },
@@ -782,14 +811,26 @@ export const checkAbandoned = internalMutation({
       .withIndex("by_date", (q) => q.lt("createdAt", cutoff))
       .take(50);
 
+    // path_selected / path_in_progress are now transient — a session only
+    // reaches them for the moment between the path tap and completion (which
+    // fires before navigating to session-end). A session stranded here means
+    // the app died mid-navigation; the mirror was already confirmed, so
+    // reconcile to completed (path not finished) rather than abandoned, and
+    // never leave it resumable via getActive.
+    const stalePathStateSet = new Set(["path_selected", "path_in_progress"]);
+
     for (const session of staleSessions) {
-      if (staleStateSet.has(session.state) && session.updatedAt < cutoff) {
+      if (session.updatedAt >= cutoff) continue;
+
+      if (staleStateSet.has(session.state)) {
         await ctx.db.patch(session._id, {
           state: "abandoned",
           updatedAt: Date.now(),
         });
         // Same gate as the manual abandon path: escalation-then-abandon only.
         await finalizeFollowUp(ctx, session, abandonRequiresFollowUp(session));
+      } else if (stalePathStateSet.has(session.state)) {
+        await finalizeCompletion(ctx, session, { pathCompleted: false });
       }
     }
   },

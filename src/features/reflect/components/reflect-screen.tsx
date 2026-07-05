@@ -211,6 +211,7 @@ export const ReflectScreen = () => {
         return (
           <PathSelectionState
             mirror={state.mirrorResponse}
+            sessionId={sessionId}
             onSelectSolo={handleSelectSolo}
             onSelectPeers={handleSelectPeers}
             onSelectExit={handleSelectExit}
