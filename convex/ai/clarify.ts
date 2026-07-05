@@ -128,6 +128,9 @@ export const handleClarification = internalAction({
         userFeedback,
         additionalInput: args.additionalRawText,
         spaceName: context.preferences?.spaceName,
+        // Longitudinal Understanding: pass the semantic profile through so the
+        // refinement is grounded in who this person is, matching process.ts.
+        semanticProfile: context.semanticProfile,
       });
 
       // 5. Call Sonnet for revised mirror
