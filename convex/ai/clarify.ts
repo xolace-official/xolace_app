@@ -10,6 +10,7 @@ import {
   ARTICULATOR_VERSION,
 } from "./providers/anthropic";
 import { buildArticulatorPrompt } from "./prompts/articulator";
+import { routeUncertainty } from "./routing";
 import {
   buildArticulatorPatternSummary,
   collectRecentMirrors,
@@ -100,6 +101,20 @@ export const handleClarification = internalAction({
 
       const recentMirrors = collectRecentMirrors(context.recentSessions);
 
+      // Uncertainty routing (Phase 4, Loop #2) on the refinement pass. Same
+      // deterministic gate as the initial mirror, off the stored confidence ×
+      // specificity. But a "not quite" is empirical proof the read missed, so
+      // never carry a "confident" posture into a rejected turn — floor it to
+      // "measured". "say_more" adds context without rejecting, so it stands.
+      const baseClaimStrength = routeUncertainty({
+        confidence: metadata.primaryEmotionConfidence,
+        specificity: metadata.specificity,
+      });
+      const claimStrength =
+        userFeedback === "not_quite" && baseClaimStrength === "confident"
+          ? "measured"
+          : baseClaimStrength;
+
       const articulatorPrompt = buildArticulatorPrompt({
         rawInput: args.additionalRawText ?? "",
         classification: {
@@ -131,6 +146,7 @@ export const handleClarification = internalAction({
         // Longitudinal Understanding: pass the semantic profile through so the
         // refinement is grounded in who this person is, matching process.ts.
         semanticProfile: context.semanticProfile,
+        claimStrength,
       });
 
       // 5. Call Sonnet for revised mirror
@@ -179,6 +195,7 @@ export const handleClarification = internalAction({
         properties: {
           turnNumber: args.turnNumber,
           hadAdditionalText: !!args.additionalRawText,
+          claimStrength,
           usedFallback: revisedMirrorText === FALLBACK_MIRROR,
           userFeedback: userFeedback ?? "not_quite",
         },

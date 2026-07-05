@@ -15,6 +15,7 @@ import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt } from "./prompts/articulator";
 import { evaluateSafeguard } from "./safeguard";
+import { routeUncertainty } from "./routing";
 import {
   buildArticulatorPatternSummary,
   buildPatternSummary,
@@ -176,6 +177,16 @@ export const generateMirror = internalAction({
       // 6. Articulate mirror (Sonnet)
       const recentMirrors = collectRecentMirrors(context.recentSessions);
 
+      // 6a. Uncertainty routing (Phase 4, Loop #2). Deterministic rule-code —
+      //     the hot path never gets agentic (decision-log #8). Gates the
+      //     mirror's claim strength off how sure the classifier is about
+      //     tonight's read; the prompt composes it with the profile's
+      //     longitudinal calibration.
+      const claimStrength = routeUncertainty({
+        confidence: classification.primaryEmotionConfidence,
+        specificity: classification.specificity,
+      });
+
       let mirrorText: string;
       try {
         const articulatorPrompt = buildArticulatorPrompt({
@@ -193,6 +204,7 @@ export const generateMirror = internalAction({
           spaceName: context.preferences?.spaceName,
           semanticProfile: context.semanticProfile,
           episodicRecall,
+          claimStrength,
         });
 
         const mirrorResponse = await anthropic.messages.create({
@@ -249,6 +261,7 @@ export const generateMirror = internalAction({
         properties: {
           entryType: session.entryType ?? "open_prompt",
           toneUsed: mirrorTone,
+          claimStrength,
           safeguardLevel: safeguard.level,
           escalationTriggered: isEscalation,
           usedFallback: mirrorText === FALLBACK_MIRROR,
