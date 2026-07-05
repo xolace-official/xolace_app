@@ -54,6 +54,15 @@ export const consolidationWorkflow = workflow.define({
         { emotionalProfileId: args.emotionalProfileId },
       );
     }
+
+    // Tone adaptation (Phase 4, Loop #1). Deterministic — runs regardless of
+    // whether the agent wrote a narrative version, and after it, so the "what
+    // lands" section patches onto the now-current version. Own journaled step:
+    // cheap, idempotent, and never reruns the model loop on retry.
+    await step.runMutation(
+      internal.ai.reflectionAgent.calibration.refreshCalibration,
+      { emotionalProfileId: args.emotionalProfileId },
+    );
   },
 });
 

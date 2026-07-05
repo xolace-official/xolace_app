@@ -145,6 +145,46 @@ export const updateTrajectory = internalMutation({
 });
 
 /**
+ * Write the "what lands" / calibration section IN PLACE on the current
+ * version — the sanctioned write path for the Phase 4 tone-adaptation loop
+ * (Cognition Layer §1.2, §4.1). Deliberately separate from the Reflection
+ * Agent's narrative write: calibration is deterministic, statistical, and
+ * decoupled from the agent's version-append, so it patches in place (like
+ * updateTrajectory) rather than minting a version. That also means it never
+ * collides with the agent's single-write model. Falls back to createVersion
+ * for the v1 bootstrap. Wipe-guarded. Shared helper so callers in other
+ * modules (calibration.ts) don't go through the registered API from a
+ * mutation.
+ */
+export async function writeCalibrationInternal(
+  ctx: MutationCtx,
+  args: {
+    emotionalProfileId: Id<"emotional_profiles">;
+    calibration: string;
+    writerVersion: string;
+  },
+): Promise<Id<"semantic_profiles"> | null> {
+  const profile = await ctx.db.get(args.emotionalProfileId);
+  if (!profile) throw new Error("Profile not found");
+  if (profile.dataWipeInProgress === true) return null;
+
+  // Bootstrap: no current version yet → mint v1 with just the calibration.
+  if (!profile.currentSemanticProfileId) {
+    return await createVersionInternal(ctx, {
+      emotionalProfileId: args.emotionalProfileId,
+      calibration: args.calibration,
+      writerVersion: args.writerVersion,
+    });
+  }
+
+  await ctx.db.patch(profile.currentSemanticProfileId, {
+    calibration: args.calibration,
+  });
+  await ctx.db.patch(args.emotionalProfileId, { updatedAt: Date.now() });
+  return profile.currentSemanticProfileId;
+}
+
+/**
  * Roll the pointer back to an earlier version (a bad agent pass
  * corrupts every subsequent mirror — this is the one-step revert).
  * The bad version row is kept for auditability, not deleted.
