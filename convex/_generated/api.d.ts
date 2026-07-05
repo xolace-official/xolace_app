@@ -44,6 +44,7 @@ import type * as crons from "../crons.js";
 import type * as dailyQuotes from "../dailyQuotes.js";
 import type * as devTools from "../devTools.js";
 import type * as emotionalMetadata from "../emotionalMetadata.js";
+import type * as episodicImportance from "../episodicImportance.js";
 import type * as episodicMemory from "../episodicMemory.js";
 import type * as escalation from "../escalation.js";
 import type * as exercises from "../exercises.js";
@@ -135,6 +136,7 @@ declare const fullApi: ApiFromModules<{
   dailyQuotes: typeof dailyQuotes;
   devTools: typeof devTools;
   emotionalMetadata: typeof emotionalMetadata;
+  episodicImportance: typeof episodicImportance;
   episodicMemory: typeof episodicMemory;
   escalation: typeof escalation;
   exercises: typeof exercises;
