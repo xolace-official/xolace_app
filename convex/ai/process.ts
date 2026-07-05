@@ -16,6 +16,7 @@ import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt } from "./prompts/articulator";
 import { evaluateSafeguard } from "./safeguard";
 import {
+  buildArticulatorPatternSummary,
   buildPatternSummary,
   collectRecentMirrors,
 } from "./helpers/patternSummary";
@@ -85,7 +86,10 @@ export const generateMirror = internalAction({
         return;
       }
 
-      // 2. Build pattern summary (pure function)
+      // 2. Build pattern summaries (pure functions). The classifier gets
+      //    the full variant (its only historical context); the articulator
+      //    gets the slim emotion-signal variant — longitudinal identity
+      //    reaches it via the semantic profile block instead.
       const mirrorTone = context.preferences?.mirrorTone ?? "adaptive";
       const patternSummary = buildPatternSummary({
         profile: context.profile,
@@ -93,6 +97,10 @@ export const generateMirror = internalAction({
         recentSessions: context.recentSessions,
         isFirstSession: context.isFirstSession,
         mirrorTone,
+      });
+      const articulatorPatternSummary = buildArticulatorPatternSummary({
+        recentMetadata: context.recentMetadata,
+        isFirstSession: context.isFirstSession,
       });
       console.log("pattern Summary ", patternSummary);
 
@@ -173,7 +181,7 @@ export const generateMirror = internalAction({
         const articulatorPrompt = buildArticulatorPrompt({
           rawInput: args.rawText,
           classification,
-          patternSummary,
+          patternSummary: articulatorPatternSummary,
           safeguardLevel: safeguard.level,
           mirrorTone,
           isFirstSession: context.isFirstSession,
