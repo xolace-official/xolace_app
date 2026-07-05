@@ -64,6 +64,11 @@ export const FEEDBACK_ICON: CrossPlatformSymbol = {
   android: "feedback",
   web: "feedback",
 };
+export const MEMORY_ICON: CrossPlatformSymbol = {
+  ios: "brain",
+  android: "auto_awesome",
+  web: "auto_awesome",
+};
 export const RETENTION_ICON: CrossPlatformSymbol = {
   ios: "clock.arrow.circlepath",
   android: "history",

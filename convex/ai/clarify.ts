@@ -11,7 +11,7 @@ import {
 } from "./providers/anthropic";
 import { buildArticulatorPrompt } from "./prompts/articulator";
 import {
-  buildPatternSummary,
+  buildArticulatorPatternSummary,
   collectRecentMirrors,
 } from "./helpers/patternSummary";
 import { posthog } from "../posthog";
@@ -92,12 +92,10 @@ export const handleClarification = internalAction({
 
       // 4. Build articulator prompt with refinement context
       const mirrorTone = context.preferences?.mirrorTone ?? "adaptive";
-      const patternSummary = buildPatternSummary({
-        profile: context.profile,
+      // Clarify only re-articulates, so it uses the slim articulator variant.
+      const patternSummary = buildArticulatorPatternSummary({
         recentMetadata: context.recentMetadata,
-        recentSessions: context.recentSessions,
         isFirstSession: context.isFirstSession,
-        mirrorTone,
       });
 
       const recentMirrors = collectRecentMirrors(context.recentSessions);
@@ -130,6 +128,9 @@ export const handleClarification = internalAction({
         userFeedback,
         additionalInput: args.additionalRawText,
         spaceName: context.preferences?.spaceName,
+        // Longitudinal Understanding: pass the semantic profile through so the
+        // refinement is grounded in who this person is, matching process.ts.
+        semanticProfile: context.semanticProfile,
       });
 
       // 5. Call Sonnet for revised mirror

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
+import { purgeEpisodicEntries } from "../episodicMemory";
 
 const BATCH_SIZE = 100;
 
@@ -33,6 +34,14 @@ export const wipe = internalMutation({
       .take(BATCH_SIZE);
 
     if (sessions.length === BATCH_SIZE) hasMore = true;
+
+    // Wipe parity (hard invariant): episodic embeddings die in the same
+    // job that deletes the session rows — never a best-effort sidecar.
+    await purgeEpisodicEntries(
+      ctx,
+      emotionalProfileId,
+      sessions.map((s) => s._id)
+    );
 
     for (const session of sessions) {
       // Delete metadata (1:1)
@@ -98,6 +107,17 @@ export const wipe = internalMutation({
       });
     }
 
+    // ── Delete semantic profile versions (all of them) ───────────
+    // The AI's narrative understanding is memory; a wipe erases it.
+    const semanticVersions = await ctx.db
+      .query("semantic_profiles")
+      .withIndex("by_profile_version", (q) =>
+        q.eq("emotionalProfileId", emotionalProfileId)
+      )
+      .take(BATCH_SIZE);
+    if (semanticVersions.length === BATCH_SIZE) hasMore = true;
+    for (const version of semanticVersions) await ctx.db.delete(version._id);
+
     // ── Reset emotional profile counters ─────────────────────────
     // Only reset on the final batch (no more sessions to delete)
     if (!hasMore) {
@@ -110,6 +130,7 @@ export const wipe = internalMutation({
         averageSessionDuration: undefined,
         typicalUsagePattern: undefined,
         dataWipeInProgress: undefined,
+        currentSemanticProfileId: undefined,
         updatedAt: Date.now(),
       });
     }

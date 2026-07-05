@@ -16,12 +16,14 @@ import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt } from "./prompts/articulator";
 import { evaluateSafeguard } from "./safeguard";
 import {
+  buildArticulatorPatternSummary,
   buildPatternSummary,
   collectRecentMirrors,
 } from "./helpers/patternSummary";
 
 import { rateLimiter } from "../lib/rateLimits";
 import { posthog } from "../posthog";
+import { rag } from "../rag";
 
 import type { SessionContext } from "./context";
 import { matchExercise } from "../exercises/match";
@@ -84,7 +86,10 @@ export const generateMirror = internalAction({
         return;
       }
 
-      // 2. Build pattern summary (pure function)
+      // 2. Build pattern summaries (pure functions). The classifier gets
+      //    the full variant (its only historical context); the articulator
+      //    gets the slim emotion-signal variant — longitudinal identity
+      //    reaches it via the semantic profile block instead.
       const mirrorTone = context.preferences?.mirrorTone ?? "adaptive";
       const patternSummary = buildPatternSummary({
         profile: context.profile,
@@ -92,6 +97,10 @@ export const generateMirror = internalAction({
         recentSessions: context.recentSessions,
         isFirstSession: context.isFirstSession,
         mirrorTone,
+      });
+      const articulatorPatternSummary = buildArticulatorPatternSummary({
+        recentMetadata: context.recentMetadata,
+        isFirstSession: context.isFirstSession,
       });
       console.log("pattern Summary ", patternSummary);
 
@@ -115,16 +124,30 @@ export const generateMirror = internalAction({
       );
       console.log("classifier prompt ", classifierPrompt);
 
-      // 4. Fetch moderation + classification in parallel (cache-backed)
-      const [moderationResult, classification] = await Promise.all([
-        moderationCache
-          .fetch(ctx, { text: args.rawText })
-          .catch(() => MODERATION_UNAVAILABLE),
-        classifierCache.fetch(ctx, {
-          systemPrompt: classifierPrompt.system,
-          userPrompt: classifierPrompt.user,
-        }),
-      ]);
+      // 4. Fetch moderation + classification + episodic recall in parallel.
+      //    Episodic recall (Cognition Layer §1.3): top-K past composites
+      //    from the user's personal namespace, matched raw-to-raw against
+      //    tonight's input. Best-effort — memory failing must never block
+      //    the mirror.
+      const [moderationResult, classification, episodicMatches] =
+        await Promise.all([
+          moderationCache
+            .fetch(ctx, { text: args.rawText })
+            .catch(() => MODERATION_UNAVAILABLE),
+          classifierCache.fetch(ctx, {
+            systemPrompt: classifierPrompt.system,
+            userPrompt: classifierPrompt.user,
+          }),
+          context.isFirstSession
+            ? Promise.resolve([] as EpisodicMatch[])
+            : searchEpisodicMemory(
+                ctx,
+                session.emotionalProfileId,
+                args.sessionId,
+                args.rawText,
+              ),
+        ]);
+      const episodicRecall = episodicMatches.map((m) => m.text);
 
       // 5. Evaluate safeguard (rule engine, no LLM)
       const safeguard = evaluateSafeguard(
@@ -158,7 +181,7 @@ export const generateMirror = internalAction({
         const articulatorPrompt = buildArticulatorPrompt({
           rawInput: args.rawText,
           classification,
-          patternSummary,
+          patternSummary: articulatorPatternSummary,
           safeguardLevel: safeguard.level,
           mirrorTone,
           isFirstSession: context.isFirstSession,
@@ -168,6 +191,8 @@ export const generateMirror = internalAction({
           freezeOccurred: context.session.freezeOccurred as boolean | undefined,
           sessionMode: session.sessionMode,
           spaceName: context.preferences?.spaceName,
+          semanticProfile: context.semanticProfile,
+          episodicRecall,
         });
 
         const mirrorResponse = await anthropic.messages.create({
@@ -266,6 +291,18 @@ export const generateMirror = internalAction({
         riskFlag:
           (safeguard.level === "crisis" || safeguard.level === "elevated") &&
           safeguard.triggerType !== "pattern_escalation",
+        // Understanding completion (Cognition Layer Phase 2): the full
+        // verdict about this moment lives in one row — safeguard result,
+        // which memories informed the mirror, which profile version was
+        // in context.
+        safeguardLevel: safeguard.level,
+        ...(safeguard.triggerType
+          ? { safeguardTrigger: safeguard.triggerType }
+          : {}),
+        episodicMatchKeys: episodicMatches.map((m) => m.key),
+        ...(context.semanticProfileVersion !== null
+          ? { profileVersion: context.semanticProfileVersion }
+          : {}),
         ...(classification.followUpReason
           ? { followUpReason: classification.followUpReason }
           : {}),
@@ -335,6 +372,17 @@ export const generateMirror = internalAction({
         );
       }
 
+      // 9.5. Schedule episodic memory ingestion (Cognition Layer §1.1).
+      //      Keyed by sessionId → idempotent replace. Delayed slightly so
+      //      the speculative distiller has usually written distilledText
+      //      by the time the composite is built. ingestSession itself
+      //      handles crisis (metadata-only) and the personal-memory toggle.
+      await ctx.scheduler.runAfter(
+        30_000,
+        internal.episodicMemory.ingestSession,
+        { sessionId: args.sessionId },
+      );
+
       // 10. Create escalation event if needed
       if (
         (safeguard.level === "crisis" || safeguard.level === "elevated") &&
@@ -370,6 +418,39 @@ export const generateMirror = internalAction({
     }
   },
 });
+
+/**
+ * One episodic memory that informed a mirror: composite text for the
+ * articulator, RAG key (= sessionId) for Understanding provenance.
+ */
+type EpisodicMatch = { text: string; key: string };
+
+/**
+ * Top-K episodic matches for the current input from the user's personal
+ * namespace (Cognition Layer §1.3). Returns composite texts, newest-format
+ * or metadata-only alike. Best-effort: any failure (no namespace yet,
+ * embedding outage) returns [] so memory can never block the mirror.
+ */
+async function searchEpisodicMemory(
+  ctx: Parameters<typeof rag.search>[0],
+  emotionalProfileId: string,
+  currentSessionId: string,
+  rawText: string,
+): Promise<EpisodicMatch[]> {
+  try {
+    const { entries } = await rag.search(ctx, {
+      namespace: emotionalProfileId,
+      query: rawText,
+      limit: 4,
+    });
+    return entries
+      .filter((e) => e.key !== undefined && e.key !== currentSessionId)
+      .slice(0, 3)
+      .map((e) => ({ text: e.text, key: e.key as string }));
+  } catch {
+    return [];
+  }
+}
 
 function sanitizeAiError(error: Error): string {
   const msg = error.message;

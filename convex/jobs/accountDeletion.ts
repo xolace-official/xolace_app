@@ -1,5 +1,6 @@
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { purgeEpisodicEntries } from "../episodicMemory";
 
 const BATCH_SIZE = 10;
 
@@ -31,6 +32,14 @@ export const purge = internalMutation({
           q.eq("emotionalProfileId", profileId)
         )
         .take(100);
+
+      // Wipe parity (hard invariant): episodic embeddings die in the
+      // same job that deletes the session rows.
+      await purgeEpisodicEntries(
+        ctx,
+        profileId,
+        sessions.map((s) => s._id)
+      );
 
       for (const session of sessions) {
         // Delete metadata
@@ -111,6 +120,17 @@ export const purge = internalMutation({
       await ctx.scheduler.runAfter(0, internal.followUps.purgeForProfile, {
         emotionalProfileId: profileId,
       });
+
+      // Delete semantic profile versions (all of them)
+      const semanticVersions = await ctx.db
+        .query("semantic_profiles")
+        .withIndex("by_profile_version", (q) =>
+          q.eq("emotionalProfileId", profileId)
+        )
+        .take(100);
+      for (const version of semanticVersions) {
+        await ctx.db.delete(version._id);
+      }
 
       // Delete emotional profile
       await ctx.db.delete(profileId);

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalQuery } from "../_generated/server";
+import { renderSemanticProfile } from "../semanticProfiles";
 
 /** Canonical return type of buildSessionContext. */
 export interface SessionContext {
@@ -36,6 +37,11 @@ export interface SessionContext {
     riskFlag: boolean;
     createdAt: number;
   }[];
+  // Semantic memory (Cognition Layer §1.3): the current AI-written
+  // narrative profile, rendered whole — it is never vector-searched.
+  // Null until the Reflection Agent writes the first version.
+  semanticProfile: string | null;
+  semanticProfileVersion: number | null;
 }
 
 /**
@@ -80,6 +86,13 @@ export const buildSessionContext = internalQuery({
       )
       .order("desc")
       .take(10);
+
+    // Load the current semantic profile version (read whole — the
+    // profile carries the longitudinal weight; recent rows below stay
+    // as a recency signal).
+    const semanticProfileDoc = profile.currentSemanticProfileId
+      ? await ctx.db.get(profile.currentSemanticProfileId)
+      : null;
 
     // Load recent emotional metadata (ordered by _creationTime desc)
     // Using by_profile_theme index [emotionalProfileId] so .order("desc")
@@ -131,6 +144,10 @@ export const buildSessionContext = internalQuery({
         riskFlag: m.riskFlag,
         createdAt: m.createdAt,
       })),
+      semanticProfile: semanticProfileDoc
+        ? renderSemanticProfile(semanticProfileDoc)
+        : null,
+      semanticProfileVersion: semanticProfileDoc?.version ?? null,
     };
   },
 });

@@ -1,6 +1,10 @@
 import { v } from "convex/values";
 import { query, internalMutation, internalQuery } from "./_generated/server";
 import { requireSessionOwnership } from "./lib/auth";
+import {
+  safeguardLevelValidator,
+  triggerTypeValidator,
+} from "./lib/validators";
 
 /**
  * AI stores the emotional classification for a session.
@@ -26,11 +30,28 @@ export const store = internalMutation({
       )
     ),
     riskFlag: v.boolean(),
+    // Understanding fields (Cognition Layer Phase 2): full safeguard
+    // verdict, episodic memories in context, semantic profile version.
+    safeguardLevel: v.optional(safeguardLevelValidator),
+    safeguardTrigger: v.optional(triggerTypeValidator),
+    episodicMatchKeys: v.optional(v.array(v.string())),
+    profileVersion: v.optional(v.number()),
     // Follow-up system: brief internal reason from the classifier. Never
     // shown to the user. Present only when the classifier flagged a follow-up.
     followUpReason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Idempotent per session: the pipeline can legitimately re-run (a retry
+    // after a partial failure past this step) and every reader assumes a
+    // 1:1 session→row invariant via .unique(). Upsert to guarantee it.
+    const existing = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return;
+    }
     await ctx.db.insert("emotional_metadata", {
       ...args,
       createdAt: Date.now(),

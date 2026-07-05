@@ -127,6 +127,9 @@ export const update = mutation({
     notificationTimezone: v.optional(v.string()),
     mirrorTone: v.optional(mirrorToneValidator),
     contributeByDefault: v.optional(v.boolean()),
+    // Personal memory (Cognition Layer §1.1b). Off = new sessions embed
+    // metadata-only into episodic memory.
+    personalMemoryEnabled: v.optional(v.boolean()),
     dataRetentionPreference: v.optional(
       v.union(
         v.literal("indefinite"),
@@ -165,6 +168,8 @@ export const update = mutation({
     if (args.mirrorTone !== undefined) patch.mirrorTone = args.mirrorTone;
     if (args.contributeByDefault !== undefined)
       patch.contributeByDefault = args.contributeByDefault;
+    if (args.personalMemoryEnabled !== undefined)
+      patch.personalMemoryEnabled = args.personalMemoryEnabled;
     if (args.dataRetentionPreference !== undefined)
       patch.dataRetentionPreference = args.dataRetentionPreference;
     if (args.preferredInputType !== undefined)

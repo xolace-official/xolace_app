@@ -14,6 +14,8 @@ export const useDataSettings = () => {
   const setBridgeEnabled = useAppStore((s) => s.setBridgeEnabled);
 
   const contributeAnonymously = preferences?.contributeByDefault ?? false;
+  // On by default (undefined = true) — see Cognition Layer §1.1b.
+  const personalMemory = preferences?.personalMemoryEnabled !== false;
   const retention: RetentionOption = preferences?.dataRetentionPreference ?? "indefinite";
 
   const retentionDisplay =
@@ -25,6 +27,10 @@ export const useDataSettings = () => {
 
   const setContributeAnonymously = (v: boolean) => {
     updatePreferences({ contributeByDefault: v });
+  };
+
+  const setPersonalMemory = (v: boolean) => {
+    updatePreferences({ personalMemoryEnabled: v });
   };
 
   const setRetention = (value: RetentionOption) => {
@@ -42,6 +48,8 @@ export const useDataSettings = () => {
   return {
     contributeAnonymously,
     setContributeAnonymously,
+    personalMemory,
+    setPersonalMemory,
     bridgeEnabled,
     setBridgeEnabled,
     retention,
