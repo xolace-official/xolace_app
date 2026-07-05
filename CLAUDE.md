@@ -154,6 +154,18 @@ convex/
   sessions.ts, sessionTurns.ts, reflections.ts, users.ts, preferences.ts, etc.
 ```
 
+### The Cognition Layer Constitution Rule
+
+> **No feature may call an LLM to re-derive something the Understanding already
+> knows.** Every session's Understanding (classification, safeguard verdict,
+> which episodic memories informed the mirror, which semantic profile version
+> was in context) lives in `emotional_metadata` and is read only via
+> `internal.understanding.getUnderstanding`. All AI features take
+> Understanding + Memory (episodic RAG namespaces + `semantic_profiles`) as
+> input. A new model call is justified only for genuinely new signal — a new
+> modality (voice/vent) or a new artifact type — and **all model calls live
+> under `convex/ai/`**. See `docs/cognition-layer-architecture.md`.
+
 ### Build Variants
 `app.config.ts` reads `APP_VARIANT` (development/preview/production) to set bundle identifiers:
 - `com.xolaceincorg.xolace.dev` / `com.xolaceincorg.xolace.preview` / `com.xolaceincorg.xolace`

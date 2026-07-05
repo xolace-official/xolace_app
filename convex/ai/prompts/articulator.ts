@@ -23,6 +23,12 @@ interface ArticulatorInput {
   sessionMode?: "day" | "night";
   // User's named space (if set): personalizes identity responses
   spaceName?: string;
+  // Cognition Layer memory (Phase 1):
+  // The AI-written narrative of who this person is emotionally.
+  semanticProfile?: string | null;
+  // Top-K episodic matches for the current input — past composites
+  // (their words + the mirror) semantically close to what they wrote now.
+  episodicRecall?: string[];
 }
 
 /**
@@ -60,6 +66,8 @@ export function buildArticulatorPrompt(
     additionalInput,
     sessionMode,
     spaceName,
+    semanticProfile,
+    episodicRecall,
   } = input;
 
   const toneInstructions = getToneInstructions(mirrorTone);
@@ -106,11 +114,45 @@ ${safeguardInstructions}${behaviorNotes}${isFirstSession ? "\nFirst session. Be 
 ${sessionMode === "night" ? getLateNightAddendum() : ""}
 ## Pattern Context (this is the emotional terrain they tend to carry, let it actively shape what you notice and how precisely you name it; never reference past sessions explicitly)
 ${patternSummary}
+${buildMemoryContext(semanticProfile, episodicRecall)}
 ${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}`;
 
   const user = rawInput;
 
   return { system, user };
+}
+
+/**
+ * Builds the memory context block: the semantic profile (who this person
+ * is emotionally) and episodic recall (past moments similar to this one).
+ *
+ * Recall rules are deliberately asymmetric with Pattern Context: episodic
+ * memory MAY surface continuity ("this specific thing is back"), including
+ * the user's own past words verbatim — that specificity is the whole point.
+ * The profile stays invisible scaffolding.
+ */
+function buildMemoryContext(
+  semanticProfile?: string | null,
+  episodicRecall?: string[]
+): string {
+  const parts: string[] = [];
+
+  if (semanticProfile) {
+    parts.push(`## What You Know About This Person (an internal working understanding built over time; let it sharpen your read; never quote it, never mention that a profile exists)
+${semanticProfile}`);
+  }
+
+  if (episodicRecall && episodicRecall.length > 0) {
+    parts.push(`## Past Moments Like This One (their own earlier words and mirrors, retrieved because they resemble tonight's input)
+${episodicRecall.map((m, i) => `--- moment ${i + 1} ---\n${m}`).join("\n")}
+Use these for continuity: if the same situation or feeling has clearly returned, you may acknowledge that quietly, and you may reuse the user's own exact words from a past moment when they name it better than anything else could.
+- Never recall something not present in these moments, and never guess at details beyond them
+- Never recite history back ("last time you said...", dates, session counts)
+- Never force a connection; if tonight is unrelated, ignore these entirely
+- Never reuse YOUR own past mirror phrasing — only THEIR words are quotable`);
+  }
+
+  return parts.length > 0 ? `\n${parts.join("\n\n")}\n` : "";
 }
 
 /**

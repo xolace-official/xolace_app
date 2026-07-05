@@ -1,6 +1,10 @@
 import { v } from "convex/values";
 import { query, internalMutation, internalQuery } from "./_generated/server";
 import { requireSessionOwnership } from "./lib/auth";
+import {
+  safeguardLevelValidator,
+  triggerTypeValidator,
+} from "./lib/validators";
 
 /**
  * AI stores the emotional classification for a session.
@@ -26,6 +30,12 @@ export const store = internalMutation({
       )
     ),
     riskFlag: v.boolean(),
+    // Understanding fields (Cognition Layer Phase 2): full safeguard
+    // verdict, episodic memories in context, semantic profile version.
+    safeguardLevel: v.optional(safeguardLevelValidator),
+    safeguardTrigger: v.optional(triggerTypeValidator),
+    episodicMatchKeys: v.optional(v.array(v.string())),
+    profileVersion: v.optional(v.number()),
     // Follow-up system: brief internal reason from the classifier. Never
     // shown to the user. Present only when the classifier flagged a follow-up.
     followUpReason: v.optional(v.string()),

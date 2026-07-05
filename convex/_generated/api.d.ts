@@ -35,6 +35,7 @@ import type * as crons from "../crons.js";
 import type * as dailyQuotes from "../dailyQuotes.js";
 import type * as devTools from "../devTools.js";
 import type * as emotionalMetadata from "../emotionalMetadata.js";
+import type * as episodicMemory from "../episodicMemory.js";
 import type * as escalation from "../escalation.js";
 import type * as exercises from "../exercises.js";
 import type * as exercises_match from "../exercises/match.js";
@@ -75,8 +76,10 @@ import type * as reflections from "../reflections.js";
 import type * as reflectionsRag from "../reflectionsRag.js";
 import type * as revenuecat from "../revenuecat.js";
 import type * as seed from "../seed.js";
+import type * as semanticProfiles from "../semanticProfiles.js";
 import type * as sessionTurns from "../sessionTurns.js";
 import type * as sessions from "../sessions.js";
+import type * as understanding from "../understanding.js";
 import type * as users from "../users.js";
 import type * as vent from "../vent.js";
 
@@ -114,6 +117,7 @@ declare const fullApi: ApiFromModules<{
   dailyQuotes: typeof dailyQuotes;
   devTools: typeof devTools;
   emotionalMetadata: typeof emotionalMetadata;
+  episodicMemory: typeof episodicMemory;
   escalation: typeof escalation;
   exercises: typeof exercises;
   "exercises/match": typeof exercises_match;
@@ -154,8 +158,10 @@ declare const fullApi: ApiFromModules<{
   reflectionsRag: typeof reflectionsRag;
   revenuecat: typeof revenuecat;
   seed: typeof seed;
+  semanticProfiles: typeof semanticProfiles;
   sessionTurns: typeof sessionTurns;
   sessions: typeof sessions;
+  understanding: typeof understanding;
   users: typeof users;
   vent: typeof vent;
 }>;

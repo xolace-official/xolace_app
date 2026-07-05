@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { purgeEpisodicEntries } from "../episodicMemory";
 
 const TIERS = ["6_months", "1_year"] as const;
 type Tier = (typeof TIERS)[number];
@@ -59,6 +60,14 @@ export const enforce = internalMutation({
         moreSessionWork = true;
       }
 
+      // Wipe parity (hard invariant): episodic embeddings are keyed by
+      // sessionId and die in the SAME job that deletes the session rows.
+      await purgeEpisodicEntries(
+        ctx,
+        pref.emotionalProfileId,
+        oldSessions.map((s) => s._id)
+      );
+
       for (const session of oldSessions) {
         const metadata = await ctx.db
           .query("emotional_metadata")
@@ -84,6 +93,25 @@ export const enforce = internalMutation({
         }
 
         await ctx.db.delete(session._id);
+      }
+
+      // Sweep old semantic profile VERSIONS past the cutoff. The current
+      // version is always kept — retention shortens history, it doesn't
+      // lobotomize the live profile. Full deletion happens in dataWipe.
+      const profileRow = await ctx.db.get(pref.emotionalProfileId);
+      const oldProfileVersions = await ctx.db
+        .query("semantic_profiles")
+        .withIndex("by_profile_version", (q) =>
+          q.eq("emotionalProfileId", pref.emotionalProfileId)
+        )
+        .take(BATCH_SIZE);
+      for (const version of oldProfileVersions) {
+        if (
+          version.createdAt < cutoff &&
+          version._id !== profileRow?.currentSemanticProfileId
+        ) {
+          await ctx.db.delete(version._id);
+        }
       }
 
       // Delete feedback records for this profile older than the retention cutoff

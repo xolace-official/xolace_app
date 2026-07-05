@@ -12,6 +12,7 @@ import { useDataSettings, type RetentionOption } from "@/src/features/settings/h
 import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
 import {
   SHARE_ICON,
+  MEMORY_ICON,
   DELETE_DATA_ICON,
   DELETE_ACCOUNT_ICON,
   type CrossPlatformSymbol,
@@ -60,6 +61,8 @@ export const DataScreen = () => {
   const {
     contributeAnonymously,
     setContributeAnonymously,
+    personalMemory,
+    setPersonalMemory,
     bridgeEnabled,
     setBridgeEnabled,
     retention,
@@ -112,6 +115,29 @@ export const DataScreen = () => {
               onToggle={setBridgeEnabled}
               isLast
             />
+          </SettingsSection>
+        </EaseView>
+
+        {/* ── MEMORY ───────────────────────────────────────────── */}
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 16 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 280, delay: 30, easing: EASE }}
+        >
+          <SettingsSection title="Memory">
+            <SettingsRow
+              variant="toggle"
+              icon={settingIcon(MEMORY_ICON)}
+              label="Personal memory"
+              isSelected={personalMemory}
+              onToggle={setPersonalMemory}
+              isLast
+            />
+            <AppText className="px-5 pt-2 text-sm text-foreground/55">
+              The fire remembers what you&apos;ve shared with it — that&apos;s
+              how it knows you. Turn this off and new reflections are kept
+              without their words.
+            </AppText>
           </SettingsSection>
         </EaseView>
 

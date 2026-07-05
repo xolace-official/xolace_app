@@ -68,6 +68,13 @@ export const mirrorToneValidator = v.union(
   v.literal("witnessed")
 );
 
+export const safeguardLevelValidator = v.union(
+  v.literal("none"),
+  v.literal("gentle"),
+  v.literal("elevated"),
+  v.literal("crisis")
+);
+
 export const triggerTypeValidator = v.union(
   v.literal("explicit_crisis_language"),
   v.literal("implicit_risk_language"),

@@ -1,7 +1,12 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { vWorkflowId } from "@convex-dev/workflow";
-import { insightFeatureValidator, resourceValidator } from "./lib/validators";
+import {
+  insightFeatureValidator,
+  resourceValidator,
+  safeguardLevelValidator,
+  triggerTypeValidator,
+} from "./lib/validators";
 
 // =============================================================
 // XOLACE — LAYER 1 MVP SCHEMA (MERGED)
@@ -187,6 +192,13 @@ export default defineSchema({
     // Prevents duplicate wipe jobs from being scheduled.
     dataWipeInProgress: v.optional(v.boolean()),
 
+    // --- Cognition Layer: semantic memory pointer ---
+    // Current semantic profile version (row in semantic_profiles).
+    // Versions are append-only; this pointer selects the live one so a
+    // bad agent pass is a one-step revert. Undefined until the Reflection
+    // Agent writes the first version.
+    currentSemanticProfileId: v.optional(v.id("semantic_profiles")),
+
     // --- Timestamps ---
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -272,6 +284,11 @@ export default defineSchema({
       v.literal("6_months"),
       v.literal("1_year"),
     ),
+
+    // Personal memory (Cognition Layer §1.1b). On by default (undefined =
+    // true). Off = new sessions embed metadata-only into episodic memory —
+    // no raw text, no mirror text. Converts disclosure into agency.
+    personalMemoryEnabled: v.optional(v.boolean()),
 
     // --- Input ---
 
@@ -707,6 +724,30 @@ export default defineSchema({
 
     // --- Safety ---
     riskFlag: v.boolean(),
+
+    // --- Understanding (Cognition Layer Phase 2) ---
+    //
+    // This table IS the per-session Understanding object: everything the
+    // system concluded about one moment, produced exactly once by the
+    // pipeline, then effectively frozen. Read only via
+    // understanding.getUnderstanding — no feature may call an LLM to
+    // re-derive what these fields already know.
+
+    // Full safeguard verdict at mirror time (rule-code, never model).
+    // Previously scattered across sessions/escalation_events; recorded
+    // here so the Understanding is complete in one row.
+    safeguardLevel: v.optional(safeguardLevelValidator),
+    safeguardTrigger: v.optional(triggerTypeValidator),
+
+    // RAG keys (= sessionIds) of the episodic memories that informed this
+    // mirror. Required by the Phase 4 relevance loop (confirmed mirrors
+    // bump these memories' importance; "not quite" decays them).
+    episodicMatchKeys: v.optional(v.array(v.string())),
+
+    // Which semantic profile version was in the articulator's context.
+    // Enables "confirmation rate dropped after profile v14" attribution
+    // and reconstructing exactly what the system believed at this moment.
+    profileVersion: v.optional(v.number()),
 
     // --- Follow-Up ---
     // Brief internal sentence explaining why the classifier flagged this
@@ -1433,4 +1474,49 @@ export default defineSchema({
 
     // Workflow cancellation / onComplete lookup.
     .index("by_workflow", ["workflowId"]),
+
+  // ===========================================================
+  // 21. SEMANTIC PROFILES (Cognition Layer §1.2)
+  // ===========================================================
+  //
+  // The AI-written narrative of who this person is emotionally.
+  // Written ONLY by the Reflection Agent (Phase 3); read by the
+  // articulator context and, progressively, the insights UI.
+  //
+  // Versioning is append-only: each consolidation pass inserts a
+  // new row and moves emotional_profiles.currentSemanticProfileId.
+  // Rollback = point the pointer at an older row. Old versions are
+  // swept by retention; ALL versions die in dataWipe/accountDeletion.
+  //
+  // Written in user-safe, non-clinical language from day one — the
+  // same artifact is both the internal working document and the
+  // earned insights surface.
+  //
+  semantic_profiles: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+
+    // Monotonic version number per profile (1, 2, 3...).
+    version: v.number(),
+
+    // --- Narrative sections ---
+    // What this person keeps carrying.
+    recurringThemes: v.optional(v.string()),
+    // e.g. "anger usually masks fear; goes quiet rather than escalating"
+    emotionalSignatures: v.optional(v.string()),
+    // What lands: tone that gets confirmations, mirror length preference.
+    // Written by the Phase 4 tone loop via the consolidation pass.
+    calibration: v.optional(v.string()),
+    // Where things have been heading recently. Fast-moving — the
+    // post-session light pass updates this most often.
+    trajectory: v.optional(v.string()),
+
+    // Which writer produced this version, for feedback attribution
+    // ("confirmation rate dropped after profile v14") and auditability.
+    // Format mirrors mirrorModelVersion: "{writer}-v{N}-{model}".
+    writerVersion: v.string(),
+
+    createdAt: v.number(),
+  })
+    // Pointer resolution + version history, newest first.
+    .index("by_profile_version", ["emotionalProfileId", "version"]),
 });

@@ -144,6 +144,17 @@ The command file is located at `command/convex.md`.
 - Edit files in `convex/_generated/`
 - Use `filter()` instead of `withIndex()`
 
+## Xolace Constitution Rule (Cognition Layer)
+
+**No feature may call an LLM to re-derive something the Understanding already
+knows.** A session's Understanding (classification + safeguard verdict +
+episodic memories in context + semantic profile version) lives in
+`emotional_metadata`; read it only via `internal.understanding.getUnderstanding`.
+All AI features take Understanding + Memory as input; new model calls are
+justified only for genuinely new signal (new modality or new artifact type),
+and all model calls live under `convex/ai/`. See
+`docs/cognition-layer-architecture.md`.
+
 ## Quick Reference
 
 ### New Function Syntax (always use this)
