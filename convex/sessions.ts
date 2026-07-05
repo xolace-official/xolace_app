@@ -119,6 +119,46 @@ async function finalizeCompletion(
   );
 }
 
+/**
+ * Patch optional post-session enrichment (mood + peer-pool contribution) onto
+ * a session. Shared by `recordPostSessionFeedback` and the legacy inline-args
+ * path on `completePath`. `session` must be the pre-patch doc so the fresh
+ * opt-in guard sees the prior contribution state.
+ */
+async function applyPostSessionFeedback(
+  ctx: MutationCtx,
+  session: Doc<"sessions">,
+  feedback: {
+    contributedReflection?: boolean;
+    postSessionMood?: Doc<"sessions">["postSessionMood"];
+  },
+): Promise<void> {
+  await ctx.db.patch(session._id, {
+    ...(feedback.contributedReflection !== undefined
+      ? { contributedReflection: feedback.contributedReflection }
+      : {}),
+    ...(feedback.postSessionMood
+      ? { postSessionMood: feedback.postSessionMood }
+      : {}),
+    updatedAt: Date.now(),
+  });
+
+  // Schedule the anonymizer only on a fresh opt-in, so repeated feedback
+  // writes (or a re-tap) never double-contribute to the peer pool.
+  if (
+    feedback.contributedReflection &&
+    session.contributedReflection !== true
+  ) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.jobs.reflectionAnonymizer.anonymize,
+      {
+        sessionId: session._id,
+      },
+    );
+  }
+}
+
 // --- Public Mutations ---
 
 /**
@@ -299,9 +339,33 @@ export const completePath = mutation({
   args: {
     sessionId: v.id("sessions"),
     pathCompleted: v.boolean(),
+    // Deprecated — 1.6.x clients send post-session feedback inline; newer
+    // clients use `recordPostSessionFeedback`. Remove once old app versions
+    // age out of the store.
+    contributedReflection: v.optional(v.boolean()),
+    postSessionMood: v.optional(postSessionMoodValidator),
   },
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
+
+    const hasLegacyFeedback =
+      args.contributedReflection !== undefined ||
+      args.postSessionMood !== undefined;
+    const legacyFeedback = {
+      contributedReflection: args.contributedReflection,
+      postSessionMood: args.postSessionMood,
+    };
+
+    // Idempotent for already-completed sessions: the abandoned-session cron
+    // reconciles stranded path_selected / path_in_progress sessions to
+    // completed, and a 1.6.x client still sitting on session-end then retries
+    // completePath — that retry must not dead-end. Still honor its feedback.
+    if (session.state === "completed") {
+      if (hasLegacyFeedback) {
+        await applyPostSessionFeedback(ctx, session, legacyFeedback);
+      }
+      return null;
+    }
 
     if (
       session.state !== "path_in_progress" &&
@@ -316,6 +380,10 @@ export const completePath = mutation({
       session.state === "confirmed" ? false : args.pathCompleted;
 
     await finalizeCompletion(ctx, session, { pathCompleted });
+
+    if (hasLegacyFeedback) {
+      await applyPostSessionFeedback(ctx, session, legacyFeedback);
+    }
 
     return null;
   },
@@ -341,27 +409,10 @@ export const recordPostSessionFeedback = mutation({
       );
     }
 
-    await ctx.db.patch(args.sessionId, {
-      ...(args.contributedReflection !== undefined
-        ? { contributedReflection: args.contributedReflection }
-        : {}),
-      ...(args.postSessionMood
-        ? { postSessionMood: args.postSessionMood }
-        : {}),
-      updatedAt: Date.now(),
+    await applyPostSessionFeedback(ctx, session, {
+      contributedReflection: args.contributedReflection,
+      postSessionMood: args.postSessionMood,
     });
-
-    // Schedule the anonymizer only on a fresh opt-in, so repeated feedback
-    // writes (or a re-tap) never double-contribute to the peer pool.
-    if (args.contributedReflection && session.contributedReflection !== true) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.jobs.reflectionAnonymizer.anonymize,
-        {
-          sessionId: args.sessionId,
-        },
-      );
-    }
 
     return null;
   },

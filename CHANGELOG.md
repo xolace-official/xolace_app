@@ -19,7 +19,7 @@ All notable changes to Xolace are documented here.
 ### Backend
 
 - **`finalizeCompletion` (convex/sessions.ts)** — single source of truth for flipping a session terminal and firing the post-session job tail (profile stats update, Reflection Agent trigger, follow-up gate). Called from `completePath`, `completeSession`, and the abandoned-session reconciliation path.
-- **`recordPostSessionFeedback`** — new mutation for optional post-session mood/contribution, replacing the fields that used to live on `completePath`'s args.
+- **`recordPostSessionFeedback`** — new mutation for optional post-session mood/contribution, replacing the fields that used to live on `completePath`'s args. For backward compatibility, `completePath` still accepts `contributedReflection` / `postSessionMood` (deprecated) from 1.6.x store clients and applies them through the same guarded path, and is idempotent when the session is already `completed` (e.g. cron-reconciled) — so deploying this backend ahead of store review can't strand old clients on the session-end screen.
 - **`semantic_profiles` refactor** — `createVersion` reworked; new `updateTrajectory` supports both bootstrap and in-place patch, with the same wipe-guard as the trusted `createVersion` path. `emotional_profiles.lastConsolidationAt` tracks the consolidation gate; cleared by `dataWipe` alongside existing profile-version purging.
 - **Rate limits** for the light and consolidation passes, so the Reflection Agent can't be triggered into a runaway loop.
 - **`patternSummary` split** for targeted usage — the classifier and mirror generator now request differently-scoped summaries instead of sharing one general-purpose blob.
