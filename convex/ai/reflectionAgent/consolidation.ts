@@ -39,24 +39,35 @@ const MAX_TOKENS = 2048;
 export const consolidationWorkflow = workflow.define({
   args: { emotionalProfileId: v.id("emotional_profiles") },
   handler: async (step, args): Promise<void> => {
-    await step.runAction(
+    const wroteProfile: boolean = await step.runAction(
       internal.ai.reflectionAgent.consolidation.runConsolidation,
       { emotionalProfileId: args.emotionalProfileId },
       // Durable retry is the whole point of hosting this on a workflow.
       { retry: true },
     );
+    // Post-write side effects live in their own journaled step: once the
+    // action step has committed, a failure here retries only the mutation —
+    // it can never rerun the model loop and append a duplicate version.
+    if (wroteProfile) {
+      await step.runMutation(
+        internal.ai.reflectionAgent.consolidation.markConsolidated,
+        { emotionalProfileId: args.emotionalProfileId },
+      );
+    }
   },
 });
 
 /**
- * The custom tool-use loop. Runs the consolidation to terminal write, then
- * stamps lastConsolidationAt so the gate re-anchors. Best-effort throughout —
- * this is off the critical path; a failure retries via the workflow and never
- * touches a live mirror.
+ * The custom tool-use loop. Runs the consolidation to terminal write and
+ * reports whether it wrote; the workflow stamps lastConsolidationAt in a
+ * separate step so a post-write failure can't retry the loop. Best-effort
+ * throughout — this is off the critical path; a failure retries via the
+ * workflow and never touches a live mirror.
  */
 export const runConsolidation = internalAction({
   args: { emotionalProfileId: v.id("emotional_profiles") },
-  handler: async (ctx, args): Promise<void> => {
+  returns: v.boolean(),
+  handler: async (ctx, args): Promise<boolean> => {
     const anthropic = getAnthropicClient();
     const system = buildConsolidationSystemPrompt();
 
@@ -106,21 +117,12 @@ export const runConsolidation = internalAction({
       if (wroteProfile) break;
     }
 
-    if (wroteProfile) {
-      await ctx.runMutation(
-        internal.ai.reflectionAgent.consolidation.markConsolidated,
-        { emotionalProfileId: args.emotionalProfileId },
-      );
-      await posthog.capture(ctx, {
-        distinctId: args.emotionalProfileId,
-        event: "reflect_consolidation_written",
-        properties: { writerVersion: REFLECTION_CONSOLIDATION_VERSION },
-      });
-    } else {
+    if (!wroteProfile) {
       console.warn("[reflectionConsolidation] loop ended without a write", {
         emotionalProfileId: args.emotionalProfileId,
       });
     }
+    return wroteProfile;
   },
 });
 
@@ -133,6 +135,11 @@ export const markConsolidated = internalMutation({
     if (!profile || profile.dataWipeInProgress === true) return null;
     await ctx.db.patch(args.emotionalProfileId, {
       lastConsolidationAt: Date.now(),
+    });
+    await posthog.capture(ctx, {
+      distinctId: args.emotionalProfileId,
+      event: "reflect_consolidation_written",
+      properties: { writerVersion: REFLECTION_CONSOLIDATION_VERSION },
     });
     return null;
   },

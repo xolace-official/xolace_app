@@ -31,6 +31,7 @@ import type * as ai_reflectionAgent_consolidation from "../ai/reflectionAgent/co
 import type * as ai_reflectionAgent_toolQueries from "../ai/reflectionAgent/toolQueries.js";
 import type * as ai_reflectionAgent_tools from "../ai/reflectionAgent/tools.js";
 import type * as ai_reflectionAgent_trigger from "../ai/reflectionAgent/trigger.js";
+import type * as ai_reflectionAgent_triggerQueries from "../ai/reflectionAgent/triggerQueries.js";
 import type * as ai_safeguard from "../ai/safeguard.js";
 import type * as ai_slotFill from "../ai/slotFill.js";
 import type * as ai_tts from "../ai/tts.js";
@@ -119,6 +120,7 @@ declare const fullApi: ApiFromModules<{
   "ai/reflectionAgent/toolQueries": typeof ai_reflectionAgent_toolQueries;
   "ai/reflectionAgent/tools": typeof ai_reflectionAgent_tools;
   "ai/reflectionAgent/trigger": typeof ai_reflectionAgent_trigger;
+  "ai/reflectionAgent/triggerQueries": typeof ai_reflectionAgent_triggerQueries;
   "ai/safeguard": typeof ai_safeguard;
   "ai/slotFill": typeof ai_slotFill;
   "ai/tts": typeof ai_tts;
