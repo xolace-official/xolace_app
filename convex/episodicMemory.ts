@@ -7,7 +7,7 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
-import { rag } from "./rag";
+import { rag, NO_GRANULAR_LABEL, EPISODIC_STATUS } from "./rag";
 
 // =============================================================
 // EPISODIC MEMORY — per-session composite documents, semantically
@@ -147,11 +147,12 @@ export const ingestSession = internalAction({
       namespace: source.emotionalProfileId,
       key: args.sessionId,
       text: buildComposite(source),
+      // All three declared filters are required on every add (see rag.ts).
+      // status is inert here — personal memory search never filters on it.
       filterValues: [
         { name: "primaryEmotion", value: source.primaryEmotion },
-        ...(source.granularLabel
-          ? [{ name: "granularLabel", value: source.granularLabel }]
-          : []),
+        { name: "granularLabel", value: source.granularLabel ?? NO_GRANULAR_LABEL },
+        { name: "status", value: EPISODIC_STATUS },
       ],
     });
   },

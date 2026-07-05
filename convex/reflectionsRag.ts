@@ -7,7 +7,7 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
-import { rag, REFLECTION_POOL_NAMESPACE } from "./rag";
+import { rag, REFLECTION_POOL_NAMESPACE, NO_GRANULAR_LABEL } from "./rag";
 
 // =============================================================
 // REFLECTIONS RAG — embeds the anonymous peer pool and precomputes
@@ -68,11 +68,10 @@ export const ingestReflection = internalAction({
       namespace: REFLECTION_POOL_NAMESPACE,
       key: args.reflectionId,
       text: r.displayText,
+      // All three declared filters are required on every add (see rag.ts).
       filterValues: [
         { name: "primaryEmotion", value: r.primaryEmotion },
-        ...(r.granularLabel
-          ? [{ name: "granularLabel", value: r.granularLabel }]
-          : []),
+        { name: "granularLabel", value: r.granularLabel ?? NO_GRANULAR_LABEL },
         { name: "status", value: r.status },
       ],
     });

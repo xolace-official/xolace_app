@@ -24,9 +24,21 @@ import { components } from "./_generated/api";
 // filterNames declares which metadata fields can be filtered at
 // query time. They must be declared here up front — filtering on
 // an undeclared name throws.
+//
+// IMPORTANT (@convex-dev/rag 0.7.5): every declared filter name must be
+// supplied on EVERY rag.add() call, regardless of namespace — the package
+// validates presence, not a subset. Fields that don't apply to a given
+// namespace use the sentinels below. They are never used as query filters
+// in that namespace, so the stored value is inert; it only satisfies the
+// add-time contract.
 // =============================================================
 
 export const REFLECTION_POOL_NAMESPACE = "reflection-pool";
+
+// No granular label on this entry (personal + pool namespaces alike).
+export const NO_GRANULAR_LABEL = "";
+// Personal episodic memory never filters on status (a peer-pool concern).
+export const EPISODIC_STATUS = "n/a";
 
 export const rag = new RAG(components.rag, {
   textEmbeddingModel: openai.embedding("text-embedding-3-small"),
