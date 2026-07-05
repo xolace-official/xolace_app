@@ -199,6 +199,12 @@ export default defineSchema({
     // Agent writes the first version.
     currentSemanticProfileId: v.optional(v.id("semantic_profiles")),
 
+    // When the Reflection Agent's consolidation pass last ran. Set ONLY by
+    // that pass; anchors the activity gate (≥5 sessions OR ≥7 days since this
+    // point). Undefined → anchor on firstSessionAt ?? createdAt. Cleared by
+    // the data-wipe pipeline alongside currentSemanticProfileId.
+    lastConsolidationAt: v.optional(v.number()),
+
     // --- Timestamps ---
     createdAt: v.number(),
     updatedAt: v.number(),

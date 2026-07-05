@@ -41,4 +41,14 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // Product feedback (shake-summoned bug/idea tray) — shake submission is
   // easy to spam, so this guard is not optional. 10 per 24h per profile.
   productFeedback: { kind: "fixed window", rate: 10, period: DAY },
+
+  // Reflection Agent light pass (Cognition Layer Phase 3) — runs ~1/session.
+  // Token bucket ~12/hour, capacity 4: a pure runaway guard, generous enough
+  // that a normal burst of completions never drops a trajectory refresh.
+  reflectionLightPass: { kind: "token bucket", rate: 12, period: HOUR, capacity: 4 },
+
+  // Reflection Agent consolidation pass — the deep Sonnet tool loop. This is
+  // the per-user token budget (doc §3): ~4/day per profile. A global
+  // pool-ceiling bucket is a noted hardening TODO.
+  reflectionConsolidation: { kind: "fixed window", rate: 4, period: DAY },
 });

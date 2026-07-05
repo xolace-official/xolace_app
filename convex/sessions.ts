@@ -272,6 +272,16 @@ export const completePath = mutation({
         sessionId: args.sessionId,
       },
     );
+    // Reflection Agent (Cognition Layer Phase 3): light pass + consolidation
+    // gate. Off the critical path, best-effort, completion-only.
+    await ctx.scheduler.runAfter(
+      0,
+      internal.ai.reflectionAgent.trigger.onSessionComplete,
+      {
+        emotionalProfileId: session.emotionalProfileId,
+        sessionId: args.sessionId,
+      },
+    );
     if (args.contributedReflection) {
       await ctx.scheduler.runAfter(
         0,
@@ -325,6 +335,16 @@ export const completeSession = mutation({
     await ctx.scheduler.runAfter(
       0,
       internal.jobs.profileStats.updateAfterSession,
+      {
+        emotionalProfileId: session.emotionalProfileId,
+        sessionId: args.sessionId,
+      },
+    );
+    // Reflection Agent (Cognition Layer Phase 3): light pass + consolidation
+    // gate. Off the critical path, best-effort, completion-only.
+    await ctx.scheduler.runAfter(
+      0,
+      internal.ai.reflectionAgent.trigger.onSessionComplete,
       {
         emotionalProfileId: session.emotionalProfileId,
         sessionId: args.sessionId,
