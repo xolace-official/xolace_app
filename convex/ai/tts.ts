@@ -42,6 +42,7 @@ export const generateMirrorAudio = internalAction({
     }
 
     const voiceId = VOICE_MAP[args.mirrorTone] ?? VOICE_MAP.adaptive;
+    console.log("mirror ", args.mirrorText)
 
     let audioBuffer: ArrayBuffer;
     const controller = new AbortController();

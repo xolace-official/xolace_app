@@ -21,6 +21,7 @@ import type * as ai_prompts_articulator from "../ai/prompts/articulator.js";
 import type * as ai_prompts_classifier from "../ai/prompts/classifier.js";
 import type * as ai_prompts_distiller from "../ai/prompts/distiller.js";
 import type * as ai_prompts_followUpCardWriter from "../ai/prompts/followUpCardWriter.js";
+import type * as ai_prompts_mirrorAudioTags from "../ai/prompts/mirrorAudioTags.js";
 import type * as ai_prompts_notificationTemplates from "../ai/prompts/notificationTemplates.js";
 import type * as ai_prompts_notificationWriter from "../ai/prompts/notificationWriter.js";
 import type * as ai_prompts_reflectionConsolidation from "../ai/prompts/reflectionConsolidation.js";
@@ -116,6 +117,7 @@ declare const fullApi: ApiFromModules<{
   "ai/prompts/classifier": typeof ai_prompts_classifier;
   "ai/prompts/distiller": typeof ai_prompts_distiller;
   "ai/prompts/followUpCardWriter": typeof ai_prompts_followUpCardWriter;
+  "ai/prompts/mirrorAudioTags": typeof ai_prompts_mirrorAudioTags;
   "ai/prompts/notificationTemplates": typeof ai_prompts_notificationTemplates;
   "ai/prompts/notificationWriter": typeof ai_prompts_notificationWriter;
   "ai/prompts/reflectionConsolidation": typeof ai_prompts_reflectionConsolidation;
