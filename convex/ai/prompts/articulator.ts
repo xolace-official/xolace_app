@@ -4,6 +4,7 @@
 
 import type { ClassificationResult } from "../providers/anthropic";
 import type { ClaimStrength } from "../routing";
+import { AUDIO_TAG_INSTRUCTIONS } from "./mirrorAudioTags";
 
 interface ArticulatorInput {
   rawInput: string;
@@ -33,6 +34,9 @@ interface ArticulatorInput {
   // Top-K episodic matches for the current input — past composites
   // (their words + the mirror) semantically close to what they wrote now.
   episodicRecall?: string[];
+  // Xolace+ perk: bake ElevenLabs audio tags into the mirror for a more
+  // expressive read. Gated on isPremium only — applies across all tones.
+  useAudioTags?: boolean;
 }
 
 /**
@@ -73,6 +77,7 @@ export function buildArticulatorPrompt(
     semanticProfile,
     episodicRecall,
     claimStrength,
+    useAudioTags,
   } = input;
 
   const toneInstructions = getToneInstructions(mirrorTone);
@@ -121,7 +126,7 @@ ${sessionMode === "night" ? getLateNightAddendum() : ""}
 ## Pattern Context (this is the emotional terrain they tend to carry, let it actively shape what you notice and how precisely you name it; never reference past sessions explicitly)
 ${patternSummary}
 ${buildMemoryContext(semanticProfile, episodicRecall)}
-${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}`;
+${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}${useAudioTags ? `\n${AUDIO_TAG_INSTRUCTIONS}` : ""}`;
 
   const user = rawInput;
 

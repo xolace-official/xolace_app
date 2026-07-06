@@ -10,6 +10,7 @@ import {
   ARTICULATOR_VERSION,
 } from "./providers/anthropic";
 import { buildArticulatorPrompt } from "./prompts/articulator";
+import { stripAudioTags } from "./prompts/mirrorAudioTags";
 import { routeUncertainty } from "./routing";
 import {
   buildArticulatorPatternSummary,
@@ -92,7 +93,12 @@ export const handleClarification = internalAction({
       const userFeedback = currentTurn?.userFeedback as string | undefined;
 
       // 4. Build articulator prompt with refinement context
-      const mirrorTone = context.preferences?.mirrorTone ?? "adaptive";
+      const rawMirrorTone = context.preferences?.mirrorTone ?? "adaptive";
+      // Real fence: same downgrade guard as the initial mirror (process.ts).
+      const mirrorTone =
+        rawMirrorTone === "witnessed" && !context.isPremium
+          ? "adaptive"
+          : rawMirrorTone;
       // Clarify only re-articulates, so it uses the slim articulator variant.
       const patternSummary = buildArticulatorPatternSummary({
         recentMetadata: context.recentMetadata,
@@ -147,6 +153,7 @@ export const handleClarification = internalAction({
         // refinement is grounded in who this person is, matching process.ts.
         semanticProfile: context.semanticProfile,
         claimStrength,
+        useAudioTags: context.isPremium,
       });
 
       // 5. Call Sonnet for revised mirror
@@ -167,6 +174,12 @@ export const handleClarification = internalAction({
         }
       } catch {
         revisedMirrorText = FALLBACK_MIRROR;
+      }
+
+      // Xolace+ audio tags live only in the TTS input (see process.ts).
+      const ttsMirrorText = revisedMirrorText;
+      if (context.isPremium && revisedMirrorText !== FALLBACK_MIRROR) {
+        revisedMirrorText = stripAudioTags(revisedMirrorText);
       }
 
       // 6. Update the turn record with the revised mirror
@@ -215,7 +228,7 @@ export const handleClarification = internalAction({
       if (revisedMirrorText !== FALLBACK_MIRROR) {
         await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
           sessionId: args.sessionId,
-          mirrorText: revisedMirrorText,
+          mirrorText: ttsMirrorText,
           mirrorTone: mirrorTone as
             | "poetic"
             | "gentle"

@@ -4,6 +4,7 @@ import { requireAuth } from "./lib/auth";
 import { mirrorToneValidator } from "./lib/validators";
 import { validateSpaceName } from "./lib/spaceName";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
+import { requirePremium } from "./lib/premium";
 
 /**
  * Get the user's quote preferences (themes, notification settings).
@@ -157,6 +158,10 @@ export const update = mutation({
 
     if (!preferences) {
       throw new Error("Preferences not found");
+    }
+
+    if (args.mirrorTone === "witnessed") {
+      await requirePremium(ctx, profile, "witnessed mirror tone");
     }
 
     // Build patch from provided args only

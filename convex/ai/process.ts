@@ -14,6 +14,7 @@ import { moderationCache, classifierCache } from "./cached";
 import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt } from "./prompts/articulator";
+import { stripAudioTags } from "./prompts/mirrorAudioTags";
 import { evaluateSafeguard } from "./safeguard";
 import { routeUncertainty } from "./routing";
 import {
@@ -91,7 +92,13 @@ export const generateMirror = internalAction({
       //    the full variant (its only historical context); the articulator
       //    gets the slim emotion-signal variant — longitudinal identity
       //    reaches it via the semantic profile block instead.
-      const mirrorTone = context.preferences?.mirrorTone ?? "adaptive";
+      const rawMirrorTone = context.preferences?.mirrorTone ?? "adaptive";
+      // Real fence: a witnessed preference set before a downgrade must not
+      // keep granting the premium tone after entitlement lapses.
+      const mirrorTone =
+        rawMirrorTone === "witnessed" && !context.isPremium
+          ? "adaptive"
+          : rawMirrorTone;
       const patternSummary = buildPatternSummary({
         profile: context.profile,
         recentMetadata: context.recentMetadata,
@@ -205,6 +212,7 @@ export const generateMirror = internalAction({
           semanticProfile: context.semanticProfile,
           episodicRecall,
           claimStrength,
+          useAudioTags: context.isPremium,
         });
 
         const mirrorResponse = await anthropic.messages.create({
@@ -223,6 +231,14 @@ export const generateMirror = internalAction({
       } catch {
         // Articulation failed — deliver fallback but still store classification
         mirrorText = FALLBACK_MIRROR;
+      }
+
+      // Xolace+ audio tags (when applied) live only in the TTS input — the
+      // stored/displayed mirror, recentMirrors, and pattern context all read
+      // the stripped text so a tag never leaks into anything but speech.
+      const ttsMirrorText = mirrorText;
+      if (context.isPremium && mirrorText !== FALLBACK_MIRROR) {
+        mirrorText = stripAudioTags(mirrorText);
       }
 
       // 7. Deliver mirror (include escalation flag atomically so the
@@ -275,7 +291,7 @@ export const generateMirror = internalAction({
       if (mirrorText !== FALLBACK_MIRROR) {
         await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
           sessionId: args.sessionId,
-          mirrorText,
+          mirrorText: ttsMirrorText,
           mirrorTone: mirrorTone as
             | "poetic"
             | "gentle"

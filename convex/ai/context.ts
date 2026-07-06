@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalQuery } from "../_generated/server";
 import { renderSemanticProfile } from "../semanticProfiles";
+import { hasPremium } from "../lib/premium";
 
 /** Canonical return type of buildSessionContext. */
 export interface SessionContext {
@@ -42,6 +43,9 @@ export interface SessionContext {
   // Null until the Reflection Agent writes the first version.
   semanticProfile: string | null;
   semanticProfileVersion: number | null;
+  // Xolace+ entitlement — the real fence for tone-gated behavior (mirrorTone
+  // preference alone isn't trustworthy after a downgrade).
+  isPremium: boolean;
 }
 
 /**
@@ -148,6 +152,7 @@ export const buildSessionContext = internalQuery({
         ? renderSemanticProfile(semanticProfileDoc)
         : null,
       semanticProfileVersion: semanticProfileDoc?.version ?? null,
+      isPremium: await hasPremium(ctx, profile),
     };
   },
 });
