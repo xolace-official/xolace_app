@@ -199,16 +199,25 @@ export const applyMemoryFeedback = internalAction({
     for (const key of args.matchedKeys) {
       // Keys are episodic RAG keys, which are sessionIds by construction.
       const sessionId = key as Id<"sessions">;
-      const { changed } = await ctx.runMutation(
-        internal.emotionalMetadata.adjustEpisodicImportance,
-        { sessionId, feedback },
-      );
-      // Only pay the re-embed when the weight actually changed (skips no-ops
-      // and memories already clamped at a floor/ceiling).
-      if (changed) {
-        await ctx.runAction(internal.episodicMemory.ingestSession, {
-          sessionId,
-        });
+      // Isolate each memory: a failure on one (adjust or re-embed) must not
+      // block feedback from landing on the remaining matched memories.
+      try {
+        const { changed } = await ctx.runMutation(
+          internal.emotionalMetadata.adjustEpisodicImportance,
+          { sessionId, feedback },
+        );
+        // Only pay the re-embed when the weight actually changed (skips no-ops
+        // and memories already clamped at a floor/ceiling).
+        if (changed) {
+          await ctx.runAction(internal.episodicMemory.ingestSession, {
+            sessionId,
+          });
+        }
+      } catch (error) {
+        console.error(
+          `[applyMemoryFeedback] failed for session ${sessionId}:`,
+          error,
+        );
       }
     }
   },

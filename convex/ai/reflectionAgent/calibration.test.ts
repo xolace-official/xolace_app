@@ -3,7 +3,7 @@ import {
   computeCalibration,
   deriveCalibrationSignals,
   type CalibrationSignals,
-} from "./calibration";
+} from "./calibrationSignals";
 
 /** A signal with no evidence — every derivation should stay silent. */
 const empty: CalibrationSignals = {
