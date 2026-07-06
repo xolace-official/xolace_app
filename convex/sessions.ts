@@ -605,6 +605,9 @@ export const listByProfile = query({
   },
 });
 
+// Free tier sees the last 30 days of timeline history; Plus sees everything.
+const FREE_TIMELINE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
 /**
  * Paginated timeline entries enriched with emotional metadata.
  * Only returns sessions that have a mirror (meaningful to display).
@@ -615,11 +618,17 @@ export const listForTimeline = query({
   },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+    const isPremium = await hasPremium(ctx, profile);
+    const windowStart = isPremium ? null : Date.now() - FREE_TIMELINE_WINDOW_MS;
 
     const result = await ctx.db
       .query("sessions")
       .withIndex("by_profile_time", (q) =>
-        q.eq("emotionalProfileId", profile._id),
+        windowStart === null
+          ? q.eq("emotionalProfileId", profile._id)
+          : q
+              .eq("emotionalProfileId", profile._id)
+              .gte("createdAt", windowStart),
       )
       .order("desc")
       .paginate(args.paginationOpts);
