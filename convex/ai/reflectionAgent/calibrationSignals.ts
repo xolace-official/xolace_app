@@ -17,6 +17,22 @@ const MIN_TONE_SAMPLE = 3;
 const MIN_LENGTH_SAMPLE = 3;
 const MIN_MOOD_SAMPLE = 5;
 
+// Directive thresholds — the tuning knobs for what each branch asserts.
+// Confirm rate: at/above HIGH the first mirror reliably lands; at/below LOW it
+// reliably misses. Between them, stay quiet.
+const HIGH_CONFIRM_RATE = 0.7;
+const LOW_CONFIRM_RATE = 0.4;
+// Median landed length vs missed: below SHORTER → prefers tighter mirrors;
+// above LONGER → prefers fuller ones.
+const SHORTER_LENGTH_RATIO = 0.85;
+const LONGER_LENGTH_RATIO = 1.15;
+// Minimum confirm-rate gap between the top two tones to name a favourite.
+const TONE_GAP = 0.2;
+// Post-session mood: at/above LIGHTER → sessions usually lift; at/above HEAVIER
+// → they don't reliably lift, so favour accompaniment.
+const LIGHTER_MOOD_RATIO = 0.5;
+const HEAVIER_MOOD_RATIO = 0.4;
+
 type Outcome = "confirmed" | "refined" | "gave_up";
 
 /** The raw statistical signal calibration is computed from. */
@@ -103,11 +119,11 @@ export function computeCalibration(signals: CalibrationSignals): string | null {
 
   // 1. How readily the first mirror lands → claim strength.
   const confirmRate = confirmed / total;
-  if (confirmRate >= 0.7) {
+  if (confirmRate >= HIGH_CONFIRM_RATE) {
     lines.push(
       "Their first read usually lands. Trust a precise, confident mirror over a hedged one.",
     );
-  } else if (confirmRate <= 0.4) {
+  } else if (confirmRate <= LOW_CONFIRM_RATE) {
     lines.push(
       "The first mirror often misses. Leave a little room and let the phrasing invite correction rather than claim certainty.",
     );
@@ -120,9 +136,9 @@ export function computeCalibration(signals: CalibrationSignals): string | null {
   ) {
     const landed = median(signals.lengthConfirmed);
     const missed = median(signals.lengthMissed);
-    if (landed < missed * 0.85) {
+    if (landed < missed * SHORTER_LENGTH_RATIO) {
       lines.push("Shorter mirrors land better for them. Keep it tight.");
-    } else if (landed > missed * 1.15) {
+    } else if (landed > missed * LONGER_LENGTH_RATIO) {
       lines.push(
         "They respond to fuller mirrors with more room, not one-liners.",
       );
@@ -139,7 +155,7 @@ export function computeCalibration(signals: CalibrationSignals): string | null {
       .map(([tone, s]) => ({ tone, rate: s.confirmed / s.total }))
       .sort((a, b) => b.rate - a.rate);
     const [best, next] = ranked;
-    if (best.rate - next.rate >= 0.2) {
+    if (best.rate - next.rate >= TONE_GAP) {
       lines.push(`The ${best.tone} register tends to land best with them.`);
     }
   }
@@ -148,9 +164,9 @@ export function computeCalibration(signals: CalibrationSignals): string | null {
   const moodTotal =
     signals.mood.lighter + signals.mood.same + signals.mood.heavier;
   if (moodTotal >= MIN_MOOD_SAMPLE) {
-    if (signals.mood.lighter / moodTotal >= 0.5) {
+    if (signals.mood.lighter / moodTotal >= LIGHTER_MOOD_RATIO) {
       lines.push("Sessions usually leave them lighter.");
-    } else if (signals.mood.heavier / moodTotal >= 0.4) {
+    } else if (signals.mood.heavier / moodTotal >= HEAVIER_MOOD_RATIO) {
       lines.push(
         "Sessions don't reliably lift the weight; stay with them rather than trying to resolve it.",
       );
