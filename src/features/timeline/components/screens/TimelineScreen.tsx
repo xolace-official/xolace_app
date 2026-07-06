@@ -4,6 +4,7 @@ import { useObserve } from "expo-observe";
 import { LegendList } from "@legendapp/list/react-native";
 import { TimelineEntryCard } from "@/src/features/timeline/components/timeline-entry-card";
 import { TimelineSectionHeader } from "@/src/features/timeline/components/timeline-section-header";
+import { TimelineUpgradeBanner } from "@/src/features/timeline/components/timeline-upgrade-banner";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTimeline } from "@/src/features/timeline/hooks/use-timeline";
 import type { TimelineFlatItem } from "@/src/features/timeline/types";
@@ -29,6 +30,7 @@ const getEstimatedItemSize = (item: TimelineFlatItem) =>
 
 const styles = StyleSheet.create({
   listContent: { paddingBottom: 40 },
+  listContentWithNudge: { paddingBottom: 100 },
   footerLoader: { paddingVertical: 20 },
 });
 
@@ -43,8 +45,14 @@ const EmptyState = () => (
 const LoadingFooter = () => <ActivityIndicator style={styles.footerLoader} />;
 
 export const TimelineScreen = () => {
-  const { sections, isLoading, canLoadMore, isLoadingMore, loadMore } =
-    useTimeline();
+  const {
+    sections,
+    isLoading,
+    canLoadMore,
+    isLoadingMore,
+    loadMore,
+    showUpgradeNudge,
+  } = useTimeline();
   const { markInteractive } = useObserve();
 
   // Per-route TTI for /timeline: ready once the first page resolves, not at
@@ -59,21 +67,26 @@ export const TimelineScreen = () => {
   }
 
   return (
-    <LegendList
-      data={sections}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      getEstimatedItemSize={getEstimatedItemSize}
-      estimatedItemSize={100}
-      recycleItems
-      getItemType={(item) => item.type}
-      onEndReached={canLoadMore ? loadMore : undefined}
-      onEndReachedThreshold={0.4}
-      contentInsetAdjustmentBehavior="automatic"
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.listContent}
-      ListEmptyComponent={EmptyState}
-      ListFooterComponent={isLoadingMore ? LoadingFooter : undefined}
-    />
+    <View className="flex-1">
+      <LegendList
+        data={sections}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        getEstimatedItemSize={getEstimatedItemSize}
+        estimatedItemSize={100}
+        recycleItems
+        getItemType={(item) => item.type}
+        onEndReached={canLoadMore ? loadMore : undefined}
+        onEndReachedThreshold={0.4}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={
+          showUpgradeNudge ? styles.listContentWithNudge : styles.listContent
+        }
+        ListEmptyComponent={EmptyState}
+        ListFooterComponent={isLoadingMore ? LoadingFooter : undefined}
+      />
+      {showUpgradeNudge && <TimelineUpgradeBanner />}
+    </View>
   );
 };

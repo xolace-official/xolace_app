@@ -29,6 +29,7 @@ import type * as ai_providers_anthropic from "../ai/providers/anthropic.js";
 import type * as ai_providers_moderation from "../ai/providers/moderation.js";
 import type * as ai_quotesDistiller from "../ai/quotesDistiller.js";
 import type * as ai_reflectionAgent_calibration from "../ai/reflectionAgent/calibration.js";
+import type * as ai_reflectionAgent_calibrationSignals from "../ai/reflectionAgent/calibrationSignals.js";
 import type * as ai_reflectionAgent_consolidation from "../ai/reflectionAgent/consolidation.js";
 import type * as ai_reflectionAgent_toolQueries from "../ai/reflectionAgent/toolQueries.js";
 import type * as ai_reflectionAgent_tools from "../ai/reflectionAgent/tools.js";
@@ -123,6 +124,7 @@ declare const fullApi: ApiFromModules<{
   "ai/providers/moderation": typeof ai_providers_moderation;
   "ai/quotesDistiller": typeof ai_quotesDistiller;
   "ai/reflectionAgent/calibration": typeof ai_reflectionAgent_calibration;
+  "ai/reflectionAgent/calibrationSignals": typeof ai_reflectionAgent_calibrationSignals;
   "ai/reflectionAgent/consolidation": typeof ai_reflectionAgent_consolidation;
   "ai/reflectionAgent/toolQueries": typeof ai_reflectionAgent_toolQueries;
   "ai/reflectionAgent/tools": typeof ai_reflectionAgent_tools;

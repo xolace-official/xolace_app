@@ -1,4 +1,4 @@
-import { usePaginatedQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { buildTimelineSections } from "@/src/features/timeline/utils";
 import type { TimelineEntry } from "@/src/features/timeline/types";
@@ -15,6 +15,7 @@ const PAGE_SIZE = 15;
  * - `canLoadMore` — `true` when additional pages are available to load, `false` otherwise.
  * - `isLoadingMore` — `true` while additional pages are being fetched, `false` otherwise.
  * - `loadMore` — Function that requests the next page of items.
+ * - `showUpgradeNudge` — `true` once the free-tier window is exhausted and older sessions exist.
  */
 export function useTimeline() {
   const { results, status, loadMore } = usePaginatedQuery(
@@ -22,6 +23,7 @@ export function useTimeline() {
     {},
     { initialNumItems: PAGE_SIZE },
   );
+  const windowInfo = useQuery(api.sessions.getTimelineWindowInfo);
 
   const isLoading = status === "LoadingFirstPage";
 
@@ -45,5 +47,6 @@ export function useTimeline() {
     canLoadMore: status === "CanLoadMore",
     isLoadingMore: status === "LoadingMore",
     loadMore: () => loadMore(PAGE_SIZE),
+    showUpgradeNudge: status === "Exhausted" && windowInfo?.hasOlderSessions === true,
   };
 }
