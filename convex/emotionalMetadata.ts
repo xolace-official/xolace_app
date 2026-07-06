@@ -5,6 +5,7 @@ import {
   safeguardLevelValidator,
   triggerTypeValidator,
 } from "./lib/validators";
+import { adjustImportance, DEFAULT_IMPORTANCE } from "./episodicImportance";
 
 /**
  * AI stores the emotional classification for a session.
@@ -56,6 +57,44 @@ export const store = internalMutation({
       ...args,
       createdAt: Date.now(),
     });
+  },
+});
+
+/**
+ * Phase 4, Loop #3 — nudge one memory's salience weight from confirmation
+ * feedback. Cheap and transactional: reads the current weight, applies the
+ * bump/decay, patches. Returns whether the weight actually moved so the
+ * caller can skip the (expensive) re-embed on a no-op or missing row.
+ * `feedback` is a terminal confirmationState; only "confirmed"/"gave_up"
+ * move the weight (see episodicImportance.ts).
+ */
+export const adjustEpisodicImportance = internalMutation({
+  args: {
+    sessionId: v.id("sessions"),
+    feedback: v.union(
+      v.literal("confirmed"),
+      v.literal("refined"),
+      v.literal("gave_up"),
+      v.literal("abandoned"),
+    ),
+  },
+  handler: async (ctx, args): Promise<{ changed: boolean }> => {
+    const metadata = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+    // No Understanding row → this memory was never classified/embedded.
+    if (!metadata) return { changed: false };
+
+    // Compare against the effective current weight (undefined = default), so a
+    // neutral nudge or one already clamped at a boundary writes nothing and
+    // skips the caller's re-embed.
+    const current = metadata.episodicImportance ?? DEFAULT_IMPORTANCE;
+    const next = adjustImportance(metadata.episodicImportance, args.feedback);
+    if (next === current) return { changed: false };
+
+    await ctx.db.patch(metadata._id, { episodicImportance: next });
+    return { changed: true };
   },
 });
 

@@ -259,6 +259,24 @@ export const confirmMirror = mutation({
       updatedAt: Date.now(),
     });
 
+    // Phase 4, Loop #3 — memory relevance feedback. This is the single
+    // terminal confirmation write (the state guard above makes it fire once),
+    // so it's the clean place to reward/penalize the episodic memories that
+    // informed this mirror. Off the hot path via the scheduler; the tap
+    // returns immediately and the re-embed happens in the background.
+    const metadata = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+    const matchedKeys = metadata?.episodicMatchKeys ?? [];
+    if (matchedKeys.length > 0) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.episodicMemory.applyMemoryFeedback,
+        { matchedKeys, feedback: args.confirmationState },
+      );
+    }
+
     return null;
   },
 });

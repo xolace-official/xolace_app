@@ -3,6 +3,7 @@
  */
 
 import type { ClassificationResult } from "../providers/anthropic";
+import type { ClaimStrength } from "../routing";
 
 interface ArticulatorInput {
   rawInput: string;
@@ -10,6 +11,9 @@ interface ArticulatorInput {
   patternSummary: string;
   safeguardLevel: "none" | "gentle" | "elevated" | "crisis";
   mirrorTone: string;
+  // Uncertainty routing (Phase 4, Loop #2): deterministic claim-strength gate
+  // derived from confidence × specificity. Omitted → "measured" (normal path).
+  claimStrength?: ClaimStrength;
   isFirstSession: boolean;
   recentMirrors: string[];
   entryType?: string;
@@ -68,9 +72,11 @@ export function buildArticulatorPrompt(
     spaceName,
     semanticProfile,
     episodicRecall,
+    claimStrength,
   } = input;
 
   const toneInstructions = getToneInstructions(mirrorTone);
+  const claimStrengthInstructions = getClaimStrengthInstructions(claimStrength);
   const safeguardInstructions = getSafeguardInstructions(safeguardLevel);
   const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
   const entryTypeInstructions = getEntryTypeInstructions(entryType);
@@ -103,7 +109,7 @@ In some rare cases you can give acknowledgement as part of the mirror but only i
 ${toneInstructions}
 
 ## Intensity × Specificity
-${getIntensitySpecificityGuidance(classification.intensity, classification.specificity)}
+${getIntensitySpecificityGuidance(classification.intensity, classification.specificity)}${claimStrengthInstructions}
 ${entryTypeInstructions}
 ## Classification Context
 Primary: ${classification.primaryEmotion} (${classification.primaryEmotionConfidence.toFixed(2)})${classification.granularLabel ? ` → ${classification.granularLabel}` : ""}${classification.secondaryEmotion ? `\nUnderneath: ${classification.secondaryEmotion}` : ""}
@@ -245,6 +251,33 @@ function getIntensitySpecificityGuidance(intensity: number, specificity: number)
     return "Low intensity, high specificity: observational and reflective. Match their measured tone.";
   }
   return "Low intensity, low specificity: light and curious. Something is there but hasn't announced itself yet.";
+}
+
+/**
+ * Uncertainty routing (Phase 4, Loop #2): shape the mirror's CLAIM STRENGTH
+ * from how sure the classifier was about tonight's read. Distinct axis from
+ * Intensity × Specificity (which governs depth): this governs certainty. Only
+ * the confident/tentative poles emit guidance; "measured" is the normal path
+ * and says nothing so the base rules stand.
+ *
+ * Composes with the profile's longitudinal "what lands" calibration: that is
+ * the prior about this person, this is the evidence about this moment.
+ */
+function getClaimStrengthInstructions(claimStrength?: ClaimStrength): string {
+  switch (claimStrength) {
+    case "tentative":
+      return `
+## Claim Strength: Tentative
+The read on this one is genuinely uncertain (the signal is faint and unformed). Offer the mirror as a naming that leaves room to be wrong, not an assertion. Reach toward the feeling rather than pinning it, and make it easy for them to say "not quite" and correct you. Do not hedge into vagueness; be specific, just held loosely.
+`;
+    case "confident":
+      return `
+## Claim Strength: Confident
+The read here is clear and well-formed. Trust it. Name the feeling precisely and directly, no hedging, no softening qualifiers. This is where a sharp, sure mirror lands hardest.
+`;
+    default:
+      return "";
+  }
 }
 
 /**

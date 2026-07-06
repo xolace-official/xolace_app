@@ -750,6 +750,17 @@ export default defineSchema({
     // bump these memories' importance; "not quite" decays them).
     episodicMatchKeys: v.optional(v.array(v.string())),
 
+    // Phase 4, Loop #3 — memory relevance feedback. The running salience
+    // weight (0.2–1) for THIS session AS an episodic memory, and the source
+    // of truth mirrored into the RAG vector's native `importance`. When a
+    // LATER session's mirror lands with this one in its episodicMatchKeys,
+    // this weight is bumped; when that mirror is given up on, it decays.
+    // Undefined = never adjusted = the default weight of 1. Stored here
+    // (not just in the vector) because @convex-dev/rag has no in-place
+    // importance setter — every change re-embeds, so we need a cheap,
+    // transactional source of truth that survives re-ingestion.
+    episodicImportance: v.optional(v.number()),
+
     // Which semantic profile version was in the articulator's context.
     // Enables "confirmation rate dropped after profile v14" attribution
     // and reconstructing exactly what the system believed at this moment.

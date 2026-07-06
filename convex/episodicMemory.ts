@@ -8,6 +8,11 @@ import {
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { rag, NO_GRANULAR_LABEL, EPISODIC_STATUS } from "./rag";
+import {
+  DEFAULT_IMPORTANCE,
+  isActionableFeedback,
+  type MemoryFeedback,
+} from "./episodicImportance";
 
 // =============================================================
 // EPISODIC MEMORY — per-session composite documents, semantically
@@ -42,6 +47,9 @@ interface EpisodicSource {
   primaryEmotion: string;
   granularLabel: string | null;
   metadataOnly: boolean;
+  // Learned salience weight (Loop #3), mirrored into the RAG vector's
+  // native importance so re-ingestion preserves it instead of resetting to 1.
+  importance: number;
 }
 
 /** Concatenate the composite document for embedding. */
@@ -114,6 +122,7 @@ export const getSessionForEpisodic = internalQuery({
       primaryEmotion: metadata.primaryEmotion,
       granularLabel: metadata.granularLabel ?? null,
       metadataOnly: isCrisis || !personalMemoryEnabled,
+      importance: metadata.episodicImportance ?? DEFAULT_IMPORTANCE,
     };
   },
 });
@@ -147,6 +156,9 @@ export const ingestSession = internalAction({
       namespace: source.emotionalProfileId,
       key: args.sessionId,
       text: buildComposite(source),
+      // Learned salience (Loop #3). Default 1 until feedback moves it; passed
+      // on every (re-)ingest so a re-embed never resets an adjusted weight.
+      importance: source.importance,
       // All three declared filters are required on every add (see rag.ts).
       // status is inert here — personal memory search never filters on it.
       filterValues: [
@@ -155,6 +167,59 @@ export const ingestSession = internalAction({
         { name: "status", value: EPISODIC_STATUS },
       ],
     });
+  },
+});
+
+/**
+ * Phase 4, Loop #3 — apply confirmation feedback to the episodic memories
+ * that informed a mirror. For each matched memory: nudge its stored weight
+ * (cheap, transactional) and, only if it actually moved, re-embed so the new
+ * importance reaches the RAG vector. Runs OFF the hot path (scheduled from
+ * confirmMirror) — the user's confirmation tap never waits on an embed.
+ *
+ * @convex-dev/rag has no in-place importance setter, so "apply the weight"
+ * IS a re-ingest (ingestSession re-checks eligibility and re-embeds with the
+ * new weight). K is small (≈3 matches), so the cost is bounded per landing.
+ */
+export const applyMemoryFeedback = internalAction({
+  args: {
+    matchedKeys: v.array(v.string()),
+    feedback: v.union(
+      v.literal("confirmed"),
+      v.literal("refined"),
+      v.literal("gave_up"),
+      v.literal("abandoned"),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const feedback = args.feedback as MemoryFeedback;
+    // Neutral states never move a weight — nothing to schedule.
+    if (!isActionableFeedback(feedback)) return;
+
+    for (const key of args.matchedKeys) {
+      // Keys are episodic RAG keys, which are sessionIds by construction.
+      const sessionId = key as Id<"sessions">;
+      // Isolate each memory: a failure on one (adjust or re-embed) must not
+      // block feedback from landing on the remaining matched memories.
+      try {
+        const { changed } = await ctx.runMutation(
+          internal.emotionalMetadata.adjustEpisodicImportance,
+          { sessionId, feedback },
+        );
+        // Only pay the re-embed when the weight actually changed (skips no-ops
+        // and memories already clamped at a floor/ceiling).
+        if (changed) {
+          await ctx.runAction(internal.episodicMemory.ingestSession, {
+            sessionId,
+          });
+        }
+      } catch (error) {
+        console.error(
+          `[applyMemoryFeedback] failed for session ${sessionId}:`,
+          error,
+        );
+      }
+    }
   },
 });
 
