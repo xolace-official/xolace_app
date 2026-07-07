@@ -155,6 +155,21 @@ justified only for genuinely new signal (new modality or new artifact type),
 and all model calls live under `convex/ai/`. See
 `docs/cognition-layer-architecture.md`.
 
+## Deferred Deprecations (Store-Gap Rule)
+
+Backend deploys before app store review clears, so a new backend runs against
+the old shipped UI for days. Never delete a server function, field, or arg the
+minimum-supported UI may still call. Instead mark, don't delete:
+
+- Add JSDoc `@deprecated` + a marker comment:
+  `// DEPRECATED(remove-after: app >= X.Y.Z): <reason + what replaces it>`
+- Add a line to the Pending Deprecations ledger below.
+- Delete only once the store-published minimum supported version no longer
+  references it.
+
+**Pending Deprecations**
+- (none yet)
+
 ## Quick Reference
 
 ### New Function Syntax (always use this)
