@@ -462,3 +462,17 @@ Verify on simulator by running a full session through the bridge path and confir
 **Effort:** S (CC ~30min incl. simulator verification)
 **Priority:** P3 — not blocking; normal flow works, only the bridge path misses
 **Depends on:** Nothing
+
+---
+
+## P3 — Follow-up card: Episodic RAG context
+
+**What:** Add top-K episodic memory retrieval (RAG over past reflections) as a third input to the follow-up card writer, alongside Understanding (`getUnderstanding`) and the semantic profile (Memory) it already uses.
+
+**Why:** Deferred out of v1 of the follow-up card's Cognition Layer transition (Understanding hygiene + semantic-profile continuity line, gated off for acute tier). The confirmed mirror text is already the moment being followed up on, so top-K episodic retrieval adds little for a same-day/next-day check-in — this mirrors the same call made for the quotes-generator Cognition Layer transition. Revisit only if follow-up cards need to reference specific past sessions beyond what the semantic profile's rolled-up trajectory already captures.
+
+**Key files:** `convex/followUps.ts` (`startFollowUpWorkflow`), `convex/ai/prompts/followUpCardWriter.ts` (`FollowUpCardContext`)
+
+**Effort:** M (CC ~30min, depends on existing episodic RAG infra maturity)
+**Priority:** P3 — revisit only if semantic-profile continuity proves insufficient
+**Depends on:** Nothing blocking; purely a "revisit if" item
