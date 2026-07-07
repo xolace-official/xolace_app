@@ -113,8 +113,8 @@ Steps 1–2 are OTA-safe. Steps 3–4 require Convex deploy (not OTA). Steps 6�
 | Server-side gate | `convex-revenuecat` webhook component | Never trust client claims for gated server data |
 | Tier name | Xolace+ | Not "Premium" — product identity |
 | Entitlement ID | `xolace-plus` | Matches tier name, used in `hasEntitlement()` |
-| Hero price | $44.99/yr with 7-day trial (annual) | Annual cohort retention structurally better than monthly |
-| Monthly price | $9.99/mo (raised from $7.99) | Churny cohort — capture more before they leave; widens annual discount to ~62% |
+| Hero price | $49.99/yr with 7-day trial (annual) | Annual cohort retention structurally better than monthly |
+| Monthly price | $9.99/mo (raised from $7.99) | Churny cohort — capture more before they leave; widens annual discount to ~58% |
 | Early-bird | Time-boxed `founding` Offering at launch | FOMO lift; anchor protected by struck-through list price + hard window |
 | Insight-data gate | ≥ 5 sessions (lowered from 10) | Enough emotional variance for a real first map; 10 gated only the deepest cohort |
 | Paywall surfaces | 3 — profile row + locked features (both from session 1) + insight gate (≥5) | Don't block eager payers; meet expressed intent wherever it appears |

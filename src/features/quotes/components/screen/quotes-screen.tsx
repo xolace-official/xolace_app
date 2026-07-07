@@ -26,6 +26,7 @@ import { QuoteLoadingAndError } from "@/src/features/quotes/components/quote-loa
 import { useQuoteNotifications } from "@/src/features/quotes/hooks/use-quote-notifications";
 import { useQuoteSharing } from "@/src/features/quotes/hooks/use-quote-sharing";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { Presets } from "react-native-pulsar";
 import { StatusBar } from "expo-status-bar";
 
@@ -55,15 +56,18 @@ export function QuotesScreen() {
   const clearReaction = useMutation(api.dailyQuotes.clearReaction);
 
   const { state: notifState, scheduleNotification } = useQuoteNotifications();
+  const openPaywall = usePaywall((s) => s.open);
 
   const [isManualColdStarting, setIsManualColdStarting] = useState(false);
   const [coldStartError, setColdStartError] = useState(false);
   const viewedTrackedRef = useRef(false);
+  const gateViewedTrackedRef = useRef(false);
 
   const coldStartIssuedRef = useRef(false);
 
   const isLoading = todayQuotes === undefined || quotePrefs === undefined;
   const displayedQuote = todayQuotes?.session ?? todayQuotes?.curated ?? null;
+  const sessionLocked = todayQuotes?.sessionLocked ?? false;
   const showNudge =
     !isLoading &&
     displayedQuote !== null &&
@@ -147,6 +151,19 @@ export function QuotesScreen() {
     todayQuotes?.hasSessionToday,
     posthog,
   ]);
+
+  useEffect(() => {
+    if (gateViewedTrackedRef.current || isLoading || !sessionLocked) return;
+    gateViewedTrackedRef.current = true;
+    posthog.capture("premium_gate_hit", {
+      feature: "daily_quote",
+      hasData: true,
+    });
+  }, [isLoading, sessionLocked, posthog]);
+
+  const handleUnlockQuote = () => {
+    openPaywall("daily_quote");
+  };
 
   const runManualColdStart = async () => {
     if (coldStartIssuedRef.current) return;
@@ -308,6 +325,8 @@ export function QuotesScreen() {
             onHeartBurst={triggerHeartBurst}
             isSharingLoading={isSharingLoading}
             showNudge={showNudge}
+            locked={sessionLocked}
+            onUnlock={handleUnlockQuote}
             top={top}
             bottom={bottom}
           />

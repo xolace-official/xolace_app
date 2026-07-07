@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, internalMutation } from "./_generated/server";
+import { query, internalQuery, internalMutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { hasPremium, PLUS_ENTITLEMENT_ID } from "./lib/premium";
 import { posthog } from "./posthog";
@@ -49,6 +49,20 @@ export const getEntitlement = query({
       tier: isPlus ? ("plus" as const) : ("free" as const),
       appUserId: profile._id,
     };
+  },
+});
+
+/**
+ * Actions can't call hasPremium() directly (it needs QueryCtx | MutationCtx).
+ * This lets an internalAction check premium status via ctx.runQuery when it
+ * only holds a profile id, not the ctx to load one itself.
+ */
+export const checkPremiumForProfile = internalQuery({
+  args: { emotionalProfileId: v.id("emotional_profiles") },
+  handler: async (ctx, args) => {
+    const profile = await ctx.db.get(args.emotionalProfileId);
+    if (!profile) return false;
+    return await hasPremium(ctx, profile);
   },
 });
 

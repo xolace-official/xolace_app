@@ -19,9 +19,12 @@ type Props = {
   top: number;
   bottom: number;
   showNudge?: boolean;
+  locked?: boolean;
+  onUnlock?: () => void;
 };
 
 const NUDGE_ICON = { ios: "wand.and.stars" as const, android: "auto_fix_high" as const };
+const LOCK_ICON = { ios: "lock.fill" as const, android: "lock" as const };
 const EASING: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 const EASE_INITIAL = { opacity: 0, translateY: 24 };
 const EASE_ANIMATE = { opacity: 1, translateY: 0 };
@@ -38,6 +41,8 @@ export function QuoteCard({
   top,
   bottom,
   showNudge,
+  locked,
+  onUnlock,
 }: Props) {
   const accentColor = useThemeColor("accent") as string;
   const foregroundColor = useThemeColor("foreground") as string;
@@ -88,13 +93,28 @@ export function QuoteCard({
         >
           {label}
         </AppText>
-        {showNudge && (
-          <View className="mt-5" style={nudgePillStyle}>
-            <SymbolView name={NUDGE_ICON} size={12} tintColor={`${accentColor}CC`} />
-            <AppText className="text-xs font-medium" style={nudgeTextStyle}>
-              Reflect often, your quotes get more personal
-            </AppText>
-          </View>
+        {locked ? (
+          <PressableFeedback
+            onPress={onUnlock}
+            accessibilityRole="button"
+            accessibilityLabel="Unlock your personalized quote with Xolace+"
+          >
+            <View className="mt-5" style={nudgePillStyle}>
+              <SymbolView name={LOCK_ICON} size={12} tintColor={`${accentColor}CC`} />
+              <AppText className="text-xs font-medium" style={nudgeTextStyle}>
+                Get personalized quotes - unlock with Xolace+
+              </AppText>
+            </View>
+          </PressableFeedback>
+        ) : (
+          showNudge && (
+            <View className="mt-5" style={nudgePillStyle}>
+              <SymbolView name={NUDGE_ICON} size={12} tintColor={`${accentColor}CC`} />
+              <AppText className="text-xs font-medium" style={nudgeTextStyle}>
+                Reflect often, your quotes get more personal
+              </AppText>
+            </View>
+          )
         )}
       </View>
 

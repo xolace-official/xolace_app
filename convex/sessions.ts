@@ -605,6 +605,23 @@ export const listByProfile = query({
   },
 });
 
+// Free tier sees the last 30 days of timeline history; Plus sees everything.
+const FREE_TIMELINE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
+// Bucketed to the start of the UTC day so the cutoff stays constant across a
+// single pagination session — usePaginatedQuery requires paginated queries to
+// be a deterministic function of their args (excluding paginationOpts); a raw
+// Date.now() here would drift between the first page and later loadMore calls
+// and invalidate the cursor ("InvalidCursor: ... from a different query").
+function getFreeTimelineWindowStart(): number {
+  const cutoff = new Date(Date.now() - FREE_TIMELINE_WINDOW_MS);
+  return Date.UTC(
+    cutoff.getUTCFullYear(),
+    cutoff.getUTCMonth(),
+    cutoff.getUTCDate(),
+  );
+}
+
 /**
  * Paginated timeline entries enriched with emotional metadata.
  * Only returns sessions that have a mirror (meaningful to display).
@@ -615,11 +632,17 @@ export const listForTimeline = query({
   },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+    const isPremium = await hasPremium(ctx, profile);
+    const windowStart = isPremium ? null : getFreeTimelineWindowStart();
 
     const result = await ctx.db
       .query("sessions")
       .withIndex("by_profile_time", (q) =>
-        q.eq("emotionalProfileId", profile._id),
+        windowStart === null
+          ? q.eq("emotionalProfileId", profile._id)
+          : q
+              .eq("emotionalProfileId", profile._id)
+              .gte("createdAt", windowStart),
       )
       .order("desc")
       .paginate(args.paginationOpts);
@@ -647,6 +670,31 @@ export const listForTimeline = query({
     );
 
     return { ...result, page: enrichedPage };
+  },
+});
+
+/**
+ * Whether the free-tier timeline window is hiding older sessions — drives the
+ * "upgrade for full history" nudge. Plus users never have anything hidden.
+ */
+export const getTimelineWindowInfo = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    const isPremium = await hasPremium(ctx, profile);
+    if (isPremium) {
+      return { premiumRequired: false, hasOlderSessions: false };
+    }
+
+    const windowStart = getFreeTimelineWindowStart();
+    const older = await ctx.db
+      .query("sessions")
+      .withIndex("by_profile_time", (q) =>
+        q.eq("emotionalProfileId", profile._id).lt("createdAt", windowStart),
+      )
+      .first();
+
+    return { premiumRequired: true, hasOlderSessions: older !== null };
   },
 });
 

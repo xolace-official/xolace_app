@@ -14,7 +14,7 @@ import { PaywallPlanCard, type PlanId } from "./paywall-plan-card";
 // Fallback display prices while offerings are unavailable
 // (appConfig.features.payments=false, or RC still loading).
 const FALLBACK = {
-  annual: { price: "$44.99/yr", detail: "$3.75/mo, billed yearly" },
+  annual: { price: "$49.99/yr", detail: "$4.17/mo, billed yearly" },
   monthly: { price: "$9.99/mo", detail: "billed monthly" },
 } as const;
 
