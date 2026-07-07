@@ -61,16 +61,17 @@ const styles = StyleSheet.create({
 
 export const MirrorScreen = () => {
   const { mirrorTone, setMirrorTone } = useMirrorSettings();
-  const { isPlus } = usePlusEntitlement();
+  const { isPlus, isLoading: isPlusLoading } = usePlusEntitlement();
   const openPaywall = usePaywall((s) => s.open);
   const muted = useThemeColor("muted");
 
   const handleValueChange = (value: string) => {
     const opt = TONE_OPTIONS.find((o) => o.value === value);
-    if (opt?.premium && !isPlus) {
+    if (opt?.premium && !isPlus && !isPlusLoading) {
       openPaywall("mirror_tone");
       return;
     }
+    if (opt?.premium && isPlusLoading) return;
     setMirrorTone(value as MirrorTone);
   };
 
@@ -89,7 +90,7 @@ export const MirrorScreen = () => {
         <SettingsSection title="Tone">
           <RadioGroup value={mirrorTone} onValueChange={handleValueChange}>
             {TONE_OPTIONS.map((opt, index) => {
-              const locked = opt.premium && !isPlus;
+              const locked = opt.premium && !isPlus && !isPlusLoading;
               return (
                 <View key={opt.value}>
                   <RadioGroup.Item value={opt.value} className="px-5 py-4">
