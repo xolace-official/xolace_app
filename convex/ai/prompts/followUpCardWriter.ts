@@ -27,6 +27,12 @@ export type FollowUpCardContext = {
   granularLabel?: string | null;
   /** True when the session ended in gave_up (no landed mirror). */
   gaveUp: boolean;
+  /**
+   * Rendered semantic profile (Cognition Layer). Null for cold-start profiles
+   * AND always for acute tier — the caller must suppress it for acute
+   * regardless of whether a profile exists (see NEVER rule below).
+   */
+  semanticProfile?: string | null;
 };
 
 export function buildFollowUpCardPrompt(ctx: FollowUpCardContext): {
@@ -60,11 +66,19 @@ ${sourceRule}
 - NEVER reference that this is an automated message, a "notification", or a "follow-up".
 - NEVER invent details the person did not express.${
     ctx.tier === "acute"
-      ? "\n- NEVER name a crisis, a method, or anything alarming. Stay soft and present."
+      ? "\n- NEVER name a crisis, a method, or anything alarming. Stay soft and present.\n- NEVER reference a longer-term pattern or history. This check-in is about right now, not a trend."
       : ""
   }`;
 
+  // Defense in depth: acute NEVER carries the continuity line, even if a
+  // caller mistakenly passes one through — the tier gate is the real
+  // suppression point (in startFollowUpWorkflow), this is a backstop.
+  const semanticProfile = ctx.tier === "acute" ? null : ctx.semanticProfile;
+
   const facts: string[] = [];
+  if (semanticProfile) {
+    facts.push(`How this sits in their larger pattern: ${semanticProfile}`);
+  }
   if (!ctx.gaveUp && ctx.mirrorText) {
     facts.push(`Mirror they confirmed: "${ctx.mirrorText}"`);
   }
