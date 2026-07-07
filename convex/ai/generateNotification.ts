@@ -5,6 +5,7 @@ import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { getAnthropicClient, extractTextFromResponse } from "./providers/anthropic";
 import { buildNotificationPrompt } from "./prompts/notificationWriter";
+import { renderSemanticProfile } from "../semanticProfiles";
 import {
   pickTemplate,
   pickFallbackTemplate,
@@ -81,6 +82,18 @@ export const generate = internalAction({
       ? (now - profile.lastSessionAt) / (1000 * 60 * 60)
       : 48;
 
+    // Prefer the semantic profile's narrative (recurring themes, calibration,
+    // trajectory) when it exists; the statistical tags below fold in beneath
+    // it as a recency signal. Null pre-v1 (Reflection Agent writes v1 at 5
+    // sessions / 7 active days) — same split as quotesDistiller.ts / context.ts.
+    const semanticProfileDoc = await ctx.runQuery(
+      internal.semanticProfiles.getCurrent,
+      { emotionalProfileId: args.emotionalProfileId }
+    );
+    const renderedProfile = semanticProfileDoc
+      ? renderSemanticProfile(semanticProfileDoc)
+      : null;
+
     const notificationCtx = {
       notificationType: effectiveType,
       reach,
@@ -92,6 +105,7 @@ export const generate = internalAction({
       typicalUsagePattern: profile.typicalUsagePattern ?? null,
       lastSessionMood: (lastSession?.postSessionMood as "lighter" | "same" | "heavier" | "unsure" | undefined) ?? null,
       lastMirrorConfirmation: (lastSession?.confirmationState as "confirmed" | "refined" | "gave_up" | "abandoned" | undefined) ?? null,
+      semanticProfile: renderedProfile,
     };
 
     const patternContextUsed =
