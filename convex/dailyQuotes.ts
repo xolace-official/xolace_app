@@ -18,7 +18,9 @@ export const getToday = query({
     const { profile } = await requireAuth(ctx);
     const today = utcDateString();
 
-    const [quotes, sessionToday, isPremium] = await Promise.all([
+    const fiveDaysAgo = new Date(today + "T00:00:00Z").getTime() - 5 * 24 * 60 * 60 * 1000;
+
+    const [quotes, sessionToday, isPremium, recentCompletedSession] = await Promise.all([
       ctx.db
         .query("daily_quotes")
         .withIndex("by_profile_date", (q) =>
@@ -35,18 +37,30 @@ export const getToday = query({
         .filter((q) => q.eq(q.field("state"), "completed"))
         .first(),
       hasPremium(ctx, profile),
+      // Mirrors the eligibility window in ai/quotesDistiller.ts loadEmotionalContext —
+      // this is what would make a session-derived quote get generated for a premium user.
+      ctx.db
+        .query("sessions")
+        .withIndex("by_profile_time", (q) =>
+          q.eq("emotionalProfileId", profile._id).gte("createdAt", fiveDaysAgo)
+        )
+        .filter((q) => q.eq(q.field("state"), "completed"))
+        .first(),
     ]);
 
-    // Session-derived (personalized) quotes are Xolace+ only. A free user who
-    // has one on record (e.g. downgraded after it was generated) sees it
-    // withheld, with `sessionLocked` flagged so the client can tease it.
+    // Session-derived (personalized) quotes are Xolace+ only — the LLM call is
+    // skipped entirely for free users (see jobs/quotesGenerator.ts), so most free
+    // users never have a `daily_quotes` row to withhold. `sessionLocked` instead
+    // reflects whether they *would* have gotten one: either a row already exists
+    // (e.g. downgraded after it was generated) or they have the recent session
+    // history that would trigger generation.
     const sessionQuote = quotes.find((q) => q.type === "session") ?? null;
 
     return {
       session: isPremium ? sessionQuote : null,
       curated: quotes.find((q) => q.type === "curated") ?? null,
       hasSessionToday: sessionToday !== null,
-      sessionLocked: !isPremium && sessionQuote !== null,
+      sessionLocked: !isPremium && (sessionQuote !== null || recentCompletedSession !== null),
     };
   },
 });

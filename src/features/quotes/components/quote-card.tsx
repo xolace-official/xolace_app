@@ -102,7 +102,7 @@ export function QuoteCard({
             <View className="mt-5" style={nudgePillStyle}>
               <SymbolView name={LOCK_ICON} size={12} tintColor={`${accentColor}CC`} />
               <AppText className="text-xs font-medium" style={nudgeTextStyle}>
-                Your quote&apos;s ready - unlock with Xolace+
+                Get personalized quotes - unlock with Xolace+
               </AppText>
             </View>
           </PressableFeedback>
