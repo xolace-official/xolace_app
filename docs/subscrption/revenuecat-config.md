@@ -56,7 +56,7 @@ Create two Auto-Renewable Subscriptions under your app, in a Subscription Group 
 
 | Product ID | Duration | Price | Trial | Display Name |
 |------------|----------|-------|-------|--------------|
-| `com.xolaceincorg.xolace.plus.annual` | 1 year | $44.99 | 7 days | Xolace+ Annual |
+| `com.xolaceincorg.xolace.plus.annual` | 1 year | $49.99 | 7 days | Xolace+ Annual |
 | `com.xolaceincorg.xolace.plus.monthly` | 1 month | $9.99 | None | Xolace+ Monthly |
 
 Set annual as the **higher tier** in the subscription group (it should be ranked above monthly so Apple handles upgrade/downgrade correctly).
@@ -79,12 +79,12 @@ Create two Subscriptions under your app's "Monetize → Subscriptions" section:
 
 | Product ID | Billing Period | Price | Trial | Display Name |
 |------------|---------------|-------|-------|--------------|
-| `com.xolaceincorg.xolace.plus.annual` | Annual | $44.99 | 7 days (free trial base plan) | Xolace+ Annual |
+| `com.xolaceincorg.xolace.plus.annual` | Annual | $49.99 | 7 days (free trial base plan) | Xolace+ Annual |
 | `com.xolaceincorg.xolace.plus.monthly` | Monthly | $9.99 | None | Xolace+ Monthly |
 
 On Android, each Subscription has **base plans** and **offers**. Configure:
 - Annual base plan: `annual`
-- Annual offer (for trial): `annual-trial` — 7-day free trial → then $44.99/yr
+- Annual offer (for trial): `annual-trial` — 7-day free trial → then $49.99/yr
 - Monthly base plan: `monthly`
 
 #### Add products to RC
@@ -134,7 +134,7 @@ For the launch FOMO window (see `confirmed-offers.md` → Early-Bird Pricing), c
 
 - Your app always calls `offerings.current`. During the window, set `founding` as **current** in RC (Offering → "Make current"); after it closes, switch back to `default` — **no app update needed**.
 - **iOS one-intro-offer rule:** a user is eligible for only *one* introductory offer per subscription. So the founding annual is a fork — pick one:
-  - **Discounted first year, no trial** (recommended for the engaged cohort): configure an **Introductory Offer** on `com.xolaceincorg.xolace.plus.annual` = e.g. `$34.99` for the first year (pay-up-front), then renews at $44.99. In this mode the annual has **no** free trial during the window.
+  - **Discounted first year, no trial** (recommended for the engaged cohort): configure an **Introductory Offer** on `com.xolaceincorg.xolace.plus.annual` = e.g. `$34.99` for the first year (pay-up-front), then renews at $49.99. In this mode the annual has **no** free trial during the window.
   - **Keep the trial**, and run the founding discount on **monthly** or via **Offer Codes** distributed to early users instead.
 - Android: model the founding discount as a separate **offer** on the annual base plan (e.g. `annual-founding`) with an eligibility/end date.
 - Always show list price struck-through in the paywall UI (RC returns both the intro and the standard price on the package — render both).

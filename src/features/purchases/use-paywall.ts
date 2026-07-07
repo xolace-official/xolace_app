@@ -12,7 +12,8 @@ export type PaywallSurface =
   | "premium_theme"
   | "premium_avatar"
   | "timeline_extended"
-  | "mirror_tone";
+  | "mirror_tone"
+  | "daily_quote";
 
 type PaywallState = {
   isOpen: boolean;

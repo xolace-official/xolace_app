@@ -17,14 +17,14 @@ There is one tier. No freemium tiers with partial unlocks, no enterprise, no lif
 
 | Plan | List Price | Trial |
 |------|-----------|-------|
-| Annual | **$44.99 / yr** | 7-day free trial |
+| Annual | **$49.99 / yr** | 7-day free trial |
 | Monthly | **$9.99 / mo** | No trial |
 
 **Hero price is annual.** The paywall leads with annual. Monthly is the anchor — it exists to show the annual discount and catch users who resist committing yearly.
 
-Annual math: $44.99/yr ≈ **$3.75/mo** vs. $9.99/mo month-to-month = **~62% cheaper**. Show the per-month equivalent on the paywall ("$3.75/mo, billed yearly") — the weekly/monthly framing beats the sticker year price.
+Annual math: $49.99/yr ≈ **$4.17/mo** vs. $9.99/mo month-to-month = **~58% cheaper**. Show the per-month equivalent on the paywall ("$4.17/mo, billed yearly") — the weekly/monthly framing beats the sticker year price.
 
-**Why monthly is $9.99, not $7.99:** monthly subscribers in emotion/wellness apps churn fast (3–6 month average lifetime), and they are — by definition — the cohort rejecting the annual commitment. Pricing the flexibility they're asking for at $9.99 raises realized monthly LTV ~25% *and* widens the annual discount, making the hero plan look better. Annual stays at $44.99 — it's correctly placed; only the monthly moved.
+**Why monthly is $9.99, not $7.99:** monthly subscribers in emotion/wellness apps churn fast (3–6 month average lifetime), and they are — by definition — the cohort rejecting the annual commitment. Pricing the flexibility they're asking for at $9.99 raises realized monthly LTV ~25% *and* widens the annual discount, making the hero plan look better. Annual stays at $49.99 — it's correctly placed; only the monthly moved.
 
 ---
 
@@ -33,13 +33,13 @@ Annual math: $44.99/yr ≈ **$3.75/mo** vs. $9.99/mo month-to-month = **~62% che
 We will run a **time-boxed founding-member discount** at launch for FOMO — this reverses the earlier "no launch discount" stance (see Revenue Model Notes for why the original caution still partly holds).
 
 **Do it right so it doesn't permanently reset the price anchor:**
-- Always show the list price struck through next to the founding price ("~~$44.99~~ **$34.99** — founding price, ends [date]").
+- Always show the list price struck through next to the founding price ("~~$49.99~~ **$34.99** — founding price, ends [date]").
 - Frame as **founding member**, not a sale. Scarcity is identity ("you were here first"), not a coupon.
 - **Box it** — a hard end date or a member cap. Open-ended discounts destroy the anchor.
 - Served via a separate RevenueCat Offering (e.g. `founding`) set as `current` during the window, then swapped back to `default` remotely — no app update. See `revenuecat-config.md`.
 
 **⚠️ iOS constraint (must decide):** On the App Store a user is eligible for **only one introductory offer per subscription** — you can give the annual *either* a 7-day free trial *or* a discounted intro price, **not both** to the same user. So the launch annual is a fork:
-- **Option A — Founding price, no trial:** annual = "$34.99 first year, then $44.99." Best for the engaged ≥5-session cohort who have already felt the value and don't need a trial to de-risk.
+- **Option A — Founding price, no trial:** annual = "$34.99 first year, then $49.99." Best for the engaged ≥5-session cohort who have already felt the value and don't need a trial to de-risk.
 - **Option B — Trial, no founding price:** keep the 7-day trial, run the founding discount on *monthly* only, or via **offer codes** distributed to early users.
 
 Recommendation: **Option A** for the founding window (discounted first year, no trial), then switch `default` to trial-based annual after the window closes. Confirm the discount amount before configuring.
@@ -90,7 +90,7 @@ Plus is intentionally **multi-driver** — insights are the anchor, but not the 
 - **Word patterns** — your most frequent texture words and emotional vocabulary (words teaser card)
 - **Session streak + milestones** — earned-access acknowledgment of consistency
 - **Longitudinal patterns** — month-over-month emotional shifts, seasonal patterns.
-  > This is the **renewal engine.** A static frequency map is check-once value that sells the *first* purchase; the evolving longitudinal picture is what makes someone still-paying at month 12. Treat it as core to the subscription, not a "nice later" — if it slips, annual LTV collapses to a single $44.99 with no recurring reason to stay.
+  > This is the **renewal engine.** A static frequency map is check-once value that sells the *first* purchase; the evolving longitudinal picture is what makes someone still-paying at month 12. Treat it as core to the subscription, not a "nice later" — if it slips, annual LTV collapses to a single $49.99 with no recurring reason to stay.
 - **Personalized quotes from your sessions** — surfaced reflections/mirrors worth keeping. Also feeds Widgets + AI video below.
 
 ### B. Personalization
@@ -150,7 +150,7 @@ Plus is intentionally **multi-driver** — insights are the anchor, but not the 
 
 - Annual is the target mix. Monthly is the fallback. Optimize conversion toward annual.
 - Churn on monthly subscriptions in emotion/wellness apps is high (3–6 months average). Annual cohort retention is structurally better — hence monthly priced at $9.99 (capture more before they churn) and annual as the hero.
-- Trial on annual only — reduces risk of the bigger commitment and captures users who want to test before paying $44.99. **Note:** during the early-bird window this may flip to a discounted-first-year annual with *no* trial (iOS one-intro-offer rule — see Early-Bird section).
+- Trial on annual only — reduces risk of the bigger commitment and captures users who want to test before paying $49.99. **Note:** during the early-bird window this may flip to a discounted-first-year annual with *no* trial (iOS one-intro-offer rule — see Early-Bird section).
 - **Early-bird / founding discount at launch** — reverses the original "no launch discount" position for deliberate FOMO. The original caution still holds *in part*: an open-ended or un-anchored discount permanently lowers the price anchor. Mitigate by always showing list price struck-through, framing as founding-member, and hard-boxing the window (date or cap). Anchor is protected by *visibility of the real price*, not by refusing to discount.
 
 ---

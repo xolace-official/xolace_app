@@ -152,12 +152,19 @@ export const processUser = internalAction({
     const themes = prefs?.quotes?.themes ?? [];
     const shownQuoteIds = (prefs?.quotes?.shownQuoteIds ?? []) as any[];
 
-    // 1. Session-derived quote — direct helper call (same V8 runtime, no ctx.runAction overhead)
-    await distillQuoteForUser(ctx, {
-      emotionalProfileId: args.emotionalProfileId,
-      date,
-      preferredThemes: themes,
-    });
+    // 1. Session-derived (personalized) quote — Xolace+ only. Skipping the LLM
+    // call for free users avoids paying for a quote they'll never see.
+    const isPremium: boolean = await ctx.runQuery(
+      internal.premium.checkPremiumForProfile,
+      { emotionalProfileId: args.emotionalProfileId }
+    );
+    if (isPremium) {
+      await distillQuoteForUser(ctx, {
+        emotionalProfileId: args.emotionalProfileId,
+        date,
+        preferredThemes: themes,
+      });
+    }
 
     // 2. Curated quote
     const curatedQuote: { _id: string; text: string } | null = await ctx.runQuery(

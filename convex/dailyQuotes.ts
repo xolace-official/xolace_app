@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import { hasPremium } from "./lib/premium";
 import { internal } from "./_generated/api";
 
 function utcDateString(): string {
@@ -17,9 +18,7 @@ export const getToday = query({
     const { profile } = await requireAuth(ctx);
     const today = utcDateString();
 
-    console.log("today ", today)
-
-    const [quotes, sessionToday] = await Promise.all([
+    const [quotes, sessionToday, isPremium] = await Promise.all([
       ctx.db
         .query("daily_quotes")
         .withIndex("by_profile_date", (q) =>
@@ -35,12 +34,19 @@ export const getToday = query({
         )
         .filter((q) => q.eq(q.field("state"), "completed"))
         .first(),
+      hasPremium(ctx, profile),
     ]);
 
+    // Session-derived (personalized) quotes are Xolace+ only. A free user who
+    // has one on record (e.g. downgraded after it was generated) sees it
+    // withheld, with `sessionLocked` flagged so the client can tease it.
+    const sessionQuote = quotes.find((q) => q.type === "session") ?? null;
+
     return {
-      session: quotes.find((q) => q.type === "session") ?? null,
+      session: isPremium ? sessionQuote : null,
       curated: quotes.find((q) => q.type === "curated") ?? null,
       hasSessionToday: sessionToday !== null,
+      sessionLocked: !isPremium && sessionQuote !== null,
     };
   },
 });
@@ -124,7 +130,7 @@ export const store = internalMutation({
       type: args.type,
       text: args.text,
       sessionContextIds: args.sessionContextIds,
-      isPremium: false,
+      isPremium: args.type === "session",
       reaction: undefined,
       createdAt: Date.now(),
     });

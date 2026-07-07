@@ -1227,7 +1227,8 @@ export default defineSchema({
     // Which sessions were used as context (session-derived only).
     sessionContextIds: v.optional(v.array(v.id("sessions"))),
 
-    // Reserved for future premium enforcement. Always false at MVP.
+    // true for session-derived (personalized) quotes, gated to Xolace+ via
+    // hasPremium() in dailyQuotes.getToday. Always false for curated quotes.
     isPremium: v.boolean(),
 
     // User reaction. Null until the user reacts.
