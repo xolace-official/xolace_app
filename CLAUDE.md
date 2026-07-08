@@ -166,6 +166,9 @@ convex/
 > modality (voice/vent) or a new artifact type — and **all model calls live
 > under `convex/ai/`**. See `docs/cognition-layer-architecture.md`.
 
+Note: the quotes → cognition layer transition keeps `loadEmotionalContext` as
+an active cold-start fallback — it is not a deprecation candidate.
+
 ### Deferred Deprecations (Store-Gap Rule)
 
 Backend deploys before app store review clears, so a new backend runs against
@@ -179,8 +182,7 @@ minimum-supported UI may still call. Instead mark, don't delete:
   references it.
 
 **Pending Deprecations**
-- (none yet — quotes → cognition layer transition keeps `loadEmotionalContext`
-  as an active cold-start fallback, nothing to deprecate there)
+- (none yet)
 
 ### Build Variants
 `app.config.ts` reads `APP_VARIANT` (development/preview/production) to set bundle identifiers:
