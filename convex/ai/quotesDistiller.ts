@@ -3,8 +3,10 @@
 import { v } from "convex/values";
 import { ActionCtx, internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { Id } from "../_generated/dataModel";
+import { Doc, Id } from "../_generated/dataModel";
 import { getAnthropicClient } from "./providers/anthropic";
+import { renderSemanticProfile } from "../semanticProfiles";
+import { buildQuotePrompt } from "./quotesPrompt";
 
 const DISTILLER_MODEL = "claude-haiku-4-5-20251001";
 
@@ -175,7 +177,7 @@ export async function distillQuoteForUser(
   try {
       const refMs = new Date(args.date + "T00:00:00Z").getTime();
 
-      const [context, recentQuoteTexts] = await Promise.all([
+      const [context, recentQuoteTexts, semanticProfileDoc] = await Promise.all([
         ctx.runQuery(internal.ai.quotesDistiller.loadEmotionalContext, {
           emotionalProfileId: args.emotionalProfileId,
           referenceDate: refMs,
@@ -184,6 +186,9 @@ export async function distillQuoteForUser(
           emotionalProfileId: args.emotionalProfileId,
           beforeDate: args.date,
         }) as Promise<string[]>,
+        ctx.runQuery(internal.semanticProfiles.getCurrent, {
+          emotionalProfileId: args.emotionalProfileId,
+        }) as Promise<Doc<"semantic_profiles"> | null>,
       ]);
 
       if (!context) {
@@ -194,42 +199,18 @@ export async function distillQuoteForUser(
       }
 
       const angleSeed = dailyAngleSeed(args.date);
+      const renderedProfile = semanticProfileDoc
+        ? renderSemanticProfile(semanticProfileDoc)
+        : null;
 
-      const now = refMs;
-      const emotionalSummary: string = context.sessions
-        .map((s: NonNullable<EmotionalContext>["sessions"][number]) => {
-          const label = s.granularLabel ?? s.primaryEmotion;
-          const tags = s.thematicTags.length > 0 ? ` (${s.thematicTags.join(", ")})` : "";
-          const daysAgo = Math.max(1, Math.round((now - s.sessionCreatedAt) / (1000 * 60 * 60 * 24)));
-          const recency = daysAgo === 1 ? "1 day ago" : `${daysAgo} days ago`;
-          return `- ${label}, intensity ${s.intensity}/10${tags} — ${recency}`;
-        })
-        .join("\n");
-
-      const systemPrompt = `You are given the emotional themes from a user's recent reflections. Generate a beautiful, honest quote that captures the emotional experience without being specific. It should feel like something a thoughtful writer found for themselves and wanted to keep.
-
-Rules:
-- 1-2 sentences maximum, mostly 1 where possible
-- Poetic but grounded, not therapy-speak
-- Can rephrase real-world quotes to suit the user's emotional context
-- Second person (You) or first person
-- No specific details from the session (the quote will be shared publicly)
-- No medical or clinical terminology
-- Must be able to stand alone without any context
-- Pass the "would someone screenshot this?" test
-- Approach the quote through the lens of: ${angleSeed}, use this as a poetic entry point, not a literal theme`;
-
-      const themesLine =
-        args.preferredThemes.length > 0
-          ? `\nPreferred themes (align naturally with one if fitting): ${args.preferredThemes.join(", ")}`
-          : "";
-
-      const avoidLine =
-        recentQuoteTexts.length > 0
-          ? `\nRecent quotes already shown — do NOT reuse these framings, metaphors, or angles:\n${recentQuoteTexts.map((t) => `- "${t}"`).join("\n")}`
-          : "";
-
-      const userPrompt: string = `Recent emotional themes:\n${emotionalSummary}${themesLine}${avoidLine}\n\nGenerate a quote:`;
+      const { systemPrompt, userPrompt } = buildQuotePrompt({
+        angleSeed,
+        now: refMs,
+        sessions: context.sessions,
+        renderedProfile,
+        preferredThemes: args.preferredThemes,
+        recentQuoteTexts,
+      });
 
       const client = getAnthropicClient();
       const response = await client.messages.create({

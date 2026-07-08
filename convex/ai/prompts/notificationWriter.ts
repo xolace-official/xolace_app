@@ -11,6 +11,8 @@ export type NotificationContext = {
   typicalUsagePattern: { dayOfWeek: number; hourOfDay: number } | null;
   lastSessionMood: "lighter" | "same" | "heavier" | "unsure" | null;
   lastMirrorConfirmation: "confirmed" | "refined" | "gave_up" | "abandoned" | null;
+  /** Rendered semantic profile (Cognition Layer). Null pre-v1 / cold-start. */
+  semanticProfile: string | null;
 };
 
 const REACH_VOICE: Record<NotificationReach, string> = {
@@ -45,7 +47,7 @@ export function buildNotificationPrompt(ctx: NotificationContext): { system: str
     ? `They typically process on day ${ctx.typicalUsagePattern.dayOfWeek} around hour ${ctx.typicalUsagePattern.hourOfDay}`
     : "";
 
-  const contextBlock = [
+  const recencySignal = [
     `Sessions completed: ${ctx.sessionCount}`,
     `Current streak: ${ctx.currentStreak} days`,
     `Hours since last session: ${Math.round(ctx.hoursSinceLastSession)}`,
@@ -57,6 +59,10 @@ export function buildNotificationPrompt(ctx: NotificationContext): { system: str
   ]
     .filter(Boolean)
     .join("\n");
+
+  const contextBlock = ctx.semanticProfile
+    ? `Longitudinal profile:\n${ctx.semanticProfile}\n\nRecent signal (last few days):\n${recencySignal}`
+    : recencySignal;
 
   const system = `You write one short notification line for Xolace, an emotional processing app.
 

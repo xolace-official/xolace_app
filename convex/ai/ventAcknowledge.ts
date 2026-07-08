@@ -2,7 +2,15 @@ export const ACKNOWLEDGE_MODEL = "claude-haiku-4-5-20251001";
 
 export function buildVentAcknowledgePrompt(
   transcript: string,
+  semanticProfile: string | null = null,
 ): { system: string; user: string } {
+  const memoryBlock = semanticProfile
+    ? `\n\n---\n\nWhat you know about this person may shape your warmth and word choice.
+NEVER reference past sessions, name specifics, or imply you've been tracking them. Stay in this moment.
+
+${semanticProfile}`
+    : "";
+
   const system = `You witness someone who just spoke something heavy.
 Write 1-2 sentences that say: I caught what you carried.
 The words should feel like a warm hand on a shoulder in the dark.
@@ -31,7 +39,7 @@ Once you have your 1-2 sentences, enhance them with audio tags so the words feel
 
 ## Audio Tags (non-exhaustive)
 Emotional directions: [happy] [sad] [thoughtful] [whisper] [gentle] [warm] [soft]
-Non-verbal: [sighs] [exhales sharply] [inhales deeply] [short pause] [long pause] [chuckles] [clears throat]
+Non-verbal: [sighs] [exhales sharply] [inhales deeply] [short pause] [long pause] [chuckles] [clears throat]${memoryBlock}
 
 Reply ONLY with the enhanced text — no labels, no explanation, no preamble.`;
 

@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, type Infer } from "convex/values";
 import {
   WorkflowManager,
   vWorkflowId,
@@ -26,10 +26,12 @@ import {
   getAnthropicClient,
   extractTextFromResponse,
 } from "./ai/providers/anthropic";
+import { safeguardLevelValidator } from "./lib/validators";
 import {
   buildFollowUpCardPrompt,
   fallbackFollowUpCard,
 } from "./ai/prompts/followUpCardWriter";
+import { renderSemanticProfile } from "./semanticProfiles";
 
 const CARD_MODEL = "claude-haiku-4-5-20251001";
 const MAX_CARD_CHARS = 200;
@@ -99,25 +101,46 @@ export const followUpWorkflow = workflow
  * saving a wasted Haiku call. The authoritative idempotency + supersede check
  * is re-done atomically in `createAndStart`.
  */
+type StartContextSignals = {
+  safeguardLevel: Infer<typeof safeguardLevelValidator> | null;
+  intensity: number | null;
+  primaryEmotion: string | null;
+  granularLabel: string | null;
+  confirmationState: string | null;
+};
+
+type StartContext = {
+  emotionalProfileId: Id<"emotional_profiles">;
+  escalationDerived: boolean;
+  signals: StartContextSignals;
+  cardCtx: {
+    mirrorText: string | null;
+    followUpReason: string | null;
+    primaryEmotion: string | null;
+    granularLabel: string | null;
+    gaveUp: boolean;
+  };
+};
+
 export const getStartContext = internalQuery({
   args: { sessionId: v.id("sessions") },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<StartContext | null> => {
     const session = await ctx.db.get(args.sessionId);
     if (!session) return null;
     if (session.followUpWorkflowId) return null; // already started (idempotent)
     if (session.requiresFollowUp !== true) return null;
 
-    const metadata = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-      .unique();
+    const metadata: Doc<"emotional_metadata"> | null = await ctx.runQuery(
+      internal.understanding.getUnderstanding,
+      { sessionId: args.sessionId },
+    );
 
     const gaveUp = session.confirmationState === "gave_up";
     const escalationDerived = session.escalationTriggered === true;
 
     // Concrete (non-optional) shape — every field present (null when absent) so
     // it matches the createAndStart `signals` validator exactly.
-    const signals = {
+    const signals: StartContextSignals = {
       safeguardLevel: session.safeguardLevel ?? null,
       intensity: metadata?.intensity ?? null,
       primaryEmotion: metadata?.primaryEmotion ?? null,
@@ -158,6 +181,18 @@ export const startFollowUpWorkflow = internalAction({
 
     const tier = followUpTier(start.signals);
 
+    // Memory enrichment: suppressed for acute tier — a crisis check-in stays
+    // presence-first and wound-light, never "you keep feeling this way".
+    const semanticProfileDoc =
+      tier === "acute"
+        ? null
+        : await ctx.runQuery(internal.semanticProfiles.getCurrent, {
+            emotionalProfileId: start.emotionalProfileId,
+          });
+    const semanticProfile = semanticProfileDoc
+      ? renderSemanticProfile(semanticProfileDoc)
+      : null;
+
     let cardText: string;
     try {
       const anthropic = getAnthropicClient();
@@ -168,6 +203,7 @@ export const startFollowUpWorkflow = internalAction({
         primaryEmotion: start.cardCtx.primaryEmotion,
         granularLabel: start.cardCtx.granularLabel,
         gaveUp: start.cardCtx.gaveUp,
+        semanticProfile,
       });
 
       const response = await anthropic.messages.create({
