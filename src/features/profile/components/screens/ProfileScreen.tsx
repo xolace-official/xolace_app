@@ -29,7 +29,7 @@ export function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const summary = useProfileSummary();
   const moodDelta = useMoodDelta();
-  const weekIntensity = useWeekIntensity();
+  const [weekOffset, setWeekOffset] = useState(0);
   const avatars = useAvatars();
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -37,6 +37,10 @@ export function ProfileScreen() {
 
   const sessionCount = summary?.sessionCount ?? 0;
   const gate = useInsightGate(sessionCount);
+  // Lapsed Plus mid-navigation shouldn't strand the query on a locked week —
+  // derive the effective offset from current entitlement instead of syncing
+  // it back into state.
+  const weekIntensity = useWeekIntensity(gate.isPlus ? weekOffset : 0);
   const hasEnoughForChips = sessionCount >= 1 && (summary?.dominantEmotionTags?.length ?? 0) > 0;
   const hasEnoughForMirrorLines = sessionCount >= 3;
   const hasEnoughForRhythm = sessionCount >= 5;
@@ -139,6 +143,11 @@ export function ProfileScreen() {
             peakDay={weekIntensity.peakDay}
             hasData={weekIntensity.hasData}
             momentsTotal={sessionCount}
+            isPlus={gate.isPlus}
+            weekLabel={weekIntensity.weekLabel}
+            isEarliestWeek={weekIntensity.isEarliestWeek}
+            onPrevWeek={() => setWeekOffset((w) => w - 1)}
+            onNextWeek={() => setWeekOffset((w) => Math.min(0, w + 1))}
             onView={() => gate.trackView("intensity_history")}
             onUnlock={() => gate.open("intensity_history")}
             staggerDelay={300}

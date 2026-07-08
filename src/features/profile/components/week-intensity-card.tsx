@@ -10,13 +10,16 @@ import Animated, {
 } from "react-native-reanimated";
 import { EaseView } from "react-native-ease/uniwind";
 import { SymbolView } from "expo-symbols";
+import { PressableFeedback } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "../hooks/use-token-color";
 import { GateFade } from "./gate-fade";
 import { CardInfo } from "./card-info";
 
-const INTENSITY_INFO =
-  "Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Only this week shows in full; your longer arc across earlier weeks is part of the deeper insights coming soon.";
+const INTENSITY_INFO_FREE =
+  "Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Only this week shows in full; browsing earlier weeks is part of Xolace+.";
+const INTENSITY_INFO_PLUS =
+  "Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Use the arrows below to browse earlier weeks.";
 
 type DayData = {
   label: string;
@@ -30,6 +33,11 @@ type Props = {
   peakDay: string | null;
   hasData: boolean;
   momentsTotal: number;
+  isPlus: boolean;
+  weekLabel: string;
+  isEarliestWeek: boolean;
+  onPrevWeek: () => void;
+  onNextWeek: () => void;
   onUnlock: () => void;
   onView: () => void;
   staggerDelay?: number;
@@ -95,7 +103,7 @@ function IntensityBar({
 
 // Frosted "earlier weeks" navigator — the single gated element (Model B). The
 // current week reads free above; only the control that pages into history is
-// blended behind a warm gradient fade, with no hard border. Tap → waitlist.
+// blended behind a warm gradient fade, with no hard border. Tap → paywall.
 function EarlierWeeksGate({ width, onPress }: { width: number; onPress: () => void }) {
   const accent = useTokenColor("accent");
   const muted = useTokenColor("muted");
@@ -125,6 +133,58 @@ function EarlierWeeksGate({ width, onPress }: { width: number; onPress: () => vo
   );
 }
 
+// Real, functional week pager for Plus — same footprint as the free gate but
+// unfrosted, with independently-disableable prev/next chevrons.
+function WeekNav({
+  weekLabel,
+  canGoNext,
+  canGoPrev,
+  onPrevWeek,
+  onNextWeek,
+}: {
+  weekLabel: string;
+  canGoNext: boolean;
+  canGoPrev: boolean;
+  onPrevWeek: () => void;
+  onNextWeek: () => void;
+}) {
+  const muted = useTokenColor("muted");
+  const foreground = useTokenColor("foreground");
+
+  return (
+    <View
+      className="flex-row items-center justify-center gap-4 border-t border-border/55"
+      style={{ height: GATE_H }}
+    >
+      <PressableFeedback
+        onPress={onPrevWeek}
+        isDisabled={!canGoPrev}
+        accessibilityRole="button"
+        accessibilityLabel="Previous week"
+        hitSlop={10}
+        style={canGoPrev ? styles.navChevron : styles.navChevronDisabled}
+      >
+        <SymbolView name={{ ios: "chevron.left", android: "chevron_left", web: "chevron_left" }} size={13} tintColor={muted} />
+      </PressableFeedback>
+
+      <AppText className="text-[12px] tracking-wide w-24 text-center" style={{ color: foreground }}>
+        {weekLabel}
+      </AppText>
+
+      <PressableFeedback
+        onPress={onNextWeek}
+        isDisabled={!canGoNext}
+        accessibilityRole="button"
+        accessibilityLabel="Next week"
+        hitSlop={10}
+        style={canGoNext ? styles.navChevron : styles.navChevronDisabled}
+      >
+        <SymbolView name={{ ios: "chevron.right", android: "chevron_right", web: "chevron_right" }} size={13} tintColor={muted} />
+      </PressableFeedback>
+    </View>
+  );
+}
+
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
 export function WeekIntensityCard({
@@ -132,6 +192,11 @@ export function WeekIntensityCard({
   peakDay,
   hasData,
   momentsTotal,
+  isPlus,
+  weekLabel,
+  isEarliestWeek,
+  onPrevWeek,
+  onNextWeek,
   onUnlock,
   onView,
   staggerDelay = 300,
@@ -148,6 +213,7 @@ export function WeekIntensityCard({
     onView();
   }, [onView]);
 
+  const isCurrentWeek = weekLabel === "This week";
   const momentLabel = `${momentsTotal} ${momentsTotal === 1 ? "moment" : "moments"}`;
 
   return (
@@ -161,9 +227,12 @@ export function WeekIntensityCard({
         <View className="px-5 pt-5 pb-4">
           <View className="flex-row items-center gap-1.5 mb-5">
             <AppText className="text-[11px] font-medium text-muted tracking-widest uppercase">
-              This week
+              {weekLabel}
             </AppText>
-            <CardInfo title="This week" description={INTENSITY_INFO} />
+            <CardInfo
+              title={weekLabel}
+              description={isPlus ? INTENSITY_INFO_PLUS : INTENSITY_INFO_FREE}
+            />
           </View>
 
           {/* Chart — always rendered (flat baseline bars when the week is empty),
@@ -211,15 +280,29 @@ export function WeekIntensityCard({
             peakDay && (
               <AppText className="text-xs text-muted mt-2">Intensity peaked {peakDay}</AppText>
             )
-          ) : (
+          ) : isCurrentWeek ? (
             <AppText className="text-xs text-muted mt-2 leading-5">
               {momentLabel} so far — this week&apos;s shape is still forming.
+            </AppText>
+          ) : (
+            <AppText className="text-xs text-muted mt-2 leading-5">
+              No moments logged that week.
             </AppText>
           )}
         </View>
 
-        {/* The only gated element: paging into earlier weeks. */}
-        <EarlierWeeksGate width={width - CARD_INSET} onPress={onUnlock} />
+        {isPlus ? (
+          <WeekNav
+            weekLabel={weekLabel}
+            canGoPrev={!isEarliestWeek}
+            canGoNext={!isCurrentWeek}
+            onPrevWeek={onPrevWeek}
+            onNextWeek={onNextWeek}
+          />
+        ) : (
+          /* The only gated element for free tier: paging into earlier weeks. */
+          <EarlierWeeksGate width={width - CARD_INSET} onPress={onUnlock} />
+        )}
       </View>
     </EaseView>
   );
@@ -229,4 +312,6 @@ const styles = StyleSheet.create({
   bar: { borderRadius: 8, borderCurve: "continuous" },
   barFull: { opacity: 1 },
   barDim: { opacity: 0.65 },
+  navChevron: { opacity: 1 },
+  navChevronDisabled: { opacity: 0.3 },
 });

@@ -785,6 +785,9 @@ export default defineSchema({
     // Theme analysis: "which life domains keep appearing?"
     .index("by_profile_theme", ["emotionalProfileId"])
 
+    // Week-bounded range scans: intensity chart paging (current + earlier weeks).
+    .index("by_profile_createdAt", ["emotionalProfileId", "createdAt"])
+
     // Model quality: compare classification accuracy across versions.
     .index("by_classifier_version", ["classifierVersion"])
 

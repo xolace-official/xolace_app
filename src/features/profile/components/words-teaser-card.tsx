@@ -121,7 +121,7 @@ export function WordsTeaserCard({ words, isPlus, onUnlock, onView, staggerDelay 
 
           <View className="px-5 pb-5">
             <AppText className="text-[11px] tracking-wide" style={{ color: mutedHex + "AA" }}>
-              See every word — and how often it returns
+              See every word and how often it returns
             </AppText>
           </View>
         </View>
