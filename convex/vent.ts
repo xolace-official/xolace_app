@@ -1,8 +1,10 @@
 import { v } from "convex/values";
 import { internalMutation, action, internalAction, type ActionCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import { ACKNOWLEDGE_MODEL, buildVentAcknowledgePrompt } from "./ai/ventAcknowledge";
+import { renderSemanticProfile } from "./semanticProfiles";
 import {
   getAnthropicClient,
   extractTextFromResponse,
@@ -58,7 +60,7 @@ export const checkAndIncrementCap = internalMutation({
     const currentUsed = needsReset ? 0 : (profile.ventDailyMinutesUsed ?? 0);
 
     if (currentUsed >= cap) {
-      return { allowed: false };
+      return { allowed: false as const };
     }
 
     await ctx.db.patch(profile._id, {
@@ -67,7 +69,7 @@ export const checkAndIncrementCap = internalMutation({
       updatedAt: Date.now(),
     });
 
-    return { allowed: true };
+    return { allowed: true as const, emotionalProfileId: profile._id };
   },
 });
 
@@ -224,18 +226,10 @@ type VentResult = {
  * All failures are soft — returns null words/audioUrl so the client can still
  * play the destruction animation regardless.
  */
-async function runVentPipeline(
-  ctx: ActionCtx,
+async function transcribeVentAudio(
+  apiKey: string,
   audioBytes: ArrayBuffer,
-): Promise<VentResult> {
-  const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
-  if (!apiKey) {
-    console.error("[vent] ELEVENLABS_VOICE_API_KEY not set — skipping pipeline");
-    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
-  }
-
-  // --- Step 1: Scribe v2 STT ---
-  let transcript = "";
+): Promise<string | null> {
   const scribeController = new AbortController();
   const scribeTimeout = setTimeout(() => scribeController.abort(), 30_000);
   try {
@@ -254,21 +248,48 @@ async function runVentPipeline(
     if (!scribeRes.ok) {
       const body = await scribeRes.text();
       console.error(`[vent] Scribe error ${scribeRes.status}: ${body}`);
-      return { words: null, audioUrl: null, isCrisis: false, capReached: false };
+      return null;
     }
 
     const data = await scribeRes.json();
-    transcript = typeof data.text === "string" ? data.text.trim() : "";
+    return typeof data.text === "string" ? data.text.trim() : "";
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
       console.error("[vent] Scribe request timed out");
     } else {
       console.error("[vent] Scribe fetch failed:", err);
     }
-    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
+    return null;
   } finally {
     clearTimeout(scribeTimeout);
   }
+}
+
+async function runVentPipeline(
+  ctx: ActionCtx,
+  audioBytes: ArrayBuffer,
+  emotionalProfileId?: Id<"emotional_profiles">,
+): Promise<VentResult> {
+  const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
+  if (!apiKey) {
+    console.error("[vent] ELEVENLABS_VOICE_API_KEY not set — skipping pipeline");
+    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
+  }
+
+  // --- Step 1: Scribe v2 STT, run alongside the (read-only) semantic profile
+  // fetch — the profile depends only on emotionalProfileId, not the
+  // transcript, so its cost is fully hidden behind the STT round-trip.
+  const [transcriptResult, semanticProfileDoc] = await Promise.all([
+    transcribeVentAudio(apiKey, audioBytes),
+    emotionalProfileId
+      ? ctx.runQuery(internal.semanticProfiles.getCurrent, { emotionalProfileId })
+      : Promise.resolve(null),
+  ]);
+
+  if (transcriptResult === null) {
+    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
+  }
+  const transcript = transcriptResult;
 
   if (transcript.length < 20) {
     console.log("[vent] Transcript too short — skipping acknowledgement");
@@ -276,6 +297,10 @@ async function runVentPipeline(
   }
 
   console.log("[vent] Transcript length:", transcript.length, "(not stored)");
+
+  const semanticProfile = semanticProfileDoc
+    ? renderSemanticProfile(semanticProfileDoc)
+    : null;
 
   // --- Step 2: Crisis check (keyword pre-filter → moderation confirm) ---
   const lower = transcript.toLowerCase();
@@ -296,7 +321,7 @@ async function runVentPipeline(
   } else {
     try {
       const client = getAnthropicClient();
-      const { system, user } = buildVentAcknowledgePrompt(transcript);
+      const { system, user } = buildVentAcknowledgePrompt(transcript, semanticProfile);
       const response = await client.messages.create({
         model: ACKNOWLEDGE_MODEL,
         max_tokens: 120,
@@ -389,15 +414,15 @@ export const processVentAudio = action({
     const payloadSeconds = args.audioBytes.byteLength / AUDIO_BYTES_PER_SECOND;
     const minutes = Math.max(claimedSeconds, payloadSeconds) / 60;
 
-    const capResult: { allowed: boolean } = await ctx.runMutation(
-      internal.vent.checkAndIncrementCap,
-      { minutes },
-    );
+    const capResult: (
+      | { allowed: true; emotionalProfileId: Id<"emotional_profiles"> }
+      | { allowed: false }
+    ) = await ctx.runMutation(internal.vent.checkAndIncrementCap, { minutes });
     if (!capResult.allowed) {
       console.log("[vent] Daily cap reached — skipping pipeline");
       return { words: null, audioUrl: null, isCrisis: false, capReached: true };
     }
 
-    return runVentPipeline(ctx, args.audioBytes);
+    return runVentPipeline(ctx, args.audioBytes, capResult.emotionalProfileId);
   },
 });
