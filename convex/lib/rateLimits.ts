@@ -3,6 +3,22 @@ import { components } from "../_generated/api";
 
 const DAY = 24 * HOUR;
 
+// Plus overrides — 2x the free rate/capacity, same ratio, passed as an
+// inline `config` override at the call site (free-tier config above stays
+// the registered default). Easy to tune independently later.
+export const SESSION_INITIATE_LIMITS_PLUS = {
+  kind: "token bucket",
+  rate: 10,
+  period: HOUR,
+  capacity: 5,
+} as const;
+export const AI_MIRROR_LIMITS_PLUS = {
+  kind: "token bucket",
+  rate: 16,
+  period: HOUR,
+  capacity: 4,
+} as const;
+
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // Session creation — 5/hour with burst allowance of 3
   sessionInitiate: { kind: "token bucket", rate: 5, period: HOUR, capacity: 3 },

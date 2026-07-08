@@ -23,7 +23,7 @@ import {
   collectRecentMirrors,
 } from "./helpers/patternSummary";
 
-import { rateLimiter } from "../lib/rateLimits";
+import { rateLimiter, AI_MIRROR_LIMITS_PLUS } from "../lib/rateLimits";
 import { posthog } from "../posthog";
 import { rag } from "../rag";
 
@@ -66,6 +66,7 @@ export const generateMirror = internalAction({
         "aiMirrorRequest",
         {
           key: context.session.emotionalProfileId as string,
+          ...(context.isPremium ? { config: AI_MIRROR_LIMITS_PLUS } : {}),
         },
       );
 

@@ -18,7 +18,7 @@ import {
   mirrorToneValidator,
 } from "./lib/validators";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
-import { rateLimiter } from "./lib/rateLimits";
+import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "./lib/rateLimits";
 import {
   abandonRequiresFollowUp,
   computeRequiresFollowUp,
@@ -174,10 +174,13 @@ export const initiate = mutation({
     const { profile } = await requireAuth(ctx);
     const now = Date.now();
 
-    // Rate limit: 5 sessions/hour per profile (token bucket with burst of 3)
+    // Rate limit: 5 sessions/hour per profile (token bucket with burst of 3),
+    // doubled for Plus.
+    const premium = await hasPremium(ctx, profile);
     await rateLimiter.limit(ctx, "sessionInitiate", {
       key: profile._id,
       throws: true,
+      ...(premium ? { config: SESSION_INITIATE_LIMITS_PLUS } : {}),
     });
 
     const sessionId = await ctx.db.insert("sessions", {
