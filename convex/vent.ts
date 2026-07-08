@@ -3,6 +3,7 @@ import { internalMutation, action, internalAction, type ActionCtx } from "./_gen
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
+import { hasPremium } from "./lib/premium";
 import { ACKNOWLEDGE_MODEL, buildVentAcknowledgePrompt } from "./ai/ventAcknowledge";
 import { renderSemanticProfile } from "./semanticProfiles";
 import {
@@ -19,7 +20,13 @@ const CRISIS_FALLBACK = "you don't have to carry this alone";
 
 // Ceiling on what a single vent can charge — also the fallback when the
 // caller can't know the real duration (e.g. the legacy agent session token).
-const MAX_INCREMENT_MINUTES = 3;
+// Tiered so a longer Plus recording isn't clipped when charged against the cap.
+const MAX_INCREMENT_MINUTES_FREE = 3;
+const MAX_INCREMENT_MINUTES_PLUS = 5;
+
+function getMaxIncrementMinutes(premium: boolean): number {
+  return premium ? MAX_INCREMENT_MINUTES_PLUS : MAX_INCREMENT_MINUTES_FREE;
+}
 // Mono 48kbps AAC ≈ 6KB/s. Used to sanity-check the client-claimed duration
 // against the actual payload so a tampered client can't under-report.
 const AUDIO_BYTES_PER_SECOND = 6000;
@@ -33,10 +40,11 @@ function startOfTodayUTC(): number {
  * Gate voice vent sessions behind a daily usage cap.
  *
  * Lazy daily reset: if ventDailyResetAt < startOfTodayUTC, the counter is
- * treated as 0 for today. The cap is read from ELEVENLABS_DAILY_CAP_MINUTES
- * (default 2). Increments by the actual session length in whole minutes
- * (clamped to 1..MAX_INCREMENT_MINUTES) — callers derive it from the
- * recording duration and payload size.
+ * treated as 0 for today. The cap is read from ELEVENLABS_DAILY_CAP_MINUTES_FREE
+ * / ELEVENLABS_DAILY_CAP_MINUTES_PLUS (default 2 / 8) depending on tier.
+ * Increments by the actual session length in whole minutes (clamped to
+ * 1..getMaxIncrementMinutes(tier)) — callers derive it from the recording
+ * duration and payload size.
  *
  * Returns { allowed: false } without incrementing when cap is exceeded.
  */
@@ -44,15 +52,27 @@ export const checkAndIncrementCap = internalMutation({
   args: { minutes: v.number() },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+    const premium = await hasPremium(ctx, profile);
 
     const minutes = Math.min(
       Math.max(Math.ceil(args.minutes), 1),
-      MAX_INCREMENT_MINUTES,
+      getMaxIncrementMinutes(premium),
     );
 
     const todayStart = startOfTodayUTC();
-    const capRaw = Number(process.env.ELEVENLABS_DAILY_CAP_MINUTES ?? "2");
-    const cap = Number.isFinite(capRaw) && capRaw >= 0 ? Math.floor(capRaw) : 2;
+    const capRaw = Number(
+      process.env[
+        premium
+          ? "ELEVENLABS_DAILY_CAP_MINUTES_PLUS"
+          : "ELEVENLABS_DAILY_CAP_MINUTES_FREE"
+      ] ?? (premium ? "8" : "2"),
+    );
+    const cap =
+      Number.isFinite(capRaw) && capRaw >= 0
+        ? Math.floor(capRaw)
+        : premium
+          ? 8
+          : 2;
 
     const needsReset =
       !profile.ventDailyResetAt || profile.ventDailyResetAt < todayStart;
@@ -88,9 +108,11 @@ export const getVentSessionToken = action({
     if (!identity) throw new Error("Not authenticated");
 
     // Open-ended agent session — duration unknown up front, charge the max.
+    // Pass the Plus ceiling; checkAndIncrementCap clamps down to the caller's
+    // actual tier internally, so a free user is still charged only their max.
     const capResult: { allowed: boolean } = await ctx.runMutation(
       internal.vent.checkAndIncrementCap,
-      { minutes: MAX_INCREMENT_MINUTES },
+      { minutes: MAX_INCREMENT_MINUTES_PLUS },
     );
     if (!capResult.allowed) throw new Error("Daily voice cap reached");
 

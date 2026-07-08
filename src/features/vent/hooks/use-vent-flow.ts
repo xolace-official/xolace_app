@@ -6,13 +6,20 @@ import { usePostHog } from 'posthog-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 import { api } from '@/convex/_generated/api';
+import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
 import { useVentRecorder } from './use-vent-recorder';
 
 export type VentState = 'idle' | 'recording' | 'processing' | 'heard' | 'gone' | 'error';
 
-// Hard recording ceiling — keeps the m4a payload safely under Convex's 1MB
-// v.bytes() limit. The daily cap is charged by actual duration server-side.
-export const MAX_VENT_DURATION_MS = 120_000;
+// Hard recording ceilings — keep the m4a payload safely under Convex's 1MB
+// v.bytes() limit (mono 48kbps AAC ≈ 6KB/s, so ~166s is the hard limit).
+// The daily cap is charged by actual duration server-side.
+const FREE_MAX_VENT_DURATION_MS = 120_000;
+const PLUS_MAX_VENT_DURATION_MS = 150_000;
+
+export function getMaxVentDurationMs(isPremium: boolean): number {
+  return isPremium ? PLUS_MAX_VENT_DURATION_MS : FREE_MAX_VENT_DURATION_MS;
+}
 
 type VentResult = {
   words: string | null;
@@ -40,11 +47,15 @@ export type UseVentFlowReturn = {
   metering: SharedValue<number>;
   isRecording: boolean;
   durationMs: number;
+  // Tier-aware recording ceiling — screen uses this for the auto-stop effect.
+  maxDurationMs: number;
 };
 
 export function useVentFlow(): UseVentFlowReturn {
   const posthog = usePostHog();
   const router = useRouter();
+  const { isPlus } = usePlusEntitlement();
+  const maxDurationMs = getMaxVentDurationMs(isPlus);
   const busyRef = useRef(false);
   const resultRef = useRef<VentResult | 'error' | null>(null);
   const burnDoneRef = useRef(false);
@@ -139,7 +150,7 @@ export function useVentFlow(): UseVentFlowReturn {
     durationAtStopRef.current = durationMs;
     posthog.capture('vent_stopped', {
       duration_ms: durationMs,
-      max_duration_reached: durationMs >= MAX_VENT_DURATION_MS,
+      max_duration_reached: durationMs >= maxDurationMs,
     });
 
     setState('processing');
@@ -204,5 +215,6 @@ export function useVentFlow(): UseVentFlowReturn {
     metering,
     isRecording,
     durationMs,
+    maxDurationMs,
   };
 }
