@@ -19,21 +19,17 @@ const PROFILE = "Recurring themes: overwork, self-doubt\nRecent trajectory: grad
 
 describe("buildFollowUpCardPrompt", () => {
   describe("semantic profile continuity line", () => {
-    it.each(["standard", "elevated"] as const)(
-      "leads with the continuity line for %s tier when a profile is present",
-      (tier) => {
+    for (const tier of ["standard", "elevated"] as const) {
+      it(`leads with the continuity line for ${tier} tier when a profile is present`, () => {
         const { user } = buildFollowUpCardPrompt({ ...baseCtx, tier, semanticProfile: PROFILE });
         expect(user).toContain(`How this sits in their larger pattern: ${PROFILE}`);
-      },
-    );
+      });
 
-    it.each(["standard", "elevated"] as const)(
-      "omits the continuity line for %s tier when the profile is null (cold-start, unchanged output)",
-      (tier) => {
+      it(`omits the continuity line for ${tier} tier when the profile is null (cold-start, unchanged output)`, () => {
         const { user } = buildFollowUpCardPrompt({ ...baseCtx, tier, semanticProfile: null });
         expect(user).not.toContain("How this sits in their larger pattern:");
-      },
-    );
+      });
+    }
 
     it("never includes the continuity line for acute tier, even if a profile is passed in", () => {
       const { user, system } = buildFollowUpCardPrompt({
