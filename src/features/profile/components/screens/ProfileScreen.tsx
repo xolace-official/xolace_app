@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 import { AuroraArc } from "@/src/features/profile/components/aurora-arc";
+import { ProfileSkeleton } from "@/src/features/profile/components/profile-skeleton";
 import { ProfileHero } from "@/src/features/profile/components/profile-hero";
 import { StatBand } from "@/src/features/profile/components/stat-band";
 import { EmotionChips } from "@/src/features/profile/components/emotion-chips";
@@ -87,6 +88,8 @@ export function ProfileScreen() {
           paddingBottom: insets.bottom + 40,
         }}
       >
+        {!summary && <ProfileSkeleton />}
+
         {summary && (
           <ProfileHero
             displayName={summary.displayName}
