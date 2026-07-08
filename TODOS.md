@@ -504,3 +504,36 @@ Verify on simulator by running a full session through the bridge path and confir
 **Effort:** M (CC ~30min, depends on existing episodic RAG infra maturity)
 **Priority:** P3 — revisit only if semantic-profile continuity proves insufficient
 **Depends on:** Nothing blocking; purely a "revisit if" item
+
+---
+
+## P3 — Quotes generator: Episodic RAG context
+
+**What:** Add top-K episodic memory retrieval (RAG over past reflections) as an input to the session-derived quotes generator, alongside the semantic profile (Memory) it already consumes.
+
+**Why:** Deferred out of v1 of the quotes-generator Cognition Layer transition (semantic-profile-first with the 2-session `loadEmotionalContext` scan kept as cold-start fallback/provenance). There is no session query text at quote-generation time, so episodic retrieval would need a themes-derived search (deriving a query from the profile's recurring themes) rather than a natural query vector. The semantic profile already delivers most of the value, so this is low-priority. Mirrors the same call made for the follow-up card and notification transitions.
+
+**Key files:** `convex/ai/quotesDistiller.ts` (`distillQuoteForUser`), `convex/semanticProfiles.ts`
+
+**Effort:** M (CC ~30min, depends on existing episodic RAG infra maturity)
+**Priority:** P3 — revisit only if semantic-profile themes prove insufficient
+**Depends on:** Nothing blocking; purely a "revisit if" item
+
+---
+
+## P3 — Quotes generator: Profile-only quotes (no recent session)
+
+**What:** Allow a session-derived quote to be generated purely from the semantic profile when the user has **no** recent completed session in the eligibility window, instead of skipping generation.
+
+**Why:** v1 of the quotes Cognition Layer transition kept the existing eligibility gate (≥1 completed session within the window) so `sessionContextIds` provenance stays intact for the retention/wipe cascade. A profile-only quote has no source sessions to key on, so it would need a new `profileVersion` provenance field on the `daily_quotes` table (schema addition) to keep wipe-keying honest. Deferred to avoid the schema change and preserve current cadence.
+
+**How to start:**
+1. Add an optional `profileVersion` (or similar) provenance field to the `daily_quotes` table in `convex/schema.ts`, alongside the existing optional `sessionContextIds`.
+2. Relax the eligibility gate in the quotes generator to also fire when a semantic profile exists but no recent session does, keying provenance on `profileVersion`.
+3. Confirm the retention/wipe cascade handles profile-version-keyed rows correctly (no orphaned quotes after a session wipe).
+
+**Key files:** `convex/schema.ts` (`daily_quotes`), `convex/ai/quotesDistiller.ts`, `convex/jobs/quotesGenerator.ts`
+
+**Effort:** M (CC ~30min — schema + gate + wipe-cascade check)
+**Priority:** P3 — only matters for users with a profile but sparse recent activity
+**Depends on:** Nothing blocking; schema addition is additive/backward-compatible
