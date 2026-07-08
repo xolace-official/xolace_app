@@ -5,9 +5,11 @@ import { useTokenColor } from "../hooks/use-token-color";
 const W = 44;
 const H = 24;
 
-// A representative count behind a static blur — readable as "a number lives
-// here" without revealing it. Real counts stay premium-gated.
-export function FrostedCount({ value }: { value: number }) {
+// A count badge, same footprint whether locked or unlocked. Locked rows show
+// a representative value behind a static blur — readable as "a number lives
+// here" without revealing it. Unlocked rows (row's real word already crossed
+// the wire) show the real count in the clear.
+export function FrostedCount({ value, locked = true }: { value: number; locked?: boolean }) {
   const accent = useTokenColor("accent");
   const muted = useTokenColor("muted");
 
@@ -30,10 +32,14 @@ export function FrostedCount({ value }: { value: number }) {
     >
       <Canvas style={{ width: W, height: H }}>
         <Rect x={0} y={0} width={W} height={H} color={accent + "12"} />
-        {/* eslint-disable-next-line react-perf/jsx-no-jsx-as-prop -- Skia <Group layer> requires a Paint JSX element; React Compiler stabilizes it */}
-        <Group layer={<Paint><Blur blur={4} /></Paint>}>
-          <Text x={x} y={y} text={label} font={font} color={muted + "E6"} />
-        </Group>
+        {locked ? (
+          // eslint-disable-next-line react-perf/jsx-no-jsx-as-prop -- Skia <Group layer> requires a Paint JSX element; React Compiler stabilizes it
+          <Group layer={<Paint><Blur blur={4} /></Paint>}>
+            <Text x={x} y={y} text={label} font={font} color={muted + "E6"} />
+          </Group>
+        ) : (
+          <Text x={x} y={y} text={label} font={font} color={accent + "E6"} />
+        )}
       </Canvas>
     </View>
   );

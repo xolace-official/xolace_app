@@ -35,10 +35,12 @@ export const getSummary = query({
 
     // Frequency-ranked language for the P5 words teaser. Read from the
     // denormalized profile field (recomputed in profileStats after each
-    // session) — no scan on this hot, reactive query. Counts stay
-    // server-side while the feature is premium-gated; only the ranked
-    // display words cross the wire. Top 4 for the teaser rows.
-    const recentWords = (profile.frequentWords ?? []).slice(0, 4).map((w) => w.word);
+    // session) — no scan on this hot, reactive query. Both the word and its
+    // real count are premium-gated together: whichever rows are unlocked for
+    // this tier ship their true count, everything else stays server-side.
+    const premium = await hasPremium(ctx, profile);
+    const allWords = profile.frequentWords ?? [];
+    const recentWords = premium ? allWords.slice(0, 4) : allWords.slice(0, 1);
 
     return {
       displayName: prefs?.displayName ?? seededDisplayName(profile._id),
@@ -55,6 +57,10 @@ export const getSummary = query({
       dominantEmotionTags: profile.dominantEmotionTags,
       typicalUsagePattern: profile.typicalUsagePattern ?? null,
       recentWords,
+      // Genuine recurring-word count, independent of tier truncation — lets
+      // the client decide teaser vs. empty state without seeing locked words.
+      wordCount: allWords.length,
+      premiumRequired: !premium,
     };
   },
 });

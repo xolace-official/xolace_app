@@ -44,7 +44,7 @@ export function ProfileScreen() {
   // Need 3 distinct recurring words so every teaser row is genuine — no
   // fabricated fallbacks. Below that, show the honest empty state once the
   // user has at least one session (their language just hasn't repeated yet).
-  const wordCount = summary?.recentWords?.length ?? 0;
+  const wordCount = summary?.wordCount ?? 0;
   const hasEnoughForWords = wordCount >= 3;
   const showWordsEmpty = sessionCount >= 1 && !hasEnoughForWords;
 
@@ -149,6 +149,7 @@ export function ProfileScreen() {
           <View className="mt-4">
             <WordsTeaserCard
               words={summary.recentWords}
+              isPlus={gate.isPlus}
               onView={() => gate.trackView("words_language")}
               onUnlock={() => gate.open("words_language")}
               staggerDelay={360}
