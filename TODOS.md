@@ -465,6 +465,34 @@ Verify on simulator by running a full session through the bridge path and confir
 
 ---
 
+## P3 — Vent acknowledgement: Episodic RAG context
+
+**What:** Add top-K episodic memory retrieval (RAG over past reflections) as an input to the vent acknowledgement prompt, alongside the semantic profile it now reads.
+
+**Why:** Deferred out of v1 of the vent → Memory-aware witness change. Retrieving specific past moments into a cathartic release pulls the acknowledgement toward specific content and off-tone — a vent is meant to feel traceless and in-the-moment, not cross-referenced. The semantic profile (who they are) is the right and only Memory input for v1; specific episodic content risks breaking the "stay in this moment" guard. Revisit only as an explicit, separate product decision.
+
+**Key files:** `convex/vent.ts` (`runVentPipeline`), `convex/ai/ventAcknowledge.ts` (`buildVentAcknowledgePrompt`)
+
+**Effort:** M (depends on existing episodic RAG infra maturity)
+**Priority:** P3 — revisit only if semantic-profile attunement proves insufficient
+**Depends on:** Nothing blocking; purely a "revisit if" item
+
+---
+
+## P3 — Vent acknowledgement: Entitlement/gating changes
+
+**What:** Any change to how the vent cap or premium/entitlement gating interacts with the (now Memory-aware) vent acknowledgement pipeline.
+
+**Why:** The semantic-profile read added to `runVentPipeline` is independent of the vent daily cap (`checkAndIncrementCap`) and any premium gate — it was deliberately left untouched in the vent → Memory-aware witness change. If entitlement changes are ever needed here, they should be scoped and decided separately rather than folded into the Memory-read work.
+
+**Key files:** `convex/vent.ts` (`checkAndIncrementCap`, `processVentAudio`)
+
+**Effort:** — (scope unknown until a concrete entitlement change is proposed)
+**Priority:** P3 — no current driver; listed so it isn't silently bundled into future vent work
+**Depends on:** Nothing blocking; purely a "revisit if" item
+
+---
+
 ## P3 — Follow-up card: Episodic RAG context
 
 **What:** Add top-K episodic memory retrieval (RAG over past reflections) as a third input to the follow-up card writer, alongside Understanding (`getUnderstanding`) and the semantic profile (Memory) it already uses.
