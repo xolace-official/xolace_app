@@ -137,6 +137,25 @@ The command file is located at `command/convex.md`.
 4. **Use internal functions** for sensitive operations
 5. **Batch operations** for large datasets
 
+### Client-Side Reactive Reads (React)
+
+Convex `useQuery` / `usePaginatedQuery` are reactive: when their **arguments
+change**, they briefly return `undefined` (or reset a paginated list to
+`status: "LoadingFirstPage"` + `page: []`) until the new data loads. Any
+`{data && <X/>}` guard then **unmounts** the subtree during that window,
+blanking the UI mid-interaction and replaying mount/entrance animations. This is
+the "overreacting" problem: https://stack.convex.dev/help-my-app-is-overreacting
+
+- **Args change from user interaction** (paging, filtering, sorting, tab/segment
+  switches): use `useStableQuery` / `useStablePaginatedQuery` from
+  `@/src/lib/convex/use-stable-query`. They hold the previously loaded result
+  during the reload so the UI swaps **in place** (only the data props change).
+  - Example: `src/features/profile/hooks/use-week-intensity.ts` — the profile
+    week pager changes a `weekOffset` arg on each chevron tap.
+- **Args are stable** (fixed-arg reads, plain infinite-scroll lists): keep raw
+  `useQuery` / `usePaginatedQuery`. Here the `undefined` / first-page-loading
+  state is a genuine cold start — render a skeleton/loading state for it.
+
 ## DO NOT
 
 - Run `npx convex deploy` without explicit instruction
