@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { create } from "zustand";
 
 /**
@@ -16,20 +17,15 @@ export type PaywallSurface =
   | "daily_quote";
 
 type PaywallState = {
-  isOpen: boolean;
-  surface: PaywallSurface | null;
   open: (surface: PaywallSurface) => void;
-  close: () => void;
 };
 
 /**
- * Global paywall visibility. Analytics (paywall_opened / paywall_dismissed)
- * are captured by PaywallSheet, which observes this store and has PostHog
- * + session context in scope.
+ * Opens the paywall route. Analytics (paywall_opened / paywall_dismissed)
+ * are captured inside the paywall screen, which has PostHog + session
+ * context in scope. Uses the imperative `router` singleton since this is a
+ * Zustand action, not a component.
  */
-export const usePaywall = create<PaywallState>((set) => ({
-  isOpen: false,
-  surface: null,
-  open: (surface) => set({ isOpen: true, surface }),
-  close: () => set({ isOpen: false }),
+export const usePaywall = create<PaywallState>(() => ({
+  open: (surface) => router.push({ pathname: "/(paywall)", params: { surface } }),
 }));
