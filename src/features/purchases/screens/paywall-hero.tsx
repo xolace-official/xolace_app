@@ -10,11 +10,11 @@ export function PaywallHero() {
     <View className="gap-3 items-center">
       <GradientText
         text="Xolace+"
-        className="font-serif text-3xl text-center"
+        className="text-3xl text-center font-bold"
         gradientProps={{ colors: [`${accentColor}80`, accentColor, `${accentColor}80`] }}
       />
-      <AppText className="text-sm font-light text-default-soft text-center leading-6 px-4">
-        {"You've been showing up. Xolace+ keeps everything you're building — your patterns, your language, your history — within reach."}
+      <AppText className="text-sm font-light text-muted text-center leading-6 px-4">
+        {"You've been showing up. Xolace+ keeps everything you're building, your patterns, your language, your history within reach."}
       </AppText>
     </View>
   );

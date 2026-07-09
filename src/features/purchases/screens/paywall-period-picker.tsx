@@ -1,86 +1,96 @@
 import { StyleSheet, View } from "react-native";
-import { PressableFeedback, useThemeColor } from "heroui-native";
-import { SymbolView } from "expo-symbols";
+import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import { SegmentedControl } from "@/src/components/shared/segmented-control";
 import { cn } from "@/src/lib/utils";
 
 export type PlanId = "annual" | "monthly";
 
-type CardProps = {
-  plan: PlanId;
-  title: string;
-  price: string;
-  /** Secondary pricing line, e.g. "$4.17/mo, billed yearly". */
-  detail: string;
-  badge?: string;
-  isSelected: boolean;
-  onSelect: (plan: PlanId) => void;
-};
-
-function PeriodCard({ plan, title, price, detail, badge, isSelected, onSelect }: CardProps) {
-  const accentColor = useThemeColor("accent") as string;
-
-  return (
-    <PressableFeedback
-      onPress={() => onSelect(plan)}
-      accessibilityRole="radio"
-      accessibilityLabel={`${title}, ${price}`}
-      accessibilityState={{ selected: isSelected }}
-      className={cn(
-        "flex-1 rounded-2xl border-2 px-4 py-4",
-        isSelected ? "border-accent bg-accent/10" : "border-border bg-surface",
-      )}
-      style={styles.borderCurve}
-    >
-      {isSelected && (
-        <View className="absolute top-3 right-3">
-          <SymbolView name="checkmark.circle.fill" size={18} tintColor={accentColor} />
-        </View>
-      )}
-      <AppText className="text-[15px] font-medium text-foreground">{title}</AppText>
-      <AppText className="text-lg font-semibold text-foreground mt-1.5">{price}</AppText>
-      <AppText className="text-[12px] text-muted mt-0.5">{detail}</AppText>
-      {badge && (
-        <View className="self-start rounded-full bg-accent px-2.5 py-1 mt-2.5">
-          <AppText className="text-[11px] font-medium text-accent-foreground">
-            {badge}
-          </AppText>
-        </View>
-      )}
-    </PressableFeedback>
-  );
-}
+type PlanPrice = { price: string; detail: string };
 
 type Props = {
-  annual: { price: string; detail: string };
-  monthly: { price: string; detail: string };
+  annual: PlanPrice;
+  monthly: PlanPrice;
+  /** Whole-number percent saved by choosing annual over monthly, e.g. 58. */
+  discountPercent: number | null;
   selected: PlanId;
   onSelect: (plan: PlanId) => void;
 };
 
 /**
- * Side-by-side period picker — Annual is the hero (7-day trial badge),
- * Monthly is the anchor that makes the annual discount legible. Replaces
- * the old stacked paywall-plan-card.tsx rows.
+ * Pinned segmented control (Monthly / Yearly) + a single price card that
+ * updates to the selected plan. Replaces the old side-by-side two-card
+ * grid — there's only one product tier, so the segment itself carries the
+ * period choice instead of duplicating it across cards.
  */
-export function PaywallPeriodPicker({ annual, monthly, selected, onSelect }: Props) {
+export function PaywallPeriodPicker({ annual, monthly, discountPercent, selected, onSelect }: Props) {
+  const accentForeground = useThemeColor("accent-foreground") as string;
+  const current = selected === "annual" ? annual : monthly;
+
   return (
-    <View className="flex-row gap-3">
-      <PeriodCard
-        plan="annual"
-        title="Annual"
-        {...annual}
-        badge="7-day free trial"
-        isSelected={selected === "annual"}
-        onSelect={onSelect}
-      />
-      <PeriodCard
-        plan="monthly"
-        title="Monthly"
-        {...monthly}
-        isSelected={selected === "monthly"}
-        onSelect={onSelect}
-      />
+    <View className="gap-3">
+      <SegmentedControl
+        value={selected}
+        onValueChange={(value) => onSelect(value as PlanId)}
+        className="relative rounded-2xl bg-surface-secondary"
+      >
+        <SegmentedControl.Indicator className="rounded-xl bg-accent" style={styles.borderCurve} />
+
+        <SegmentedControl.Item value="monthly" className="flex-1 items-center py-2.5">
+          <AppText
+            className={cn(
+              "text-[14px] font-medium",
+              selected === "monthly" ? "text-accent-foreground" : "text-foreground",
+            )}
+          >
+            Monthly
+          </AppText>
+        </SegmentedControl.Item>
+
+        <SegmentedControl.Item
+          value="annual"
+          className="flex-1 flex-row items-center justify-center gap-2 py-2.5"
+        >
+          <AppText
+            className={cn(
+              "text-[14px] font-medium",
+              selected === "annual" ? "text-accent-foreground" : "text-foreground",
+            )}
+          >
+            Yearly
+          </AppText>
+          {discountPercent !== null && (
+            <View
+              className={cn(
+                "rounded-full px-2 py-0.5",
+                selected === "annual" ? "bg-accent-foreground/15" : "bg-accent/15",
+              )}
+            >
+              <AppText
+                className="text-[11px] font-semibold"
+                style={{ color: selected === "annual" ? accentForeground : undefined }}
+              >
+                {selected === "annual" ? `-${discountPercent}%` : `Save ${discountPercent}%`}
+              </AppText>
+            </View>
+          )}
+        </SegmentedControl.Item>
+      </SegmentedControl>
+
+      <View
+        className="flex-row items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3.5"
+        style={styles.borderCurve}
+      >
+        <View>
+          <AppText className="text-[15px] font-semibold text-foreground">{current.price}</AppText>
+          <AppText className="text-[12px] text-muted mt-0.5">{current.detail}</AppText>
+        </View>
+        {selected === "annual" && (
+          <View className="rounded-full bg-accent/12 px-2.5 py-1" style={styles.borderCurve}>
+            <AppText className="text-[11px] font-medium text-accent">7-day free trial</AppText>
+          </View>
+        )}
+      </View>
     </View>
   );
 }

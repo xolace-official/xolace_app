@@ -40,7 +40,7 @@ export function PaywallFeatureItem({ icon, title, description, isHighlighted }: 
           )}
         </View>
         {description && (
-          <AppText className="text-[13px] leading-5 text-default-soft">{description}</AppText>
+          <AppText className="text-[13px] leading-5 text-muted">{description}</AppText>
         )}
       </View>
     </View>

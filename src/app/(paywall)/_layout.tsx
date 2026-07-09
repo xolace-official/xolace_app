@@ -1,33 +1,24 @@
 import { Stack } from "expo-router";
-import {
-  PaywallCloseButton,
-  PaywallRestoreButton,
-} from "@/src/features/purchases/screens/paywall-header-actions";
+
+
+const SCREEN_OPTIONS = {
+  headerShown: false,
+  contentStyle: { backgroundColor: 'transparent' },
+};
 
 export default function PaywallLayout() {
   return (
-    <Stack>
+    <Stack screenOptions={SCREEN_OPTIONS}>
       <Stack.Screen
         name="index"
         options={{
+          title: "",
           headerTransparent: true,
           headerShadowVisible: false,
-          headerTitle: () => null,
           presentation: "fullScreenModal",
           gestureEnabled: true,
         }}
-      >
-        <Stack.Toolbar placement="left">
-          <Stack.Toolbar.View>
-            <PaywallCloseButton />
-          </Stack.Toolbar.View>
-        </Stack.Toolbar>
-        <Stack.Toolbar placement="right">
-          <Stack.Toolbar.View>
-            <PaywallRestoreButton />
-          </Stack.Toolbar.View>
-        </Stack.Toolbar>
-      </Stack.Screen>
+      />
     </Stack>
   );
 }
