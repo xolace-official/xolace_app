@@ -35,10 +35,12 @@ export const getSummary = query({
 
     // Frequency-ranked language for the P5 words teaser. Read from the
     // denormalized profile field (recomputed in profileStats after each
-    // session) — no scan on this hot, reactive query. Counts stay
-    // server-side while the feature is premium-gated; only the ranked
-    // display words cross the wire. Top 4 for the teaser rows.
-    const recentWords = (profile.frequentWords ?? []).slice(0, 4).map((w) => w.word);
+    // session) — no scan on this hot, reactive query. Both the word and its
+    // real count are premium-gated together: whichever rows are unlocked for
+    // this tier ship their true count, everything else stays server-side.
+    const premium = await hasPremium(ctx, profile);
+    const allWords = profile.frequentWords ?? [];
+    const recentWords = premium ? allWords.slice(0, 4) : allWords.slice(0, 1);
 
     return {
       displayName: prefs?.displayName ?? seededDisplayName(profile._id),
@@ -55,6 +57,10 @@ export const getSummary = query({
       dominantEmotionTags: profile.dominantEmotionTags,
       typicalUsagePattern: profile.typicalUsagePattern ?? null,
       recentWords,
+      // Genuine recurring-word count, independent of tier truncation — lets
+      // the client decide teaser vs. empty state without seeing locked words.
+      wordCount: allWords.length,
+      premiumRequired: !premium,
     };
   },
 });
@@ -94,33 +100,59 @@ export const getMoodDelta = query({
   },
 });
 
+// How far back a Plus user can page. Matches the longest data-retention
+// tier ("1_year") — beyond this, earlier sessions are already purged.
+const MAX_WEEKS_BACK = 52;
+const MONTH_LABELS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+function formatWeekLabel(weekStart: Date, weekEnd: Date): string {
+  const lastDay = new Date(weekEnd.getTime() - 86_400_000);
+  const sameMonth = weekStart.getMonth() === lastDay.getMonth();
+  const start = `${MONTH_LABELS[weekStart.getMonth()]} ${weekStart.getDate()}`;
+  const end = sameMonth
+    ? `${lastDay.getDate()}`
+    : `${MONTH_LABELS[lastDay.getMonth()]} ${lastDay.getDate()}`;
+  return `${start}–${end}`;
+}
+
 /**
- * Current-week intensity data for the P2 chart teaser (Mon–Sun).
- * Returns per-day averages and which day peaked.
- * Earlier-week depth is gated premium — returns null + premiumRequired flag.
+ * Intensity data for the P2 chart teaser (Mon–Sun), current week by default.
+ * Free tier can only ever request the current week (weekOffset forced to 0
+ * server-side); Plus can page up to MAX_WEEKS_BACK weeks into history.
  */
 export const getWeekIntensity = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { weekOffset: v.optional(v.number()) },
+  handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+    const premium = await hasPremium(ctx, profile);
+
+    // v.number() is a Float64: NaN and ±Infinity pass validation and would
+    // otherwise propagate into Invalid Date and NaN index bounds below.
+    const rawOffset = args.weekOffset ?? 0;
+    const requestedOffset = Number.isFinite(rawOffset) ? Math.trunc(rawOffset) : 0;
+    const weekOffset = premium
+      ? Math.max(-MAX_WEEKS_BACK, Math.min(0, requestedOffset))
+      : 0;
 
     const now = Date.now();
     // Shift so Mon=0, Sun=6
     const dayOfWeek = (new Date(now).getDay() + 6) % 7;
-    const weekStart = new Date(now - dayOfWeek * 86_400_000);
-    weekStart.setHours(0, 0, 0, 0);
+    const currentWeekStart = new Date(now - dayOfWeek * 86_400_000);
+    currentWeekStart.setHours(0, 0, 0, 0);
+    const weekStart = new Date(currentWeekStart.getTime() + weekOffset * 7 * 86_400_000);
     const weekEnd = new Date(weekStart.getTime() + 7 * 86_400_000);
 
-    // Bounded scan: take up to 50, filter to current week in JS.
-    const allMeta = await ctx.db
+    const metadata = await ctx.db
       .query("emotional_metadata")
-      .withIndex("by_profile_theme", (q) => q.eq("emotionalProfileId", profile._id))
-      .order("desc")
-      .take(50);
-
-    const metadata = allMeta.filter(
-      (m) => m.createdAt >= weekStart.getTime() && m.createdAt < weekEnd.getTime(),
-    );
+      .withIndex("by_profile_createdAt", (q) =>
+        q
+          .eq("emotionalProfileId", profile._id)
+          .gte("createdAt", weekStart.getTime())
+          .lt("createdAt", weekEnd.getTime()),
+      )
+      .take(300);
 
     const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
     const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -131,7 +163,7 @@ export const getWeekIntensity = query({
       buckets[idx].push(m.intensity);
     }
 
-    const todayIdx = (new Date(now).getDay() + 6) % 7;
+    const todayIdx = weekOffset === 0 ? (new Date(now).getDay() + 6) % 7 : -1;
 
     const days = DAY_LABELS.map((label, i) => {
       const vals = buckets[i];
@@ -149,7 +181,10 @@ export const getWeekIntensity = query({
       days,
       peakDay: peakIdx !== null ? days[peakIdx].dayName : null,
       hasData: days.some((d) => d.intensity !== null),
-      premiumRequired: !(await hasPremium(ctx, profile)),
+      premiumRequired: !premium,
+      weekOffset,
+      weekLabel: weekOffset === 0 ? "This week" : formatWeekLabel(weekStart, weekEnd),
+      isEarliestWeek: weekOffset <= -MAX_WEEKS_BACK,
     };
   },
 });

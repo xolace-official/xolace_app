@@ -10,8 +10,11 @@ import { CardInfo } from "./card-info";
 const WORDS_INFO =
   "These are the recurring words from your own writing; your language, not ours. The count is how often each one has returned. Seeing every word and its frequency is part of the deeper insights coming soon.";
 
+type WordEntry = { word: string; count: number };
+
 type Props = {
-  words: string[];
+  words: WordEntry[];
+  isPlus: boolean;
   onUnlock: () => void;
   onView: () => void;
   staggerDelay?: number;
@@ -19,7 +22,8 @@ type Props = {
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
-// Representative counts behind the frosted badges — never real values.
+// Representative counts for locked rows — never real values. Unlocked rows
+// use the real count that shipped alongside their word.
 const PLACEHOLDER_COUNTS = [12, 7, 4];
 const FALLBACK_WORDS = ["still", "here", "quiet"];
 // Stable positional keys — rows are fixed slots (clear → fogged), never reordered.
@@ -48,7 +52,7 @@ function BlurredWord({ text, color }: { text: string; color: string }) {
   );
 }
 
-export function WordsTeaserCard({ words, onUnlock, onView, staggerDelay = 360 }: Props) {
+export function WordsTeaserCard({ words, isPlus, onUnlock, onView, staggerDelay = 360 }: Props) {
   const mutedHex = useTokenColor("muted");
   const accentHex = useTokenColor("accent");
 
@@ -59,10 +63,23 @@ export function WordsTeaserCard({ words, onUnlock, onView, staggerDelay = 360 }:
     onView();
   }, [onView]);
 
-  // Three rows: the top word reads clear; the rest are blurred. Counts stay
-  // frosted on every row (the recurrence is the premium part).
-  const source = words.length > 0 ? words : FALLBACK_WORDS;
-  const rows = ROW_SLOTS.map((slot, i) => ({ slot, word: source[i] ?? FALLBACK_WORDS[i] }));
+  // Three rows. Plus: all real words + real counts, all clear. Free: only the
+  // hook word is real (the server never sends the 2nd/3rd word or their
+  // counts to a free tier) — the remaining rows are local decoys with
+  // placeholder counts, always blurred/frosted.
+  const rows = isPlus
+    ? ROW_SLOTS.map((slot, i) => ({
+        slot,
+        word: words[i]?.word ?? FALLBACK_WORDS[i],
+        count: words[i]?.count ?? PLACEHOLDER_COUNTS[i],
+        blurred: !words[i],
+      }))
+    : ROW_SLOTS.map((slot, i) => ({
+        slot,
+        word: i === 0 ? (words[0]?.word ?? FALLBACK_WORDS[0]) : FALLBACK_WORDS[i],
+        count: i === 0 ? (words[0]?.count ?? PLACEHOLDER_COUNTS[0]) : PLACEHOLDER_COUNTS[i],
+        blurred: i !== 0,
+      }));
 
   return (
     <EaseView
@@ -85,25 +102,26 @@ export function WordsTeaserCard({ words, onUnlock, onView, staggerDelay = 360 }:
             <CardInfo title="Words that keep finding you" description={WORDS_INFO} />
           </View>
 
-          {/* Rows: top word clear, others blurred — counts frosted throughout. */}
+          {/* Rows: unlocked rows show word + real count clear; locked rows
+              stay blurred/frosted with decoy word + placeholder count. */}
           <View className="px-5 pb-4 gap-2.5">
-            {rows.map(({ slot, word }, i) => (
+            {rows.map(({ slot, word, count, blurred }) => (
               <View key={slot} className="flex-row items-center justify-between">
-                {i === 0 ? (
+                {blurred ? (
+                  <BlurredWord text={word} color={accentHex + "CC"} />
+                ) : (
                   <AppText className="text-sm" style={{ color: accentHex + "CC" }}>
                     {word}
                   </AppText>
-                ) : (
-                  <BlurredWord text={word} color={accentHex + "CC"} />
                 )}
-                <FrostedCount value={PLACEHOLDER_COUNTS[i % PLACEHOLDER_COUNTS.length]} />
+                <FrostedCount value={count} locked={blurred} />
               </View>
             ))}
           </View>
 
           <View className="px-5 pb-5">
             <AppText className="text-[11px] tracking-wide" style={{ color: mutedHex + "AA" }}>
-              See every word — and how often it returns
+              See every word and how often it returns
             </AppText>
           </View>
         </View>
