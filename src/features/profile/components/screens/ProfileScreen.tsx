@@ -148,6 +148,7 @@ export function ProfileScreen() {
             momentsTotal={sessionCount}
             isPlus={gate.isPlus}
             weekLabel={weekIntensity.weekLabel}
+            isCurrentWeek={weekIntensity.weekOffset === 0}
             isEarliestWeek={weekIntensity.isEarliestWeek}
             onPrevWeek={() => setWeekOffset((w) => w - 1)}
             onNextWeek={() => setWeekOffset((w) => Math.min(0, w + 1))}

@@ -72,7 +72,7 @@ export function WordsTeaserCard({ words, isPlus, onUnlock, onView, staggerDelay 
         slot,
         word: words[i]?.word ?? FALLBACK_WORDS[i],
         count: words[i]?.count ?? PLACEHOLDER_COUNTS[i],
-        blurred: false,
+        blurred: !words[i],
       }))
     : ROW_SLOTS.map((slot, i) => ({
         slot,

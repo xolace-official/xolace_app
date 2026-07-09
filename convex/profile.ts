@@ -128,7 +128,10 @@ export const getWeekIntensity = query({
     const { profile } = await requireAuth(ctx);
     const premium = await hasPremium(ctx, profile);
 
-    const requestedOffset = Math.trunc(args.weekOffset ?? 0);
+    // v.number() is a Float64: NaN and ±Infinity pass validation and would
+    // otherwise propagate into Invalid Date and NaN index bounds below.
+    const rawOffset = args.weekOffset ?? 0;
+    const requestedOffset = Number.isFinite(rawOffset) ? Math.trunc(rawOffset) : 0;
     const weekOffset = premium
       ? Math.max(-MAX_WEEKS_BACK, Math.min(0, requestedOffset))
       : 0;

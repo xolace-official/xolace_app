@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 import { api } from '@/convex/_generated/api';
 import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
-import { useVentRecorder } from './use-vent-recorder';
+import { useVentRecorder } from '@/src/features/vent/hooks/use-vent-recorder';
 
 export type VentState = 'idle' | 'recording' | 'processing' | 'heard' | 'gone' | 'error';
 

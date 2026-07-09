@@ -19,7 +19,7 @@ import { PressableFeedback } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useAppStore } from '@/src/store/store';
-import { useVentFlow } from '../../hooks/use-vent-flow';
+import { useVentFlow } from '@/src/features/vent/hooks/use-vent-flow';
 import { useVentSounds } from '../../hooks/use-vent-sounds';
 import { ParticleField, type ParticleStage } from '../particles/particle-field';
 import { VentAcknowledgement } from '../vent-acknowledgement';

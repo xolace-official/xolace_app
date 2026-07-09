@@ -35,6 +35,7 @@ type Props = {
   momentsTotal: number;
   isPlus: boolean;
   weekLabel: string;
+  isCurrentWeek: boolean;
   isEarliestWeek: boolean;
   onPrevWeek: () => void;
   onNextWeek: () => void;
@@ -194,6 +195,7 @@ export function WeekIntensityCard({
   momentsTotal,
   isPlus,
   weekLabel,
+  isCurrentWeek,
   isEarliestWeek,
   onPrevWeek,
   onNextWeek,
@@ -213,7 +215,6 @@ export function WeekIntensityCard({
     onView();
   }, [onView]);
 
-  const isCurrentWeek = weekLabel === "This week";
   const momentLabel = `${momentsTotal} ${momentsTotal === 1 ? "moment" : "moments"}`;
 
   return (
