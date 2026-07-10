@@ -70,6 +70,12 @@ export const VoiceSection = () => {
                             playSoftPress();
                             preview.toggle(slug);
                           }}
+                          accessibilityRole="button"
+                          accessibilityLabel={
+                            preview.playingSlug === slug
+                              ? `Stop ${opt.label} voice preview`
+                              : `Play ${opt.label} voice preview`
+                          }
                           className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-accent/10"
                         >
                           <SymbolView
