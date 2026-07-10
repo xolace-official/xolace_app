@@ -23,6 +23,9 @@ export const PAYWALL_SURFACE_FEATURE: Record<PaywallSurface, PaywallFeatureId | 
   timeline_extended: "timeline",
   mirror_tone: "mirror_tone",
   daily_quote: "quotes",
+  // Bridge has no feature row of its own — its cap lives under "Higher daily
+  // limits" alongside reflections and vents.
+  bridge_draft: "caps",
   settings_row: null,
   profile_row: null,
 };

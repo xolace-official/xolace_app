@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import {
   mutation,
   query,
@@ -27,6 +27,13 @@ import type { Doc } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 
 const ABANDON_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
+
+// Hard ceiling on a single reflection's text. The client's TextArea enforces
+// the same limit via maxLength, so a normal user never reaches this — the
+// server throw only fires against a tampered client. A generous bound (~800
+// words); the mirror rate limit is the real cost containment, this is cheap
+// insurance on token spend. Keep in sync with MAX_RAW_INPUT in typing-state.tsx.
+const MAX_RAW_INPUT = 5_000;
 
 // Terminal states — sessions in these states cannot be transitioned further.
 const TERMINAL_STATES = new Set(["completed", "abandoned"]);
@@ -204,8 +211,15 @@ export const submitInput = mutation({
   args: {
     sessionId: v.id("sessions"),
     rawInput: v.string(),
-    rawText: v.string(),
-    rawInputLength: v.number(),
+    // DEPRECATED(remove-after: app >= next shipped build): the server no longer
+    // trusts these. `rawText` must equal `rawInput` (a tampered client could
+    // send different text than it stored), and `rawInputLength` is derivable —
+    // both are now derived from `rawInput` server-side. Optional so a future
+    // client can stop sending them; their values are ignored.
+    /** @deprecated derived from rawInput server-side; value ignored */
+    rawText: v.optional(v.string()),
+    /** @deprecated derived from rawInput server-side; value ignored */
+    rawInputLength: v.optional(v.number()),
     inputDuration: v.optional(v.number()),
     freezeOccurred: v.boolean(),
     freezeDuration: v.optional(v.number()),
@@ -217,12 +231,23 @@ export const submitInput = mutation({
       throw new Error(`Cannot submit input in state "${session.state}"`);
     }
 
+    if (args.rawInput.length > MAX_RAW_INPUT) {
+      throw new ConvexError({
+        code: "input_too_long",
+        max: MAX_RAW_INPUT,
+      });
+    }
+
+    // Single source of truth: the AI processes exactly what we store, and the
+    // stored length matches the stored text. Client-sent rawText/rawInputLength
+    // are ignored (see deprecation note above).
+    const rawText = args.rawInput;
     const now = new Date();
 
     await ctx.db.patch(args.sessionId, {
       state: "processing",
-      rawInput: args.rawInput,
-      rawInputLength: args.rawInputLength,
+      rawInput: rawText,
+      rawInputLength: rawText.length,
       inputDuration: args.inputDuration,
       freezeOccurred: args.freezeOccurred,
       freezeDuration: args.freezeDuration,
@@ -234,7 +259,7 @@ export const submitInput = mutation({
     // Schedule AI processing
     await ctx.scheduler.runAfter(0, internal.ai.process.generateMirror, {
       sessionId: args.sessionId,
-      rawText: args.rawText,
+      rawText,
     });
 
     return null;
@@ -473,7 +498,13 @@ export const completeSession = mutation({
 export const retrySession = mutation({
   args: {
     sessionId: v.id("sessions"),
-    rawText: v.string(),
+    // DEPRECATED(remove-after: app >= next shipped build): retry now reprocesses
+    // the text already stored on the session (session.rawInput), not a client
+    // arg — a retry should re-run what the user actually submitted, and a
+    // tampered client shouldn't be able to swap in different text on retry.
+    // Optional so a future client can stop sending it; value ignored.
+    /** @deprecated retry reprocesses session.rawInput; value ignored */
+    rawText: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
@@ -482,16 +513,21 @@ export const retrySession = mutation({
       throw new Error(`Cannot retry session in state "${session.state}"`);
     }
 
+    const rawText = session.rawInput;
+    if (!rawText) {
+      throw new Error("Cannot retry a session with no stored input");
+    }
+
     await ctx.db.patch(args.sessionId, {
       state: "processing",
       errorMessage: undefined,
       updatedAt: Date.now(),
     });
 
-    // Re-schedule AI processing
+    // Re-schedule AI processing with the stored input (client arg ignored).
     await ctx.scheduler.runAfter(0, internal.ai.process.generateMirror, {
       sessionId: args.sessionId,
-      rawText: args.rawText,
+      rawText,
     });
 
     return null;

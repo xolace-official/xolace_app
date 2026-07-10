@@ -19,12 +19,37 @@ export const AI_MIRROR_LIMITS_PLUS = {
   capacity: 4,
 } as const;
 
+// Trusted Bridge drafts. The bucket counts Anthropic CALLS, not drafts: the
+// product promise is 1 draft/day free and 5/day Plus, each with one free
+// regeneration (change the recipient, try again). A call that fails or returns
+// empty is refunded, so a user never loses a draft to our error.
+//
+// Anything user-facing must divide by BRIDGE_CALLS_PER_DRAFT — "2 calls left"
+// is one draft plus its retry, and rendering it as two drafts is a lie.
+export const BRIDGE_CALLS_PER_DRAFT = 2;
+export const BRIDGE_DRAFTS_FREE = 1;
+export const BRIDGE_DRAFTS_PLUS = 5;
+
+export const BRIDGE_DRAFT_LIMITS_PLUS = {
+  kind: "fixed window",
+  rate: BRIDGE_DRAFTS_PLUS * BRIDGE_CALLS_PER_DRAFT,
+  period: DAY,
+} as const;
+
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // Session creation — 5/hour with burst allowance of 3
   sessionInitiate: { kind: "token bucket", rate: 5, period: HOUR, capacity: 3 },
 
   // AI mirror generation — main cost control
   aiMirrorRequest: { kind: "token bucket", rate: 8, period: HOUR, capacity: 2 },
+
+  // Trusted Bridge draft generation — free tier default (1 draft + 1 retry).
+  // Plus widens the same bucket via BRIDGE_DRAFT_LIMITS_PLUS at the call site.
+  bridgeDraft: {
+    kind: "fixed window",
+    rate: BRIDGE_DRAFTS_FREE * BRIDGE_CALLS_PER_DRAFT,
+    period: DAY,
+  },
 
   // Notification spam prevention — 1 per 24 hours
   notification: { kind: "fixed window", rate: 1, period: DAY },

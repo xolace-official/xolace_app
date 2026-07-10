@@ -92,6 +92,14 @@ export const enforce = internalMutation({
           continue;
         }
 
+        // Wipe parity: the TTS render of the user's own mirror. Nothing else
+        // references this blob, so it leaks into storage forever if we skip it
+        // (see dataWipe.wipe / accountDeletion.purge). Only reclaimed once the
+        // session row is actually being deleted, not on the turns-remain path.
+        if (session.mirrorAudioStorageId) {
+          await ctx.storage.delete(session.mirrorAudioStorageId);
+        }
+
         await ctx.db.delete(session._id);
       }
 

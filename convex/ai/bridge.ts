@@ -1,12 +1,32 @@
-import { v } from "convex/values";
-import { action, internalAction, internalQuery } from "../_generated/server";
+import { ConvexError, v } from "convex/values";
+import {
+  action,
+  internalAction,
+  internalMutation,
+  internalQuery,
+  query,
+} from "../_generated/server";
 import { internal } from "../_generated/api";
 import {
   getAnthropicClient,
   ARTICULATOR_MODEL,
   extractTextFromResponse,
 } from "./providers/anthropic";
-import { requireSessionOwnership } from "../lib/auth";
+import { requireAuth, requireSessionOwnership } from "../lib/auth";
+import { hasPremium } from "../lib/premium";
+import {
+  BRIDGE_CALLS_PER_DRAFT,
+  BRIDGE_DRAFTS_FREE,
+  BRIDGE_DRAFTS_PLUS,
+  BRIDGE_DRAFT_LIMITS_PLUS,
+  rateLimiter,
+} from "../lib/rateLimits";
+
+// These strings are interpolated straight into the prompt, so they are both a
+// token-spend surface and an injection surface. Real values are short.
+const MAX_RECIPIENT_NAME = 60;
+const MAX_RELATIONSHIP = 40;
+const MAX_ADDRESS_TERM = 40;
 
 // Relationships the user is typically safe being fully raw with.
 // Anyone else gets a measured-disclosure instruction — over-sharing to a
@@ -57,6 +77,83 @@ export const gatherBridgeContext = internalQuery({
       turnInputs: turns
         .map((t) => t.userInput)
         .filter((x): x is string => !!x && x.trim().length > 0),
+    };
+  },
+});
+
+/**
+ * Charge one Anthropic call against the caller's daily bridge budget.
+ * Consumed BEFORE the model call, never after: a check-then-generate pair
+ * leaves a window where N concurrent requests all pass the check.
+ */
+export const consumeBridgeQuota = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    const isPremium = await hasPremium(ctx, profile);
+
+    const { ok, retryAfter } = await rateLimiter.limit(ctx, "bridgeDraft", {
+      key: profile._id,
+      ...(isPremium ? { config: BRIDGE_DRAFT_LIMITS_PLUS } : {}),
+    });
+
+    return { ok, retryAfter: retryAfter ?? 0, isPremium };
+  },
+});
+
+/**
+ * Credit back a token when the model call itself failed. The user should never
+ * lose a draft to an Anthropic timeout or an empty completion.
+ *
+ * A negative `count` is a refund: the component subtracts count from the
+ * bucket, and only rejects `count > capacity`. Safe because we refund exactly
+ * once, only after a consume in the same request succeeded.
+ */
+export const refundBridgeQuota = internalMutation({
+  args: { isPremium: v.boolean() },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    await rateLimiter.limit(ctx, "bridgeDraft", {
+      key: profile._id,
+      count: -1,
+      ...(args.isPremium ? { config: BRIDGE_DRAFT_LIMITS_PLUS } : {}),
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Non-consuming read of the caller's remaining bridge budget, so the UI can
+ * show what's left (and the Plus upsell) before they tap generate.
+ */
+export const getQuota = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    const isPremium = await hasPremium(ctx, profile);
+
+    const { value, ts, config } = await rateLimiter.getValue(
+      ctx,
+      "bridgeDraft",
+      {
+        key: profile._id,
+        ...(isPremium ? { config: BRIDGE_DRAFT_LIMITS_PLUS } : {}),
+      },
+    );
+
+    // `value` is in calls. One call still buys a full draft (it just leaves no
+    // retry behind it), so round UP — a user holding a lone retry token has one
+    // more draft in them, and telling them "0 left" would be wrong.
+    const callsLeft = Math.max(0, Math.floor(value));
+
+    return {
+      isPremium,
+      draftsRemaining: Math.ceil(callsLeft / BRIDGE_CALLS_PER_DRAFT),
+      draftsTotal: isPremium ? BRIDGE_DRAFTS_PLUS : BRIDGE_DRAFTS_FREE,
+      plusDrafts: BRIDGE_DRAFTS_PLUS,
+      resetsAt: ts + config.period,
     };
   },
 });
@@ -179,21 +276,45 @@ export const requestBridgeDraft = action({
       throw new Error("No mirror text for this session");
     }
 
-    const trimmedRecipientName = args.recipientName?.trim();
+    const trimmedRecipientName = args.recipientName
+      ?.trim()
+      .slice(0, MAX_RECIPIENT_NAME);
     const trimmedRecipientRelationship =
-      args.recipientRelationship?.trim() || undefined;
-    const trimmedAddressTerm = args.addressTerm?.trim() || undefined;
+      args.recipientRelationship?.trim().slice(0, MAX_RELATIONSHIP) || undefined;
+    const trimmedAddressTerm =
+      args.addressTerm?.trim().slice(0, MAX_ADDRESS_TERM) || undefined;
 
     if (!trimmedRecipientName) {
       throw new Error("Recipient name is required");
     }
 
-    const draft = await _generateDraft({
-      ...context,
-      recipientName: trimmedRecipientName,
-      recipientRelationship: trimmedRecipientRelationship,
-      addressTerm: trimmedAddressTerm,
-    });
+    // Everything above is free. The model call below is not.
+    const { ok, retryAfter, isPremium } = await ctx.runMutation(
+      internal.ai.bridge.consumeBridgeQuota,
+      {},
+    );
+    if (!ok) {
+      throw new ConvexError({
+        code: "bridge_rate_limited",
+        retryAfter,
+        isPremium,
+      });
+    }
+
+    let draft: string;
+    try {
+      draft = await _generateDraft({
+        ...context,
+        recipientName: trimmedRecipientName,
+        recipientRelationship: trimmedRecipientRelationship,
+        addressTerm: trimmedAddressTerm,
+      });
+    } catch (error) {
+      await ctx.runMutation(internal.ai.bridge.refundBridgeQuota, {
+        isPremium,
+      });
+      throw error;
+    }
 
     return { draft };
   },

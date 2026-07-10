@@ -55,11 +55,12 @@ export default defineSchema({
   users: defineTable({
     // --- Auth ---
 
-    // Which provider authenticated this user.
+    // Which provider authenticated this user. Self-reported by the client;
+    // a display hint (e.g. the settings screen), not an authority.
     authProvider: v.union(v.literal("apple"), v.literal("google")),
 
-    // The opaque identifier from the auth provider.
-    // Not their email. Not their name. An opaque token.
+    // The verified Clerk user id (identity.subject, "user_..."), set server-side
+    // from the JWT — never the client. Not their email. Not their name.
     authProviderAccountId: v.string(),
 
     // The bridge to emotional data. This single reference
@@ -73,13 +74,16 @@ export default defineSchema({
 
     // --- Account State ---
 
-    // Active, suspended, or soft-deleted.
-    // "deleted" means deletion has been requested — a
-    // background job will purge associated data.
+    // Active, suspended, soft-deleted, or actively purging.
+    // "deleted" means deletion has been requested — the purge
+    // sweep will claim it. "purging" means the sweep has claimed
+    // it and a purgeUser drain is in flight; this claim keeps the
+    // sweep from re-selecting (and double-enqueuing) the same user.
     accountStatus: v.union(
       v.literal("active"),
       v.literal("suspended"),
       v.literal("deleted"),
+      v.literal("purging"),
     ),
 
     // When the user requested account deletion.

@@ -149,7 +149,7 @@ export function PaywallScreen({ surface }: Props) {
               id="caps"
               icon="bolt.fill"
               title="Higher daily limits"
-              description="More reflections and vents per day"
+              description="More reflections, vents, and message drafts per day"
               isHighlighted={highlightedFeature === "caps"}
             />
           </PaywallFeatureSection>

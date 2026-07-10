@@ -157,6 +157,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO",
         "android.permission.ACTIVITY_RECOGNITION",
+        "com.google.android.gms.permission.AD_ID",
       ]
     },
     web: {

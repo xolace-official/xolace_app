@@ -506,6 +506,8 @@ export const listForProfile = query({
  * Cancel any active workflow and purge all follow-up cards for a profile.
  * Idempotent; safe to call repeatedly. Returns the number of cards purged.
  */
+const PURGE_BATCH_SIZE = 200;
+
 export const purgeForProfile = internalMutation({
   args: { emotionalProfileId: v.id("emotional_profiles") },
   handler: async (ctx, args) => {
@@ -514,7 +516,7 @@ export const purgeForProfile = internalMutation({
       .withIndex("by_profile_created", (q) =>
         q.eq("emotionalProfileId", args.emotionalProfileId),
       )
-      .take(200);
+      .take(PURGE_BATCH_SIZE);
 
     for (const card of cards) {
       if (ACTIVE_STATUSES.has(card.status)) {
@@ -527,6 +529,16 @@ export const purgeForProfile = internalMutation({
       }
       await ctx.db.delete(card._id);
     }
+
+    // A profile accrues one card per session, so it can hold more than a
+    // single transaction can drain. Reschedule while we filled a batch and
+    // stop once the tail comes back short, so deletion clears every card.
+    if (cards.length === PURGE_BATCH_SIZE) {
+      await ctx.scheduler.runAfter(0, internal.followUps.purgeForProfile, {
+        emotionalProfileId: args.emotionalProfileId,
+      });
+    }
+
     return cards.length;
   },
 });
