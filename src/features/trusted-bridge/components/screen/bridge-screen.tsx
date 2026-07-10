@@ -22,6 +22,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { useAppStore } from "@/src/store/store";
 import { useBridgeDraft } from "@/src/features/trusted-bridge/hooks/use-bridge-draft";
 import { BridgeIntro } from "@/src/features/trusted-bridge/components/bridge-intro";
+import { BridgeQuotaHint } from "@/src/features/trusted-bridge/components/bridge-quota-hint";
 import { ShimmerLoadingText } from "@/src/features/trusted-bridge/components/shimmer-loading-text";
 import { BridgeDoneButton } from "@/src/features/trusted-bridge/components/bridge-done-button";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -327,6 +328,7 @@ export function BridgeScreen({ sessionId }: Props) {
               >
                 Write this together
               </Button>
+              <BridgeQuotaHint />
             </View>
           </KeyboardStickyView>
         </View>
@@ -412,7 +414,7 @@ export function BridgeScreen({ sessionId }: Props) {
                       />
                       <AppText className="text-xs font-light text-foreground/55 flex-1 leading-4">
                         {status === "rate_limited"
-                          ? "That's every draft you have today. It comes back tomorrow — the template below is yours to edit in the meantime."
+                          ? "That's every draft you have today. It comes back tomorrow, the template below is yours to edit in the meantime."
                           : "Couldn't personalize this time, but the template below is yours to edit."}
                       </AppText>
                     </View>
