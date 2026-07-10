@@ -74,13 +74,16 @@ export default defineSchema({
 
     // --- Account State ---
 
-    // Active, suspended, or soft-deleted.
-    // "deleted" means deletion has been requested — a
-    // background job will purge associated data.
+    // Active, suspended, soft-deleted, or actively purging.
+    // "deleted" means deletion has been requested — the purge
+    // sweep will claim it. "purging" means the sweep has claimed
+    // it and a purgeUser drain is in flight; this claim keeps the
+    // sweep from re-selecting (and double-enqueuing) the same user.
     accountStatus: v.union(
       v.literal("active"),
       v.literal("suspended"),
       v.literal("deleted"),
+      v.literal("purging"),
     ),
 
     // When the user requested account deletion.

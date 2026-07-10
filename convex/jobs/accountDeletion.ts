@@ -12,6 +12,13 @@ const BATCH_SIZE = 100;
  * `purgeUser`, which drains that user's data across as many transactions as
  * it takes. This function deliberately owns no per-user deletion logic —
  * a single mutation cannot bound a user with thousands of sessions.
+ *
+ * Each selected user is claimed (flipped "deleted" → "purging") in the same
+ * transaction that schedules its drain. The claim moves the user out of the
+ * "deleted" bucket this index scans, so a later cron tick advances to the
+ * next unclaimed users instead of re-selecting an in-flight one and
+ * enqueuing a duplicate purgeUser chain. Convex schedules the drain
+ * atomically with this commit, so a claimed user always has a worker.
  */
 export const purge = internalMutation({
   args: {},
@@ -24,6 +31,7 @@ export const purge = internalMutation({
     if (deletedUsers.length === 0) return;
 
     for (const user of deletedUsers) {
+      await ctx.db.patch(user._id, { accountStatus: "purging" });
       await ctx.scheduler.runAfter(
         0,
         internal.jobs.accountDeletion.purgeUser,
@@ -48,10 +56,13 @@ export const purgeUser = internalMutation({
     const user = await ctx.db.get(args.userId);
     if (!user) return;
 
-    // The grace period lets a user sign back in and cancel deletion
-    // (users.getOrCreate flips accountStatus back to "active"). If that
-    // happened mid-drain, stop — their remaining data stays.
-    if (user.accountStatus !== "deleted") return;
+    // Proceed only while this user is pending deletion. "purging" is the
+    // sweep's claim on a drain we own; "deleted" covers a drain scheduled
+    // before the claim step existed. Any other status means the grace
+    // period reactivated the account (users.getOrCreate flips "deleted"
+    // back to "active") — stop, their remaining data stays.
+    if (user.accountStatus !== "deleted" && user.accountStatus !== "purging")
+      return;
 
     const profileId = user.emotionalProfileId;
     let hasMore = false;
