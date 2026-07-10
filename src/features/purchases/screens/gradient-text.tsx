@@ -20,11 +20,11 @@ export const GradientText = ({ text, gradientProps, className, textProps }: Grad
       }
     >
       <LinearGradient
+        {...gradientProps}
         colors={gradientProps?.colors ?? ["blue", "yellow", "blue"]}
         start={gradientProps?.start ?? { x: 0, y: 0 }}
         end={gradientProps?.end ?? { x: 1, y: 0 }}
         style={[StyleSheet.absoluteFill, gradientProps?.style]}
-        {...gradientProps}
       />
       <Text className={cn(className)} {...textProps} style={{ opacity: 0 }}>
         {text}

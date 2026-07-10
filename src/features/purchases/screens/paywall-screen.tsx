@@ -67,12 +67,13 @@ export function PaywallScreen({ surface }: Props) {
   const discountPercent =
     monthlyNumeric > 0 ? Math.round((1 - annualNumeric / (monthlyNumeric * 12)) * 100) : null;
 
+  const selectedPkg = selected === "annual" ? annualPkg : monthlyPkg;
+
   const handleContinue = () => {
-    const pkg = selected === "annual" ? annualPkg : monthlyPkg;
-    console.log("pkg ", pkg)
-    if (!pkg) return; // payments not live yet — CTA is a visual placeholder
+    console.log("pkg ", selectedPkg)
+    if (!selectedPkg) return; // payments not live yet — CTA is a visual placeholder
     setBusy(true);
-    purchase(pkg, surface ?? undefined)
+    purchase(selectedPkg, surface ?? undefined)
       .then((ok) => {
         if (ok) router.back(); // server entitlement query flips reactively
       })
@@ -173,7 +174,7 @@ export function PaywallScreen({ surface }: Props) {
             label={ctaLabel}
             onPress={handleContinue}
             isBusy={busy}
-            isDisabled={busy || isProUser}
+            isDisabled={busy || isProUser || !selectedPkg}
           />
         </View>
       </View>
