@@ -11,7 +11,7 @@ import { revenuecat } from "../revenuecat";
 // across data wipes (dataWipe.ts never deletes the profile row).
 // =============================================================
 
-export const PLUS_ENTITLEMENT_ID = "xolace-plus";
+export const PLUS_ENTITLEMENT_ID = "Xolace: AI Mood & Feelings Pro";
 
 export type PremiumTier = "free" | "plus";
 

@@ -32,9 +32,9 @@ export function PaywallPeriodPicker({ annual, monthly, discountPercent, selected
       <SegmentedControl
         value={selected}
         onValueChange={(value) => onSelect(value as PlanId)}
-        className="relative rounded-2xl bg-surface-secondary"
+        className="relative rounded-2xl bg-surface-secondary p-1"
       >
-        <SegmentedControl.Indicator className="rounded-xl bg-accent" style={styles.borderCurve} />
+        <SegmentedControl.Indicator className="rounded-xl bg-accent top-1" style={styles.borderCurve} />
 
         <SegmentedControl.Item value="monthly" className="flex-1 items-center py-2.5">
           <AppText

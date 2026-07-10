@@ -91,6 +91,7 @@ export function RevenueCatProvider({ children }: { children: React.ReactNode }) 
   const isProUser = appConfig.features.payments
     ? hasActiveEntitlement(customerInfo)
     : appConfig.devIsPlus;
+  console.log("customerInfo", customerInfo)
 
   // Initialize SDK once payments are enabled.
   useEffect(() => {

@@ -33,6 +33,8 @@ export function PaywallScreen({ surface }: Props) {
   const posthog = usePostHog();
   const insets = useSafeAreaInsets();
   const { offerings, purchase, isProUser } = useRevenueCat();
+  console.log("offering ", JSON.stringify(offerings))
+  console.log("isProUser ", isProUser)
   const { isAuthenticated } = useConvexAuth();
   const summary = useQuery(api.profile.getSummary, isAuthenticated ? {} : "skip");
   const [selected, setSelected] = useState<PlanId>("annual");
@@ -67,6 +69,7 @@ export function PaywallScreen({ surface }: Props) {
 
   const handleContinue = () => {
     const pkg = selected === "annual" ? annualPkg : monthlyPkg;
+    console.log("pkg ", pkg)
     if (!pkg) return; // payments not live yet — CTA is a visual placeholder
     setBusy(true);
     purchase(pkg, surface ?? undefined)
