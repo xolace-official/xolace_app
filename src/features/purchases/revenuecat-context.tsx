@@ -15,6 +15,8 @@
  * Identity: after Convex auth resolves we call `Purchases.logIn(appUserId)`
  * with `appUserId = emotionalProfileId` from api.premium.getEntitlement — the
  * same id the server checks entitlements with (see gating-plan ID convention).
+ * On sign-out we call `Purchases.logOut()` (guarded by isAnonymous) so a
+ * later sign-in on the same device starts from a clean anonymous SDK state.
  */
 
 import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
@@ -71,7 +73,7 @@ export function useRevenueCat() {
 export function RevenueCatProvider({ children }: { children: React.ReactNode }) {
   const posthog = usePostHog();
   const { toast } = useToast();
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const entitlement = useQuery(
     api.premium.getEntitlement,
     isAuthenticated ? {} : "skip",
@@ -91,6 +93,7 @@ export function RevenueCatProvider({ children }: { children: React.ReactNode }) 
   const isProUser = appConfig.features.payments
     ? hasActiveEntitlement(customerInfo)
     : appConfig.devIsPlus;
+  console.log("customerInfo", customerInfo)
 
   // Initialize SDK once payments are enabled.
   useEffect(() => {
@@ -141,6 +144,29 @@ export function RevenueCatProvider({ children }: { children: React.ReactNode }) 
       .then(({ customerInfo: info }) => setCustomerInfo(info))
       .catch((error) => console.error("[RevenueCat] logIn failed:", error));
   }, [configured, appUserId]);
+
+  // Identity: on sign-out, detach the SDK from the previous user so their
+  // cached entitlements can't leak to whoever signs in next on this device.
+  // Covers every sign-out path (settings, account deletion, desync recovery)
+  // because Convex auth is the single upstream signal. logOut() throws when
+  // the SDK user is already anonymous, so check isAnonymous first — that also
+  // makes the cold-start-while-signed-out case a no-op.
+  useEffect(() => {
+    if (!configured || isAuthLoading || isAuthenticated) return;
+    let cancelled = false;
+    Purchases.isAnonymous()
+      .then((anonymous) => {
+        if (anonymous || cancelled) return null;
+        return Purchases.logOut();
+      })
+      .then((info) => {
+        if (info && !cancelled) setCustomerInfo(info);
+      })
+      .catch((error) => console.error("[RevenueCat] logOut failed:", error));
+    return () => {
+      cancelled = true;
+    };
+  }, [configured, isAuthLoading, isAuthenticated]);
 
   // useCallback keeps the memoized Provider value stable (context exception).
   const purchase = useCallback(async (pkg: PurchasesPackage, rawSurface?: string): Promise<boolean> => {

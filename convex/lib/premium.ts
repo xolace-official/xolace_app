@@ -7,11 +7,19 @@ import { revenuecat } from "../revenuecat";
 // Every server-side gate reads through here. Callers already hold
 // the profile doc from requireAuth(), so no extra DB lookup.
 //
-// appUserId = profile._id (= emotionalProfileId). Verified stable
-// across data wipes (dataWipe.ts never deletes the profile row).
+// appUserId = profile._id (= emotionalProfileId). Stable across data
+// wipes (dataWipe.ts never deletes the profile row), but NOT across
+// full account deletion: jobs/accountDeletion.ts purges the profile
+// row after the grace period, so a user who deletes, gets purged, and
+// signs back in receives a fresh profile id — RC then sees a new,
+// unrelated appUserId. Prior entitlement history under the old id is
+// orphaned on RC's side; the store receipt still belongs to their
+// Apple/Google account, so "Restore purchases" reattaches any active
+// subscription to the new id (no double-billing, but RC-side history
+// and analytics under the old id don't carry over).
 // =============================================================
 
-export const PLUS_ENTITLEMENT_ID = "xolace-plus";
+export const PLUS_ENTITLEMENT_ID = "Xolace: AI Mood & Feelings Pro";
 
 export type PremiumTier = "free" | "plus";
 

@@ -23,11 +23,11 @@ const extra = Constants.expoConfig?.extra as
 export const appConfig = {
   features: {
     /** ← flip true once RC dashboard + store products are configured. */
-    payments: false,
+    payments: true,
   },
   monetization: {
     /** User is Plus if ANY of these entitlements is active. */
-    entitlements: ['xolace-plus'],
+    entitlements: ['xolace-plus', "Xolace: AI Mood & Feelings Pro"],
     revenueCatApiKey: {
       ios: extra?.revenueCat?.iosKey ?? '',
       android: extra?.revenueCat?.androidKey ?? '',

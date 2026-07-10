@@ -15,6 +15,7 @@ export function usePlusEntitlement(): { isPlus: boolean; isLoading: boolean } {
     isAuthenticated ? {} : "skip",
   );
   const { isProUser, isLoading: sdkLoading } = useRevenueCat();
+  console.log("entitlement ", entitlement)
 
   return {
     isPlus: (entitlement?.isPlus ?? false) || isProUser,

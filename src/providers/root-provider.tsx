@@ -11,7 +11,6 @@ import { ConvexClientProvider } from "./convex-provider";
 import { posthog } from "@/src/config/posthog";
 import { FeedbackTrayProvider } from "@/src/features/feedback-tray/feedback-tray-provider";
 import { RevenueCatProvider } from "@/src/features/purchases/revenuecat-context";
-import { PaywallSheet } from "@/src/features/purchases/paywall-sheet";
 
 /**
  * Root provider that composes all app-wide providers in the correct order.
@@ -64,7 +63,6 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
                       inside HeroUI (purchase/restore toasts). */}
                   <RevenueCatProvider>
                     <FeedbackTrayProvider>{children}</FeedbackTrayProvider>
-                    <PaywallSheet />
                   </RevenueCatProvider>
                 </HeroUINativeProvider>
               </ConvexClientProvider>
