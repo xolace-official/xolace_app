@@ -13,6 +13,9 @@ const tierValidator = v.union(v.literal("free"), v.literal("premium"));
 export const listAvatars = query({
   args: {},
   handler: async (ctx) => {
+    // Parity with setAvatar / the rest of the API — the catalog isn't secret,
+    // but every function reads auth; no reason this one is the exception.
+    await requireAuth(ctx);
     const rows = await ctx.db.query("avatars").withIndex("by_tier_order").take(50);
     return rows.map((a) => ({
       key: a.key,

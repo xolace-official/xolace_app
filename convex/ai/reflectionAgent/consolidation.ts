@@ -5,7 +5,9 @@ import {
   vWorkflowId,
   vResultValidator,
 } from "@convex-dev/workflow";
+import type { GenericActionCtx } from "convex/server";
 import { components, internal } from "../../_generated/api";
+import type { DataModel, Id } from "../../_generated/dataModel";
 import { internalAction, internalMutation } from "../../_generated/server";
 import { posthog } from "../../posthog";
 import {
@@ -35,6 +37,13 @@ export const workflow = new WorkflowManager(components.workflow);
 // pass reads a handful of tools then writes once.
 const MAX_ITERATIONS = 8;
 const MAX_TOKENS = 2048;
+
+// The shared client's 30s default is sized for the Haiku calls. A non-streaming
+// Sonnet tool-use turn at MAX_TOKENS routinely runs past it, and Convex's fetch
+// rejects an abort without an `AbortError` name, so the SDK reports the timeout
+// as a generic "Connection error." Override per request rather than widening the
+// singleton. maxRetries stays at 1 because the workflow already retries durably.
+const CONSOLIDATION_REQUEST_OPTIONS = { timeout: 120_000, maxRetries: 1 };
 
 export const consolidationWorkflow = workflow.define({
   args: { emotionalProfileId: v.id("emotional_profiles") },
@@ -67,6 +76,36 @@ export const consolidationWorkflow = workflow.define({
 });
 
 /**
+ * The counterpart to the `reflect_consolidation_written` capture in
+ * markConsolidated: both terminal outcomes of the loop are now observable.
+ * Best-effort — a telemetry failure must never mask the failure it describes.
+ */
+async function captureConsolidationFailed(
+  ctx: GenericActionCtx<DataModel>,
+  emotionalProfileId: Id<"emotional_profiles">,
+  properties: {
+    reason: "error" | "no_write";
+    message?: string;
+    iterations: number;
+  },
+): Promise<void> {
+  try {
+    await posthog.capture(ctx, {
+      distinctId: emotionalProfileId,
+      event: "reflect_consolidation_failed",
+      properties: {
+        writerVersion: REFLECTION_CONSOLIDATION_VERSION,
+        ...properties,
+      },
+    });
+  } catch (err) {
+    console.error("[reflectionConsolidation] failed to capture failure event", {
+      message: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
  * The custom tool-use loop. Runs the consolidation to terminal write and
  * reports whether it wrote; the workflow stamps lastConsolidationAt in a
  * separate step so a post-write failure can't retry the loop. Best-effort
@@ -89,46 +128,69 @@ export const runConsolidation = internalAction({
     ];
 
     let wroteProfile = false;
+    let iterations = 0;
 
-    for (let i = 0; i < MAX_ITERATIONS; i++) {
-      const response = await anthropic.messages.create({
-        model: REFLECTION_CONSOLIDATION_MODEL,
-        max_tokens: MAX_TOKENS,
-        system,
-        tools: REFLECTION_TOOLS,
-        messages,
-      });
-
-      messages.push({ role: "assistant", content: response.content });
-
-      if (response.stop_reason !== "tool_use") break;
-
-      const toolResults: Anthropic.ToolResultBlockParam[] = [];
-      for (const block of response.content) {
-        if (block.type !== "tool_use") continue;
-        if (block.name === WRITE_TOOL) wroteProfile = true;
-        const result = await dispatchTool(
-          ctx,
-          args.emotionalProfileId,
-          block.name,
-          block.input as Record<string, unknown>,
+    try {
+      for (let i = 0; i < MAX_ITERATIONS; i++) {
+        iterations = i + 1;
+        const response = await anthropic.messages.create(
+          {
+            model: REFLECTION_CONSOLIDATION_MODEL,
+            max_tokens: MAX_TOKENS,
+            system,
+            tools: REFLECTION_TOOLS,
+            messages,
+          },
+          CONSOLIDATION_REQUEST_OPTIONS,
         );
-        toolResults.push({
-          type: "tool_result",
-          tool_use_id: block.id,
-          content: result,
-        });
+
+        messages.push({ role: "assistant", content: response.content });
+
+        if (response.stop_reason !== "tool_use") break;
+
+        const toolResults: Anthropic.ToolResultBlockParam[] = [];
+        for (const block of response.content) {
+          if (block.type !== "tool_use") continue;
+          if (block.name === WRITE_TOOL) wroteProfile = true;
+          const result = await dispatchTool(
+            ctx,
+            args.emotionalProfileId,
+            block.name,
+            block.input as Record<string, unknown>,
+          );
+          toolResults.push({
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: result,
+          });
+        }
+
+        messages.push({ role: "user", content: toolResults });
+
+        // Terminal write done — the profile is committed; stop the loop.
+        if (wroteProfile) break;
       }
-
-      messages.push({ role: "user", content: toolResults });
-
-      // Terminal write done — the profile is committed; stop the loop.
-      if (wroteProfile) break;
+    } catch (err) {
+      // A throw here leaves lastConsolidationAt unstamped, so the gate stays
+      // due and the workflow retries. Emit before rethrowing — otherwise a
+      // persistent failure disables consolidation with no signal anywhere.
+      await captureConsolidationFailed(ctx, args.emotionalProfileId, {
+        reason: "error",
+        message: err instanceof Error ? err.message : String(err),
+        iterations,
+      });
+      throw err;
     }
 
     if (!wroteProfile) {
       console.warn("[reflectionConsolidation] loop ended without a write", {
         emotionalProfileId: args.emotionalProfileId,
+      });
+      // Same end state as a throw — no new profile version — but it returns
+      // false instead, so nothing retries. Worth its own signal.
+      await captureConsolidationFailed(ctx, args.emotionalProfileId, {
+        reason: "no_write",
+        iterations,
       });
     }
     return wroteProfile;

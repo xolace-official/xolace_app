@@ -11,12 +11,20 @@ import { generateDisplayName } from "./lib/displayName";
  */
 export const getOrCreate = mutation({
   args: {
+    // Self-reported by the client, non-authoritative — a display hint (settings
+    // screen), never a security-sensitive read. Stored as given.
     authProvider: v.union(v.literal("apple"), v.literal("google")),
-    authProviderAccountId: v.string(),
+    // DEPRECATED(remove-after: app >= next shipped build): the server now stores
+    // identity.subject (the verified Clerk user id) instead of this client arg,
+    // which was untrusted and — on sign-in, where the client had no createdUserId
+    // — a hardcoded placeholder string. Optional; value ignored.
+    /** @deprecated server stores identity.subject; value ignored */
+    authProviderAccountId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     console.log("getOrCreate", args);
     const identity = await ctx.auth.getUserIdentity();
+
     if (!identity) {
       console.log("getOrCreate-error: not authenticated");
       throw new Error("Not authenticated");
@@ -73,11 +81,12 @@ export const getOrCreate = mutation({
       displayName: generateDisplayName(),
       avatarId: "default",
     });
-
-    // Create user
+    
+    // Create user. authProviderAccountId is the server-verified Clerk subject,
+    // never the client arg. authProvider is the self-reported display hint.
     const userId = await ctx.db.insert("users", {
       authProvider: args.authProvider,
-      authProviderAccountId: args.authProviderAccountId,
+      authProviderAccountId: identity.subject,
       emotionalProfileId: profileId,
       tokenIdentifier: identity.tokenIdentifier,
       accountStatus: "active",

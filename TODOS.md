@@ -4,6 +4,36 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P1 — `dailyQuotes.coldStart` fan-out (security audit H2, second half)
+
+**What:** `coldStart` schedules `jobs.quotesGenerator.processUser` without an idempotency check of its own. The check (`getProfileStatus` → `alreadyDone`) lives *inside* the scheduled job and keys on a curated quote already existing for today — which is false for everyone until the first quote lands. So N concurrent `coldStart` calls fan out N jobs, and each one reaches `distillQuoteForUser`: a real Anthropic call per job, for every Plus user.
+
+**Why:** Second half of finding H2 in the Convex security audit (the `requestBridgeDraft` half is fixed). The client's `coldStartIssuedRef` guard in `quotes-screen.tsx` is per-mount, so background/foreground, a remount, or a second device re-fires it. Unmetered LLM spend on a public action.
+
+**How to fix — a lease, not a rate limit.** A rate limiter would bound damage (e.g. 3/day) but still permit 3 concurrent LLM calls, and would dead-end the screen's retry button after a genuine failure.
+
+1. Add `quotesColdStartAt: v.optional(v.number())` to `emotional_profiles` in `convex/schema.ts`.
+2. New `internalMutation` `claimColdStart` in `convex/dailyQuotes.ts`: `requireAuth`, then in one transaction — return early if a quote already exists for today; return early if `quotesColdStartAt` is within a 5-minute lease window (job in flight); otherwise patch the timestamp and `ctx.scheduler.runAfter(0, processUser)`.
+3. `coldStart` **stays an `action`** and becomes a one-line `ctx.runMutation(internal.dailyQuotes.claimColdStart)`.
+
+Convex mutations are serializable: two concurrent claims reading and writing the same profile doc conflict on OCC, so one retries and observes the lease. Exactly one job per user per day, not "usually one."
+
+**Two constraints worth not rediscovering:**
+- Keep `coldStart` an action. The shipped client calls it via `useAction`; changing its kind to a mutation breaks every build in the store (store-gap rule). Thin-wrapper is the safe shape.
+- The 5-minute expiry is what preserves the retry button. A plain "already claimed today" flag would silently no-op `quotes-screen.tsx`'s retry and strand the user with no quotes until UTC midnight.
+
+**Also:** `getMyProfile` and `hasQuotesForToday` become dead once this lands (`claimColdStart` does its own `requireAuth` and inlines the quote check). Both are `internalQuery`, unreachable from clients, so they can be deleted outright.
+
+**Not fixed by this:** if the session-quote distill succeeds but the curated store fails, `alreadyDone` stays false and a later run re-distills. Pre-existing; the lease bounds it to one retry per 5 minutes rather than unbounded.
+
+**Key files:** `convex/dailyQuotes.ts` (`coldStart`, `getMyProfile`, `hasQuotesForToday`), `convex/schema.ts` (`emotional_profiles`), `convex/jobs/quotesGenerator.ts` (`processUser`, `getProfileStatus`), `src/features/quotes/components/screen/quotes-screen.tsx` (retry path — verify unchanged)
+
+**Effort:** S (CC ~20min)
+**Priority:** P1 — open LLM spend on a public action
+**Depends on:** Nothing
+
+---
+
 ## P3 — Dedicated "See all check-ins" screen
 
 **What:** A full-list screen for follow-up check-ins, reached via a "See all check-ins" row on the profile. The profile's Follow-Ups section is now capped at the 5 most recent (`PROFILE_FOLLOWUP_LIMIT` in `convex/followUps.ts`) so it can't grow unbounded; the rest of the history needs a home.

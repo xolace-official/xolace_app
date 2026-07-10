@@ -55,11 +55,12 @@ export default defineSchema({
   users: defineTable({
     // --- Auth ---
 
-    // Which provider authenticated this user.
+    // Which provider authenticated this user. Self-reported by the client;
+    // a display hint (e.g. the settings screen), not an authority.
     authProvider: v.union(v.literal("apple"), v.literal("google")),
 
-    // The opaque identifier from the auth provider.
-    // Not their email. Not their name. An opaque token.
+    // The verified Clerk user id (identity.subject, "user_..."), set server-side
+    // from the JWT — never the client. Not their email. Not their name.
     authProviderAccountId: v.string(),
 
     // The bridge to emotional data. This single reference

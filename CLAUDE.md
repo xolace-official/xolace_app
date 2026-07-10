@@ -181,8 +181,10 @@ minimum-supported UI may still call. Instead mark, don't delete:
 - Delete only once the store-published minimum supported version no longer
   references it.
 
-**Pending Deprecations**
-- (none yet)
+**Pending Deprecations** (remove each once the store-published minimum supported app version no longer sends the arg)
+- `users.getOrCreate` arg `authProviderAccountId` — server now stores `identity.subject`; value ignored.
+- `sessions.submitInput` args `rawText`, `rawInputLength` — derived from `rawInput` server-side; values ignored.
+- `sessions.retrySession` arg `rawText` — retry reprocesses `session.rawInput`; value ignored.
 
 ### Build Variants
 `app.config.ts` reads `APP_VARIANT` (development/preview/production) to set bundle identifiers:

@@ -31,6 +31,11 @@ function getMaxIncrementMinutes(premium: boolean): number {
 // against the actual payload so a tampered client can't under-report.
 const AUDIO_BYTES_PER_SECOND = 6000;
 
+// How long a vent's TTS blob lives before it's reclaimed. Playback needs
+// seconds; an hour absorbs a backgrounded app returning to the coda. After
+// this the URL 404s, which is fine — the words are already on screen.
+const VENT_AUDIO_TTL_MS = 60 * 60 * 1000;
+
 function startOfTodayUTC(): number {
   const now = new Date();
   return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
@@ -94,71 +99,20 @@ export const checkAndIncrementCap = internalMutation({
 });
 
 /**
- * Obtain a short-lived signed URL for the ElevenLabs conversational AI agent.
- *
- * The signed URL expires quickly (ElevenLabs default: ~60s) and is used
- * client-side to start the voice session without exposing the API key.
+ * Reclaim a vent's TTS blob after its short playback life (see
+ * VENT_AUDIO_TTL_MS). Scheduled from runVentPipeline; no-op-safe if the file
+ * is already gone.
  */
-export const getVentSessionToken = action({
-  args: {},
-  handler: async (ctx): Promise<{ signedUrl: string }> => {
-    // Fast-fail only — full requireAuth (user, accountStatus, profile) runs
-    // inside checkAndIncrementCap below, transactionally with the cap charge.
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    // Open-ended agent session — duration unknown up front, charge the max.
-    // Pass the Plus ceiling; checkAndIncrementCap clamps down to the caller's
-    // actual tier internally, so a free user is still charged only their max.
-    const capResult: { allowed: boolean } = await ctx.runMutation(
-      internal.vent.checkAndIncrementCap,
-      { minutes: MAX_INCREMENT_MINUTES_PLUS },
-    );
-    if (!capResult.allowed) throw new Error("Daily voice cap reached");
-
-    const apiKey = process.env.ELEVENLABS_AGENT_KEY;
-    if (!apiKey) {
-      throw new Error("ELEVENLABS_AGENT_KEY not configured");
-    }
-
-    const agentId = process.env.ELEVENLABS_VENT_AGENT_ID;
-    if (!agentId) {
-      throw new Error("ELEVENLABS_VENT_AGENT_ID not configured");
-    }
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
-
-    let response: Response;
-    try {
-      response = await fetch(
-        `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(agentId)}`,
-        {
-          method: "GET",
-          headers: { "xi-api-key": apiKey },
-          signal: controller.signal,
-        }
-      );
-    } finally {
-      clearTimeout(timeout);
-    }
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error(`[vent] ElevenLabs signed URL error ${response.status}: ${body}`);
-      throw new Error(`Failed to get signed URL: ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (!data || typeof data.signed_url !== "string") {
-      throw new Error("ElevenLabs response missing signed_url");
-    }
-    return { signedUrl: data.signed_url };
+export const deleteVentAudio = internalMutation({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    await ctx.storage.delete(args.storageId);
+    return null;
   },
 });
 
-// Crisis keywords for client-side detection fallback (Phase 4).
-// Used by classifyVentSafety when STT produces a transcript.
+// Crisis keywords for the vent pipeline's server-side pre-filter. A hit is
+// confirmed via moderation before it changes behavior (see runVentPipeline).
 const CRISIS_KEYWORDS = [
   "kill myself",
   "hurt myself",
@@ -198,36 +152,6 @@ async function confirmCrisisWithModeration(
     (cat) => (moderation.categoryScores[cat] ?? 0) >= CRISIS_CLEAR_THRESHOLD,
   );
 }
-
-/**
- * Classify a voice vent transcript for safety signals.
- *
- * - Empty or very short transcripts are skipped (no error, no side effect).
- * - Transcript is NEVER stored. Only safety_flag metadata persists.
- * - When a crisis keyword is detected, an escalation_event is written.
- *
- * Called from the client after expo-speech-recognition produces a partial
- * transcript. The sessionId here is a Mirror session created to hold the
- * escalation_event reference (vent sessions are otherwise ephemeral).
- */
-export const classifyVentSafety = internalAction({
-  args: {
-    transcript: v.string(),
-    emotionalProfileId: v.id("emotional_profiles"),
-  },
-  handler: async (ctx, args) => {
-    if (args.transcript.trim().length < 20) return;
-
-    const lower = args.transcript.toLowerCase();
-    const matched = CRISIS_KEYWORDS.find((kw) => lower.includes(kw));
-    if (!matched) return;
-
-    console.warn(
-      `[vent] Crisis keyword detected for profile ${args.emotionalProfileId}. ` +
-        `Trigger type: crisis_keywords. Transcript NOT stored.`
-    );
-  },
-});
 
 // ---------------------------------------------------------------------------
 // Vent pipeline — Approach B (expo-audio + Scribe STT + Claude + ElevenLabs)
@@ -390,6 +314,13 @@ async function runVentPipeline(
       const audioBlob = new Blob([audioBuffer], { type: "audio/mpeg" });
       const storageId = await ctx.storage.store(audioBlob);
       audioUrl = await ctx.storage.getUrl(storageId);
+      // The client plays this once, right after the burn animation, then pops
+      // the route — the blob is never replayed or persisted. Nothing keeps its
+      // id anywhere, so schedule its own deletion or it orphans in storage
+      // forever. The TTL covers a user who backgrounds mid-coda and returns.
+      await ctx.scheduler.runAfter(VENT_AUDIO_TTL_MS, internal.vent.deleteVentAudio, {
+        storageId,
+      });
     }
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
