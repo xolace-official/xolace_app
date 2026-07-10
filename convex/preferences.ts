@@ -1,10 +1,11 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { mirrorToneValidator } from "./lib/validators";
 import { validateSpaceName } from "./lib/spaceName";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
-import { requirePremium } from "./lib/premium";
+import { requirePremium, hasPremium } from "./lib/premium";
+import { voiceSlugValidator } from "./lib/voices";
 
 /**
  * Get the user's quote preferences (themes, notification settings).
@@ -145,6 +146,9 @@ export const update = mutation({
     // null = clear the name; string = set/update; undefined = no-op
     spaceName: v.optional(v.union(v.string(), v.null())),
     spaceNamePromptDismissed: v.optional(v.boolean()),
+    // Plus-only custom voice. null clears back to "Auto"; a slug sets it;
+    // undefined = no-op. Gated below, same shape as spaceName.
+    voice: v.optional(v.union(voiceSlugValidator, v.null())),
   },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
@@ -162,6 +166,11 @@ export const update = mutation({
 
     if (args.mirrorTone === "witnessed") {
       await requirePremium(ctx, profile, "witnessed mirror tone");
+    }
+
+    // Setting a voice is Plus-only; clearing it (null) is always allowed.
+    if (args.voice != null) {
+      await requirePremium(ctx, profile, "custom voice");
     }
 
     // Build patch from provided args only
@@ -192,6 +201,7 @@ export const update = mutation({
     if (args.spaceNamePromptDismissed !== undefined) {
       patch.spaceNamePromptDismissed = args.spaceNamePromptDismissed;
     }
+    if (args.voice !== undefined) patch.voice = args.voice ?? undefined;
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(preferences._id, patch);
@@ -214,6 +224,28 @@ export const update = mutation({
     }
 
     return null;
+  },
+});
+
+/**
+ * Resolve the effective custom-voice slug for a profile, re-checking premium.
+ * Used by the vent pipeline, which runs mid-action with no auth context.
+ * Returns null when there's no voice preference OR the subscription lapsed —
+ * the caller then falls back to the default vent voice.
+ */
+export const getResolvedVoiceSlug = internalQuery({
+  args: { emotionalProfileId: v.id("emotional_profiles") },
+  handler: async (ctx, args): Promise<string | null> => {
+    const profile = await ctx.db.get(args.emotionalProfileId);
+    if (!profile) return null;
+    const prefs = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId),
+      )
+      .unique();
+    if (!prefs?.voice) return null;
+    return (await hasPremium(ctx, profile)) ? prefs.voice : null;
   },
 });
 

@@ -14,6 +14,7 @@ export type PaywallSurface =
   | "premium_avatar"
   | "timeline_extended"
   | "mirror_tone"
+  | "mirror_voice"
   | "daily_quote"
   | "bridge_draft";
 

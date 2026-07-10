@@ -18,6 +18,7 @@ export interface SessionContext {
     mirrorTone: string;
     reducedMotion: boolean;
     spaceName?: string;
+    voice?: string;
   } | null;
   turns: Record<string, unknown>[];
   recentSessions: {
@@ -124,6 +125,7 @@ export const buildSessionContext = internalQuery({
             mirrorTone: preferences.mirrorTone,
             reducedMotion: preferences.reducedMotion,
             spaceName: preferences.spaceName,
+            voice: preferences.voice,
           }
         : null,
       turns,

@@ -7,6 +7,7 @@ import {
   safeguardLevelValidator,
   triggerTypeValidator,
 } from "./lib/validators";
+import { voiceSlugValidator } from "./lib/voices";
 
 // =============================================================
 // XOLACE — LAYER 1 MVP SCHEMA (MERGED)
@@ -280,6 +281,12 @@ export default defineSchema({
       v.literal("adaptive"),
       v.literal("witnessed"),
     ),
+
+    // Plus-only TTS voice override. Undefined = default (tone-mapped mirror
+    // voice, Witnessed vent voice). Slug into VOICE_CATALOG, never a raw
+    // ElevenLabs id. Premium is re-checked at generation time, so a lapsed
+    // subscription silently falls back without wiping the choice.
+    voice: v.optional(voiceSlugValidator),
 
     // --- Privacy ---
 

@@ -14,8 +14,8 @@ import {
   moderateInput,
   MODERATION_UNAVAILABLE,
 } from "./ai/providers/moderation";
+import { resolveVoiceId, VENT_DEFAULT_VOICE_ID } from "./lib/voices";
 
-const WITNESSED_VOICE_ID = "NOpBlnGInO9m6vDvFkFC"; // Spuds Oxley — wise, approachable
 const CRISIS_FALLBACK = "you don't have to carry this alone";
 
 // Ceiling on what a single vent can charge — also the fallback when the
@@ -223,12 +223,15 @@ async function runVentPipeline(
   }
 
   // --- Step 1: Scribe v2 STT, run alongside the (read-only) semantic profile
-  // fetch — the profile depends only on emotionalProfileId, not the
-  // transcript, so its cost is fully hidden behind the STT round-trip.
-  const [transcriptResult, semanticProfileDoc] = await Promise.all([
+  // and resolved-voice fetches — both depend only on emotionalProfileId, not
+  // the transcript, so their cost is fully hidden behind the STT round-trip.
+  const [transcriptResult, semanticProfileDoc, voiceSlug] = await Promise.all([
     transcribeVentAudio(apiKey, audioBytes),
     emotionalProfileId
       ? ctx.runQuery(internal.semanticProfiles.getCurrent, { emotionalProfileId })
+      : Promise.resolve(null),
+    emotionalProfileId
+      ? ctx.runQuery(internal.preferences.getResolvedVoiceSlug, { emotionalProfileId })
       : Promise.resolve(null),
   ]);
 
@@ -288,8 +291,10 @@ async function runVentPipeline(
   const ttsController = new AbortController();
   const ttsTimeout = setTimeout(() => ttsController.abort(), 30_000);
   try {
+    const ventVoiceId = resolveVoiceId(voiceSlug ?? undefined, VENT_DEFAULT_VOICE_ID);
+    console.log("[vent] voice:", voiceSlug ?? "default", "->", ventVoiceId);
     const ttsRes = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${WITNESSED_VOICE_ID}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${ventVoiceId}`,
       {
         method: "POST",
         headers: {

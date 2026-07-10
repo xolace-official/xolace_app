@@ -22,6 +22,9 @@ export const PAYWALL_SURFACE_FEATURE: Record<PaywallSurface, PaywallFeatureId | 
   premium_avatar: "avatars",
   timeline_extended: "timeline",
   mirror_tone: "mirror_tone",
+  // Voice picker reuses the existing "Mirror voice & tone" row — that row's
+  // copy already covers voice, so no separate feature row is added.
+  mirror_voice: "mirror_tone",
   daily_quote: "quotes",
   // Bridge has no feature row of its own — its cap lives under "Higher daily
   // limits" alongside reflections and vents.

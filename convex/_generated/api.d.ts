@@ -77,6 +77,7 @@ import type * as lib_spaceName from "../lib/spaceName.js";
 import type * as lib_streak from "../lib/streak.js";
 import type * as lib_timeOfDay from "../lib/timeOfDay.js";
 import type * as lib_validators from "../lib/validators.js";
+import type * as lib_voices from "../lib/voices.js";
 import type * as migrations from "../migrations.js";
 import type * as monthlyEvents from "../monthlyEvents.js";
 import type * as notifications from "../notifications.js";
@@ -174,6 +175,7 @@ declare const fullApi: ApiFromModules<{
   "lib/streak": typeof lib_streak;
   "lib/timeOfDay": typeof lib_timeOfDay;
   "lib/validators": typeof lib_validators;
+  "lib/voices": typeof lib_voices;
   migrations: typeof migrations;
   monthlyEvents: typeof monthlyEvents;
   notifications: typeof notifications;

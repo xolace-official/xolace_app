@@ -299,6 +299,16 @@ export const generateMirror = internalAction({
             | "direct"
             | "adaptive"
             | "witnessed",
+          // Generation-time premium fence — the mutation gate alone wouldn't
+          // cover a subscription that lapsed after the voice was chosen.
+          voiceSlug: context.isPremium
+            ? (context.preferences?.voice as
+                | "sage"
+                | "wren"
+                | "vesper"
+                | "ash"
+                | undefined)
+            : undefined,
         });
       }
 

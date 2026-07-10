@@ -4,6 +4,19 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Custom voice (Xolace+)** — Plus members can now choose the voice that speaks their mirror *and* their vent coda, from a small curated cast: **Sage** (older, unhurried storyteller), **Wren** (warm, soft-spoken), **Vesper** (calm and grounded), and **Ash** (low, gravelly, close to the fire). The picker lives in Settings → Mirror as a new "Voice" section beneath Tone. **Auto** stays the free default — the mirror keeps using your tone-mapped voice and the vent keeps its Witnessed voice. Every named voice carries a play button that previews it (a fixed line, *"I'm here. Take whatever time you need."*) — playable even before you subscribe, since hearing the voice is the point. Free users tapping a voice are routed to the paywall. See `docs/voice-naming.md` for the naming rationale.
+
+### Backend
+
+- **`convex/lib/voices.ts`** — new single source of truth for TTS voices: the Plus `VOICE_CATALOG` (client-facing slugs → ElevenLabs ids, which never leave the server), the tone-default map, the vent default, and `resolveVoiceId`. The mirror (`ai/tts.ts`) and vent (`vent.ts`) pipelines now resolve through it. The stored preference is a **slug**, never a raw voice id.
+- **Generation-time premium fence** — the voice is gated both at write (`preferences.update`) and again when audio is generated (`process.ts` / `clarify.ts` pass the slug only when `isPremium`; the vent pipeline reads `preferences.getResolvedVoiceSlug`, which re-checks entitlement). A lapsed subscription silently falls back to the default voice **without wiping the saved choice**, so it returns intact on renewal.
+
+---
+
 ## [1.7.0] - (2026-07-05)
 
 ### Added

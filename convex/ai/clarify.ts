@@ -235,6 +235,15 @@ export const handleClarification = internalAction({
             | "direct"
             | "adaptive"
             | "witnessed",
+          // Generation-time premium fence — see process.ts for rationale.
+          voiceSlug: context.isPremium
+            ? (context.preferences?.voice as
+                | "sage"
+                | "wren"
+                | "vesper"
+                | "ash"
+                | undefined)
+            : undefined,
         });
       }
     } catch (error) {
