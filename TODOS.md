@@ -16,7 +16,7 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 2. New `internalMutation` `claimColdStart` in `convex/dailyQuotes.ts`: `requireAuth`, then in one transaction — return early if a quote already exists for today; return early if `quotesColdStartAt` is within a 5-minute lease window (job in flight); otherwise patch the timestamp and `ctx.scheduler.runAfter(0, processUser)`.
 3. `coldStart` **stays an `action`** and becomes a one-line `ctx.runMutation(internal.dailyQuotes.claimColdStart)`.
 
-Convex mutations are serializable: two concurrent claims reading and writing the same profile doc conflict on OCC, so one retries and observes the lease. Exactly one job per user per day, not "usually one."
+Convex mutations are serializable: two concurrent claims reading and writing the same profile doc conflict on OCC, so one retries and observes the lease. The 5-minute lease therefore guarantees at most one *in-flight* job per lease window — not exactly one job per user per day. Once a curated quote is stored for the day, `alreadyDone` short-circuits every later run; but a slow or failed job that never stores a quote leaves the lease to expire, after which a subsequent `coldStart` can legitimately retry.
 
 **Two constraints worth not rediscovering:**
 - Keep `coldStart` an action. The shipped client calls it via `useAction`; changing its kind to a mutation breaks every build in the store (store-gap rule). Thin-wrapper is the safe shape.
