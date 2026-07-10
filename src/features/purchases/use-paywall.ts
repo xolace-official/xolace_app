@@ -14,7 +14,8 @@ export type PaywallSurface =
   | "premium_avatar"
   | "timeline_extended"
   | "mirror_tone"
-  | "daily_quote";
+  | "daily_quote"
+  | "bridge_draft";
 
 type PaywallState = {
   open: (surface: PaywallSurface) => void;

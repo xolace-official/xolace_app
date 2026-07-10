@@ -44,6 +44,12 @@ export const wipe = internalMutation({
     );
 
     for (const session of sessions) {
+      // The TTS render of the user's own mirror — nothing else references
+      // this blob, so it leaks into storage forever if we skip it.
+      if (session.mirrorAudioStorageId) {
+        await ctx.storage.delete(session.mirrorAudioStorageId);
+      }
+
       // Delete metadata (1:1)
       const metadata = await ctx.db
         .query("emotional_metadata")
@@ -85,6 +91,18 @@ export const wipe = internalMutation({
 
     if (notifications.length === BATCH_SIZE) hasMore = true;
     for (const n of notifications) await ctx.db.delete(n._id);
+
+    // ── Delete daily quotes ──────────────────────────────────────
+    // Session-derived quotes are distilled from the words being wiped.
+    const quotes = await ctx.db
+      .query("daily_quotes")
+      .withIndex("by_profile_date", (q) =>
+        q.eq("emotionalProfileId", emotionalProfileId)
+      )
+      .take(BATCH_SIZE);
+
+    if (quotes.length === BATCH_SIZE) hasMore = true;
+    for (const q of quotes) await ctx.db.delete(q._id);
 
     // ── Anonymize escalation events ──────────────────────────────
     const escalations = await ctx.db
