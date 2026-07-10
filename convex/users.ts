@@ -41,7 +41,16 @@ export const getOrCreate = mutation({
     if (existingUser) {
       // Grace period: if the user signed back in before the cron
       // purged their account, cancel the deletion and reactivate.
-      if (existingUser.accountStatus === "deleted") {
+      // "purging" is treated the same as "deleted": the sweep has
+      // claimed the account but the drain checks status per batch, so
+      // flipping back to "active" stops it (accountDeletion.ts:purgeUser).
+      // Without this, a stalled/failed purge leaves the user permanently
+      // stuck at "purging" — never re-selected by the sweep, never able
+      // to reactivate — and requireAuth locks them out.
+      if (
+        existingUser.accountStatus === "deleted" ||
+        existingUser.accountStatus === "purging"
+      ) {
         await ctx.db.patch(existingUser._id, {
           accountStatus: "active",
           deletionRequestedAt: undefined,
