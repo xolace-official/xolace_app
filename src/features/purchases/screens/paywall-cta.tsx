@@ -58,13 +58,13 @@ export function PaywallCta({ label, onPress, isBusy, isDisabled }: Props) {
 
       <View className="flex-row items-center justify-center gap-5">
         <AppText
-          className="text-[12px] text-white underline"
+          className="text-[12px] dark:text-white underline"
           onPress={() => setActiveDocument(TERMS_OF_SERVICE)}
         >
           Terms of Service
         </AppText>
         <AppText
-          className="text-[12px] text-white underline"
+          className="text-[12px] dark:text-white underline"
           onPress={() => setActiveDocument(PRIVACY_POLICY)}
         >
           Privacy Policy
