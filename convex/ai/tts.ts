@@ -1,14 +1,11 @@
 import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
-
-const VOICE_MAP: Record<string, string> = {
-  gentle: "BpjGufoPiobT79j2vtj4", // Priyanka — calm, soothing, late-night warmth
-  poetic: "Z3R5wn05IrDiVCyEkUrK", // Arabella — mysterious, emotive
-  direct: "EkK5I93UQWFDigLMpZcX", // James — modulated, controlled, direct
-  adaptive: "c6SfcYrb2t09NHXiT80T", // Jarnathan — versatile, wide emotional range
-  witnessed: "NOpBlnGInO9m6vDvFkFC", // Spuds Oxley — wise, approachable
-};
+import {
+  TONE_DEFAULT_VOICE,
+  resolveVoiceId,
+  voiceSlugValidator,
+} from "../lib/voices";
 
 /**
  * Generates ElevenLabs TTS for a mirror text and stores the audio in Convex
@@ -26,6 +23,10 @@ export const generateMirrorAudio = internalAction({
       v.literal("adaptive"),
       v.literal("witnessed"),
     ),
+    // Plus custom-voice override. Resolved to an ElevenLabs id below; when
+    // absent, falls back to the tone-mapped voice. Premium is re-checked at
+    // the scheduling call site, not here.
+    voiceSlug: v.optional(voiceSlugValidator),
   },
   handler: async (ctx, args) => {
     // Idempotency: bail if audio was already generated (e.g. duplicate schedule)
@@ -41,7 +42,11 @@ export const generateMirrorAudio = internalAction({
       return;
     }
 
-    const voiceId = VOICE_MAP[args.mirrorTone] ?? VOICE_MAP.adaptive;
+    const voiceId = resolveVoiceId(
+      args.voiceSlug,
+      TONE_DEFAULT_VOICE[args.mirrorTone] ?? TONE_DEFAULT_VOICE.adaptive,
+    );
+    console.log("[tts] voice:", args.voiceSlug ?? `tone:${args.mirrorTone}`, "->", voiceId);
     console.log("mirror ", args.mirrorText)
 
     let audioBuffer: ArrayBuffer;

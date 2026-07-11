@@ -19,7 +19,7 @@ import { revenuecat } from "../revenuecat";
 // and analytics under the old id don't carry over).
 // =============================================================
 
-export const PLUS_ENTITLEMENT_ID = "Xolace: AI Mood & Feelings Pro";
+export const PLUS_ENTITLEMENT_ID = "xolace-plus";
 
 export type PremiumTier = "free" | "plus";
 

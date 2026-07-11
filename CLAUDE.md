@@ -186,6 +186,21 @@ minimum-supported UI may still call. Instead mark, don't delete:
 - `sessions.submitInput` args `rawText`, `rawInputLength` — derived from `rawInput` server-side; values ignored.
 - `sessions.retrySession` arg `rawText` — retry reprocesses `session.rawInput`; value ignored.
 
+## Good to know
+
+Schema must always match existing data. Convex enforces this constraint. You cannot push a schema to a deployment with existing data that doesn't match it, unless you turn off schema enforcement. In general it safe to:
+Add new tables to the schema.
+Add an optional field to an existing table's schema, set the field on all documents in the table, and then make the field required.
+Mark an existing field as optional, remove the field from all documents, and then remove the field.
+Mark an existing field as a union of the existing type and a new type, modify the field on all documents to match the new type, and then change the type to the new type.
+Functions should be backwards compatible. Even if your only client is a website, and you deploy it together with your backend, your users might still be running the old version of your website when your backend changes. Therefore you should make your functions backwards compatible until you are OK to break old clients. In general it is safe to:
+Add new functions.
+Add an optional named argument to an existing function.
+Mark an existing named argument as optional.
+Mark an existing named argument as a union of the existing type and a new type.
+Change the behavior of the function in such a way that given the arguments from an old client its behavior will still be acceptable to the old client.
+Scheduled functions should be backwards compatible. When you schedule a function to run in the future, you provide the argument values it will receive. Whenever a function runs, it always runs its currently deployed version. If you change the function between the time it was scheduled and the time it runs, you must ensure the new version will behave acceptably given the old arguments.
+
 ### Build Variants
 `app.config.ts` reads `APP_VARIANT` (development/preview/production) to set bundle identifiers:
 - `com.xolaceincorg.xolace.dev` / `com.xolaceincorg.xolace.preview` / `com.xolaceincorg.xolace`

@@ -39,6 +39,7 @@ export const usePreferenceMutation = () =>
       ...(args.preferredInputType !== undefined && { preferredInputType: args.preferredInputType }),
       ...(args.colorTheme !== undefined && { colorTheme: args.colorTheme }),
       ...(args.spaceName !== undefined && { spaceName: args.spaceName ?? undefined }),
+      ...(args.voice !== undefined && { voice: args.voice ?? undefined }),
       ...(args.spaceNamePromptDismissed !== undefined && { spaceNamePromptDismissed: args.spaceNamePromptDismissed }),
       ...(mergedNotifications !== undefined && { notifications: mergedNotifications }),
     });

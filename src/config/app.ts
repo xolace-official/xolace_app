@@ -27,7 +27,7 @@ export const appConfig = {
   },
   monetization: {
     /** User is Plus if ANY of these entitlements is active. */
-    entitlements: ['xolace-plus', "Xolace: AI Mood & Feelings Pro"],
+    entitlements: ['xolace-plus'],
     revenueCatApiKey: {
       ios: extra?.revenueCat?.iosKey ?? '',
       android: extra?.revenueCat?.androidKey ?? '',
