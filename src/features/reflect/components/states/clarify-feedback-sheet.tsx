@@ -12,8 +12,6 @@ const CHIPS = [
   { key: "missed_the_main_thing", label: "Missed the main thing" },
 ] as const;
 
-const SNAP_POINTS = ["48%"];
-
 type Props = {
   sessionId: Id<"sessions"> | null;
   turnIndex: number;
@@ -47,12 +45,15 @@ export function ClarifyFeedbackSheet({ sessionId, turnIndex, isOpen, onClose }: 
     onClose();
   };
 
+  // Content-sized, like the other feedback sheets. The old fixed "48%" snap
+  // point could leave the chips (and any exit) below the fold.
   return (
-    <FeedbackSheet.Frame snapPoints={SNAP_POINTS} isOpen={isOpen} onClose={onClose}>
-      <FeedbackSheet.Header subtitle="One tap, no pressure. Can dismiss to">
+    <FeedbackSheet.Frame isOpen={isOpen} onClose={onClose}>
+      <FeedbackSheet.Header subtitle="One tap, no pressure — or dismiss." onDismiss={onClose}>
         What didn&apos;t land?
       </FeedbackSheet.Header>
       <FeedbackSheet.Chips chips={CHIPS} selected={null} onSelect={handleChip} />
+      <FeedbackSheet.Submit onPress={onClose} label="Skip" />
     </FeedbackSheet.Frame>
   );
 }
