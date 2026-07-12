@@ -15,6 +15,41 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-07-12 — Android: mic + close buttons dead in the typing state (invisible views eat touches)
+
+**Symptom**
+- On the reflect screen's **typing** state, the mic button and the ✕ (dismiss) in the top-right header row did nothing when tapped. No error, no log, no visual press feedback.
+- Everything else on the screen worked: the text field focused and accepted input, and "Let it out" submitted normally.
+- Worked in a previously shipped build, so it read as a regression rather than a never-implemented feature.
+
+**Where it appeared**
+- Android only (emulator + device). iOS was completely unaffected.
+
+**Root cause**
+Two independent bugs, both invisible on iOS for the *same* underlying reason: **Android lets an invisible view keep consuming touches; UIKit does not.** `UIView.hitTest:` skips any view that is `hidden`, has `userInteractionEnabled = NO`, or `alpha < 0.01` — so an invisible layer is transparent to touch. Android's `ViewGroup.dispatchTouchEvent` never consults `getAlpha()`, so a transparent-but-laid-out view is a wall.
+
+1. **The dead buttons.** `reflect-screen.tsx` mounted its two `Stack.Toolbar.Button`s unconditionally and merely marked them `hidden={!isIdle}`. On Android the toolbar's transparent host view stays laid out across the top ~10% of the screen (y ≈ 0.051–0.105 normalized) even while "hidden", swallowing every touch in that band — exactly where the typing row's mic and ✕ sit (y ≈ 0.064–0.092).
+2. **A ghost-screen leak, found while diagnosing.** The outgoing screen was rendered as `<EaseView animate={{opacity: 0}}>` with **no `initialAnimate`**. In `react-native-ease`, `initialAnimate` defaults to `animate` (see `EaseView.tsx`: `const initial = initialAnimate ?? animate`), so the native view mounts *already at* opacity 0, `hasInitialAnimation` is false, no animation runs — and therefore **`onTransitionEnd` never fires**. That callback is what calls `onOutgoingComplete()`, so `previous` never unmounted and `isTransitioning` stayed `true` forever. Every screen the user left stayed mounted underneath, timers and Convex subscriptions included. Regressed in `94dbd11` (Reanimated → `react-native-ease` migration); the old Reanimated `FadeOut` unmounted correctly.
+
+**How we diagnosed it**
+1. `describe` (Argent) on the running emulator — the accessibility tree showed the **entire idle screen** (texture words, "Tap to begin writing", menu, streak) still mounted alongside the typing screen, permanently. That surfaced bug 2 immediately.
+2. Tapped the ✕ → nothing. Tapped the ghost idle screen's own (invisible) buttons → also nothing. Tapped the text field → cursor moved. So touches *were* reaching the typing screen; only the top strip was dead. That ruled out the ghost screen as the blocker and reframed it as a **geometric** problem.
+3. Proved the geometry instead of guessing: temporarily added `mt-16` to the typing header row. At y ≈ 0.137 the ✕ tapped fine and dismissed to idle; at y ≈ 0.078, identical code, dead. Same element, same handler, only the y-coordinate changed.
+4. Cross-referenced the idle-state `describe`: the two `Stack.Toolbar` `ComposeView`s occupy y 0.051–0.105 — precisely the dead band.
+
+**Fix**
+- `reflect-screen.tsx`: render the `Stack.Toolbar` blocks **only when `isIdle`** (`{isIdle && <>…</>}`) instead of mounting them always with `hidden={!isIdle}`.
+- `reflect-screen.tsx`: give the outgoing `EaseView` an explicit `initialAnimate={{ opacity: 1 }}` so a real 1→0 transition runs and `onTransitionEnd` fires, unmounting the outgoing screen.
+- Verified on the Android emulator: ✕ dismisses to idle from its normal position; mic prompts for permission, then flips the placeholder to "I'm listening…" with the system mic indicator lit; `describe` shows only the typing elements, no ghost screen.
+
+**Prevention / future reference**
+- **"Works on iOS, dead on Android" for a tap almost always means an invisible view is on top.** Don't start from the button — dump the tree (`describe`) and look for a layer covering that region. Moving the element a few dozen px is a one-line, decisive test.
+- Never hide native chrome by leaving it mounted with a `hidden` prop when the region overlaps interactive content. Unmount it.
+- `react-native-ease`: **`onTransitionEnd` only fires if a transition actually runs**, and a transition only runs when `initialAnimate` differs from `animate`. Any exit animation whose completion drives an unmount *must* pass an explicit `initialAnimate`, or it will silently never unmount. If a screen seems to leak, check for a missing `initialAnimate` first.
+- Screens stuck mounted are invisible on iOS but still alive — leaking timers, animations, and Convex subscriptions. A stale `describe` tree is the cheapest way to spot them.
+
+---
+
 ## 2026-07-11 — Android Google Sign-In silently fails on a *local* build (recurrence)
 
 **Symptom**
