@@ -15,6 +15,40 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-07-11 — Android Google Sign-In silently fails on a *local* build (recurrence)
+
+**Symptom**
+- Same signature as the 2026-05-24 entry: account picker opens, user picks an account, it spins, then nothing. No error, no throw. Only log line was `[GoogleAuth] no session created — createdSessionId: null`.
+- Emulator had a Google account and Play Services, so the usual first suspects were already ruled out.
+
+**Where it appeared**
+- Android emulator, **local** `expo run:android` build (not EAS).
+
+**Root cause**
+Two mismatches stacked, both invisible:
+1. The build ran as **production**. `bun android` / `bunx expo run:android` leaves `APP_VARIANT` unset, so `app.config.ts` falls through to the prod package `com.xolaceincorg.xolace` (app name "Xolace", not "Xolace (Dev)"). Same trap as 2026-05-24, different entry point.
+2. A local build is signed with the **Expo template debug keystore** at `android/app/debug.keystore` (SHA-1 `5E:8F:16:06:…`) — *not* the EAS key and *not* `~/.android/debug.keystore`. That package + SHA-1 pair had no Android OAuth client in Google Cloud, so Credential Manager matched nothing and returned no credential and no exception.
+
+The registered OAuth client existed for `…xolace.dev` + the debug SHA-1; the app on the device was `…xolace` + the same SHA-1. One field off, total silence.
+
+**How we diagnosed it**
+1. `adb shell pm list packages | grep xolace` → `com.xolaceincorg.xolace` installed. Wrong variant, immediately.
+2. `adb shell pm path` → `adb pull` → `apksigner verify --print-certs` → the APK presents SHA-1 `5E:8F:16:06:…`.
+3. `keytool -list` on `~/.android/debug.keystore` gave a *different* SHA-1 (`3B:34:9D:…`) — proving Gradle signs with the project-local `android/app/debug.keystore` (see `signingConfigs.debug` → `storeFile file('debug.keystore')`), not the user's personal one.
+4. Parsed `google-services.json`: zero registered `certificate_hash` entries for all three packages.
+
+**Fix**
+- Rebuild with `bun android:dev` so the package is `com.xolaceincorg.xolace.dev`, matching the registered OAuth client.
+- Register the local debug keystore's SHA-1 for the `.dev` package (Google Cloud Android OAuth client) and its SHA-256 (Clerk native Android entry).
+
+**Prevention / future reference**
+- **Check the app name first.** "Xolace" instead of "Xolace (Dev)" means you built prod. Costs one second and rules out the most common cause.
+- `android/` is gitignored, so the debug keystore comes from the Expo prebuild template and is normally identical across machines — which is why one registration covers the whole team. Don't rely on it silently: verify with `keytool` (see `dev-onboarding.md` §5).
+- The installed APK is the source of truth for the SHA-1, not `eas credentials` and not `~/.android/debug.keystore`.
+- New collaborator onboarding, including this whole trap, is written up in `docs/dev-onboarding.md`.
+
+---
+
 ## 2026-06-10 — `eas update` fails with "Channel has no branches associated with it"
 
 **Symptom**

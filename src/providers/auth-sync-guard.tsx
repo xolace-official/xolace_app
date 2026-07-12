@@ -43,6 +43,8 @@ export function AuthSyncGuard() {
   const recoveredRef = useRef(false);
 
   useEffect(() => {
+    console.log('[auth:sync] clerkSignedIn:', !!isSignedIn, '| convexAuthenticated:', isAuthenticated, '| convexLoading:', isLoading);
+
     // Healthy, signed out, or still settling — nothing to recover; reset latch.
     if (isLoading || !isSignedIn || isAuthenticated) {
       recoveredRef.current = false;
@@ -50,20 +52,27 @@ export function AuthSyncGuard() {
     }
     if (recoveredRef.current) return;
 
+    console.warn(`[auth:sync] DESYNC — Clerk signed in but Convex not authenticated; recovering in ${DESYNC_GRACE_MS}ms`);
+
     const timer = setTimeout(() => {
       recoveredRef.current = true;
       Promise.resolve(getTokenRef.current())
         .then((token) => {
           // A mintable token means the session is valid — keep it and let Convex
           // re-authenticate. Only sign out when nothing can mint.
-          if (token) return;
+          if (token) {
+            console.warn('[auth:sync] token IS mintable — keeping session, waiting for Convex to re-auth');
+            return;
+          }
+          console.error('[auth:sync] token NOT mintable past grace — signing out');
           Sentry.captureMessage(
             "Auth desync — token unmintable past grace; signing out",
             "error",
           );
           signOutRef.current().catch(() => {});
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('[auth:sync] getToken threw past grace — signing out:', error);
           Sentry.captureMessage(
             "Auth desync — getToken threw past grace; signing out",
             "error",

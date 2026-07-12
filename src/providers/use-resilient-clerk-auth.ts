@@ -51,15 +51,31 @@ export function useResilientClerkAuth() {
       attempt++;
       try {
         const token = await getTokenRef.current(options);
-        if (token) return token;
+        if (token) {
+          console.log(
+            `[auth:token] minted on attempt ${attempt} after ${Date.now() - start}ms (len ${token.length})`,
+          );
+          return token;
+        }
+        console.log(
+          `[auth:token] attempt ${attempt} returned NULL (clerkSignedIn: ${isSignedInRef.current})`,
+        );
         lastError = null;
       } catch (error) {
+        console.log(
+          `[auth:token] attempt ${attempt} THREW (clerkSignedIn: ${isSignedInRef.current}):`,
+          error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+        );
         lastError = error;
       }
       if (isSignedInRef.current !== true) break;
       if (Date.now() - start + RETRY_DELAY_MS >= RETRY_WINDOW_MS) break;
       await sleep(RETRY_DELAY_MS);
     }
+
+    console.warn(
+      `[auth:token] giving up after ${attempt} attempts / ${Date.now() - start}ms — Convex will see UNAUTHENTICATED (clerkSignedIn: ${isSignedInRef.current})`,
+    );
 
     // Exhausted while still signed in: a token never minted in the window — a
     // genuine failure, not the transient boot race. Surface it; this is rare and

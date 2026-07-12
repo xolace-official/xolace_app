@@ -117,24 +117,36 @@ export const AuthScreen = () => {
 
     try {
       setLoadingProvider('google');
+      console.log('[auth:google] 1/6 tapped — clerkSignedIn:', isSignedIn);
 
       // A stale Clerk session (active client-side but never validated by
       // Convex) makes the SSO flow throw "You're already signed in" and
       // dead-ends the user here. Clear it first so a fresh sign-in proceeds.
       if (isSignedIn) {
+        console.log('[auth:google] 2/6 stale session — signing out first');
         await signOut();
+        console.log('[auth:google] 2/6 signOut done');
       }
 
+      console.log('[auth:google] 3/6 starting native SSO flow…');
+      const flowStart = Date.now();
       const { createdSessionId, setActive, signUp } =
         await startGoogleAuthenticationFlow();
+      console.log('[auth:google] 3/6 flow returned in', Date.now() - flowStart, 'ms —', {
+        createdSessionId,
+        hasSetActive: !!setActive,
+        createdUserId: signUp?.createdUserId ?? null,
+      });
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
+        console.log('[auth:google] 4/6 setActive done — Clerk session is active');
 
         const userId = await getOrCreate({
           authProvider: 'google',
           authProviderAccountId: signUp?.createdUserId ?? 'google-user',
         });
+        console.log('[auth:google] 5/6 convex getOrCreate ok — userId:', userId);
 
         posthog.identify(userId, {
           $set: { auth_provider: 'google' },
@@ -144,6 +156,7 @@ export const AuthScreen = () => {
           auth_provider: 'google',
           is_new_user: !!signUp?.createdUserId,
         });
+        console.log('[auth:google] 6/6 done — now waiting on route guard to flip to (protected)');
       } else {
         console.warn('[GoogleAuth] no session created — createdSessionId:', createdSessionId);
       }
@@ -170,7 +183,7 @@ export const AuthScreen = () => {
       } else {
         msg = String(error);
       }
-      console.error('Google auth error:', msg);
+      console.error('[auth:google] FAILED — code:', code, '\n', msg);
       posthog.capture('$exception', {
         $exception_list: [
           {

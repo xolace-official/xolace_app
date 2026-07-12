@@ -106,6 +106,14 @@ const AppContent = () => {
       : !isAuthenticated
         ? "(auth)"
         : "(protected)";
+    console.log(`[auth:guard] → ${group}`, {
+      introSeen,
+      clerkLoaded: isClerkLoaded,
+      clerkSignedIn: !!isSignedIn,
+      clerkUserId: userId ?? null,
+      convexAuthenticated: isAuthenticated,
+      convexAuthLoading: isAuthLoading,
+    });
     Sentry.addBreadcrumb({
       category: "auth.guard",
       level: isClerkLoaded && isSignedIn && !isAuthenticated ? "warning" : "info",

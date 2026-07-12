@@ -21,6 +21,7 @@ type TokenCache = NonNullable<typeof clerkTokenCache>;
  * `clerkTokenCache` is `undefined` on web — fall through to it untouched there.
  */
 function breadcrumb(message: string, data?: Record<string, unknown>) {
+  console.log(`[auth:cache] ${message}`, data ?? {});
   Sentry.addBreadcrumb({
     category: "clerk.tokenCache",
     level: "info",
