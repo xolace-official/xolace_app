@@ -33,6 +33,11 @@ import { SpaceNamePromptDialog } from "@/src/features/reflect/components/space-n
 import { ClarifyFeedbackSheet } from "@/src/features/reflect/components/states/clarify-feedback-sheet";
 import { useFeedbackShake } from "@/src/features/feedback-tray/feedback-tray-provider";
 
+// EaseView only runs a transition — and only then emits onTransitionEnd — when
+// initialAnimate differs from animate. Without an explicit opacity: 1 start the
+// outgoing screen mounts already at opacity 0, no animation runs, and
+// onOutgoingComplete never fires, leaving it mounted forever.
+const EASE_ANIMATE_OUT_INITIAL = { opacity: 1 };
 const EASE_ANIMATE_OUT = { opacity: 0 };
 
 export const ReflectScreen = () => {
@@ -265,24 +270,35 @@ export const ReflectScreen = () => {
   return (
     <View className="flex-1 bg-background" style={safeAreaStyle}>
       <Stack.Screen options={stackScreenOptions} />
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button
-          hidden={!isIdle}
-          icon={process.env.EXPO_OS === "ios" ? "person.circle" : AccountCircle}
-          onPress={() => router.push("/(protected)/profile")}
-        />
-      </Stack.Toolbar>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button
-          hidden={!isIdle}
-          icon={process.env.EXPO_OS === "ios" ? "lifepreserver" : CrisisAlert}
-          tintColor={crisisTint}
-          onPress={() => router.push("/crisis-resources?from=idle_button")}
-        />
-      </Stack.Toolbar>
+      {/* Mounted only while idle. A `hidden` toolbar button still leaves its
+          transparent host view laid out across the top of the screen on
+          Android, where (unlike UIKit) an invisible view still consumes
+          touches — that band swallowed the typing screen's mic and close. */}
+      {isIdle && (
+        <>
+          <Stack.Toolbar placement="left">
+            <Stack.Toolbar.Button
+              icon={
+                process.env.EXPO_OS === "ios" ? "person.circle" : AccountCircle
+              }
+              onPress={() => router.push("/(protected)/profile")}
+            />
+          </Stack.Toolbar>
+          <Stack.Toolbar placement="right">
+            <Stack.Toolbar.Button
+              icon={
+                process.env.EXPO_OS === "ios" ? "lifepreserver" : CrisisAlert
+              }
+              tintColor={crisisTint}
+              onPress={() => router.push("/crisis-resources?from=idle_button")}
+            />
+          </Stack.Toolbar>
+        </>
+      )}
       {/* Outgoing screen — fades out then unmounts */}
       {previous && previousConfig && (
         <EaseView
+          initialAnimate={EASE_ANIMATE_OUT_INITIAL}
           animate={EASE_ANIMATE_OUT}
           transition={previousConfig.exit.transition}
           onTransitionEnd={onOutgoingComplete}
