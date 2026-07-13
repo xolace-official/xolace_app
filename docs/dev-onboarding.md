@@ -3,7 +3,7 @@
 Getting a new machine from `git clone` to a running app with working sign-in.
 
 Most of this is self-serve. The parts that are **not** are called out under
-[What the maintainer must do for you](#what-the-maintainer-must-do-for-you) —
+[What the lead (Nat😜) must do for you](#what-the-lead (Nat😜)-must-do-for-you) —
 nothing in the repo can give you those, so request them on day one rather than
 discovering you're blocked halfway through.
 
@@ -22,7 +22,7 @@ your afternoon. See `bug-log.md` (2026-05-24) for the full autopsy.
 | **Xcode** | iOS only. Includes the iOS Simulator. |
 | **Android Studio** | Android only. Needed for the SDK + an emulator (AVD). |
 | **Java 17+** | Comes with Android Studio; needed for Gradle and `keytool`. |
-| **Convex account** | Ask the maintainer to add you to the project. |
+| **Convex account** | Ask the lead (Nat😜) to add you to the project. |
 
 An Android emulator **must have Google Play Services** (pick an AVD image
 labelled "Google Play", not plain "AOSP") — Google sign-in uses Credential
@@ -37,7 +37,7 @@ bun install
 ## 2. Secrets you must be given
 
 Four things are gitignored and cannot be recovered from the repo. Ask the
-maintainer for them and place them exactly here:
+lead (Nat😜) for them and place them exactly here:
 
 | File | What it is |
 |---|---|
@@ -50,7 +50,7 @@ Without `google-services.json` the Android build **fails outright** at the
 Gradle `processGoogleServices` task — it is not optional, even if you never
 touch Firebase.
 
-`.env.local` keys, for reference (values come from the maintainer):
+`.env.local` keys, for reference (values come from the lead (Nat😜)):
 
 ```
 EXPO_PUBLIC_CONVEX_URL              EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
@@ -139,7 +139,7 @@ SHA1:   5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25
 SHA256: FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C
 ```
 
-**If your SHA-1 differs, stop and send both hashes to the maintainer** — they
+**If your SHA-1 differs, stop and send both hashes to the lead (Nat😜)** — they
 must register them (see below) before Google sign-in can work for you. You
 cannot fix this from the codebase.
 
@@ -162,7 +162,7 @@ Sign in with Google. If it works, you're done.
 
 ---
 
-## What the maintainer must do for you
+## What the lead (Nat😜) must do for you
 
 Actions only the project owner can perform. None of these are in the repo.
 
@@ -191,7 +191,7 @@ The signature. Credential Manager found no Android OAuth client matching
 *package + SHA-1*, so it returned no credential and no exception. In order:
 1. Is the app named "Xolace (Dev)"? If it says "Xolace", you built the prod
    package with `bun android` — rebuild with `bun android:dev`.
-2. Does your SHA-1 match §5? If not, the maintainer must register it.
+2. Does your SHA-1 match §5? If not, the lead (Nat😜) must register it.
 3. Is a Google account added to the emulator, and does the image have Play
    Services?
 
