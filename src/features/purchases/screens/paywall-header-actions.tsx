@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { LinkButton, PressableFeedback, useThemeColor } from "heroui-native";
@@ -33,10 +34,18 @@ export function PaywallCloseButton({ surface }: CloseProps) {
 
 export function PaywallRestoreButton() {
   const { restorePurchases } = useRevenueCat();
+  const [isRestoring, setIsRestoring] = useState(false);
+
+  const handleRestore = () => {
+    setIsRestoring(true);
+    restorePurchases().finally(() => setIsRestoring(false));
+  };
 
   return (
-    <LinkButton size="sm" onPress={() => restorePurchases()} className="px-3" >
-      <LinkButton.Label className="text-[13px] text-muted">Restore</LinkButton.Label>
+    <LinkButton size="sm" onPress={handleRestore} isDisabled={isRestoring} className="px-3">
+      <LinkButton.Label className="text-[13px] text-muted">
+        {isRestoring ? "Restoring…" : "Restore"}
+      </LinkButton.Label>
     </LinkButton>
   );
 }
