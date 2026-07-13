@@ -9,6 +9,7 @@
         "@anthropic-ai/sdk": "^0.80.0",
         "@clerk/expo": "3.6.3",
         "@convex-dev/action-cache": "^0.3.0",
+        "@convex-dev/aggregate": "^0.2.2",
         "@convex-dev/expo-push-notifications": "^0.3.1",
         "@convex-dev/migrations": "^0.3.3",
         "@convex-dev/rag": "^0.7.5",
@@ -279,6 +280,8 @@
     "@coinbase/wallet-sdk": ["@coinbase/wallet-sdk@4.3.7", "", { "dependencies": { "@noble/hashes": "^1.4.0", "clsx": "^1.2.1", "eventemitter3": "^5.0.1", "preact": "^10.24.2", "viem": "^2.27.2" } }, "sha512-z6e5XDw6EF06RqkeyEa+qD0dZ2ZbLci99vx3zwDY//XO8X7166tqKJrR2XlQnzVmtcUuJtCd5fCvr9Cu6zzX7w=="],
 
     "@convex-dev/action-cache": ["@convex-dev/action-cache@0.3.0", "", { "peerDependencies": { "convex": "^1.24.8" } }, "sha512-B3GsOgwPv81whdu1mHaMKBwbIYHhNXsv3Fr5oMjynIOrRy1laGLUo9zRWDKWJgtKXfVnn8X/uxYD9RyWmPIbPQ=="],
+
+    "@convex-dev/aggregate": ["@convex-dev/aggregate@0.2.2", "", { "peerDependencies": { "convex": "^1.24.8" } }, "sha512-9sskfPZdiH0mdc33Obcf2+gQSPDpyHqUDkYmXDsUqhqe5lLwGKYbrxw7LgxHmYm9c1YLbaXqxKiM1CgucfKAAw=="],
 
     "@convex-dev/eslint-plugin": ["@convex-dev/eslint-plugin@1.2.1", "", { "dependencies": { "@typescript-eslint/types": "~8.49.0", "@typescript-eslint/utils": "~8.49.0" }, "peerDependencies": { "convex": "^1.31.7" } }, "sha512-2EfDq/jscJofSjZscPolVFa3SgfF2iwLtOBJdtI5C1089eHEgQ8bEuxbCVnRRuapAZxLXz17+8vHjPC4+hmyIQ=="],
 

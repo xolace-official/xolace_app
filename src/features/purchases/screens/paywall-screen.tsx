@@ -161,7 +161,7 @@ export function PaywallScreen({ surface }: Props) {
               id="timeline"
               icon={TIMELINE_ICON}
               title="Extended timeline"
-              description="Look back further than the last few weeks"
+              description="Your whole history, not just the recent window"
               isHighlighted={highlightedFeature === "timeline"}
             />
             <PaywallFeatureItem

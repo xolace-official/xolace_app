@@ -52,6 +52,7 @@ export const TimelineScreen = () => {
     isLoadingMore,
     loadMore,
     showUpgradeNudge,
+    windowDays,
   } = useTimeline();
   const { markInteractive } = useObserve();
 
@@ -65,6 +66,10 @@ export const TimelineScreen = () => {
   if (isLoading) {
     return <ActiveLoader />;
   }
+
+  // Narrows windowDays to a number for the banner. Free users always get a
+  // number back with hasOlderSessions; the null check is the type proof.
+  const showNudge = showUpgradeNudge && windowDays !== null;
 
   return (
     <View className="flex-1">
@@ -81,12 +86,12 @@ export const TimelineScreen = () => {
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={
-          showUpgradeNudge ? styles.listContentWithNudge : styles.listContent
+          showNudge ? styles.listContentWithNudge : styles.listContent
         }
         ListEmptyComponent={EmptyState}
         ListFooterComponent={isLoadingMore ? LoadingFooter : undefined}
       />
-      {showUpgradeNudge && <TimelineUpgradeBanner />}
+      {showNudge && <TimelineUpgradeBanner windowDays={windowDays} />}
     </View>
   );
 };

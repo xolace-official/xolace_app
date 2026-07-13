@@ -16,6 +16,7 @@ const PAGE_SIZE = 15;
  * - `isLoadingMore` — `true` while additional pages are being fetched, `false` otherwise.
  * - `loadMore` — Function that requests the next page of items.
  * - `showUpgradeNudge` — `true` once the free-tier window is exhausted and older sessions exist.
+ * - `windowDays` — server-truth length of the free-tier window, for the nudge copy.
  */
 export function useTimeline() {
   const { results, status, loadMore } = usePaginatedQuery(
@@ -48,5 +49,6 @@ export function useTimeline() {
     isLoadingMore: status === "LoadingMore",
     loadMore: () => loadMore(PAGE_SIZE),
     showUpgradeNudge: status === "Exhausted" && windowInfo?.hasOlderSessions === true,
+    windowDays: windowInfo?.windowDays ?? null,
   };
 }
