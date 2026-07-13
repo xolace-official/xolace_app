@@ -52,7 +52,7 @@ export function PaywallCta({ label, onPress, isBusy, isDisabled }: Props) {
         )}
       </Button>
 
-      <AppText className="text-[11px] text-white text-center leading-4">
+      <AppText className="text-[11px] dark:text-white text-center leading-4">
         Renews automatically. Cancel anytime in your store settings.
       </AppText>
 

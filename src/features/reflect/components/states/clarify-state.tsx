@@ -108,7 +108,7 @@ export const ClarifyState = ({
               dispatch({ type: 'CLARIFY_TEXT_CHANGE', text })
             }
             variant="secondary"
-            className="min-h-[120] flex-1 border-0 bg-transparent text-base text-foreground"
+            className="min-h-[120] flex-1 border-0 bg-transparent text-base text-foreground ios:focus:outline-transparent android:focus:border-transparent"
           />
         </View>
 
