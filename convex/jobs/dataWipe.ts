@@ -3,6 +3,7 @@ import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
 import { purgeEpisodicEntries } from "../episodicMemory";
+import { rankReplace } from "../lib/aggregates";
 
 const BATCH_SIZE = 100;
 
@@ -139,6 +140,9 @@ export const wipe = internalMutation({
     // ── Reset emotional profile counters ─────────────────────────
     // Only reset on the final batch (no more sessions to delete)
     if (!hasMore) {
+      // Read before the patch — the percentile aggregate needs the old
+      // sessionCount to find and move this profile's key.
+      const profileBeforeReset = await ctx.db.get(emotionalProfileId);
       await ctx.db.patch(emotionalProfileId, {
         sessionCount: 0,
         currentStreak: 0,
@@ -152,6 +156,7 @@ export const wipe = internalMutation({
         lastConsolidationAt: undefined,
         updatedAt: Date.now(),
       });
+      if (profileBeforeReset) await rankReplace(ctx, profileBeforeReset);
     }
 
     // ── Self-reschedule if more data remains ─────────────────────

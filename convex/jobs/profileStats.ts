@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { isStreakExpired } from "../lib/streak";
+import { rankReplace } from "../lib/aggregates";
 
 /**
  * Update emotional profile stats after a session completes.
@@ -163,6 +164,9 @@ export const updateAfterSession = internalMutation({
       firstSessionAt: profile.firstSessionAt ?? now,
       updatedAt: now,
     });
+
+    // sessionCount just moved — keep the percentile aggregate in step.
+    await rankReplace(ctx, profile);
 
     // Mark any unresolved notification_log entries within the last 24h as
     // having resulted in a session — covers organic returns (no tap required).

@@ -11,6 +11,7 @@ import { ProfileHero } from "@/src/features/profile/components/profile-hero";
 import { StatBand } from "@/src/features/profile/components/stat-band";
 import { EmotionChips } from "@/src/features/profile/components/emotion-chips";
 import { MirrorLines } from "@/src/features/profile/components/mirror-lines";
+import { RankCard } from "@/src/features/profile/components/rank-card";
 import { WeekIntensityCard } from "@/src/features/profile/components/week-intensity-card";
 import { WordsTeaserCard } from "@/src/features/profile/components/words-teaser-card";
 import { WordsTeaserEmpty } from "@/src/features/profile/components/words-teaser-empty";
@@ -20,6 +21,7 @@ import { useProfileSummary } from "@/src/features/profile/hooks/use-profile-summ
 import { useMoodDelta } from "@/src/features/profile/hooks/use-mood-delta";
 import { useWeekIntensity } from "@/src/features/profile/hooks/use-week-intensity";
 import { useInsightGate } from "@/src/features/profile/hooks/use-insight-gate";
+import { useReflectionRank } from "@/src/features/profile/hooks/use-reflection-rank";
 import { useAvatars, resolveAvatar } from "@/src/features/profile/hooks/use-avatars";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -30,6 +32,7 @@ export function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const summary = useProfileSummary();
   const moodDelta = useMoodDelta();
+  const rank = useReflectionRank();
   const [weekOffset, setWeekOffset] = useState(0);
   const avatars = useAvatars();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -124,7 +127,9 @@ export function ProfileScreen() {
           />
         )}
 
-        {hasEnoughForChart && (
+        {/* The rank card renders from session zero, so the section header must
+            too — otherwise a new user sees a lone card with no heading. */}
+        {(hasEnoughForChart || rank) && (
           <EaseView
             initialAnimate={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -138,6 +143,14 @@ export function ProfileScreen() {
               <View className="flex-1 h-px bg-separator/55" />
             </View>
           </EaseView>
+        )}
+
+        {/* Widest lens first: you among everyone, then your week, then your
+            words. Always rendered — the card carries its own pending state. */}
+        {rank && (
+          <View className="mb-4">
+            <RankCard rank={rank} staggerDelay={300} />
+          </View>
         )}
 
         {hasEnoughForChart && weekIntensity && (
@@ -154,7 +167,7 @@ export function ProfileScreen() {
             onNextWeek={() => setWeekOffset((w) => Math.min(0, w + 1))}
             onView={() => gate.trackView("intensity_history")}
             onUnlock={() => gate.open("intensity_history")}
-            staggerDelay={300}
+            staggerDelay={360}
           />
         )}
 
@@ -165,18 +178,18 @@ export function ProfileScreen() {
               isPlus={gate.isPlus}
               onView={() => gate.trackView("words_language")}
               onUnlock={() => gate.open("words_language")}
-              staggerDelay={360}
+              staggerDelay={420}
             />
           </View>
         )}
 
         {showWordsEmpty && (
           <View className="mt-4">
-            <WordsTeaserEmpty staggerDelay={360} />
+            <WordsTeaserEmpty staggerDelay={420} />
           </View>
         )}
 
-        <FollowUpsSection staggerDelay={420} />
+        <FollowUpsSection staggerDelay={480} />
       </ScrollView>
 
       <AvatarPickerSheet

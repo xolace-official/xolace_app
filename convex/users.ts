@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
+import { rankInsert } from "./lib/aggregates";
 import { generateDisplayName } from "./lib/displayName";
 
 /**
@@ -71,6 +72,7 @@ export const getOrCreate = mutation({
       createdAt: now,
       updatedAt: now,
     });
+    await rankInsert(ctx, profileId);
 
     // Create preferences with defaults
     await ctx.db.insert("preferences", {

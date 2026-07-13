@@ -65,6 +65,7 @@ import type * as jobs_profileStats from "../jobs/profileStats.js";
 import type * as jobs_quotesGenerator from "../jobs/quotesGenerator.js";
 import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js";
 import type * as jobs_reflectionDistiller from "../jobs/reflectionDistiller.js";
+import type * as lib_aggregates from "../lib/aggregates.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_displayName from "../lib/displayName.js";
 import type * as lib_followUpCadence from "../lib/followUpCadence.js";
@@ -163,6 +164,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/quotesGenerator": typeof jobs_quotesGenerator;
   "jobs/reflectionAnonymizer": typeof jobs_reflectionAnonymizer;
   "jobs/reflectionDistiller": typeof jobs_reflectionDistiller;
+  "lib/aggregates": typeof lib_aggregates;
   "lib/auth": typeof lib_auth;
   "lib/displayName": typeof lib_displayName;
   "lib/followUpCadence": typeof lib_followUpCadence;
@@ -232,5 +234,6 @@ export declare const components: {
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   rag: import("@convex-dev/rag/_generated/component.js").ComponentApi<"rag">;
   revenuecat: import("convex-revenuecat/_generated/component.js").ComponentApi<"revenuecat">;
+  reflectionRank: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"reflectionRank">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
 };

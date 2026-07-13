@@ -3,6 +3,7 @@ import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { purgeEpisodicEntries } from "../episodicMemory";
 import { pushNotifications } from "../lib/pushNotifications";
+import { rankDelete } from "../lib/aggregates";
 
 const USER_BATCH_SIZE = 10;
 const BATCH_SIZE = 100;
@@ -244,6 +245,10 @@ export const purgeUser = internalMutation({
     // Push tokens live in the component, keyed by profile id — deleting the
     // profile row does not reach them.
     await pushNotifications.removeToken(ctx, { userId: profileId });
+
+    // Must run before the row is gone — the aggregate needs the doc to locate
+    // its key. Skipping this leaves a phantom in the percentile denominator.
+    await rankDelete(ctx, profileId);
 
     await ctx.db.delete(profileId);
     await ctx.db.delete(user._id);
