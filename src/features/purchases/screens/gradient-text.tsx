@@ -11,14 +11,16 @@ type GradientTextProps = {
 };
 
 export const GradientText = ({ text, gradientProps, className, textProps }: GradientTextProps) => {
+  // MaskedView takes the mask as an element; React Compiler memoizes it.
+  const mask = (
+    // eslint-disable-next-line react-perf/jsx-no-jsx-as-prop
+    <Text className={cn(className)} {...textProps}>
+      {text}
+    </Text>
+  );
+
   return (
-    <MaskedView
-      maskElement={
-        <Text className={cn(className)} {...textProps}>
-          {text}
-        </Text>
-      }
-    >
+    <MaskedView maskElement={mask}>
       <LinearGradient
         {...gradientProps}
         colors={gradientProps?.colors ?? ["blue", "yellow", "blue"]}
@@ -26,7 +28,7 @@ export const GradientText = ({ text, gradientProps, className, textProps }: Grad
         end={gradientProps?.end ?? { x: 1, y: 0 }}
         style={[StyleSheet.absoluteFill, gradientProps?.style]}
       />
-      <Text className={cn(className)} {...textProps} style={{ opacity: 0 }}>
+      <Text {...textProps} className={cn(className, "opacity-0")}>
         {text}
       </Text>
     </MaskedView>

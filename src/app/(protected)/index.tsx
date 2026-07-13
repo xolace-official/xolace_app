@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -98,7 +98,7 @@ export default function ProtectedIndex() {
   // sheet the instant the tour completed, stacking a third interruption onto a
   // first run. Persisted state hydrates synchronously (unified-storage), so this
   // is the real value on the very first render.
-  const tourSeenAtMount = useRef(reflectTourSeen).current;
+  const [tourSeenAtMount] = useState(reflectTourSeen);
 
   // Same getFullContext query ReflectScreen subscribes to — Convex dedupes it,
   // so this is a cached read, not a second round-trip.
