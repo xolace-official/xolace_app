@@ -93,45 +93,33 @@ export const ReflectScreen = () => {
 
   const [showSpaceNameDialog, setShowSpaceNameDialog] = useState(false);
   const [spaceNameDialogFired, setSpaceNameDialogFired] = useState(false);
-  // Rejecting a mirror arms the feedback sheet; it is not shown yet. The sheet
-  // only becomes visible once the clarify screen has finished transitioning in
-  // (below). Opening it in the same commit as the transition asks gorhom to
-  // snap against a container that is still being laid out, which can park the
-  // sheet at the bottom edge with its chips off-screen.
-  const [mirrorFeedbackArmed, setMirrorFeedbackArmed] = useState(false);
+  const [mirrorFeedbackTurn, setMirrorFeedbackTurn] = useState<number | null>(null);
   const mirrorFeedbackShown = useRef(false);
 
   // Visible only while clarify is settled and on top. Derived, so leaving
   // clarify — "← Back to mirror", give-up on the last turn, escalation, an
   // error — closes the sheet instead of stranding it over another screen.
   const mirrorFeedbackOpen =
-    mirrorFeedbackArmed && current === "clarify" && !isTransitioning;
+    mirrorFeedbackTurn !== null &&
+    current === "clarify" &&
+    !isTransitioning &&
+    sessionId !== null;
 
-  // Disarm on leaving clarify so a later return (e.g. "Say more") can't
-  // resurrect a sheet the user already walked away from. Adjusted during
-  // render with a prev-value comparison rather than a useEffect.
+  
   const [prevScreen, setPrevScreen] = useState(state.screen);
   if (state.screen !== prevScreen) {
     setPrevScreen(state.screen);
-    if (mirrorFeedbackArmed && state.screen !== "clarify") {
-      setMirrorFeedbackArmed(false);
+    if (mirrorFeedbackTurn !== null && state.screen !== "clarify") {
+      setMirrorFeedbackTurn(null);
     }
   }
 
   const handleNotQuiteWithFeedback = () => {
     if (!mirrorFeedbackShown.current) {
       mirrorFeedbackShown.current = true;
-      setMirrorFeedbackArmed(true);
+      setMirrorFeedbackTurn(turnsCount);
     }
     handleNotQuite();
-  };
-
-  const handleSayMoreWithFeedback = () => {
-    if (!mirrorFeedbackShown.current) {
-      mirrorFeedbackShown.current = true;
-      setMirrorFeedbackArmed(true);
-    }
-    handleSayMore();
   };
 
   useEffect(() => {
@@ -203,7 +191,7 @@ export const ReflectScreen = () => {
             toneUsed={toneUsed}
             onThatsIt={handleThatsIt}
             onNotQuite={handleNotQuiteWithFeedback}
-            onSayMore={handleSayMoreWithFeedback}
+            onSayMore={handleSayMore}
           />
         );
       case "clarify":
@@ -215,7 +203,7 @@ export const ReflectScreen = () => {
             onSubmit={submitClarification}
             // Armed, not open: the sheet is still transitioning in at mount
             // time, and autoFocus would raise the keyboard underneath it.
-            autoFocus={!isOutgoing && !mirrorFeedbackArmed}
+            autoFocus={!isOutgoing && mirrorFeedbackTurn === null}
           />
         );
       case "gave-up":
@@ -346,9 +334,9 @@ export const ReflectScreen = () => {
       {/* Mirror feedback — fires when user rejects a mirror, persists through screen transition */}
       <ClarifyFeedbackSheet
         sessionId={sessionId}
-        turnIndex={turnsCount}
+        turnIndex={mirrorFeedbackTurn ?? 0}
         isOpen={mirrorFeedbackOpen}
-        onClose={() => setMirrorFeedbackArmed(false)}
+        onClose={() => setMirrorFeedbackTurn(null)}
       />
 
       {/* Space naming — fires once on first path-selection when unnamed */}

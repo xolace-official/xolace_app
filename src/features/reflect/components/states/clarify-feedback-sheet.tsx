@@ -31,6 +31,9 @@ export function ClarifyFeedbackSheet({ sessionId, turnIndex, isOpen, onClose }: 
     if (isOpen) setSubmitted(false);
   }
 
+  // `sessionId` is non-null whenever the sheet is open — the owner gates
+  // `isOpen` on it, so a tap can never be silently dropped. The check remains
+  // as a type narrowing and a backstop if it goes null mid-open.
   const handleChip = (key: string) => {
     if (!submitted && sessionId) {
       Presets.chirp();

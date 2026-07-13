@@ -15,6 +15,42 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-07-12 — Android: `Observe.logEvent` is undefined, crashing the reflect screen when a mirror arrives
+
+**Symptom**
+- Red-box render error `undefined is not a function` at `use-reflection-machine.ts:109`, thrown the moment a mirror came back from the server. The mirror never rendered.
+- Only reachable by completing a real reflection (idle → type → submit) in a **fresh** session. See the verification trap below — this is what makes it easy to think you've fixed it when you haven't.
+
+**Where it appeared**
+- Android dev build (emulator). `expo-observe@56.0.21`, `expo-app-metrics@56.0.19`.
+
+**Root cause**
+`logEvent` is **not implemented on the `ExpoObserve` native module** — it lives on `ExpoAppMetrics`. `expo-observe` bridges the two with a Proxy that delegates only when the property is absent from the native target:
+
+```js
+if (typeof prop === 'string' && !(prop in target)) return Reflect.get(AppMetrics, prop);
+```
+
+On Android/Hermes the `ExpoObserve` JSI host object answers **`'logEvent' in target` → `true`** while exposing no such method. The delegation condition is therefore false, the Proxy hands back `target.logEvent` (`undefined`), and calling it throws. Confirmed live on-device: `ExpoObserve` → `hasLogEvent: true, typeof: "undefined"`; `ExpoAppMetrics` → `hasLogEvent: true, typeof: "function"`.
+
+This is a library bug, not a misuse — `Observe.logEvent` is the API the [EAS Observe docs](https://docs.expo.dev/eas/observe/events.md) prescribe.
+
+**How we diagnosed it**
+1. Red box pointed at the `Observe.logEvent('mirror.generated', …)` call. `logEvent` *is* in `expo-observe`'s TypeScript types, so tsc was happy — runtime-only failure.
+2. Read `expo-observe/src/module.ts`: found the `requireNativeModule('ExpoObserve')` + Proxy-fallback-to-`AppMetrics` structure, and that `logEvent` is declared in `AppMetricsModule.kt` (`Name("ExpoAppMetrics")`), not `ObserveModule.kt` (`Name("ExpoObserve")`).
+3. Settled it empirically rather than theorising: `debugger-evaluate` against the running app, dumping `getOwnPropertyNames` + `'logEvent' in m` + `typeof m.logEvent` for both `globalThis.expo.modules.ExpoObserve` and `.ExpoAppMetrics`. That exposed the `in`-says-yes / value-is-undefined contradiction that defeats the Proxy guard.
+
+**Fix**
+- `use-reflection-machine.ts`: import `AppMetrics` (re-exported by `expo-observe`) and call `AppMetrics.logEvent(...)` directly, bypassing the Proxy. Same native method and same dashboard event — `ExpoAppMetrics.logEvent` is what the Proxy was trying to reach anyway.
+
+**Prevention / future reference**
+- **Verification trap — the one that nearly let a non-fix through.** The `logEvent` call is guarded by `if (durationMs !== undefined)`, and `durationMs` is derived from `submitTimestampRef`, which is only set by a submit *in the current JS lifetime*. So after a reload the session **resumes straight to mirror with `submitTimestampRef === null`**, `logEvent` is never called, and the mirror renders fine — with or without the fix. Reloading after the crash "fixes" it, which is pure illusion. **Only a fresh idle → type → submit → mirror round-trip exercises this line.** Any change to this path must be verified that way.
+- If another `Observe.<method>` throws `undefined is not a function` on Android, check whether the method belongs to `ExpoAppMetrics` rather than `ExpoObserve`: `grep 'Function("' node_modules/expo-observe/android/**/*.kt node_modules/expo-app-metrics/android/**/*.kt`. Only `configure`, `setBundleDefaults`, and `dispatchEvents` are truly on `ExpoObserve`; `logEvent`, `markFirstRender`, `markInteractive`, and `setGlobalAttributes` all live on `ExpoAppMetrics` and are reachable only through the broken Proxy. Call `AppMetrics.*` directly.
+- TypeScript cannot catch this class of bug — the types describe the merged surface; the Proxy fails at runtime.
+- Re-test on an `expo-observe` upgrade: if upstream fixes the `in` check, the `Observe.*` calls become safe again.
+
+---
+
 ## 2026-07-12 — Android: mic + close buttons dead in the typing state (invisible views eat touches)
 
 **Symptom**

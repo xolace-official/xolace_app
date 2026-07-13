@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { ScrollView, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { ScrollView, View, type TextInput } from 'react-native';
 import { Presets } from 'react-native-pulsar';
 import { EaseView } from 'react-native-ease/uniwind';
 import { TextArea, LinkButton } from 'heroui-native';
@@ -35,6 +35,20 @@ export const ClarifyState = ({
   useEffect(() => {
     Presets.wobble();
   }, []);
+
+  const inputRef = useRef<TextInput>(null);
+  // React Native honors `autoFocus` only at mount. When the feedback sheet is
+  // open the input mounts unfocused on purpose (the keyboard would rise behind
+  // the sheet), so once the sheet closes and `autoFocus` flips true we have to
+  // raise the keyboard ourselves — otherwise the user lands on a clarify screen
+  // whose input never takes focus.
+  const autoFocusedAtMount = useRef(autoFocus);
+  useEffect(() => {
+    if (autoFocus && !autoFocusedAtMount.current) {
+      inputRef.current?.focus();
+    }
+  }, [autoFocus]);
+
   const canSubmit = clarifyText.trim().length > 0;
 
   return (
@@ -86,6 +100,7 @@ export const ClarifyState = ({
 
         <View className="flex-1 overflow-hidden">
           <TextArea
+            ref={inputRef}
             autoFocus={autoFocus}
             placeholder="Help me understand better..."
             value={clarifyText}
