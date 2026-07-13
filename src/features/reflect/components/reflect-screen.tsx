@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, type ViewStyle, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import AccountCircle from "@expo/material-symbols/account_circle.xml";
@@ -94,7 +94,7 @@ export const ReflectScreen = () => {
   const [showSpaceNameDialog, setShowSpaceNameDialog] = useState(false);
   const [spaceNameDialogFired, setSpaceNameDialogFired] = useState(false);
   const [mirrorFeedbackTurn, setMirrorFeedbackTurn] = useState<number | null>(null);
-  const mirrorFeedbackShown = useRef(false);
+  const [mirrorFeedbackShown, setMirrorFeedbackShown] = useState(false);
 
   // Visible only while clarify is settled and on top. Derived, so leaving
   // clarify — "← Back to mirror", give-up on the last turn, escalation, an
@@ -105,18 +105,25 @@ export const ReflectScreen = () => {
     !isTransitioning &&
     sessionId !== null;
 
-  
+
   const [prevScreen, setPrevScreen] = useState(state.screen);
   if (state.screen !== prevScreen) {
     setPrevScreen(state.screen);
     if (mirrorFeedbackTurn !== null && state.screen !== "clarify") {
       setMirrorFeedbackTurn(null);
     }
+    // Idle is the start of a session, so re-arm the one-per-session feedback
+    // sheet here — the screen stays mounted across sessions ("Start fresh",
+    // "Have more? I'm here."), and without this the sheet would only ever be
+    // offered for the first session of the mount.
+    if (state.screen === "idle" && mirrorFeedbackShown) {
+      setMirrorFeedbackShown(false);
+    }
   }
 
   const handleNotQuiteWithFeedback = () => {
-    if (!mirrorFeedbackShown.current) {
-      mirrorFeedbackShown.current = true;
+    if (!mirrorFeedbackShown) {
+      setMirrorFeedbackShown(true);
       setMirrorFeedbackTurn(turnsCount);
     }
     handleNotQuite();

@@ -595,3 +595,15 @@ Verify on simulator by running a full session through the bridge path and confir
 **Effort:** M (CC ~30min — schema + gate + wipe-cascade check)
 **Priority:** P3 — only matters for users with a profile but sparse recent activity
 **Depends on:** Nothing blocking; schema addition is additive/backward-compatible
+
+
+## 
+Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In `@src/features/reflect/components/reflect-screen.tsx` around lines 96 - 122,
+Reset mirrorFeedbackShown.current when a reflection session resets or the screen
+returns to idle, so handleNotQuiteWithFeedback can arm mirrorFeedbackTurn again
+for each new session. Update the existing state-transition/session-reset logic
+near prevScreen and preserve the one-display-per-session behavior within an
+active reflection.
