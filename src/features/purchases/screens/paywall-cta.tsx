@@ -52,19 +52,19 @@ export function PaywallCta({ label, onPress, isBusy, isDisabled }: Props) {
         )}
       </Button>
 
-      <AppText className="text-[11px] text-white text-center leading-4">
+      <AppText className="text-[11px] dark:text-white text-center leading-4">
         Renews automatically. Cancel anytime in your store settings.
       </AppText>
 
       <View className="flex-row items-center justify-center gap-5">
         <AppText
-          className="text-[12px] text-white underline"
+          className="text-[12px] dark:text-white underline"
           onPress={() => setActiveDocument(TERMS_OF_SERVICE)}
         >
           Terms of Service
         </AppText>
         <AppText
-          className="text-[12px] text-white underline"
+          className="text-[12px] dark:text-white underline"
           onPress={() => setActiveDocument(PRIVACY_POLICY)}
         >
           Privacy Policy

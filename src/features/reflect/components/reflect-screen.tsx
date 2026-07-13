@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, type ViewStyle, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import AccountCircle from "@expo/material-symbols/account_circle.xml";
@@ -33,6 +33,11 @@ import { SpaceNamePromptDialog } from "@/src/features/reflect/components/space-n
 import { ClarifyFeedbackSheet } from "@/src/features/reflect/components/states/clarify-feedback-sheet";
 import { useFeedbackShake } from "@/src/features/feedback-tray/feedback-tray-provider";
 
+// EaseView only runs a transition — and only then emits onTransitionEnd — when
+// initialAnimate differs from animate. Without an explicit opacity: 1 start the
+// outgoing screen mounts already at opacity 0, no animation runs, and
+// onOutgoingComplete never fires, leaving it mounted forever.
+const EASE_ANIMATE_OUT_INITIAL = { opacity: 1 };
 const EASE_ANIMATE_OUT = { opacity: 0 };
 
 export const ReflectScreen = () => {
@@ -88,23 +93,40 @@ export const ReflectScreen = () => {
 
   const [showSpaceNameDialog, setShowSpaceNameDialog] = useState(false);
   const [spaceNameDialogFired, setSpaceNameDialogFired] = useState(false);
-  const [mirrorFeedbackOpen, setMirrorFeedbackOpen] = useState(false);
-  const mirrorFeedbackShown = useRef(false);
+  const [mirrorFeedbackTurn, setMirrorFeedbackTurn] = useState<number | null>(null);
+  const [mirrorFeedbackShown, setMirrorFeedbackShown] = useState(false);
+
+  // Visible only while clarify is settled and on top. Derived, so leaving
+  // clarify — "← Back to mirror", give-up on the last turn, escalation, an
+  // error — closes the sheet instead of stranding it over another screen.
+  const mirrorFeedbackOpen =
+    mirrorFeedbackTurn !== null &&
+    current === "clarify" &&
+    !isTransitioning &&
+    sessionId !== null;
+
+
+  const [prevScreen, setPrevScreen] = useState(state.screen);
+  if (state.screen !== prevScreen) {
+    setPrevScreen(state.screen);
+    if (mirrorFeedbackTurn !== null && state.screen !== "clarify") {
+      setMirrorFeedbackTurn(null);
+    }
+    // Idle is the start of a session, so re-arm the one-per-session feedback
+    // sheet here — the screen stays mounted across sessions ("Start fresh",
+    // "Have more? I'm here."), and without this the sheet would only ever be
+    // offered for the first session of the mount.
+    if (state.screen === "idle" && mirrorFeedbackShown) {
+      setMirrorFeedbackShown(false);
+    }
+  }
 
   const handleNotQuiteWithFeedback = () => {
-    if (!mirrorFeedbackShown.current) {
-      mirrorFeedbackShown.current = true;
-      setMirrorFeedbackOpen(true);
+    if (!mirrorFeedbackShown) {
+      setMirrorFeedbackShown(true);
+      setMirrorFeedbackTurn(turnsCount);
     }
     handleNotQuite();
-  };
-
-  const handleSayMoreWithFeedback = () => {
-    if (!mirrorFeedbackShown.current) {
-      mirrorFeedbackShown.current = true;
-      setMirrorFeedbackOpen(true);
-    }
-    handleSayMore();
   };
 
   useEffect(() => {
@@ -176,7 +198,7 @@ export const ReflectScreen = () => {
             toneUsed={toneUsed}
             onThatsIt={handleThatsIt}
             onNotQuite={handleNotQuiteWithFeedback}
-            onSayMore={handleSayMoreWithFeedback}
+            onSayMore={handleSayMore}
           />
         );
       case "clarify":
@@ -186,7 +208,9 @@ export const ReflectScreen = () => {
             clarifyText={state.clarifyText}
             dispatch={dispatch}
             onSubmit={submitClarification}
-            autoFocus={!isOutgoing && !mirrorFeedbackOpen}
+            // Armed, not open: the sheet is still transitioning in at mount
+            // time, and autoFocus would raise the keyboard underneath it.
+            autoFocus={!isOutgoing && mirrorFeedbackTurn === null}
           />
         );
       case "gave-up":
@@ -265,24 +289,35 @@ export const ReflectScreen = () => {
   return (
     <View className="flex-1 bg-background" style={safeAreaStyle}>
       <Stack.Screen options={stackScreenOptions} />
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button
-          hidden={!isIdle}
-          icon={process.env.EXPO_OS === "ios" ? "person.circle" : AccountCircle}
-          onPress={() => router.push("/(protected)/profile")}
-        />
-      </Stack.Toolbar>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button
-          hidden={!isIdle}
-          icon={process.env.EXPO_OS === "ios" ? "lifepreserver" : CrisisAlert}
-          tintColor={crisisTint}
-          onPress={() => router.push("/crisis-resources?from=idle_button")}
-        />
-      </Stack.Toolbar>
+      {/* Mounted only while idle. A `hidden` toolbar button still leaves its
+          transparent host view laid out across the top of the screen on
+          Android, where (unlike UIKit) an invisible view still consumes
+          touches — that band swallowed the typing screen's mic and close. */}
+      {isIdle && (
+        <>
+          <Stack.Toolbar placement="left">
+            <Stack.Toolbar.Button
+              icon={
+                process.env.EXPO_OS === "ios" ? "person.circle" : AccountCircle
+              }
+              onPress={() => router.push("/(protected)/profile")}
+            />
+          </Stack.Toolbar>
+          <Stack.Toolbar placement="right">
+            <Stack.Toolbar.Button
+              icon={
+                process.env.EXPO_OS === "ios" ? "lifepreserver" : CrisisAlert
+              }
+              tintColor={crisisTint}
+              onPress={() => router.push("/crisis-resources?from=idle_button")}
+            />
+          </Stack.Toolbar>
+        </>
+      )}
       {/* Outgoing screen — fades out then unmounts */}
       {previous && previousConfig && (
         <EaseView
+          initialAnimate={EASE_ANIMATE_OUT_INITIAL}
           animate={EASE_ANIMATE_OUT}
           transition={previousConfig.exit.transition}
           onTransitionEnd={onOutgoingComplete}
@@ -306,9 +341,9 @@ export const ReflectScreen = () => {
       {/* Mirror feedback — fires when user rejects a mirror, persists through screen transition */}
       <ClarifyFeedbackSheet
         sessionId={sessionId}
-        turnIndex={turnsCount}
+        turnIndex={mirrorFeedbackTurn ?? 0}
         isOpen={mirrorFeedbackOpen}
-        onClose={() => setMirrorFeedbackOpen(false)}
+        onClose={() => setMirrorFeedbackTurn(null)}
       />
 
       {/* Space naming — fires once on first path-selection when unnamed */}

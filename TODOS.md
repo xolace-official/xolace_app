@@ -4,6 +4,34 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P2 — Clarify feedback sheet: `mirrorFeedbackShown` ref never resets
+
+**What:** The "What didn't land?" sheet can only ever appear **once per `ReflectScreen` mount**. `mirrorFeedbackShown` is a `useRef(false)` that is set to `true` the first time the user taps "Not quite" and is never cleared — not on `handleReset`, not on a new session, not on the give-up path.
+
+**Why it matters (two distinct losses):**
+1. **Second session in the same mount gets nothing.** After a session completes, the user taps "Have more? I'm here." → `handleReset` → a fresh session in the *same* mount. Rejecting that session's mirror silently shows no sheet. We collect `mirror_miss` feedback only from a user's first rejection after a cold app launch, which quietly biases the dataset toward first-session mirrors.
+2. **The MAX_TURNS give-up path burns the ref without ever showing the sheet.** `handleNotQuiteWithFeedback` sets `mirrorFeedbackShown.current = true` and arms the sheet *before* calling `handleNotQuite()`. When `turnsCount >= MAX_TURNS`, `handleNotQuite` dispatches to `gave-up` rather than `clarify` — so the derived `mirrorFeedbackOpen` (which requires `current === "clarify"`) never becomes true, the disarm guard clears the armed state, and the ref stays burned. The user is then never asked again in that mount.
+
+**Why the ref exists at all:** to show the sheet at most once per session so a user rejecting both turns isn't surveyed twice. That intent is right; the scope (mount) is wrong — it should be per *session*.
+
+**How to fix:** Key the once-only latch on the session rather than the mount. Options, in order of preference:
+1. Replace the ref with state holding the `sessionId` the sheet has already been shown for (`shownForSession: Id<"sessions"> | null`), and gate on `shownForSession !== sessionId`. Resets naturally on every new session, no cleanup path to forget. Prefer this — the reset is derived, not remembered.
+2. Failing that, clear the ref wherever a session ends (`handleReset` and any other reset path) — but this is the fragile shape: every future reset path must remember to clear it.
+
+Also move the latch-burning **after** the MAX_TURNS branch decision, or only burn it when the sheet actually opens (e.g. set it in the same derived condition that opens the sheet), so the give-up path can't consume a showing that never happened.
+
+**Note:** the sheet is only armed by "Not quite" — "Say more" deliberately does not arm it (elaboration is not a rejection; see `docs/feedback-tray-plan.md` §15).
+
+**Key files:** `src/features/reflect/components/reflect-screen.tsx` (`mirrorFeedbackShown`, `mirrorFeedbackTurn`, `handleNotQuiteWithFeedback`, the `mirrorFeedbackOpen` derivation and the disarm guard), `src/features/reflect/hooks/use-reflection-machine.ts` (`handleNotQuite` MAX_TURNS branch, `handleReset`)
+
+**Verify:** complete a session, tap "Have more? I'm here." (no app restart), reject the new mirror → the sheet must appear. Separately, reject twice to exhaust MAX_TURNS → land on `gave-up` → start a new session → the sheet must still be available.
+
+**Effort:** S (CC ~20min incl. emulator verification)
+**Priority:** P2 — silent feedback loss, biases the `mirror_miss` dataset
+**Depends on:** Nothing
+
+---
+
 ## P1 — `dailyQuotes.coldStart` fan-out (security audit H2, second half)
 
 **What:** `coldStart` schedules `jobs.quotesGenerator.processUser` without an idempotency check of its own. The check (`getProfileStatus` → `alreadyDone`) lives *inside* the scheduled job and keys on a curated quote already existing for today — which is false for everyone until the first quote lands. So N concurrent `coldStart` calls fan out N jobs, and each one reaches `distillQuoteForUser`: a real Anthropic call per job, for every Plus user.

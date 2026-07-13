@@ -86,10 +86,19 @@ export default function ProtectedIndex() {
   const clearLastNotification = useAppStore((s) => s.clearLastNotification);
   const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
   const setFounderWelcomeSeen = useAppStore((s) => s.setFounderWelcomeSeen);
+  const reflectTourSeen = useAppStore((s) => s.reflectTourSeen);
+  const setHomeSheetBlocking = useAppStore((s) => s.setHomeSheetBlocking);
   const [showWelcome, setShowWelcome] = useState(false);
   const isFocused = useIsFocused();
   const awarenessEvent = useAwarenessEvent();
   const { markInteractive } = useObserve();
+
+  // Snapshot, not live read. The awareness sheet waits for a launch where the
+  // tour is already behind the user — reading reflectTourSeen live would pop the
+  // sheet the instant the tour completed, stacking a third interruption onto a
+  // first run. Persisted state hydrates synchronously (unified-storage), so this
+  // is the real value on the very first render.
+  const [tourSeenAtMount] = useState(reflectTourSeen);
 
   // Same getFullContext query ReflectScreen subscribes to — Convex dedupes it,
   // so this is a cached read, not a second round-trip.
@@ -123,6 +132,28 @@ export default function ProtectedIndex() {
     quietReturn: profile ? computeQuietReturn(profile) : null,
     lastSessionAt: profile?.lastSessionAt,
   });
+
+  // Last link in the chain: FounderWelcome → ReturnWelcome → FollowUp →
+  // MonthlyEvent. It additionally waits for the tour, which owns the idle screen
+  // on a first run — see tourSeenAtMount.
+  const awarenessOpen =
+    founderWelcomeSeen &&
+    tourSeenAtMount &&
+    isFocused &&
+    !returnWelcome.blocking &&
+    !followUp.blocking;
+
+  // The tour subscribes to this so its coach marks never render under a sheet.
+  const sheetBlocking =
+    !founderWelcomeSeen ||
+    showWelcome ||
+    returnWelcome.blocking ||
+    followUp.blocking ||
+    (awarenessOpen && awarenessEvent !== null);
+
+  useEffect(() => {
+    setHomeSheetBlocking(sheetBlocking);
+  }, [sheetBlocking, setHomeSheetBlocking]);
 
   useEffect(() => {
     if (founderWelcomeSeen) return;
@@ -158,13 +189,7 @@ export default function ProtectedIndex() {
         onResolve={followUp.resolve}
         onDismiss={followUp.dismiss}
       />
-      <MonthlyEventSheet
-        event={
-          founderWelcomeSeen && isFocused && !returnWelcome.blocking && !followUp.blocking
-            ? awarenessEvent
-            : null
-        }
-      />
+      <MonthlyEventSheet event={awarenessOpen ? awarenessEvent : null} />
     </View>
     </>
   );

@@ -35,7 +35,7 @@ export function PaywallRestoreButton() {
   const { restorePurchases } = useRevenueCat();
 
   return (
-    <LinkButton size="sm" onPress={() => restorePurchases()}>
+    <LinkButton size="sm" onPress={() => restorePurchases()} className="px-3" >
       <LinkButton.Label className="text-[13px] text-muted">Restore</LinkButton.Label>
     </LinkButton>
   );

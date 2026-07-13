@@ -15,6 +15,111 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-07-12 — Android: `Observe.logEvent` is undefined, crashing the reflect screen when a mirror arrives
+
+**Symptom**
+- Red-box render error `undefined is not a function` at `use-reflection-machine.ts:109`, thrown the moment a mirror came back from the server. The mirror never rendered.
+- Only reachable by completing a real reflection (idle → type → submit) in a **fresh** session. See the verification trap below — this is what makes it easy to think you've fixed it when you haven't.
+
+**Where it appeared**
+- Android dev build (emulator). `expo-observe@56.0.21`, `expo-app-metrics@56.0.19`.
+
+**Root cause**
+`logEvent` is **not implemented on the `ExpoObserve` native module** — it lives on `ExpoAppMetrics`. `expo-observe` bridges the two with a Proxy that delegates only when the property is absent from the native target:
+
+```js
+if (typeof prop === 'string' && !(prop in target)) return Reflect.get(AppMetrics, prop);
+```
+
+On Android/Hermes the `ExpoObserve` JSI host object answers **`'logEvent' in target` → `true`** while exposing no such method. The delegation condition is therefore false, the Proxy hands back `target.logEvent` (`undefined`), and calling it throws. Confirmed live on-device: `ExpoObserve` → `hasLogEvent: true, typeof: "undefined"`; `ExpoAppMetrics` → `hasLogEvent: true, typeof: "function"`.
+
+This is a library bug, not a misuse — `Observe.logEvent` is the API the [EAS Observe docs](https://docs.expo.dev/eas/observe/events.md) prescribe.
+
+**How we diagnosed it**
+1. Red box pointed at the `Observe.logEvent('mirror.generated', …)` call. `logEvent` *is* in `expo-observe`'s TypeScript types, so tsc was happy — runtime-only failure.
+2. Read `expo-observe/src/module.ts`: found the `requireNativeModule('ExpoObserve')` + Proxy-fallback-to-`AppMetrics` structure, and that `logEvent` is declared in `AppMetricsModule.kt` (`Name("ExpoAppMetrics")`), not `ObserveModule.kt` (`Name("ExpoObserve")`).
+3. Settled it empirically rather than theorising: `debugger-evaluate` against the running app, dumping `getOwnPropertyNames` + `'logEvent' in m` + `typeof m.logEvent` for both `globalThis.expo.modules.ExpoObserve` and `.ExpoAppMetrics`. That exposed the `in`-says-yes / value-is-undefined contradiction that defeats the Proxy guard.
+
+**Fix**
+- `use-reflection-machine.ts`: import `AppMetrics` (re-exported by `expo-observe`) and call `AppMetrics.logEvent(...)` directly, bypassing the Proxy. Same native method and same dashboard event — `ExpoAppMetrics.logEvent` is what the Proxy was trying to reach anyway.
+
+**Prevention / future reference**
+- **Verification trap — the one that nearly let a non-fix through.** The `logEvent` call is guarded by `if (durationMs !== undefined)`, and `durationMs` is derived from `submitTimestampRef`, which is only set by a submit *in the current JS lifetime*. So after a reload the session **resumes straight to mirror with `submitTimestampRef === null`**, `logEvent` is never called, and the mirror renders fine — with or without the fix. Reloading after the crash "fixes" it, which is pure illusion. **Only a fresh idle → type → submit → mirror round-trip exercises this line.** Any change to this path must be verified that way.
+- If another `Observe.<method>` throws `undefined is not a function` on Android, check whether the method belongs to `ExpoAppMetrics` rather than `ExpoObserve`: `grep 'Function("' node_modules/expo-observe/android/**/*.kt node_modules/expo-app-metrics/android/**/*.kt`. Only `configure`, `setBundleDefaults`, and `dispatchEvents` are truly on `ExpoObserve`; `logEvent`, `markFirstRender`, `markInteractive`, and `setGlobalAttributes` all live on `ExpoAppMetrics` and are reachable only through the broken Proxy. Call `AppMetrics.*` directly.
+- TypeScript cannot catch this class of bug — the types describe the merged surface; the Proxy fails at runtime.
+- Re-test on an `expo-observe` upgrade: if upstream fixes the `in` check, the `Observe.*` calls become safe again.
+
+---
+
+## 2026-07-12 — Android: mic + close buttons dead in the typing state (invisible views eat touches)
+
+**Symptom**
+- On the reflect screen's **typing** state, the mic button and the ✕ (dismiss) in the top-right header row did nothing when tapped. No error, no log, no visual press feedback.
+- Everything else on the screen worked: the text field focused and accepted input, and "Let it out" submitted normally.
+- Worked in a previously shipped build, so it read as a regression rather than a never-implemented feature.
+
+**Where it appeared**
+- Android only (emulator + device). iOS was completely unaffected.
+
+**Root cause**
+Two independent bugs, both invisible on iOS for the *same* underlying reason: **Android lets an invisible view keep consuming touches; UIKit does not.** `UIView.hitTest:` skips any view that is `hidden`, has `userInteractionEnabled = NO`, or `alpha < 0.01` — so an invisible layer is transparent to touch. Android's `ViewGroup.dispatchTouchEvent` never consults `getAlpha()`, so a transparent-but-laid-out view is a wall.
+
+1. **The dead buttons.** `reflect-screen.tsx` mounted its two `Stack.Toolbar.Button`s unconditionally and merely marked them `hidden={!isIdle}`. On Android the toolbar's transparent host view stays laid out across the top ~10% of the screen (y ≈ 0.051–0.105 normalized) even while "hidden", swallowing every touch in that band — exactly where the typing row's mic and ✕ sit (y ≈ 0.064–0.092).
+2. **A ghost-screen leak, found while diagnosing.** The outgoing screen was rendered as `<EaseView animate={{opacity: 0}}>` with **no `initialAnimate`**. In `react-native-ease`, `initialAnimate` defaults to `animate` (see `EaseView.tsx`: `const initial = initialAnimate ?? animate`), so the native view mounts *already at* opacity 0, `hasInitialAnimation` is false, no animation runs — and therefore **`onTransitionEnd` never fires**. That callback is what calls `onOutgoingComplete()`, so `previous` never unmounted and `isTransitioning` stayed `true` forever. Every screen the user left stayed mounted underneath, timers and Convex subscriptions included. Regressed in `94dbd11` (Reanimated → `react-native-ease` migration); the old Reanimated `FadeOut` unmounted correctly.
+
+**How we diagnosed it**
+1. `describe` (Argent) on the running emulator — the accessibility tree showed the **entire idle screen** (texture words, "Tap to begin writing", menu, streak) still mounted alongside the typing screen, permanently. That surfaced bug 2 immediately.
+2. Tapped the ✕ → nothing. Tapped the ghost idle screen's own (invisible) buttons → also nothing. Tapped the text field → cursor moved. So touches *were* reaching the typing screen; only the top strip was dead. That ruled out the ghost screen as the blocker and reframed it as a **geometric** problem.
+3. Proved the geometry instead of guessing: temporarily added `mt-16` to the typing header row. At y ≈ 0.137 the ✕ tapped fine and dismissed to idle; at y ≈ 0.078, identical code, dead. Same element, same handler, only the y-coordinate changed.
+4. Cross-referenced the idle-state `describe`: the two `Stack.Toolbar` `ComposeView`s occupy y 0.051–0.105 — precisely the dead band.
+
+**Fix**
+- `reflect-screen.tsx`: render the `Stack.Toolbar` blocks **only when `isIdle`** (`{isIdle && <>…</>}`) instead of mounting them always with `hidden={!isIdle}`.
+- `reflect-screen.tsx`: give the outgoing `EaseView` an explicit `initialAnimate={{ opacity: 1 }}` so a real 1→0 transition runs and `onTransitionEnd` fires, unmounting the outgoing screen.
+- Verified on the Android emulator: ✕ dismisses to idle from its normal position; mic prompts for permission, then flips the placeholder to "I'm listening…" with the system mic indicator lit; `describe` shows only the typing elements, no ghost screen.
+
+**Prevention / future reference**
+- **"Works on iOS, dead on Android" for a tap almost always means an invisible view is on top.** Don't start from the button — dump the tree (`describe`) and look for a layer covering that region. Moving the element a few dozen px is a one-line, decisive test.
+- Never hide native chrome by leaving it mounted with a `hidden` prop when the region overlaps interactive content. Unmount it.
+- `react-native-ease`: **`onTransitionEnd` only fires if a transition actually runs**, and a transition only runs when `initialAnimate` differs from `animate`. Any exit animation whose completion drives an unmount *must* pass an explicit `initialAnimate`, or it will silently never unmount. If a screen seems to leak, check for a missing `initialAnimate` first.
+- Screens stuck mounted are invisible on iOS but still alive — leaking timers, animations, and Convex subscriptions. A stale `describe` tree is the cheapest way to spot them.
+
+---
+
+## 2026-07-11 — Android Google Sign-In silently fails on a *local* build (recurrence)
+
+**Symptom**
+- Same signature as the 2026-05-24 entry: account picker opens, user picks an account, it spins, then nothing. No error, no throw. Only log line was `[GoogleAuth] no session created — createdSessionId: null`.
+- Emulator had a Google account and Play Services, so the usual first suspects were already ruled out.
+
+**Where it appeared**
+- Android emulator, **local** `expo run:android` build (not EAS).
+
+**Root cause**
+Two mismatches stacked, both invisible:
+1. The build ran as **production**. `bun android` / `bunx expo run:android` leaves `APP_VARIANT` unset, so `app.config.ts` falls through to the prod package `com.xolaceincorg.xolace` (app name "Xolace", not "Xolace (Dev)"). Same trap as 2026-05-24, different entry point.
+2. A local build is signed with the **Expo template debug keystore** at `android/app/debug.keystore` (SHA-1 `5E:8F:16:06:…`) — *not* the EAS key and *not* `~/.android/debug.keystore`. That package + SHA-1 pair had no Android OAuth client in Google Cloud, so Credential Manager matched nothing and returned no credential and no exception.
+
+The registered OAuth client existed for `…xolace.dev` + the debug SHA-1; the app on the device was `…xolace` + the same SHA-1. One field off, total silence.
+
+**How we diagnosed it**
+1. `adb shell pm list packages | grep xolace` → `com.xolaceincorg.xolace` installed. Wrong variant, immediately.
+2. `adb shell pm path` → `adb pull` → `apksigner verify --print-certs` → the APK presents SHA-1 `5E:8F:16:06:…`.
+3. `keytool -list` on `~/.android/debug.keystore` gave a *different* SHA-1 (`3B:34:9D:…`) — proving Gradle signs with the project-local `android/app/debug.keystore` (see `signingConfigs.debug` → `storeFile file('debug.keystore')`), not the user's personal one.
+4. Parsed `google-services.json`: zero registered `certificate_hash` entries for all three packages.
+
+**Fix**
+- Rebuild with `bun android:dev` so the package is `com.xolaceincorg.xolace.dev`, matching the registered OAuth client.
+- Register the local debug keystore's SHA-1 for the `.dev` package (Google Cloud Android OAuth client) and its SHA-256 (Clerk native Android entry).
+
+**Prevention / future reference**
+- **Check the app name first.** "Xolace" instead of "Xolace (Dev)" means you built prod. Costs one second and rules out the most common cause.
+- `android/` is gitignored, so the debug keystore comes from the Expo prebuild template and is normally identical across machines — which is why one registration covers the whole team. Don't rely on it silently: verify with `keytool` (see `dev-onboarding.md` §5).
+- The installed APK is the source of truth for the SHA-1, not `eas credentials` and not `~/.android/debug.keystore`.
+- New collaborator onboarding, including this whole trap, is written up in `docs/dev-onboarding.md`.
+
+---
+
 ## 2026-06-10 — `eas update` fails with "Channel has no branches associated with it"
 
 **Symptom**

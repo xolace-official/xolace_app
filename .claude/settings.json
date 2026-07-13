@@ -3,5 +3,8 @@
     "allow": [
       "mcp__argent"
     ]
+  },
+  "worktree": {
+    "bgIsolation": "none"
   }
 }

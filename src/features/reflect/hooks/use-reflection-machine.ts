@@ -1,6 +1,11 @@
 import { useReducer, useCallback, useEffect, useRef } from 'react';
 import { usePostHog } from 'posthog-react-native';
-import { Observe } from 'expo-observe';
+// AppMetrics, not Observe: `logEvent` lives on the ExpoAppMetrics native module,
+// and Observe only reaches it via a Proxy fallback keyed on `!(prop in target)`.
+// On Android the ExpoObserve host object answers `'logEvent' in target` with
+// true while exposing no such method, so the fallback never fires and
+// `Observe.logEvent` resolves to undefined — crashing the mirror render.
+import { AppMetrics } from 'expo-observe';
 import type { FeedbackType } from '@/src/features/reflect/types';
 import { useSession } from '@/src/features/reflect/hooks/use-session';
 import { extractErrorMessage } from '@/src/features/reflect/session-service';
@@ -106,7 +111,7 @@ export function useReflectionMachine() {
           // EAS Observe perf signal: felt AI round-trip, correlated with app
           // version/release in the Observe dashboard. Only log a real measurement.
           if (durationMs !== undefined) {
-            Observe.logEvent('mirror.generated', {
+            AppMetrics.logEvent('mirror.generated', {
               attributes: {
                 durationMs,
                 escalated: !!session?.escalationTriggered,
@@ -248,22 +253,24 @@ export function useReflectionMachine() {
   }, [turnsCount, confirmMirror, posthog, dispatchError]);
 
   const handleNotQuite = useCallback(() => {
+    if (state.screen !== 'mirror') return;
     if (turnsCount >= MAX_TURNS) {
       dispatch({ type: 'SESSION_RESUMED', screen: 'gave-up' });
     } else {
       posthog.capture('mirror_not_quite', { turns_count: turnsCount });
       dispatch({ type: 'NOT_QUITE' });
     }
-  }, [turnsCount, posthog]);
+  }, [state.screen, turnsCount, posthog]);
 
   const handleSayMore = useCallback(() => {
+    if (state.screen !== 'mirror') return;
     if (turnsCount >= MAX_TURNS) {
       dispatch({ type: 'SESSION_RESUMED', screen: 'gave-up' });
     } else {
       posthog.capture('mirror_say_more', { turns_count: turnsCount });
       dispatch({ type: 'SAY_MORE' });
     }
-  }, [turnsCount, posthog]);
+  }, [state.screen, turnsCount, posthog]);
 
   const handleGaveUpPathSelection = useCallback(async () => {
     if (busyRef.current) return;
