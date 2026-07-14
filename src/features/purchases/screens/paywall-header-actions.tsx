@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { LinkButton, PressableFeedback, useThemeColor } from "heroui-native";
+import { PressableFeedback, Spinner, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
+import { AppText } from "@/src/components/shared/app-text";
 import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
 import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
 
@@ -34,6 +35,7 @@ export function PaywallCloseButton({ surface }: CloseProps) {
 
 export function PaywallRestoreButton() {
   const { restorePurchases } = useRevenueCat();
+  const tintColor = useThemeColor("muted") as string;
   const [isRestoring, setIsRestoring] = useState(false);
 
   const handleRestore = () => {
@@ -41,11 +43,27 @@ export function PaywallRestoreButton() {
     restorePurchases().finally(() => setIsRestoring(false));
   };
 
+  // Android's native header sizes this view to the label's measured width with
+  // no slack, which truncates the trailing glyph ("Restor"). The fixed width
+  // plus the label's own padding keeps the text box wider than the glyphs, and
+  // swapping to a spinner rather than a longer label keeps the width constant
+  // across states so the header never re-measures.
   return (
-    <LinkButton size="sm" onPress={handleRestore} isDisabled={isRestoring} className="px-3">
-      <LinkButton.Label className="text-[13px] text-muted">
-        {isRestoring ? "Restoring…" : "Restore"}
-      </LinkButton.Label>
-    </LinkButton>
+    <PressableFeedback
+      accessibilityRole="button"
+      accessibilityLabel="Restore purchases"
+      isDisabled={isRestoring}
+      hitSlop={12}
+      onPress={handleRestore}
+      className="w-24 flex-row items-center justify-end pr-1"
+    >
+      {isRestoring ? (
+        <Spinner size="sm" color={tintColor} />
+      ) : (
+        <AppText numberOfLines={1} className="text-[13px] text-muted pr-1">
+          Restore
+        </AppText>
+      )}
+    </PressableFeedback>
   );
 }
