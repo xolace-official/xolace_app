@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { RadioGroup, Separator } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { cn } from "@/src/lib/utils";
@@ -45,6 +45,17 @@ const MODE_OPTIONS: {
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
+/**
+ * Sonar is a 2s sweep: three 0.35-amplitude pings 600ms apart, then a 0.855 burst
+ * at 1.66s. CoreHaptics renders its sharpness (frequency) channel, so even the quiet
+ * pings read as crisp on iOS. Android has no frequency channel below API 36, so
+ * Pulsar falls back to VibrationEffect.createWaveform() with sharpness dropped —
+ * 0.35 amplitude sits under most LRAs' perceptual floor, and the one beat you might
+ * feel lands 1.66s after the tap. Result: it reads as "nothing happened".
+ * Strike (80ms, 0.72 amplitude) survives the amplitude-only path and fires at once.
+ */
+const playThemeSelect = Platform.OS === "android" ? Presets.strike : Presets.sonar;
+
 const styles = StyleSheet.create({
   contentContainer: { paddingTop: 16, paddingBottom: 48 },
   themeScrollerContent: { paddingHorizontal: 20, gap: 12 },
@@ -68,7 +79,7 @@ export const AppearanceScreen = () => {
   const openPaywall = usePaywall((s) => s.open);
 
   const handleFreeThemePress = (themeId: string) => {
-    Presets.sonar();
+    playThemeSelect();
     setColorTheme(themeId);
   };
 
@@ -78,7 +89,7 @@ export const AppearanceScreen = () => {
       return;
     }
     if (!available) return; // Plus, but this theme's CSS hasn't shipped yet
-    Presets.sonar();
+    playThemeSelect();
     setColorTheme(themeId);
   };
 

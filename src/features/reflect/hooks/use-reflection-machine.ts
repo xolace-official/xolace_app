@@ -110,13 +110,24 @@ export function useReflectionMachine() {
           posthog.capture('mirror_arrived', { duration_ms: durationMs ?? null });
           // EAS Observe perf signal: felt AI round-trip, correlated with app
           // version/release in the Observe dashboard. Only log a real measurement.
+          //
+          // Telemetry must never be able to reach the dispatch below it. This call
+          // threw on Android once already (`Observe.logEvent` resolved to undefined),
+          // and since it runs *before* MIRROR_RECEIVED it took the mirror down with
+          // it — on 1.6.0, which shipped without an error boundary, the throw
+          // unmounted the whole tree and left users on a blank screen they could only
+          // escape by force-quitting. A perf event is never worth a dead session.
           if (durationMs !== undefined) {
-            AppMetrics.logEvent('mirror.generated', {
-              attributes: {
-                durationMs,
-                escalated: !!session?.escalationTriggered,
-              },
-            });
+            try {
+              AppMetrics.logEvent('mirror.generated', {
+                attributes: {
+                  durationMs,
+                  escalated: !!session?.escalationTriggered,
+                },
+              });
+            } catch (error) {
+              console.warn('[observe] mirror.generated logEvent failed:', error);
+            }
           }
           if (session?.escalationTriggered) {
             posthog.capture('escalation_triggered');

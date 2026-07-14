@@ -30,6 +30,28 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-07-personal-memory",
+    label: "Version 1.7.0",
+    date: "July 2026",
+    highlights: [
+      {
+        icon: { ios: "brain.head.profile", android: "psychology" },
+        title: "Personal memory",
+        body: "Xolace now remembers what's come up for you across sessions, so mirrors can reflect your patterns, not just the moment in front of you. It's on by default — find the toggle in Settings → Data if you'd rather turn it off.",
+      },
+      {
+        icon: { ios: "paintpalette.fill", android: "palette" },
+        title: "Premium themes",
+        body: "Xolace+ members can now dress the fire in five new palettes — Emerald, Rosé, Platinum, Velvet, and Noir. Find them in Settings → Appearance.",
+      },
+      {
+        icon: { ios: "waveform", android: "graphic_eq" },
+        title: "Choose your voice",
+        body: "Xolace+ members can pick who speaks their mirror and their vent: Sage, Wren, Vesper, or Ash. Preview each one in Settings → Mirror before you choose.",
+      },
+    ],
+  },
+  {
     id: "1.6.1",
     label: "OTA Update",
     date: "June 2026",

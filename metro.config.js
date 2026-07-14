@@ -25,5 +25,16 @@ module.exports = withUniwindConfig(config, {
     'human-dark',
     'nightly-light',
     'nightly-dark',
+    // xolace+ premium themes
+    'emerald-light',
+    'emerald-dark',
+    'rose-light',
+    'rose-dark',
+    'platinum-light',
+    'platinum-dark',
+    'velvet-light',
+    'velvet-dark',
+    'noir-light',
+    'noir-dark',
   ],
 });
