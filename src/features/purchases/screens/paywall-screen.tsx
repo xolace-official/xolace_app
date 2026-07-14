@@ -149,6 +149,7 @@ export function PaywallScreen({ surface }: Props) {
               id="themes"
               icon={THEMES_ICON}
               title="Premium themes"
+              description="Five palettes - Noir, Emerald, Velvet, Rosé and Platinum"
               isHighlighted={highlightedFeature === "themes"}
             />
             <PaywallFeatureItem

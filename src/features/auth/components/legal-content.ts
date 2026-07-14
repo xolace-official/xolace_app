@@ -76,6 +76,10 @@ export const TERMS_OF_SERVICE: LegalDocument = {
       body: 'You retain ownership of what you write. You grant us a limited license to process it to operate the service and generate reflections. Your entries are private by default.',
     },
     {
+      heading: 'Subscriptions & Purchases',
+      body: 'Xolace+ is an auto-renewing subscription (monthly or annual) billed through your Apple or Google account. Free trials, where offered, convert automatically to a paid subscription unless cancelled at least 24 hours before the trial ends. Your subscription renews automatically at the price shown at purchase unless cancelled; we will give advance notice in the app before any price change takes effect for existing subscribers. Manage or cancel anytime in your device\'s App Store or Google Play account settings — cancelling stops future renewals but does not refund the current period. All payments are processed by Apple or Google, and refunds are governed by their respective policies, not by Xolace directly.',
+    },
+    {
       heading: 'Limitation of Liability',
       body: 'Xolace is provided "as is." We are not liable for emotional distress or decisions made based on AI reflections. Our total liability will not exceed the amount you paid in the prior 12 months.',
     },
