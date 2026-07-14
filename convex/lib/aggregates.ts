@@ -12,10 +12,20 @@ import { MutationCtx } from "../_generated/server";
  *
  * INVARIANT: every write to `emotional_profiles.sessionCount` — insert, patch,
  * or delete — must go through the sync helpers below, or the aggregate silently
- * drifts from the table and every user's percentile is wrong. There are four
- * such write sites today (users.getOrCreate, jobs/profileStats,
- * jobs/dataWipe, jobs/accountDeletion). If that grows much past a handful,
+ * drifts from the table and every user's percentile is wrong. There are five
+ * such write sites today (users.getOrCreate, jobs/profileStats, jobs/dataWipe,
+ * jobs/accountDeletion, devTools.setStreak). If that grows much past a handful,
  * switch to convex-helpers Triggers so the sync can't be forgotten.
+ *
+ * The helpers use the aggregate's tolerant writes (`insertIfDoesNotExist` /
+ * `replaceOrInsert` / `deleteIfExists`) rather than the strict ones. The strict
+ * variants throw when a profile's key isn't in the tree — which is the state
+ * every pre-existing profile is in between deploying this and the backfill
+ * finishing. With strict writes, the first session any existing user completes
+ * in that window fails outright: `profileStats` patches the profile, calls
+ * `replace`, throws, and the whole mutation rolls back. Deletion wedges the
+ * same way. A percentile that is briefly off is a wrong number; a session
+ * completion that throws is a broken app, so we take the wrong number.
  */
 export const reflectionRank = new TableAggregate<{
   Key: number;
@@ -28,7 +38,7 @@ export const reflectionRank = new TableAggregate<{
 /** Call immediately after inserting a new emotional_profiles row. */
 export async function rankInsert(ctx: MutationCtx, profileId: Id<"emotional_profiles">) {
   const doc = await ctx.db.get(profileId);
-  if (doc) await reflectionRank.insert(ctx, doc);
+  if (doc) await reflectionRank.insertIfDoesNotExist(ctx, doc);
 }
 
 /**
@@ -37,11 +47,11 @@ export async function rankInsert(ctx: MutationCtx, profileId: Id<"emotional_prof
  */
 export async function rankReplace(ctx: MutationCtx, oldDoc: Doc<"emotional_profiles">) {
   const newDoc = await ctx.db.get(oldDoc._id);
-  if (newDoc) await reflectionRank.replace(ctx, oldDoc, newDoc);
+  if (newDoc) await reflectionRank.replaceOrInsert(ctx, oldDoc, newDoc);
 }
 
 /** Call *before* deleting the profile row — the doc must still exist. */
 export async function rankDelete(ctx: MutationCtx, profileId: Id<"emotional_profiles">) {
   const doc = await ctx.db.get(profileId);
-  if (doc) await reflectionRank.delete(ctx, doc);
+  if (doc) await reflectionRank.deleteIfExists(ctx, doc);
 }

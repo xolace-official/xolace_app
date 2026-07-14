@@ -113,7 +113,13 @@ const RANK_MIN_SESSIONS = 5;
 // without this, the card is permanently stuck in `warming` there and its ranked
 // state is untestable. Set `RANK_MIN_POPULATION=2` on dev; leave it unset in
 // prod so the honest floor applies.
-const RANK_MIN_POPULATION = Number(process.env.RANK_MIN_POPULATION ?? 50);
+// A malformed value must fall back to 50, not disable the floor: Number("abc")
+// is NaN, and `population < NaN` is always false — the warming gate would
+// silently vanish and tiny-population percentiles would ship as ranked.
+const RANK_MIN_POPULATION = (() => {
+  const parsed = Number(process.env.RANK_MIN_POPULATION);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
+})();
 
 /**
  * Percentile rank by session count, for the "among the fires" profile card.

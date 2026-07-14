@@ -6,7 +6,10 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import type { WorkflowId } from "@convex-dev/workflow";
+import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
+import { rankReplace, reflectionRank } from "./lib/aggregates";
+import { migrations } from "./migrations";
 import { workflow } from "./followUps";
 
 function assertDevToolsEnabled() {
@@ -38,7 +41,35 @@ export const setStreak = mutation({
       // computeUserVariant needs sessionCount > 0 to show the calendar
       sessionCount: Math.max(profile.sessionCount, 1),
     });
+    // sessionCount can move 0→1 here — keep the percentile aggregate in step.
+    await rankReplace(ctx, profile);
     return newStreak;
+  },
+});
+
+/**
+ * Wipe and rebuild the reflectionRank aggregate from the table. The repair for
+ * drift flagged by jobs/rankAudit — e.g. the key-0 orphans that pre-fix
+ * setStreak runs left on dev. Safe against live writes: the clear commits with
+ * this mutation, the backfill runs after it in batches, and a session completed
+ * in between lands via replaceOrInsert and is then skipped by the backfill's
+ * insertIfDoesNotExist.
+ *
+ *   bunx convex run devTools:rebuildReflectionRank
+ *
+ * Verify afterwards (once the backfill finishes) with jobs/rankAudit:audit.
+ */
+export const rebuildReflectionRank = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    assertDevToolsEnabled();
+    await reflectionRank.clear(ctx);
+    // cursor: null restarts from the beginning even if a previous run completed.
+    await migrations.runOne(ctx, internal.migrations.backfillReflectionRank, {
+      cursor: null,
+    });
+    return null;
   },
 });
 

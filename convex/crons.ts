@@ -54,6 +54,15 @@ crons.interval(
   {}
 );
 
+// Weekly reflectionRank drift audit (Mon 04:00 UTC) — detection only, logs on
+// mismatch. See convex/jobs/rankAudit.ts for the repair path.
+crons.cron(
+  "audit reflection rank aggregate",
+  "0 4 * * 1",
+  internal.jobs.rankAudit.audit,
+  {}
+);
+
 // Nightly daily quotes generation (midnight UTC)
 crons.cron(
   "nightly daily quotes",

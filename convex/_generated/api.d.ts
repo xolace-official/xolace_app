@@ -63,6 +63,7 @@ import type * as jobs_dataWipe from "../jobs/dataWipe.js";
 import type * as jobs_notificationTriggers from "../jobs/notificationTriggers.js";
 import type * as jobs_profileStats from "../jobs/profileStats.js";
 import type * as jobs_quotesGenerator from "../jobs/quotesGenerator.js";
+import type * as jobs_rankAudit from "../jobs/rankAudit.js";
 import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js";
 import type * as jobs_reflectionDistiller from "../jobs/reflectionDistiller.js";
 import type * as lib_aggregates from "../lib/aggregates.js";
@@ -162,6 +163,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/notificationTriggers": typeof jobs_notificationTriggers;
   "jobs/profileStats": typeof jobs_profileStats;
   "jobs/quotesGenerator": typeof jobs_quotesGenerator;
+  "jobs/rankAudit": typeof jobs_rankAudit;
   "jobs/reflectionAnonymizer": typeof jobs_reflectionAnonymizer;
   "jobs/reflectionDistiller": typeof jobs_reflectionDistiller;
   "lib/aggregates": typeof lib_aggregates;
