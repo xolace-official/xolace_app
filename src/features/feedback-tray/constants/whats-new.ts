@@ -30,7 +30,7 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
-    id: "1.7.0",
+    id: "2026-07-personal-memory",
     label: "Version 1.7.0",
     date: "July 2026",
     highlights: [
