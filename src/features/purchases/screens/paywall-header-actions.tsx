@@ -42,11 +42,14 @@ export function PaywallRestoreButton() {
     restorePurchases().finally(() => setIsRestoring(false));
   };
 
-  // Android's native header sizes this view to the label's measured width with
-  // no slack, which truncates the trailing glyph ("Restor"). The fixed width
-  // plus the label's own padding keeps the text box wider than the glyphs, and
-  // swapping to a spinner rather than a longer label keeps the width constant
-  // across states so the header never re-measures.
+  // The width slack is Android-only. Android's native header sizes this view to
+  // the label's measured width with no slack, which truncates the trailing glyph
+  // ("Restor"), so there it gets a fixed width plus trailing padding to keep the
+  // text box wider than the glyphs. iOS must stay intrinsically sized — its
+  // toolbar renders a glass capsule around the child, and a fixed width there
+  // inflates the capsule and strands the label against its edge. Swapping to a
+  // spinner rather than a longer label keeps the width constant across states on
+  // both platforms, so the header never re-measures.
   return (
     <PressableFeedback
       accessibilityRole="button"
@@ -54,12 +57,12 @@ export function PaywallRestoreButton() {
       isDisabled={isRestoring}
       hitSlop={12}
       onPress={handleRestore}
-      className="w-24 flex-row items-center justify-end pr-1"
+      className="flex-row items-center justify-center android:w-24 android:justify-end android:pr-1 ios:px-3"
     >
       {isRestoring ? (
         <Spinner size="sm" color={tintColor} />
       ) : (
-        <AppText numberOfLines={1} className="text-[13px] text-muted pr-1">
+        <AppText numberOfLines={1} className="text-[13px] text-muted android:pr-1">
           Restore
         </AppText>
       )}
