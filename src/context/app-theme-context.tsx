@@ -21,7 +21,18 @@ type ThemeName =
   | 'human-light'
   | 'human-dark'
   | 'nightly-light'
-  | 'nightly-dark';
+  | 'nightly-dark'
+  // xolace+ premium themes
+  | 'emerald-light'
+  | 'emerald-dark'
+  | 'rose-light'
+  | 'rose-dark'
+  | 'platinum-light'
+  | 'platinum-dark'
+  | 'velvet-light'
+  | 'velvet-dark'
+  | 'noir-light'
+  | 'noir-dark';
 
 interface AppThemeContextType {
   currentTheme: string;
@@ -65,6 +76,16 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         case 'human-dark': Uniwind.setTheme('human-light'); break;
         case 'nightly-light': Uniwind.setTheme('nightly-dark'); break;
         case 'nightly-dark': Uniwind.setTheme('nightly-light'); break;
+        case 'emerald-light': Uniwind.setTheme('emerald-dark'); break;
+        case 'emerald-dark': Uniwind.setTheme('emerald-light'); break;
+        case 'rose-light': Uniwind.setTheme('rose-dark'); break;
+        case 'rose-dark': Uniwind.setTheme('rose-light'); break;
+        case 'platinum-light': Uniwind.setTheme('platinum-dark'); break;
+        case 'platinum-dark': Uniwind.setTheme('platinum-light'); break;
+        case 'velvet-light': Uniwind.setTheme('velvet-dark'); break;
+        case 'velvet-dark': Uniwind.setTheme('velvet-light'); break;
+        case 'noir-light': Uniwind.setTheme('noir-dark'); break;
+        case 'noir-dark': Uniwind.setTheme('noir-light'); break;
       }
     };
 

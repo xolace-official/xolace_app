@@ -8,8 +8,12 @@ import { useRevenueCat } from "./revenuecat-context";
  * RevenueCat webhook lands) OR'd with the local SDK state as an optimistic
  * hint covering webhook lag right after a purchase.
  */
-export function usePlusEntitlement(): { isPlus: boolean; isLoading: boolean } {
-  const { isAuthenticated } = useConvexAuth();
+export function usePlusEntitlement(): {
+  isPlus: boolean;
+  isLoading: boolean;
+  isResolved: boolean;
+} {
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const entitlement = useQuery(
     api.premium.getEntitlement,
     isAuthenticated ? {} : "skip",
@@ -20,5 +24,14 @@ export function usePlusEntitlement(): { isPlus: boolean; isLoading: boolean } {
   return {
     isPlus: (entitlement?.isPlus ?? false) || isProUser,
     isLoading: (isAuthenticated && entitlement === undefined) || sdkLoading,
+    // True only once BOTH sources have actually answered. `isPlus: false` is the
+    // default for a signed-out or still-authenticating user — safe for locking UI,
+    // but indistinguishable from a real lapse. Anything that *revokes* on the
+    // strength of a negative (see usePremiumThemeReconciler) must wait for this.
+    isResolved:
+      !authLoading &&
+      isAuthenticated &&
+      entitlement !== undefined &&
+      !sdkLoading,
   };
 }
