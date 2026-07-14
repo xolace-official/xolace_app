@@ -32,9 +32,15 @@ export function PaywallFeatureItem({ icon, title, description, isHighlighted }: 
       </View>
       <View className="flex-1 gap-1">
         <View className="flex-row items-center gap-2">
-          <AppText className="text-[15px] font-medium text-foreground">{title}</AppText>
+          <AppText
+            className="text-[15px] font-medium text-foreground shrink"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {title}
+          </AppText>
           {isHighlighted && (
-            <Chip size="sm" color="accent">
+            <Chip size="sm" color="accent" className="shrink-0">
               <Chip.Label>This unlocks it</Chip.Label>
             </Chip>
           )}
