@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, Spinner, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
-import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
+import { usePaywall, type PaywallSurface } from "@/src/features/purchases/use-paywall";
 
 const CLOSE_ICON_NAME = { ios: "xmark", android: "close", web: "close" } as const;
 
@@ -14,8 +13,8 @@ type CloseProps = {
 };
 
 export function PaywallCloseButton({ surface }: CloseProps) {
-  const router = useRouter();
   const posthog = usePostHog();
+  const closePaywall = usePaywall((s) => s.close);
   const tintColor = useThemeColor("muted") as string;
 
   return (
@@ -25,7 +24,7 @@ export function PaywallCloseButton({ surface }: CloseProps) {
       hitSlop={12}
       onPress={() => {
         posthog.capture("paywall_dismissed", { surface: surface ?? null });
-        router.back();
+        closePaywall();
       }}
     >
       <SymbolView name={CLOSE_ICON_NAME} size={16} tintColor={tintColor} />

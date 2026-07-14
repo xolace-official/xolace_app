@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { useConvexAuth, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import { api } from "@/convex/_generated/api";
 import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
-import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
+import { usePaywall, type PaywallSurface } from "@/src/features/purchases/use-paywall";
 import { PaywallHero } from "./paywall-hero";
 import { PaywallFeatureSection } from "./paywall-feature-section";
 import { PaywallFeatureItem } from "./paywall-feature-item";
@@ -39,8 +39,8 @@ type Props = {
 };
 
 export function PaywallScreen({ surface }: Props) {
-  const router = useRouter();
   const posthog = usePostHog();
+  const closePaywall = usePaywall((s) => s.close);
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { offerings, purchase, isProUser } = useRevenueCat();
@@ -86,7 +86,7 @@ export function PaywallScreen({ surface }: Props) {
     setBusy(true);
     purchase(selectedPkg, surface ?? undefined)
       .then((ok) => {
-        if (ok) router.back(); // server entitlement query flips reactively
+        if (ok) closePaywall(); // server entitlement query flips reactively
       })
       .finally(() => setBusy(false));
   };

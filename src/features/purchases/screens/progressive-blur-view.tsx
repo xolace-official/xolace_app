@@ -13,13 +13,16 @@ type Props = {
 
 /**
  * ProgressiveBlurView — top/bottom fade-to-blur edge, e.g. under a status bar
- * or behind a sticky CTA. The mask gradient (black/transparent) is a luminance
- * mask, not visible UI color, so it stays hardcoded.
+ * or behind a sticky CTA. The iOS mask gradient (black/transparent) is a
+ * luminance mask, not visible UI color, so it stays hardcoded.
  *
- * Android needs `experimentalBlurMethod="dimezisBlurView"` — without it expo-blur
- * degrades to a flat semi-transparent overlay and content stays legible through
- * it. The tinted scrim underneath it does the rest of the occlusion, since the
- * Android blur radius is weaker than iOS's at the same intensity.
+ * Android has no working backdrop blur for this: expo-blur's default method is a
+ * flat translucent overlay, and `experimentalBlurMethod="dimezisBlurView"` still
+ * leaves the content behind it perfectly sharp (verified on API 35). So Android
+ * gets an opaque scrim instead — it reaches full background opacity across the
+ * band that sits behind content (the sticky CTA / legal links) and only fades out
+ * at the edge facing the scroll. A weak fade here is what let the feature rows
+ * show through the legal copy.
  */
 export function ProgressiveBlurView({ position = "top", height = 100, blurViewProps }: Props) {
   const backgroundColor = useThemeColor("background") as string;
@@ -47,25 +50,25 @@ export function ProgressiveBlurView({ position = "top", height = 100, blurViewPr
       )}
       style={{ height }}
     >
-      <MaskedView maskElement={mask} style={StyleSheet.absoluteFill}>
-        <BlurView
-          style={[StyleSheet.absoluteFill, blurViewProps?.style]}
-          intensity={blurViewProps?.intensity ?? 70}
-          experimentalBlurMethod="dimezisBlurView"
-          {...blurViewProps}
+      {Platform.OS === "android" ? (
+        <LinearGradient
+          style={StyleSheet.absoluteFill}
+          locations={isTop ? [0, 0.55, 1] : [0, 0.45, 1]}
+          colors={
+            isTop
+              ? [backgroundColor, backgroundColor, `${backgroundColor}00`]
+              : [`${backgroundColor}00`, backgroundColor, backgroundColor]
+          }
         />
-        {Platform.OS === "android" ? (
-          <LinearGradient
-            style={StyleSheet.absoluteFill}
-            locations={isTop ? [0, 0.6, 1] : [0, 0.4, 1]}
-            colors={
-              isTop
-                ? [backgroundColor, `${backgroundColor}CC`, `${backgroundColor}00`]
-                : [`${backgroundColor}00`, `${backgroundColor}CC`, backgroundColor]
-            }
+      ) : (
+        <MaskedView maskElement={mask} style={StyleSheet.absoluteFill}>
+          <BlurView
+            style={[StyleSheet.absoluteFill, blurViewProps?.style]}
+            intensity={blurViewProps?.intensity ?? 70}
+            {...blurViewProps}
           />
-        ) : null}
-      </MaskedView>
+        </MaskedView>
+      )}
     </View>
   );
 }
