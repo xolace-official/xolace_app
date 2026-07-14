@@ -77,7 +77,7 @@ export const TERMS_OF_SERVICE: LegalDocument = {
     },
     {
       heading: 'Subscriptions & Purchases',
-      body: 'Xolace+ is an auto-renewing subscription (monthly or annual) billed through your Apple or Google account. Free trials, where offered, convert automatically to a paid subscription unless cancelled at least 24 hours before the trial ends. Your subscription renews automatically at the price shown at purchase unless cancelled; we will give advance notice in the app before any price change takes effect for existing subscribers. Manage or cancel anytime in your device\'s App Store or Google Play account settings — cancelling stops future renewals but does not refund the current period. All payments are processed by Apple or Google, and refunds are governed by their respective policies, not by Xolace directly.',
+      body: 'Xolace+ is an auto-renewing subscription (monthly or annual) billed through your Apple or Google account. Free trials, where offered, convert automatically to a paid subscription unless cancelled before the trial ends — on iOS, at least 24 hours before; on Google Play, any time before the trial period expires. Your subscription renews automatically at the price shown at purchase unless cancelled; we will give advance notice in the app before any price change takes effect for existing subscribers. Manage or cancel anytime in your device\'s App Store or Google Play account settings — cancelling stops future renewals but does not refund the current period. All payments are processed by Apple or Google, and refunds are governed by their respective policies, not by Xolace directly.',
     },
     {
       heading: 'Limitation of Liability',
