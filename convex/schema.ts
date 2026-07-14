@@ -134,6 +134,12 @@ export default defineSchema({
 
     // Total completed sessions. Calibrates AI tone —
     // first-timers get warmth, veterans get precision.
+    //
+    // MIRRORED: this field is the sort key of the `reflectionRank` aggregate
+    // (convex/lib/aggregates.ts), which powers the profile percentile card.
+    // Any new writer — insert, patch, or delete — must call the matching
+    // rankInsert/rankReplace/rankDelete helper, or the aggregate drifts and
+    // every user's percentile goes wrong with no error surfaced.
     sessionCount: v.number(),
 
     // Timestamp of first completed session.

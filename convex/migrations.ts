@@ -1,6 +1,7 @@
 import { Migrations } from "@convex-dev/migrations";
 import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
+import { reflectionRank } from "./lib/aggregates";
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
@@ -34,6 +35,19 @@ export const backfillLongestStreak = migrations.define({
   },
 });
 
+// Backfill the reflectionRank aggregate from existing emotional_profiles rows.
+// Must run once before the percentile card is enabled, otherwise the aggregate
+// only knows about profiles touched since the component was deployed.
+// Idempotent — insertIfDoesNotExist skips keys already present, so it is safe
+// to re-run after a partial failure.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillReflectionRank"}'
+export const backfillReflectionRank = migrations.define({
+  table: "emotional_profiles",
+  migrateOne: async (ctx, doc) => {
+    await reflectionRank.insertIfDoesNotExist(ctx, doc);
+  },
+});
+
 // Run both in sequence (renameRawInput first, then renameUserInput):
 //   bunx convex run migrations:runAll
 import { internal } from "./_generated/api";
@@ -41,4 +55,5 @@ export const runAll = migrations.runner([
   internal.migrations.renameRawInput,
   internal.migrations.renameUserInput,
   internal.migrations.backfillLongestStreak,
+  internal.migrations.backfillReflectionRank,
 ]);

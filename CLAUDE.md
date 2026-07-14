@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 #### 1. What Xolace Is
 
-Xolace is an emotional processing app/infrastructure. Not a chatbot. Not a social network. Not therapy.
+We are building an AI-native end-to-end mental health support app; from when a user can't even name what they are feeling to getting actual support.
 
-People open Xolace when they feel something they can't name — heavy, anxious, numb, confused — but not "bad enough" for therapy. The app asks one question: "What's here right now?" The user writes whatever is true (or taps texture words if they can't find words). An AI reads what they expressed and mirrors it back with more precision than they could find themselves — 1-3 sentences that make them think "yes, exactly, that's what I'm feeling." Then they choose: sit with a short guided exercise, see that strangers have felt something similar, or simply close the app knowing they were heard.
+People open Xolace when they feel something they can't name — heavy, anxious, numb, confused, happy , excited — but not "bad enough" for therapy. The app asks one question: "What's here right now?" The user writes whatever is true (or taps texture words if they can't find words). An AI reads what they expressed and mirrors it back with more precision than they could find themselves — 1-3 sentences that make them think "yes, exactly, that's what I'm feeling." Then they choose: sit with a short guided exercise, see that strangers have felt something similar, or simply close the app knowing they were heard.
 
 #### Core Thesis
 

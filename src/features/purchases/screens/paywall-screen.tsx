@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
+import { useHeaderHeight } from "expo-router/react-navigation";
 import { useConvexAuth, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import type { PurchasesPackage } from "react-native-purchases";
@@ -16,6 +17,15 @@ import { PaywallCta } from "./paywall-cta";
 import { PaywallCloseButton, PaywallRestoreButton } from "./paywall-header-actions";
 import { ProgressiveBlurView } from "./progressive-blur-view";
 import { PAYWALL_SURFACE_FEATURE } from "./paywall-surface-map";
+import {
+  INSIGHTS_ICON,
+  MIRROR_TONE_ICON,
+  QUOTES_ICON,
+  THEMES_ICON,
+  AVATARS_ICON,
+  TIMELINE_ICON,
+  CAPS_ICON,
+} from "./paywall-icons";
 
 // Fallback display prices while offerings are unavailable
 // (appConfig.features.payments=false, or RC still loading).
@@ -32,6 +42,7 @@ export function PaywallScreen({ surface }: Props) {
   const router = useRouter();
   const posthog = usePostHog();
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const { offerings, purchase, isProUser } = useRevenueCat();
   console.log("offering ", JSON.stringify(offerings))
   console.log("isProUser ", isProUser)
@@ -97,28 +108,36 @@ export function PaywallScreen({ surface }: Props) {
       <View className="flex-1 bg-background">
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: ctaHeight + 24 }]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              // contentInsetAdjustmentBehavior handles this on iOS; Android's
+              // ScrollView has no equivalent for a transparent native header.
+              paddingTop: Platform.OS === "android" ? headerHeight + 16 : 0,
+              paddingBottom: ctaHeight + 24,
+            },
+          ]}
         >
           <PaywallHero />
 
           <PaywallFeatureSection title="New Level Unlocked">
             <PaywallFeatureItem
               id="insights"
-              icon="chart.line.uptrend.xyaxis"
+              icon={INSIGHTS_ICON}
               title="Pattern & language insights"
               description="See how your words and intensity shift over time"
               isHighlighted={highlightedFeature === "insights"}
             />
             <PaywallFeatureItem
               id="mirror_tone"
-              icon="waveform"
+              icon={MIRROR_TONE_ICON}
               title="Mirror voice & tone"
               description="Choose how your reflections are spoken back to you"
               isHighlighted={highlightedFeature === "mirror_tone"}
             />
             <PaywallFeatureItem
               id="quotes"
-              icon="text.quote"
+              icon={QUOTES_ICON}
               title="Personalized quotes"
               description="Daily language drawn from your own reflections"
               isHighlighted={highlightedFeature === "quotes"}
@@ -128,26 +147,26 @@ export function PaywallScreen({ surface }: Props) {
           <PaywallFeatureSection title="Make It Yours">
             <PaywallFeatureItem
               id="themes"
-              icon="paintpalette.fill"
+              icon={THEMES_ICON}
               title="Premium themes"
               isHighlighted={highlightedFeature === "themes"}
             />
             <PaywallFeatureItem
               id="avatars"
-              icon="person.crop.circle.fill"
+              icon={AVATARS_ICON}
               title="Custom avatars"
               isHighlighted={highlightedFeature === "avatars"}
             />
             <PaywallFeatureItem
               id="timeline"
-              icon="clock.arrow.circlepath"
+              icon={TIMELINE_ICON}
               title="Extended timeline"
-              description="Look back further than the last few weeks"
+              description="Your whole history, not just the recent window"
               isHighlighted={highlightedFeature === "timeline"}
             />
             <PaywallFeatureItem
               id="caps"
-              icon="bolt.fill"
+              icon={CAPS_ICON}
               title="Higher daily limits"
               description="More reflections, vents, and message drafts per day"
               isHighlighted={highlightedFeature === "caps"}

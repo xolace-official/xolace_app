@@ -5,6 +5,7 @@ import { hasPremium } from "./lib/premium";
 import { insightFeatureValidator } from "./lib/validators";
 import { generateDisplayName } from "./lib/displayName";
 import { displayStreak } from "./lib/streak";
+import { reflectionRank } from "./lib/aggregates";
 
 // Deterministic fallback name for users created before displayName existed.
 // Consistent per-profile so the same user always sees the same name.
@@ -97,6 +98,84 @@ export const getMoodDelta = query({
 
     if (topCount / moods.length < 0.4) return "mixed" as const;
     return topBucket as "lighter" | "same" | "heavier" | "unsure" | "mixed";
+  },
+});
+
+// Own sessions needed before the card appears. Matches the existing "rhythm"
+// gate on the profile screen — below this, a rank says more about being new
+// than about how you reflect.
+const RANK_MIN_SESSIONS = 5;
+
+// Reflectors needed before a percentile means anything. Under this, the number
+// is noise dressed up as an insight, so the card withholds it.
+//
+// Overridable per-deployment because dev will never hold 50 real reflectors —
+// without this, the card is permanently stuck in `warming` there and its ranked
+// state is untestable. Set `RANK_MIN_POPULATION=2` on dev; leave it unset in
+// prod so the honest floor applies.
+// A malformed value must fall back to 50, not disable the floor: Number("abc")
+// is NaN, and `population < NaN` is always false — the warming gate would
+// silently vanish and tiny-population percentiles would ship as ranked.
+const RANK_MIN_POPULATION = (() => {
+  const parsed = Number(process.env.RANK_MIN_POPULATION);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
+})();
+
+/**
+ * Percentile rank by session count, for the "among the fires" profile card.
+ *
+ * The population is everyone with at least one completed session — NOT every
+ * signup. Including zero-session accounts would put a large block of people
+ * below every active user, inflating everyone's percentile, and would make the
+ * number track signup-abandonment (a marketing artifact) rather than the user's
+ * own reflecting. The client copy says "people who reflect here" to match this
+ * denominator exactly.
+ *
+ * Ties are excluded from the numerator, so "more than N%" means N% have
+ * strictly fewer moments than you. Kept out of `getSummary` on purpose: this
+ * query is invalidated whenever any user anywhere completes a session, and the
+ * profile summary must not inherit that global churn.
+ */
+export const getReflectionRank = query({
+  args: {},
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+
+    const mine = profile.sessionCount;
+
+    // Withheld, not hidden: the card still renders and says what it's waiting
+    // for. Returning the *reason* lets the copy be specific ("3 more moments")
+    // instead of vague — a promise the user can actually act on.
+    if (mine < RANK_MIN_SESSIONS) {
+      return {
+        status: "pending" as const,
+        sessionCount: mine,
+        threshold: RANK_MIN_SESSIONS,
+        remaining: RANK_MIN_SESSIONS - mine,
+      };
+    }
+
+    const reflectors = { lower: { key: 1, inclusive: true } } as const;
+    const population = await reflectionRank.count(ctx, { bounds: reflectors });
+
+    // The user has done their part; the sample hasn't. Distinct from "pending"
+    // so we never tell someone to reflect more when that isn't what's missing.
+    if (population < RANK_MIN_POPULATION) {
+      return { status: "warming" as const, sessionCount: mine };
+    }
+
+    const below = await reflectionRank.count(ctx, {
+      bounds: {
+        lower: { key: 1, inclusive: true },
+        upper: { key: mine, inclusive: false },
+      },
+    });
+
+    // The cap is a defensive no-op: you are in the population but never in
+    // your own `below` bucket, so this can't reach 100 on its own.
+    const percentile = Math.min(Math.floor((below / population) * 100), 99);
+
+    return { status: "ranked" as const, percentile, sessionCount: mine };
   },
 });
 

@@ -644,8 +644,18 @@ export const listByProfile = query({
   },
 });
 
-// Free tier sees the last 30 days of timeline history; Plus sees everything.
-const FREE_TIMELINE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+// Free tier sees a rolling window of timeline history; Plus sees everything.
+// Surfaced to the client via getTimelineWindowInfo (windowDays) so the nudge
+// copy always tracks this number — tuning the window is a server-only change,
+// no app resubmit.
+//
+// Held at 30 until the Xolace+ build is live in the store. The shipped app has
+// no upgrade banner and no paywall, and hasPremium() is false for everyone
+// while subs are unreleased — so a tighter window there would silently vanish
+// sessions with no explanation and no way to unlock them. Drop to 7 the day
+// the subs build goes live.
+const FREE_TIMELINE_WINDOW_DAYS = 30;
+const FREE_TIMELINE_WINDOW_MS = FREE_TIMELINE_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
 // Bucketed to the start of the UTC day so the cutoff stays constant across a
 // single pagination session — usePaginatedQuery requires paginated queries to
@@ -715,6 +725,10 @@ export const listForTimeline = query({
 /**
  * Whether the free-tier timeline window is hiding older sessions — drives the
  * "upgrade for full history" nudge. Plus users never have anything hidden.
+ *
+ * Returns windowDays so the nudge renders the window length from server truth;
+ * the client must never hardcode it, or the copy drifts the moment the window
+ * is retuned.
  */
 export const getTimelineWindowInfo = query({
   args: {},
@@ -722,7 +736,11 @@ export const getTimelineWindowInfo = query({
     const { profile } = await requireAuth(ctx);
     const isPremium = await hasPremium(ctx, profile);
     if (isPremium) {
-      return { premiumRequired: false, hasOlderSessions: false };
+      return {
+        premiumRequired: false,
+        hasOlderSessions: false,
+        windowDays: null,
+      };
     }
 
     const windowStart = getFreeTimelineWindowStart();
@@ -733,7 +751,11 @@ export const getTimelineWindowInfo = query({
       )
       .first();
 
-    return { premiumRequired: true, hasOlderSessions: older !== null };
+    return {
+      premiumRequired: true,
+      hasOlderSessions: older !== null,
+      windowDays: FREE_TIMELINE_WINDOW_DAYS,
+    };
   },
 });
 

@@ -595,3 +595,25 @@ Verify on simulator by running a full session through the bridge path and confir
 **Effort:** M (CC ~30min — schema + gate + wipe-cascade check)
 **Priority:** P3 — only matters for users with a profile but sparse recent activity
 **Depends on:** Nothing blocking; schema addition is additive/backward-compatible
+
+---
+
+## P3 — "Where you sit in the distribution" (deeper rank view, likely Xolace+)
+
+**What:** The profile percentile card ("You've sat with more moments than 73% of people who reflect here") ships free and shows a single number plus the ember field. The deeper view — actually *seeing* the distribution you sit inside, rather than being told one number about it — is deferred for its own analysis and is the natural Xolace+ upgrade of this surface.
+
+**Why it's deferred, not just unbuilt:** the free card answers "where am I?" A distribution view answers "what does the field of people here actually look like, and what does my position inside it mean?" That's a different (and more valuable) question, and it needs product thinking before design — a histogram of session counts is the templated answer and probably the wrong one.
+
+**What already exists to build on:**
+- `reflectionRank` aggregate (`convex/lib/aggregates.ts`) — a sorted index over `emotional_profiles.sessionCount`. It already supports everything a distribution view needs beyond `count`: `at(ctx, offset)` for the value at any rank, `min`/`max` for the tails, and bounded `count` for arbitrary buckets. **No new backend data is required** — this is a read-shape and design question, not a modelling one.
+- `convex/profile.ts:getReflectionRank` — the free query, returning a `ranked | pending | warming` union.
+- `src/features/profile/components/rank-card.tsx` + `ember-field.tsx` — the free surface and its Skia field.
+
+**Open questions to settle first:**
+1. What does the user actually learn from seeing the distribution that the single number doesn't tell them? If the answer is "nothing, it's just prettier", don't build it.
+2. Buckets vs. a continuous curve — and does either survive the privacy posture? A histogram with thin buckets at the tail edges toward identifying the handful of people in them.
+3. Population is ~61 reflectors in prod (2026-07). A distribution over 61 points is mostly noise; this may simply be premature until the population is a few hundred.
+4. If it's the Plus upgrade of a free card, the free card must not feel deliberately crippled — see the gating rules in `project_paywall_gating_audit`.
+
+**Effort:** M–L (needs a design pass before an estimate means anything)
+**Priority:** P3 — the free card carries the retention value today; this is upside, not a gap
