@@ -6,5 +6,8 @@
   },
   "worktree": {
     "bgIsolation": "none"
+  },
+  "enabledPlugins": {
+    "cwb-app-icon@cwb-plugins": true
   }
 }
