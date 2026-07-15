@@ -69,8 +69,11 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
     if (index < 0 || index > 4) return;
     const sv = [s1, s2, s3, s4, s5][index];
     sv.set(
-      withSpring(1.35, SPRING_BOUNCE, () => {
-        sv.set(withSpring(1.0, SPRING_SETTLE));
+      withSpring(1.35, SPRING_BOUNCE, (finished) => {
+        // Guard: since reanimated 4.5 a cancelled animation's callback fires
+        // synchronously inside valueSetter before _animation is cleared, so an
+        // unconditional sv.set() here re-enters the same callback infinitely.
+        if (finished) sv.set(withSpring(1.0, SPRING_SETTLE));
       }),
     );
   };
