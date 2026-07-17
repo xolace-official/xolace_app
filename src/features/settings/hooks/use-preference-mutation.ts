@@ -29,10 +29,20 @@ export const usePreferenceMutation = () =>
         }
       : undefined;
 
+    // Mirror the server's bidirectional sync so the optimistic snapshot matches
+    // what the mutation writes: motionPreference is the source of truth, and
+    // reducedMotion is its back-compat boolean projection (and vice-versa).
+    const motionPatch =
+      args.motionPreference !== undefined
+        ? { motionPreference: args.motionPreference, reducedMotion: args.motionPreference === "reduced" }
+        : args.reducedMotion !== undefined
+          ? { motionPreference: args.reducedMotion ? ("reduced" as const) : ("system" as const), reducedMotion: args.reducedMotion }
+          : undefined;
+
     localStore.setQuery(api.preferences.get, {}, {
       ...current,
       ...(args.theme !== undefined && { theme: args.theme }),
-      ...(args.reducedMotion !== undefined && { reducedMotion: args.reducedMotion }),
+      ...(motionPatch !== undefined && motionPatch),
       ...(args.mirrorTone !== undefined && { mirrorTone: args.mirrorTone }),
       ...(args.contributeByDefault !== undefined && { contributeByDefault: args.contributeByDefault }),
       ...(args.dataRetentionPreference !== undefined && { dataRetentionPreference: args.dataRetentionPreference }),

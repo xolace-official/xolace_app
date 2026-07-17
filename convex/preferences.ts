@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, internalQuery } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
-import { mirrorToneValidator } from "./lib/validators";
+import { mirrorToneValidator, motionPreferenceValidator } from "./lib/validators";
 import { validateSpaceName } from "./lib/spaceName";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
 import { requirePremium, hasPremium } from "./lib/premium";
@@ -108,6 +108,9 @@ export const update = mutation({
     theme: v.optional(
       v.union(v.literal("light"), v.literal("dark"), v.literal("system"))
     ),
+    // Tri-state motion preference. Source of truth going forward.
+    motionPreference: v.optional(motionPreferenceValidator),
+    // Back-compat boolean mirror. Kept in sync with motionPreference below.
     reducedMotion: v.optional(v.boolean()),
     notifications: v.optional(
       v.object({
@@ -176,7 +179,19 @@ export const update = mutation({
     // Build patch from provided args only
     const patch: Record<string, unknown> = {};
     if (args.theme !== undefined) patch.theme = args.theme;
-    if (args.reducedMotion !== undefined) patch.reducedMotion = args.reducedMotion;
+    // Keep motionPreference (source of truth) and reducedMotion (back-compat
+    // mirror) in sync regardless of which one the caller wrote:
+    //  - New UI writes motionPreference → mirror to the boolean (reduced only
+    //    when forced "reduced"; "system"/"full" both map to false).
+    //  - Old UI writes reducedMotion → project onto the tri-state
+    //    (true → "reduced", false → "system"), preserving the resolver.
+    if (args.motionPreference !== undefined) {
+      patch.motionPreference = args.motionPreference;
+      patch.reducedMotion = args.motionPreference === "reduced";
+    } else if (args.reducedMotion !== undefined) {
+      patch.reducedMotion = args.reducedMotion;
+      patch.motionPreference = args.reducedMotion ? "reduced" : "system";
+    }
     if (args.notifications !== undefined) patch.notifications = args.notifications;
 
     if (args.mirrorTone !== undefined) patch.mirrorTone = args.mirrorTone;

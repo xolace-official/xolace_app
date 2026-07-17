@@ -202,7 +202,7 @@ minimum-supported UI may still call. Instead mark, don't delete:
   references it.
 
 **Pending Deprecations**
-- (none yet)
+- `preferences.reducedMotion` (schema field + `update` arg) — superseded by tri-state `motionPreference`. Server keeps the boolean in sync as a back-compat mirror. Remove once no store-published client reads `reducedMotion`.
 
 ## Quick Reference
 

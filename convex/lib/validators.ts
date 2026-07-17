@@ -68,6 +68,20 @@ export const mirrorToneValidator = v.union(
   v.literal("witnessed")
 );
 
+/**
+ * Tri-state motion preference, resolved against the OS reduce-motion flag at
+ * read time:
+ *   "system"  — follow the phone's reduce-motion setting (default)
+ *   "reduced" — force reduced motion, ignore the OS
+ *   "full"    — force full motion, ignore the OS
+ * Mirrors the light/dark/system shape of `theme`. See `use-effective-reduced-motion`.
+ */
+export const motionPreferenceValidator = v.union(
+  v.literal("system"),
+  v.literal("reduced"),
+  v.literal("full")
+);
+
 export const safeguardLevelValidator = v.union(
   v.literal("none"),
   v.literal("gentle"),

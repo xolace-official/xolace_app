@@ -78,6 +78,7 @@ export const getOrCreate = mutation({
     await ctx.db.insert("preferences", {
       emotionalProfileId: profileId,
       theme: "system",
+      motionPreference: "system",
       reducedMotion: false,
       notifications: {
         enabled: false,

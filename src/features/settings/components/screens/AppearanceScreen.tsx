@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
-import { RadioGroup, Separator } from "heroui-native";
+import { RadioGroup } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { cn } from "@/src/lib/utils";
 import { AppText } from "@/src/components/shared/app-text";
@@ -12,6 +12,7 @@ import { ThemePreviewCard } from "@/src/features/settings/components/theme-previ
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { FREE_THEMES, PREMIUM_THEMES } from "@/src/lib/themes";
 import { useAppearanceSettings, type ThemeMode } from "@/src/features/settings/hooks/use-appearance-settings";
+import type { MotionPreference } from "@/src/lib/motion/use-effective-reduced-motion";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { useAppStore } from "@/src/store/store";
@@ -43,6 +44,32 @@ const MODE_OPTIONS: {
   },
 ];
 
+const MOTION_OPTIONS: {
+  value: MotionPreference;
+  label: string;
+  description: string;
+  symbol: CrossPlatformSymbol;
+}[] = [
+  {
+    value: "system",
+    label: "Match my phone",
+    description: "Follows your device's Reduce Motion setting",
+    symbol: { ios: "iphone", android: "smartphone", web: "smartphone" },
+  },
+  {
+    value: "reduced",
+    label: "Reduced motion",
+    description: "Stills breathing and other fluid motion, even if your phone doesn't ask for it",
+    symbol: { ios: "tortoise", android: "slow_motion_video", web: "slow_motion_video" },
+  },
+  {
+    value: "full",
+    label: "Full motion",
+    description: "Keeps everything animated, even if your phone asks apps to calm down",
+    symbol: { ios: "sparkles", android: "animation", web: "animation" },
+  },
+];
+
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
 /**
@@ -67,11 +94,22 @@ export const AppearanceScreen = () => {
     setThemeMode,
     colorThemeId,
     setColorTheme,
-    reducedMotion,
-    setReducedMotion,
+    motionPreference,
+    setMotionPreference,
+    osReduceMotion,
+    effectiveReducedMotion,
     nightModeEnabled,
     setNightModeEnabled,
   } = useAppearanceSettings();
+
+  // Contextual line under the motion picker — spells out what the current
+  // choice actually does, and specifically warns when fluid motion (the
+  // breathing at "sit with this") will stop following.
+  const motionHint = effectiveReducedMotion
+    ? "Fluid motion is calmed — the breathing exercise won't expand and contract; it guides you with words and a steady haptic instead."
+    : motionPreference === "full" && osReduceMotion
+      ? "Your phone asks apps to reduce motion, but Xolace will stay fully animated."
+      : "Everything stays gently in motion, including the breathing exercise.";
 
   const setIntroSeen = useAppStore((s) => s.setIntroSeen);
   const [replayIntroOpen, setReplayIntroOpen] = useState(false);
@@ -187,20 +225,62 @@ export const AppearanceScreen = () => {
           </ScrollView>
         </EaseView>
 
-        {/* ── VISUAL ───────────────────────────────────────────── */}
+        {/* ── MOTION ───────────────────────────────────────────── */}
         <EaseView
           initialAnimate={{ opacity: 0, translateY: 16 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", duration: 280, delay: 120, easing: EASE }}
+          className="mb-8"
+        >
+          <SettingsSection title="Motion">
+            <View className="px-5 gap-2">
+              <RadioGroup
+                value={motionPreference}
+                onValueChange={(v) => setMotionPreference(v as MotionPreference)}
+                className="gap-2"
+              >
+                {MOTION_OPTIONS.map((opt) => (
+                  <RadioGroup.Item key={opt.value} value={opt.value}>
+                    {({ isSelected }) => (
+                      <View
+                        className={cn(
+                          "flex-row items-center gap-4 px-4 py-4 rounded-2xl",
+                          isSelected ? "bg-surface" : "bg-surface/30",
+                        )}
+                      >
+                        <RadioIconIndicator
+                          symbol={opt.symbol}
+                          isSelected={isSelected}
+                        />
+                        <View className="flex-1 gap-0.5">
+                          <AppText className="text-base font-medium text-foreground">
+                            {opt.label}
+                          </AppText>
+                          <AppText className="text-sm text-foreground/55">
+                            {opt.description}
+                          </AppText>
+                        </View>
+                      </View>
+                    )}
+                  </RadioGroup.Item>
+                ))}
+              </RadioGroup>
+              <View className="flex-row items-start gap-2 mt-1 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3">
+                <AppText className="flex-1 text-sm leading-5 text-foreground/60">
+                  {motionHint}
+                </AppText>
+              </View>
+            </View>
+          </SettingsSection>
+        </EaseView>
+
+        {/* ── VISUAL ───────────────────────────────────────────── */}
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 16 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 280, delay: 160, easing: EASE }}
           className="mx-5 rounded-2xl bg-surface overflow-hidden mb-8"
         >
-          <SettingsRow
-            variant="toggle"
-            label="Reduced motion"
-            isSelected={reducedMotion}
-            onToggle={setReducedMotion}
-          />
-          <Separator className="mx-5" />
           <SettingsRow
             variant="toggle"
             label="Night mode (10pm–4am)"
@@ -219,7 +299,7 @@ export const AppearanceScreen = () => {
         <EaseView
           initialAnimate={{ opacity: 0, translateY: 16 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 280, delay: 160, easing: EASE }}
+          transition={{ type: "timing", duration: 280, delay: 200, easing: EASE }}
         >
           <SettingsSection title="General">
             <SettingsRow
