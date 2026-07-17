@@ -7,6 +7,7 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import { api } from "@/convex/_generated/api";
+import { appConfig } from "@/src/config/app";
 import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
 import { usePaywall, type PaywallSurface } from "@/src/features/purchases/use-paywall";
 import { PaywallHero } from "./paywall-hero";
@@ -14,6 +15,7 @@ import { PaywallFeatureSection } from "./paywall-feature-section";
 import { PaywallFeatureItem } from "./paywall-feature-item";
 import { PaywallPeriodPicker, type PlanId } from "./paywall-period-picker";
 import { PaywallCta } from "./paywall-cta";
+import { PaywallPlansUnavailable } from "./paywall-plans-unavailable";
 import { PaywallCloseButton, PaywallRestoreButton } from "./paywall-header-actions";
 import { ProgressiveBlurView } from "./progressive-blur-view";
 import { PAYWALL_SURFACE_FEATURE } from "./paywall-surface-map";
@@ -43,18 +45,35 @@ export function PaywallScreen({ surface }: Props) {
   const closePaywall = usePaywall((s) => s.close);
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
-  const { offerings, purchase, isProUser } = useRevenueCat();
-  console.log("offering ", JSON.stringify(offerings))
-  console.log("isProUser ", isProUser)
+  const { offerings, purchase, isProUser, isLoading, refreshOfferings } = useRevenueCat();
   const { isAuthenticated } = useConvexAuth();
   const summary = useQuery(api.profile.getSummary, isAuthenticated ? {} : "skip");
   const [selected, setSelected] = useState<PlanId>("annual");
   const [busy, setBusy] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [ctaHeight, setCtaHeight] = useState(0);
 
   const annualPkg = offerings?.current?.annual ?? null;
   const monthlyPkg = offerings?.current?.monthly ?? null;
   const highlightedFeature = surface ? PAYWALL_SURFACE_FEATURE[surface] : null;
+
+  // Payments are live but the store gave us nothing to sell — the cold-start
+  // fetch failed or the products didn't resolve. Never show a purchasable-
+  // looking CTA in this state (App Review 2.1 "unresponsive button").
+  const plansUnavailable =
+    appConfig.features.payments && !annualPkg && !monthlyPkg;
+
+  // Recover from a failed cold-start offerings fetch as soon as the paywall
+  // opens, instead of waiting for the user to tap "Try again".
+  useEffect(() => {
+    if (!plansUnavailable || isLoading) return;
+    refreshOfferings();
+  }, [plansUnavailable, isLoading, refreshOfferings]);
+
+  const handleRetry = () => {
+    setRetrying(true);
+    refreshOfferings().finally(() => setRetrying(false));
+  };
 
   useEffect(() => {
     posthog.capture("paywall_opened", {
@@ -81,7 +100,6 @@ export function PaywallScreen({ surface }: Props) {
   const selectedPkg = selected === "annual" ? annualPkg : monthlyPkg;
 
   const handleContinue = () => {
-    console.log("pkg ", selectedPkg)
     if (!selectedPkg) return; // payments not live yet — CTA is a visual placeholder
     setBusy(true);
     purchase(selectedPkg, surface ?? undefined)
@@ -183,19 +201,28 @@ export function PaywallScreen({ surface }: Props) {
           style={{ paddingBottom: insets.bottom + 12 }}
           onLayout={(e) => setCtaHeight(e.nativeEvent.layout.height)}
         >
-          <PaywallPeriodPicker
-            annual={priceOf(annualPkg, "annual")}
-            monthly={priceOf(monthlyPkg, "monthly")}
-            discountPercent={discountPercent}
-            selected={selected}
-            onSelect={setSelected}
-          />
-          <PaywallCta
-            label={ctaLabel}
-            onPress={handleContinue}
-            isBusy={busy}
-            isDisabled={busy || isProUser || !selectedPkg}
-          />
+          {plansUnavailable ? (
+            <PaywallPlansUnavailable
+              isRetrying={retrying || isLoading}
+              onRetry={handleRetry}
+            />
+          ) : (
+            <>
+              <PaywallPeriodPicker
+                annual={priceOf(annualPkg, "annual")}
+                monthly={priceOf(monthlyPkg, "monthly")}
+                discountPercent={discountPercent}
+                selected={selected}
+                onSelect={setSelected}
+              />
+              <PaywallCta
+                label={ctaLabel}
+                onPress={handleContinue}
+                isBusy={busy}
+                isDisabled={busy || isProUser || (appConfig.features.payments && !selectedPkg)}
+              />
+            </>
+          )}
         </View>
       </View>
     </>

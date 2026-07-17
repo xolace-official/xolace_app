@@ -55,6 +55,7 @@ type RevenueCatContextType = {
   isLoading: boolean;
   purchase: (pkg: PurchasesPackage, surface?: string) => Promise<boolean>;
   restorePurchases: () => Promise<boolean>;
+  refreshOfferings: () => Promise<boolean>;
 };
 
 export const RevenueCatContext = createContext<RevenueCatContextType>({
@@ -64,6 +65,7 @@ export const RevenueCatContext = createContext<RevenueCatContextType>({
   isLoading: true,
   purchase: () => Promise.resolve(false),
   restorePurchases: () => Promise.resolve(false),
+  refreshOfferings: () => Promise.resolve(false),
 });
 
 export function useRevenueCat() {
@@ -93,7 +95,6 @@ export function RevenueCatProvider({ children }: { children: React.ReactNode }) 
   const isProUser = appConfig.features.payments
     ? hasActiveEntitlement(customerInfo)
     : appConfig.devIsPlus;
-  console.log("customerInfo", customerInfo)
 
   // Initialize SDK once payments are enabled.
   useEffect(() => {
@@ -147,10 +148,6 @@ export function RevenueCatProvider({ children }: { children: React.ReactNode }) 
 
   // Identity: on sign-out, detach the SDK from the previous user so their
   // cached entitlements can't leak to whoever signs in next on this device.
-  // Covers every sign-out path (settings, account deletion, desync recovery)
-  // because Convex auth is the single upstream signal. logOut() throws when
-  // the SDK user is already anonymous, so check isAnonymous first — that also
-  // makes the cold-start-while-signed-out case a no-op.
   useEffect(() => {
     if (!configured || isAuthLoading || isAuthenticated) return;
     let cancelled = false;
@@ -204,6 +201,19 @@ export function RevenueCatProvider({ children }: { children: React.ReactNode }) 
     }
   }, [posthog, toast]);
 
+
+  const refreshOfferings = useCallback(async (): Promise<boolean> => {
+    if (!appConfig.features.payments || !getApiKey()) return false;
+    try {
+      const offers = await Purchases.getOfferings();
+      setOfferings(offers);
+      return (offers.current?.availablePackages.length ?? 0) > 0;
+    } catch (error) {
+      console.error("[RevenueCat] offerings refresh failed:", error);
+      return false;
+    }
+  }, []);
+
   const restorePurchases = useCallback(async (): Promise<boolean> => {
     try {
       const info = await Purchases.restorePurchases();
@@ -228,11 +238,10 @@ export function RevenueCatProvider({ children }: { children: React.ReactNode }) 
     }
   }, [toast]);
 
-  // Context Provider value must stay manually memoized (React Compiler does
-  // not stabilize across context boundaries) — see CLAUDE.md exceptions.
+
   const value = useMemo(
-    () => ({ customerInfo, offerings, isProUser, isLoading, purchase, restorePurchases }),
-    [customerInfo, offerings, isProUser, isLoading, purchase, restorePurchases],
+    () => ({ customerInfo, offerings, isProUser, isLoading, purchase, restorePurchases, refreshOfferings }),
+    [customerInfo, offerings, isProUser, isLoading, purchase, restorePurchases, refreshOfferings],
   );
 
   return <RevenueCatContext value={value}>{children}</RevenueCatContext>;
