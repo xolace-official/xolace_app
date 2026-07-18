@@ -122,14 +122,43 @@ delivery, trend-aware (not one-shot) contact experience, and the separate listen
 | Two escalation events fire in quick succession before the first SMS send completes | Escalation trigger → notify pipeline | Needs idempotency/locking at the mutation level so a race doesn't double-send before `lastNotifiedAt` is written — flagged for `/plan-eng-review`, not resolved here |
 | Contact's phone number gets reassigned/reused by carrier after they opted out or stopped responding | `trustedContacts` row with stale `contactAcceptedAt` | Flagged for `/plan-eng-review`: consider a re-confirmation cadence or expiry on stale accepted contacts, not decided here |
 
+## Eng Review Decisions (2026-07-18, /plan-eng-review)
+
+Verified against code. Locked decisions:
+
+1. **Trigger gate = triggerType, not a number.** `triggerConfidence` is heterogeneous in `convex/ai/safeguard.ts` (moderation score | emotion-classifier confidence | riskCount/windowCount ratio) — a single threshold is meaningless. Gate on `triggerType`.
+2. **Gate v2 = `{explicit_crisis_language, pattern_escalation}`.** (Reversed an earlier eng-review call that excluded explicit_crisis, after the outside voice showed `user_requested` is a dead enum — emitted nowhere in `safeguard.ts` — and `pattern_escalation` alone never fires acutely.) On `explicit_crisis_language` the Xolace SMS runs **in addition to, never replacing**, the crisis-line handoff. **Gated on product + clinical sign-off** (pre-req, not an eng default).
+3. **Contact consent = append-only, in a NEW phone-hash-keyed table** — NOT `consent_records` (which is profile-keyed with no contact type; verified `convex/consent.ts`). Survives row hard-delete; retained hashed after account deletion.
+4. **Send pipeline = reserve → send → compensate.** Mutation transactionally re-checks accepted/opted-out/cooldown + writes `lastNotifiedAt` reservation + schedules Twilio send action. Compensator rolls back on **Twilio DLR `failed`/`undelivered`** (the `@convex-dev/twilio` component tracks delivery status via `getMessageBySid()`), not on the synchronous 202.
+5. **Exactly one trusted contact per user in v1.**
+6. **Delivery stays Xolace-originated via Twilio** (not a user's-own-phone `sms:` deep link) — founder confirmed "the message coming from Xolace" is the hard requirement that justifies the pipeline.
+
+Mandatory requirements folded into the plan (not optional):
+- `trustedContacts` table + **index on normalized (E.164) phone**; add to `accountDeletion.purgeUser` (enumerates tables explicitly) with a **hash-and-keep** branch for consent.
+- Inbound `/twilio/incoming-message` webhook **must verify the Twilio signature** (component does not); parse `YES-<token>`/STOP/HELP; **invite token in outbound copy** (same phone can be invited by multiple users).
+- **Carrier-level STOP is global per phone** — treat it as source of truth, not per-user state.
+- Surface `triggerType` (or a derived `notifyEligible`) to the reflect client — today only `escalationTriggered` (bool) is exposed.
+
 ## GSTACK REVIEW REPORT
 
 | Review | Trigger | Why | Runs | Status | Findings |
 |--------|---------|-----|------|--------|----------|
-| Office Hours | `/office-hours` | Prerequisite design doc | 1 | APPROVED (8/10, 3 review rounds) | 8 issues found and fixed: opt-out, cooldown, revoke policy, accept-flow mechanism, inbound SMS infra, A2P 10DLC, effort labeling |
-| CEO Review | `/plan-ceo-review` | Scope & strategy | 1 | IN PROGRESS | Premise reaffirmed post-audit; SELECTIVE EXPANSION; 3 cherry-picks all deferred, scope held at Approach A |
-| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 0 | — | Not yet run |
-| Codex Review | `/codex review` | Independent 2nd opinion | 0 | — | — |
-| Design Review | `/plan-design-review` | UI/UX gaps | 0 | — | — |
+| CEO Review | `/plan-ceo-review` | Scope & strategy | 1 | APPROVED | SELECTIVE EXPANSION; 3 cherry-picks deferred, scope held at Approach A |
+| Codex Review | `/codex review` | Independent 2nd opinion | 1 | UNAVAILABLE | Codex CLI rejected all models on this ChatGPT account; outside voice ran via Claude subagent instead |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 1 | ISSUES_OPEN | 5 review findings (all resolved) + 10 outside-voice findings (2 reopened decisions, 8 folded as requirements); 1 critical launch gap (intl feasibility) |
+| Design Review | `/plan-design-review` | UI/UX gaps | 0 | — | Not run (confirm prompt + setup UI would benefit) |
+| DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | Not run |
 
-**UNRESOLVED:** Deep 11-section review (Section index) not yet run — proceeding next.
+**OUTSIDE VOICE (Claude subagent):** 10 findings. Two forced decision reversals/confirmations (delivery shape → keep Twilio; trigger gate → add explicit_crisis). Eight folded as hard requirements (phone-hash consent table, hash-and-keep purge, carrier-global STOP, invite token, intl feasibility spike, triggerType plumbing, DLR compensator, webhook signature).
+
+**CROSS-MODEL:** Codex unavailable — no independent 2nd model. Single-model outside voice only; treat cross-model consensus as absent.
+
+**VERDICT:** ENG REVIEW COMPLETE with open items — NOT yet clear to implement. Resolve the P1 international-SMS feasibility spike (T1) and secure clinical sign-off before build. CEO scope APPROVED.
+
+**UNRESOLVED DECISIONS:**
+- International/Ghana two-way SMS feasibility — P1 spike (T1) required before A2P registration and build; if two-way to Ghana MSISDNs is unreliable, the double-opt-in mechanism itself is at risk.
+- Clinical + product sign-off for including `explicit_crisis_language` in the notify gate — gating pre-req.
+- Cooldown duration between repeat notifies (recommend 24h/contact) — set at implementation.
+- Invited-but-not-accepted contact TTL/cleanup (recommend 7-day expiry cron, T12) — deferred.
+- Exact STOP/HELP carrier-compliant copy — legal requirement, must be drafted (T11).
+- Setup UI location (recommend Settings, T10) — confirm in design review.
