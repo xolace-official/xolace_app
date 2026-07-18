@@ -8,6 +8,7 @@
     "bgIsolation": "none"
   },
   "enabledPlugins": {
-    "cwb-app-icon@cwb-plugins": true
+    "cwb-app-icon@cwb-plugins": true,
+    "ponytail@ponytail": true
   }
 }
