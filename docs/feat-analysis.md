@@ -1,7 +1,10 @@
 # Main Point isnt the component itself but the feats ideas these channels can enable us to come out with
 
 ### Twilio SMS — `@convex-dev/twilio` · v0.2.2
-Link -> https://www.convex.dev/components/twilio 
+Link -> https://www.convex.dev/components/twilio
+- Markdown: https://www.convex.dev/components/twilio/twilio.md
+- LLMs.txt: https://www.convex.dev/components/twilio/llms.txt
+- Skill: https://www.convex.dev/components/twilio/SKILL.md
 Can copy the page as markdown as context to your agent if needed.
 
 **What it does**
@@ -18,6 +21,9 @@ Two-way SMS via Twilio. Send messages from actions, receive them via webhook, qu
 
 ### WhatsApp Cloud API — `convex-whatsapp` · v1.1.5
 link -> https://www.convex.dev/components/convex-whatsapp
+- Markdown: https://www.convex.dev/components/convex-whatsapp/convex-whatsapp.md
+- LLMs.txt: https://www.convex.dev/components/convex-whatsapp/llms.txt
+- Skill: https://www.convex.dev/components/convex-whatsapp/SKILL.md
 
 **What it does**
 Drop-in wrapper for the WhatsApp Cloud API. Handles webhook ingestion for inbound messages, outbound message sending via Convex actions, delivery tracking, and conversation state stored reactively in your Convex database. Eliminates manual webhook management and API auth. Inbound messages trigger Convex functions you define — process content, update conversation state, send replies.
@@ -35,6 +41,9 @@ Drop-in wrapper for the WhatsApp Cloud API. Handles webhook ingestion for inboun
 
 ### Telegram Bot — `convex-telegram` · v0.1.1
 link -> https://www.convex.dev/components/convex-telegram
+- Markdown: https://www.convex.dev/components/convex-telegram/convex-telegram.md
+- LLMs.txt: https://www.convex.dev/components/convex-telegram/llms.txt
+- Skill: https://www.convex.dev/components/convex-telegram/SKILL.md
 
 **What it does** — wraps the Telegram Bot API: typed `bot.api.*` client for outbound calls from Convex actions, an HTTP webhook route (`registerRoutes`) for inbound updates with secret-token verification, handler dispatch keyed by update type (`message`, `callback_query`, …), and a one-time `setupWebhook()` call to point Telegram at the deployment.
 
