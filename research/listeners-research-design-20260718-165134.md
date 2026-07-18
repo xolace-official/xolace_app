@@ -92,7 +92,11 @@ one-tap feedback link back to Xolace are required in the same surface, not follo
    designed on this branch — not superseding or blocked by either. — AGREED
 2. v1 trust model is human vetting of a small known cohort, not platform infrastructure —
    acceptable for a pilot with 6 ambassadors, must be revisited before opening to any
-   listener outside this cohort. — AGREED
+   listener outside this cohort. **Explicit trigger: the cohort will not grow to include
+   anyone outside the founder's personal, physically-close vetting until the full
+   social-layer infrastructure exists — growing informally past this known group without
+   that infrastructure would break the actual safety argument this design relies on.**
+   — AGREED
 3. The suggestion fires on moderate-to-high intensity sessions, explicitly excluding any
    session with a triggered `escalation_events` record — that population stays on Xolace's
    existing crisis-resource path untouched. — AGREED
@@ -141,21 +145,19 @@ and any admin CRUD for a 6-row roster.
 ## Approaches Considered
 
 ### Approach A: Minimal viable — direct reveal, hand-seeded roster (RECOMMENDED, chosen)
-Effort: S/M (human ~2-3 days / CC ~30-40min, plus `@vllnt/convex-flags` install — see
-`/plan-ceo-review` Section 1). Adopt `@vllnt/convex-flags` for both a global kill-switch
-(disable the whole feature instantly, no redeploy) and per-ambassador active/inactive
-override (replacing a plain `active` field) — sandboxed tables, "zero blast radius into
-your schema" per the component's own docs, and its per-subject override mechanism doubles
-as the ambassador self-pause toggle deferred in TODOS.md (D3.3), which this adoption
-substantially de-risks even though it stays deferred as a UI/access question. **Dependency
-risk noted and accepted:** the package is at v0.1.0-canary (single maintainer, 7 versions
-published) — accepted given the small, easily-vendored surface of a boolean-flag use case;
-if the package is abandoned, the flag-check call sites are trivial to replace. Pausing an
-ambassador via the flag (rather than deleting their `ambassadors` row) preserves their
-`lastSuggestedAt` history and audit trail for when they return. New
-`ambassadors` table (name, bio, contactMethod, contactValue,
-`lastSuggestedAt: optional number` — active state now lives in convex-flags, not a table
-field — 6 hand-seeded rows, no admin UI). New `listenerSuggestions` table (sessionId, userId,
+Effort: S/M (human ~2-3 days / CC ~30-40min). Global kill-switch is a single
+`listenerSuggestionsEnabled: boolean` field on an existing app-config/settings doc
+(checked first in the eligibility query); per-ambassador pause is a plain
+`active: boolean` field on the `ambassadors` table. **Reverted from an earlier draft
+that proposed adopting `@vllnt/convex-flags`** — a second independent review pass flagged
+that as scope creep: a canary-stage (v0.1.0), single-maintainer dependency was being
+justified partly by giving it double duty as the deferred ambassador self-pause toggle
+(TODOS.md D3.3), which is solving a deferred problem to justify a dependency the stated
+need (kill-switch + pause) doesn't actually require. Plain fields do the identical job
+with zero new dependency, zero canary risk, zero new failure surface — the ambassador
+self-pause toggle stays genuinely deferred, not retroactively half-solved. New
+`ambassadors` table (name, bio, contactMethod, contactValue, `active: boolean`,
+`lastSuggestedAt: optional number` — 6 hand-seeded rows, no admin UI). New `listenerSuggestions` table (sessionId, userId,
 ambassadorId, `shown: boolean`) as the eligibility/audit trail, indexed `by_userId` for the
 D3.4 cooldown check (per this repo's Convex conventions: always index instead of
 `.filter()`) — **note this table can only
@@ -251,6 +253,22 @@ all. Approach C is cheaper but throws away the one thing this pilot exists to le
   added later without restructuring the eligibility query. Flagged here so it isn't lost, not
   decided.
 
+## Kill Criteria
+
+The pilot pauses (global `listenerSuggestionsEnabled` flipped to `false`) pending founder
+review on any of: a credible "that felt wrong/unsafe" feedback report via the feedback tray;
+any ambassador requesting to pause or exit; or any pattern the founder judges as a real
+safety signal in ambassador-reported conversations. These are stop conditions, not just
+upside metrics — the pilot is not success-criteria-only.
+
+## Per-Ambassador Volume Cap
+
+The least-recently-suggested rotation could concentrate suggestions on one ambassador if
+others go `active: false`. Add a simple weekly cap (e.g. max N suggestions per ambassador
+per 7-day window — exact N TBD in `/plan-eng-review`); once an ambassador hits the cap for
+the window, they're skipped in rotation until it resets, even if they have the oldest
+`lastSuggestedAt`.
+
 ## Success Criteria
 
 - Suggestion-to-contact rate (of users shown the card, how many use the deep link) — the
@@ -269,8 +287,8 @@ all. Approach C is cheaper but throws away the one thing this pilot exists to le
 - Reuses the existing feedback-tray system (`src/features/feedback-tray/`,
   `convex/productFeedback.submit`) for the "tell us" link — extends the `kind` union with
   `"listener"`, no new feedback schema, inherits existing rate-limiting and error handling.
-- New `@vllnt/convex-flags` component dependency (global kill-switch + per-ambassador
-  active/inactive override — see `/plan-ceo-review` Section 1).
+- No new external component dependency — global kill-switch and per-ambassador pause are
+  both plain boolean fields (see `/plan-ceo-review` Section 1 / Cross-Model Tension 1).
 - New `ambassadors` table and new `listenerSuggestions` table — schema additions required.
 - Related but explicitly independent: Trusted Contact Notify (APPROVED,
   `nathan-chore-channels-research-design-20260718-082326.md`) and WhatsApp Follow-Up Delivery
@@ -280,14 +298,22 @@ all. Approach C is cheaper but throws away the one thing this pilot exists to le
 - Blocking, non-technical dependency: the ambassador-consent conversation (Premise #4) must
   happen before real-user launch, though it does not block writing the code.
 
+## UI Placement
+
+The suggestion card sits **below the existing session-end content (acknowledgment + optional
+mood check), above the "Have more? I'm here." CTA** — the validated acknowledgment moment
+comes first, the new listener option is offered second as a next step, and the generic
+"start again" exit path stays last. Does not compete with or interrupt the existing
+session-end hierarchy.
+
 ## Deploy-Order Requirement
 
-The `@vllnt/convex-flags` global kill-switch **must default to OFF at deploy time**, flipped
-ON only after the Premise #4 ambassador-consent conversation completes for all 6 ambassadors.
-Code can ship dark; the flag flip is the actual launch event. This prevents the exact failure
-mode the consent gate exists to avoid — code shipping with the flag left in whatever state
-a developer's local testing left it, exposing real users to the feature before ambassadors
-agreed to its terms.
+The `listenerSuggestionsEnabled` global kill-switch **must default to `false` at deploy
+time**, flipped to `true` only after the Premise #4 ambassador-consent conversation completes
+for all 6 ambassadors. Code can ship dark; the flag flip is the actual launch event. This
+prevents the exact failure mode the consent gate exists to avoid — code shipping with the
+flag left in whatever state a developer's local testing left it, exposing real users to the
+feature before ambassadors agreed to its terms.
 
 ## The Assignment
 

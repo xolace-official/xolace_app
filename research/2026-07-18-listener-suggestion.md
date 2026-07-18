@@ -40,9 +40,10 @@ Well under the >8-file smell threshold — no reduction in scope warranted.
   `/plan-eng-review`).
 
 ## Deferred to TODOS.md
-- Ambassador self-service pause toggle — see TODOS.md entry for pickup context. Substantially
-  de-risked (not eliminated) by the convex-flags adoption below, since per-subject override
-  already exists at the data layer — only a UI/access question remains.
+- Ambassador self-service pause toggle — see TODOS.md entry for pickup context. Remains a
+  genuine UI/access gap, not a data-layer one — a plain `active: boolean` field is the v1
+  mechanism (convex-flags was considered and rejected as scope creep, see Cross-Model
+  Tension 1 below).
 
 ## NOT in Scope
 - Browse/directory UI for listeners — rejected in `/office-hours` (Q4), reconfirmed here.

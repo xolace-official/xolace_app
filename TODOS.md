@@ -14,7 +14,9 @@ instead of the founder hand-editing the row when someone needs a break.
 **Why:** Deferred during `/plan-ceo-review`'s SELECTIVE EXPANSION cherry-pick pass. At 6
 ambassadors the founder personally trains and talks to, hand-editing one DB row when someone
 messages "I need a break" costs one query — real ROI on self-service only arrives if the
-ambassador cohort grows well past a handful.
+ambassador cohort grows well past a handful. (A convex-flags-based approach was considered
+during review and rejected as scope creep — a plain `active: boolean` field is the v1
+mechanism; this TODO stays a genuine UI/access gap, not a data-layer one.)
 
 **How to start:** A minimal auth-gated (or obscure-link) toggle scoped only to the 6
 ambassador accounts — needs its own light identification mechanism since ambassadors are not
