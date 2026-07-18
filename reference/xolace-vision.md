@@ -51,7 +51,7 @@ Catch people at the layer nearly every competitor skips: the moment something is
 
 ### Phase 2 — Proactive Support
 
-Xolace stops waiting to be opened. It reaches toward the user — noticing patterns across sessions, checking in, meeting people before they think to ask for help.
+Xolace stops waiting to be opened. It reaches toward the user — noticing patterns across sessions, checking in, meeting people before they think to ask for help, helping them be noticed by people in their lives when they are going through something.
 
 ### Phase 3 — Passive / Ambient Support
 
