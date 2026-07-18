@@ -4,6 +4,212 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P3 — Ambassador self-service pause toggle (Listener Suggestion feature)
+
+**What:** Let each of the 6 ambassadors flip their own `active: false` flag on the
+`ambassadors` table (see the Listener Suggestion design doc,
+`~/.gstack/projects/xolace-official-xolace_app/nathan-chore-channels-research-design-20260718-165134.md`)
+instead of the founder hand-editing the row when someone needs a break.
+
+**Why:** Deferred during `/plan-ceo-review`'s SELECTIVE EXPANSION cherry-pick pass. At 6
+ambassadors the founder personally trains and talks to, hand-editing one DB row when someone
+messages "I need a break" costs one query — real ROI on self-service only arrives if the
+ambassador cohort grows well past a handful. (A convex-flags-based approach was considered
+during review and rejected as scope creep — a plain `active: boolean` field is the v1
+mechanism; this TODO stays a genuine UI/access gap, not a data-layer one.)
+
+**How to start:** A minimal auth-gated (or obscure-link) toggle scoped only to the 6
+ambassador accounts — needs its own light identification mechanism since ambassadors are not
+Xolace users in the schema (see the design doc's Open Questions on whether ambassadors ever
+become real Xolace accounts).
+
+**Key files:** `convex/schema.ts` (`ambassadors` table, once it exists), the Listener
+Suggestion design doc referenced above.
+
+**Effort:** S — small toggle, but genuinely new surface area (identification/light auth for
+non-user actors), not just a UI change.
+
+**Priority:** P3 — no urgency at current cohort size.
+
+**Depends on:** Listener Suggestion pilot (Approach A) shipping first; only relevant once the
+`ambassadors` table exists.
+
+---
+
+## P2 — WhatsApp as second delivery channel for Trusted Contact Notify
+
+**What:** Once the SMS-only Trusted Contact Notify feature (see
+`~/.gstack/projects/xolace-official-xolace_app/ceo-plans/2026-07-18-trusted-contact-notify.md`)
+ships and has 2+ weeks of real accept-rate / confirm-tap data, add a per-contact channel
+preference so the check-in message can go via WhatsApp Cloud API instead of Twilio SMS.
+
+**Why:** WhatsApp gets roughly 4x SMS open rates (`docs/feat-analysis.md`), which matters
+for a message whose entire value depends on being seen promptly. Deferred rather than built
+alongside SMS because sequencing risk favors validating the mechanism (does a real contact
+accept, does the confirm-tap flow work, does the message land right) on one channel before
+adding a second provider's integration surface.
+
+**How to start:** Add a `preferredChannel: "sms" | "whatsapp"` field to `trustedContacts`.
+Wire the WhatsApp Cloud API component (`convex-whatsapp`, already scoped in
+`docs/feat-analysis.md`) as a second outbound (and inbound, for accept/opt-out) provider
+alongside the Twilio SMS integration built for the base feature. Reuse the same
+`escalation_events`-triggered send logic — only the delivery provider branches on
+`preferredChannel`.
+
+**Key files:** `convex/schema.ts` (`trustedContacts`), new `convex/trustedContactNotify.ts`
+or wherever the base feature's Twilio wiring lands, `docs/feat-analysis.md` (WhatsApp
+component reference)
+
+**Effort:** M (CC ~30-40min) — second messaging provider integration plus per-contact
+channel branching, both inbound and outbound
+
+**Priority:** P2 — gated on SMS-only version shipping and validating first
+
+**Depends on:** Trusted Contact Notify (Approach A, SMS-only) shipped + 2 weeks of
+accept-rate/confirm-tap analytics
+
+---
+
+## P2 — Instrument follow-up push delivery before/alongside WhatsApp channel work
+
+**What:** Add PostHog capture (and/or extend the `notification_log` table) for follow-up
+push `delivered`/opened/tapped rates specifically, run for 1-2 weeks in parallel with
+building the WhatsApp follow-up delivery channel (see design doc
+`~/.gstack/projects/xolace-official-xolace_app/nathan-chore-channels-research-design-20260718-134117.md`).
+
+**Why:** The WhatsApp-follow-up design's Premise #1 explicitly accepts an unconfirmed-demand
+gap — no PostHog data exists on whether Xolace's follow-up push is actually underperforming;
+the wedge is built on founder intuition + generic industry stats, not Xolace's own numbers.
+This was surfaced as Approach C during the `/office-hours` session that produced the design
+doc, and the founder chose Approach A (build WhatsApp directly) over it — but Approach C is
+cheap enough to run in parallel rather than dropped entirely. Closing this gap in time gives
+the next review (or a retro) a real number instead of a hunch, and doesn't block Approach A.
+
+**How to start:** `convex/notifications.ts`'s `schedule` mutation already writes to
+`notification_log` with a `delivered` boolean; extend it with an `opened`/`tapped` state
+(client marks it on notification-tap deep link) and add a PostHog capture mirroring it,
+scoped to `type: "follow_up"`.
+
+**Key files:** `convex/notifications.ts` (`schedule`), `convex/followUps.ts`
+(`sendFollowUpNudge`), client-side notification-tap handler (deep link entry point)
+
+**Effort:** XS (human ~1-2h / CC ~15min)
+
+**Priority:** P2 — parallel to WhatsApp follow-up delivery work, not blocking it
+
+**Depends on:** Nothing — can start immediately, independent of the WhatsApp channel build
+
+---
+
+## P3 — Verified WhatsApp number ↔ Xolace user table (shared auth gate)
+
+**What:** Build the WhatsApp number opt-in/verification table (already required for the
+follow-up delivery feature, see `nathan-chore-channels-research-design-20260718-134117.md`)
+as a standalone mapping — verified WhatsApp number ↔ Xolace user/profile — rather than a
+field scoped only to the follow-up feature, so it can double as an identity gate for a
+possible future ElevenLabs WhatsApp voice/text agent persona.
+
+**Why:** WhatsApp Business numbers are publicly reachable by anyone — there's no
+platform-level allowlist. If Xolace ever adds an ElevenLabs agent persona on WhatsApp
+(raised as a "probably, not yet designed" idea, not current scope), it needs an app-side way
+to distinguish a real, verified Xolace user from a random inbound number before handing over
+any personal context or engaging in anything therapeutic-toned. ElevenLabs supports a
+conversation-initiation webhook that receives the caller's WhatsApp ID before a conversation
+starts — that webhook would look the number up against this same table to allow/deny and
+personalize. Building the table once, generically, avoids redoing the verification flow
+later for a second feature.
+
+**How to start:** When `/plan-eng-review` designs the follow-up feature's WhatsApp
+opt-in/verification table, shape it as a general `verifiedWhatsAppNumbers` (or similar)
+mapping keyed by profile, not a field embedded only in follow-up-specific state. The
+follow-up feature is the first consumer; an ElevenLabs conversation-initiation webhook would
+be a second, later consumer of the same lookup.
+
+**Key files:** wherever `/plan-eng-review` lands the follow-up feature's WhatsApp
+verification schema (not yet decided — see that design doc's Open Questions)
+
+**Effort:** No extra effort now — this is a shaping note for how the follow-up feature's
+existing verification table gets designed, not new work. Effort attaches to the (not yet
+real) ElevenLabs integration later: webhook + lookup, S.
+
+**Priority:** P3 — speculative; the ElevenLabs idea is not yet scoped or designed
+
+**Depends on:** Follow-up WhatsApp delivery feature (Approach A) shipping first, since it's
+the table's first real consumer
+
+---
+
+## P2 — Weekly emotional summary fan-out via WhatsApp
+
+**What:** Send the existing Workflow+RAG weekly emotional summary pipeline's output over
+WhatsApp instead of, or alongside, the current in-app/push delivery.
+
+**Why:** This is a re-engagement lever, not a proactive-support-to-third-parties feature —
+distinct problem from Trusted Contact Notify. WhatsApp's higher open rate makes it a
+plausible upgrade for content the user has already opted into receiving (a Sunday-morning
+digest is more likely read in a messaging app already open than a push notification that
+gets swiped away). Deferred because it needs its own design pass, not because the idea is
+weak — bundling it into the trusted-contact plan would conflate two different products
+(reaching the user vs. reaching someone else).
+
+**How to start:** Once the WhatsApp Cloud API component is installed (see the P2 item
+above, or independently if that lands first), wire the existing weekly summary generation
+job to fan out a WhatsApp message alongside its current delivery path, gated by a user
+opt-in toggle (do not default this on — matches the existing notification consent pattern
+in `convex/lib/notificationPrefs.ts`).
+
+**Key files:** whichever job currently generates/delivers the weekly summary (locate via
+the Workflow+RAG pipeline references in `convex/jobs/` or `convex/ai/`),
+`convex/lib/notificationPrefs.ts` (consent pattern to follow), `docs/feat-analysis.md`
+(WhatsApp component reference)
+
+**Effort:** M (CC ~30-40min) — WhatsApp Cloud API integration (if not already installed by
+the sibling P2 item above) plus weekly cron wiring to the existing summary content
+
+**Priority:** P2 — real idea, needs its own design pass before scoping further
+
+**Depends on:** WhatsApp Cloud API component installed (shared dependency with the sibling
+P2 item above — install once, use for both if both are picked up together)
+
+---
+
+## P3 — Telegram bot as low-friction, no-identity-anchor front door
+
+**What:** A Telegram bot entry point ("message the bot with whatever's here, get one line
+back") as an alternative onboarding surface, using inline keyboards for the texture-word
+tap targets (heavy/tight/foggy/buzzing/empty/scattered/numb/raw) instead of free text only.
+
+**Why:** Per `docs/feat-analysis.md`'s privacy comparison, a Telegram bot only ever receives
+a platform-scoped numeric `user_id`/`chat_id` — never a phone number unless the user
+explicitly shares a contact card, which a well-designed flow never asks for. That's a
+materially better privacy story than the SMS/WhatsApp front-door ideas in the same doc, for
+the segment of the target audience already on Telegram (skews privacy-conscious and
+international). This is an acquisition/onboarding bet, structurally different from Trusted
+Contact Notify (reaching a third party) or the WhatsApp re-engagement idea above (reaching
+an existing user) — it's about lowering the barrier for someone who hasn't started with
+Xolace at all.
+
+**How to start:** Do not scope implementation yet — this needs its own `/office-hours`
+session to establish real demand evidence (is there actually a Telegram-native segment of
+the target audience, and what's the smallest testable version) before committing to bot
+infrastructure. When ready: `convex-telegram` component (`docs/feat-analysis.md` has the
+link), inbound webhook (`registerRoutes`) keyed by update type, `bot.api.*` client for
+outbound.
+
+**Key files:** none yet — greenfield within this repo; `docs/feat-analysis.md` for the
+component reference and privacy comparison
+
+**Effort:** L (CC ~1-1.5h once scoped) — new bot infra, webhook registration, inline-keyboard
+UI mapping to the existing texture-word set, entirely separate from the Twilio/WhatsApp
+integrations above
+
+**Priority:** P3 — needs its own demand-validation session before further scoping
+
+**Depends on:** Nothing technically, but should not be built before a dedicated
+`/office-hours` session validates demand
+
+---
+
 ## P2 — Clarify feedback sheet: `mirrorFeedbackShown` ref never resets
 
 **What:** The "What didn't land?" sheet can only ever appear **once per `ReflectScreen` mount**. `mirrorFeedbackShown` is a `useRef(false)` that is set to `true` the first time the user taps "Not quite" and is never cleared — not on `handleReset`, not on a new session, not on the give-up path.
