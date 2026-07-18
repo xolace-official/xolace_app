@@ -4,6 +4,36 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P3 — Ambassador self-service pause toggle (Listener Suggestion feature)
+
+**What:** Let each of the 6 ambassadors flip their own `active: false` flag on the
+`ambassadors` table (see the Listener Suggestion design doc,
+`~/.gstack/projects/xolace-official-xolace_app/nathan-chore-channels-research-design-20260718-165134.md`)
+instead of the founder hand-editing the row when someone needs a break.
+
+**Why:** Deferred during `/plan-ceo-review`'s SELECTIVE EXPANSION cherry-pick pass. At 6
+ambassadors the founder personally trains and talks to, hand-editing one DB row when someone
+messages "I need a break" costs one query — real ROI on self-service only arrives if the
+ambassador cohort grows well past a handful.
+
+**How to start:** A minimal auth-gated (or obscure-link) toggle scoped only to the 6
+ambassador accounts — needs its own light identification mechanism since ambassadors are not
+Xolace users in the schema (see the design doc's Open Questions on whether ambassadors ever
+become real Xolace accounts).
+
+**Key files:** `convex/schema.ts` (`ambassadors` table, once it exists), the Listener
+Suggestion design doc referenced above.
+
+**Effort:** S — small toggle, but genuinely new surface area (identification/light auth for
+non-user actors), not just a UI change.
+
+**Priority:** P3 — no urgency at current cohort size.
+
+**Depends on:** Listener Suggestion pilot (Approach A) shipping first; only relevant once the
+`ambassadors` table exists.
+
+---
+
 ## P2 — WhatsApp as second delivery channel for Trusted Contact Notify
 
 **What:** Once the SMS-only Trusted Contact Notify feature (see
@@ -35,6 +65,75 @@ channel branching, both inbound and outbound
 
 **Depends on:** Trusted Contact Notify (Approach A, SMS-only) shipped + 2 weeks of
 accept-rate/confirm-tap analytics
+
+---
+
+## P2 — Instrument follow-up push delivery before/alongside WhatsApp channel work
+
+**What:** Add PostHog capture (and/or extend the `notification_log` table) for follow-up
+push `delivered`/opened/tapped rates specifically, run for 1-2 weeks in parallel with
+building the WhatsApp follow-up delivery channel (see design doc
+`~/.gstack/projects/xolace-official-xolace_app/nathan-chore-channels-research-design-20260718-134117.md`).
+
+**Why:** The WhatsApp-follow-up design's Premise #1 explicitly accepts an unconfirmed-demand
+gap — no PostHog data exists on whether Xolace's follow-up push is actually underperforming;
+the wedge is built on founder intuition + generic industry stats, not Xolace's own numbers.
+This was surfaced as Approach C during the `/office-hours` session that produced the design
+doc, and the founder chose Approach A (build WhatsApp directly) over it — but Approach C is
+cheap enough to run in parallel rather than dropped entirely. Closing this gap in time gives
+the next review (or a retro) a real number instead of a hunch, and doesn't block Approach A.
+
+**How to start:** `convex/notifications.ts`'s `schedule` mutation already writes to
+`notification_log` with a `delivered` boolean; extend it with an `opened`/`tapped` state
+(client marks it on notification-tap deep link) and add a PostHog capture mirroring it,
+scoped to `type: "follow_up"`.
+
+**Key files:** `convex/notifications.ts` (`schedule`), `convex/followUps.ts`
+(`sendFollowUpNudge`), client-side notification-tap handler (deep link entry point)
+
+**Effort:** XS (human ~1-2h / CC ~15min)
+
+**Priority:** P2 — parallel to WhatsApp follow-up delivery work, not blocking it
+
+**Depends on:** Nothing — can start immediately, independent of the WhatsApp channel build
+
+---
+
+## P3 — Verified WhatsApp number ↔ Xolace user table (shared auth gate)
+
+**What:** Build the WhatsApp number opt-in/verification table (already required for the
+follow-up delivery feature, see `nathan-chore-channels-research-design-20260718-134117.md`)
+as a standalone mapping — verified WhatsApp number ↔ Xolace user/profile — rather than a
+field scoped only to the follow-up feature, so it can double as an identity gate for a
+possible future ElevenLabs WhatsApp voice/text agent persona.
+
+**Why:** WhatsApp Business numbers are publicly reachable by anyone — there's no
+platform-level allowlist. If Xolace ever adds an ElevenLabs agent persona on WhatsApp
+(raised as a "probably, not yet designed" idea, not current scope), it needs an app-side way
+to distinguish a real, verified Xolace user from a random inbound number before handing over
+any personal context or engaging in anything therapeutic-toned. ElevenLabs supports a
+conversation-initiation webhook that receives the caller's WhatsApp ID before a conversation
+starts — that webhook would look the number up against this same table to allow/deny and
+personalize. Building the table once, generically, avoids redoing the verification flow
+later for a second feature.
+
+**How to start:** When `/plan-eng-review` designs the follow-up feature's WhatsApp
+opt-in/verification table, shape it as a general `verifiedWhatsAppNumbers` (or similar)
+mapping keyed by profile, not a field embedded only in follow-up-specific state. The
+follow-up feature is the first consumer; an ElevenLabs conversation-initiation webhook would
+be a second, later consumer of the same lookup.
+
+**Key files:** wherever `/plan-eng-review` lands the follow-up feature's WhatsApp
+verification schema (not yet decided — see that design doc's Open Questions)
+
+**Effort:** No extra effort now — this is a shaping note for how the follow-up feature's
+existing verification table gets designed, not new work. Effort attaches to the (not yet
+real) ElevenLabs integration later: webhook + lookup, S.
+
+**Priority:** P3 — speculative; the ElevenLabs idea is not yet scoped or designed
+
+**Depends on:** Follow-up WhatsApp delivery feature (Approach A) shipping first, since it's
+the table's first real consumer
 
 ---
 
