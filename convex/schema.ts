@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { vWorkflowId } from "@convex-dev/workflow";
 import {
   insightFeatureValidator,
+  motionPreferenceValidator,
   resourceValidator,
   safeguardLevelValidator,
   triggerTypeValidator,
@@ -244,7 +245,15 @@ export default defineSchema({
     // Stored separately from light/dark mode so both can change independently.
     colorTheme: v.optional(v.string()),
 
-    // Disable breath animation and motion effects.
+    // Tri-state motion preference (system | reduced | full), resolved against
+    // the OS reduce-motion flag at read time. This is the source of truth going
+    // forward — undefined on rows written before it shipped.
+    motionPreference: v.optional(motionPreferenceValidator),
+    // DEPRECATED(remove-after: app >= min-supported-version-that-writes
+    // motionPreference): back-compat boolean mirror of motionPreference. Old
+    // shipped UIs still read/write this, so the mutation keeps the two fields in
+    // sync. Resolver precedence: motionPreference ?? (reducedMotion ? "reduced"
+    // : "system"). Delete once no store-published client references it.
     reducedMotion: v.boolean(),
 
     // --- Notifications ---

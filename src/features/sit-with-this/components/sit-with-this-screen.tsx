@@ -10,6 +10,7 @@ import { usePostHog } from "posthog-react-native";
 import { ExerciseRunner } from "./runner/exercise-runner";
 import { SwapSheet } from "./swap-sheet";
 import { AppText } from "@/src/components/shared/app-text";
+import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 import type { ExerciseData } from "./runner/exercise-runner.types";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -39,6 +40,7 @@ export function SitWithThisScreen() {
     sessionId ? { sessionId } : "skip",
   );
   const preferences = useQuery(api.preferences.get);
+  const reducedMotion = useEffectiveReducedMotion();
   const recordSwapMutation = useMutation(api.exercises.recordSwap);
 
   useEffect(() => {
@@ -157,7 +159,7 @@ export function SitWithThisScreen() {
       <ExerciseRunner
         key={exerciseData?.exercise._id}
         exercise={exerciseData!}
-        reducedMotion={preferences.reducedMotion}
+        reducedMotion={reducedMotion}
         showPreRoll={!hasSwapped}
         onComplete={handleComplete}
         onExitEarly={handleExitEarly}
