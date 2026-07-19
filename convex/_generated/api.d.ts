@@ -16,6 +16,7 @@ import type * as ai_context from "../ai/context.js";
 import type * as ai_evalMetrics from "../ai/evalMetrics.js";
 import type * as ai_generateNotification from "../ai/generateNotification.js";
 import type * as ai_helpers_patternSummary from "../ai/helpers/patternSummary.js";
+import type * as ai_mirrorPlan from "../ai/mirrorPlan.js";
 import type * as ai_process from "../ai/process.js";
 import type * as ai_prompts_articulator from "../ai/prompts/articulator.js";
 import type * as ai_prompts_classifier from "../ai/prompts/classifier.js";
@@ -116,6 +117,7 @@ declare const fullApi: ApiFromModules<{
   "ai/evalMetrics": typeof ai_evalMetrics;
   "ai/generateNotification": typeof ai_generateNotification;
   "ai/helpers/patternSummary": typeof ai_helpers_patternSummary;
+  "ai/mirrorPlan": typeof ai_mirrorPlan;
   "ai/process": typeof ai_process;
   "ai/prompts/articulator": typeof ai_prompts_articulator;
   "ai/prompts/classifier": typeof ai_prompts_classifier;
