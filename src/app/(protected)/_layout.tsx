@@ -18,6 +18,7 @@ export default function ProtectedLayout() {
   return (
     <Stack screenOptions={SCREEN_OPTIONS}>
       <Stack.Screen name="index" />
+      <Stack.Screen name="(tabs)" options={NO_GESTURE} />
       <Stack.Screen name="sit-with-this" options={NO_GESTURE} />
       <Stack.Screen name="peer-reflections" options={NO_GESTURE} />
       <Stack.Screen name="session-end" options={NO_GESTURE} />
