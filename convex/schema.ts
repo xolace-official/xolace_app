@@ -627,6 +627,9 @@ export default defineSchema({
     // Aggregate analytics.
     .index("by_date", ["createdAt"])
 
+    // Abandoned-session sweep: stale sessions in a given non-terminal state.
+    .index("by_state_and_updatedAt", ["state", "updatedAt"])
+
     // Model quality tracking: compare confirmation rates across versions.
     .index("by_model_version", ["mirrorModelVersion", "confirmationState"]),
 

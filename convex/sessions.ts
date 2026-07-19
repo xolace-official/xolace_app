@@ -976,18 +976,13 @@ export const checkAbandoned = internalMutation({
   handler: async (ctx) => {
     const cutoff = Date.now() - ABANDON_THRESHOLD_MS;
 
-    const staleStateSet = new Set([
+    const staleStates = [
       "initiated",
       "input_received",
       "processing",
       "mirror_delivered",
       "error",
-    ]);
-
-    const staleSessions = await ctx.db
-      .query("sessions")
-      .withIndex("by_date", (q) => q.lt("createdAt", cutoff))
-      .take(50);
+    ] as const;
 
     // path_selected / path_in_progress are now transient — a session only
     // reaches them for the moment between the path tap and completion (which
@@ -995,20 +990,27 @@ export const checkAbandoned = internalMutation({
     // the app died mid-navigation; the mirror was already confirmed, so
     // reconcile to completed (path not finished) rather than abandoned, and
     // never leave it resumable via getActive.
-    const stalePathStateSet = new Set(["path_selected", "path_in_progress"]);
+    const stalePathStates = ["path_selected", "path_in_progress"] as const;
 
-    for (const session of staleSessions) {
-      if (session.updatedAt >= cutoff) continue;
+    for (const state of [...staleStates, ...stalePathStates]) {
+      const staleSessions = await ctx.db
+        .query("sessions")
+        .withIndex("by_state_and_updatedAt", (q) =>
+          q.eq("state", state).lt("updatedAt", cutoff)
+        )
+        .take(50);
 
-      if (staleStateSet.has(session.state)) {
-        await ctx.db.patch(session._id, {
-          state: "abandoned",
-          updatedAt: Date.now(),
-        });
-        // Same gate as the manual abandon path: escalation-then-abandon only.
-        await finalizeFollowUp(ctx, session, abandonRequiresFollowUp(session));
-      } else if (stalePathStateSet.has(session.state)) {
-        await finalizeCompletion(ctx, session, { pathCompleted: false });
+      for (const session of staleSessions) {
+        if ((stalePathStates as readonly string[]).includes(state)) {
+          await finalizeCompletion(ctx, session, { pathCompleted: false });
+        } else {
+          await ctx.db.patch(session._id, {
+            state: "abandoned",
+            updatedAt: Date.now(),
+          });
+          // Same gate as the manual abandon path: escalation-then-abandon only.
+          await finalizeFollowUp(ctx, session, abandonRequiresFollowUp(session));
+        }
       }
     }
   },
