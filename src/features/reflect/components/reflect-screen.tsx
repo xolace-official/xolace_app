@@ -47,6 +47,7 @@ export const ReflectScreen = () => {
     dispatch,
     isLoading,
     sessionId,
+    mirrorText,
     escalationResources,
     toneUsed,
     isRecording,
@@ -191,7 +192,7 @@ export const ReflectScreen = () => {
       case "mirror":
         return (
           <MirrorState
-            mirror={state.mirrorResponse}
+            mirror={mirrorText ?? ""}
             selectedTextures={state.selectedTextures}
             entryType={state.entryType}
             sessionId={sessionId}
@@ -204,7 +205,7 @@ export const ReflectScreen = () => {
       case "clarify":
         return (
           <ClarifyState
-            previousMirror={state.mirrorResponse}
+            previousMirror={mirrorText ?? ""}
             clarifyText={state.clarifyText}
             dispatch={dispatch}
             onSubmit={submitClarification}
@@ -224,7 +225,7 @@ export const ReflectScreen = () => {
       case "escalation":
         return (
           <EscalationState
-            mirror={state.mirrorResponse}
+            mirror={mirrorText ?? ""}
             resources={escalationResources}
             onEngage={handleEscalationEngage}
             onDismiss={handleEscalationDismiss}
@@ -234,7 +235,7 @@ export const ReflectScreen = () => {
       case "path-selection":
         return (
           <PathSelectionState
-            mirror={state.mirrorResponse}
+            mirror={mirrorText ?? ""}
             sessionId={sessionId}
             onSelectSolo={handleSelectSolo}
             onSelectPeers={handleSelectPeers}

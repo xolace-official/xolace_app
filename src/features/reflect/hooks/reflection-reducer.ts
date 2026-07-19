@@ -10,7 +10,6 @@ export const initialState: ReflectionState = {
   screen: 'idle',
   entryText: '',
   clarifyText: '',
-  mirrorResponse: '',
   errorMessage: '',
   lastFeedbackType: null,
   userVariant: { kind: 'first-time' },
@@ -67,12 +66,6 @@ export function reducer(
     case 'SUBMIT':
       return { ...state, screen: 'processing', clarifyText: '' };
 
-    case 'MIRROR_RECEIVED':
-      return { ...state, screen: 'mirror', mirrorResponse: action.mirror };
-
-    case 'ESCALATION_TRIGGERED':
-      return { ...state, screen: 'escalation', mirrorResponse: action.mirror };
-
     case 'THATS_IT':
       return { ...state, screen: 'path-selection' };
 
@@ -98,11 +91,7 @@ export function reducer(
       return { ...state, screen: 'error', errorMessage: action.message };
 
     case 'SESSION_RESUMED':
-      return {
-        ...state,
-        screen: action.screen,
-        mirrorResponse: action.mirrorResponse ?? state.mirrorResponse,
-      };
+      return { ...state, screen: action.screen };
 
     case 'VOICE_START':
       return { ...state, screen: 'typing', entryType: 'voice' };
