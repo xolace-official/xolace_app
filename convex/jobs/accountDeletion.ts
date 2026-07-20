@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { purgeEpisodicEntries } from "../episodicMemory";
+import { purgeSessions } from "../lib/sessionCascade";
 import { pushNotifications } from "../lib/pushNotifications";
 import { rankDelete } from "../lib/aggregates";
 
@@ -78,38 +78,7 @@ export const purgeUser = internalMutation({
 
     if (sessions.length === BATCH_SIZE) hasMore = true;
 
-    // Wipe parity (hard invariant): episodic embeddings die in the
-    // same job that deletes the session rows.
-    await purgeEpisodicEntries(
-      ctx,
-      profileId,
-      sessions.map((s) => s._id)
-    );
-
-    for (const session of sessions) {
-      // The TTS render of the user's own mirror — nothing else references
-      // this blob, so it leaks into storage forever if we skip it.
-      if (session.mirrorAudioStorageId) {
-        await ctx.storage.delete(session.mirrorAudioStorageId);
-      }
-
-      const metadata = await ctx.db
-        .query("emotional_metadata")
-        .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-        .unique();
-      if (metadata) await ctx.db.delete(metadata._id);
-
-      let turns;
-      do {
-        turns = await ctx.db
-          .query("session_turns")
-          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-          .take(10);
-        for (const turn of turns) await ctx.db.delete(turn._id);
-      } while (turns.length === 10);
-
-      await ctx.db.delete(session._id);
-    }
+    await purgeSessions(ctx, profileId, sessions);
 
     // ── Anonymize escalation events (preserve for safety audit) ──
     const escalations = await ctx.db
@@ -164,16 +133,31 @@ export const purgeUser = internalMutation({
     if (reports.length === BATCH_SIZE) hasMore = true;
     for (const report of reports) await ctx.db.delete(report._id);
 
-    // ── Emotional feedback (mirror_miss / gave_up / mood) ────────
+    // ── Anonymize emotional feedback (mirror_miss / gave_up / mood) ──
+    // Retained for product signal, stripped of both the owner link and the
+    // user's own words. What survives is structural only: type,
+    // selectedOption, turnIndex, createdAt. Clearing emotionalProfileId also
+    // drops the row out of the by_profile range this query scans, so the
+    // batch loop still makes progress (same mechanism as escalation_events).
     const feedbackRecords = await ctx.db
       .query("feedback")
       .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
       .take(BATCH_SIZE);
 
     if (feedbackRecords.length === BATCH_SIZE) hasMore = true;
-    for (const record of feedbackRecords) await ctx.db.delete(record._id);
+    for (const record of feedbackRecords) {
+      await ctx.db.patch(record._id, {
+        emotionalProfileId: undefined,
+        text: undefined,
+      });
+    }
 
-    // ── Product feedback (free text the user wrote) ──────────────
+    // ── Anonymize product feedback (bug / idea) ──────────────────
+    // Deliberate exception: `text` is RETAINED, because the prose is the
+    // entire value of the row — strip it and only a kind+appVersion husk is
+    // left. Recorded decision, see CONTEXT.md "Feedback retention". The
+    // tradeoff is that a bug report naming a person or place outlives the
+    // account, so this text must never surface anywhere user-facing.
     const productFeedback = await ctx.db
       .query("product_feedback")
       .withIndex("by_profile_and_created", (q) =>
@@ -182,7 +166,9 @@ export const purgeUser = internalMutation({
       .take(BATCH_SIZE);
 
     if (productFeedback.length === BATCH_SIZE) hasMore = true;
-    for (const record of productFeedback) await ctx.db.delete(record._id);
+    for (const record of productFeedback) {
+      await ctx.db.patch(record._id, { emotionalProfileId: undefined });
+    }
 
     // ── Daily quotes (session-derived quotes carry their words) ──
     const quotes = await ctx.db
