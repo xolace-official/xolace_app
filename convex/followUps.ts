@@ -447,7 +447,6 @@ export const getReadyCard = query({
       .order("desc")
       .first();
 
-    console.log("ready ", ready)
     if (ready) return ready;
     return await ctx.db
       .query("follow_up_cards")

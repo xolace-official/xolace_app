@@ -155,9 +155,11 @@ const MIN_RETURN_GAP_MS_BY_TIER: Record<FollowUpTier, number> = {
   standard: 8 * HOUR,
 };
 
-// TODO(test): set back to null before shipping. Forces a 1-minute gap for every
-// tier so the check-in card surfaces within a minute during manual QA.
-const TEST_RETURN_GAP_OVERRIDE_MS: number | null = 1 * MINUTE;
+// QA-only override: force a short gap for every tier so the check-in card
+// surfaces within a minute during manual testing. MUST be null in shipped
+// builds — otherwise every tier's return-gap collapses and the card surfaces
+// in the same sitting as the session that created it.
+const TEST_RETURN_GAP_OVERRIDE_MS: number | null = null;
 
 /**
  * The minimum time since card creation before a reopen may surface the card,
