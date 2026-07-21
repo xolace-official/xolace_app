@@ -35,6 +35,7 @@ export const handleClarification = internalAction({
     turnNumber: v.number(),
     additionalRawText: v.optional(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     let session: {
       mirrorText?: string;

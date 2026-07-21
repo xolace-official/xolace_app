@@ -76,6 +76,7 @@ export const generateMirrorAudio = internalAction({
     // the scheduling call site, not here.
     voiceSlug: v.optional(voiceSlugValidator),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Idempotency: bail if audio was already generated (e.g. duplicate schedule)
     const existingStorageId = await ctx.runQuery(
