@@ -981,6 +981,7 @@ export const checkAbandoned = internalMutation({
       "input_received",
       "processing",
       "mirror_delivered",
+      "confirmed",
       "error",
     ] as const;
 
