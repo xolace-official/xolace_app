@@ -14,9 +14,10 @@ import { moderationCache, classifierCache } from "./cached";
 import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt } from "./prompts/articulator";
-import { stripAudioTags } from "./prompts/mirrorAudioTags";
+import { applyAudioFence } from "./prompts/mirrorAudioTags";
 import { evaluateSafeguard } from "./safeguard";
 import { decideMirrorOutcome, resolveMirrorTone } from "./mirrorPlan";
+import { scheduleMirrorAudio } from "./tts";
 import {
   buildArticulatorPatternSummary,
   buildPatternSummary,
@@ -234,10 +235,13 @@ export const generateMirror = internalAction({
       // Xolace+ audio tags (when applied) live only in the TTS input — the
       // stored/displayed mirror, recentMirrors, and pattern context all read
       // the stripped text so a tag never leaks into anything but speech.
-      const ttsMirrorText = mirrorText;
-      if (context.isPremium && mirrorText !== FALLBACK_MIRROR) {
-        mirrorText = stripAudioTags(mirrorText);
-      }
+      const isFallback = mirrorText === FALLBACK_MIRROR;
+      const { ttsText, displayText } = applyAudioFence({
+        mirrorText,
+        isFallback,
+        isPremium: context.isPremium,
+      });
+      mirrorText = displayText;
 
       // Deliver mirror (include escalation flag atomically so the
       // client sees both state and escalationTriggered in one update)
@@ -271,23 +275,14 @@ export const generateMirror = internalAction({
       });
 
       // Schedule TTS generation (fire-and-forget, non-blocking)
-      if (mirrorText !== FALLBACK_MIRROR) {
-        await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
-          sessionId: args.sessionId,
-          mirrorText: ttsMirrorText,
-          mirrorTone: plan.tone,
-          // Generation-time premium fence — the mutation gate alone wouldn't
-          // cover a subscription that lapsed after the voice was chosen.
-          voiceSlug: context.isPremium
-            ? (context.preferences?.voice as
-                | "sage"
-                | "wren"
-                | "vesper"
-                | "ash"
-                | undefined)
-            : undefined,
-        });
-      }
+      await scheduleMirrorAudio(ctx, {
+        sessionId: args.sessionId,
+        ttsText,
+        isFallback,
+        tone: plan.tone,
+        isPremium: context.isPremium,
+        voice: context.preferences?.voice as string | undefined,
+      });
 
       // Store emotional metadata
       await ctx.runMutation(internal.emotionalMetadata.store, {

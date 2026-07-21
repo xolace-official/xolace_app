@@ -3,7 +3,7 @@
  * directly into the mirror it writes (single-pass, same call â€” no extra
  * model round-trip). Applies across all mirror tones, gated on isPremium
  * only. The tagged text is used for TTS; a tag-stripped copy is what gets
- * stored/displayed (see stripAudioTags in ai/tts.ts).
+ * stored/displayed (see stripAudioTags / applyAudioFence below).
  *
  * Adapted from ElevenLabs' own dialogue-tagging prompt to a single-line
  * mirror instead of multi-speaker dialogue.
@@ -35,4 +35,25 @@ Enclose every tag in square brackets. Reply with ONLY the enhanced mirror text â
  */
 export function stripAudioTags(text: string): string {
   return text.replace(/\[[^\]]*\]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * The Xolace+ audio-tag fence, owned in one place. Audio tags (when present)
+ * live only in the TTS input; the stored/displayed text always reads the
+ * stripped copy so a tag never leaks into anything but speech. Fallback
+ * mirrors are never tagged, so they pass through untouched. Callers keep
+ * their own FALLBACK_MIRROR string local and pass the boolean.
+ */
+export function applyAudioFence(input: {
+  mirrorText: string;
+  isFallback: boolean;
+  isPremium: boolean;
+}): { displayText: string; ttsText: string } {
+  return {
+    ttsText: input.mirrorText,
+    displayText:
+      input.isPremium && !input.isFallback
+        ? stripAudioTags(input.mirrorText)
+        : input.mirrorText,
+  };
 }
