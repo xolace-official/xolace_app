@@ -170,6 +170,27 @@ export function minReturnGapForTier(tier: FollowUpTier): number {
 }
 
 /**
+ * How long after a card was last shown before an *unresolved* `shown` card may
+ * re-surface on a later app open. A user often backgrounds mid-check-in
+ * (stepped away, took a call) — we still want to catch them next time, just not
+ * on every single launch. Within this window the home stays quiet.
+ */
+export const RESHOW_COOLDOWN_MS = 2 * HOUR;
+
+/**
+ * Should an unresolved `shown` card re-surface now? Only once the re-show
+ * cooldown has elapsed since it was last shown. A card with no `shownAt` (never
+ * actually rendered) is not eligible here.
+ */
+export function shouldReshowShownCard(args: {
+  shownAt: number | null | undefined;
+  now: number;
+}): boolean {
+  if (args.shownAt == null) return false;
+  return args.now - args.shownAt >= RESHOW_COOLDOWN_MS;
+}
+
+/**
  * Should a reopen surface this card? Only for a still-pending card, and only
  * once enough time has passed since the card was created (≈ session completion
  * time). This stops the card from resolving while the user is still in the app
