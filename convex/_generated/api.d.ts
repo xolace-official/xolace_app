@@ -72,6 +72,7 @@ import type * as lib_auth from "../lib/auth.js";
 import type * as lib_displayName from "../lib/displayName.js";
 import type * as lib_followUpCadence from "../lib/followUpCadence.js";
 import type * as lib_notificationPrefs from "../lib/notificationPrefs.js";
+import type * as lib_poolability from "../lib/poolability.js";
 import type * as lib_premium from "../lib/premium.js";
 import type * as lib_pushNotifications from "../lib/pushNotifications.js";
 import type * as lib_rateLimits from "../lib/rateLimits.js";
@@ -174,6 +175,7 @@ declare const fullApi: ApiFromModules<{
   "lib/displayName": typeof lib_displayName;
   "lib/followUpCadence": typeof lib_followUpCadence;
   "lib/notificationPrefs": typeof lib_notificationPrefs;
+  "lib/poolability": typeof lib_poolability;
   "lib/premium": typeof lib_premium;
   "lib/pushNotifications": typeof lib_pushNotifications;
   "lib/rateLimits": typeof lib_rateLimits;

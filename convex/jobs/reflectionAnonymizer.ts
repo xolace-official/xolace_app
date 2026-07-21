@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { isPoolable } from "../lib/poolability";
 
 /**
  * Load session + its metadata for anonymization.
@@ -40,16 +41,8 @@ export const anonymize = internalAction({
     if (!result) return;
 
     const { session, metadata } = result;
-    if (session.kept !== true) return;
+    if (!isPoolable(session)) return; // see lib/poolability.ts
     if (!metadata) return;
-
-    // Consent gate: re-check at run time, not just at enqueue. The user can
-    // revoke the contribution opt-in between scheduling and execution (or
-    // before an action retry) — a revoked session must never enter the pool.
-    if (session.contributedReflection !== true) return;
-
-    // Safety gate: crisis sessions must never enter the anonymous pool.
-    if (session.safeguardLevel === "crisis") return;
 
     // Prefer distilled text (first-person, voice-preserving)
     // Fall back to mirror text (second-person, AI voice)

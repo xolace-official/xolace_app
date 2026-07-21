@@ -3,6 +3,21 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Poolability (2026-07-21)
+
+`convex/lib/poolability.ts` `isPoolable(session)` is the single owner of "may
+this session's text enter the shared anonymous peer pool" — the one place user
+text is allowed to leave their private space. It gates on three fields:
+`kept === true`, `contributedReflection === true` (fresh consent, re-checked at
+run time because the opt-in can be revoked between enqueue and execution), and
+`safeguardLevel !== "crisis"`. `jobs/reflectionAnonymizer.anonymize` is the only
+caller; a new gate (e.g. a future `redacted` flag) goes in the predicate, not at
+the call site. Truth table lives in `poolability.test.ts`.
+
+The pool is the **only** cross-user surface. Do not fold the distiller or
+episodic-memory gates into this predicate — they answer different questions with
+private destinations (see `docs/notes/poolability-scope.md`).
+
 ## Feedback retention (2026-07-20)
 
 Account deletion **anonymizes** `feedback` and `product_feedback` in place
