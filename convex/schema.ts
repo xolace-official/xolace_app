@@ -627,6 +627,9 @@ export default defineSchema({
     // Aggregate analytics.
     .index("by_date", ["createdAt"])
 
+    // Abandoned-session sweep: stale sessions in a given non-terminal state.
+    .index("by_state_and_updatedAt", ["state", "updatedAt"])
+
     // Model quality tracking: compare confirmation rates across versions.
     .index("by_model_version", ["mirrorModelVersion", "confirmationState"]),
 
@@ -1181,7 +1184,10 @@ export default defineSchema({
   // mood_unsure (session end), mirror_miss (clarify state), gave_up (gave-up state).
   //
   feedback: defineTable({
-    emotionalProfileId: v.id("emotional_profiles"),
+    // Optional ONLY because account deletion anonymizes in place: the owner
+    // link and `text` are stripped, the structural signal (type,
+    // selectedOption, turnIndex) is retained. Always set on insert.
+    emotionalProfileId: v.optional(v.id("emotional_profiles")),
     type: v.union(
       v.literal("general"),
       v.literal("mood_heavier"),
@@ -1389,9 +1395,14 @@ export default defineSchema({
   //
   product_feedback: defineTable({
     // Server-derived owner scope (never accepted from client).
-    emotionalProfileId: v.id("emotional_profiles"),
+    // Optional ONLY because account deletion anonymizes in place: the owner
+    // link is stripped and the row is retained. Always set on insert.
+    emotionalProfileId: v.optional(v.id("emotional_profiles")),
     kind: v.union(v.literal("bug"), v.literal("idea")),
     // 1..1000 chars, trimmed + validated server-side.
+    // RETAINED past account deletion by policy (see CONTEXT.md "Feedback
+    // retention"). Treat as potentially identifying: a bug report can name
+    // a person or place. Never surface it in anything user-facing.
     text: v.string(),
     // Submission context — helps triage without touching content.
     context: v.object({
@@ -1520,7 +1531,10 @@ export default defineSchema({
     .index("by_profile_created", ["emotionalProfileId", "createdAt"])
 
     // Workflow cancellation / onComplete lookup.
-    .index("by_workflow", ["workflowId"]),
+    .index("by_workflow", ["workflowId"])
+
+    // Session cascade delete (lib/sessionCascade.purgeSessions).
+    .index("by_session", ["sessionId"]),
 
   // ===========================================================
   // 21. SEMANTIC PROFILES (Cognition Layer §1.2)

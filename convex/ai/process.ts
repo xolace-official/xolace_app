@@ -14,9 +14,10 @@ import { moderationCache, classifierCache } from "./cached";
 import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt } from "./prompts/articulator";
-import { stripAudioTags } from "./prompts/mirrorAudioTags";
+import { applyAudioFence } from "./prompts/mirrorAudioTags";
 import { evaluateSafeguard } from "./safeguard";
-import { routeUncertainty } from "./routing";
+import { decideMirrorOutcome, resolveMirrorTone } from "./mirrorPlan";
+import { scheduleMirrorAudio } from "./tts";
 import {
   buildArticulatorPatternSummary,
   buildPatternSummary,
@@ -28,7 +29,6 @@ import { posthog } from "../posthog";
 import { rag } from "../rag";
 
 import type { SessionContext } from "./context";
-import { matchExercise } from "../exercises/match";
 
 const FALLBACK_MIRROR = "I hear you, and what you're feeling matters.";
 
@@ -43,6 +43,7 @@ export const generateMirror = internalAction({
     sessionId: v.id("sessions"),
     rawText: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     let session:
       | {
@@ -54,13 +55,13 @@ export const generateMirror = internalAction({
         }
       | undefined;
     try {
-      // 1. Load full context (single DB transaction)
+      // Load full context (single DB transaction)
       const context: SessionContext = await ctx.runQuery(
         internal.ai.context.buildSessionContext,
         { sessionId: args.sessionId },
       );
 
-      // 1a. Rate limit AI requests (main cost control)
+      // Rate limit AI requests (main cost control)
       const { ok, retryAfter } = await rateLimiter.limit(
         ctx,
         "aiMirrorRequest",
@@ -86,20 +87,17 @@ export const generateMirror = internalAction({
           event: "mirror_rate_limited",
           properties: { retryAfterMs: retryAfter ?? 0 },
         });
-        return;
+        return null;
       }
 
-      // 2. Build pattern summaries (pure functions). The classifier gets
-      //    the full variant (its only historical context); the articulator
-      //    gets the slim emotion-signal variant — longitudinal identity
-      //    reaches it via the semantic profile block instead.
-      const rawMirrorTone = context.preferences?.mirrorTone ?? "adaptive";
-      // Real fence: a witnessed preference set before a downgrade must not
-      // keep granting the premium tone after entitlement lapses.
-      const mirrorTone =
-        rawMirrorTone === "witnessed" && !context.isPremium
-          ? "adaptive"
-          : rawMirrorTone;
+      // Build pattern summaries (pure functions). The classifier gets
+      // the full variant (its only historical context); the articulator
+      // gets the slim emotion-signal variant — longitudinal identity
+      // reaches it via the semantic profile block instead.
+      const mirrorTone = resolveMirrorTone(
+        context.preferences?.mirrorTone,
+        context.isPremium,
+      );
       const patternSummary = buildPatternSummary({
         profile: context.profile,
         recentMetadata: context.recentMetadata,
@@ -113,7 +111,7 @@ export const generateMirror = internalAction({
       });
       console.log("pattern Summary ", patternSummary);
 
-      // 3. Parallel: moderation + classification (both cached)
+      // Parallel: moderation + classification (both cached)
       const anthropic = getAnthropicClient();
 
       session = context.session as {
@@ -133,11 +131,11 @@ export const generateMirror = internalAction({
       );
       console.log("classifier prompt ", classifierPrompt);
 
-      // 4. Fetch moderation + classification + episodic recall in parallel.
-      //    Episodic recall (Cognition Layer §1.3): top-K past composites
-      //    from the user's personal namespace, matched raw-to-raw against
-      //    tonight's input. Best-effort — memory failing must never block
-      //    the mirror.
+      // Fetch moderation + classification + episodic recall in parallel.
+      // Episodic recall (Cognition Layer §1.3): top-K past composites
+      // from the user's personal namespace, matched raw-to-raw against
+      // tonight's input. Best-effort — memory failing must never block
+      // the mirror.
       const [moderationResult, classification, episodicMatches] =
         await Promise.all([
           moderationCache
@@ -179,21 +177,22 @@ export const generateMirror = internalAction({
             rejectionReason: safeguard.rejectionReason ?? "content_policy_violation",
           },
         });
-        return;
+        return null;
       }
+
+      // Decide the outcome (pure — all routing rules in one place).
+      // Claim strength stays deterministic rule-code: the hot path
+      // never gets agentic.
+      const plan = decideMirrorOutcome({
+        rawMirrorTone: context.preferences?.mirrorTone,
+        isPremium: context.isPremium,
+        classification,
+        safeguard,
+        entryType: session.entryType ?? "open_prompt",
+      });
 
       // 6. Articulate mirror (Sonnet)
       const recentMirrors = collectRecentMirrors(context.recentSessions);
-
-      // 6a. Uncertainty routing (Phase 4, Loop #2). Deterministic rule-code —
-      //     the hot path never gets agentic (decision-log #8). Gates the
-      //     mirror's claim strength off how sure the classifier is about
-      //     tonight's read; the prompt composes it with the profile's
-      //     longitudinal calibration.
-      const claimStrength = routeUncertainty({
-        confidence: classification.primaryEmotionConfidence,
-        specificity: classification.specificity,
-      });
 
       let mirrorText: string;
       try {
@@ -212,7 +211,7 @@ export const generateMirror = internalAction({
           spaceName: context.preferences?.spaceName,
           semanticProfile: context.semanticProfile,
           episodicRecall,
-          claimStrength,
+          claimStrength: plan.claimStrength,
           useAudioTags: context.isPremium,
         });
 
@@ -225,7 +224,6 @@ export const generateMirror = internalAction({
 
         mirrorText = extractTextFromResponse(mirrorResponse).trim();
 
-        // Fallback if Sonnet returned empty
         if (!mirrorText) {
           mirrorText = FALLBACK_MIRROR;
         }
@@ -237,82 +235,56 @@ export const generateMirror = internalAction({
       // Xolace+ audio tags (when applied) live only in the TTS input — the
       // stored/displayed mirror, recentMirrors, and pattern context all read
       // the stripped text so a tag never leaks into anything but speech.
-      const ttsMirrorText = mirrorText;
-      if (context.isPremium && mirrorText !== FALLBACK_MIRROR) {
-        mirrorText = stripAudioTags(mirrorText);
-      }
+      const isFallback = mirrorText === FALLBACK_MIRROR;
+      const { ttsText, displayText } = applyAudioFence({
+        mirrorText,
+        isFallback,
+        isPremium: context.isPremium,
+      });
+      mirrorText = displayText;
 
-      // 7. Deliver mirror (include escalation flag atomically so the
-      //    client sees both state and escalationTriggered in one update)
-      const isEscalation =
-        (safeguard.level === "crisis" || safeguard.level === "elevated") &&
-        !!safeguard.triggerType;
-
-      // Preliminary follow-up flag (the gave_up rule is folded in later, at
-      // session completion — confirmationState isn't known yet here).
-      const requiresFollowUp =
-        isEscalation || classification.requiresFollowUp === true;
-
+      // Deliver mirror (include escalation flag atomically so the
+      // client sees both state and escalationTriggered in one update)
       await ctx.runMutation(internal.sessions.deliverMirror, {
         sessionId: args.sessionId,
         mirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
-        toneUsed: mirrorTone as
-          | "poetic"
-          | "gentle"
-          | "direct"
-          | "adaptive"
-          | "witnessed",
+        toneUsed: plan.tone,
         safeguardLevel: safeguard.level,
-        ...(isEscalation
+        ...(plan.isEscalation
           ? {
               escalationTriggered: true,
               escalationResources: safeguard.resourcesPresented,
             }
           : {}),
-        ...(requiresFollowUp ? { requiresFollowUp: true } : {}),
+        ...(plan.requiresFollowUp ? { requiresFollowUp: true } : {}),
       });
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,
         event: "mirror_delivered",
         properties: {
           entryType: session.entryType ?? "open_prompt",
-          toneUsed: mirrorTone,
-          claimStrength,
+          toneUsed: plan.tone,
+          claimStrength: plan.claimStrength,
           safeguardLevel: safeguard.level,
-          escalationTriggered: isEscalation,
+          escalationTriggered: plan.isEscalation,
           usedFallback: mirrorText === FALLBACK_MIRROR,
           isFirstSession: context.isFirstSession,
           sessionMode: session.sessionMode ?? "day",
         },
       });
 
-      // 7.5. Schedule TTS generation (fire-and-forget, non-blocking)
-      //      Skipped for fallback mirrors — nothing meaningful to speak.
-      if (mirrorText !== FALLBACK_MIRROR) {
-        await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
-          sessionId: args.sessionId,
-          mirrorText: ttsMirrorText,
-          mirrorTone: mirrorTone as
-            | "poetic"
-            | "gentle"
-            | "direct"
-            | "adaptive"
-            | "witnessed",
-          // Generation-time premium fence — the mutation gate alone wouldn't
-          // cover a subscription that lapsed after the voice was chosen.
-          voiceSlug: context.isPremium
-            ? (context.preferences?.voice as
-                | "sage"
-                | "wren"
-                | "vesper"
-                | "ash"
-                | undefined)
-            : undefined,
-        });
-      }
+      // Schedule TTS generation (fire-and-forget, non-blocking)
+      await scheduleMirrorAudio(ctx, {
+        sessionId: args.sessionId,
+        ttsText,
+        isFallback,
+        tone: plan.tone,
+        isPremium: context.isPremium,
+        voice: context.preferences?.voice as string | undefined,
+      });
 
-      // 8. Store emotional metadata
+      // Store emotional metadata
       await ctx.runMutation(internal.emotionalMetadata.store, {
         sessionId: args.sessionId,
         emotionalProfileId: session.emotionalProfileId as ReturnType<
@@ -328,13 +300,7 @@ export const generateMirror = internalAction({
         thematicTags: classification.thematicTags,
         userLanguageTags: classification.userLanguageTags,
         temporalContext: classification.temporalContext,
-        riskFlag:
-          (safeguard.level === "crisis" || safeguard.level === "elevated") &&
-          safeguard.triggerType !== "pattern_escalation",
-        // Understanding completion (Cognition Layer Phase 2): the full
-        // verdict about this moment lives in one row — safeguard result,
-        // which memories informed the mirror, which profile version was
-        // in context.
+        riskFlag: plan.riskFlag,
         safeguardLevel: safeguard.level,
         ...(safeguard.triggerType
           ? { safeguardTrigger: safeguard.triggerType }
@@ -348,22 +314,9 @@ export const generateMirror = internalAction({
           : {}),
       });
 
-      // 8.5. Match exercise from emotional classification.
-      //      Confidence < 0.6 = ambiguous input → safe fallback to "reset".
-      const rankedTitles = matchExercise({
-        primaryEmotion: classification.primaryEmotion,
-        granularLabel: classification.granularLabel,
-        intensity: classification.intensity,
-        userLanguageTags: classification.userLanguageTags,
-        entryType: session.entryType ?? "open_prompt",
-        confirmationState: "confirmed",
-      });
-      const primaryTitle =
-        classification.primaryEmotionConfidence < 0.6
-          ? "reset"
-          : rankedTitles[0];
+      // Look up the exercise the plan matched.
       const matched = await ctx.runQuery(internal.exercises.getByTitle, {
-        title: primaryTitle,
+        title: plan.exerciseTitle,
       });
       if (matched) {
         await ctx.runMutation(internal.exercises.setMatched, {
@@ -371,7 +324,7 @@ export const generateMirror = internalAction({
           matchedExerciseId: matched._id,
         });
 
-        // 8.7: Slot-fill — fire-and-forget so it doesn't block mirror delivery.
+        // Slot-fill — fire-and-forget so it doesn't block mirror delivery.
         const slotKeys = [
           ...new Set(
             matched.steps.flatMap(
@@ -382,7 +335,7 @@ export const generateMirror = internalAction({
         if (slotKeys.length > 0) {
           await ctx.scheduler.runAfter(0, internal.ai.slotFill.fillSlots, {
             sessionId: args.sessionId,
-            exerciseTitle: primaryTitle,
+            exerciseTitle: plan.exerciseTitle,
             slotKeys,
             mirrorText,
             userLanguageTags: classification.userLanguageTags,
@@ -391,11 +344,10 @@ export const generateMirror = internalAction({
         }
       }
 
-      // 9. Schedule speculative distillation (for reflection pool)
-      //    Skip if mirror is the fallback — nothing meaningful to distill.
-      //    Skip entirely for crisis sessions
-      const isCrisis = safeguard.level === "crisis";
-      if (mirrorText !== FALLBACK_MIRROR && !isCrisis) {
+      // Schedule speculative distillation (for reflection pool)
+      // Skip if mirror is the fallback — nothing meaningful to distill.
+      // Skip entirely for crisis sessions
+      if (mirrorText !== FALLBACK_MIRROR && !plan.isCrisis) {
         await ctx.scheduler.runAfter(
           0,
           internal.jobs.reflectionDistiller.distill,
@@ -412,22 +364,19 @@ export const generateMirror = internalAction({
         );
       }
 
-      // 9.5. Schedule episodic memory ingestion (Cognition Layer §1.1).
-      //      Keyed by sessionId → idempotent replace. Delayed slightly so
-      //      the speculative distiller has usually written distilledText
-      //      by the time the composite is built. ingestSession itself
-      //      handles crisis (metadata-only) and the personal-memory toggle.
+      // Schedule episodic memory ingestion.
+      // Keyed by sessionId → idempotent replace. Delayed slightly so
+      // the speculative distiller has usually written distilledText
+      // by the time the composite is built. ingestSession itself
+      // handles crisis (metadata-only) and the personal-memory toggle.
       await ctx.scheduler.runAfter(
         30_000,
         internal.episodicMemory.ingestSession,
         { sessionId: args.sessionId },
       );
 
-      // 10. Create escalation event if needed
-      if (
-        (safeguard.level === "crisis" || safeguard.level === "elevated") &&
-        safeguard.triggerType
-      ) {
+      // Create escalation event if needed
+      if (plan.isEscalation && safeguard.triggerType) {
         await ctx.runMutation(internal.escalation.create, {
           emotionalProfileId: session.emotionalProfileId as ReturnType<
             typeof v.id<"emotional_profiles">
@@ -440,6 +389,7 @@ export const generateMirror = internalAction({
           resourcesPresented: safeguard.resourcesPresented,
         });
       }
+      return null;
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -455,6 +405,7 @@ export const generateMirror = internalAction({
         event: "mirror_generation_failed",
         properties: { errorType: classifyAiError(error) },
       });
+      return null;
     }
   },
 });
@@ -467,7 +418,7 @@ type EpisodicMatch = { text: string; key: string };
 
 /**
  * Top-K episodic matches for the current input from the user's personal
- * namespace (Cognition Layer §1.3). Returns composite texts, newest-format
+ * namespace. Returns composite texts, newest-format
  * or metadata-only alike. Best-effort: any failure (no namespace yet,
  * embedding outage) returns [] so memory can never block the mirror.
  */

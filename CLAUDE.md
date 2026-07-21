@@ -186,6 +186,7 @@ minimum-supported UI may still call. Instead mark, don't delete:
 - `sessions.submitInput` args `rawText`, `rawInputLength` — derived from `rawInput` server-side; values ignored.
 - `sessions.retrySession` arg `rawText` — retry reprocesses `session.rawInput`; value ignored.
 - `preferences.reducedMotion` (schema field + `update` arg) — superseded by tri-state `motionPreference`. Server keeps the boolean in sync as a back-compat mirror. Remove the field and arg once no store-published client reads `reducedMotion` (old UIs read it directly for the "sit with this" breathing).
+- Client `isMaxRefinementError` message-substring fallback (`.includes('Maximum refinement turns')` in `src/features/reflect/session-service.ts`) — the server now throws a `ConvexError` with code `max_refinement_turns`; remove the fallback once the backend deployed before that code is no longer reachable. Conversely, the server's error message must keep the "Maximum refinement turns" substring until no store-published client matches on it.
 
 ## Good to know
 

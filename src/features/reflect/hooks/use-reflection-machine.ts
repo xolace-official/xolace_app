@@ -8,7 +8,11 @@ import { usePostHog } from 'posthog-react-native';
 import { AppMetrics } from 'expo-observe';
 import type { FeedbackType } from '@/src/features/reflect/types';
 import { useSession } from '@/src/features/reflect/hooks/use-session';
-import { extractErrorMessage } from '@/src/features/reflect/session-service';
+import {
+  extractErrorMessage,
+  isMaxRefinementError,
+  projectScreen,
+} from '@/src/features/reflect/session-service';
 import { MAX_TURNS, initialState, reducer } from './reflection-reducer';
 import { useVoiceInput } from '@/src/features/reflect/hooks/use-voice-input';
 
@@ -90,68 +94,66 @@ export function useReflectionMachine() {
     dispatch({ type: 'VOICE_TRANSCRIPT', text });
   }, [partialTranscript]);
 
-  // --- Bridge server state changes to UI dispatches ---
+  // --- Reconcile server state edges into the UI ---
+  // The screen policy lives in projectScreen (session-service.ts); this effect
+  // is a thin applier plus edge telemetry. It fires once per server-state
+  // change — between edges, local dispatches own the screen.
   useEffect(() => {
     if (!serverState || serverState === prevServerStateRef.current) return;
+    // Mirror not readable yet — keep current screen and retry when mirrorText
+    // arrives (don't mark handled, or the re-fire short-circuits above).
+    if (serverState === 'mirror_delivered' && !mirrorText) return;
     prevServerStateRef.current = serverState;
 
-    switch (serverState) {
-      case 'processing':
-        if (state.screen !== 'processing') {
-          dispatch({ type: 'SUBMIT' });
+    if (serverState === 'completed' || serverState === 'abandoned') {
+      // Terminal states — reset UI for a fresh session
+      resetSession();
+      clearRefs();
+      dispatch({ type: 'RESET' });
+      return;
+    }
+
+    if (serverState === 'mirror_delivered') {
+      const durationMs = submitTimestampRef.current
+        ? Date.now() - submitTimestampRef.current
+        : undefined;
+      submitTimestampRef.current = null;
+      posthog.capture('mirror_arrived', { duration_ms: durationMs ?? null });
+      // EAS Observe perf signal: felt AI round-trip, correlated with app
+      // version/release in the Observe dashboard. Only log a real measurement.
+      //
+      // Telemetry must never be able to reach the dispatch below it. This call
+      // threw on Android once already (`Observe.logEvent` resolved to undefined),
+      // and since it runs *before* the screen dispatch it took the mirror down
+      // with it — on 1.6.0, which shipped without an error boundary, the throw
+      // unmounted the whole tree and left users on a blank screen they could only
+      // escape by force-quitting. A perf event is never worth a dead session.
+      if (durationMs !== undefined) {
+        try {
+          AppMetrics.logEvent('mirror.generated', {
+            attributes: {
+              durationMs,
+              escalated: !!session?.escalationTriggered,
+            },
+          });
+        } catch (error) {
+          console.warn('[observe] mirror.generated logEvent failed:', error);
         }
-        break;
-      case 'mirror_delivered':
-        if (mirrorText) {
-          const durationMs = submitTimestampRef.current
-            ? Date.now() - submitTimestampRef.current
-            : undefined;
-          submitTimestampRef.current = null;
-          posthog.capture('mirror_arrived', { duration_ms: durationMs ?? null });
-          // EAS Observe perf signal: felt AI round-trip, correlated with app
-          // version/release in the Observe dashboard. Only log a real measurement.
-          //
-          // Telemetry must never be able to reach the dispatch below it. This call
-          // threw on Android once already (`Observe.logEvent` resolved to undefined),
-          // and since it runs *before* MIRROR_RECEIVED it took the mirror down with
-          // it — on 1.6.0, which shipped without an error boundary, the throw
-          // unmounted the whole tree and left users on a blank screen they could only
-          // escape by force-quitting. A perf event is never worth a dead session.
-          if (durationMs !== undefined) {
-            try {
-              AppMetrics.logEvent('mirror.generated', {
-                attributes: {
-                  durationMs,
-                  escalated: !!session?.escalationTriggered,
-                },
-              });
-            } catch (error) {
-              console.warn('[observe] mirror.generated logEvent failed:', error);
-            }
-          }
-          if (session?.escalationTriggered) {
-            posthog.capture('escalation_triggered');
-            dispatch({ type: 'ESCALATION_TRIGGERED', mirror: mirrorText });
-          } else {
-            dispatch({ type: 'MIRROR_RECEIVED', mirror: mirrorText });
-          }
-        }
-        break;
-      case 'confirmed':
-        if (state.screen !== 'path-selection') {
-          dispatch({ type: 'THATS_IT' });
-        }
-        break;
-      case 'error':
-        dispatchError(errorMessage ?? 'Something went wrong.');
-        break;
-      case 'abandoned':
-      case 'completed':
-        // Terminal states — reset UI for a fresh session
-        resetSession();
-        clearRefs();
-        dispatch({ type: 'RESET' });
-        break;
+      }
+      if (session?.escalationTriggered) {
+        posthog.capture('escalation_triggered');
+      }
+    }
+
+    const next = projectScreen(
+      serverState,
+      state.screen,
+      !!session?.escalationTriggered,
+    );
+    if (next === 'error') {
+      dispatchError(errorMessage ?? 'Something went wrong.');
+    } else if (next && next !== state.screen) {
+      dispatch({ type: 'SESSION_RESUMED', screen: next });
     }
   }, [serverState, mirrorText, errorMessage, state.screen, session, resetSession, clearRefs, posthog, dispatchError]);
 
@@ -235,10 +237,7 @@ export function useReflectionMachine() {
     try {
       await submitRefinement(feedbackType, state.clarifyText);
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.includes('Maximum refinement turns')
-      ) {
+      if (isMaxRefinementError(error)) {
         dispatch({ type: 'SESSION_RESUMED', screen: 'gave-up' });
       } else {
         dispatchError(extractErrorMessage(error));
@@ -430,6 +429,7 @@ export function useReflectionMachine() {
     isLoading,
     sessionId,
     turnsCount,
+    mirrorText,
     escalationResources: session?.escalationResources ?? null,
     toneUsed: session?.toneUsed ?? null,
     isRecording,

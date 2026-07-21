@@ -10,7 +10,9 @@ import {
   ARTICULATOR_VERSION,
 } from "./providers/anthropic";
 import { buildArticulatorPrompt } from "./prompts/articulator";
-import { stripAudioTags } from "./prompts/mirrorAudioTags";
+import { applyAudioFence } from "./prompts/mirrorAudioTags";
+import { resolveMirrorTone } from "./mirrorPlan";
+import { scheduleMirrorAudio } from "./tts";
 import { routeUncertainty } from "./routing";
 import {
   buildArticulatorPatternSummary,
@@ -33,6 +35,7 @@ export const handleClarification = internalAction({
     turnNumber: v.number(),
     additionalRawText: v.optional(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     let session: {
       mirrorText?: string;
@@ -93,12 +96,11 @@ export const handleClarification = internalAction({
       const userFeedback = currentTurn?.userFeedback as string | undefined;
 
       // 4. Build articulator prompt with refinement context
-      const rawMirrorTone = context.preferences?.mirrorTone ?? "adaptive";
       // Real fence: same downgrade guard as the initial mirror (process.ts).
-      const mirrorTone =
-        rawMirrorTone === "witnessed" && !context.isPremium
-          ? "adaptive"
-          : rawMirrorTone;
+      const mirrorTone = resolveMirrorTone(
+        context.preferences?.mirrorTone,
+        context.isPremium,
+      );
       // Clarify only re-articulates, so it uses the slim articulator variant.
       const patternSummary = buildArticulatorPatternSummary({
         recentMetadata: context.recentMetadata,
@@ -176,11 +178,14 @@ export const handleClarification = internalAction({
         revisedMirrorText = FALLBACK_MIRROR;
       }
 
-      // Xolace+ audio tags live only in the TTS input (see process.ts).
-      const ttsMirrorText = revisedMirrorText;
-      if (context.isPremium && revisedMirrorText !== FALLBACK_MIRROR) {
-        revisedMirrorText = stripAudioTags(revisedMirrorText);
-      }
+      // Xolace+ audio tags live only in the TTS input (see applyAudioFence).
+      const isFallback = revisedMirrorText === FALLBACK_MIRROR;
+      const { ttsText, displayText } = applyAudioFence({
+        mirrorText: revisedMirrorText,
+        isFallback,
+        isPremium: context.isPremium,
+      });
+      revisedMirrorText = displayText;
 
       // 6. Update the turn record with the revised mirror
       await ctx.runMutation(internal.sessionTurns.deliverRevisedMirror, {
@@ -195,12 +200,7 @@ export const handleClarification = internalAction({
         sessionId: args.sessionId,
         mirrorText: revisedMirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
-        toneUsed: mirrorTone as
-          | "poetic"
-          | "gentle"
-          | "direct"
-          | "adaptive"
-          | "witnessed",
+        toneUsed: mirrorTone,
       });
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,
@@ -215,37 +215,15 @@ export const handleClarification = internalAction({
       });
 
       // 7.5. Replace TTS: delete old audio file and schedule fresh generation.
-      const oldStorageId = await ctx.runQuery(
-        internal.sessions.getMirrorAudioStorageId,
-        { sessionId: args.sessionId },
-      );
-      if (oldStorageId) {
-        await ctx.storage.delete(oldStorageId);
-        await ctx.runMutation(internal.sessions.clearMirrorAudio, {
-          sessionId: args.sessionId,
-        });
-      }
-      if (revisedMirrorText !== FALLBACK_MIRROR) {
-        await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
-          sessionId: args.sessionId,
-          mirrorText: ttsMirrorText,
-          mirrorTone: mirrorTone as
-            | "poetic"
-            | "gentle"
-            | "direct"
-            | "adaptive"
-            | "witnessed",
-          // Generation-time premium fence — see process.ts for rationale.
-          voiceSlug: context.isPremium
-            ? (context.preferences?.voice as
-                | "sage"
-                | "wren"
-                | "vesper"
-                | "ash"
-                | undefined)
-            : undefined,
-        });
-      }
+      await scheduleMirrorAudio(ctx, {
+        sessionId: args.sessionId,
+        ttsText,
+        isFallback,
+        tone: mirrorTone,
+        isPremium: context.isPremium,
+        voice: context.preferences?.voice as string | undefined,
+        replaceExisting: true,
+      });
     } catch (error) {
       const errorMessage =
         error instanceof Error

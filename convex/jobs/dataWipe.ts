@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
-import { purgeEpisodicEntries } from "../episodicMemory";
+import { purgeSessions } from "../lib/sessionCascade";
 import { rankReplace } from "../lib/aggregates";
 
 const BATCH_SIZE = 100;
@@ -36,40 +36,7 @@ export const wipe = internalMutation({
 
     if (sessions.length === BATCH_SIZE) hasMore = true;
 
-    // Wipe parity (hard invariant): episodic embeddings die in the same
-    // job that deletes the session rows — never a best-effort sidecar.
-    await purgeEpisodicEntries(
-      ctx,
-      emotionalProfileId,
-      sessions.map((s) => s._id)
-    );
-
-    for (const session of sessions) {
-      // The TTS render of the user's own mirror — nothing else references
-      // this blob, so it leaks into storage forever if we skip it.
-      if (session.mirrorAudioStorageId) {
-        await ctx.storage.delete(session.mirrorAudioStorageId);
-      }
-
-      // Delete metadata (1:1)
-      const metadata = await ctx.db
-        .query("emotional_metadata")
-        .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-        .unique();
-      if (metadata) await ctx.db.delete(metadata._id);
-
-      // Delete all turns (loop until batch is empty)
-      let turns;
-      do {
-        turns = await ctx.db
-          .query("session_turns")
-          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-          .take(10);
-        for (const turn of turns) await ctx.db.delete(turn._id);
-      } while (turns.length === 10);
-
-      await ctx.db.delete(session._id);
-    }
+    await purgeSessions(ctx, emotionalProfileId, sessions);
 
     // ── Delete reflection resonances ─────────────────────────────
     const resonances = await ctx.db

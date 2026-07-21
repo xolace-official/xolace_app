@@ -7,7 +7,7 @@ type ServerEntryType =
   | 'body_scan'
   | 'voice';
 
-type ServerSessionState =
+export type ServerSessionState =
   | 'initiated'
   | 'input_received'
   | 'processing'
@@ -37,34 +37,69 @@ export function mapEntryType(clientType: EntryType): ServerEntryType {
 }
 
 /**
- * Map a server session state to the corresponding UI reflection screen name.
+ * The one authority for "server state → which screen". Edge semantics: the
+ * machine applies this only when `serverState` *changes*, so the ambiguous
+ * pair (mirror_delivered, processing) is unambiguous here — at that edge the
+ * server just delivered, so the mirror wins. Between edges, local dispatches
+ * own the screen.
  *
- * @param serverState - The server session state to translate
- * @returns The corresponding `ReflectionStateName` for `serverState`, or `null` for terminal or unrecognized states
+ * @returns The screen the server mandates, or `null` when the local screen
+ * wins (pre-processing states, mirror-phase sub-modes, terminal states).
  */
-export function mapServerStateToScreen(
+export function projectScreen(
   serverState: ServerSessionState,
+  localScreen: ReflectionStateName,
+  escalationTriggered: boolean,
 ): ReflectionStateName | null {
   switch (serverState) {
     case 'initiated':
     case 'input_received':
-      return 'idle';
+      // Pre-processing — local owns idle / typing / nudge / optimistic processing
+      return null;
     case 'processing':
       return 'processing';
     case 'mirror_delivered':
-      return 'mirror';
+      // Local sub-modes (clarify, gave-up) and the optimistic That's-it advance
+      // all happen while the server sits in mirror_delivered — local wins.
+      if (
+        localScreen === 'clarify' ||
+        localScreen === 'gave-up' ||
+        localScreen === 'path-selection'
+      ) {
+        return null;
+      }
+      return escalationTriggered ? 'escalation' : 'mirror';
     case 'confirmed':
+      return 'path-selection';
     case 'path_selected':
     case 'path_in_progress':
-      return 'path-selection';
+      // In-path sessions are owned by the path screens (sit-with-this /
+      // peer-reflections), never projected onto reflect. Mapping these to
+      // path-selection resurrects stale sessions getActive picks up after
+      // the current one ends.
+      return null;
     case 'error':
       return 'error';
     case 'completed':
     case 'abandoned':
-      return null; // terminal — no screen to show
-    default:
-      return null;
+      return null; // terminal — machine resets instead of showing a screen
   }
+}
+
+/**
+ * True when the error is the server's "maximum refinement turns" rejection.
+ * Prefers the typed ConvexError code; falls back to message matching for
+ * responses from a backend deployed before the code existed.
+ */
+export function isMaxRefinementError(error: unknown): boolean {
+  const data = (error as { data?: { code?: string } } | null)?.data;
+  if (data?.code === 'max_refinement_turns') return true;
+  // DEPRECATED(remove-after: backend always sends max_refinement_turns code):
+  // message-substring fallback for the pre-ConvexError server throw.
+  return (
+    error instanceof Error &&
+    error.message.includes('Maximum refinement turns')
+  );
 }
 
 /**

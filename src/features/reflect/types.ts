@@ -30,7 +30,6 @@ export type ReflectionAction =
   | { type: 'PAUSE_TIMEOUT' }
   | { type: 'RESUME_TYPING' }
   | { type: 'SUBMIT' }
-  | { type: 'MIRROR_RECEIVED'; mirror: string }
   | { type: 'THATS_IT' }
   | { type: 'NOT_QUITE' }
   | { type: 'SAY_MORE' }
@@ -39,8 +38,7 @@ export type ReflectionAction =
   | { type: 'SET_QUIET_RETURN'; tier: QuietReturnTier | null }
   | { type: 'RESET' }
   | { type: 'SESSION_ERROR'; message: string }
-  | { type: 'SESSION_RESUMED'; screen: ReflectionStateName; mirrorResponse?: string }
-  | { type: 'ESCALATION_TRIGGERED'; mirror: string }
+  | { type: 'SESSION_RESUMED'; screen: ReflectionStateName }
   | { type: 'VOICE_START' }
   | { type: 'VOICE_TRANSCRIPT'; text: string }
   | { type: 'BACK_TO_MIRROR' }
@@ -50,7 +48,6 @@ export interface ReflectionState {
   screen: ReflectionStateName;
   entryText: string;
   clarifyText: string;
-  mirrorResponse: string;
   errorMessage: string;
   lastFeedbackType: FeedbackType | null;
   userVariant: UserVariant;

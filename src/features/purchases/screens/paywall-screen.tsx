@@ -9,6 +9,7 @@ import type { PurchasesPackage } from "react-native-purchases";
 import { api } from "@/convex/_generated/api";
 import { appConfig } from "@/src/config/app";
 import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
+import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { usePaywall, type PaywallSurface } from "@/src/features/purchases/use-paywall";
 import { PaywallHero } from "./paywall-hero";
 import { PaywallFeatureSection } from "./paywall-feature-section";
@@ -45,7 +46,8 @@ export function PaywallScreen({ surface }: Props) {
   const closePaywall = usePaywall((s) => s.close);
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
-  const { offerings, purchase, isProUser, isLoading, refreshOfferings } = useRevenueCat();
+  const { offerings, purchase, isLoading, refreshOfferings } = useRevenueCat();
+  const { isPlus } = usePlusEntitlement();
   const { isAuthenticated } = useConvexAuth();
   const summary = useQuery(api.profile.getSummary, isAuthenticated ? {} : "skip");
   const [selected, setSelected] = useState<PlanId>("annual");
@@ -219,7 +221,7 @@ export function PaywallScreen({ surface }: Props) {
                 label={ctaLabel}
                 onPress={handleContinue}
                 isBusy={busy}
-                isDisabled={busy || isProUser || (appConfig.features.payments && !selectedPkg)}
+                isDisabled={busy || isPlus || (appConfig.features.payments && !selectedPkg)}
               />
             </>
           )}

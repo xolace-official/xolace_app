@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { purgeEpisodicEntries } from "../episodicMemory";
+import { purgeSessions } from "../lib/sessionCascade";
 
 const TIERS = ["6_months", "1_year"] as const;
 type Tier = (typeof TIERS)[number];
@@ -15,7 +15,6 @@ const tierValidator = v.union(v.literal("6_months"), v.literal("1_year"));
 
 const BATCH_SIZE = 50;
 const PREFS_PAGE_SIZE = 100;
-const TURNS_PER_SESSION_BATCH = 100;
 
 function nextTier(tier: Tier): Tier | null {
   const idx = TIERS.indexOf(tier);
@@ -60,48 +59,7 @@ export const enforce = internalMutation({
         moreSessionWork = true;
       }
 
-      // Wipe parity (hard invariant): episodic embeddings are keyed by
-      // sessionId and die in the SAME job that deletes the session rows.
-      await purgeEpisodicEntries(
-        ctx,
-        pref.emotionalProfileId,
-        oldSessions.map((s) => s._id)
-      );
-
-      for (const session of oldSessions) {
-        const metadata = await ctx.db
-          .query("emotional_metadata")
-          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-          .unique();
-        if (metadata) {
-          await ctx.db.delete(metadata._id);
-        }
-
-        const turns = await ctx.db
-          .query("session_turns")
-          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-          .take(TURNS_PER_SESSION_BATCH);
-        for (const turn of turns) {
-          await ctx.db.delete(turn._id);
-        }
-
-        if (turns.length === TURNS_PER_SESSION_BATCH) {
-          // More turns remain for this session — leave the session row so the
-          // next scan revisits it and finishes the turn cleanup first.
-          moreSessionWork = true;
-          continue;
-        }
-
-        // Wipe parity: the TTS render of the user's own mirror. Nothing else
-        // references this blob, so it leaks into storage forever if we skip it
-        // (see dataWipe.wipe / accountDeletion.purge). Only reclaimed once the
-        // session row is actually being deleted, not on the turns-remain path.
-        if (session.mirrorAudioStorageId) {
-          await ctx.storage.delete(session.mirrorAudioStorageId);
-        }
-
-        await ctx.db.delete(session._id);
-      }
+      await purgeSessions(ctx, pref.emotionalProfileId, oldSessions);
 
       // Sweep old semantic profile VERSIONS past the cutoff. The current
       // version is always kept — retention shortens history, it doesn't

@@ -3,6 +3,7 @@ import {
   WorkflowManager,
   vWorkflowId,
   vResultValidator,
+  type WorkflowId,
 } from "@convex-dev/workflow";
 import { components, internal } from "./_generated/api";
 import {
@@ -11,6 +12,7 @@ import {
   internalQuery,
   mutation,
   query,
+  type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -49,7 +51,23 @@ const userResponseValidator = v.union(
 );
 
 // Active = a card whose lifecycle is still owned by a live workflow.
-const ACTIVE_STATUSES = new Set(["pending", "ready", "shown"]);
+// Exported for lib/sessionCascade, which purges cards per-session.
+export const ACTIVE_STATUSES = new Set(["pending", "ready", "shown"]);
+
+/**
+ * Cancel a card's workflow, tolerating an already-terminal one.
+ * Shared with lib/sessionCascade so both purge paths swallow identically.
+ */
+export async function cancelFollowUpWorkflow(
+  ctx: MutationCtx,
+  workflowId: WorkflowId,
+): Promise<void> {
+  try {
+    await workflow.cancel(ctx, workflowId);
+  } catch {
+    // Already terminal — nothing to cancel.
+  }
+}
 
 // =============================================================
 // The durable follow-up workflow
@@ -521,11 +539,7 @@ export const purgeForProfile = internalMutation({
     for (const card of cards) {
       if (ACTIVE_STATUSES.has(card.status)) {
         // Cancel the live workflow so it stops nudging a deleted user.
-        try {
-          await workflow.cancel(ctx, card.workflowId);
-        } catch {
-          // Already terminal — nothing to cancel.
-        }
+        await cancelFollowUpWorkflow(ctx, card.workflowId);
       }
       await ctx.db.delete(card._id);
     }

@@ -32,7 +32,7 @@ export type Resource = {
   description?: string;
 };
 
-export interface SafeguardResult {
+interface SafeguardBase {
   level: SafeguardLevel;
   triggerType?: TriggerType;
   triggerConfidence: number;
@@ -41,6 +41,19 @@ export interface SafeguardResult {
   resourcesPresented: Resource[];
   shouldReject: boolean;
   rejectionReason?: string;
+}
+
+/**
+ * The safeguard verdict plus its consequences. The three flags are derived
+ * once here — callers must never re-derive them from level/triggerType.
+ */
+export interface SafeguardResult extends SafeguardBase {
+  /** Crisis or elevated with a concrete trigger → escalation event + client flag. */
+  isEscalation: boolean;
+  /** Feeds emotional_metadata.riskFlag (pattern_escalation excluded to avoid self-reinforcement). */
+  riskFlag: boolean;
+  /** Crisis sessions are excluded from distillation / the peer pool. */
+  isCrisis: boolean;
 }
 
 interface RecentMetadataEntry {
@@ -132,30 +145,26 @@ export function evaluateSafeguard(
   moderation: ModerationResult,
   recentMetadata: RecentMetadataEntry[]
 ): SafeguardResult {
-  // Step 1: Check for content that should be rejected entirely
-  const rejection = checkRejection(moderation, classification);
-  if (rejection) return rejection;
+  const base: SafeguardBase =
+    checkRejection(moderation, classification) ??
+    checkCrisis(classification, moderation) ??
+    checkElevated(classification, moderation, recentMetadata) ??
+    checkGentle(classification, moderation) ?? {
+      level: "none",
+      triggerConfidence: 0,
+      triggerEvidence: "No risk signals detected.",
+      actionTaken: "resources_shown",
+      resourcesPresented: [],
+      shouldReject: false,
+    };
 
-  // Step 2: Check for crisis signals
-  const crisis = checkCrisis(classification, moderation);
-  if (crisis) return crisis;
-
-  // Step 3: Check for elevated signals
-  const elevated = checkElevated(classification, moderation, recentMetadata);
-  if (elevated) return elevated;
-
-  // Step 4: Check for gentle signals
-  const gentle = checkGentle(classification, moderation);
-  if (gentle) return gentle;
-
-  // Step 5: No risk detected
+  // Consequences derived exactly once — the single source callers read.
+  const escalatable = base.level === "crisis" || base.level === "elevated";
   return {
-    level: "none",
-    triggerConfidence: 0,
-    triggerEvidence: "No risk signals detected.",
-    actionTaken: "resources_shown",
-    resourcesPresented: [],
-    shouldReject: false,
+    ...base,
+    isEscalation: escalatable && !!base.triggerType,
+    riskFlag: escalatable && base.triggerType !== "pattern_escalation",
+    isCrisis: base.level === "crisis",
   };
 }
 
@@ -200,7 +209,7 @@ function isSurvivorNarrative(
 function checkRejection(
   moderation: ModerationResult,
   classification: ClassificationResult
-): SafeguardResult | null {
+): SafeguardBase | null {
   console.log("moderation result ", moderation);
   const cats = moderation.categories;
   const scores = moderation.categoryScores;
@@ -245,7 +254,7 @@ function checkRejection(
 function checkCrisis(
   classification: ClassificationResult,
   moderation: ModerationResult
-): SafeguardResult | null {
+): SafeguardBase | null {
   const scores = moderation.categoryScores;
 
   // Self-harm intent with high confidence
@@ -304,7 +313,7 @@ function checkElevated(
   classification: ClassificationResult,
   moderation: ModerationResult,
   recentMetadata: RecentMetadataEntry[]
-): SafeguardResult | null {
+): SafeguardBase | null {
   const scores = moderation.categoryScores;
 
   // Trauma disclosure: moderation flagged sexual content or violence+harassment
@@ -415,7 +424,7 @@ function checkElevated(
 function checkGentle(
   classification: ClassificationResult,
   moderation: ModerationResult
-): SafeguardResult | null {
+): SafeguardBase | null {
   // Violence without harassment (may be describing experiences)
   if (moderation.categories.violence && !moderation.categories.harassment) {
     return {
@@ -452,7 +461,7 @@ function checkGentle(
  * @returns A `SafeguardResult` that signals the session should be rejected with `shouldReject: true`, `level: "none"`, `triggerConfidence: 1`, the provided `triggerEvidence`, `actionTaken: "session_redirected"`, and the given `rejectionReason`
  */
 
-function makeRejection(evidence: string, reason: string): SafeguardResult {
+function makeRejection(evidence: string, reason: string): SafeguardBase {
   return {
     level: "none",
     triggerConfidence: 1,
