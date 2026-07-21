@@ -100,6 +100,9 @@ export function useReflectionMachine() {
   // change — between edges, local dispatches own the screen.
   useEffect(() => {
     if (!serverState || serverState === prevServerStateRef.current) return;
+    // Mirror not readable yet — keep current screen and retry when mirrorText
+    // arrives (don't mark handled, or the re-fire short-circuits above).
+    if (serverState === 'mirror_delivered' && !mirrorText) return;
     prevServerStateRef.current = serverState;
 
     if (serverState === 'completed' || serverState === 'abandoned') {
@@ -111,7 +114,6 @@ export function useReflectionMachine() {
     }
 
     if (serverState === 'mirror_delivered') {
-      if (!mirrorText) return; // mirror not readable yet — keep current screen
       const durationMs = submitTimestampRef.current
         ? Date.now() - submitTimestampRef.current
         : undefined;
