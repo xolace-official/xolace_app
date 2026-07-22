@@ -46,18 +46,6 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
     useQuery(api.followUps.getReadyCard, active && hasPendingFollowUp ? {} : "skip") ??
     null;
 
-  // Fire markReturn once per activation when a pending follow-up exists.
-  const returnedRef = useRef(false);
-  useEffect(() => {
-    if (!active || !hasPendingFollowUp) {
-      returnedRef.current = false;
-      return;
-    }
-    if (returnedRef.current) return;
-    returnedRef.current = true;
-    void markReturn({});
-  }, [active, hasPendingFollowUp, markReturn]);
-
   // Any card `getReadyCard` returns is one the server has decided is surfaceable
   // now (a fresh `ready` card, or a `shown` card past its re-show cooldown)
   const [openedCard, setOpenedCard] =
@@ -65,6 +53,22 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
   const [handledId, setHandledId] =
     useState<Id<"follow_up_cards"> | null>(null);
   const markedRef = useRef<Id<"follow_up_cards"> | null>(null);
+
+  // Fire markReturn once per activation when a pending follow-up exists. On
+  // deactivation, also clear markedRef so the next activation re-stamps
+  // `shownAt` when the same card re-surfaces.
+  const returnedRef = useRef(false);
+  useEffect(() => {
+    if (!active || !hasPendingFollowUp) {
+      returnedRef.current = false;
+      markedRef.current = null;
+      return;
+    }
+    if (returnedRef.current) return;
+    returnedRef.current = true;
+    void markReturn({});
+  }, [active, hasPendingFollowUp, markReturn]);
+
   const gateOpen = active && hasPendingFollowUp;
   // On deactivation, clear retained lifecycle state so the next activation
   // re-qualifies against `getReadyCard` from scratch — otherwise a stale
@@ -73,7 +77,6 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
   if (!gateOpen && (openedCard || handledId)) {
     setOpenedCard(null);
     setHandledId(null);
-    markedRef.current = null;
   } else if (card && card._id !== handledId && openedCard?._id !== card._id) {
     setOpenedCard(card);
   }
