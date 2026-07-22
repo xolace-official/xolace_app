@@ -64,7 +64,17 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
     useState<Doc<"follow_up_cards"> | null>(null);
   const [handledId, setHandledId] =
     useState<Id<"follow_up_cards"> | null>(null);
-  if (card && card._id !== handledId && openedCard?._id !== card._id) {
+  const markedRef = useRef<Id<"follow_up_cards"> | null>(null);
+  const gateOpen = active && hasPendingFollowUp;
+  // On deactivation, clear retained lifecycle state so the next activation
+  // re-qualifies against `getReadyCard` from scratch — otherwise a stale
+  // `openedCard` keeps the sheet open (via `card ?? openedCard`) even when the
+  // server no longer surfaces the card (e.g. re-show cooldown not elapsed).
+  if (!gateOpen && (openedCard || handledId)) {
+    setOpenedCard(null);
+    setHandledId(null);
+    markedRef.current = null;
+  } else if (card && card._id !== handledId && openedCard?._id !== card._id) {
     setOpenedCard(card);
   }
 
@@ -72,7 +82,6 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
   // flips it to `shown`; for a re-surfaced `shown` card it re-stamps `shownAt`
   // so the next cooldown is measured from this viewing (otherwise a once-eligible
   // card would re-open on every subsequent launch forever).
-  const markedRef = useRef<Id<"follow_up_cards"> | null>(null);
   useEffect(() => {
     if (card && markedRef.current !== card._id) {
       markedRef.current = card._id;
