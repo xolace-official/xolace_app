@@ -216,10 +216,9 @@ describe("shouldEmitReturn (gap guard)", () => {
 });
 
 describe("minReturnGapForTier", () => {
-  it("returns the test override for every tier while testing", () => {
-    // TODO(test): this asserts the QA override is active — flip when restoring.
-    expect(minReturnGapForTier("acute")).toBe(60 * 1000);
-    expect(minReturnGapForTier("elevated")).toBe(60 * 1000);
-    expect(minReturnGapForTier("standard")).toBe(60 * 1000);
+  it("returns each tier's real return gap (no QA override in shipped builds)", () => {
+    expect(minReturnGapForTier("acute")).toBe(30 * 60 * 1000); // 30min
+    expect(minReturnGapForTier("elevated")).toBe(8 * 60 * 60 * 1000); // 8h
+    expect(minReturnGapForTier("standard")).toBe(8 * 60 * 60 * 1000); // 8h
   });
 });

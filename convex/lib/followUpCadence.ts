@@ -155,9 +155,11 @@ const MIN_RETURN_GAP_MS_BY_TIER: Record<FollowUpTier, number> = {
   standard: 8 * HOUR,
 };
 
-// TODO(test): set back to null before shipping. Forces a 1-minute gap for every
-// tier so the check-in card surfaces within a minute during manual QA.
-const TEST_RETURN_GAP_OVERRIDE_MS: number | null = 1 * MINUTE;
+// QA-only override: force a short gap for every tier so the check-in card
+// surfaces within a minute during manual testing. MUST be null in shipped
+// builds — otherwise every tier's return-gap collapses and the card surfaces
+// in the same sitting as the session that created it.
+const TEST_RETURN_GAP_OVERRIDE_MS: number | null = null;
 
 /**
  * The minimum time since card creation before a reopen may surface the card,
@@ -165,6 +167,27 @@ const TEST_RETURN_GAP_OVERRIDE_MS: number | null = 1 * MINUTE;
  */
 export function minReturnGapForTier(tier: FollowUpTier): number {
   return TEST_RETURN_GAP_OVERRIDE_MS ?? MIN_RETURN_GAP_MS_BY_TIER[tier];
+}
+
+/**
+ * How long after a card was last shown before an *unresolved* `shown` card may
+ * re-surface on a later app open. A user often backgrounds mid-check-in
+ * (stepped away, took a call) — we still want to catch them next time, just not
+ * on every single launch. Within this window the home stays quiet.
+ */
+export const RESHOW_COOLDOWN_MS = 2 * HOUR;
+
+/**
+ * Should an unresolved `shown` card re-surface now? Only once the re-show
+ * cooldown has elapsed since it was last shown. A card with no `shownAt` (never
+ * actually rendered) is not eligible here.
+ */
+export function shouldReshowShownCard(args: {
+  shownAt: number | null | undefined;
+  now: number;
+}): boolean {
+  if (args.shownAt == null) return false;
+  return args.now - args.shownAt >= RESHOW_COOLDOWN_MS;
 }
 
 /**

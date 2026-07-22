@@ -22,6 +22,7 @@ import {
   followUpTier,
   minReturnGapForTier,
   shouldEmitReturn,
+  shouldReshowShownCard,
   shouldSupersede,
 } from "./lib/followUpCadence";
 import {
@@ -434,7 +435,13 @@ export const markReturn = mutation({
 // Client read + write surface (the check-in sheet + profile section)
 // =============================================================
 
-/** The card to surface on reopen, if any (ready first, then shown). */
+/**
+ * The card to surface on reopen, if any. A `ready` card (fresh return / nudge)
+ * always surfaces. An unresolved `shown` card — one the user saw but never
+ * answered, e.g. backgrounded the app mid-check-in — only re-surfaces once its
+ * re-show cooldown has elapsed, so it doesn't nag on every launch. Gating here
+ * (server) keeps the client render pure — it never has to read the clock.
+ */
 export const getReadyCard = query({
   args: {},
   handler: async (ctx) => {
@@ -447,26 +454,39 @@ export const getReadyCard = query({
       .order("desc")
       .first();
 
-    console.log("ready ", ready)
     if (ready) return ready;
-    return await ctx.db
+
+    const shown = await ctx.db
       .query("follow_up_cards")
       .withIndex("by_profile_status", (q) =>
         q.eq("emotionalProfileId", profile._id).eq("status", "shown"),
       )
       .order("desc")
       .first();
+
+    if (
+      shown &&
+      shouldReshowShownCard({ shownAt: shown.shownAt, now: Date.now() })
+    ) {
+      return shown;
+    }
+    return null;
   },
 });
 
-/** Mark a ready card as shown when the sheet mounts (idempotent). */
+/**
+ * Stamp a card as shown when the sheet mounts. Flips `ready → shown` on the
+ * first surface, and re-stamps `shownAt` when an unresolved `shown` card
+ * re-surfaces after its cooldown (client-gated) — so the next re-show cooldown
+ * is measured from the latest viewing. Any terminal status is left untouched.
+ */
 export const markShown = mutation({
   args: { cardId: v.id("follow_up_cards") },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const card = await ctx.db.get(args.cardId);
     if (!card || card.emotionalProfileId !== profile._id) return null;
-    if (card.status !== "ready") return null; // idempotent
+    if (card.status !== "ready" && card.status !== "shown") return null;
     await ctx.db.patch(args.cardId, { status: "shown", shownAt: Date.now() });
     return null;
   },

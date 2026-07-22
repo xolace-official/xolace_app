@@ -6,7 +6,7 @@
 
 #### What Xolace Is
 
-We are building an AI-native end-to-end mental health support app; from when a user can't even name what they are feeling to getting actual support.
+"We're building the AI-native mental health app that takes people from 'I don't even know what I'm feeling' to real support — end to end.
 
 ## The Problem Worth Solving
 

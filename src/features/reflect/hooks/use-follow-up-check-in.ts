@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
@@ -46,14 +46,22 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
     useQuery(api.followUps.getReadyCard, active && hasPendingFollowUp ? {} : "skip") ??
     null;
 
-  console.log("card ", card)
-  console.log("active", active, "hasPendingFollowUp", hasPendingFollowUp)
+  // Any card `getReadyCard` returns is one the server has decided is surfaceable
+  // now (a fresh `ready` card, or a `shown` card past its re-show cooldown)
+  const [openedCard, setOpenedCard] =
+    useState<Doc<"follow_up_cards"> | null>(null);
+  const [handledId, setHandledId] =
+    useState<Id<"follow_up_cards"> | null>(null);
+  const markedRef = useRef<Id<"follow_up_cards"> | null>(null);
 
-  // Fire markReturn once per activation when a pending follow-up exists.
+  // Fire markReturn once per activation when a pending follow-up exists. On
+  // deactivation, also clear markedRef so the next activation re-stamps
+  // `shownAt` when the same card re-surfaces.
   const returnedRef = useRef(false);
   useEffect(() => {
     if (!active || !hasPendingFollowUp) {
       returnedRef.current = false;
+      markedRef.current = null;
       return;
     }
     if (returnedRef.current) return;
@@ -61,11 +69,25 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
     void markReturn({});
   }, [active, hasPendingFollowUp, markReturn]);
 
-  // Mark the ready card as shown when it first surfaces (idempotent server-side).
-  const shownRef = useRef<Id<"follow_up_cards"> | null>(null);
+  const gateOpen = active && hasPendingFollowUp;
+  // On deactivation, clear retained lifecycle state so the next activation
+  // re-qualifies against `getReadyCard` from scratch — otherwise a stale
+  // `openedCard` keeps the sheet open (via `card ?? openedCard`) even when the
+  // server no longer surfaces the card (e.g. re-show cooldown not elapsed).
+  if (!gateOpen && (openedCard || handledId)) {
+    setOpenedCard(null);
+    setHandledId(null);
+  } else if (card && card._id !== handledId && openedCard?._id !== card._id) {
+    setOpenedCard(card);
+  }
+
+  // Mark the card shown once per surfaced card. For a `ready` card markShown
+  // flips it to `shown`; for a re-surfaced `shown` card it re-stamps `shownAt`
+  // so the next cooldown is measured from this viewing (otherwise a once-eligible
+  // card would re-open on every subsequent launch forever).
   useEffect(() => {
-    if (card && card.status === "ready" && shownRef.current !== card._id) {
-      shownRef.current = card._id;
+    if (card && markedRef.current !== card._id) {
+      markedRef.current = card._id;
       void markShown({ cardId: card._id });
       posthog.capture('follow_up_shown', {
         tier: card.tier,
@@ -76,31 +98,35 @@ export function useFollowUpCheckIn({ active, hasPendingFollowUp }: Args): Result
 
   const resolve = useCallback(
     (response: FollowUpResponse) => {
-      if (!card) return;
-      void resolveCard({ cardId: card._id, response });
+      if (!openedCard) return;
+      void resolveCard({ cardId: openedCard._id, response });
       posthog.capture('follow_up_responded', {
         response,
-        tier: card.tier,
-        escalation_derived: card.escalationDerived,
+        tier: openedCard.tier,
+        escalation_derived: openedCard.escalationDerived,
       });
+      setHandledId(openedCard._id);
+      setOpenedCard(null);
       // For "vent" the sheet also navigates to the voice-vent screen (handled
       // in the sheet, which owns the router).
     },
-    [card, resolveCard, posthog],
+    [openedCard, resolveCard, posthog],
   );
 
   const dismiss = useCallback(() => {
-    if (!card) return;
-    void resolveCard({ cardId: card._id, response: "dismissed" });
+    if (!openedCard) return;
+    void resolveCard({ cardId: openedCard._id, response: "dismissed" });
     posthog.capture('follow_up_dismissed', {
-      tier: card.tier,
-      escalation_derived: card.escalationDerived,
+      tier: openedCard.tier,
+      escalation_derived: openedCard.escalationDerived,
     });
-  }, [card, resolveCard, posthog]);
+    setHandledId(openedCard._id);
+    setOpenedCard(null);
+  }, [openedCard, resolveCard, posthog]);
 
   return {
-    card,
-    isOpen: !!card && (card.status === "ready" || card.status === "shown"),
+    card: card ?? openedCard,
+    isOpen: openedCard !== null,
     blocking: active && hasPendingFollowUp,
     resolve,
     dismiss,
