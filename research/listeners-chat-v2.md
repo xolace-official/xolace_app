@@ -334,6 +334,68 @@ No concerns at this scale (single-digit ambassadors, low message volume, 1:1 con
 only). The eligibility/rotation query is index-bounded (per this repo's Convex conventions);
 no N+1 patterns introduced.
 
+## Design Review (via /plan-design-review, 2026-07-24)
+
+New placement decision this session: the directory + chat UI lands in the **tab slot currently
+occupied by the "Check-in" placeholder** (`src/app/(protected)/(tabs)/check-in.tsx`), reached via
+the idle-menu's "Discovery" entry → native tab bar, alongside the "Discovery" tab — not a new
+stack screen. This is a real, reviewable IA decision, not cosmetic; it changes which states this
+feature needs (tab bar, not a pushed screen) and it's the first thing every user sees, before any
+schema or moderation work matters.
+
+Visual mockups for every state below, built from the app's actual light-theme tokens
+(`src/global.css`) and existing component patterns (`BridgeCard`, native tab bar, HeroUI Native
+primitives): `docs/visualization/listener-chat-mockups.html`.
+
+**Ratings:**
+- Information architecture (tab placement): **4/10 → 9/10 after fix.** Reusing the tab slot is
+  the right call (zero new nav surface, matches the existing Discovery/Check-in sibling
+  pattern) — but the doc never addressed that "Check-in" (checkmark-circle icon) no longer
+  describes what's behind it. A 10 needs the label/icon to match the content.
+- Interaction-state coverage: **2/10 → 8/10 after fix.** The doc names 4 screens but specifies
+  zero non-happy-path states — no empty, loading, pending, or declined state for any of them.
+  For a 6-ambassador launch, the empty state isn't an edge case, it's what most early users hit.
+- Trust/safety at the UI layer: **3/10 → 8/10 after fix.** Decision 5 in the Engineering Review
+  correctly defers *automated* mid-conversation escalation detection to v2 — but the plan shipped
+  zero UI mitigation for the gap in the meantime. A static, persistent link to the app's existing
+  crisis-resources screen inside the chat thread costs nothing to build and directly addresses
+  the stated risk while the automated version is pending.
+- Specificity / reuse: **7/10.** The session-end suggestion card was already correctly scoped as
+  "reuse `BridgeCard`, don't rebuild" — the strongest-specified screen in the doc. No fix needed;
+  mockup included as confirmation it holds up pixel-for-pixel with the existing pattern.
+
+**Fixes made directly (no tradeoff, shipped in the mockup, doc updated to match):**
+1. **Zero-active-listeners empty state** — unspecified in the plan; this is launch day's actual
+   state (6 ambassadors, consent still rolling in one at a time). Warm copy, escape hatch back to
+   reflect, no dead end. See mockup section 1.
+2. **First-load skeleton state** — unspecified. Reuses HeroUI Native's `Skeleton` component
+   (already in the design system) rather than a spinner.
+3. **Request-pending state** — the eng review's request/accept flow (provisional, pending
+   confirmation from 5 of 6 ambassadors) added a schema state (`pending | accepted | declined`)
+   but no corresponding screen. Sets an expectation ("usually within a day") instead of leaving
+   the requester staring at nothing.
+4. **Declined / listener-unavailable state** — also unspecified by the request/accept addition.
+   No-guilt framing, matching this repo's established copy convention for absence/return states
+   (the same posture already used for streak-gap and return-after-absence copy) — the decline
+   isn't about the user.
+5. **In-thread safety banner** — persistent, low-friction manual link to crisis resources, always
+   visible in the active chat thread. See rating above.
+6. **Listener profile-completion screen** — missing from the plan's UI Placement and Dependencies
+   entirely, despite being the only way `listenerProfiles.complete` ever becomes `true`. Publish
+   CTA stays disabled until name + bio + photo are all present, mirroring the boolean directly.
+
+**Open decision, resolved this session:**
+Tab label/icon: rename "Check-in" → **"Connect"** with a person/message icon, replacing the
+checkmark-circle. Confirmed via AskUserQuestion — a mismatched label/icon on the very first thing
+a user taps was judged worse than the one-line cost of fixing it, even for a "for now" placement.
+This is a UI-only change to `src/app/(protected)/(tabs)/_layout.tsx` (label + icon on the existing
+`NativeTabs.Trigger`, no route rename) — left for implementation, not made here per this skill's
+review-only scope.
+
+**Not touched:** the idle-menu's "Discovery" entry point copy (`src/features/idle-menu/menu-buttons.tsx`)
+is unaffected — it still routes to `/discovery`, which still lands the user on the tab bar with
+both tabs visible; only the second tab's label/icon and content change.
+
 ## What I noticed about how you think
 
 - When I initially got the Stream moderation-tier facts wrong, you didn't just accept the
