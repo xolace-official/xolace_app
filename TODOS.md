@@ -4,6 +4,38 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P3 — Automated mid-conversation escalation detection (Listener Chat)
+
+**What:** Detect a crisis-adjacent moment happening *inside* a live Stream conversation
+between a user and a listener, not just at Xolace session boundaries (see the Listener Chat
+design doc, `nathan-chore-listener-chat-design-design-20260724-054614.md`).
+
+**Why:** Deferred during `/plan-eng-review` (Issue 4). Xolace's `escalation_events` signal only
+fires from the AI-processed session pipeline — a live Stream chat never touches that pipeline,
+so there's no existing signal to key off. v1 relies on ambassadors being trained to recognize
+concerning conversations themselves and point the user back to Xolace's existing crisis-resource
+path, same as any human-to-human conversation would require. This is judged sufficient for a
+small, personally-vetted cohort (see the original Listener Suggestion design's Premise #2), but
+should be revisited if the listener cohort grows past that scale.
+
+**How to start:** Would require a Stream webhook on new messages, piping message content through
+`convex/ai/safeguard.ts` (or a lighter-weight classifier) per message — a genuinely new AI-call
+surface, real-time cost, and worth weighing against the Cognition Layer Constitution ("no feature
+may call an LLM to re-derive something the Understanding already knows" — arguably justified here
+since chat content is new signal the Understanding never sees, but that argument should be made
+explicitly when this is picked up, not assumed).
+
+**Key files:** `convex/ai/safeguard.ts`, `convex/integrations/stream.ts` (once it exists),
+whatever webhook/channel-event handler the Listener Chat build adds.
+
+**Effort:** M-L — new webhook surface, new classification call, real-time latency/cost tradeoffs.
+
+**Priority:** P3 — no urgency at current ambassador-cohort scale.
+
+**Depends on:** Listener Chat (Approach B, Stream-based) shipping first.
+
+---
+
 ## P3 — Ambassador self-service pause toggle (Listener Suggestion feature)
 
 **What:** Let each of the 6 ambassadors flip their own `active: false` flag on the

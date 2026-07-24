@@ -54,3 +54,4 @@ google-services-preview/
 .heroui-docs/
 
 .env.local
+.stream/
