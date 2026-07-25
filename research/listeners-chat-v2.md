@@ -396,6 +396,19 @@ review-only scope.
 is unaffected — it still routes to `/discovery`, which still lands the user on the tab bar with
 both tabs visible; only the second tab's label/icon and content change.
 
+## Implementation Notes (Phase 1 build, 2026-07-24)
+
+- Removed `src/features/check-in/` — an 18-line "Sample second tab — placeholder only"
+  screen (`check-in-screen.tsx`) with no logic; its tab slot now renders the Connect
+  screen per the Design Review placement decision. Route file `(tabs)/check-in.tsx`
+  kept (no route rename), label/icon changed to Connect.
+- Stream provider is mounted per chat route group (`(protected)/chat/_layout.tsx`),
+  not app-wide: wrapping the whole protected stack would remount navigation when the
+  client connects, and scoping the connection to open threads keeps the app off
+  Stream's concurrent-connection budget outside chat. Consequence: the Chats list
+  renders from Convex state (status chips + timestamps) without Stream last-message
+  previews in Phase 1.
+
 ## What I noticed about how you think
 
 - When I initially got the Stream moderation-tier facts wrong, you didn't just accept the

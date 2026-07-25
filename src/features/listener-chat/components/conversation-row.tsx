@@ -1,0 +1,139 @@
+import { StyleSheet, View } from 'react-native';
+import { Button, PressableFeedback } from 'heroui-native';
+import { useAction, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { AppText } from '@/src/components/shared/app-text';
+import { playSoftPress } from '@/src/lib/haptics';
+import { cn } from '@/src/lib/utils';
+import { formatCompactTime } from '../utils';
+import { ListenerAvatar } from './listener-avatar';
+import type { ConversationList } from './chats-list';
+
+type Conversation = ConversationList[number];
+
+const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
+
+function chipFor(conversation: Conversation): { label: string; tone: 'warn' | 'muted' } | null {
+  if (conversation.status === 'requested') {
+    return { label: conversation.role === 'listener' ? 'New request' : 'Waiting', tone: 'warn' };
+  }
+  if (conversation.status === 'resting') return { label: 'Resting', tone: 'muted' };
+  if (conversation.status === 'closed') return { label: 'Closed', tone: 'muted' };
+  return null;
+}
+
+function subtitleFor(conversation: Conversation): string {
+  if (conversation.status === 'requested') {
+    return conversation.role === 'listener'
+      ? 'Wants to talk — accept when you have space'
+      : `Request sent — ${conversation.counterpartName} will reply when they can`;
+  }
+  if (conversation.status === 'open') return 'Tap to open your conversation';
+  if (conversation.status === 'resting') return 'Gone quiet — pick it back up anytime';
+  if (conversation.closedReason === 'declined') {
+    return `${conversation.counterpartName} couldn't take this one on`;
+  }
+  if (conversation.closedReason === 'expired') return 'This request quietly expired';
+  return 'Everything you two wrote is still here';
+}
+
+export function ConversationRow({
+  conversation,
+  onPress,
+}: {
+  conversation: Conversation;
+  onPress: () => void;
+}) {
+  const acceptRequest = useAction(api.listenerChat.acceptRequest);
+  const declineRequest = useMutation(api.listenerChat.declineRequest);
+
+  const dim = conversation.status !== 'open';
+  const chip = chipFor(conversation);
+  const showInlineActions =
+    conversation.role === 'listener' && conversation.status === 'requested';
+  const when = conversation.lastMessageAt ?? conversation.requestedAt;
+
+  return (
+    <PressableFeedback
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Conversation with ${conversation.counterpartName}`}
+    >
+      <View
+        className="rounded-3xl bg-surface border border-border/40 p-3.5 gap-3"
+        style={styles.borderCurve}
+      >
+        <View className="flex-row items-center gap-3">
+          <ListenerAvatar
+            name={conversation.counterpartName}
+            photoUrl={conversation.counterpartPhotoUrl}
+            muted={dim}
+          />
+          <View className="flex-1 min-w-0">
+            <View className="flex-row items-baseline gap-1.5">
+              <AppText
+                className={cn(
+                  'text-sm font-semibold',
+                  dim ? 'text-muted' : 'text-foreground',
+                )}
+              >
+                {conversation.counterpartName}
+              </AppText>
+              {chip && (
+                <View
+                  className={cn(
+                    'rounded-full px-2 py-0.5',
+                    chip.tone === 'warn' ? 'bg-warning/20' : 'bg-surface-tertiary',
+                  )}
+                >
+                  <AppText className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    {chip.label}
+                  </AppText>
+                </View>
+              )}
+              <AppText className="text-[11px] text-muted ml-auto">
+                {formatCompactTime(when)}
+              </AppText>
+            </View>
+            <AppText
+              className={cn('text-xs mt-0.5', dim ? 'text-muted' : 'text-foreground/70')}
+              numberOfLines={1}
+            >
+              {subtitleFor(conversation)}
+            </AppText>
+          </View>
+        </View>
+
+        {showInlineActions && (
+          <View className="flex-row gap-2">
+            <Button
+              size="sm"
+              className="flex-1"
+              onPress={() => {
+                playSoftPress();
+                acceptRequest({ conversationId: conversation.id }).catch((err) =>
+                  console.error('[listener-chat] accept failed', err),
+                );
+              }}
+            >
+              Accept
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="flex-1"
+              onPress={() => {
+                playSoftPress();
+                declineRequest({ conversationId: conversation.id }).catch((err) =>
+                  console.error('[listener-chat] decline failed', err),
+                );
+              }}
+            >
+              Decline
+            </Button>
+          </View>
+        )}
+      </View>
+    </PressableFeedback>
+  );
+}

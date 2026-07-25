@@ -4,7 +4,7 @@
  * with `bunx convex env set DEV_TOOLS_ENABLED true` on the dev deployment.
  */
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { internalMutation, mutation } from "./_generated/server";
 import type { WorkflowId } from "@convex-dev/workflow";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
@@ -175,5 +175,58 @@ export const cleanupStuckFollowUps = mutation({
       }
     }
     return retired;
+  },
+});
+
+/**
+ * Seed a published listener so the Connect roster has something in it.
+ * Takes an explicit user id (rather than requireAuth) so it can promote a
+ * *different* test account than the one signed into the simulator — which is
+ * exactly why it's `internalMutation`: an unauthenticated, public function
+ * that flips `isListener` on an arbitrary user would be an impersonation
+ * hole the moment DEV_TOOLS_ENABLED reached a real deployment.
+ *
+ *   bunx convex run devTools:seedListener '{"userId":"...","displayName":"Maya","bio":"..."}'
+ */
+export const seedListener = internalMutation({
+  args: {
+    userId: v.id("users"),
+    displayName: v.string(),
+    bio: v.string(),
+    photoUrl: v.optional(v.string()),
+  },
+  returns: v.id("emotional_profiles"),
+  handler: async (ctx, args) => {
+    assertDevToolsEnabled();
+
+    const user = await ctx.db.get(args.userId);
+    if (!user) throw new Error("No such user");
+    await ctx.db.patch(user._id, { isListener: true });
+
+    const emotionalProfileId = user.emotionalProfileId;
+    const existing = await ctx.db
+      .query("listener_profiles")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", emotionalProfileId))
+      .unique();
+
+    const fields = {
+      displayName: args.displayName,
+      bio: args.bio,
+      photoUrl: args.photoUrl,
+      complete: true,
+      active: true,
+      updatedAt: Date.now(),
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, fields);
+      return emotionalProfileId;
+    }
+    await ctx.db.insert("listener_profiles", {
+      emotionalProfileId,
+      createdAt: Date.now(),
+      ...fields,
+    });
+    return emotionalProfileId;
   },
 });

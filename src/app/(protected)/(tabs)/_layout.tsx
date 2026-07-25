@@ -19,12 +19,14 @@ export default function TabsLayout() {
         />
         <NativeTabs.Trigger.Label>Discovery</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
+      {/* Route name stays "check-in" (no route rename per design review);
+          only the label/icon/content changed when Listener Chat landed here. */}
       <NativeTabs.Trigger name="check-in">
         <NativeTabs.Trigger.Icon
-          sf={{ default: 'checkmark.circle', selected: 'checkmark.circle.fill' }}
-          md="check_circle"
+          sf={{ default: 'bubble.left.and.bubble.right', selected: 'bubble.left.and.bubble.right.fill' }}
+          md="forum"
         />
-        <NativeTabs.Trigger.Label>Check-in</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Connect</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

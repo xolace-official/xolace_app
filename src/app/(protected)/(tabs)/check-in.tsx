@@ -1,5 +1,5 @@
-import { CheckInScreen } from '@/src/features/check-in/components/check-in-screen';
+import { ConnectScreen } from '@/src/features/listener-chat/components/connect-screen';
 
-export default function CheckInRoute() {
-  return <CheckInScreen />;
+export default function ConnectRoute() {
+  return <ConnectScreen />;
 }

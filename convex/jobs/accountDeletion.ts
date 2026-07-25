@@ -23,6 +23,7 @@ const BATCH_SIZE = 100;
  */
 export const purge = internalMutation({
   args: {},
+  returns: v.null(),
   handler: async (ctx) => {
     const deletedUsers = await ctx.db
       .query("users")
@@ -53,6 +54,7 @@ export const purge = internalMutation({
  */
 export const purgeUser = internalMutation({
   args: { userId: v.id("users") },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
     if (!user) return;
@@ -192,6 +194,32 @@ export const purgeUser = internalMutation({
     if (waitlistRows.length === BATCH_SIZE) hasMore = true;
     for (const row of waitlistRows) await ctx.db.delete(row._id);
 
+    // ── Listener conversations (both sides of every pair) ────────
+    // Rows where this user was the requester, and rows where they were
+    // the listener. Stream-side message content is removed by the
+    // purgeStreamUser action scheduled in the final batch.
+    const conversationsAsUser = await ctx.db
+      .query("listener_conversations")
+      .withIndex("by_user", (q) => q.eq("userProfileId", profileId))
+      .take(BATCH_SIZE);
+
+    if (conversationsAsUser.length === BATCH_SIZE) hasMore = true;
+    for (const conversation of conversationsAsUser) {
+      await ctx.db.delete(conversation._id);
+    }
+
+    const conversationsAsListener = await ctx.db
+      .query("listener_conversations")
+      .withIndex("by_listener_and_status", (q) =>
+        q.eq("listenerProfileId", profileId)
+      )
+      .take(BATCH_SIZE);
+
+    if (conversationsAsListener.length === BATCH_SIZE) hasMore = true;
+    for (const conversation of conversationsAsListener) {
+      await ctx.db.delete(conversation._id);
+    }
+
     // ── Semantic profile versions ────────────────────────────────
     const semanticVersions = await ctx.db
       .query("semantic_profiles")
@@ -226,6 +254,20 @@ export const purgeUser = internalMutation({
     // it cancels component workflows and is independently bounded.
     await ctx.scheduler.runAfter(0, internal.followUps.purgeForProfile, {
       emotionalProfileId: profileId,
+    });
+
+    // Listener profile (1:1 with the profile, if this user was a listener)
+    const listenerProfile = await ctx.db
+      .query("listener_profiles")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
+      .unique();
+    if (listenerProfile) await ctx.db.delete(listenerProfile._id);
+
+    // Stream-hosted chat content is external — the row deletes above don't
+    // reach it. Fail-open action: logs and continues on Stream outage so a
+    // third party can never block a deletion request.
+    await ctx.scheduler.runAfter(0, internal.listenerChat.purgeStreamUser, {
+      profileId: profileId,
     });
 
     // Push tokens live in the component, keyed by profile id — deleting the

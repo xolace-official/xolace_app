@@ -29,6 +29,9 @@ export default function ProtectedLayout() {
         options={{ gestureEnabled: false, animation: 'fade' }}
       />
       <Stack.Screen name="quotes/index" />
+      <Stack.Screen name="chat" />
+      <Stack.Screen name="listener/[profileId]" />
+      <Stack.Screen name="listener-setup" />
     </Stack>
   );
 }
