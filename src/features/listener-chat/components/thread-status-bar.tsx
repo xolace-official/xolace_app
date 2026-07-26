@@ -52,7 +52,7 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
     playSoftPress();
     // Same pattern as the idle menu's Discovery entry — the tab surface is a
     // sibling stack entry, so replace rather than stacking another screen.
-    router.replace('/check-in');
+    router.replace('/connect');
   };
 
   if (conversation.status === 'requested') {

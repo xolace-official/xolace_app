@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PressableFeedback } from 'heroui-native';
 import { useQuery } from 'convex/react';
@@ -23,7 +23,7 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
 
   if (directory !== undefined && directory.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center px-8 gap-2.5">
+      <View className="min-h-[380px] items-center justify-center gap-2.5 px-8">
         <View className="h-12 w-12 rounded-2xl bg-surface-secondary items-center justify-center">
           <AppText className="text-lg">🕯️</AppText>
         </View>
@@ -45,11 +45,7 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
   );
 
   return (
-    <ScrollView
-      className="flex-1"
-      contentContainerClassName="px-4 pt-3 pb-6 gap-2.5"
-      contentInsetAdjustmentBehavior="automatic"
-    >
+    <View className="gap-2.5">
       {(directory ?? []).map((listener) => {
         const talking = openWith.has(listener.displayName);
         return (
@@ -104,6 +100,6 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
           </PressableFeedback>
         );
       })}
-    </ScrollView>
+    </View>
   );
 }

@@ -1,4 +1,4 @@
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PressableFeedback } from 'heroui-native';
 import type { FunctionReturnType } from 'convex/server';
@@ -25,7 +25,7 @@ export function ChatsList({
 
   if (conversations.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center px-8 gap-2.5">
+      <View className="min-h-[380px] items-center justify-center gap-2.5 px-8">
         <View className="h-12 w-12 rounded-2xl bg-surface-secondary items-center justify-center">
           <AppText className="text-lg">💬</AppText>
         </View>
@@ -53,11 +53,7 @@ export function ChatsList({
   }
 
   return (
-    <ScrollView
-      className="flex-1"
-      contentContainerClassName="px-4 pt-3 pb-6 gap-2.5"
-      contentInsetAdjustmentBehavior="automatic"
-    >
+    <View className="gap-2.5">
       {conversations.map((conversation) => (
         <ConversationRow
           key={conversation.id}
@@ -68,6 +64,6 @@ export function ChatsList({
           }}
         />
       ))}
-    </ScrollView>
+    </View>
   );
 }

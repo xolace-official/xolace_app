@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useQuery } from 'convex/react';
 import { Skeleton } from 'heroui-native';
 import { api } from '@/convex/_generated/api';
@@ -14,12 +14,18 @@ type Segment = 'chats' | 'listeners';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
 
+/**
+ * The active pill is accent, not `surface`: on dark themes `surface` (L15%) is
+ * *darker* than the `surface-secondary` track (L19%), so a surface indicator
+ * read as no selection at all. Accent is the app's established active-state
+ * color and carries contrast in both light and dark.
+ */
 function SegmentLabel({ label, active }: { label: string; active: boolean }) {
   return (
     <AppText
       className={cn(
         'text-[13px] font-semibold',
-        active ? 'text-foreground' : 'text-muted',
+        active ? 'text-accent-foreground' : 'text-muted',
       )}
     >
       {label}
@@ -32,6 +38,10 @@ function SegmentLabel({ label, active }: { label: string; active: boolean }) {
  * listener's incoming requests) and Listeners (the roster). Auto-lands on
  * Chats when any conversation exists, on Listeners otherwise — a first-time
  * user meets the roster, a returning user meets their thread.
+ *
+ * The title is the stack's large title, not a text node — one scroll view owns
+ * the screen so the native tab/stack insets land, and the segments scroll with
+ * the content the way the mockup has them.
  */
 export function ConnectScreen() {
   const status = useQuery(api.listenerChat.status);
@@ -44,9 +54,9 @@ export function ConnectScreen() {
 
   if (status && !status.enabled) {
     return (
-      <View className="flex-1 bg-background items-center justify-center px-8 gap-2">
+      <View className="flex-1 items-center justify-center gap-2 bg-background px-8">
         <AppText className="text-base font-medium text-foreground">Nothing here yet</AppText>
-        <AppText className="text-sm text-muted text-center">
+        <AppText className="text-center text-sm text-muted">
           This space is still being prepared. Check back soon.
         </AppText>
       </View>
@@ -54,13 +64,14 @@ export function ConnectScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background">
-      <View className="px-5 pt-4">
-        <AppText className="text-2xl font-semibold text-foreground">Connect</AppText>
-      </View>
-
+    <ScrollView
+      className="flex-1 bg-background"
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="px-4 pb-10 gap-4"
+      showsVerticalScrollIndicator={false}
+    >
       {loading ? (
-        <View className="px-4 pt-4 gap-3">
+        <View className="gap-3 pt-2">
           <Skeleton className="h-11 rounded-2xl" />
           <Skeleton className="h-20 rounded-3xl" />
           <Skeleton className="h-20 rounded-3xl" />
@@ -68,24 +79,22 @@ export function ConnectScreen() {
         </View>
       ) : (
         <>
-          <View className="px-4 pt-3">
-            <SegmentedControl
-              value={segment}
-              onValueChange={(value) => setSelected(value as Segment)}
-              className="relative rounded-2xl bg-surface-secondary p-1"
-            >
-              <SegmentedControl.Indicator
-                className="rounded-xl bg-surface top-1"
-                style={styles.borderCurve}
-              />
-              <SegmentedControl.Item value="chats" className="flex-1 items-center py-2">
-                <SegmentLabel label="Chats" active={segment === 'chats'} />
-              </SegmentedControl.Item>
-              <SegmentedControl.Item value="listeners" className="flex-1 items-center py-2">
-                <SegmentLabel label="Listeners" active={segment === 'listeners'} />
-              </SegmentedControl.Item>
-            </SegmentedControl>
-          </View>
+          <SegmentedControl
+            value={segment}
+            onValueChange={(value) => setSelected(value as Segment)}
+            className="relative mt-1 rounded-2xl bg-surface-secondary p-1"
+          >
+            <SegmentedControl.Indicator
+              className="top-1 rounded-xl bg-accent"
+              style={styles.borderCurve}
+            />
+            <SegmentedControl.Item value="chats" className="flex-1 items-center py-2.5">
+              <SegmentLabel label="Chats" active={segment === 'chats'} />
+            </SegmentedControl.Item>
+            <SegmentedControl.Item value="listeners" className="flex-1 items-center py-2.5">
+              <SegmentLabel label="Listeners" active={segment === 'listeners'} />
+            </SegmentedControl.Item>
+          </SegmentedControl>
 
           {status?.enabled && status.isListener && !status.listenerProfileComplete && (
             <ListenerSetupBanner />
@@ -101,6 +110,6 @@ export function ConnectScreen() {
           )}
         </>
       )}
-    </View>
+    </ScrollView>
   );
 }

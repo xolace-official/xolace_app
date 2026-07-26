@@ -26,9 +26,6 @@ export function DiscoveryScreen() {
       className="flex-1 bg-background"
       contentContainerClassName="p-5 gap-4"
     >
-      <AppText className="text-2xl font-semibold text-foreground">
-        Discovery
-      </AppText>
       <AppText className="text-sm text-foreground/60">
         Placeholder — exploration lives here.
       </AppText>
