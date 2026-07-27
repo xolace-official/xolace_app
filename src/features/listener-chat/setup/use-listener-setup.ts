@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { useMutation, useQuery } from 'convex/react';
+import { useToast } from 'heroui-native';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { MAX_SPECIALTIES, type Specialty } from '@/convex/lib/specialties';
@@ -15,6 +16,7 @@ type TextDraft = Pick<SetupDraft, 'displayName' | 'bio'>;
  * new URL back rather than an effect mirroring it into state.
  */
 export function useListenerSetup() {
+  const { toast } = useToast();
   const saved = useQuery(api.listenerChat.myListenerProfile);
   const upsert = useMutation(api.listenerChat.upsertMyListenerProfile);
   const generateUploadUrl = useMutation(api.listenerChat.generatePhotoUploadUrl);
@@ -110,11 +112,12 @@ export function useListenerSetup() {
 
     setUploading(true);
     // `.finally()` rather than try/finally — the React Compiler skips
-    // optimization for try/finally bodies.
-    await uploadPhoto(picked.assets[0].uri, generateUploadUrl, setListenerPhoto).finally(
-      () => setUploading(false),
-    );
-  }, [generateUploadUrl, setListenerPhoto]);
+    // optimization for try/finally bodies. The `.catch()` is what keeps the
+    // fire-and-forget call in PhotoStep from becoming an unhandled rejection.
+    await uploadPhoto(picked.assets[0].uri, generateUploadUrl, setListenerPhoto)
+      .finally(() => setUploading(false))
+      .catch(() => toast.show({ label: "Couldn't upload that photo. Try again." }));
+  }, [generateUploadUrl, setListenerPhoto, toast]);
 
   return {
     draft,
@@ -144,6 +147,9 @@ async function uploadPhoto(
     headers: { 'Content-Type': blob.type },
     body: blob,
   });
+  // A failed upload answers with text, not JSON — parsing it first would throw
+  // something unreadable instead of the actual status.
+  if (!result.ok) throw new Error(`Photo upload failed (${result.status})`);
   const { storageId } = (await result.json()) as { storageId: Id<'_storage'> };
   await setListenerPhoto({ storageId });
 }

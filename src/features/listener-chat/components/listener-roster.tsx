@@ -45,7 +45,7 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
   const openWith = new Set(
     conversations
       .filter((c) => c.role === 'user' && c.status === 'open')
-      .map((c) => c.counterpartName),
+      .map((c) => c.listenerProfileId),
   );
 
   const listeners = directory ?? [];
@@ -61,7 +61,7 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
       <SpecialtyFilter available={offered} selected={filter} onSelect={setFilter} />
 
       {visible.map((listener) => {
-        const talking = openWith.has(listener.displayName);
+        const talking = openWith.has(listener.listenerProfileId);
         return (
           <PressableFeedback
             key={listener.listenerProfileId}

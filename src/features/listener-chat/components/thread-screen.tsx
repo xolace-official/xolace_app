@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { useQuery } from 'convex/react';
+import { Button } from 'heroui-native';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -28,7 +29,7 @@ export function ThreadScreen({ conversationId }: { conversationId: string }) {
 }
 
 function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
-  const streamStatus = useStreamStatus();
+  const { status: streamStatus, retry } = useStreamStatus();
 
   // Identity lives in the native header's title slot; the back affordance,
   // safe area and glass background are the platform's. Rendered as a sibling of
@@ -72,7 +73,7 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
       <View className="flex-1 bg-background">
         {header}
         <SafetyStrip />
-        {streamStatus === 'connecting' ? <ThreadSkeleton /> : <MessagesUnavailable />}
+        {streamStatus === 'connecting' ? <ThreadSkeleton /> : <MessagesUnavailable onRetry={retry} />}
         {conversation.status === 'open' ? (
           // Only while connecting. On the error path the messages never arrive,
           // so a composer stub would promise a send that cannot happen.
@@ -92,12 +93,15 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
   );
 }
 
-function MessagesUnavailable() {
+function MessagesUnavailable({ onRetry }: { onRetry: () => void }) {
   return (
-    <View className="flex-1 items-center justify-center px-10">
+    <View className="flex-1 items-center justify-center gap-4 px-10">
       <AppText className="text-center text-[13px] leading-5 text-muted">
         Messages couldn&apos;t load. Check your connection and try again.
       </AppText>
+      <Button variant="secondary" size="sm" onPress={onRetry}>
+        Try again
+      </Button>
     </View>
   );
 }

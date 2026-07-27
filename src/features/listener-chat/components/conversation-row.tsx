@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, PressableFeedback } from 'heroui-native';
+import { Button, PressableFeedback, useToast } from 'heroui-native';
 import { useAction, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
@@ -46,6 +47,28 @@ export function ConversationRow({
 }) {
   const acceptRequest = useAction(api.listenerChat.acceptRequest);
   const declineRequest = useMutation(api.listenerChat.declineRequest);
+  const { toast } = useToast();
+  const [pending, setPending] = useState<'accept' | 'decline' | null>(null);
+
+  const run = (kind: 'accept' | 'decline', failLabel: string) => {
+    if (pending) return;
+    playSoftPress();
+    setPending(kind);
+    const call =
+      kind === 'accept'
+        ? acceptRequest({ conversationId: conversation.id })
+        : declineRequest({ conversationId: conversation.id });
+    call
+      .catch((err) => {
+        console.error(`[listener-chat] ${kind} failed`, err);
+        toast.show({
+          label: failLabel,
+          description: 'Something went wrong. Try again.',
+          variant: 'default',
+        });
+      })
+      .finally(() => setPending(null));
+  };
 
   const dim = conversation.status !== 'open';
   const chip = chipFor(conversation);
@@ -109,12 +132,8 @@ export function ConversationRow({
             <Button
               size="sm"
               className="flex-1"
-              onPress={() => {
-                playSoftPress();
-                acceptRequest({ conversationId: conversation.id }).catch((err) =>
-                  console.error('[listener-chat] accept failed', err),
-                );
-              }}
+              isDisabled={pending !== null}
+              onPress={() => run('accept', "Couldn't accept this request")}
             >
               Accept
             </Button>
@@ -122,12 +141,8 @@ export function ConversationRow({
               size="sm"
               variant="secondary"
               className="flex-1"
-              onPress={() => {
-                playSoftPress();
-                declineRequest({ conversationId: conversation.id }).catch((err) =>
-                  console.error('[listener-chat] decline failed', err),
-                );
-              }}
+              isDisabled={pending !== null}
+              onPress={() => run('decline', "Couldn't decline this request")}
             >
               Decline
             </Button>

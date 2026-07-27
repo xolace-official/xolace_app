@@ -1,4 +1,4 @@
-import { createContext, use, useCallback, useEffect, useState } from 'react';
+import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react';
 import { Chat, OverlayProvider, useCreateChatClient } from 'stream-chat-expo';
 import { useAuth } from '@clerk/expo';
 import { useAction } from 'convex/react';
@@ -26,7 +26,14 @@ let cachedSession: { userId: string; session: StreamSession } | null = null;
  */
 export type StreamStatus = 'connecting' | 'ready' | 'unavailable';
 
-const StreamStatusContext = createContext<StreamStatus>('connecting');
+/** `retry` re-runs the token fetch after `unavailable`; a no-op otherwise. */
+type StreamStatusValue = { status: StreamStatus; retry: () => void };
+
+const NOOP = () => {};
+const CONNECTING: StreamStatusValue = { status: 'connecting', retry: NOOP };
+const READY: StreamStatusValue = { status: 'ready', retry: NOOP };
+
+const StreamStatusContext = createContext<StreamStatusValue>(CONNECTING);
 
 export const useStreamStatus = () => use(StreamStatusContext);
 
@@ -62,6 +69,14 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
     userId && cachedSession?.userId === userId ? cachedSession.session : null,
   );
   const [error, setError] = useState(false);
+  // Bumped by `retry`: clearing `error` alone leaves every effect dep unchanged,
+  // so the fetch would never re-run.
+  const [attempt, setAttempt] = useState(0);
+
+  const retry = useCallback(() => {
+    setError(false);
+    setAttempt((n) => n + 1);
+  }, []);
 
   useEffect(() => {
     if (!userId || session) return;
@@ -78,17 +93,18 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
     return () => {
       alive = false;
     };
-  }, [getStreamToken, userId, session]);
+  }, [getStreamToken, userId, session, attempt]);
+
+  const value = useMemo(
+    () => ({ status: (error ? 'unavailable' : 'connecting') as StreamStatus, retry }),
+    [error, retry],
+  );
 
   // Children render throughout, never behind a full-screen spinner: the thread
   // screen's own Convex query is the source of the header and status copy, and
   // gating it here serialised two independent round trips that should overlap.
   if (error || !session) {
-    return (
-      <StreamStatusContext value={error ? 'unavailable' : 'connecting'}>
-        {children}
-      </StreamStatusContext>
-    );
+    return <StreamStatusContext value={value}>{children}</StreamStatusContext>;
   }
   return (
     <ConnectedChat session={session} getStreamToken={getStreamToken}>
@@ -125,11 +141,11 @@ function ConnectedChat({
   // ThemeProvider, and this one covers everything under `Chat`.
   const streamTheme = useStreamTheme();
 
-  if (!client) return <StreamStatusContext value="connecting">{children}</StreamStatusContext>;
+  if (!client) return <StreamStatusContext value={CONNECTING}>{children}</StreamStatusContext>;
 
   return (
     <Chat client={client} style={streamTheme}>
-      <StreamStatusContext value="ready">{children}</StreamStatusContext>
+      <StreamStatusContext value={READY}>{children}</StreamStatusContext>
     </Chat>
   );
 }

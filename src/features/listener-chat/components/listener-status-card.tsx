@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { Switch, useThemeColor } from 'heroui-native';
+import { Switch, useThemeColor, useToast } from 'heroui-native';
 import { SymbolView } from 'expo-symbols';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -21,6 +21,7 @@ const ICON = {
  */
 export function ListenerStatusCard({ active }: { active: boolean }) {
   const setActive = useMutation(api.listenerChat.setListenerActive);
+  const { toast } = useToast();
   const accent = useThemeColor('accent') as string;
   const muted = useThemeColor('muted') as string;
 
@@ -48,7 +49,14 @@ export function ListenerStatusCard({ active }: { active: boolean }) {
         isSelected={active}
         onSelectedChange={(next) => {
           playSoftPress();
-          void setActive({ active: next });
+          setActive({ active: next }).catch((err) => {
+            console.error('[listener-chat] setListenerActive failed', err);
+            toast.show({
+              label: next ? "Couldn't list you" : "Couldn't pause you",
+              description: 'Something went wrong. Try again.',
+              variant: 'default',
+            });
+          });
         }}
         accessibilityLabel="Available for new conversations"
       >

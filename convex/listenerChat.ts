@@ -42,6 +42,9 @@ const conversationRowValidator = v.object({
   streamChannelId: v.optional(v.string()),
   lastMessageAt: v.optional(v.number()),
   requestedAt: v.number(),
+  // Stable identity for the listener side of the thread — the roster matches
+  // on this, never on display name (names repeat and can change).
+  listenerProfileId: v.id("emotional_profiles"),
   counterpartName: v.string(),
   counterpartPhotoUrl: v.optional(v.string()),
 });
@@ -335,6 +338,7 @@ export const myConversations = query({
         streamChannelId: conversation.streamChannelId,
         lastMessageAt: conversation.lastMessageAt,
         requestedAt: conversation.requestedAt,
+        listenerProfileId: conversation.listenerProfileId,
         counterpartName: listener?.displayName ?? "Listener",
         counterpartPhotoUrl: listener?.photoUrl,
       });
@@ -348,6 +352,7 @@ export const myConversations = query({
         streamChannelId: conversation.streamChannelId,
         lastMessageAt: conversation.lastMessageAt,
         requestedAt: conversation.requestedAt,
+        listenerProfileId: conversation.listenerProfileId,
         counterpartName: pseudonym(conversation.userProfileId),
         counterpartPhotoUrl: undefined,
       });
