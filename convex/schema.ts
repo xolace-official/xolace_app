@@ -9,6 +9,7 @@ import {
   triggerTypeValidator,
 } from "./lib/validators";
 import { voiceSlugValidator } from "./lib/voices";
+import { specialtyValidator } from "./lib/specialties";
 
 // =============================================================
 // XOLACE — LAYER 1 MVP SCHEMA (MERGED)
@@ -1609,6 +1610,15 @@ export default defineSchema({
     displayName: v.optional(v.string()),
     bio: v.optional(v.string()),
     photoUrl: v.optional(v.string()),
+    // What this listener is comfortable sitting with — max 3, life
+    // situations rather than diagnoses (see lib/specialties.ts).
+    specialties: v.optional(v.array(specialtyValidator)),
+
+    // Denormalized rating counters. Convex has no count operator, so the
+    // aggregate is maintained by rateConversation rather than scanned.
+    // Averages stay hidden until MIN_RATINGS_TO_DISPLAY (see listenerChat).
+    ratingSum: v.optional(v.number()),
+    ratingCount: v.optional(v.number()),
 
     complete: v.boolean(),
     // Operator/listener availability switch. Inactive listeners stay
@@ -1673,4 +1683,30 @@ export default defineSchema({
     .index("by_user_and_listener", ["userProfileId", "listenerProfileId"])
     // Cron sweep: open-but-quiet → resting, requested-but-stale → closed.
     .index("by_status_and_lastMessageAt", ["status", "lastMessageAt"]),
+
+  // ===========================================================
+  // CONVERSATION RATINGS
+  // ===========================================================
+  //
+  // One row per conversation, written only by the person who asked to
+  // talk (a listener never rates the people who come to them). Editable
+  // — re-rating patches this row and adjusts the listener's counters by
+  // the delta, so the aggregate can't be inflated by rating twice.
+  //
+  // Only ratable once real messages were exchanged, which makes a
+  // drive-by rating from a never-answered request impossible.
+  //
+  conversation_ratings: defineTable({
+    conversationId: v.id("listener_conversations"),
+    raterProfileId: v.id("emotional_profiles"),
+    listenerProfileId: v.id("emotional_profiles"),
+    // 1–5, integer. Validated server-side, never trusted from the client.
+    rating: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    // One rating per conversation — also the "have I already rated?" lookup.
+    .index("by_conversation", ["conversationId"])
+    // Account deletion sweeps a rater's rows.
+    .index("by_rater", ["raterProfileId"]),
 });

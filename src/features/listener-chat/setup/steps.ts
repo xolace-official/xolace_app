@@ -5,10 +5,11 @@ export type SetupDraft = {
   photoUrl?: string;
   displayName: string;
   bio: string;
+  specialties: string[];
 };
 
 export type SetupStep = {
-  id: 'photo' | 'name' | 'bio' | 'review';
+  id: 'photo' | 'name' | 'bio' | 'specialties' | 'review';
   title: string;
   description: string;
   /** Label for the progress meter when this step is what's blocking publish. */
@@ -20,7 +21,8 @@ export type SetupStep = {
  * Config-driven steps: the container renders whichever body matches `id`, and
  * the progress meter + Publish button both read `isComplete` rather than
  * carrying their own copy of the rule. The gate mirrors the server's
- * `publishProfile` check exactly — displayName + bio + photoUrl.
+ * `publishProfile` check exactly — displayName + bio + photoUrl + at least
+ * one specialty.
  */
 export const SETUP_STEPS: SetupStep[] = [
   {
@@ -44,6 +46,13 @@ export const SETUP_STEPS: SetupStep[] = [
     missingLabel: 'write a short bio',
     isComplete: (draft) =>
       draft.bio.trim().length > 0 && draft.bio.length <= BIO_MAX_LENGTH,
+  },
+  {
+    id: 'specialties',
+    title: "What you're here for",
+    description: 'Pick up to three. People can filter the roster by these.',
+    missingLabel: 'pick what you’re here for',
+    isComplete: (draft) => draft.specialties.length > 0,
   },
   {
     id: 'review',

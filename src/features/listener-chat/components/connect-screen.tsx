@@ -9,6 +9,7 @@ import { cn } from '@/src/lib/utils';
 import { ChatsList } from './chats-list';
 import { ListenerRoster } from './listener-roster';
 import { ListenerSetupBanner } from './listener-setup-banner';
+import { ListenerStatusCard } from './listener-status-card';
 
 type Segment = 'chats' | 'listeners';
 
@@ -96,9 +97,13 @@ export function ConnectScreen() {
             </SegmentedControl.Item>
           </SegmentedControl>
 
-          {status?.enabled && status.isListener && !status.listenerProfileComplete && (
-            <ListenerSetupBanner />
-          )}
+          {status?.enabled &&
+            status.isListener &&
+            (status.listenerProfileComplete ? (
+              <ListenerStatusCard active={status.listenerActive} />
+            ) : (
+              <ListenerSetupBanner />
+            ))}
 
           {segment === 'chats' ? (
             <ChatsList

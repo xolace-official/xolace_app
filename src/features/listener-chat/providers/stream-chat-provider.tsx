@@ -5,7 +5,7 @@ import { Chat, OverlayProvider, useCreateChatClient } from 'stream-chat-expo';
 import { useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
-type StreamSession = { token: string; userId: string };
+type StreamSession = { apiKey: string; token: string; userId: string };
 
 const LoadingView = () => (
   <View className="flex-1 items-center justify-center bg-background">
@@ -68,8 +68,11 @@ function ConnectedChat({
     [getStreamToken],
   );
 
+  // Key comes from the same action that signed the token, not from a client
+  // env var — the two must belong to the same Stream app or the WS handshake
+  // fails with an opaque "signature is not valid" and the UI hangs on a spinner.
   const client = useCreateChatClient({
-    apiKey: process.env.EXPO_PUBLIC_STREAM_API_KEY ?? '',
+    apiKey: session.apiKey,
     tokenOrProvider: tokenProvider,
     userData: { id: session.userId },
   });

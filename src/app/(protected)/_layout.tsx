@@ -12,6 +12,9 @@ const SCREEN_OPTIONS = {
 
 const NO_GESTURE = { gestureEnabled: false };
 
+/** Skipping a rating should feel like dismissing, not navigating away. */
+const RATE_OPTIONS = { presentation: 'formSheet', sheetGrabberVisible: true } as const;
+
 export default function ProtectedLayout() {
   useNotifications();
 
@@ -32,6 +35,9 @@ export default function ProtectedLayout() {
       <Stack.Screen name="chat" />
       <Stack.Screen name="listener/[profileId]" />
       <Stack.Screen name="listener-setup" />
+      {/* Sits outside the chat group on purpose — rating needs no Stream
+          client, and a sheet keeps "skip" feeling like a dismissal. */}
+      <Stack.Screen name="rate/[conversationId]" options={RATE_OPTIONS} />
     </Stack>
   );
 }

@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { ListenerAvatar } from '../components/listener-avatar';
+import { SpecialtyChips } from '../components/specialty-chips';
 import type { SetupDraft } from './steps';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
@@ -27,6 +28,7 @@ export function ReviewStep({ draft }: { draft: SetupDraft }) {
         <AppText className="text-center text-[15px] leading-6 text-foreground">
           &ldquo;{draft.bio || 'Your bio'}&rdquo;
         </AppText>
+        <SpecialtyChips specialties={draft.specialties} className="justify-center" />
       </View>
       <AppText className="text-center text-[11px] leading-4 text-muted">
         Publishing puts you on the roster. You can edit any of this later, and people only

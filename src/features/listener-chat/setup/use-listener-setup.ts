@@ -3,7 +3,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import { SETUP_STEPS, type SetupDraft } from './steps';
+import { MAX_SPECIALTIES, type Specialty } from '@/convex/lib/specialties';
+import { SETUP_STEPS, firstIncompleteStep, type SetupDraft } from './steps';
 
 type TextDraft = Pick<SetupDraft, 'displayName' | 'bio'>;
 
@@ -21,22 +22,54 @@ export function useListenerSetup() {
   const publish = useMutation(api.listenerChat.publishProfile);
 
   const [index, setIndex] = useState(0);
+  const [resumed, setResumed] = useState(false);
   const [visible, setVisible] = useState(true);
   const [uploading, setUploading] = useState(false);
   const pendingIndex = useRef<number | null>(null);
 
   // Server values seed the fields once; after that the local draft owns them.
   const [edits, setEdits] = useState<Partial<TextDraft>>({});
+  const [specialtyEdits, setSpecialtyEdits] = useState<string[] | null>(null);
   const draft: SetupDraft = {
     photoUrl: saved?.photoUrl,
     displayName: edits.displayName ?? saved?.displayName ?? '',
     bio: edits.bio ?? saved?.bio ?? '',
+    specialties: specialtyEdits ?? saved?.specialties ?? [],
   };
+
+  /**
+   * Open on the first thing still missing instead of always step 1. For a new
+   * listener that IS step 1, so nothing changes for them — it only saves a
+   * returning listener from tapping Continue past steps they already finished.
+   * Seeded once, in render rather than an effect, so it never fights the user:
+   * after this runs, `index` is theirs and filling a field can't move them.
+   */
+  if (!resumed && saved !== undefined) {
+    setResumed(true);
+    const blocking = firstIncompleteStep(draft);
+    setIndex(blocking ? SETUP_STEPS.indexOf(blocking) : SETUP_STEPS.length - 1);
+  }
 
   const setField = useCallback(
     (key: keyof TextDraft, value: string) =>
       setEdits((prev) => ({ ...prev, [key]: value })),
     [],
+  );
+
+  /**
+   * Toggling stays local until the step is left, same as the text fields —
+   * a chip that waits on a round trip to fill in feels broken. The cap is
+   * enforced here and again server-side.
+   */
+  const toggleSpecialty = useCallback(
+    (slug: string) =>
+      setSpecialtyEdits((prev) => {
+        const current = prev ?? saved?.specialties ?? [];
+        if (current.includes(slug)) return current.filter((item) => item !== slug);
+        if (current.length >= MAX_SPECIALTIES) return current;
+        return [...current, slug];
+      }),
+    [saved?.specialties],
   );
 
   /** Cross-fade: fade out, swap the step, fade back in on transition end. */
@@ -61,8 +94,9 @@ export function useListenerSetup() {
       upsert({
         displayName: draft.displayName.trim() || undefined,
         bio: draft.bio.trim() || undefined,
+        specialties: draft.specialties as Specialty[],
       }),
-    [upsert, draft.displayName, draft.bio],
+    [upsert, draft.displayName, draft.bio, draft.specialties],
   );
 
   const pickPhoto = useCallback(async () => {
@@ -85,6 +119,7 @@ export function useListenerSetup() {
   return {
     draft,
     setField,
+    toggleSpecialty,
     index,
     visible,
     uploading,

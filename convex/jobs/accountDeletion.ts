@@ -220,6 +220,33 @@ export const purgeUser = internalMutation({
       await ctx.db.delete(conversation._id);
     }
 
+    // ── Conversation ratings this user gave ──────────────────────
+    // The listener's denormalized counters have to come down with the
+    // row, or a deleted account keeps voting. Ratings this user
+    // *received* as a listener die with their listener_profiles row.
+    const ratingsGiven = await ctx.db
+      .query("conversation_ratings")
+      .withIndex("by_rater", (q) => q.eq("raterProfileId", profileId))
+      .take(BATCH_SIZE);
+
+    if (ratingsGiven.length === BATCH_SIZE) hasMore = true;
+    for (const rating of ratingsGiven) {
+      const rated = await ctx.db
+        .query("listener_profiles")
+        .withIndex("by_profile", (q) =>
+          q.eq("emotionalProfileId", rating.listenerProfileId)
+        )
+        .unique();
+      if (rated) {
+        await ctx.db.patch(rated._id, {
+          ratingSum: Math.max(0, (rated.ratingSum ?? 0) - rating.rating),
+          ratingCount: Math.max(0, (rated.ratingCount ?? 0) - 1),
+          updatedAt: Date.now(),
+        });
+      }
+      await ctx.db.delete(rating._id);
+    }
+
     // ── Semantic profile versions ────────────────────────────────
     const semanticVersions = await ctx.db
       .query("semantic_profiles")

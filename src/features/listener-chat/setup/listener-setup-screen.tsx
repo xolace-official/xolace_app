@@ -10,6 +10,7 @@ import { playSoftPress } from '@/src/lib/haptics';
 import { PhotoStep } from './photo-step';
 import { ReviewStep } from './review-step';
 import { SetupProgress } from './setup-progress';
+import { SpecialtyPicker } from './specialty-picker';
 import { BioStep, NameStep } from './text-steps';
 import { SETUP_STEPS, firstIncompleteStep, type SetupDraft } from './steps';
 import { useListenerSetup } from './use-listener-setup';
@@ -152,6 +153,11 @@ function StepBody({
   }
   if (id === 'bio') {
     return <BioStep value={draft.bio} onChange={(next) => setField('bio', next)} />;
+  }
+  if (id === 'specialties') {
+    return (
+      <SpecialtyPicker selected={draft.specialties} onToggle={setup.toggleSpecialty} />
+    );
   }
   return <ReviewStep draft={draft} />;
 }

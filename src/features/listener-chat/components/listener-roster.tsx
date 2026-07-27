@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PressableFeedback } from 'heroui-native';
@@ -7,6 +8,8 @@ import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
 import { ListenerAvatar } from './listener-avatar';
+import { NewListenerChip, RatingStars } from './rating-stars';
+import { SpecialtyChips, SpecialtyFilter } from './specialty-chips';
 import type { ConversationList } from './chats-list';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
@@ -20,6 +23,7 @@ const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } })
 export function ListenerRoster({ conversations }: { conversations: ConversationList }) {
   const router = useRouter();
   const directory = useQuery(api.listenerChat.directory);
+  const [filter, setFilter] = useState<string | null>(null);
 
   if (directory !== undefined && directory.length === 0) {
     return (
@@ -44,9 +48,19 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
       .map((c) => c.counterpartName),
   );
 
+  const listeners = directory ?? [];
+  const offered = [...new Set(listeners.flatMap((listener) => listener.specialties))];
+  const visible = filter
+    ? listeners.filter((listener) =>
+        (listener.specialties as readonly string[]).includes(filter),
+      )
+    : listeners;
+
   return (
     <View className="gap-2.5">
-      {(directory ?? []).map((listener) => {
+      <SpecialtyFilter available={offered} selected={filter} onSelect={setFilter} />
+
+      {visible.map((listener) => {
         const talking = openWith.has(listener.displayName);
         return (
           <PressableFeedback
@@ -67,7 +81,7 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
                 photoUrl={listener.photoUrl}
                 muted={listener.atCapacity}
               />
-              <View className="flex-1 min-w-0">
+              <View className="flex-1 min-w-0 gap-1">
                 <View className="flex-row items-center gap-1.5">
                   <AppText
                     className={cn(
@@ -84,22 +98,44 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
                       </AppText>
                     </View>
                   )}
-                  {listener.atCapacity && (
-                    <View className="rounded-full bg-surface-tertiary px-2 py-0.5 ml-auto">
-                      <AppText className="text-[10px] font-semibold uppercase tracking-wide text-muted">
-                        Full right now
-                      </AppText>
-                    </View>
-                  )}
+                  {/* Scores share one right-hand column so the eye reads down
+                      it instead of hunting; capacity outranks the score. */}
+                  <View className="ml-auto pl-2">
+                    {listener.atCapacity ? (
+                      <View className="rounded-full bg-surface-tertiary px-2 py-0.5">
+                        <AppText className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                          Full right now
+                        </AppText>
+                      </View>
+                    ) : listener.rating === undefined ? (
+                      <NewListenerChip />
+                    ) : (
+                      <RatingStars
+                        rating={listener.rating}
+                        ratingCount={listener.ratingCount}
+                      />
+                    )}
+                  </View>
                 </View>
-                <AppText className="text-xs text-muted mt-0.5 leading-4" numberOfLines={2}>
+                <AppText className="text-xs text-muted leading-4" numberOfLines={2}>
                   {listener.bio}
                 </AppText>
+                <SpecialtyChips
+                  specialties={listener.specialties}
+                  muted={listener.atCapacity}
+                  className="mt-0.5"
+                />
               </View>
             </View>
           </PressableFeedback>
         );
       })}
+
+      {filter !== null && visible.length === 0 && (
+        <AppText className="py-8 text-center text-[13px] leading-5 text-muted">
+          Nobody&apos;s listed that right now. Try another tag, or browse everyone.
+        </AppText>
+      )}
     </View>
   );
 }

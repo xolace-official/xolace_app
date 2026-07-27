@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button, useToast } from 'heroui-native';
+import { Button, PressableFeedback, useToast } from 'heroui-native';
 import { useAction, useMutation } from 'convex/react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '@/convex/_generated/api';
@@ -91,6 +91,7 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
           — picking it up doesn&apos;t need a new request.
         </Copy>
         <Button onPress={handleResume}>Pick this back up</Button>
+        <RatePrompt conversation={conversation} />
       </Bar>
     );
   }
@@ -107,7 +108,36 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
       <Button variant="secondary" onPress={goToRoster}>
         Find another listener
       </Button>
+      <RatePrompt conversation={conversation} />
     </Bar>
+  );
+}
+
+/**
+ * The single entry to the rating prompt, offered only once a conversation has
+ * gone quiet — never mid-thread, where it would turn an emotional exchange
+ * into a transaction. It's a link, not a modal: ignoring it is the default,
+ * and an unrated conversation just never enters anyone's denominator.
+ */
+function RatePrompt({ conversation }: { conversation: ThreadConversation }) {
+  const router = useRouter();
+  if (!conversation.canRate) return null;
+
+  return (
+    <PressableFeedback
+      onPress={() => {
+        playSoftPress();
+        router.push(`/rate/${conversation.id}` as never);
+      }}
+      accessibilityRole="button"
+      accessibilityLabel="Rate this conversation"
+    >
+      <AppText className="pt-0.5 text-center text-xs text-muted underline">
+        {conversation.myRating === undefined
+          ? 'How was this conversation?'
+          : 'Change how you rated this'}
+      </AppText>
+    </PressableFeedback>
   );
 }
 

@@ -260,6 +260,21 @@ interfaces/    — TypeScript interfaces by domain
 types/         — Type definitions
 ```
 
+## Design Principles
+
+Critique and iterate every screen against these eight. They are the qualities
+people register as "that looks right" — when a layout feels off, one of them is
+missing, and naming which one is faster than guessing at fixes.
+
+- **Contrast** — makes elements distinguishable. Differences in size, color, weight, or shape create hierarchy and draw the eye to what matters most. Without contrast, everything competes equally and nothing stands out.
+- **Hierarchy** — guides the viewer through content in order of importance. Headlines before body text, primary actions looking different from secondary ones. Size, position, color, and weight all signal "look here first."
+- **Alignment** — creates order and connection. Elements sharing an edge or axis feel related and intentional. Strong alignment is invisible; its absence looks sloppy immediately.
+- **Proximity** — groups related items and separates unrelated ones. White space between groups tells the eye what belongs together without needing borders or boxes.
+- **Repetition (consistency)** — builds cohesion. Reusing colors, fonts, shapes, and spacing patterns makes a design feel unified and helps users learn the system quickly.
+- **Balance** — distributes visual weight across the composition. Symmetrical feels stable and formal, asymmetrical feels dynamic but still resolved. Either works; an unbalanced layout feels off.
+- **White space (negative space)** — gives content room to breathe. It is not empty, it is active, and it determines how premium, calm, or cluttered a design feels.
+- **Unity** — the overall sense that every element belongs. It emerges when the other principles work together; nothing feels arbitrary or out of place.
+
 ## Performance Best Practices
 
 ### React Compiler (`reactCompiler: true` is enabled)

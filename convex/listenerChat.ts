@@ -14,9 +14,11 @@ import { requireAuth } from "./lib/auth";
 import {
   createListenerChannel,
   deleteStreamUser,
+  getStreamApiKey,
   mintUserToken,
   upsertStreamUsers,
 } from "./integrations/stream";
+import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 
 const statusValidator = v.union(
   v.literal("requested"),
@@ -48,6 +50,25 @@ const conversationRowValidator = v.object({
 export const MAX_OPEN_CONVERSATIONS = 8;
 const REQUEST_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 const RESTING_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * Below this, no average is shown anywhere — one bad night shouldn't read as
+ * a listener's score, and a 5.0 from a single rating is worse than no number
+ * at all. Enforced server-side so the client never receives a hideable value.
+ */
+const MIN_RATINGS_TO_DISPLAY = 5;
+
+/** Public rating shape: the average exists only past the display threshold. */
+function publicRating(profile: Doc<"listener_profiles">) {
+  const count = profile.ratingCount ?? 0;
+  return {
+    rating:
+      count >= MIN_RATINGS_TO_DISPLAY
+        ? Math.round(((profile.ratingSum ?? 0) / count) * 10) / 10
+        : undefined,
+    ratingCount: count,
+  };
+}
 
 // Global kill-switch (env-var gate, same pattern as devTools). The feature
 // ships dark until the ambassador-consent + DPA review clears.
@@ -90,6 +111,30 @@ async function getListenerProfileByProfileId(
     .unique();
 }
 
+async function findRating(
+  ctx: QueryCtx,
+  conversationId: Id<"listener_conversations">,
+) {
+  return await ctx.db
+    .query("conversation_ratings")
+    .withIndex("by_conversation", (q) => q.eq("conversationId", conversationId))
+    .unique();
+}
+
+/**
+ * The abuse guard: `lastMessageAt` is stamped once on accept and again by
+ * `touchConversation` on every send, so a later timestamp is proof that at
+ * least one real message followed the handshake. Without it, a request that
+ * was accepted and then ignored could still be rated.
+ */
+function hasRealExchange(conversation: Doc<"listener_conversations">) {
+  return Boolean(
+    conversation.acceptedAt &&
+      conversation.lastMessageAt &&
+      conversation.lastMessageAt > conversation.acceptedAt,
+  );
+}
+
 async function requireConversationParticipant(
   ctx: QueryCtx,
   conversationId: Id<"listener_conversations">,
@@ -120,6 +165,7 @@ export const status = query({
       enabled: v.literal(true),
       isListener: v.boolean(),
       listenerProfileComplete: v.boolean(),
+      listenerActive: v.boolean(),
     }),
   ),
   handler: async (ctx) => {
@@ -132,6 +178,7 @@ export const status = query({
       enabled: true as const,
       isListener: Boolean(user.isListener),
       listenerProfileComplete: Boolean(listenerProfile?.complete),
+      listenerActive: Boolean(listenerProfile?.active),
     };
   },
 });
@@ -148,6 +195,9 @@ export const directory = query({
       displayName: v.string(),
       bio: v.string(),
       photoUrl: v.optional(v.string()),
+      specialties: v.array(specialtyValidator),
+      rating: v.optional(v.number()),
+      ratingCount: v.number(),
       atCapacity: v.boolean(),
       listenerSince: v.number(),
     }),
@@ -173,6 +223,8 @@ export const directory = query({
         displayName: listener.displayName ?? "",
         bio: listener.bio ?? "",
         photoUrl: listener.photoUrl,
+        specialties: listener.specialties ?? [],
+        ...publicRating(listener),
         atCapacity: openCount >= MAX_OPEN_CONVERSATIONS,
         listenerSince: listener.createdAt,
       });
@@ -191,8 +243,13 @@ export const listenerProfile = query({
       displayName: v.string(),
       bio: v.string(),
       photoUrl: v.optional(v.string()),
+      specialties: v.array(specialtyValidator),
+      rating: v.optional(v.number()),
+      ratingCount: v.number(),
       listenerSince: v.number(),
       available: v.boolean(),
+      /** Viewing your own profile — the request CTA is replaced, not disabled. */
+      isSelf: v.boolean(),
       conversation: v.union(
         v.null(),
         v.object({
@@ -223,8 +280,11 @@ export const listenerProfile = query({
       displayName: listener.displayName ?? "",
       bio: listener.bio ?? "",
       photoUrl: listener.photoUrl,
+      specialties: listener.specialties ?? [],
+      ...publicRating(listener),
       listenerSince: listener.createdAt,
       available: listenerAvailable(listener, openCount),
+      isSelf: profile._id === args.listenerProfileId,
       conversation: conversation
         ? {
             id: conversation._id,
@@ -316,6 +376,8 @@ export const getConversation = query({
       lastMessageAt: v.optional(v.number()),
       requestedAt: v.number(),
       resumable: v.boolean(),
+      canRate: v.boolean(),
+      myRating: v.optional(v.number()),
       counterpartName: v.string(),
       counterpartPhotoUrl: v.optional(v.string()),
       myStreamUserId: v.id("emotional_profiles"),
@@ -337,6 +399,9 @@ export const getConversation = query({
     // still published, active, and under cap.
     const resumable = listenerAvailable(listener, openCount);
 
+    const existingRating =
+      role === "user" ? await findRating(ctx, conversation._id) : null;
+
     return {
       id: conversation._id,
       role,
@@ -346,6 +411,8 @@ export const getConversation = query({
       lastMessageAt: conversation.lastMessageAt,
       requestedAt: conversation.requestedAt,
       resumable,
+      canRate: role === "user" && hasRealExchange(conversation),
+      myRating: existingRating?.rating,
       counterpartName:
         role === "user"
           ? (listener?.displayName ?? "Listener")
@@ -567,6 +634,81 @@ export const touchConversation = mutation({
 });
 
 // ============================================================
+// Ratings
+// ============================================================
+
+/**
+ * Rate the listener, or change a rating already given. Only the person who
+ * asked to talk may rate, and only once real messages were exchanged.
+ *
+ * The listener's counters are denormalized (Convex has no count operator), so
+ * an edit applies the delta rather than re-summing — the aggregate stays O(1)
+ * no matter how many conversations a listener has held.
+ */
+export const rateConversation = mutation({
+  args: {
+    conversationId: v.id("listener_conversations"),
+    rating: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Listener chat is not available");
+
+    const rounded = Math.round(args.rating);
+    if (rounded < 1 || rounded > 5) {
+      throw new Error("Rating must be between 1 and 5");
+    }
+
+    const { profile, conversation, role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    // A listener never rates the people who come to them — the relationship
+    // isn't symmetric and a rated user would be a reason not to reach out.
+    if (role !== "user") throw new Error("Only the requester can rate");
+    if (!hasRealExchange(conversation)) {
+      throw new Error("Nothing to rate yet");
+    }
+
+    const listener = await ctx.db
+      .query("listener_profiles")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", conversation.listenerProfileId),
+      )
+      .unique();
+    if (!listener) throw new Error("Listener profile not found");
+
+    const existing = await findRating(ctx, args.conversationId);
+    const now = Date.now();
+
+    if (existing) {
+      if (existing.rating === rounded) return null;
+      await ctx.db.patch(existing._id, { rating: rounded, updatedAt: now });
+      await ctx.db.patch(listener._id, {
+        ratingSum: (listener.ratingSum ?? 0) - existing.rating + rounded,
+        updatedAt: now,
+      });
+      return null;
+    }
+
+    await ctx.db.insert("conversation_ratings", {
+      conversationId: args.conversationId,
+      raterProfileId: profile._id,
+      listenerProfileId: conversation.listenerProfileId,
+      rating: rounded,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await ctx.db.patch(listener._id, {
+      ratingSum: (listener.ratingSum ?? 0) + rounded,
+      ratingCount: (listener.ratingCount ?? 0) + 1,
+      updatedAt: now,
+    });
+    return null;
+  },
+});
+
+// ============================================================
 // Stream token
 // ============================================================
 
@@ -596,7 +738,7 @@ export const getStreamIdentity = internalQuery({
  */
 export const getStreamToken = action({
   args: {},
-  returns: v.object({ token: v.string(), userId: v.string() }),
+  returns: v.object({ apiKey: v.string(), token: v.string(), userId: v.string() }),
   handler: async (ctx) => {
     if (!chatEnabled()) throw new Error("Listener chat is not available");
     const identity: {
@@ -608,7 +750,13 @@ export const getStreamToken = action({
       { id: identity.userId, name: identity.name, image: identity.image },
     ]);
     const token = await mintUserToken(identity.userId);
-    return { token, userId: identity.userId as string };
+    // apiKey ships with the token so the pair can never disagree — see
+    // getStreamApiKey. Publishable value, safe to hand to the client.
+    return {
+      apiKey: getStreamApiKey(),
+      token,
+      userId: identity.userId as string,
+    };
   },
 });
 
@@ -624,6 +772,7 @@ export const myListenerProfile = query({
       displayName: v.optional(v.string()),
       bio: v.optional(v.string()),
       photoUrl: v.optional(v.string()),
+      specialties: v.array(specialtyValidator),
       complete: v.boolean(),
       active: v.boolean(),
     }),
@@ -638,6 +787,7 @@ export const myListenerProfile = query({
       displayName: listener.displayName,
       bio: listener.bio,
       photoUrl: listener.photoUrl,
+      specialties: listener.specialties ?? [],
       complete: listener.complete,
       active: listener.active,
     };
@@ -649,6 +799,7 @@ export const upsertMyListenerProfile = mutation({
     displayName: v.optional(v.string()),
     bio: v.optional(v.string()),
     photoUrl: v.optional(v.string()),
+    specialties: v.optional(v.array(specialtyValidator)),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -661,6 +812,9 @@ export const upsertMyListenerProfile = mutation({
     }
     if (args.displayName !== undefined && args.displayName.length > 40) {
       throw new Error("Display name must be 40 characters or fewer");
+    }
+    if (args.specialties && args.specialties.length > MAX_SPECIALTIES) {
+      throw new Error(`Pick at most ${MAX_SPECIALTIES}`);
     }
 
     const existing = await getListenerProfileByProfileId(ctx, profile._id);
@@ -737,10 +891,38 @@ export const publishProfile = mutation({
     if (!user.isListener) throw new Error("Not a listener");
 
     const listener = await getListenerProfileByProfileId(ctx, profile._id);
-    if (!listener?.displayName || !listener.bio || !listener.photoUrl) {
+    if (
+      !listener?.displayName ||
+      !listener.bio ||
+      !listener.photoUrl ||
+      !listener.specialties?.length
+    ) {
       throw new Error("Profile is incomplete");
     }
     await ctx.db.patch(listener._id, { complete: true, updatedAt: Date.now() });
+    return null;
+  },
+});
+
+/**
+ * Pause / unpause. `active` already gates the directory index and both
+ * `listenerAvailable` call sites, so flipping it is the whole feature: paused
+ * listeners leave the roster and can't be requested or resumed, while every
+ * conversation they already have keeps working. Deliberately not a "go
+ * offline" state — it survives app restarts, because the point is a listener
+ * stepping away for a week, not for an evening.
+ */
+export const setListenerActive = mutation({
+  args: { active: v.boolean() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    const { user, profile } = await requireAuth(ctx);
+    if (!user.isListener) throw new Error("Not a listener");
+
+    const listener = await getListenerProfileByProfileId(ctx, profile._id);
+    if (!listener) throw new Error("No listener profile");
+    await ctx.db.patch(listener._id, { active: args.active, updatedAt: Date.now() });
     return null;
   },
 });

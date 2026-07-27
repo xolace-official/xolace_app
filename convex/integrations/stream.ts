@@ -51,6 +51,16 @@ async function signJwt(
   return `${header}.${body}.${base64url(new Uint8Array(signature))}`;
 }
 
+/**
+ * The publishable Stream key, handed to the client alongside its token. The
+ * client deliberately does not keep its own copy: a token signed with this
+ * app's secret is only valid against this app's key, so any drift between two
+ * env vars fails as an unreadable WS signature error at connect time.
+ */
+export function getStreamApiKey(): string {
+  return getStreamEnv().apiKey;
+}
+
 /** Client-facing Stream user token. userId is always a pseudonymous profile id. */
 export async function mintUserToken(userId: string): Promise<string> {
   const { apiSecret } = getStreamEnv();

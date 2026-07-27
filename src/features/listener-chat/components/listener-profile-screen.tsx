@@ -13,6 +13,8 @@ import type { Trays } from '@/src/features/feedback-tray/screens/registry';
 import { playSoftPress } from '@/src/lib/haptics';
 import { formatMonthYear } from '../utils';
 import { ListenerAvatar } from './listener-avatar';
+import { NewListenerChip, RatingStars } from './rating-stars';
+import { SpecialtyChips } from './specialty-chips';
 
 type Profile = NonNullable<FunctionReturnType<typeof api.listenerChat.listenerProfile>>;
 
@@ -93,15 +95,19 @@ function ProfileBody({ profile }: { profile: Profile }) {
             <AppText className="text-[26px] font-semibold leading-8 text-foreground">
               {profile.displayName}
             </AppText>
+            <ProfileRating profile={profile} />
             <AppText className="text-xs text-muted">
               Listener since {formatMonthYear(profile.listenerSince)} · replies within a day
             </AppText>
           </View>
         </View>
 
-        <AppText className="px-2 text-center text-[17px] leading-7 text-foreground">
-          &ldquo;{profile.bio}&rdquo;
-        </AppText>
+        <View className="gap-4">
+          <AppText className="px-2 text-center text-[17px] leading-7 text-foreground">
+            &ldquo;{profile.bio}&rdquo;
+          </AppText>
+          <SpecialtyChips specialties={profile.specialties} className="justify-center" />
+        </View>
 
         <View className="gap-3.5">
           {hasThread && (
@@ -167,6 +173,34 @@ function ProfileBody({ profile }: { profile: Profile }) {
 }
 
 /**
+ * The denominator is always visible next to the score — "23 conversations
+ * rated" is what stops 4.9 reading as an absolute verdict on a person. Under
+ * the display threshold the reason is spelled out rather than showing an empty
+ * row of stars, which would read as a bad score.
+ */
+function ProfileRating({ profile }: { profile: Profile }) {
+  if (profile.rating === undefined) {
+    return (
+      <View className="items-center gap-1">
+        <NewListenerChip />
+        <AppText className="text-[11px] text-muted">
+          Not enough conversations rated yet
+        </AppText>
+      </View>
+    );
+  }
+
+  return (
+    <View className="items-center gap-1">
+      <RatingStars rating={profile.rating} ratingCount={profile.ratingCount} />
+      <AppText className="text-[11px] text-muted">
+        {profile.ratingCount} conversation{profile.ratingCount === 1 ? '' : 's'} rated
+      </AppText>
+    </View>
+  );
+}
+
+/**
  * The CTA names the request/accept reality instead of implying a chat opens on
  * tap, and is driven straight off the conversation row's existence + status so
  * there is no extra state to compute.
@@ -180,7 +214,14 @@ function ProfileCta({
   onAsk: () => void;
   onOpen: () => void;
 }) {
-  const { conversation, available, displayName } = profile;
+  const { conversation, available, displayName, isSelf } = profile;
+
+  // Your own profile is worth seeing — it's how you check what the roster
+  // shows — but there's nothing to ask yourself. The server rejects a
+  // self-request anyway; this keeps you from tapping into that error.
+  if (isSelf) {
+    return <Note>This is how your profile looks to everyone else.</Note>;
+  }
 
   if (conversation && conversation.status !== 'closed') {
     return (
