@@ -1,5 +1,7 @@
-import { useEffect, useMemo } from 'react';
-import { View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
+import { Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from 'heroui-native';
 import { useMutation, useQuery } from 'convex/react';
 import type { FunctionReturnType } from 'convex/server';
@@ -8,6 +10,7 @@ import {
   Channel,
   MessageComposer,
   MessageList,
+  messageActions as defaultMessageActions,
   useChatContext,
 } from 'stream-chat-expo';
 import type {
@@ -33,15 +36,50 @@ export type ThreadConversation = NonNullable<
  */
 const NO_REACTIONS: ReactionData[] = [];
 
-/** Everything except threadReply and quotedReply — v1 has no reply surface. */
-function minimalMessageActions({
-  copyMessage,
-  deleteMessage,
-  editMessage,
-  flagMessage,
-  retry,
-}: MessageActionsParams): MessageActionType[] {
-  return [copyMessage, editMessage, deleteMessage, flagMessage, retry];
+/**
+ * Everything except threadReply and quotedReply — v1 has no reply surface.
+ *
+ * Subtractive on purpose. Building the array by hand skipped Stream's own
+ * gating and offered actions that cannot run: Copy with no clipboard handler
+ * registered, Retry on a message that never failed, Flag on your own message.
+ */
+const ALLOWED_ACTIONS = new Set([
+  'copyMessage',
+  'editMessage',
+  'deleteMessage',
+  'flagMessage',
+  'retry',
+]);
+
+/**
+ * Gives iOS the portal settle window Stream only grants Android.
+ *
+ * Edit is the one action that focuses the composer input, and Stream gates that
+ * focus behind `usePortalSettledCallback` — two frames on Android, **zero on
+ * iOS**. With no window the focus lands while `PortalWhileClosingView` is still
+ * handing the composer's native view back from the overlay's closing portal
+ * host, and Stream's own doc comment predicts the result: "Doing this
+ * prematurely will result in the keyboard being immediately closed." Observed
+ * here as Edit silently doing nothing, and on iOS 26 as a hard abort inside JSI
+ * (`Assertion failed: (isObject()), getObject`) when the focus command reached
+ * a shadow node mid-reparent.
+ *
+ * Two frames reproduces the Android timing: one to let the portal retarget and
+ * React commit, one to let the native hierarchy settle in its final host.
+ * Remove once stream-chat-react-native ships a non-zero iOS SETTLE_FRAMES.
+ */
+function afterPortalSettles(action: () => void) {
+  return () => requestAnimationFrame(() => requestAnimationFrame(action));
+}
+
+function minimalMessageActions(params: MessageActionsParams): MessageActionType[] {
+  return defaultMessageActions(params)
+    .filter((action) => ALLOWED_ACTIONS.has(action.actionType))
+    .map((action) =>
+      process.env.EXPO_OS === 'ios' && action.actionType === 'editMessage'
+        ? { ...action, action: afterPortalSettles(action.action) }
+        : action,
+    );
 }
 
 export function ThreadScreen({ conversationId }: { conversationId: string }) {
@@ -57,6 +95,31 @@ export function ThreadScreen({ conversationId }: { conversationId: string }) {
 function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
   const { client } = useChatContext();
   const { streamChannelId } = conversation;
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const [contentHeight, setContentHeight] = useState(0);
+
+  // Stream's KeyboardCompatibleView compares its own layout height — which
+  // starts below the native header — against the keyboard's absolute screen Y,
+  // so the shift under-shoots by exactly the header height and the composer
+  // ends up behind the keyboard. Handing that height back as the offset closes
+  // the gap. Measured rather than assumed: the header grows with the subtitle,
+  // the notch and Dynamic Island, and no constant survives all three.
+  const headerOffset = contentHeight ? windowHeight - contentHeight : 0;
+  const onContentLayout = (event: LayoutChangeEvent) =>
+    setContentHeight(event.nativeEvent.layout.height);
+
+  // Identity lives in the native header's title slot; the back affordance,
+  // safe area and glass background are the platform's.
+  const header = (
+    <Stack.Screen
+      options={{
+        // eslint-disable-next-line react/no-unstable-nested-components -- navigation header render prop, not a mounted subtree
+        headerTitle: () => <ThreadHeader conversation={conversation} />,
+        title: conversation.counterpartName,
+      }}
+    />
+  );
 
   // Channel identity must stay stable across renders — `<Channel>` treats a new
   // instance as a new conversation. This memo is for correctness, not perf, so
@@ -73,7 +136,7 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
   if (!channel) {
     return (
       <View className="flex-1 bg-background">
-        <ThreadHeader conversation={conversation} />
+        {header}
         <SafetyStrip />
         <View className="flex-1 items-center justify-center px-10">
           <AppText className="text-center text-[13px] leading-5 text-muted">
@@ -88,25 +151,28 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
   }
 
   return (
-    <Channel
-      channel={channel}
-      // The header lives INSIDE Channel, so nothing sits above it to offset.
-      // Both must be explicit: Channel destructures keyboardVerticalOffset
-      // with no default, so omitting it passes `undefined`, not 0.
-      keyboardVerticalOffset={0}
-      topInset={0}
-      supportedReactions={NO_REACTIONS}
-      messageActions={minimalMessageActions}
-    >
-      <ThreadHeader conversation={conversation} />
-      <SafetyStrip />
-      <MessageList disableTypingIndicator />
-      {conversation.status === 'open' ? (
-        <MessageComposer />
-      ) : (
-        <ThreadStatusBar conversation={conversation} />
-      )}
-    </Channel>
+    // Wrapper exists to measure the content box; Channel's own root is the
+    // view whose height Stream mis-compares against the keyboard frame.
+    <View className="flex-1" onLayout={onContentLayout}>
+      <Channel
+        channel={channel}
+        // Must be explicit: Channel destructures both with no default, so
+        // omitting them passes `undefined`, not 0.
+        keyboardVerticalOffset={headerOffset}
+        topInset={insets.top}
+        supportedReactions={NO_REACTIONS}
+        messageActions={minimalMessageActions}
+      >
+        {header}
+        <SafetyStrip />
+        <MessageList disableTypingIndicator />
+        {conversation.status === 'open' ? (
+          <MessageComposer />
+        ) : (
+          <ThreadStatusBar conversation={conversation} />
+        )}
+      </Channel>
+    </View>
   );
 }
 

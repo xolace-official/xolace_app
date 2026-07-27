@@ -1,15 +1,8 @@
 import { View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { PressableFeedback, useThemeColor } from 'heroui-native';
-import { SymbolView } from 'expo-symbols';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
-import { playSoftPress } from '@/src/lib/haptics';
 import { formatLongAgo } from '../utils';
 import { ListenerAvatar } from './listener-avatar';
 import type { ThreadConversation } from './thread-screen';
-
-const BACK_ICON = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
 
 /**
  * Header states a response norm ("usually replies within a day") rather than a
@@ -33,35 +26,22 @@ function subtitleFor(conversation: ThreadConversation): string {
     : 'Usually replies within a day';
 }
 
+/**
+ * Rendered into the native stack header's title slot, so it carries identity
+ * only — the back affordance, safe area and background are the platform's.
+ */
 export function ThreadHeader({ conversation }: { conversation: ThreadConversation }) {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const foreground = useThemeColor('foreground') as string;
   const dim = conversation.status !== 'open';
 
   return (
-    <View
-      className="flex-row items-center gap-2.5 border-b border-border/40 px-3 pb-2.5"
-      style={{ paddingTop: insets.top + 6 }}
-    >
-      <PressableFeedback
-        onPress={() => {
-          playSoftPress();
-          router.back();
-        }}
-        hitSlop={10}
-        accessibilityRole="button"
-        accessibilityLabel="Back"
-      >
-        <SymbolView name={BACK_ICON} size={20} tintColor={foreground} />
-      </PressableFeedback>
+    <View className="flex-row items-center gap-2.5">
       <ListenerAvatar
         name={conversation.counterpartName}
         photoUrl={conversation.counterpartPhotoUrl}
         size="sm"
         muted={dim}
       />
-      <View className="flex-1 min-w-0">
+      <View className="min-w-0 flex-shrink">
         <AppText className="text-sm font-semibold text-foreground" numberOfLines={1}>
           {conversation.counterpartName}
         </AppText>

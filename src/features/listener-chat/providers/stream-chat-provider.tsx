@@ -4,6 +4,7 @@ import { Spinner } from 'heroui-native';
 import { Chat, OverlayProvider, useCreateChatClient } from 'stream-chat-expo';
 import { useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { useStreamTheme } from './stream-theme';
 
 type StreamSession = { apiKey: string; token: string; userId: string };
 
@@ -14,11 +15,29 @@ const LoadingView = () => (
 );
 
 /**
- * Connects the authenticated user to Stream and mounts OverlayProvider + Chat.
- * Mounted only around chat surfaces (the chat route group), not app-wide, so
- * the app never blocks on — or holds — a Stream connection outside a thread.
- * The Stream user id is minted server-side from the authed profile; the client
- * never names it.
+ * Overlay host for the long-press message menu and image gallery.
+ *
+ * Mounted high (the protected stack), unlike `StreamChatProvider`, because
+ * `MessageOverlayHostLayer` positions the lifted message and its action list in
+ * `useWindowDimensions()` coordinates — full-screen ones. Hosted inside a screen
+ * it would sit below the navigation header while still measuring against the
+ * whole window, and the action list would run off the bottom edge (Delete
+ * becoming unreachable). This is also Stream's documented placement: above
+ * navigation, not inside a route.
+ *
+ * Cheap to hoist: it renders context, a portal host, and nothing else until an
+ * overlay is actually open. No Stream connection is involved.
+ */
+export function StreamOverlayProvider({ children }: { children: React.ReactNode }) {
+  const streamTheme = useStreamTheme();
+  return <OverlayProvider value={{ style: streamTheme }}>{children}</OverlayProvider>;
+}
+
+/**
+ * Connects the authenticated user to Stream and mounts `Chat`. Mounted only on
+ * the thread screen, not app-wide, so the app never blocks on — or holds — a
+ * Stream connection outside a thread. The Stream user id is minted server-side
+ * from the authed profile; the client never names it.
  */
 export function StreamChatProvider({ children }: { children: React.ReactNode }) {
   const getStreamToken = useAction(api.listenerChat.getStreamToken);
@@ -77,11 +96,15 @@ function ConnectedChat({
     userData: { id: session.userId },
   });
 
+  // Applied here as well as on OverlayProvider — the overlay host reads its own
+  // ThemeProvider, and this one covers everything under `Chat`.
+  const streamTheme = useStreamTheme();
+
   if (!client) return <LoadingView />;
 
   return (
-    <OverlayProvider>
-      <Chat client={client}>{children}</Chat>
-    </OverlayProvider>
+    <Chat client={client} style={streamTheme}>
+      {children}
+    </Chat>
   );
 }
