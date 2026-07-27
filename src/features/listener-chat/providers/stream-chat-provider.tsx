@@ -1,18 +1,34 @@
-import { useCallback, useEffect, useState } from 'react';
-import { View } from 'react-native';
-import { Spinner } from 'heroui-native';
+import { createContext, use, useCallback, useEffect, useState } from 'react';
 import { Chat, OverlayProvider, useCreateChatClient } from 'stream-chat-expo';
+import { useAuth } from '@clerk/expo';
 import { useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useStreamTheme } from './stream-theme';
 
 type StreamSession = { apiKey: string; token: string; userId: string };
 
-const LoadingView = () => (
-  <View className="flex-1 items-center justify-center bg-background">
-    <Spinner />
-  </View>
-);
+/**
+ * Outlives the thread screen that fetched it, so the second and later opens
+ * skip the token round trip and go straight to connecting.
+ *
+ * Keyed by Clerk user id, never bare: module state survives a sign-out (no app
+ * restart in between), and an unkeyed cache would hand the next signed-in
+ * account the previous one's Stream identity. A stale-but-same-user token costs
+ * one `tokenProvider` refresh, which is the path that already handles expiry.
+ */
+let cachedSession: { userId: string; session: StreamSession } | null = null;
+
+/**
+ * How far along the Stream connection is, published to the thread screen so it
+ * can render its own chrome — header, safety strip, status bar, all of which
+ * come from Convex — while the connection is still opening, instead of the
+ * whole route being replaced by a spinner.
+ */
+export type StreamStatus = 'connecting' | 'ready' | 'unavailable';
+
+const StreamStatusContext = createContext<StreamStatus>('connecting');
+
+export const useStreamStatus = () => use(StreamStatusContext);
 
 /**
  * Overlay host for the long-press message menu and image gallery.
@@ -41,13 +57,18 @@ export function StreamOverlayProvider({ children }: { children: React.ReactNode 
  */
 export function StreamChatProvider({ children }: { children: React.ReactNode }) {
   const getStreamToken = useAction(api.listenerChat.getStreamToken);
-  const [session, setSession] = useState<StreamSession | null>(null);
+  const { userId } = useAuth();
+  const [session, setSession] = useState<StreamSession | null>(() =>
+    userId && cachedSession?.userId === userId ? cachedSession.session : null,
+  );
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!userId || session) return;
     let alive = true;
     getStreamToken()
       .then((result) => {
+        cachedSession = { userId, session: result };
         if (alive) setSession(result);
       })
       .catch((err) => {
@@ -57,14 +78,18 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
     return () => {
       alive = false;
     };
-  }, [getStreamToken]);
+  }, [getStreamToken, userId, session]);
 
-  if (error) {
-    // Thread screens render their own status copy from Convex; without a
-    // Stream session the messages simply can't load — bail to loading-free UI.
-    return <View className="flex-1 bg-background">{children}</View>;
+  // Children render throughout, never behind a full-screen spinner: the thread
+  // screen's own Convex query is the source of the header and status copy, and
+  // gating it here serialised two independent round trips that should overlap.
+  if (error || !session) {
+    return (
+      <StreamStatusContext value={error ? 'unavailable' : 'connecting'}>
+        {children}
+      </StreamStatusContext>
+    );
   }
-  if (!session) return <LoadingView />;
   return (
     <ConnectedChat session={session} getStreamToken={getStreamToken}>
       {children}
@@ -100,11 +125,11 @@ function ConnectedChat({
   // ThemeProvider, and this one covers everything under `Chat`.
   const streamTheme = useStreamTheme();
 
-  if (!client) return <LoadingView />;
+  if (!client) return <StreamStatusContext value="connecting">{children}</StreamStatusContext>;
 
   return (
     <Chat client={client} style={streamTheme}>
-      {children}
+      <StreamStatusContext value="ready">{children}</StreamStatusContext>
     </Chat>
   );
 }
