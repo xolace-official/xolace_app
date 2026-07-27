@@ -37,6 +37,21 @@ export type ThreadConversation = NonNullable<
 const NO_REACTIONS: ReactionData[] = [];
 
 /**
+ * Removes the two affordances v1 has no answer for.
+ *
+ * `supportedReactions: []` only empties the reaction *list* — the picker itself
+ * renders on `own_capabilities.sendReaction`, so long-press still offered a bare
+ * "+" that opened an emoji sheet. And the composer's "+" is an attachment
+ * picker; we accept text only, so it opened a gallery whose result had nowhere
+ * to go. Denying the capability is the single lever for both: the reaction
+ * picker returns null on `sendReaction`, and the attach button on `uploadFile`.
+ *
+ * Capabilities are merged per-key, so naming these two leaves the rest of the
+ * channel's real capabilities intact.
+ */
+const TEXT_ONLY_CAPABILITIES = { sendReaction: false, uploadFile: false };
+
+/**
  * Everything except threadReply and quotedReply — v1 has no reply surface.
  *
  * Subtractive on purpose. Building the array by hand skipped Stream's own
@@ -161,6 +176,16 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
         keyboardVerticalOffset={headerOffset}
         topInset={insets.top}
         supportedReactions={NO_REACTIONS}
+        overrideOwnCapabilities={TEXT_ONLY_CAPABILITIES}
+        // The capability alone does not remove the attach button: InputButtons
+        // sits behind a memo whose comparator checks only these three picker
+        // props, so a change to `uploadFile` never re-renders it. These do.
+        hasImagePicker={false}
+        hasFilePicker={false}
+        hasCameraPicker={false}
+        // And the button survives on slash commands alone — a messaging
+        // channel ships with giphy enabled by default.
+        hasCommands={false}
         messageActions={minimalMessageActions}
       >
         {header}
