@@ -36,6 +36,18 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
   // Primary actions — what you came to do. Full rows.
   const primaryItems: MenuButtonItem[] = [
     {
+      label: "Discovery",
+      iconName: { ios: "safari", android: "explore" },
+      accessibilityLabel: "Open discovery",
+      newKey: "discovery",
+      onPress: () => {
+        onClose();
+        // replace, not push — reflect stays the "/" landing with no back stack.
+        // Cast until typedRoutes regenerates on next expo start (see /quotes).
+        router.replace("/discovery" as any);
+      },
+    },
+    {
       label: "Vent",
       iconName: { ios: "mic", android: "mic" },
       accessibilityLabel: "Open voice vent, speak your weight",

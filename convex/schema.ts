@@ -9,6 +9,7 @@ import {
   triggerTypeValidator,
 } from "./lib/validators";
 import { voiceSlugValidator } from "./lib/voices";
+import { specialtyValidator } from "./lib/specialties";
 
 // =============================================================
 // XOLACE — LAYER 1 MVP SCHEMA (MERGED)
@@ -92,6 +93,12 @@ export default defineSchema({
     // Triggers the data purge pipeline.
     // Null if no deletion requested.
     deletionRequestedAt: v.optional(v.number()),
+
+    // Trained peer-listener (ambassador) eligibility. Set by an operator,
+    // never self-service. Public-facing listener data lives in
+    // listener_profiles — this flag only answers "may this account act
+    // as a listener?"
+    isListener: v.optional(v.boolean()),
 
     // --- Timestamps ---
     createdAt: v.number(),
@@ -1580,4 +1587,126 @@ export default defineSchema({
   })
     // Pointer resolution + version history, newest first.
     .index("by_profile_version", ["emotionalProfileId", "version"]),
+
+  // ===========================================================
+  // LISTENER PROFILES
+  // ===========================================================
+  //
+  // Public-facing data for trained peer listeners (ambassadors).
+  // Keyed by emotionalProfileId like every other child table —
+  // the Stream chat identity is the pseudonymous profile id, so
+  // a listener's real-world identity never reaches Stream.
+  //
+  // A profile is not listed in the directory until the listener
+  // finishes filling it in (complete) and is taking conversations
+  // (active).
+  //
+  listener_profiles: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+
+    // All optional until the listener publishes. `complete` mirrors
+    // "displayName + bio + photoUrl all present" — set server-side
+    // on publish, never client-computed.
+    displayName: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    photoUrl: v.optional(v.string()),
+    // What this listener is comfortable sitting with — max 3, life
+    // situations rather than diagnoses (see lib/specialties.ts).
+    specialties: v.optional(v.array(specialtyValidator)),
+
+    // Denormalized rating counters. Convex has no count operator, so the
+    // aggregate is maintained by rateConversation rather than scanned.
+    // Averages stay hidden until MIN_RATINGS_TO_DISPLAY (see listenerChat).
+    ratingSum: v.optional(v.number()),
+    ratingCount: v.optional(v.number()),
+
+    complete: v.boolean(),
+    // Operator/listener availability switch. Inactive listeners stay
+    // out of the directory and can't receive new requests, but open
+    // conversations keep working.
+    active: v.boolean(),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_profile", ["emotionalProfileId"])
+    // Directory listing: complete && active.
+    .index("by_complete_and_active", ["complete", "active"]),
+
+  // ===========================================================
+  // LISTENER CONVERSATIONS
+  // ===========================================================
+  //
+  // One row per (user, listener) pair, ever — re-requesting someone
+  // you already talked to reopens this row, never creates a second.
+  // The row is the source of truth for lifecycle; Stream only holds
+  // message content for accepted conversations.
+  //
+  // Lifecycle: requested → open → resting ⇄ open, → closed.
+  //  - requested: user asked, listener hasn't answered (7d expiry).
+  //  - open: accepted; counts against the listener's volume cap.
+  //  - resting: 14d with no message; readable, frees the cap slot.
+  //  - closed: declined, expired, blocked, or listener left.
+  //
+  listener_conversations: defineTable({
+    userProfileId: v.id("emotional_profiles"),
+    listenerProfileId: v.id("emotional_profiles"),
+
+    status: v.union(
+      v.literal("requested"),
+      v.literal("open"),
+      v.literal("resting"),
+      v.literal("closed"),
+    ),
+    // Why a conversation is closed — drives the no-guilt copy variant.
+    closedReason: v.optional(
+      v.union(
+        v.literal("declined"),
+        v.literal("expired"),
+        v.literal("blocked"),
+        v.literal("listener_left"),
+      ),
+    ),
+
+    // Stream channel id (not cid). Set on accept; absent while requested.
+    streamChannelId: v.optional(v.string()),
+
+    requestedAt: v.number(),
+    acceptedAt: v.optional(v.number()),
+    // Drives the resting sweep. Updated by touchConversation on send.
+    lastMessageAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userProfileId"])
+    // Volume-cap counting and listener-side inbox.
+    .index("by_listener_and_status", ["listenerProfileId", "status"])
+    // One-conversation-per-pair lookup.
+    .index("by_user_and_listener", ["userProfileId", "listenerProfileId"])
+    // Cron sweep: open-but-quiet → resting, requested-but-stale → closed.
+    .index("by_status_and_lastMessageAt", ["status", "lastMessageAt"]),
+
+  // ===========================================================
+  // CONVERSATION RATINGS
+  // ===========================================================
+  //
+  // One row per conversation, written only by the person who asked to
+  // talk (a listener never rates the people who come to them). Editable
+  // — re-rating patches this row and adjusts the listener's counters by
+  // the delta, so the aggregate can't be inflated by rating twice.
+  //
+  // Only ratable once real messages were exchanged, which makes a
+  // drive-by rating from a never-answered request impossible.
+  //
+  conversation_ratings: defineTable({
+    conversationId: v.id("listener_conversations"),
+    raterProfileId: v.id("emotional_profiles"),
+    listenerProfileId: v.id("emotional_profiles"),
+    // 1–5, integer. Validated server-side, never trusted from the client.
+    rating: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    // One rating per conversation — also the "have I already rated?" lookup.
+    .index("by_conversation", ["conversationId"])
+    // Account deletion sweeps a rater's rows.
+    .index("by_rater", ["raterProfileId"]),
 });

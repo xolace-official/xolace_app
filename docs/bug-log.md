@@ -15,6 +15,39 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-07-27 — Listener chat: thread screen hangs on a spinner forever (Stream key/secret mismatch)
+
+**Symptom**
+- Opening any listener conversation showed an infinite `Spinner` — no error, no red box, no toast. The rest of the app (roster, request, status card) worked normally, so it read as a hang rather than a failure.
+- Nothing in the client's captured network traffic pointed at Stream: only Clerk token refreshes.
+
+**Where it appeared**
+- iOS dev build (`com.xolaceincorg.xolace.dev`), dev Convex deployment `groovy-mandrill-892`. `stream-chat-expo@9.7.x`.
+
+**Root cause**
+The client and the backend were pointed at **two different Stream apps**. Convex had `STREAM_API_KEY=6ymu8zaw7ud2` (with its matching `STREAM_API_SECRET`); the app's `.env` had `EXPO_PUBLIC_STREAM_API_KEY=gtvk5c23d63d`. `getStreamToken` minted a valid JWT signed with the *first* app's secret, and `useCreateChatClient` presented it to the *second* app. Stream rejected the signature at the WebSocket handshake.
+
+The failure is silent by construction: `useCreateChatClient` swallows the connect error and simply leaves `client === null`, which renders the provider's `LoadingView` forever. The two env vars were set from different sources at different times (`getstream env --target expo` wrote the client one; the Convex pair was pasted into the dashboard separately), so nothing ever compared them.
+
+**How we diagnosed it**
+1. Component tree showed a bare `Spinner.Root` and no `Chat`/`OverlayProvider`, isolating the stall to `StreamChatProvider` rather than `ThreadScreen`.
+2. Ruled out the obvious: `EXPO_PUBLIC_STREAM_API_KEY` was present (len 12); Convex `envList` confirmed all three vars set; `getStreamToken` run via the Convex MCP returned a prompt `Not authenticated` (so the action was deployed and reachable, not hanging).
+3. Ruled out an effect loop — `useAction` is memoized on `[convex, fnName]` (`convex/dist/esm/react/client.js:523`), so the `useEffect` dep is stable.
+4. Probed Stream reachability *from the device* with `debugger-evaluate` + `fetch`: got a 401 `stream-auth-type missing or invalid`, i.e. network fine and the key recognised as a real app.
+5. **Sentry had the answer the whole time**: `WS failed with code 43 — JWTAuth error: signature is not valid. Make sure the token is created using the secret for API key "gtvk5c23d63d"`. The error names the *client's* key, which is what exposed the mismatch. It never reached the JS console because it's an unhandled rejection inside the Stream SDK's WS layer.
+
+**Fix**
+- `convex/integrations/stream.ts`: added `getStreamApiKey()`.
+- `convex/listenerChat.ts`: `getStreamToken` now returns `{ apiKey, token, userId }` — restoring what the original plan specified; the implementation had dropped `apiKey`.
+- `stream-chat-provider.tsx`: `useCreateChatClient({ apiKey: session.apiKey })` instead of reading `process.env.EXPO_PUBLIC_STREAM_API_KEY`. The key now ships with the token that was signed for it, so the two cannot drift. `EXPO_PUBLIC_STREAM_API_KEY` is no longer read anywhere in the app.
+
+**Prevention / future reference**
+- **A Stream client that hangs on a spinner with no error is almost always an auth mismatch, not a network problem.** `useCreateChatClient` returns `null` on failure and logs nothing to the JS console — check Sentry, not the Metro log.
+- Never give the client its own copy of the Stream API key. The token is only valid against the app whose secret signed it, so the key must come from the same call that mints the token.
+- Fetch-based network inspection will not show this: the handshake fails over WebSocket, so `view-network-logs` (which hooks `fetch`) stays empty and misleadingly suggests no request was made.
+
+---
+
 ## 2026-07-12 — Android: `Observe.logEvent` is undefined, crashing the reflect screen when a mirror arrives
 
 **Symptom**

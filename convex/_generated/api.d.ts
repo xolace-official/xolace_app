@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
 import type * as ai_bridge from "../ai/bridge.js";
 import type * as ai_cached from "../ai/cached.js";
 import type * as ai_cachedActions from "../ai/cachedActions.js";
@@ -58,6 +59,7 @@ import type * as exercises_match from "../exercises/match.js";
 import type * as feedback from "../feedback.js";
 import type * as followUps from "../followUps.js";
 import type * as http from "../http.js";
+import type * as integrations_stream from "../integrations/stream.js";
 import type * as jobs_accountDeletion from "../jobs/accountDeletion.js";
 import type * as jobs_dataRetention from "../jobs/dataRetention.js";
 import type * as jobs_dataWipe from "../jobs/dataWipe.js";
@@ -79,10 +81,12 @@ import type * as lib_rateLimits from "../lib/rateLimits.js";
 import type * as lib_reflectionMatching from "../lib/reflectionMatching.js";
 import type * as lib_sessionCascade from "../lib/sessionCascade.js";
 import type * as lib_spaceName from "../lib/spaceName.js";
+import type * as lib_specialties from "../lib/specialties.js";
 import type * as lib_streak from "../lib/streak.js";
 import type * as lib_timeOfDay from "../lib/timeOfDay.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as lib_voices from "../lib/voices.js";
+import type * as listenerChat from "../listenerChat.js";
 import type * as migrations from "../migrations.js";
 import type * as monthlyEvents from "../monthlyEvents.js";
 import type * as notifications from "../notifications.js";
@@ -111,6 +115,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
   "ai/bridge": typeof ai_bridge;
   "ai/cached": typeof ai_cached;
   "ai/cachedActions": typeof ai_cachedActions;
@@ -161,6 +166,7 @@ declare const fullApi: ApiFromModules<{
   feedback: typeof feedback;
   followUps: typeof followUps;
   http: typeof http;
+  "integrations/stream": typeof integrations_stream;
   "jobs/accountDeletion": typeof jobs_accountDeletion;
   "jobs/dataRetention": typeof jobs_dataRetention;
   "jobs/dataWipe": typeof jobs_dataWipe;
@@ -182,10 +188,12 @@ declare const fullApi: ApiFromModules<{
   "lib/reflectionMatching": typeof lib_reflectionMatching;
   "lib/sessionCascade": typeof lib_sessionCascade;
   "lib/spaceName": typeof lib_spaceName;
+  "lib/specialties": typeof lib_specialties;
   "lib/streak": typeof lib_streak;
   "lib/timeOfDay": typeof lib_timeOfDay;
   "lib/validators": typeof lib_validators;
   "lib/voices": typeof lib_voices;
+  listenerChat: typeof listenerChat;
   migrations: typeof migrations;
   monthlyEvents: typeof monthlyEvents;
   notifications: typeof notifications;
