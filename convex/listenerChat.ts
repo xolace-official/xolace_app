@@ -85,7 +85,29 @@ function chatEnabled() {
  * multiple conversations distinguishable without leaking anything.
  */
 function pseudonym(profileId: string) {
-  return `Guest ${profileId.slice(-4).toUpperCase()}`;
+  return `Camper ${profileId.slice(-4).toUpperCase()}`;
+}
+
+/**
+ * The seeker's chat picture — their chosen catalog avatar. `avatars.url` is
+ * already a denormalized public storage URL, so Stream takes it as-is.
+ * Curated illustrations only, never a photo, so it leaks nothing the
+ * pseudonym doesn't.
+ *
+ * Two reads per row in myConversations (up to 100 conversations) is the only
+ * cost worth naming; if that ever bites, denormalize avatarUrl onto
+ * listener_conversations at request time. Not yet.
+ */
+async function seekerImage(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
+  const prefs = await ctx.db
+    .query("preferences")
+    .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
+    .unique();
+  const avatar = await ctx.db
+    .query("avatars")
+    .withIndex("by_key", (q) => q.eq("key", prefs?.avatarId ?? "default"))
+    .unique();
+  return avatar?.url;
 }
 
 async function countOpen(ctx: QueryCtx, listenerProfileId: Id<"emotional_profiles">) {
@@ -354,7 +376,7 @@ export const myConversations = query({
         requestedAt: conversation.requestedAt,
         listenerProfileId: conversation.listenerProfileId,
         counterpartName: pseudonym(conversation.userProfileId),
-        counterpartPhotoUrl: undefined,
+        counterpartPhotoUrl: await seekerImage(ctx, conversation.userProfileId),
       });
     }
 
@@ -422,7 +444,10 @@ export const getConversation = query({
         role === "user"
           ? (listener?.displayName ?? "Listener")
           : pseudonym(conversation.userProfileId),
-      counterpartPhotoUrl: role === "user" ? listener?.photoUrl : undefined,
+      counterpartPhotoUrl:
+        role === "user"
+          ? listener?.photoUrl
+          : await seekerImage(ctx, conversation.userProfileId),
       myStreamUserId: profile._id,
     };
   },
@@ -493,6 +518,7 @@ export const getForAccept = internalQuery({
     listenerProfileId: v.id("emotional_profiles"),
     listenerName: v.string(),
     listenerPhotoUrl: v.optional(v.string()),
+    userPhotoUrl: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
     const { conversation, role } = await requireConversationParticipant(
@@ -512,6 +538,7 @@ export const getForAccept = internalQuery({
       listenerProfileId: conversation.listenerProfileId,
       listenerName: listener?.displayName ?? "Listener",
       listenerPhotoUrl: listener?.photoUrl,
+      userPhotoUrl: await seekerImage(ctx, conversation.userProfileId),
     };
   },
 });
@@ -549,6 +576,7 @@ export const acceptRequest = action({
       listenerProfileId: Id<"emotional_profiles">;
       listenerName: string;
       listenerPhotoUrl?: string;
+      userPhotoUrl?: string;
     } = await ctx.runQuery(internal.listenerChat.getForAccept, {
       conversationId: args.conversationId,
     });
@@ -560,7 +588,11 @@ export const acceptRequest = action({
         name: info.listenerName,
         image: info.listenerPhotoUrl,
       },
-      { id: info.userProfileId, name: pseudonym(info.userProfileId) },
+      {
+        id: info.userProfileId,
+        name: pseudonym(info.userProfileId),
+        image: info.userPhotoUrl,
+      },
     ]);
     await createListenerChannel(
       channelId,
@@ -732,7 +764,9 @@ export const getStreamIdentity = internalQuery({
     return {
       userId: profile._id,
       name: listener?.complete ? (listener.displayName ?? "") : pseudonym(profile._id),
-      image: listener?.complete ? listener.photoUrl : undefined,
+      image: listener?.complete
+        ? listener.photoUrl
+        : await seekerImage(ctx, profile._id),
     };
   },
 });
