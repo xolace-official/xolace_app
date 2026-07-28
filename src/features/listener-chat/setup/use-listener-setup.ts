@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import { File, UploadType } from 'expo-file-system';
 import { useMutation, useQuery } from 'convex/react';
 import { useToast } from 'heroui-native';
 import { api } from '@/convex/_generated/api';
@@ -111,12 +112,16 @@ export function useListenerSetup() {
     if (picked.canceled) return;
 
     setUploading(true);
+    const asset = picked.assets[0];
     // `.finally()` rather than try/finally — the React Compiler skips
     // optimization for try/finally bodies. The `.catch()` is what keeps the
     // fire-and-forget call in PhotoStep from becoming an unhandled rejection.
-    await uploadPhoto(picked.assets[0].uri, generateUploadUrl, setListenerPhoto)
+    await uploadPhoto(asset.uri, asset.mimeType, generateUploadUrl, setListenerPhoto)
       .finally(() => setUploading(false))
-      .catch(() => toast.show({ label: "Couldn't upload that photo. Try again." }));
+      .catch((error) => {
+        console.error('[listener-setup] photo upload failed', error);
+        toast.show({ label: "Couldn't upload that photo. Try again." });
+      });
   }, [generateUploadUrl, setListenerPhoto, toast]);
 
   return {
@@ -135,21 +140,30 @@ export function useListenerSetup() {
   };
 }
 
+/**
+ * The picked file streams to Convex natively rather than through
+ * `fetch(uri).blob()`. Reading a `file://` URI back through RN's fetch fails
+ * outright on Android, and where it does work it yields a blob with an empty
+ * `type`, so the upload lands with a blank Content-Type. `File.upload` reads
+ * the file on the native side and sends the picker's own mime type.
+ */
 async function uploadPhoto(
   uri: string,
+  mimeType: string | undefined,
   generateUploadUrl: () => Promise<string>,
   setListenerPhoto: (args: { storageId: Id<'_storage'> }) => Promise<null>,
 ) {
   const uploadUrl = await generateUploadUrl();
-  const blob = await fetch(uri).then((response) => response.blob());
-  const result = await fetch(uploadUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': blob.type },
-    body: blob,
+  const result = await new File(uri).upload(uploadUrl, {
+    httpMethod: 'POST',
+    uploadType: UploadType.BINARY_CONTENT,
+    headers: { 'Content-Type': mimeType ?? 'image/jpeg' },
   });
   // A failed upload answers with text, not JSON — parsing it first would throw
   // something unreadable instead of the actual status.
-  if (!result.ok) throw new Error(`Photo upload failed (${result.status})`);
-  const { storageId } = (await result.json()) as { storageId: Id<'_storage'> };
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(`Photo upload failed (${result.status}): ${result.body}`);
+  }
+  const { storageId } = JSON.parse(result.body) as { storageId: Id<'_storage'> };
   await setListenerPhoto({ storageId });
 }

@@ -3,11 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DiscoveryHeader } from './discovery-header';
 import { DailyQuotesCard } from './daily-quotes-card';
-import { ReflectDock } from './reflect-dock';
-
-// Room for the floating dock + tab bar so the last card is never trapped
-// underneath them.
-const DOCK_CLEARANCE = 148;
+import { DOCK_CLEARANCE, ReflectDock } from './reflect-dock';
 
 /**
  * First tab. The masthead runs under the status bar, so this screen opts out of

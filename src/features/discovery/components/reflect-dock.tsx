@@ -7,10 +7,16 @@ import { SymbolView } from 'expo-symbols';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 
-// The screen container already stops just above the floating tab bar, but the
-// bar still overlaps its last ~23pt. This is only the small gap between the two
-// — measured, not the full bar height, which would push the dock way up.
-const TAB_BAR_CLEARANCE = 90;
+// iOS: the native tab bar is translucent and content runs underneath it, so the
+// dock has to clear the whole bar. Android: the native BottomNavigationView is
+// opaque and the content view already stops above it, so the same number
+// stranded the dock ~90dp in mid-air — there it only needs a breathing margin.
+export const TAB_BAR_CLEARANCE = process.env.EXPO_OS === 'android' ? 16 : 90;
+
+// Dock height + its clearance — how much scroll tail the screen must reserve.
+export const DOCK_CLEARANCE = 56 + TAB_BAR_CLEARANCE;
+
+const ARROW_ICON = { ios: 'arrow.right', android: 'arrow_forward', web: 'arrow_forward' } as const;
 
 const styles = StyleSheet.create({
   // borderRadius lives here with the shadow, not only in `rounded-full` — the
@@ -54,7 +60,7 @@ export function ReflectDock() {
             Start a reflection
           </AppText>
           <View className="h-10 w-10 items-center justify-center rounded-full bg-accent-foreground">
-            <SymbolView name="arrow.right" size={16} tintColor={accent as string} />
+            <SymbolView name={ARROW_ICON as any} size={16} tintColor={accent as string} />
           </View>
         </View>
       </PressableFeedback>
