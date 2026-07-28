@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+// import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { PressableFeedback, useThemeColor } from 'heroui-native';
 import { SymbolView } from 'expo-symbols';
@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
  */
 export function ReflectDock() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  // const insets = useSafeAreaInsets();
   const accent = useThemeColor('accent');
 
   const goToReflect = () => {
@@ -44,14 +44,14 @@ export function ReflectDock() {
       <PressableFeedback
         onPress={goToReflect}
         accessibilityRole="button"
-        accessibilityLabel="What's here right now? Return to reflect"
+        accessibilityLabel="Start a reflection"
       >
         <View
           className="h-14 flex-row items-center gap-3 rounded-full bg-accent pl-5 pr-2"
           style={styles.shadow}
         >
           <AppText className="flex-1 text-[15px] font-semibold text-accent-foreground">
-            What&apos;s here right now?
+            Start a reflection
           </AppText>
           <View className="h-10 w-10 items-center justify-center rounded-full bg-accent-foreground">
             <SymbolView name="arrow.right" size={16} tintColor={accent as string} />

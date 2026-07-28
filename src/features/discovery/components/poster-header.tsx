@@ -1,12 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useUser } from '@clerk/expo';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppTheme } from '@/src/context/app-theme-context';
 import { DISPLAY_LEAD, DISPLAY_TAIL, getDateStamp, getGreeting } from '@/src/features/discovery/greeting';
+import { useProfileSummary } from '@/src/features/profile/hooks/use-profile-summary';
 
 const ART = require('@/assets/images/illustrations/discovery-image-bg.png');
 
@@ -42,7 +42,9 @@ const styles = StyleSheet.create({
  */
 export function PosterHeader() {
   const insets = useSafeAreaInsets();
-  const { user } = useUser();
+  // Same name the profile screen shows — the user-set displayName from
+  // preferences, not the Clerk account name.
+  const summary = useProfileSummary();
   const { isDark } = useAppTheme();
 
   return (
@@ -77,7 +79,7 @@ export function PosterHeader() {
         <View className="mt-8 flex-row items-end justify-between gap-4">
           <View className="flex-1">
             <AppText className="text-[13px] font-semibold text-accent-foreground">
-              {getGreeting(user?.firstName)}
+              {getGreeting(summary?.displayName)}
             </AppText>
             <AppText className="mt-0.5 text-[12px] leading-4 text-accent-foreground/70">
               You made it here again.

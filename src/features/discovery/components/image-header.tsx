@@ -1,12 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useUser } from '@clerk/expo';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppTheme } from '@/src/context/app-theme-context';
 import { DISPLAY_LEAD, DISPLAY_TAIL, getDateStamp, getGreeting } from '@/src/features/discovery/greeting';
+import { useProfileSummary } from '@/src/features/profile/hooks/use-profile-summary';
 
 const ART = require('@/assets/images/illustrations/discovery-image-bg.png');
 
@@ -30,7 +30,8 @@ const styles = StyleSheet.create({
  */
 export function ImageHeader() {
   const insets = useSafeAreaInsets();
-  const { user } = useUser();
+  // displayName from preferences, matching the profile screen.
+  const summary = useProfileSummary();
   const { isDark } = useAppTheme();
 
   return (
@@ -60,13 +61,13 @@ export function ImageHeader() {
 
         <View className="mt-4">
           <AppText
-            className="text-[36px] leading-[38px] font-bold text-accent-foreground"
+            className="text-[36px] leading-9.5 font-bold text-accent-foreground"
             style={styles.display}
           >
             {DISPLAY_LEAD}
           </AppText>
           <AppText
-            className="mt-1 text-[36px] leading-[38px] font-normal text-accent-foreground/75"
+            className="mt-1 text-[36px] leading-9.5 font-normal text-accent-foreground/75"
             style={styles.display}
           >
             {DISPLAY_TAIL}
@@ -75,7 +76,7 @@ export function ImageHeader() {
 
         <View className="mt-10">
           <AppText className="text-[13px] font-semibold text-accent-foreground">
-            {getGreeting(user?.firstName)}
+            {getGreeting(summary?.displayName)}
           </AppText>
           <AppText className="mt-0.5 text-[12px] leading-4 text-accent-foreground/75">
             You made it here again.

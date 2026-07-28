@@ -20,9 +20,13 @@ export function getDateStamp(now = new Date()): string {
   return `${weekday} · ${getDayPart(now)}`;
 }
 
-/** Quiet, non-time-worded greeting so it doesn't echo the eyebrow above it. */
-export function getGreeting(firstName?: string | null): string {
-  return firstName ? `Welcome back, ${firstName}` : 'Welcome back';
+/**
+ * Quiet, non-time-worded greeting so it doesn't echo the eyebrow above it.
+ * Takes the preferences displayName (same source as the profile screen), not
+ * the Clerk account name.
+ */
+export function getGreeting(displayName?: string | null): string {
+  return displayName ? `Welcome back, ${displayName}` : 'Welcome back';
 }
 
 /**
