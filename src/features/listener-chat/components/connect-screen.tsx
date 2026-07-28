@@ -6,6 +6,7 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { SegmentedControl } from '@/src/components/shared/segmented-control';
 import { cn } from '@/src/lib/utils';
+import { useChatWarmup } from '../use-chat-warmup';
 import { ChatsList } from './chats-list';
 import { ListenerRoster } from './listener-roster';
 import { ListenerSetupBanner } from './listener-setup-banner';
@@ -48,6 +49,11 @@ export function ConnectScreen() {
   const status = useQuery(api.listenerChat.status);
   const conversations = useQuery(api.listenerChat.myConversations);
   const [selected, setSelected] = useState<Segment | null>(null);
+
+  // Opens the Stream connection and warms every channel in the list, so tapping
+  // a row lands on messages instead of a skeleton. Held off until `status`
+  // confirms the feature is on — a disabled deployment has no token to mint.
+  useChatWarmup(conversations, status?.enabled ?? false);
 
   const loading = status === undefined || conversations === undefined;
   const segment: Segment =
