@@ -27,14 +27,14 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
 
   if (directory !== undefined && directory.length === 0) {
     return (
-      <View className="min-h-[380px] items-center justify-center gap-2.5 px-8">
+      <View className="min-h-95 items-center justify-center gap-2.5 px-8">
         <View className="h-12 w-12 rounded-2xl bg-surface-secondary items-center justify-center">
           <AppText className="text-lg">🕯️</AppText>
         </View>
         <AppText className="text-[15px] font-semibold text-foreground">
           No one&apos;s here just yet
         </AppText>
-        <AppText className="text-[13px] text-muted text-center leading-5 max-w-[240px]">
+        <AppText className="text-[13px] text-muted text-center leading-5 max-w-60">
           Listeners are still settling in. They&apos;ll show up here as they arrive — check
           back soon.
         </AppText>

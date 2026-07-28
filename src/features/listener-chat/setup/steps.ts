@@ -12,7 +12,6 @@ export type SetupStep = {
   id: 'photo' | 'name' | 'bio' | 'specialties' | 'review';
   title: string;
   description: string;
-  /** Label for the progress meter when this step is what's blocking publish. */
   missingLabel: string;
   isComplete: (draft: SetupDraft) => boolean;
 };

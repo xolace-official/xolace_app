@@ -41,7 +41,7 @@ export function ThreadHeader({ conversation }: { conversation: ThreadConversatio
         size="sm"
         muted={dim}
       />
-      <View className="min-w-0 flex-shrink">
+      <View className="min-w-0 shrink">
         <AppText className="text-sm font-semibold text-foreground" numberOfLines={1}>
           {conversation.counterpartName}
         </AppText>

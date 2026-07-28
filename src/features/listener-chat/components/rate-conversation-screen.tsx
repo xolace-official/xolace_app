@@ -24,11 +24,6 @@ const HEADER_OPTIONS = {
  * quiet, never mid-thread. Asking during a live exchange would turn it into a
  * transaction; asking at the natural end of one is the only moment where the
  * question isn't intrusive.
- *
- * The question is "how was this conversation?", not "how was Maya?" — a
- * listener can do everything right on a night nothing helps, and the question
- * shouldn't make them carry that. Skipping is one tap and costs nothing: an
- * unrated conversation simply never enters the denominator.
  */
 export function RateConversationScreen({ conversationId }: { conversationId: string }) {
   const router = useRouter();
@@ -44,7 +39,7 @@ export function RateConversationScreen({ conversationId }: { conversationId: str
     return (
       <View className="flex-1 items-center justify-center gap-4 bg-background px-10">
         <Stack.Screen options={HEADER_OPTIONS} />
-        <Skeleton className="h-[58px] w-[58px] rounded-full" />
+        <Skeleton className="h-14.5 w-14.5 rounded-full" />
         <Skeleton className="h-6 w-56 rounded-lg" />
         <Skeleton className="h-10 w-48 rounded-lg" />
       </View>
@@ -99,7 +94,7 @@ export function RateConversationScreen({ conversationId }: { conversationId: str
 
       {/* The privacy rule is stated before the stars, not after, so nobody
           answers without knowing what the listener will see. */}
-      <AppText className="max-w-[260px] text-center text-[13px] leading-5 text-muted">
+      <AppText className="max-w-65 text-center text-[13px] leading-5 text-muted">
         Only you and Xolace see this. {conversation.counterpartName} sees an overall score,
         never which conversation it came from.
       </AppText>

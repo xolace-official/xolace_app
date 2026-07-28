@@ -27,7 +27,7 @@ export function SetupProgress({
       <AppText className="text-[11px] text-muted">
         {blockingLabel
           ? `${done} of ${total} complete — ${blockingLabel} to publish`
-          : 'All set — publish when you’re ready'}
+          : 'All set - publish when you’re ready'}
       </AppText>
     </View>
   );

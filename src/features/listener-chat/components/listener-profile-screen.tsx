@@ -216,9 +216,7 @@ function ProfileCta({
 }) {
   const { conversation, available, displayName, isSelf } = profile;
 
-  // Your own profile is worth seeing — it's how you check what the roster
-  // shows — but there's nothing to ask yourself. The server rejects a
-  // self-request anyway; this keeps you from tapping into that error.
+
   if (isSelf) {
     return <Note>This is how your profile looks to everyone else.</Note>;
   }
@@ -308,7 +306,7 @@ function ProfileSkeleton() {
   return (
     <View className="flex-1 items-center gap-4 bg-background px-6 pt-28">
       <Stack.Screen options={HEADER_OPTIONS} />
-      <Skeleton className="h-[76px] w-[76px] rounded-full" />
+      <Skeleton className="h-19 w-19 rounded-full" />
       <Skeleton className="h-7 w-36 rounded-lg" />
       <Skeleton className="h-4 w-52 rounded-lg" />
       <Skeleton className="mt-3 h-28 w-full rounded-3xl" />

@@ -29,8 +29,7 @@ export function useChatWarmup(
 ) {
   const { client } = useStreamConnection(enabled);
 
-  // Joined into a string so a re-render of the reactive Convex query — new
-  // array identity, same contents — doesn't re-issue the query.
+
   const channelIds = (conversations ?? [])
     .filter((conversation) => conversation.streamChannelId)
     .sort((a, b) => (b.lastMessageAt ?? 0) - (a.lastMessageAt ?? 0))
@@ -39,18 +38,12 @@ export function useChatWarmup(
     .join(',');
 
   useEffect(() => {
-    // `enabled` is checked here as well as at the connection: the provider
-    // outlives any one chat surface, so a client opened by the thread screen is
-    // still around while this caller says it doesn't want chat work yet.
     if (!enabled || !client || !channelIds) return;
     // Not cancellable, and deliberately not awaited: the only effect that
     // matters is the client-side cache it fills, which a later mount still
     // benefits from. Nothing here renders the result.
     client
       .queryChannels(
-        // The membership clause is redundant against read permissions, which
-        // already scope this to our own channels — it's here because it's the
-        // filter shape Stream indexes client-side queries on.
         { id: { $in: channelIds.split(',') }, members: { $in: [client.userID as string] } },
         { last_message_at: -1 },
         { watch: true, limit: MAX_PREFETCH },

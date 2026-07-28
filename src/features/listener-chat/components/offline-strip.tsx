@@ -22,10 +22,6 @@ const OFFLINE_ICON = {
  * before the client connects, and every `requested` thread, neither of which
  * mounts this component at all.
  *
- * Renders nothing while `isOnline` is `null`: that is Stream's "haven't asked
- * NetInfo yet" value, and treating it as offline would flash the strip on
- * every open. `connectionRecovering` separates a retrying socket from a flat
- * one — the difference decides whether waiting is worth it.
  */
 export function OfflineStrip() {
   const { connectionRecovering, isOnline } = useChatContext();

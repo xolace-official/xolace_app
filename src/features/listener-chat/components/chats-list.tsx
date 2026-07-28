@@ -25,15 +25,15 @@ export function ChatsList({
 
   if (conversations.length === 0) {
     return (
-      <View className="min-h-[380px] items-center justify-center gap-2.5 px-8">
+      <View className="min-h-95 items-center justify-center gap-2.5 px-8">
         <View className="h-12 w-12 rounded-2xl bg-surface-secondary items-center justify-center">
           <AppText className="text-lg">💬</AppText>
         </View>
         <AppText className="text-[15px] font-semibold text-foreground">
           No conversations yet
         </AppText>
-        <AppText className="text-[13px] text-muted text-center leading-5 max-w-[240px]">
-          When you message a listener, it&apos;ll live here — including anything you&apos;ve
+        <AppText className="text-[13px] text-muted text-center leading-5 max-w-60">
+          When you message a listener, it&apos;ll live here - including anything you&apos;ve
           talked about before.
         </AppText>
         <PressableFeedback

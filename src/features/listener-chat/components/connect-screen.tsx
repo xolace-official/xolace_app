@@ -16,12 +16,7 @@ type Segment = 'chats' | 'listeners';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
 
-/**
- * The active pill is accent, not `surface`: on dark themes `surface` (L15%) is
- * *darker* than the `surface-secondary` track (L19%), so a surface indicator
- * read as no selection at all. Accent is the app's established active-state
- * color and carries contrast in both light and dark.
- */
+
 function SegmentLabel({ label, active }: { label: string; active: boolean }) {
   return (
     <AppText
@@ -40,10 +35,6 @@ function SegmentLabel({ label, active }: { label: string; active: boolean }) {
  * listener's incoming requests) and Listeners (the roster). Auto-lands on
  * Chats when any conversation exists, on Listeners otherwise — a first-time
  * user meets the roster, a returning user meets their thread.
- *
- * The title is the stack's large title, not a text node — one scroll view owns
- * the screen so the native tab/stack insets land, and the segments scroll with
- * the content the way the mockup has them.
  */
 export function ConnectScreen() {
   const status = useQuery(api.listenerChat.status);

@@ -103,7 +103,7 @@ function FilterChip({
       <View
         className={cn(
           'rounded-full border px-3 py-1.5',
-          active ? 'border-accent bg-accent/12' : 'border-border/50 bg-surface',
+          active ? 'border-accent bg-accent/12' : 'border-border/55 bg-surface',
         )}
         style={styles.borderCurve}
       >

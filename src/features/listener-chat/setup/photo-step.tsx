@@ -43,7 +43,7 @@ export function PhotoStep({
       <AppText className="text-[13px] font-semibold text-accent">
         {photoUrl ? 'Choose a different photo' : 'Choose a photo'}
       </AppText>
-      <AppText className="max-w-[260px] text-center text-[11px] leading-4 text-muted">
+      <AppText className="max-w-65 text-center text-[11px] leading-4 text-muted">
         This is the only image anyone sees. It stays on your listener profile and nowhere
         else.
       </AppText>

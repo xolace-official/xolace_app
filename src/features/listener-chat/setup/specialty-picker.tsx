@@ -101,8 +101,6 @@ function SpecialtyChip({
   disabled: boolean;
   onPress: () => void;
 }) {
-  // useThemeColor resolves tokens to 6-digit hex, so an appended alpha pair is
-  // a valid colour — that's the wash behind a selected chip.
   const accent = useThemeColor('accent') as string;
   const muted = useThemeColor('muted') as string;
 
