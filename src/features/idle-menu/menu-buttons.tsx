@@ -57,15 +57,6 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
         router.push("/(protected)/voice-vent");
       },
     },
-    {
-      label: "Today",
-      iconName: { ios: "quote.bubble", android: "format_quote" },
-      accessibilityLabel: "Open your daily quote",
-      onPress: () => {
-        onClose();
-        router.push("/(protected)/quotes" as any);
-      },
-    },
   ];
 
   // Housekeeping — shares one compact row.

@@ -1,34 +1,35 @@
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { useUser } from '@clerk/expo';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
-import { PressableFeedback, useThemeColor } from 'heroui-native';
-import { SymbolView } from 'expo-symbols';
 
 import { AppText } from '@/src/components/shared/app-text';
-import { playSoftPress } from '@/src/lib/haptics';
 import { useAppTheme } from '@/src/context/app-theme-context';
-import {
-  XOLACER_LEAD,
-  XOLACER_TAIL,
-  getDateStamp,
-  getGreeting,
-} from '@/src/features/discovery/greeting';
+import { DISPLAY_LEAD, DISPLAY_TAIL, getDateStamp, getGreeting } from '@/src/features/discovery/greeting';
 
 const ART = require('@/assets/images/illustrations/discovery-image-bg.png');
 
-// The asset is a 4-up illustration; cropping to the top-right quadrant isolates
-// one figure so the tile reads as a portrait, not a collage of half-faces.
-const ART_CROP = { top: 0, right: 0 } as const;
+// The source is a 2×2 grid of figures, so it has to be zoomed and offset to
+// isolate one; `contentFit`/`contentPosition` alone only pan, they don't zoom.
+// Source is 1200×1000; the top-right figure sits at roughly x 620–980, y 40–470.
+const ART_SCALE = 0.36;
 
 const styles = StyleSheet.create({
   // Space Grotesk needs negative tracking to hold together at display size.
   // letterSpacing is px in RN, so it can't live in a Tailwind class.
   display: { letterSpacing: -1.1 },
   eyebrow: { letterSpacing: 1.4 },
-  art: { width: 128, height: 138 },
+  artWindow: { width: 128, height: 138 },
+  art: {
+    position: 'absolute',
+    width: 1200 * ART_SCALE,
+    height: 1000 * ART_SCALE,
+    left: -630 * ART_SCALE,
+    top: -60 * ART_SCALE,
+  },
+  // Only the bottom corners round — the field runs off the top of the screen.
+  field: { borderBottomLeftRadius: 34, borderBottomRightRadius: 34 },
 });
 
 /**
@@ -41,52 +42,37 @@ const styles = StyleSheet.create({
  */
 export function PosterHeader() {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const { user } = useUser();
   const { isDark } = useAppTheme();
-  const onAccent = useThemeColor('accent-foreground');
-
-  const goToListenerSetup = () => {
-    playSoftPress();
-    router.push('/listener-setup' as never);
-  };
 
   return (
-    <View className="overflow-hidden rounded-b-[34px] bg-accent">
+    <View className="overflow-hidden bg-accent" style={styles.field}>
       {/* --accent is dark in light theme and light in dark theme, so the status
           bar content inverts against the app theme on this screen only. */}
       <StatusBar style={isDark ? 'dark' : 'light'} />
 
       <View className="px-6 pb-7" style={{ paddingTop: insets.top + 12 }}>
         <AppText
-          className="text-[10px] font-medium uppercase text-accent-foreground/60"
+          className="text-[10px] font-medium uppercase text-accent-foreground/65"
           style={styles.eyebrow}
         >
           {getDateStamp()}
         </AppText>
 
-        <PressableFeedback
-          onPress={goToListenerSetup}
-          accessibilityRole="button"
-          accessibilityLabel="Become a Xolacer"
-          className="mt-4"
-        >
+        <View className="mt-4">
           <AppText
-            className="text-[36px] leading-[38px] font-bold text-accent-foreground"
+            className="text-[36px] leading-9.5 font-bold text-accent-foreground"
             style={styles.display}
           >
-            {XOLACER_LEAD}
+            {DISPLAY_LEAD}
           </AppText>
-          <View className="mt-1 flex-row items-center gap-2">
-            <AppText
-              className="text-[36px] leading-[38px] font-normal text-accent-foreground/70"
-              style={styles.display}
-            >
-              {XOLACER_TAIL}
-            </AppText>
-            <SymbolView name="arrow.right" size={18} tintColor={onAccent as string} />
-          </View>
-        </PressableFeedback>
+          <AppText
+            className="mt-1 text-[36px] leading-9.5 font-normal text-accent-foreground/70"
+            style={styles.display}
+          >
+            {DISPLAY_TAIL}
+          </AppText>
+        </View>
 
         <View className="mt-8 flex-row items-end justify-between gap-4">
           <View className="flex-1">
@@ -97,13 +83,12 @@ export function PosterHeader() {
               You made it here again.
             </AppText>
           </View>
-          <View className="overflow-hidden rounded-[22px] border border-accent-foreground/15">
+          <View className="overflow-hidden rounded-[22px]" style={styles.artWindow}>
             <Image
               source={ART}
               contentFit="cover"
-              contentPosition={ART_CROP}
               style={styles.art}
-              accessibilityLabel="People holding their phones, quietly"
+              accessibilityLabel="Someone listening, quietly"
             />
           </View>
         </View>

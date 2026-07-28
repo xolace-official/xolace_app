@@ -1,0 +1,63 @@
+import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { PressableFeedback, useThemeColor } from 'heroui-native';
+import { SymbolView } from 'expo-symbols';
+
+import { AppText } from '@/src/components/shared/app-text';
+import { playSoftPress } from '@/src/lib/haptics';
+
+// The screen container already stops just above the floating tab bar, but the
+// bar still overlaps its last ~23pt. This is only the small gap between the two
+// — measured, not the full bar height, which would push the dock way up.
+const TAB_BAR_CLEARANCE = 90;
+
+const styles = StyleSheet.create({
+  // borderRadius lives here with the shadow, not only in `rounded-full` — the
+  // shadow path follows the radius on this style object, otherwise it draws as
+  // a rectangle and its corners show past the pill on light backgrounds.
+  shadow: { borderRadius: 999 },
+});
+
+/**
+ * The one persistent action on discovery — a floating pill above the tab bar,
+ * not a row in the scroll content, so the way back to reflect is always within
+ * thumb reach. `replace`s to "/" so the user never accumulates a back stack
+ * between the tab surface and the idle screen.
+ */
+export function ReflectDock() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const accent = useThemeColor('accent');
+
+  const goToReflect = () => {
+    playSoftPress();
+    router.replace('/');
+  };
+
+  return (
+    <View
+      className="absolute left-4 right-4"
+      style={{ bottom:  TAB_BAR_CLEARANCE }}
+      pointerEvents="box-none"
+    >
+      <PressableFeedback
+        onPress={goToReflect}
+        accessibilityRole="button"
+        accessibilityLabel="What's here right now? Return to reflect"
+      >
+        <View
+          className="h-14 flex-row items-center gap-3 rounded-full bg-accent pl-5 pr-2"
+          style={styles.shadow}
+        >
+          <AppText className="flex-1 text-[15px] font-semibold text-accent-foreground">
+            What&apos;s here right now?
+          </AppText>
+          <View className="h-10 w-10 items-center justify-center rounded-full bg-accent-foreground">
+            <SymbolView name="arrow.right" size={16} tintColor={accent as string} />
+          </View>
+        </View>
+      </PressableFeedback>
+    </View>
+  );
+}

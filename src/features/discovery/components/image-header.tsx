@@ -1,21 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { useUser } from '@clerk/expo';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
-import { PressableFeedback, useThemeColor } from 'heroui-native';
-import { SymbolView } from 'expo-symbols';
 
 import { AppText } from '@/src/components/shared/app-text';
-import { playSoftPress } from '@/src/lib/haptics';
 import { useAppTheme } from '@/src/context/app-theme-context';
-import {
-  XOLACER_LEAD,
-  XOLACER_TAIL,
-  getDateStamp,
-  getGreeting,
-} from '@/src/features/discovery/greeting';
+import { DISPLAY_LEAD, DISPLAY_TAIL, getDateStamp, getGreeting } from '@/src/features/discovery/greeting';
 
 const ART = require('@/assets/images/illustrations/discovery-image-bg.png');
 
@@ -26,6 +17,7 @@ const ART_CROP = { bottom: 0 } as const;
 const styles = StyleSheet.create({
   display: { letterSpacing: -1.1 },
   eyebrow: { letterSpacing: 1.4 },
+  field: { borderBottomLeftRadius: 34, borderBottomRightRadius: 34 },
 });
 
 /**
@@ -38,18 +30,11 @@ const styles = StyleSheet.create({
  */
 export function ImageHeader() {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const { user } = useUser();
   const { isDark } = useAppTheme();
-  const onAccent = useThemeColor('accent-foreground');
-
-  const goToListenerSetup = () => {
-    playSoftPress();
-    router.push('/listener-setup' as never);
-  };
 
   return (
-    <View className="overflow-hidden rounded-b-[34px] bg-accent">
+    <View className="overflow-hidden bg-accent" style={styles.field}>
       <StatusBar style={isDark ? 'dark' : 'light'} />
 
       <Image
@@ -73,28 +58,20 @@ export function ImageHeader() {
           {getDateStamp()}
         </AppText>
 
-        <PressableFeedback
-          onPress={goToListenerSetup}
-          accessibilityRole="button"
-          accessibilityLabel="Become a Xolacer"
-          className="mt-4"
-        >
+        <View className="mt-4">
           <AppText
             className="text-[36px] leading-[38px] font-bold text-accent-foreground"
             style={styles.display}
           >
-            {XOLACER_LEAD}
+            {DISPLAY_LEAD}
           </AppText>
-          <View className="mt-1 flex-row items-center gap-2">
-            <AppText
-              className="text-[36px] leading-[38px] font-normal text-accent-foreground/75"
-              style={styles.display}
-            >
-              {XOLACER_TAIL}
-            </AppText>
-            <SymbolView name="arrow.right" size={18} tintColor={onAccent as string} />
-          </View>
-        </PressableFeedback>
+          <AppText
+            className="mt-1 text-[36px] leading-[38px] font-normal text-accent-foreground/75"
+            style={styles.display}
+          >
+            {DISPLAY_TAIL}
+          </AppText>
+        </View>
 
         <View className="mt-10">
           <AppText className="text-[13px] font-semibold text-accent-foreground">

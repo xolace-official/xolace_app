@@ -26,17 +26,21 @@ export function getGreeting(firstName?: string | null): string {
 }
 
 /**
- * Xolacer invitation lines. One is live; swap the index to try another.
- * Split lead/tail so the masthead can drop the tail to a lighter weight —
- * the reference's trick for giving a type block internal rhythm.
+ * Masthead display copy. Split lead/tail so the tail can drop to a lighter
+ * weight — the reference's trick for giving a type block internal rhythm.
+ *
+ * Copy only — it does not navigate. Listener setup is gated on `isListener`,
+ * so it is not the destination; this stays inert until there is one.
  */
-export const XOLACER_LINES = [
-  'Be the support someone needs.',
-  'Listen. Connect. Support.',
-  'Your story, your empathy, your impact.',
-  'Make space for someone to be heard.',
-  'Someone needs a safe space. You could help create it.',
+export const DISPLAY_LINES = [
+  { lead: 'Be the support someone needs.', tail: 'Become a Xolacer.' },
+  { lead: 'Listen. Connect. Support.', tail: 'Become a Xolacer.' },
+  { lead: 'Your story, your empathy, your impact.', tail: 'Become a Xolacer.' },
+  { lead: 'Make space for someone to be heard.', tail: 'Become a Xolacer.' },
+  { lead: 'Someone needs a safe space.', tail: 'You could help create it.' },
 ] as const;
 
-export const XOLACER_LEAD = XOLACER_LINES[3];
-export const XOLACER_TAIL = 'Become a Xolacer.';
+const ACTIVE_LINE = 3;
+
+export const DISPLAY_LEAD = DISPLAY_LINES[ACTIVE_LINE].lead;
+export const DISPLAY_TAIL = DISPLAY_LINES[ACTIVE_LINE].tail;
