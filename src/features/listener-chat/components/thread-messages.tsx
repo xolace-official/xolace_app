@@ -124,7 +124,7 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
   );
 
   const watched = useWatchedChannel(channel);
-  useTouchOnSend(channel, conversation);
+  useTouchOnSend(channel, conversation, client.userID);
 
   // `client.channel()` returns an *unwatched* handle: no messages, and no
   // `own_capabilities`. `<Channel>` renders its children immediately and only
@@ -218,18 +218,27 @@ function useWatchedChannel(channel: StreamChannel) {
  * Each client touches on its own sends, so both sides stay covered without a
  * Stream webhook. (ponytail: webhook later only if client drift shows up.)
  */
-function useTouchOnSend(channel: StreamChannel, conversation: ThreadConversation) {
+function useTouchOnSend(
+  channel: StreamChannel,
+  conversation: ThreadConversation,
+  // The connected user's id, from the socket rather than from Convex — same
+  // value (the profile id signs the token), one less field the screen has to
+  // have loaded before it can mount this.
+  myUserId: string | undefined,
+) {
   const touchConversation = useMutation(api.listenerChat.touchConversation);
-  const { id, status, myStreamUserId } = conversation;
+  const { id, status } = conversation;
 
   useEffect(() => {
     if (status !== 'open') return;
     const { unsubscribe } = channel.on('message.new', (event) => {
-      if (event.user?.id !== myStreamUserId) return;
+      // The `!myUserId` half matters: without it an id-less event would match
+      // an id-less user and touch on the counterpart's message.
+      if (!myUserId || event.user?.id !== myUserId) return;
       touchConversation({ conversationId: id }).catch((error) =>
         console.error('[listener-chat] touch failed', error),
       );
     });
     return unsubscribe;
-  }, [channel, id, status, myStreamUserId, touchConversation]);
+  }, [channel, id, status, myUserId, touchConversation]);
 }

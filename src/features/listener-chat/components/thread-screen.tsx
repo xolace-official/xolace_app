@@ -1,12 +1,11 @@
 import { View } from 'react-native';
 import { Stack } from 'expo-router';
-import { useQuery } from 'convex/react';
 import { Button } from 'heroui-native';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
 import { useStreamConnection } from '../providers/stream-chat-provider';
+import { useThreadConversation } from '../use-thread-conversation';
 import { ComposerPlaceholder } from './composer-placeholder';
 import { SafetyStrip } from './safety-strip';
 import { ThreadHeader } from './thread-header';
@@ -14,14 +13,20 @@ import { ThreadMessages } from './thread-messages';
 import { ThreadSkeleton } from './thread-skeleton';
 import { ThreadStatusBar } from './thread-status-bar';
 
-export type ThreadConversation = NonNullable<
-  FunctionReturnType<typeof api.listenerChat.getConversation>
+/**
+ * `myStreamUserId` is dropped: it is the profile id, which is also the id the
+ * Stream socket connects as, so `client.userID` carries the same value without
+ * the round trip — and that lets `useThreadConversation` seed this shape from
+ * the conversation list, which has no per-user field of its own. The server
+ * still returns it for clients shipped before this change.
+ */
+export type ThreadConversation = Omit<
+  NonNullable<FunctionReturnType<typeof api.listenerChat.getConversation>>,
+  'myStreamUserId'
 >;
 
 export function ThreadScreen({ conversationId }: { conversationId: string }) {
-  const conversation = useQuery(api.listenerChat.getConversation, {
-    conversationId: conversationId as Id<'listener_conversations'>,
-  });
+  const conversation = useThreadConversation(conversationId);
 
   if (conversation === undefined) return <ThreadSkeleton />;
   if (conversation === null) return <ThreadUnavailable />;
