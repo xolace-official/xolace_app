@@ -7,6 +7,7 @@ import {
   Channel,
   MessageComposer,
   MessageList,
+  WithComponents,
   messageActions as defaultMessageActions,
   useChatContext,
 } from 'stream-chat-expo';
@@ -17,6 +18,7 @@ import type {
 } from 'stream-chat-expo';
 import { api } from '@/convex/_generated/api';
 import { ComposerPlaceholder } from './composer-placeholder';
+import { ChannelErrorIndicator, OfflineStrip } from './offline-strip';
 import { SafetyStrip } from './safety-strip';
 import { ThreadSkeleton } from './thread-skeleton';
 import { ThreadStatusBar } from './thread-status-bar';
@@ -51,6 +53,9 @@ const TEXT_ONLY_CAPABILITIES = { sendReaction: false, uploadFile: false };
  * gating and offered actions that cannot run: Copy with no clipboard handler
  * registered, Retry on a message that never failed, Flag on your own message.
  */
+/** Hands the offline half of Stream's indicator to OfflineStrip — see there. */
+const COMPONENT_OVERRIDES = { NetworkDownIndicator: ChannelErrorIndicator };
+
 const ALLOWED_ACTIONS = new Set([
   'copyMessage',
   'editMessage',
@@ -147,33 +152,44 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
     // Wrapper exists to measure the content box; Channel's own root is the
     // view whose height Stream mis-compares against the keyboard frame.
     <View className="flex-1" onLayout={onContentLayout}>
-      <Channel
-        channel={channel}
-        // Must be explicit: Channel destructures both with no default, so
-        // omitting them passes `undefined`, not 0.
-        keyboardVerticalOffset={headerOffset}
-        topInset={insets.top}
-        supportedReactions={NO_REACTIONS}
-        overrideOwnCapabilities={TEXT_ONLY_CAPABILITIES}
-        // The capability alone does not remove the attach button: InputButtons
-        // sits behind a memo whose comparator checks only these three picker
-        // props, so a change to `uploadFile` never re-renders it. These do.
-        hasImagePicker={false}
-        hasFilePicker={false}
-        hasCameraPicker={false}
-        // And the button survives on slash commands alone — a messaging
-        // channel ships with giphy enabled by default.
-        hasCommands={false}
-        messageActions={minimalMessageActions}
-      >
-        <SafetyStrip />
-        <MessageList disableTypingIndicator />
-        {conversation.status === 'open' ? (
-          <MessageComposer />
-        ) : (
-          <ThreadStatusBar conversation={conversation} />
-        )}
-      </Channel>
+      {/* Component overrides arrive through this, not through Channel props.
+        Module-level constant because WithComponents reads `overrides` once at
+        mount and never again — a fresh object each render would be silently
+        ignored, which is worse than a crash. */}
+      <WithComponents overrides={COMPONENT_OVERRIDES}>
+        <Channel
+          channel={channel}
+          // Must be explicit: Channel destructures both with no default, so
+          // omitting them passes `undefined`, not 0.
+          keyboardVerticalOffset={headerOffset}
+          topInset={insets.top}
+          supportedReactions={NO_REACTIONS}
+          overrideOwnCapabilities={TEXT_ONLY_CAPABILITIES}
+          // The capability alone does not remove the attach button: InputButtons
+          // sits behind a memo whose comparator checks only these three picker
+          // props, so a change to `uploadFile` never re-renders it. These do.
+          hasImagePicker={false}
+          hasFilePicker={false}
+          hasCameraPicker={false}
+          // And the button survives on slash commands alone — a messaging
+          // channel ships with giphy enabled by default.
+          hasCommands={false}
+          messageActions={minimalMessageActions}
+        >
+          <SafetyStrip />
+          <MessageList disableTypingIndicator />
+          {conversation.status === 'open' ? (
+            <>
+              {/* Above the composer, not below it: the answer to "why did that
+                not send" has to be visible before the tap, not after. */}
+              <OfflineStrip />
+              <MessageComposer />
+            </>
+          ) : (
+            <ThreadStatusBar conversation={conversation} />
+          )}
+        </Channel>
+      </WithComponents>
     </View>
   );
 }

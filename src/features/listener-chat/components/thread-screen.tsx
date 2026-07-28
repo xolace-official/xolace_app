@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { Button } from 'heroui-native';
+import { useOverlayContext } from 'stream-chat-expo';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
@@ -39,6 +40,14 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
   // link, or a cold launch straight into this route.
   const { status: streamStatus, retry } = useStreamConnection();
 
+  // The long-press menu and image gallery lift the message into a portal hosted
+  // by `StreamOverlayProvider`, above this stack. Popping the screen mid-portal
+  // tears the host out from under a view that is still being reparented — the
+  // same hazard `afterPortalSettles` works around in ThreadMessages, and the
+  // same JSI abort when it loses. The edge-swipe is the one way to pop without
+  // closing the overlay first, so it is off while one is open.
+  const { overlay } = useOverlayContext();
+
   // Identity lives in the native header's title slot; the back affordance,
   // safe area and glass background are the platform's. Rendered as a sibling of
   // every branch below rather than inside one, so the title is set on the first
@@ -50,6 +59,7 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
         // eslint-disable-next-line react/no-unstable-nested-components -- navigation header render prop, not a mounted subtree
         headerTitle: () => <ThreadHeader conversation={conversation} />,
         title: conversation.counterpartName,
+        gestureEnabled: overlay === 'none',
       }}
     />
   );
