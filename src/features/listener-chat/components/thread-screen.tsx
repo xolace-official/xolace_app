@@ -6,7 +6,7 @@ import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
-import { useStreamStatus } from '../providers/stream-chat-provider';
+import { useStreamConnection } from '../providers/stream-chat-provider';
 import { ComposerPlaceholder } from './composer-placeholder';
 import { SafetyStrip } from './safety-strip';
 import { ThreadHeader } from './thread-header';
@@ -29,7 +29,10 @@ export function ThreadScreen({ conversationId }: { conversationId: string }) {
 }
 
 function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
-  const { status: streamStatus, retry } = useStreamStatus();
+  // Usually a no-op — the Connect tab already opened the connection on the way
+  // here. It matters on the paths that skip that tab: a push-notification deep
+  // link, or a cold launch straight into this route.
+  const { status: streamStatus, retry } = useStreamConnection();
 
   // Identity lives in the native header's title slot; the back affordance,
   // safe area and glass background are the platform's. Rendered as a sibling of
