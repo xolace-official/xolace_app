@@ -129,8 +129,14 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
   // Stays false for users who never open a chat surface — see useStreamConnection.
   const [active, setActive] = useState(false);
 
+  // Drops the token as well as the error. A session that is cached but no longer
+  // usable — revoked user, key rotated, signature the WS rejects — otherwise
+  // short-circuits the fetch effect below on its `session` guard, so retry would
+  // bump `attempt` into a no-op and leave the connection wedged for good.
   const retry = useCallback(() => {
     setError(false);
+    cachedSession = null;
+    setSession(null);
     setAttempt((n) => n + 1);
   }, []);
 
@@ -181,6 +187,20 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
   );
 }
 
+/**
+ * `useCreateChatClient` has no failure channel: it holds the client at `null`
+ * and swallows a rejected `connectUser`, so a bad signature, a revoked user or a
+ * socket that never opens are all indistinguishable from "still connecting" —
+ * and the thread sits on its skeleton forever with no retry affordance.
+ *
+ * Stream's own connect gives up well inside this window, so a client still null
+ * here is not going to arrive.
+ *
+ * ponytail: a watchdog, not a real error channel — it can't say *why*. Replace
+ * with an inline `connectUser().catch()` if the reason ever needs surfacing.
+ */
+const CONNECT_TIMEOUT_MS = 20_000;
+
 function ConnectedChat({
   session,
   getStreamToken,
@@ -209,18 +229,29 @@ function ConnectedChat({
     userData: { id: session.userId },
   });
 
+  // Re-armed whenever the client goes back to null (the hook nulls it while
+  // reconnecting under a new identity), and cleared the moment one arrives.
+  // `retry` unmounts this component by clearing the session upstairs, so the
+  // flag never needs resetting in place.
+  const [timedOut, setTimedOut] = useState(false);
+  useEffect(() => {
+    if (client) return;
+    const timer = setTimeout(() => setTimedOut(true), CONNECT_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [client]);
+
   // Applied here as well as on OverlayProvider — the overlay host reads its own
   // ThemeProvider, and this one covers everything under `Chat`.
   const streamTheme = useStreamTheme();
 
   const value = useMemo(
     () => ({
-      status: (client ? 'ready' : 'connecting') as StreamStatus,
+      status: (client ? 'ready' : timedOut ? 'unavailable' : 'connecting') as StreamStatus,
       client,
       retry,
       activate,
     }),
-    [client, retry, activate],
+    [client, timedOut, retry, activate],
   );
 
   if (!client) return <StreamStatusContext value={value}>{children}</StreamStatusContext>;

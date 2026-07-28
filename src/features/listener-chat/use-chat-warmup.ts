@@ -39,7 +39,10 @@ export function useChatWarmup(
     .join(',');
 
   useEffect(() => {
-    if (!client || !channelIds) return;
+    // `enabled` is checked here as well as at the connection: the provider
+    // outlives any one chat surface, so a client opened by the thread screen is
+    // still around while this caller says it doesn't want chat work yet.
+    if (!enabled || !client || !channelIds) return;
     // Not cancellable, and deliberately not awaited: the only effect that
     // matters is the client-side cache it fills, which a later mount still
     // benefits from. Nothing here renders the result.
@@ -53,5 +56,5 @@ export function useChatWarmup(
         { watch: true, limit: MAX_PREFETCH },
       )
       .catch((error) => console.error('[listener-chat] channel prefetch failed', error));
-  }, [client, channelIds]);
+  }, [enabled, client, channelIds]);
 }
