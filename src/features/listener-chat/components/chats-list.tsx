@@ -33,7 +33,7 @@ export function ChatsList({
           No conversations yet
         </AppText>
         <AppText className="text-[13px] text-muted text-center leading-5 max-w-60">
-          When you message a listener, it&apos;ll live here - including anything you&apos;ve
+          When you message a Xolacer, it&apos;ll live here - including anything you&apos;ve
           talked about before.
         </AppText>
         <PressableFeedback

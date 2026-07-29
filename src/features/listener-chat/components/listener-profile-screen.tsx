@@ -97,7 +97,7 @@ function ProfileBody({ profile }: { profile: Profile }) {
             </AppText>
             <ProfileRating profile={profile} />
             <AppText className="text-xs text-muted">
-              Listener since {formatMonthYear(profile.listenerSince)} · replies within a day
+              Xolacer since {formatMonthYear(profile.listenerSince)} · replies within a day
             </AppText>
           </View>
         </View>
@@ -132,7 +132,7 @@ function ProfileBody({ profile }: { profile: Profile }) {
 
           <Block title="What to expect">
             <Fact icon={PERSON_ICON}>
-              {profile.displayName} is a trained peer listener, not a therapist — no
+              {profile.displayName} is a trained peer Xolacer, not a therapist — no
               diagnoses, no clinical advice.
             </Fact>
             <Fact icon={LOCK_ICON}>
@@ -320,7 +320,7 @@ function ProfileUnavailable() {
     <View className="flex-1 items-center justify-center gap-2 bg-background px-10">
       <Stack.Screen options={HEADER_OPTIONS} />
       <AppText className="text-[15px] font-semibold text-foreground">
-        This listener isn&apos;t here
+        This Xolacer isn&apos;t here
       </AppText>
       <AppText className="text-center text-[13px] leading-5 text-muted">
         Their profile may have been unpublished. There are others on the roster.

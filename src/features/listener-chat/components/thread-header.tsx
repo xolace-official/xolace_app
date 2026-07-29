@@ -22,7 +22,7 @@ function subtitleFor(conversation: ThreadConversation): string {
   }
   if (conversation.status === 'closed') return 'Not taking conversations right now';
   return conversation.role === 'user'
-    ? 'Listener · usually replies within a day'
+    ? 'Xolacer · usually replies within a day'
     : 'Usually replies within a day';
 }
 

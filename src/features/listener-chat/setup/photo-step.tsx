@@ -44,7 +44,7 @@ export function PhotoStep({
         {photoUrl ? 'Choose a different photo' : 'Choose a photo'}
       </AppText>
       <AppText className="max-w-65 text-center text-[11px] leading-4 text-muted">
-        This is the only image anyone sees. It stays on your listener profile and nowhere
+        This is the only image anyone sees. It stays on your Xolacer profile and nowhere
         else.
       </AppText>
     </View>

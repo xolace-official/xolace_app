@@ -90,7 +90,7 @@ export function ConnectScreen() {
               <SegmentLabel label="Chats" active={segment === 'chats'} />
             </SegmentedControl.Item>
             <SegmentedControl.Item value="listeners" className="flex-1 items-center py-2.5">
-              <SegmentLabel label="Listeners" active={segment === 'listeners'} />
+              <SegmentLabel label="Xolacers" active={segment === 'listeners'} />
             </SegmentedControl.Item>
           </SegmentedControl>
 

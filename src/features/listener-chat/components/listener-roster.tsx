@@ -35,7 +35,7 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
           No one&apos;s here just yet
         </AppText>
         <AppText className="text-[13px] text-muted text-center leading-5 max-w-60">
-          Listeners are still settling in. They&apos;ll show up here as they arrive — check
+          Xolacers are still settling in. They&apos;ll show up here as they arrive — check
           back soon.
         </AppText>
       </View>

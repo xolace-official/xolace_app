@@ -106,7 +106,7 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
         <Bold>everything you two wrote is still here</Bold>.
       </Copy>
       <Button variant="secondary" onPress={goToRoster}>
-        Find another listener
+        Find another Xolacer
       </Button>
       <RatePrompt conversation={conversation} />
     </Bar>

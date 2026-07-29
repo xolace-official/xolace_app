@@ -7,6 +7,9 @@ import { playSoftPress } from '@/src/lib/haptics';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
 
+// A bare string is an SF Symbol — iOS only. Android needs the platform map.
+const ARROW_ICON = { ios: 'arrow.right', android: 'arrow_forward', web: 'arrow_forward' } as const;
+
 /** Shown to listeners whose profile isn't published yet — the only entry into setup. */
 export function ListenerSetupBanner() {
   const router = useRouter();
@@ -19,7 +22,7 @@ export function ListenerSetupBanner() {
         router.push('/listener-setup' as never);
       }}
       accessibilityRole="button"
-      accessibilityLabel="Set up your listener profile"
+      accessibilityLabel="Set up your Xolacer profile"
     >
       <View
         className="flex-row items-center gap-3 rounded-3xl border border-accent/25 bg-accent/8 p-4"
@@ -27,13 +30,13 @@ export function ListenerSetupBanner() {
       >
         <View className="flex-1">
           <AppText className="text-sm font-semibold text-foreground">
-            Set up your listener profile
+            Set up your Xolacer profile
           </AppText>
           <AppText className="mt-0.5 text-xs text-muted">
             People can&apos;t find you until it&apos;s published.
           </AppText>
         </View>
-        <SymbolView name="arrow.right" size={16} tintColor={accent} />
+        <SymbolView name={ARROW_ICON as any} size={16} tintColor={accent} />
       </View>
     </PressableFeedback>
   );

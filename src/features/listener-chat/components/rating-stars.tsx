@@ -99,7 +99,7 @@ export function NewListenerChip() {
   return (
     <View className="rounded-full bg-surface-tertiary px-2 py-0.5">
       <AppText className="text-[10px] font-semibold uppercase tracking-wide text-muted">
-        New listener
+        New Xolacer
       </AppText>
     </View>
   );
