@@ -1709,5 +1709,7 @@ export default defineSchema({
     // One rating per conversation — also the "have I already rated?" lookup.
     .index("by_conversation", ["conversationId"])
     // Account deletion sweeps a rater's rows.
-    .index("by_rater", ["raterProfileId"]),
+    .index("by_rater", ["raterProfileId"])
+    // Account deletion sweeps the rows a xolacer received.
+    .index("by_xolacer", ["xolacerProfileId"]),
 });

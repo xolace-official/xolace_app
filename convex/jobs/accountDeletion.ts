@@ -222,8 +222,7 @@ export const purgeUser = internalMutation({
 
     // ── Conversation ratings this user gave ──────────────────────
     // The xolacer's denormalized counters have to come down with the
-    // row, or a deleted account keeps voting. Ratings this user
-    // *received* as a xolacer die with their xolacer_profiles row.
+    // row, or a deleted account keeps voting.
     const ratingsGiven = await ctx.db
       .query("conversation_ratings")
       .withIndex("by_rater", (q) => q.eq("raterProfileId", profileId))
@@ -246,6 +245,19 @@ export const purgeUser = internalMutation({
       }
       await ctx.db.delete(rating._id);
     }
+
+    // ── Conversation ratings this user received as a xolacer ──────
+    // The xolacer_profiles row (with its counters) is deleted in the final
+    // batch, so nothing reads these again — but they'd outlive the account
+    // still holding its profile id. No counter fixup: the profile they
+    // point at is going away.
+    const ratingsReceived = await ctx.db
+      .query("conversation_ratings")
+      .withIndex("by_xolacer", (q) => q.eq("xolacerProfileId", profileId))
+      .take(BATCH_SIZE);
+
+    if (ratingsReceived.length === BATCH_SIZE) hasMore = true;
+    for (const rating of ratingsReceived) await ctx.db.delete(rating._id);
 
     // ── Semantic profile versions ────────────────────────────────
     const semanticVersions = await ctx.db
