@@ -1,4 +1,4 @@
-import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react';
+import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StreamChat } from 'stream-chat';
 import { Chat, OverlayProvider } from 'stream-chat-expo';
 import { useAuth } from '@clerk/expo';
@@ -138,6 +138,12 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
   const [timedOut, setTimedOut] = useState(false);
   const streamTheme = useStreamTheme();
 
+  // Serializes connect/disconnect. `disconnectUser` is async, so an unawaited
+  // teardown can still be closing the socket when the next effect run calls
+  // `connectUser` — the close then lands on the new connection. Every op chains
+  // onto the previous one instead.
+  const streamOp = useRef<Promise<unknown>>(Promise.resolve());
+
   // One instance for the life of the app. `getInstance` is idempotent per key,
   // so a remount above this can never leave two sockets racing.
   const client = useMemo(
@@ -190,8 +196,12 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
     // Re-hits the authed Convex action on expiry and on every reconnect.
     const tokenProvider = async () => (await getStreamToken()).token;
 
-    client
-      .connectUser({ id: session.userId }, tokenProvider)
+    const connecting = streamOp.current
+      .catch(() => {})
+      .then(() => client.connectUser({ id: session.userId }, tokenProvider));
+    streamOp.current = connecting;
+
+    connecting
       .then(() => {
         if (alive) setConnected(true);
       })
@@ -203,7 +213,7 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
     return () => {
       alive = false;
       setConnected(false);
-      client.disconnectUser();
+      streamOp.current = connecting.catch(() => {}).then(() => client.disconnectUser());
     };
   }, [client, active, session, keyMismatch, getStreamToken]);
 

@@ -102,27 +102,38 @@ export function useXolacerSetup() {
     [upsert, draft.displayName, draft.bio, draft.specialties],
   );
 
+  const reportPhotoFailure = useCallback(
+    (error: unknown) => {
+      console.error('[xolacer-setup] photo upload failed', error);
+      toast.show({ label: "Couldn't upload that photo. Try again." });
+    },
+    [toast],
+  );
+
   const pickPhoto = useCallback(async () => {
+    // The picker can reject on its own (permission denied, native failure), and
+    // PhotoStep calls this fire-and-forget — so it needs the same catch as the
+    // upload or the rejection surfaces nowhere.
     const picked = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
+    }).catch((error) => {
+      reportPhotoFailure(error);
+      return null;
     });
-    if (picked.canceled) return;
+    if (!picked || picked.canceled) return;
+    const asset = picked.assets[0];
+    if (!asset) return;
 
     setUploading(true);
-    const asset = picked.assets[0];
     // `.finally()` rather than try/finally — the React Compiler skips
-    // optimization for try/finally bodies. The `.catch()` is what keeps the
-    // fire-and-forget call in PhotoStep from becoming an unhandled rejection.
+    // optimization for try/finally bodies.
     await uploadPhoto(asset.uri, asset.mimeType, generateUploadUrl, setXolacerPhoto)
       .finally(() => setUploading(false))
-      .catch((error) => {
-        console.error('[xolacer-setup] photo upload failed', error);
-        toast.show({ label: "Couldn't upload that photo. Try again." });
-      });
-  }, [generateUploadUrl, setXolacerPhoto, toast]);
+      .catch(reportPhotoFailure);
+  }, [generateUploadUrl, setXolacerPhoto, reportPhotoFailure]);
 
   return {
     draft,
