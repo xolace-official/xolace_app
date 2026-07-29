@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { useIsFocused } from 'expo-router/react-navigation';
 import { ConnectScreen } from '@/src/features/listener-chat/components/connect-screen';
@@ -15,9 +15,11 @@ import { ConnectScreen } from '@/src/features/listener-chat/components/connect-s
  */
 export default function ConnectRoute() {
   const isFocused = useIsFocused();
-  const everFocused = useRef(false);
-  if (isFocused) everFocused.current = true;
+  // Latched during render rather than in an effect, so the first focused frame
+  // already renders the screen instead of a blank one.
+  const [everFocused, setEverFocused] = useState(isFocused);
+  if (isFocused && !everFocused) setEverFocused(true);
 
-  if (!everFocused.current) return <View className="flex-1 bg-background" />;
+  if (!everFocused) return <View className="flex-1 bg-background" />;
   return <ConnectScreen />;
 }

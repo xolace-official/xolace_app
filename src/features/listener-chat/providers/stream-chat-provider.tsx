@@ -1,12 +1,24 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react';
-import type { StreamChat } from 'stream-chat';
-import { Chat, OverlayProvider, useCreateChatClient } from 'stream-chat-expo';
+import { StreamChat } from 'stream-chat';
+import { Chat, OverlayProvider } from 'stream-chat-expo';
 import { useAuth } from '@clerk/expo';
 import { useAction } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useStreamTheme } from './stream-theme';
 
 type StreamSession = { apiKey: string; token: string; userId: string };
+
+/**
+ * Public Stream key — the same one that ships inside every Stream client app.
+ * Read here rather than only off the token action so `Chat` can be mounted from
+ * the first frame; see `StreamChatProvider` for why that matters. The token,
+ * which is the part that actually grants access, is still minted server-side
+ * per user and never lives in the bundle.
+ *
+ * Must exist in the build environment (`.env.local` locally, EAS environment
+ * variables for cloud builds) alongside the other `EXPO_PUBLIC_*` keys.
+ */
+const STREAM_API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY;
 
 /**
  * Outlives the thread screen that fetched it, so the second and later opens
@@ -83,13 +95,34 @@ export function StreamOverlayProvider({ children }: { children: React.ReactNode 
 }
 
 /**
- * Connects the authenticated user to Stream and mounts `Chat`. The Stream user
- * id is minted server-side from the authed profile; the client never names it.
+ * `connectUser` rejects on a bad signature or a refused socket, but a socket
+ * that opens and then never completes the handshake resolves neither way — and
+ * the thread would sit on its skeleton forever with no retry affordance.
  *
- * Scoping is now temporal instead of positional: nothing connects until
+ * ponytail: a watchdog, not a diagnosis — it can't say *why*. The `.catch`
+ * below covers every failure that does report itself.
+ */
+const CONNECT_TIMEOUT_MS = 20_000;
+
+/**
+ * Connects the authenticated user to Stream. The Stream user id is minted
+ * server-side from the authed profile; the client never names it.
+ *
+ * Scoping is temporal, not positional: nothing connects until
  * `useStreamConnection` asks, and the connection then lasts as long as the
  * protected group. Sign-out still tears it down for free — the `Stack.Protected`
  * guard unmounts this whole subtree.
+ *
+ * `Chat` is mounted unconditionally, from the first frame, and that is
+ * load-bearing. It wraps the entire protected navigator, so a version of this
+ * that only mounted it once a client existed changed the element type sitting
+ * above `children` — which unmounts and rebuilds every screen in the app. That
+ * fired twice per connect (once when the token landed, once when the socket
+ * opened): screens replayed their entrance, images re-decoded, `useState` reset
+ * mid-interaction. Keeping the shape fixed means only the context value moves.
+ *
+ * Mounting `Chat` early costs no network. `new StreamChat()` opens nothing —
+ * `connectUser` is what does, and that still waits for `activate()`.
  */
 export function StreamChatProvider({ children }: { children: React.ReactNode }) {
   const getStreamToken = useAction(api.listenerChat.getStreamToken);
@@ -101,10 +134,20 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
   const [attempt, setAttempt] = useState(0);
   // Stays false for users who never open a chat surface — see useStreamConnection.
   const [active, setActive] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+  const streamTheme = useStreamTheme();
 
+  // One instance for the life of the app. `getInstance` is idempotent per key,
+  // so a remount above this can never leave two sockets racing.
+  const client = useMemo(
+    () => (STREAM_API_KEY ? StreamChat.getInstance(STREAM_API_KEY) : null),
+    [],
+  );
 
   const retry = useCallback(() => {
     setError(false);
+    setTimedOut(false);
     cachedSession = null;
     setSession(null);
     setAttempt((n) => n + 1);
@@ -129,95 +172,72 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
     };
   }, [getStreamToken, userId, session, attempt, active]);
 
-  const value = useMemo(
-    () => ({
-      status: (error ? 'unavailable' : 'connecting') as StreamStatus,
-      client: null,
-      retry,
-      activate,
-    }),
-    [error, retry, activate],
-  );
-
-
-  if (error || !active || !session) {
-    return <StreamStatusContext value={value}>{children}</StreamStatusContext>;
-  }
-  return (
-    <ConnectedChat
-      session={session}
-      getStreamToken={getStreamToken}
-      retry={retry}
-      activate={activate}
-    >
-      {children}
-    </ConnectedChat>
-  );
-}
-
-/**
- * `useCreateChatClient` has no failure channel: it holds the client at `null`
- * and swallows a rejected `connectUser`, so a bad signature, a revoked user or a
- * socket that never opens are all indistinguishable from "still connecting" —
- * and the thread sits on its skeleton forever with no retry affordance.
- *
- * ponytail: a watchdog, not a real error channel — it can't say *why*. Replace
- * with an inline `connectUser().catch()` if the reason ever needs surfacing.
- */
-const CONNECT_TIMEOUT_MS = 20_000;
-
-function ConnectedChat({
-  session,
-  getStreamToken,
-  retry,
-  activate,
-  children,
-}: {
-  session: StreamSession;
-  getStreamToken: () => Promise<StreamSession>;
-  retry: () => void;
-  activate: () => void;
-  children: React.ReactNode;
-}) {
-  // Token provider re-hits the authed Convex action on expiry/reconnect.
-  const tokenProvider = useCallback(
-    async () => (await getStreamToken()).token,
-    [getStreamToken],
-  );
-
-  // Key comes from the same action that signed the token, not from a client
-  // env var — the two must belong to the same Stream app or the WS handshake
-  // fails with an opaque "signature is not valid".
-  const client = useCreateChatClient({
-    apiKey: session.apiKey,
-    tokenOrProvider: tokenProvider,
-    userData: { id: session.userId },
-  });
-
-
-  const [timedOut, setTimedOut] = useState(false);
+  // The token is signed for one Stream app. If the bundled key names a
+  // different one the handshake fails with an opaque "signature is not valid",
+  // so refuse to connect and say what actually went wrong instead.
+  const keyMismatch = !!session && session.apiKey !== STREAM_API_KEY;
   useEffect(() => {
-    if (client) return;
+    if (!keyMismatch) return;
+    console.error(
+      '[listener-chat] EXPO_PUBLIC_STREAM_API_KEY does not match the key the server signed this token with',
+    );
+  }, [keyMismatch]);
+
+  useEffect(() => {
+    if (!client || !active || !session || keyMismatch) return;
+
+    let alive = true;
+    // Re-hits the authed Convex action on expiry and on every reconnect.
+    const tokenProvider = async () => (await getStreamToken()).token;
+
+    client
+      .connectUser({ id: session.userId }, tokenProvider)
+      .then(() => {
+        if (alive) setConnected(true);
+      })
+      .catch((err) => {
+        console.error('[listener-chat] Stream connect failed', err);
+        if (alive) setError(true);
+      });
+
+    return () => {
+      alive = false;
+      setConnected(false);
+      client.disconnectUser();
+    };
+  }, [client, active, session, keyMismatch, getStreamToken]);
+
+  const pending = active && !!session && !connected && !error && !keyMismatch;
+  useEffect(() => {
+    if (!pending) return;
     const timer = setTimeout(() => setTimedOut(true), CONNECT_TIMEOUT_MS);
     return () => clearTimeout(timer);
-  }, [client]);
-
-  // Applied here as well as on OverlayProvider — the overlay host reads its own
-  // ThemeProvider, and this one covers everything under `Chat`.
-  const streamTheme = useStreamTheme();
+  }, [pending]);
 
   const value = useMemo(
     () => ({
-      status: (client ? 'ready' : timedOut ? 'unavailable' : 'connecting') as StreamStatus,
-      client,
+      status: (connected
+        ? 'ready'
+        : error || timedOut || keyMismatch || !client
+          ? 'unavailable'
+          : 'connecting') as StreamStatus,
+      // Handed out only once the socket is up — `useChatWarmup` and the thread
+      // both assume a client they get from here can `queryChannels`.
+      client: connected ? client : null,
       retry,
       activate,
     }),
-    [client, timedOut, retry, activate],
+    [connected, error, timedOut, keyMismatch, client, retry, activate],
   );
 
-  if (!client) return <StreamStatusContext value={value}>{children}</StreamStatusContext>;
+  // Build-time constant, so this branch never flips at runtime and cannot
+  // remount anything. Chat is simply unavailable in a build with no key.
+  if (!client) {
+    return <StreamStatusContext value={value}>{children}</StreamStatusContext>;
+  }
 
+  // Theme applied here as well as on OverlayProvider — the overlay host reads
+  // its own ThemeProvider, and this one covers everything under `Chat`.
   return (
     <Chat client={client} style={streamTheme}>
       <StreamStatusContext value={value}>{children}</StreamStatusContext>
