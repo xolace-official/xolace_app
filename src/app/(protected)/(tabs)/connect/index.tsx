@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useIsFocused } from 'expo-router/react-navigation';
-import { ConnectScreen } from '@/src/features/listener-chat/components/connect-screen';
+import { ConnectScreen } from '@/src/features/xolacer-chat/components/connect-screen';
 
 /**
  * NativeTabs renders every tab's content as soon as the navigator mounts — it

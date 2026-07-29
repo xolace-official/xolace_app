@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
 
 /**
  * Fixed taxonomy, hard cap of three. Past the cap the unpicked chips dim
- * rather than disappear, so a listener can see what they didn't pick and swap
+ * rather than disappear, so a xolacer can see what they didn't pick and swap
  * — a list that shrinks as you use it feels broken.
  */
 export function SpecialtyPicker({

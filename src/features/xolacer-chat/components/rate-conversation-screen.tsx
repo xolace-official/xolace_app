@@ -8,7 +8,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
-import { ListenerAvatar } from './listener-avatar';
+import { XolacerAvatar } from './xolacer-avatar';
 import { RatingPicker } from './rating-stars';
 
 const HEADER_OPTIONS = {
@@ -82,7 +82,7 @@ export function RateConversationScreen({ conversationId }: { conversationId: str
     >
       <Stack.Screen options={HEADER_OPTIONS} />
 
-      <ListenerAvatar
+      <XolacerAvatar
         name={conversation.counterpartName}
         photoUrl={conversation.counterpartPhotoUrl}
         size="lg"
@@ -93,7 +93,7 @@ export function RateConversationScreen({ conversationId }: { conversationId: str
       </AppText>
 
       {/* The privacy rule is stated before the stars, not after, so nobody
-          answers without knowing what the listener will see. */}
+          answers without knowing what the xolacer will see. */}
       <AppText className="max-w-65 text-center text-[13px] leading-5 text-muted">
         Only you and Xolace see this. {conversation.counterpartName} sees an overall score,
         never which conversation it came from.

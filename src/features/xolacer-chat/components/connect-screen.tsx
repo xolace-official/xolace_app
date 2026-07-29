@@ -8,11 +8,11 @@ import { SegmentedControl } from '@/src/components/shared/segmented-control';
 import { cn } from '@/src/lib/utils';
 import { useChatWarmup } from '../use-chat-warmup';
 import { ChatsList } from './chats-list';
-import { ListenerRoster } from './listener-roster';
-import { ListenerSetupBanner } from './listener-setup-banner';
-import { ListenerStatusCard } from './listener-status-card';
+import { XolacerRoster } from './xolacer-roster';
+import { XolacerSetupBanner } from './xolacer-setup-banner';
+import { XolacerStatusCard } from './xolacer-status-card';
 
-type Segment = 'chats' | 'listeners';
+type Segment = 'chats' | 'xolacers';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
 
@@ -32,8 +32,8 @@ function SegmentLabel({ label, active }: { label: string; active: boolean }) {
 
 /**
  * The Connect tab: Chats (conversations in every lifecycle state, including a
- * listener's incoming requests) and Listeners (the roster). Auto-lands on
- * Chats when any conversation exists, on Listeners otherwise — a first-time
+ * xolacer's incoming requests) and Xolacers (the roster). Auto-lands on
+ * Chats when any conversation exists, on Xolacers otherwise — a first-time
  * user meets the roster, a returning user meets their thread.
  */
 export function ConnectScreen() {
@@ -48,7 +48,7 @@ export function ConnectScreen() {
 
   const loading = status === undefined || conversations === undefined;
   const segment: Segment =
-    selected ?? (conversations && conversations.length > 0 ? 'chats' : 'listeners');
+    selected ?? (conversations && conversations.length > 0 ? 'chats' : 'xolacers');
 
   if (status && !status.enabled) {
     return (
@@ -89,26 +89,26 @@ export function ConnectScreen() {
             <SegmentedControl.Item value="chats" className="flex-1 items-center py-2.5">
               <SegmentLabel label="Chats" active={segment === 'chats'} />
             </SegmentedControl.Item>
-            <SegmentedControl.Item value="listeners" className="flex-1 items-center py-2.5">
-              <SegmentLabel label="Xolacers" active={segment === 'listeners'} />
+            <SegmentedControl.Item value="xolacers" className="flex-1 items-center py-2.5">
+              <SegmentLabel label="Xolacers" active={segment === 'xolacers'} />
             </SegmentedControl.Item>
           </SegmentedControl>
 
           {status?.enabled &&
             status.isXolacer &&
             (status.xolacerProfileComplete ? (
-              <ListenerStatusCard active={status.xolacerActive} />
+              <XolacerStatusCard active={status.xolacerActive} />
             ) : (
-              <ListenerSetupBanner />
+              <XolacerSetupBanner />
             ))}
 
           {segment === 'chats' ? (
             <ChatsList
               conversations={conversations ?? []}
-              onBrowseListeners={() => setSelected('listeners')}
+              onBrowseXolacers={() => setSelected('xolacers')}
             />
           ) : (
-            <ListenerRoster conversations={conversations ?? []} />
+            <XolacerRoster conversations={conversations ?? []} />
           )}
         </>
       )}

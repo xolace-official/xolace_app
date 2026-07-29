@@ -215,7 +215,7 @@ function useWatchedChannel(channel: StreamChannel) {
         if (alive) setFailedCid(null);
       })
       .catch((error) => {
-        console.error('[listener-chat] channel watch failed', error);
+        console.error('[xolacer-chat] channel watch failed', error);
         if (alive) setFailedCid(channel.cid);
       });
     return () => {
@@ -252,7 +252,7 @@ function useTouchOnSend(
       // an id-less user and touch on the counterpart's message.
       if (!myUserId || event.user?.id !== myUserId) return;
       touchConversation({ conversationId: id }).catch((error) =>
-        console.error('[listener-chat] touch failed', error),
+        console.error('[xolacer-chat] touch failed', error),
       );
     });
     return unsubscribe;

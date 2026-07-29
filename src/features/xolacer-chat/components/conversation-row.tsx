@@ -7,7 +7,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
 import { formatCompactTime } from '../utils';
-import { ListenerAvatar } from './listener-avatar';
+import { XolacerAvatar } from './xolacer-avatar';
 import type { ConversationList } from './chats-list';
 
 type Conversation = ConversationList[number];
@@ -60,7 +60,7 @@ export function ConversationRow({
         : declineRequest({ conversationId: conversation.id });
     call
       .catch((err) => {
-        console.error(`[listener-chat] ${kind} failed`, err);
+        console.error(`[xolacer-chat] ${kind} failed`, err);
         toast.show({
           label: failLabel,
           description: 'Something went wrong. Try again.',
@@ -87,7 +87,7 @@ export function ConversationRow({
         style={styles.borderCurve}
       >
         <View className="flex-row items-center gap-3">
-          <ListenerAvatar
+          <XolacerAvatar
             name={conversation.counterpartName}
             photoUrl={conversation.counterpartPhotoUrl}
             muted={dim}

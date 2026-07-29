@@ -7,20 +7,20 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
-import { ListenerAvatar } from './listener-avatar';
-import { NewListenerChip, RatingStars } from './rating-stars';
+import { XolacerAvatar } from './xolacer-avatar';
+import { NewXolacerChip, RatingStars } from './rating-stars';
 import { SpecialtyChips, SpecialtyFilter } from './specialty-chips';
 import type { ConversationList } from './chats-list';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
 
 /**
- * The roster: every published, active listener. A capped listener stays
+ * The roster: every published, active xolacer. A capped xolacer stays
  * visible but dimmed ("Full right now") — vanishing from a six-person list
- * would read as a bug. "Talking" marks listeners you already have an open
+ * would read as a bug. "Talking" marks xolacers you already have an open
  * thread with.
  */
-export function ListenerRoster({ conversations }: { conversations: ConversationList }) {
+export function XolacerRoster({ conversations }: { conversations: ConversationList }) {
   const router = useRouter();
   const directory = useQuery(api.xolacerChat.directory);
   const [filter, setFilter] = useState<string | null>(null);
@@ -48,48 +48,48 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
       .map((c) => c.xolacerProfileId),
   );
 
-  const listeners = directory ?? [];
-  const offered = [...new Set(listeners.flatMap((listener) => listener.specialties))];
+  const xolacers = directory ?? [];
+  const offered = [...new Set(xolacers.flatMap((xolacer) => xolacer.specialties))];
   const visible = filter
-    ? listeners.filter((listener) =>
-        (listener.specialties as readonly string[]).includes(filter),
+    ? xolacers.filter((xolacer) =>
+        (xolacer.specialties as readonly string[]).includes(filter),
       )
-    : listeners;
+    : xolacers;
 
   return (
     <View className="gap-2.5">
       <SpecialtyFilter available={offered} selected={filter} onSelect={setFilter} />
 
-      {visible.map((listener) => {
-        const talking = openWith.has(listener.xolacerProfileId);
+      {visible.map((xolacer) => {
+        const talking = openWith.has(xolacer.xolacerProfileId);
         return (
           <PressableFeedback
-            key={listener.xolacerProfileId}
+            key={xolacer.xolacerProfileId}
             onPress={() => {
               playSoftPress();
-              router.push(`/listener/${listener.xolacerProfileId}` as never);
+              router.push(`/xolacer/${xolacer.xolacerProfileId}` as never);
             }}
             accessibilityRole="button"
-            accessibilityLabel={`View ${listener.displayName}'s profile`}
+            accessibilityLabel={`View ${xolacer.displayName}'s profile`}
           >
             <View
               className="flex-row items-start gap-3 rounded-3xl bg-surface border border-border/40 p-3.5"
               style={styles.borderCurve}
             >
-              <ListenerAvatar
-                name={listener.displayName}
-                photoUrl={listener.photoUrl}
-                muted={listener.atCapacity}
+              <XolacerAvatar
+                name={xolacer.displayName}
+                photoUrl={xolacer.photoUrl}
+                muted={xolacer.atCapacity}
               />
               <View className="flex-1 min-w-0 gap-1">
                 <View className="flex-row items-center gap-1.5">
                   <AppText
                     className={cn(
                       'text-sm font-semibold',
-                      listener.atCapacity ? 'text-muted' : 'text-foreground',
+                      xolacer.atCapacity ? 'text-muted' : 'text-foreground',
                     )}
                   >
-                    {listener.displayName}
+                    {xolacer.displayName}
                   </AppText>
                   {talking && (
                     <View className="rounded-full bg-success/15 px-2 py-0.5">
@@ -101,28 +101,28 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
                   {/* Scores share one right-hand column so the eye reads down
                       it instead of hunting; capacity outranks the score. */}
                   <View className="ml-auto pl-2">
-                    {listener.atCapacity ? (
+                    {xolacer.atCapacity ? (
                       <View className="rounded-full bg-surface-tertiary px-2 py-0.5">
                         <AppText className="text-[10px] font-semibold uppercase tracking-wide text-muted">
                           Full right now
                         </AppText>
                       </View>
-                    ) : listener.rating === undefined ? (
-                      <NewListenerChip />
+                    ) : xolacer.rating === undefined ? (
+                      <NewXolacerChip />
                     ) : (
                       <RatingStars
-                        rating={listener.rating}
-                        ratingCount={listener.ratingCount}
+                        rating={xolacer.rating}
+                        ratingCount={xolacer.ratingCount}
                       />
                     )}
                   </View>
                 </View>
                 <AppText className="text-xs text-muted leading-4" numberOfLines={2}>
-                  {listener.bio}
+                  {xolacer.bio}
                 </AppText>
                 <SpecialtyChips
-                  specialties={listener.specialties}
-                  muted={listener.atCapacity}
+                  specialties={xolacer.specialties}
+                  muted={xolacer.atCapacity}
                   className="mt-0.5"
                 />
               </View>

@@ -12,8 +12,8 @@ import { useTray } from '@/src/features/feedback-tray/engine/tray-provider';
 import type { Trays } from '@/src/features/feedback-tray/screens/registry';
 import { playSoftPress } from '@/src/lib/haptics';
 import { formatMonthYear } from '../utils';
-import { ListenerAvatar } from './listener-avatar';
-import { NewListenerChip, RatingStars } from './rating-stars';
+import { XolacerAvatar } from './xolacer-avatar';
+import { NewXolacerChip, RatingStars } from './rating-stars';
 import { SpecialtyChips } from './specialty-chips';
 
 type Profile = NonNullable<FunctionReturnType<typeof api.xolacerChat.xolacerProfile>>;
@@ -42,7 +42,7 @@ const CHAT_ICON = {
 } as const;
 const MOON_ICON = { ios: 'moon', android: 'bedtime', web: 'bedtime' } as const;
 
-export function ListenerProfileScreen({ profileId }: { profileId: string }) {
+export function XolacerProfileScreen({ profileId }: { profileId: string }) {
   const profile = useQuery(api.xolacerChat.xolacerProfile, {
     xolacerProfileId: profileId as Id<'emotional_profiles'>,
   });
@@ -91,7 +91,7 @@ function ProfileBody({ profile }: { profile: Profile }) {
         showsVerticalScrollIndicator={false}
       >
         <View className="items-center gap-3">
-          <ListenerAvatar
+          <XolacerAvatar
             name={profile.displayName}
             photoUrl={profile.photoUrl}
             size="lg"
@@ -188,7 +188,7 @@ function ProfileRating({ profile }: { profile: Profile }) {
   if (profile.rating === undefined) {
     return (
       <View className="items-center gap-1">
-        <NewListenerChip />
+        <NewXolacerChip />
         <AppText className="text-[11px] text-muted">
           Not enough conversations rated yet
         </AppText>

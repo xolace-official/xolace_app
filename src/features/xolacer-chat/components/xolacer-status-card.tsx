@@ -14,12 +14,12 @@ const ICON = {
 } as const;
 
 /**
- * A published listener's only always-visible control: step off the roster
+ * A published xolacer's only always-visible control: step off the roster
  * without deleting anything. Lives at the top of Connect because that's the
- * one screen a listener is already on — a settings row would hide the thing
+ * one screen a xolacer is already on — a settings row would hide the thing
  * someone reaches for precisely when they're too drained to go looking.
  */
-export function ListenerStatusCard({ active }: { active: boolean }) {
+export function XolacerStatusCard({ active }: { active: boolean }) {
   const setActive = useMutation(api.xolacerChat.setXolacerActive);
   const { toast } = useToast();
   const accent = useThemeColor('accent') as string;
@@ -50,7 +50,7 @@ export function ListenerStatusCard({ active }: { active: boolean }) {
         onSelectedChange={(next) => {
           playSoftPress();
           setActive({ active: next }).catch((err) => {
-            console.error('[listener-chat] setListenerActive failed', err);
+            console.error('[xolacer-chat] setXolacerActive failed', err);
             toast.show({
               label: next ? "Couldn't list you" : "Couldn't pause you",
               description: 'Something went wrong. Try again.',

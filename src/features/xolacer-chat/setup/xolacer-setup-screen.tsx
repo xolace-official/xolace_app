@@ -13,17 +13,17 @@ import { SetupProgress } from './setup-progress';
 import { SpecialtyPicker } from './specialty-picker';
 import { BioStep, NameStep } from './text-steps';
 import { SETUP_STEPS, firstIncompleteStep, type SetupDraft } from './steps';
-import { useListenerSetup } from './use-listener-setup';
+import { useXolacerSetup } from './use-xolacer-setup';
 
 const FADE = { type: 'timing' as const, duration: 150 };
 const CLOSE_ICON = { ios: 'xmark', android: 'close', web: 'close' } as const;
 
-export function ListenerSetupScreen() {
+export function XolacerSetupScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { toast } = useToast();
   const foreground = useThemeColor('foreground') as string;
-  const setup = useListenerSetup();
+  const setup = useXolacerSetup();
 
   const { draft, index, visible } = setup;
   const step = SETUP_STEPS[index];
@@ -110,9 +110,9 @@ export function ListenerSetupScreen() {
 /**
  * Every step stays mounted inside an `Activity`; only the current one is
  * visible. Hidden steps keep their input state and cursor position, so moving
- * back and forth never costs a listener what they already typed.
+ * back and forth never costs a xolacer what they already typed.
  */
-function StepBodies({ setup }: { setup: ReturnType<typeof useListenerSetup> }) {
+function StepBodies({ setup }: { setup: ReturnType<typeof useXolacerSetup> }) {
   const { draft, index, setField } = setup;
 
   return (
@@ -134,7 +134,7 @@ function StepBody({
 }: {
   id: (typeof SETUP_STEPS)[number]['id'];
   draft: SetupDraft;
-  setup: ReturnType<typeof useListenerSetup>;
+  setup: ReturnType<typeof useXolacerSetup>;
   setField: (key: 'displayName' | 'bio', value: string) => void;
 }) {
   if (id === 'photo') {

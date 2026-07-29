@@ -164,7 +164,7 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
         if (alive) setSession(result);
       })
       .catch((err) => {
-        console.error('[listener-chat] Stream token fetch failed', err);
+        console.error('[xolacer-chat] Stream token fetch failed', err);
         if (alive) setError(true);
       });
     return () => {
@@ -179,7 +179,7 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (!keyMismatch) return;
     console.error(
-      '[listener-chat] EXPO_PUBLIC_STREAM_API_KEY does not match the key the server signed this token with',
+      '[xolacer-chat] EXPO_PUBLIC_STREAM_API_KEY does not match the key the server signed this token with',
     );
   }, [keyMismatch]);
 
@@ -196,7 +196,7 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
         if (alive) setConnected(true);
       })
       .catch((err) => {
-        console.error('[listener-chat] Stream connect failed', err);
+        console.error('[xolacer-chat] Stream connect failed', err);
         if (alive) setError(true);
       });
 

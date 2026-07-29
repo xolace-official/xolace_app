@@ -14,7 +14,7 @@ export function formatCompactTime(timestamp: number): string {
   return `${months}mo`;
 }
 
-/** Profile meta line: "Listener since March" / "March 2025" once it's not this year. */
+/** Profile meta line: "Xolacer since March" / "March 2025" once it's not this year. */
 export function formatMonthYear(timestamp: number): string {
   const date = new Date(timestamp);
   const month = date.toLocaleString(undefined, { month: 'long' });

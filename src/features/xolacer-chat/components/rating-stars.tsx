@@ -24,7 +24,7 @@ function useStarColors() {
 /**
  * Read-only rating for roster rows. Renders nothing without an average — the
  * 5-rating display threshold is enforced server-side, so an absent `rating`
- * means "not enough yet" and the caller shows a "New listener" chip instead.
+ * means "not enough yet" and the caller shows a "New xolacer" chip instead.
  * A row of grey stars would read as a bad score, which is the opposite of true.
  */
 export function RatingStars({
@@ -94,8 +94,8 @@ export function RatingPicker({
   );
 }
 
-/** Placeholder where the stars go before a listener has five ratings. */
-export function NewListenerChip() {
+/** Placeholder where the stars go before a xolacer has five ratings. */
+export function NewXolacerChip() {
   return (
     <View className="rounded-full bg-surface-tertiary px-2 py-0.5">
       <AppText className="text-[10px] font-semibold uppercase tracking-wide text-muted">

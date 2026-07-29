@@ -28,7 +28,7 @@ export function SafetyStrip() {
       <PressableFeedback
         onPress={() => {
           playSoftPress();
-          router.push('/crisis-resources?from=listener_chat');
+          router.push('/crisis-resources?from=xolacer_chat');
         }}
         accessibilityRole="button"
         accessibilityLabel="Open crisis resources"

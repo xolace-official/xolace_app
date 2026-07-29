@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/src/components/shared/app-text';
-import { ListenerAvatar } from '../components/listener-avatar';
+import { XolacerAvatar } from '../components/xolacer-avatar';
 import { SpecialtyChips } from '../components/specialty-chips';
 import type { SetupDraft } from './steps';
 
@@ -17,7 +17,7 @@ export function ReviewStep({ draft }: { draft: SetupDraft }) {
         className="items-center gap-2 rounded-3xl border border-border/40 bg-surface p-5"
         style={styles.borderCurve}
       >
-        <ListenerAvatar
+        <XolacerAvatar
           name={draft.displayName || '?'}
           photoUrl={draft.photoUrl}
           size="lg"

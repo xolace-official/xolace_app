@@ -48,6 +48,6 @@ export function useChatWarmup(
         { last_message_at: -1 },
         { watch: true, limit: MAX_PREFETCH },
       )
-      .catch((error) => console.error('[listener-chat] channel prefetch failed', error));
+      .catch((error) => console.error('[xolacer-chat] channel prefetch failed', error));
   }, [enabled, client, channelIds]);
 }

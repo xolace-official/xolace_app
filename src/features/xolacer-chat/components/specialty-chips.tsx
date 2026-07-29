@@ -7,7 +7,7 @@ import { cn } from '@/src/lib/utils';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
 
-/** The tags a listener declared, on a roster row or under a profile bio. */
+/** The tags a xolacer declared, on a roster row or under a profile bio. */
 export function SpecialtyChips({
   specialties,
   muted = false,
@@ -44,7 +44,7 @@ export function SpecialtyChips({
 /**
  * Roster filter. Only tags somebody on the roster actually declared are
  * offered — a filter that returns nothing is worse than no filter, and with
- * six listeners most of the taxonomy is empty on any given day.
+ * six xolacers most of the taxonomy is empty on any given day.
  *
  * Filtering happens client-side over the already-loaded directory, so tapping
  * a chip costs no round trip and can't blank the list mid-interaction.

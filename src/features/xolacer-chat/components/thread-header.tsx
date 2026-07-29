@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { formatLongAgo } from '../utils';
-import { ListenerAvatar } from './listener-avatar';
+import { XolacerAvatar } from './xolacer-avatar';
 import type { ThreadConversation } from './thread-screen';
 
 /**
@@ -35,7 +35,7 @@ export function ThreadHeader({ conversation }: { conversation: ThreadConversatio
 
   return (
     <View className="flex-row items-center gap-2.5">
-      <ListenerAvatar
+      <XolacerAvatar
         name={conversation.counterpartName}
         photoUrl={conversation.counterpartPhotoUrl}
         size="sm"

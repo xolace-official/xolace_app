@@ -14,7 +14,7 @@ const SIZES = {
  * Initial-or-photo avatar. `muted` renders the resting/unavailable look
  * (grey surface instead of accent) per the mockup.
  */
-export function ListenerAvatar({
+export function XolacerAvatar({
   name,
   photoUrl,
   size = 'md',

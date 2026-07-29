@@ -10,8 +10,8 @@ const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } })
 // A bare string is an SF Symbol — iOS only. Android needs the platform map.
 const ARROW_ICON = { ios: 'arrow.right', android: 'arrow_forward', web: 'arrow_forward' } as const;
 
-/** Shown to listeners whose profile isn't published yet — the only entry into setup. */
-export function ListenerSetupBanner() {
+/** Shown to xolacers whose profile isn't published yet — the only entry into setup. */
+export function XolacerSetupBanner() {
   const router = useRouter();
   const accent = useThemeColor('accent');
 
@@ -19,7 +19,7 @@ export function ListenerSetupBanner() {
     <PressableFeedback
       onPress={() => {
         playSoftPress();
-        router.push('/listener-setup' as never);
+        router.push('/xolacer-setup' as never);
       }}
       accessibilityRole="button"
       accessibilityLabel="Set up your Xolacer profile"

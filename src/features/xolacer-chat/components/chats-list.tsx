@@ -11,15 +11,15 @@ export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConve
 
 /**
  * All lifecycle states live in one list — resting rows dim rather than hide
- * (the history is the point), and a listener's incoming requests sit inline
+ * (the history is the point), and a xolacer's incoming requests sit inline
  * with accept/decline so "Waiting" is never a screen to remember.
  */
 export function ChatsList({
   conversations,
-  onBrowseListeners,
+  onBrowseXolacers,
 }: {
   conversations: ConversationList;
-  onBrowseListeners: () => void;
+  onBrowseXolacers: () => void;
 }) {
   const router = useRouter();
 
@@ -39,7 +39,7 @@ export function ChatsList({
         <PressableFeedback
           onPress={() => {
             playSoftPress();
-            onBrowseListeners();
+            onBrowseXolacers();
           }}
           accessibilityRole="button"
           accessibilityLabel="See who's listening"

@@ -16,12 +16,12 @@ type TextDraft = Pick<SetupDraft, 'displayName' | 'bio'>;
  * drafted at all — it's uploaded on pick, and the reactive query carries the
  * new URL back rather than an effect mirroring it into state.
  */
-export function useListenerSetup() {
+export function useXolacerSetup() {
   const { toast } = useToast();
   const saved = useQuery(api.xolacerChat.myXolacerProfile);
   const upsert = useMutation(api.xolacerChat.upsertMyXolacerProfile);
   const generateUploadUrl = useMutation(api.xolacerChat.generatePhotoUploadUrl);
-  const setListenerPhoto = useMutation(api.xolacerChat.setXolacerPhoto);
+  const setXolacerPhoto = useMutation(api.xolacerChat.setXolacerPhoto);
   const publish = useMutation(api.xolacerChat.publishProfile);
 
   const [index, setIndex] = useState(0);
@@ -42,8 +42,8 @@ export function useListenerSetup() {
 
   /**
    * Open on the first thing still missing instead of always step 1. For a new
-   * listener that IS step 1, so nothing changes for them — it only saves a
-   * returning listener from tapping Continue past steps they already finished.
+   * xolacer that IS step 1, so nothing changes for them — it only saves a
+   * returning xolacer from tapping Continue past steps they already finished.
    * Seeded once, in render rather than an effect, so it never fights the user:
    * after this runs, `index` is theirs and filling a field can't move them.
    */
@@ -116,13 +116,13 @@ export function useListenerSetup() {
     // `.finally()` rather than try/finally — the React Compiler skips
     // optimization for try/finally bodies. The `.catch()` is what keeps the
     // fire-and-forget call in PhotoStep from becoming an unhandled rejection.
-    await uploadPhoto(asset.uri, asset.mimeType, generateUploadUrl, setListenerPhoto)
+    await uploadPhoto(asset.uri, asset.mimeType, generateUploadUrl, setXolacerPhoto)
       .finally(() => setUploading(false))
       .catch((error) => {
-        console.error('[listener-setup] photo upload failed', error);
+        console.error('[xolacer-setup] photo upload failed', error);
         toast.show({ label: "Couldn't upload that photo. Try again." });
       });
-  }, [generateUploadUrl, setListenerPhoto, toast]);
+  }, [generateUploadUrl, setXolacerPhoto, toast]);
 
   return {
     draft,
@@ -151,7 +151,7 @@ async function uploadPhoto(
   uri: string,
   mimeType: string | undefined,
   generateUploadUrl: () => Promise<string>,
-  setListenerPhoto: (args: { storageId: Id<'_storage'> }) => Promise<null>,
+  setXolacerPhoto: (args: { storageId: Id<'_storage'> }) => Promise<null>,
 ) {
   const uploadUrl = await generateUploadUrl();
   const result = await new File(uri).upload(uploadUrl, {
@@ -165,5 +165,5 @@ async function uploadPhoto(
     throw new Error(`Photo upload failed (${result.status}): ${result.body}`);
   }
   const { storageId } = JSON.parse(result.body) as { storageId: Id<'_storage'> };
-  await setListenerPhoto({ storageId });
+  await setXolacerPhoto({ storageId });
 }

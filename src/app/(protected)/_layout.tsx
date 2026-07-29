@@ -3,7 +3,7 @@ import { useNotifications } from "@/src/lib/use-notifications";
 import {
   StreamChatProvider,
   StreamOverlayProvider,
-} from "@/src/features/listener-chat/providers/stream-chat-provider";
+} from "@/src/features/xolacer-chat/providers/stream-chat-provider";
 
 /**
  * Provides the navigation layout used by protected routes.
@@ -54,8 +54,8 @@ export default function ProtectedLayout() {
 
           
           <Stack.Screen name="chat/[conversationId]" options={CHAT_OPTIONS} />
-          <Stack.Screen name="listener/[profileId]" />
-          <Stack.Screen name="listener-setup" />
+          <Stack.Screen name="xolacer/[profileId]" />
+          <Stack.Screen name="xolacer-setup" />
           <Stack.Screen name="rate/[conversationId]" options={RATE_OPTIONS} />
         </Stack>
       </StreamChatProvider>
