@@ -1676,7 +1676,8 @@ export default defineSchema({
     // Drives the resting sweep. Updated by touchConversation on send.
     lastMessageAt: v.optional(v.number()),
   })
-    .index("by_user", ["userProfileId"])
+    // Seeker-side inbox (prefix scan) and pending-request cap counting.
+    .index("by_user_and_status", ["userProfileId", "status"])
     // Volume-cap counting and listener-side inbox.
     .index("by_listener_and_status", ["listenerProfileId", "status"])
     // One-conversation-per-pair lookup.

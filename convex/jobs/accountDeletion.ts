@@ -200,7 +200,7 @@ export const purgeUser = internalMutation({
     // purgeStreamUser action scheduled in the final batch.
     const conversationsAsUser = await ctx.db
       .query("listener_conversations")
-      .withIndex("by_user", (q) => q.eq("userProfileId", profileId))
+      .withIndex("by_user_and_status", (q) => q.eq("userProfileId", profileId))
       .take(BATCH_SIZE);
 
     if (conversationsAsUser.length === BATCH_SIZE) hasMore = true;

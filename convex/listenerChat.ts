@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import {
   action,
   internalAction,
@@ -51,6 +51,12 @@ const conversationRowValidator = v.object({
 
 // Volume cap counts OPEN conversations only — resting/closed free the slot.
 export const MAX_OPEN_CONVERSATIONS = 8;
+/**
+ * Outbound requests a seeker may have awaiting an answer at once. Only
+ * "requested" rows count — once a listener accepts or declines, the slot is
+ * free again. Without this a user can blanket every listener in the directory.
+ */
+export const MAX_PENDING_REQUESTS = 2;
 const REQUEST_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 const RESTING_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
 
@@ -118,6 +124,37 @@ async function countOpen(ctx: QueryCtx, listenerProfileId: Id<"emotional_profile
     )
     .take(MAX_OPEN_CONVERSATIONS);
   return open.length;
+}
+
+/** Outbound requests a seeker has awaiting an answer. Stops at the cap. */
+async function countPendingRequests(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+) {
+  const pending = await ctx.db
+    .query("listener_conversations")
+    .withIndex("by_user_and_status", (q) =>
+      q.eq("userProfileId", userProfileId).eq("status", "requested"),
+    )
+    .take(MAX_PENDING_REQUESTS);
+  return pending.length;
+}
+
+/**
+ * Guard for any transition that puts a row into "requested". Distinct error
+ * code so the client can say "waiting on 2 already" instead of blaming the
+ * listener's availability.
+ */
+async function requirePendingRequestSlot(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+) {
+  if ((await countPendingRequests(ctx, userProfileId)) >= MAX_PENDING_REQUESTS) {
+    throw new ConvexError({
+      code: "pending_request_limit",
+      max: MAX_PENDING_REQUESTS,
+    });
+  }
 }
 
 function listenerAvailable(profile: Doc<"listener_profiles"> | null, openCount: number) {
@@ -334,7 +371,7 @@ export const myConversations = query({
 
     const asUser = await ctx.db
       .query("listener_conversations")
-      .withIndex("by_user", (q) => q.eq("userProfileId", profile._id))
+      .withIndex("by_user_and_status", (q) => q.eq("userProfileId", profile._id))
       .take(100);
 
     const asListener = user.isListener
@@ -493,6 +530,7 @@ export const requestConversation = mutation({
       ) {
         throw new Error("This conversation can no longer be reopened");
       }
+      await requirePendingRequestSlot(ctx, profile._id);
       await ctx.db.patch(existing._id, {
         status: "requested",
         closedReason: undefined,
@@ -501,6 +539,7 @@ export const requestConversation = mutation({
       return existing._id;
     }
 
+    await requirePendingRequestSlot(ctx, profile._id);
     return await ctx.db.insert("listener_conversations", {
       userProfileId: profile._id,
       listenerProfileId: args.listenerProfileId,

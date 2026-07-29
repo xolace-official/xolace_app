@@ -69,9 +69,15 @@ function ProfileBody({ profile }: { profile: Profile }) {
     playSoftPress();
     requestConversation({ listenerProfileId: profile.listenerProfileId })
       .then(openThread)
-      .catch(() =>
-        toast.show({ label: `${profile.displayName} isn't taking conversations right now.` }),
-      );
+      .catch((error: unknown) => {
+        const data = (error as { data?: { code?: string; max?: number } } | null)?.data;
+        toast.show({
+          label:
+            data?.code === 'pending_request_limit'
+              ? `You're already waiting on ${data.max ?? 2} listeners. Give them a moment to reply.`
+              : `${profile.displayName} isn't taking conversations right now.`,
+        });
+      });
   };
 
   return (
