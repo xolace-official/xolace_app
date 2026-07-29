@@ -7,7 +7,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { ConversationRow } from './conversation-row';
 
-export type ConversationList = FunctionReturnType<typeof api.listenerChat.myConversations>;
+export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConversations>;
 
 /**
  * All lifecycle states live in one list — resting rows dim rather than hide

@@ -108,7 +108,7 @@ export async function upsertStreamUsers(users: StreamUser[]): Promise<void> {
  * Create (or return) the 1:1 messaging channel for a conversation.
  * Channel id is deterministic per conversation row, so accept is idempotent.
  */
-export async function createListenerChannel(
+export async function createXolacerChannel(
   channelId: string,
   memberIds: string[],
   createdById: string,

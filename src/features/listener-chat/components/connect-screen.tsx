@@ -37,8 +37,8 @@ function SegmentLabel({ label, active }: { label: string; active: boolean }) {
  * user meets the roster, a returning user meets their thread.
  */
 export function ConnectScreen() {
-  const status = useQuery(api.listenerChat.status);
-  const conversations = useQuery(api.listenerChat.myConversations);
+  const status = useQuery(api.xolacerChat.status);
+  const conversations = useQuery(api.xolacerChat.myConversations);
   const [selected, setSelected] = useState<Segment | null>(null);
 
   // Opens the Stream connection and warms every channel in the list, so tapping
@@ -95,9 +95,9 @@ export function ConnectScreen() {
           </SegmentedControl>
 
           {status?.enabled &&
-            status.isListener &&
-            (status.listenerProfileComplete ? (
-              <ListenerStatusCard active={status.listenerActive} />
+            status.isXolacer &&
+            (status.xolacerProfileComplete ? (
+              <ListenerStatusCard active={status.xolacerActive} />
             ) : (
               <ListenerSetupBanner />
             ))}

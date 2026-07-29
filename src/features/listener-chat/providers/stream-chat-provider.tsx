@@ -70,7 +70,7 @@ export const useStreamStatus = () => use(StreamStatusContext);
  * with the user reading their conversation list instead of blocking the open.
  *
  * Pass `enabled: false` while a caller still doesn't know whether it needs chat
- * — the Connect tab holds it off until `listenerChat.status` confirms the
+ * — the Connect tab holds it off until `xolacerChat.status` confirms the
  * feature is on, so a disabled deployment never fetches a token that would
  * throw.
  */
@@ -125,7 +125,7 @@ const CONNECT_TIMEOUT_MS = 20_000;
  * `connectUser` is what does, and that still waits for `activate()`.
  */
 export function StreamChatProvider({ children }: { children: React.ReactNode }) {
-  const getStreamToken = useAction(api.listenerChat.getStreamToken);
+  const getStreamToken = useAction(api.xolacerChat.getStreamToken);
   const { userId } = useAuth();
   const [session, setSession] = useState<StreamSession | null>(() =>
     userId && cachedSession?.userId === userId ? cachedSession.session : null,

@@ -16,7 +16,7 @@ import { ListenerAvatar } from './listener-avatar';
 import { NewListenerChip, RatingStars } from './rating-stars';
 import { SpecialtyChips } from './specialty-chips';
 
-type Profile = NonNullable<FunctionReturnType<typeof api.listenerChat.listenerProfile>>;
+type Profile = NonNullable<FunctionReturnType<typeof api.xolacerChat.xolacerProfile>>;
 
 const styles = StyleSheet.create({
   borderCurve: { borderCurve: 'continuous' },
@@ -43,8 +43,8 @@ const CHAT_ICON = {
 const MOON_ICON = { ios: 'moon', android: 'bedtime', web: 'bedtime' } as const;
 
 export function ListenerProfileScreen({ profileId }: { profileId: string }) {
-  const profile = useQuery(api.listenerChat.listenerProfile, {
-    listenerProfileId: profileId as Id<'emotional_profiles'>,
+  const profile = useQuery(api.xolacerChat.xolacerProfile, {
+    xolacerProfileId: profileId as Id<'emotional_profiles'>,
   });
 
   if (profile === undefined) return <ProfileSkeleton />;
@@ -57,7 +57,7 @@ function ProfileBody({ profile }: { profile: Profile }) {
   const insets = useSafeAreaInsets();
   const { toast } = useToast();
   const { show } = useTray<Trays>();
-  const requestConversation = useMutation(api.listenerChat.requestConversation);
+  const requestConversation = useMutation(api.xolacerChat.requestConversation);
 
   const { conversation } = profile;
   const hasThread = conversation !== null && conversation.status !== 'closed';
@@ -67,14 +67,14 @@ function ProfileBody({ profile }: { profile: Profile }) {
 
   const handleAsk = () => {
     playSoftPress();
-    requestConversation({ listenerProfileId: profile.listenerProfileId })
+    requestConversation({ xolacerProfileId: profile.xolacerProfileId })
       .then(openThread)
       .catch((error: unknown) => {
         const data = (error as { data?: { code?: string; max?: number } } | null)?.data;
         toast.show({
           label:
             data?.code === 'pending_request_limit'
-              ? `You're already waiting on ${data.max ?? 2} listeners. Give them a moment to reply.`
+              ? `You're already waiting on ${data.max ?? 2} Xolacers. Give them a moment to reply.`
               : `${profile.displayName} isn't taking conversations right now.`,
         });
       });
@@ -103,7 +103,7 @@ function ProfileBody({ profile }: { profile: Profile }) {
             </AppText>
             <ProfileRating profile={profile} />
             <AppText className="text-xs text-muted">
-              Xolacer since {formatMonthYear(profile.listenerSince)} · replies within a day
+              Xolacer since {formatMonthYear(profile.xolacerSince)} · replies within a day
             </AppText>
           </View>
         </View>

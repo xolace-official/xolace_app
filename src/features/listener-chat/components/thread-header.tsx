@@ -11,7 +11,7 @@ import type { ThreadConversation } from './thread-screen';
  */
 function subtitleFor(conversation: ThreadConversation): string {
   if (conversation.status === 'requested') {
-    return conversation.role === 'listener'
+    return conversation.role === 'xolacer'
       ? 'Waiting on you'
       : 'Request sent — no reply yet';
   }

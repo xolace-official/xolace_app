@@ -18,11 +18,11 @@ type TextDraft = Pick<SetupDraft, 'displayName' | 'bio'>;
  */
 export function useListenerSetup() {
   const { toast } = useToast();
-  const saved = useQuery(api.listenerChat.myListenerProfile);
-  const upsert = useMutation(api.listenerChat.upsertMyListenerProfile);
-  const generateUploadUrl = useMutation(api.listenerChat.generatePhotoUploadUrl);
-  const setListenerPhoto = useMutation(api.listenerChat.setListenerPhoto);
-  const publish = useMutation(api.listenerChat.publishProfile);
+  const saved = useQuery(api.xolacerChat.myXolacerProfile);
+  const upsert = useMutation(api.xolacerChat.upsertMyXolacerProfile);
+  const generateUploadUrl = useMutation(api.xolacerChat.generatePhotoUploadUrl);
+  const setListenerPhoto = useMutation(api.xolacerChat.setXolacerPhoto);
+  const publish = useMutation(api.xolacerChat.publishProfile);
 
   const [index, setIndex] = useState(0);
   const [resumed, setResumed] = useState(false);

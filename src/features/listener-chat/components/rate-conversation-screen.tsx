@@ -29,10 +29,10 @@ export function RateConversationScreen({ conversationId }: { conversationId: str
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { toast } = useToast();
-  const conversation = useQuery(api.listenerChat.getConversation, {
-    conversationId: conversationId as Id<'listener_conversations'>,
+  const conversation = useQuery(api.xolacerChat.getConversation, {
+    conversationId: conversationId as Id<'xolacer_conversations'>,
   });
-  const rateConversation = useMutation(api.listenerChat.rateConversation);
+  const rateConversation = useMutation(api.xolacerChat.rateConversation);
   const [choice, setChoice] = useState<number | undefined>(undefined);
 
   if (conversation === undefined) {

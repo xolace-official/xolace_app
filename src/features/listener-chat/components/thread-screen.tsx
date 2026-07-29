@@ -22,7 +22,7 @@ import { ThreadStatusBar } from './thread-status-bar';
  * still returns it for clients shipped before this change.
  */
 export type ThreadConversation = Omit<
-  NonNullable<FunctionReturnType<typeof api.listenerChat.getConversation>>,
+  NonNullable<FunctionReturnType<typeof api.xolacerChat.getConversation>>,
   'myStreamUserId'
 >;
 
@@ -74,7 +74,7 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
         <SafetyStrip />
         <View className="flex-1 items-center justify-center px-10">
           <AppText className="text-center text-[13px] leading-5 text-muted">
-            {conversation.role === 'listener'
+            {conversation.role === 'xolacer'
               ? 'Nothing has been said yet — the conversation opens once you accept.'
               : 'Messages will appear here once your request is accepted.'}
           </AppText>

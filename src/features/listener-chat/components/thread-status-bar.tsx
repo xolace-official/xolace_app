@@ -17,9 +17,9 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { toast } = useToast();
-  const acceptRequest = useAction(api.listenerChat.acceptRequest);
-  const declineRequest = useMutation(api.listenerChat.declineRequest);
-  const resumeConversation = useMutation(api.listenerChat.resumeConversation);
+  const acceptRequest = useAction(api.xolacerChat.acceptRequest);
+  const declineRequest = useMutation(api.xolacerChat.declineRequest);
+  const resumeConversation = useMutation(api.xolacerChat.resumeConversation);
 
   const padBottom = Math.max(insets.bottom, 14);
 
@@ -58,7 +58,7 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
   if (conversation.status === 'requested') {
     return (
       <Bar padBottom={padBottom}>
-        {conversation.role === 'listener' ? (
+        {conversation.role === 'xolacer' ? (
           <>
             <Copy>
               <Bold>{conversation.counterpartName}</Bold> asked to talk. Accepting opens a

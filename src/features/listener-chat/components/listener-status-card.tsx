@@ -20,7 +20,7 @@ const ICON = {
  * someone reaches for precisely when they're too drained to go looking.
  */
 export function ListenerStatusCard({ active }: { active: boolean }) {
-  const setActive = useMutation(api.listenerChat.setListenerActive);
+  const setActive = useMutation(api.xolacerChat.setXolacerActive);
   const { toast } = useToast();
   const accent = useThemeColor('accent') as string;
   const muted = useThemeColor('muted') as string;

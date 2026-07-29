@@ -179,16 +179,16 @@ export const cleanupStuckFollowUps = mutation({
 });
 
 /**
- * Seed a published listener so the Connect roster has something in it.
+ * Seed a published xolacer so the Connect roster has something in it.
  * Takes an explicit user id (rather than requireAuth) so it can promote a
  * *different* test account than the one signed into the simulator — which is
  * exactly why it's `internalMutation`: an unauthenticated, public function
- * that flips `isListener` on an arbitrary user would be an impersonation
+ * that flips `isXolacer` on an arbitrary user would be an impersonation
  * hole the moment DEV_TOOLS_ENABLED reached a real deployment.
  *
- *   bunx convex run devTools:seedListener '{"userId":"...","displayName":"Maya","bio":"..."}'
+ *   bunx convex run devTools:seedXolacer '{"userId":"...","displayName":"Maya","bio":"..."}'
  */
-export const seedListener = internalMutation({
+export const seedXolacer = internalMutation({
   args: {
     userId: v.id("users"),
     displayName: v.string(),
@@ -201,11 +201,11 @@ export const seedListener = internalMutation({
 
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("No such user");
-    await ctx.db.patch(user._id, { isListener: true });
+    await ctx.db.patch(user._id, { isXolacer: true });
 
     const emotionalProfileId = user.emotionalProfileId;
     const existing = await ctx.db
-      .query("listener_profiles")
+      .query("xolacer_profiles")
       .withIndex("by_profile", (q) => q.eq("emotionalProfileId", emotionalProfileId))
       .unique();
 
@@ -222,7 +222,7 @@ export const seedListener = internalMutation({
       await ctx.db.patch(existing._id, fields);
       return emotionalProfileId;
     }
-    await ctx.db.insert("listener_profiles", {
+    await ctx.db.insert("xolacer_profiles", {
       emotionalProfileId,
       createdAt: Date.now(),
       ...fields,

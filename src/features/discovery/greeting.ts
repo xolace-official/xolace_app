@@ -33,7 +33,7 @@ export function getGreeting(displayName?: string | null): string {
  * Masthead display copy. Split lead/tail so the tail can drop to a lighter
  * weight — the reference's trick for giving a type block internal rhythm.
  *
- * Copy only — it does not navigate. Listener setup is gated on `isListener`,
+ * Copy only — it does not navigate. Listener setup is gated on `isXolacer`,
  * so it is not the destination; this stays inert until there is one.
  */
 export const DISPLAY_LINES = [

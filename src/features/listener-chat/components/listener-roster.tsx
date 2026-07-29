@@ -22,7 +22,7 @@ const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } })
  */
 export function ListenerRoster({ conversations }: { conversations: ConversationList }) {
   const router = useRouter();
-  const directory = useQuery(api.listenerChat.directory);
+  const directory = useQuery(api.xolacerChat.directory);
   const [filter, setFilter] = useState<string | null>(null);
 
   if (directory !== undefined && directory.length === 0) {
@@ -45,7 +45,7 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
   const openWith = new Set(
     conversations
       .filter((c) => c.role === 'user' && c.status === 'open')
-      .map((c) => c.listenerProfileId),
+      .map((c) => c.xolacerProfileId),
   );
 
   const listeners = directory ?? [];
@@ -61,13 +61,13 @@ export function ListenerRoster({ conversations }: { conversations: ConversationL
       <SpecialtyFilter available={offered} selected={filter} onSelect={setFilter} />
 
       {visible.map((listener) => {
-        const talking = openWith.has(listener.listenerProfileId);
+        const talking = openWith.has(listener.xolacerProfileId);
         return (
           <PressableFeedback
-            key={listener.listenerProfileId}
+            key={listener.xolacerProfileId}
             onPress={() => {
               playSoftPress();
-              router.push(`/listener/${listener.listenerProfileId}` as never);
+              router.push(`/listener/${listener.xolacerProfileId}` as never);
             }}
             accessibilityRole="button"
             accessibilityLabel={`View ${listener.displayName}'s profile`}

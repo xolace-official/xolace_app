@@ -16,7 +16,7 @@ const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } })
 
 function chipFor(conversation: Conversation): { label: string; tone: 'warn' | 'muted' } | null {
   if (conversation.status === 'requested') {
-    return { label: conversation.role === 'listener' ? 'New request' : 'Waiting', tone: 'warn' };
+    return { label: conversation.role === 'xolacer' ? 'New request' : 'Waiting', tone: 'warn' };
   }
   if (conversation.status === 'resting') return { label: 'Resting', tone: 'muted' };
   if (conversation.status === 'closed') return { label: 'Closed', tone: 'muted' };
@@ -25,7 +25,7 @@ function chipFor(conversation: Conversation): { label: string; tone: 'warn' | 'm
 
 function subtitleFor(conversation: Conversation): string {
   if (conversation.status === 'requested') {
-    return conversation.role === 'listener'
+    return conversation.role === 'xolacer'
       ? 'Wants to talk — accept when you have space'
       : `Request sent — ${conversation.counterpartName} will reply when they can`;
   }
@@ -45,8 +45,8 @@ export function ConversationRow({
   conversation: Conversation;
   onPress: () => void;
 }) {
-  const acceptRequest = useAction(api.listenerChat.acceptRequest);
-  const declineRequest = useMutation(api.listenerChat.declineRequest);
+  const acceptRequest = useAction(api.xolacerChat.acceptRequest);
+  const declineRequest = useMutation(api.xolacerChat.declineRequest);
   const { toast } = useToast();
   const [pending, setPending] = useState<'accept' | 'decline' | null>(null);
 
@@ -73,7 +73,7 @@ export function ConversationRow({
   const dim = conversation.status !== 'open';
   const chip = chipFor(conversation);
   const showInlineActions =
-    conversation.role === 'listener' && conversation.status === 'requested';
+    conversation.role === 'xolacer' && conversation.status === 'requested';
   const when = conversation.lastMessageAt ?? conversation.requestedAt;
 
   return (

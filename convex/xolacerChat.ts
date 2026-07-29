@@ -12,7 +12,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { QueryCtx } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import {
-  createListenerChannel,
+  createXolacerChannel,
   deleteStreamUser,
   getStreamApiKey,
   mintUserToken,
@@ -31,20 +31,20 @@ const closedReasonValidator = v.optional(
     v.literal("declined"),
     v.literal("expired"),
     v.literal("blocked"),
-    v.literal("listener_left"),
+    v.literal("xolacer_left"),
   ),
 );
 const conversationRowValidator = v.object({
-  id: v.id("listener_conversations"),
-  role: v.union(v.literal("user"), v.literal("listener")),
+  id: v.id("xolacer_conversations"),
+  role: v.union(v.literal("user"), v.literal("xolacer")),
   status: statusValidator,
   closedReason: closedReasonValidator,
   streamChannelId: v.optional(v.string()),
   lastMessageAt: v.optional(v.number()),
   requestedAt: v.number(),
-  // Stable identity for the listener side of the thread — the roster matches
+  // Stable identity for the xolacer side of the thread — the roster matches
   // on this, never on display name (names repeat and can change).
-  listenerProfileId: v.id("emotional_profiles"),
+  xolacerProfileId: v.id("emotional_profiles"),
   counterpartName: v.string(),
   counterpartPhotoUrl: v.optional(v.string()),
 });
@@ -53,8 +53,8 @@ const conversationRowValidator = v.object({
 export const MAX_OPEN_CONVERSATIONS = 8;
 /**
  * Outbound requests a seeker may have awaiting an answer at once. Only
- * "requested" rows count — once a listener accepts or declines, the slot is
- * free again. Without this a user can blanket every listener in the directory.
+ * "requested" rows count — once a xolacer accepts or declines, the slot is
+ * free again. Without this a user can blanket every xolacer in the directory.
  */
 export const MAX_PENDING_REQUESTS = 2;
 const REQUEST_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
@@ -62,13 +62,13 @@ const RESTING_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
 
 /**
  * Below this, no average is shown anywhere — one bad night shouldn't read as
- * a listener's score, and a 5.0 from a single rating is worse than no number
+ * a xolacer's score, and a 5.0 from a single rating is worse than no number
  * at all. Enforced server-side so the client never receives a hideable value.
  */
 const MIN_RATINGS_TO_DISPLAY = 5;
 
 /** Public rating shape: the average exists only past the display threshold. */
-function publicRating(profile: Doc<"listener_profiles">) {
+function publicRating(profile: Doc<"xolacer_profiles">) {
   const count = profile.ratingCount ?? 0;
   return {
     rating:
@@ -82,11 +82,11 @@ function publicRating(profile: Doc<"listener_profiles">) {
 // Global kill-switch (env-var gate, same pattern as devTools). The feature
 // ships dark until the ambassador-consent + DPA review clears.
 function chatEnabled() {
-  return process.env.LISTENER_CHAT_ENABLED === "true";
+  return process.env.XOLACER_CHAT_ENABLED === "true";
 }
 
 /**
- * Listener-side counterparts are anonymous users — no public identity exists
+ * Xolacer-side counterparts are anonymous users — no public identity exists
  * for them by design. A stable pseudonym derived from the profile id keeps
  * multiple conversations distinguishable without leaking anything.
  */
@@ -102,7 +102,7 @@ function pseudonym(profileId: string) {
  *
  * Two reads per row in myConversations (up to 100 conversations) is the only
  * cost worth naming; if that ever bites, denormalize avatarUrl onto
- * listener_conversations at request time. Not yet.
+ * xolacer_conversations at request time. Not yet.
  */
 async function seekerImage(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
   const prefs = await ctx.db
@@ -116,11 +116,11 @@ async function seekerImage(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
   return avatar?.url;
 }
 
-async function countOpen(ctx: QueryCtx, listenerProfileId: Id<"emotional_profiles">) {
+async function countOpen(ctx: QueryCtx, xolacerProfileId: Id<"emotional_profiles">) {
   const open = await ctx.db
-    .query("listener_conversations")
-    .withIndex("by_listener_and_status", (q) =>
-      q.eq("listenerProfileId", listenerProfileId).eq("status", "open"),
+    .query("xolacer_conversations")
+    .withIndex("by_xolacer_and_status", (q) =>
+      q.eq("xolacerProfileId", xolacerProfileId).eq("status", "open"),
     )
     .take(MAX_OPEN_CONVERSATIONS);
   return open.length;
@@ -132,7 +132,7 @@ async function countPendingRequests(
   userProfileId: Id<"emotional_profiles">,
 ) {
   const pending = await ctx.db
-    .query("listener_conversations")
+    .query("xolacer_conversations")
     .withIndex("by_user_and_status", (q) =>
       q.eq("userProfileId", userProfileId).eq("status", "requested"),
     )
@@ -143,7 +143,7 @@ async function countPendingRequests(
 /**
  * Guard for any transition that puts a row into "requested". Distinct error
  * code so the client can say "waiting on 2 already" instead of blaming the
- * listener's availability.
+ * xolacer's availability.
  */
 async function requirePendingRequestSlot(
   ctx: QueryCtx,
@@ -157,25 +157,25 @@ async function requirePendingRequestSlot(
   }
 }
 
-function listenerAvailable(profile: Doc<"listener_profiles"> | null, openCount: number) {
+function xolacerAvailable(profile: Doc<"xolacer_profiles"> | null, openCount: number) {
   return Boolean(
     profile && profile.complete && profile.active && openCount < MAX_OPEN_CONVERSATIONS,
   );
 }
 
-async function getListenerProfileByProfileId(
+async function getXolacerProfileByProfileId(
   ctx: QueryCtx,
   emotionalProfileId: Id<"emotional_profiles">,
 ) {
   return await ctx.db
-    .query("listener_profiles")
+    .query("xolacer_profiles")
     .withIndex("by_profile", (q) => q.eq("emotionalProfileId", emotionalProfileId))
     .unique();
 }
 
 async function findRating(
   ctx: QueryCtx,
-  conversationId: Id<"listener_conversations">,
+  conversationId: Id<"xolacer_conversations">,
 ) {
   return await ctx.db
     .query("conversation_ratings")
@@ -189,7 +189,7 @@ async function findRating(
  * least one real message followed the handshake. Without it, a request that
  * was accepted and then ignored could still be rated.
  */
-function hasRealExchange(conversation: Doc<"listener_conversations">) {
+function hasRealExchange(conversation: Doc<"xolacer_conversations">) {
   return Boolean(
     conversation.acceptedAt &&
       conversation.lastMessageAt &&
@@ -199,7 +199,7 @@ function hasRealExchange(conversation: Doc<"listener_conversations">) {
 
 async function requireConversationParticipant(
   ctx: QueryCtx,
-  conversationId: Id<"listener_conversations">,
+  conversationId: Id<"xolacer_conversations">,
 ) {
   const { user, profile } = await requireAuth(ctx);
   const conversation = await ctx.db.get(conversationId);
@@ -207,8 +207,8 @@ async function requireConversationParticipant(
   const role =
     conversation.userProfileId === profile._id
       ? ("user" as const)
-      : conversation.listenerProfileId === profile._id
-        ? ("listener" as const)
+      : conversation.xolacerProfileId === profile._id
+        ? ("xolacer" as const)
         : null;
   if (!role) throw new Error("Conversation does not belong to this user");
   return { user, profile, conversation, role };
@@ -225,22 +225,22 @@ export const status = query({
     v.object({ enabled: v.literal(false) }),
     v.object({
       enabled: v.literal(true),
-      isListener: v.boolean(),
-      listenerProfileComplete: v.boolean(),
-      listenerActive: v.boolean(),
+      isXolacer: v.boolean(),
+      xolacerProfileComplete: v.boolean(),
+      xolacerActive: v.boolean(),
     }),
   ),
   handler: async (ctx) => {
     if (!chatEnabled()) return { enabled: false as const };
     const { user, profile } = await requireAuth(ctx);
-    const listenerProfile = user.isListener
-      ? await getListenerProfileByProfileId(ctx, profile._id)
+    const xolacerProfile = user.isXolacer
+      ? await getXolacerProfileByProfileId(ctx, profile._id)
       : null;
     return {
       enabled: true as const,
-      isListener: Boolean(user.isListener),
-      listenerProfileComplete: Boolean(listenerProfile?.complete),
-      listenerActive: Boolean(listenerProfile?.active),
+      isXolacer: Boolean(user.isXolacer),
+      xolacerProfileComplete: Boolean(xolacerProfile?.complete),
+      xolacerActive: Boolean(xolacerProfile?.active),
     };
   },
 });
@@ -253,7 +253,7 @@ export const directory = query({
   args: {},
   returns: v.array(
     v.object({
-      listenerProfileId: v.id("emotional_profiles"),
+      xolacerProfileId: v.id("emotional_profiles"),
       displayName: v.string(),
       bio: v.string(),
       photoUrl: v.optional(v.string()),
@@ -261,61 +261,61 @@ export const directory = query({
       rating: v.optional(v.number()),
       ratingCount: v.number(),
       atCapacity: v.boolean(),
-      listenerSince: v.number(),
+      xolacerSince: v.number(),
     }),
   ),
   handler: async (ctx) => {
     if (!chatEnabled()) return [];
     const { profile } = await requireAuth(ctx);
 
-    const listeners = await ctx.db
-      .query("listener_profiles")
+    const xolacers = await ctx.db
+      .query("xolacer_profiles")
       .withIndex("by_complete_and_active", (q) =>
         q.eq("complete", true).eq("active", true),
       )
       .take(50);
 
     const rows = [];
-    for (const listener of listeners) {
-      // A listener browsing the roster shouldn't see themselves.
-      if (listener.emotionalProfileId === profile._id) continue;
-      const openCount = await countOpen(ctx, listener.emotionalProfileId);
+    for (const xolacer of xolacers) {
+      // A xolacer browsing the roster shouldn't see themselves.
+      if (xolacer.emotionalProfileId === profile._id) continue;
+      const openCount = await countOpen(ctx, xolacer.emotionalProfileId);
       rows.push({
-        listenerProfileId: listener.emotionalProfileId,
-        displayName: listener.displayName ?? "",
-        bio: listener.bio ?? "",
-        photoUrl: listener.photoUrl,
-        specialties: listener.specialties ?? [],
-        ...publicRating(listener),
+        xolacerProfileId: xolacer.emotionalProfileId,
+        displayName: xolacer.displayName ?? "",
+        bio: xolacer.bio ?? "",
+        photoUrl: xolacer.photoUrl,
+        specialties: xolacer.specialties ?? [],
+        ...publicRating(xolacer),
         atCapacity: openCount >= MAX_OPEN_CONVERSATIONS,
-        listenerSince: listener.createdAt,
+        xolacerSince: xolacer.createdAt,
       });
     }
     return rows;
   },
 });
 
-/** Public profile + my relationship to this listener (drives the CTA). */
-export const listenerProfile = query({
-  args: { listenerProfileId: v.id("emotional_profiles") },
+/** Public profile + my relationship to this xolacer (drives the CTA). */
+export const xolacerProfile = query({
+  args: { xolacerProfileId: v.id("emotional_profiles") },
   returns: v.union(
     v.null(),
     v.object({
-      listenerProfileId: v.id("emotional_profiles"),
+      xolacerProfileId: v.id("emotional_profiles"),
       displayName: v.string(),
       bio: v.string(),
       photoUrl: v.optional(v.string()),
       specialties: v.array(specialtyValidator),
       rating: v.optional(v.number()),
       ratingCount: v.number(),
-      listenerSince: v.number(),
+      xolacerSince: v.number(),
       available: v.boolean(),
       /** Viewing your own profile — the request CTA is replaced, not disabled. */
       isSelf: v.boolean(),
       conversation: v.union(
         v.null(),
         v.object({
-          id: v.id("listener_conversations"),
+          id: v.id("xolacer_conversations"),
           status: statusValidator,
           closedReason: closedReasonValidator,
         }),
@@ -326,27 +326,27 @@ export const listenerProfile = query({
     if (!chatEnabled()) return null;
     const { profile } = await requireAuth(ctx);
 
-    const listener = await getListenerProfileByProfileId(ctx, args.listenerProfileId);
-    if (!listener || !listener.complete) return null;
+    const xolacer = await getXolacerProfileByProfileId(ctx, args.xolacerProfileId);
+    if (!xolacer || !xolacer.complete) return null;
 
-    const openCount = await countOpen(ctx, args.listenerProfileId);
+    const openCount = await countOpen(ctx, args.xolacerProfileId);
     const conversation = await ctx.db
-      .query("listener_conversations")
-      .withIndex("by_user_and_listener", (q) =>
-        q.eq("userProfileId", profile._id).eq("listenerProfileId", args.listenerProfileId),
+      .query("xolacer_conversations")
+      .withIndex("by_user_and_xolacer", (q) =>
+        q.eq("userProfileId", profile._id).eq("xolacerProfileId", args.xolacerProfileId),
       )
       .unique();
 
     return {
-      listenerProfileId: args.listenerProfileId,
-      displayName: listener.displayName ?? "",
-      bio: listener.bio ?? "",
-      photoUrl: listener.photoUrl,
-      specialties: listener.specialties ?? [],
-      ...publicRating(listener),
-      listenerSince: listener.createdAt,
-      available: listenerAvailable(listener, openCount),
-      isSelf: profile._id === args.listenerProfileId,
+      xolacerProfileId: args.xolacerProfileId,
+      displayName: xolacer.displayName ?? "",
+      bio: xolacer.bio ?? "",
+      photoUrl: xolacer.photoUrl,
+      specialties: xolacer.specialties ?? [],
+      ...publicRating(xolacer),
+      xolacerSince: xolacer.createdAt,
+      available: xolacerAvailable(xolacer, openCount),
+      isSelf: profile._id === args.xolacerProfileId,
       conversation: conversation
         ? {
             id: conversation._id,
@@ -370,24 +370,24 @@ export const myConversations = query({
     const { user, profile } = await requireAuth(ctx);
 
     const asUser = await ctx.db
-      .query("listener_conversations")
+      .query("xolacer_conversations")
       .withIndex("by_user_and_status", (q) => q.eq("userProfileId", profile._id))
       .take(100);
 
-    const asListener = user.isListener
+    const asXolacer = user.isXolacer
       ? await ctx.db
-          .query("listener_conversations")
-          .withIndex("by_listener_and_status", (q) =>
-            q.eq("listenerProfileId", profile._id),
+          .query("xolacer_conversations")
+          .withIndex("by_xolacer_and_status", (q) =>
+            q.eq("xolacerProfileId", profile._id),
           )
           .take(100)
       : [];
 
     const rows = [];
     for (const conversation of asUser) {
-      const listener = await getListenerProfileByProfileId(
+      const xolacer = await getXolacerProfileByProfileId(
         ctx,
-        conversation.listenerProfileId,
+        conversation.xolacerProfileId,
       );
       rows.push({
         id: conversation._id,
@@ -397,27 +397,27 @@ export const myConversations = query({
         streamChannelId: conversation.streamChannelId,
         lastMessageAt: conversation.lastMessageAt,
         requestedAt: conversation.requestedAt,
-        listenerProfileId: conversation.listenerProfileId,
-        counterpartName: listener?.displayName ?? "Listener",
-        counterpartPhotoUrl: listener?.photoUrl,
+        xolacerProfileId: conversation.xolacerProfileId,
+        counterpartName: xolacer?.displayName ?? "Xolacer",
+        counterpartPhotoUrl: xolacer?.photoUrl,
       });
     }
-    for (const conversation of asListener) {
+    for (const conversation of asXolacer) {
       rows.push({
         id: conversation._id,
-        role: "listener" as const,
+        role: "xolacer" as const,
         status: conversation.status,
         closedReason: conversation.closedReason,
         streamChannelId: conversation.streamChannelId,
         lastMessageAt: conversation.lastMessageAt,
         requestedAt: conversation.requestedAt,
-        listenerProfileId: conversation.listenerProfileId,
+        xolacerProfileId: conversation.xolacerProfileId,
         counterpartName: pseudonym(conversation.userProfileId),
         counterpartPhotoUrl: await seekerImage(ctx, conversation.userProfileId),
       });
     }
 
-    // Requested first (listener inbox), then most recent activity.
+    // Requested first (xolacer inbox), then most recent activity.
     rows.sort((a, b) => {
       const aKey = a.lastMessageAt ?? a.requestedAt;
       const bKey = b.lastMessageAt ?? b.requestedAt;
@@ -428,12 +428,12 @@ export const myConversations = query({
 });
 
 export const getConversation = query({
-  args: { conversationId: v.id("listener_conversations") },
+  args: { conversationId: v.id("xolacer_conversations") },
   returns: v.union(
     v.null(),
     v.object({
-      id: v.id("listener_conversations"),
-      role: v.union(v.literal("user"), v.literal("listener")),
+      id: v.id("xolacer_conversations"),
+      role: v.union(v.literal("user"), v.literal("xolacer")),
       status: statusValidator,
       closedReason: closedReasonValidator,
       streamChannelId: v.optional(v.string()),
@@ -454,14 +454,14 @@ export const getConversation = query({
       args.conversationId,
     );
 
-    const listener = await getListenerProfileByProfileId(
+    const xolacer = await getXolacerProfileByProfileId(
       ctx,
-      conversation.listenerProfileId,
+      conversation.xolacerProfileId,
     );
-    const openCount = await countOpen(ctx, conversation.listenerProfileId);
-    // Resting → Open without a fresh request only while the listener is
+    const openCount = await countOpen(ctx, conversation.xolacerProfileId);
+    // Resting → Open without a fresh request only while the xolacer is
     // still published, active, and under cap.
-    const resumable = listenerAvailable(listener, openCount);
+    const resumable = xolacerAvailable(xolacer, openCount);
 
     const existingRating =
       role === "user" ? await findRating(ctx, conversation._id) : null;
@@ -479,11 +479,11 @@ export const getConversation = query({
       myRating: existingRating?.rating,
       counterpartName:
         role === "user"
-          ? (listener?.displayName ?? "Listener")
+          ? (xolacer?.displayName ?? "Xolacer")
           : pseudonym(conversation.userProfileId),
       counterpartPhotoUrl:
         role === "user"
-          ? listener?.photoUrl
+          ? xolacer?.photoUrl
           : await seekerImage(ctx, conversation.userProfileId),
       myStreamUserId: profile._id,
     };
@@ -491,25 +491,25 @@ export const getConversation = query({
 });
 
 export const requestConversation = mutation({
-  args: { listenerProfileId: v.id("emotional_profiles") },
-  returns: v.id("listener_conversations"),
+  args: { xolacerProfileId: v.id("emotional_profiles") },
+  returns: v.id("xolacer_conversations"),
   handler: async (ctx, args) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
     const { profile } = await requireAuth(ctx);
-    if (profile._id === args.listenerProfileId) {
+    if (profile._id === args.xolacerProfileId) {
       throw new Error("Cannot request a conversation with yourself");
     }
 
-    const listener = await getListenerProfileByProfileId(ctx, args.listenerProfileId);
-    const openCount = await countOpen(ctx, args.listenerProfileId);
-    if (!listenerAvailable(listener, openCount)) {
-      throw new Error("This listener is not taking conversations right now");
+    const xolacer = await getXolacerProfileByProfileId(ctx, args.xolacerProfileId);
+    const openCount = await countOpen(ctx, args.xolacerProfileId);
+    if (!xolacerAvailable(xolacer, openCount)) {
+      throw new Error("This xolacer is not taking conversations right now");
     }
 
     const existing = await ctx.db
-      .query("listener_conversations")
-      .withIndex("by_user_and_listener", (q) =>
-        q.eq("userProfileId", profile._id).eq("listenerProfileId", args.listenerProfileId),
+      .query("xolacer_conversations")
+      .withIndex("by_user_and_xolacer", (q) =>
+        q.eq("userProfileId", profile._id).eq("xolacerProfileId", args.xolacerProfileId),
       )
       .unique();
 
@@ -523,10 +523,10 @@ export const requestConversation = mutation({
         await ctx.db.patch(existing._id, { status: "open" });
         return existing._id;
       }
-      // Closed: declined/expired may re-request; blocked/listener_left may not.
+      // Closed: declined/expired may re-request; blocked/xolacer_left may not.
       if (
         existing.closedReason === "blocked" ||
-        existing.closedReason === "listener_left"
+        existing.closedReason === "xolacer_left"
       ) {
         throw new Error("This conversation can no longer be reopened");
       }
@@ -540,23 +540,23 @@ export const requestConversation = mutation({
     }
 
     await requirePendingRequestSlot(ctx, profile._id);
-    return await ctx.db.insert("listener_conversations", {
+    return await ctx.db.insert("xolacer_conversations", {
       userProfileId: profile._id,
-      listenerProfileId: args.listenerProfileId,
+      xolacerProfileId: args.xolacerProfileId,
       status: "requested",
       requestedAt: Date.now(),
     });
   },
 });
 
-/** Listener-side validation for accept — runs in query ctx so the action stays thin. */
+/** Xolacer-side validation for accept — runs in query ctx so the action stays thin. */
 export const getForAccept = internalQuery({
-  args: { conversationId: v.id("listener_conversations") },
+  args: { conversationId: v.id("xolacer_conversations") },
   returns: v.object({
     userProfileId: v.id("emotional_profiles"),
-    listenerProfileId: v.id("emotional_profiles"),
-    listenerName: v.string(),
-    listenerPhotoUrl: v.optional(v.string()),
+    xolacerProfileId: v.id("emotional_profiles"),
+    xolacerName: v.string(),
+    xolacerPhotoUrl: v.optional(v.string()),
     userPhotoUrl: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
@@ -564,19 +564,19 @@ export const getForAccept = internalQuery({
       ctx,
       args.conversationId,
     );
-    if (role !== "listener") throw new Error("Only the listener can accept");
+    if (role !== "xolacer") throw new Error("Only the xolacer can accept");
     if (conversation.status !== "requested") {
       throw new Error("Request is no longer pending");
     }
-    const listener = await getListenerProfileByProfileId(
+    const xolacer = await getXolacerProfileByProfileId(
       ctx,
-      conversation.listenerProfileId,
+      conversation.xolacerProfileId,
     );
     return {
       userProfileId: conversation.userProfileId,
-      listenerProfileId: conversation.listenerProfileId,
-      listenerName: listener?.displayName ?? "Listener",
-      listenerPhotoUrl: listener?.photoUrl,
+      xolacerProfileId: conversation.xolacerProfileId,
+      xolacerName: xolacer?.displayName ?? "Xolacer",
+      xolacerPhotoUrl: xolacer?.photoUrl,
       userPhotoUrl: await seekerImage(ctx, conversation.userProfileId),
     };
   },
@@ -584,7 +584,7 @@ export const getForAccept = internalQuery({
 
 export const markAccepted = internalMutation({
   args: {
-    conversationId: v.id("listener_conversations"),
+    conversationId: v.id("xolacer_conversations"),
     streamChannelId: v.string(),
   },
   returns: v.null(),
@@ -606,26 +606,26 @@ export const markAccepted = internalMutation({
  * retry after a partial failure is idempotent.
  */
 export const acceptRequest = action({
-  args: { conversationId: v.id("listener_conversations") },
+  args: { conversationId: v.id("xolacer_conversations") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
     const info: {
       userProfileId: Id<"emotional_profiles">;
-      listenerProfileId: Id<"emotional_profiles">;
-      listenerName: string;
-      listenerPhotoUrl?: string;
+      xolacerProfileId: Id<"emotional_profiles">;
+      xolacerName: string;
+      xolacerPhotoUrl?: string;
       userPhotoUrl?: string;
-    } = await ctx.runQuery(internal.listenerChat.getForAccept, {
+    } = await ctx.runQuery(internal.xolacerChat.getForAccept, {
       conversationId: args.conversationId,
     });
 
-    const channelId = `listener_${args.conversationId}`;
+    const channelId = `xolacer_${args.conversationId}`;
     await upsertStreamUsers([
       {
-        id: info.listenerProfileId,
-        name: info.listenerName,
-        image: info.listenerPhotoUrl,
+        id: info.xolacerProfileId,
+        name: info.xolacerName,
+        image: info.xolacerPhotoUrl,
       },
       {
         id: info.userProfileId,
@@ -633,13 +633,13 @@ export const acceptRequest = action({
         image: info.userPhotoUrl,
       },
     ]);
-    await createListenerChannel(
+    await createXolacerChannel(
       channelId,
-      [info.listenerProfileId, info.userProfileId],
-      info.listenerProfileId,
+      [info.xolacerProfileId, info.userProfileId],
+      info.xolacerProfileId,
     );
 
-    await ctx.runMutation(internal.listenerChat.markAccepted, {
+    await ctx.runMutation(internal.xolacerChat.markAccepted, {
       conversationId: args.conversationId,
       streamChannelId: channelId,
     });
@@ -648,15 +648,15 @@ export const acceptRequest = action({
 });
 
 export const declineRequest = mutation({
-  args: { conversationId: v.id("listener_conversations") },
+  args: { conversationId: v.id("xolacer_conversations") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
     const { conversation, role } = await requireConversationParticipant(
       ctx,
       args.conversationId,
     );
-    if (role !== "listener") throw new Error("Only the listener can decline");
+    if (role !== "xolacer") throw new Error("Only the xolacer can decline");
     if (conversation.status !== "requested") return null;
     await ctx.db.patch(args.conversationId, {
       status: "closed",
@@ -667,22 +667,22 @@ export const declineRequest = mutation({
 });
 
 export const resumeConversation = mutation({
-  args: { conversationId: v.id("listener_conversations") },
+  args: { conversationId: v.id("xolacer_conversations") },
   returns: v.object({ resumed: v.boolean() }),
   handler: async (ctx, args) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
     const { conversation } = await requireConversationParticipant(
       ctx,
       args.conversationId,
     );
     if (conversation.status !== "resting") return { resumed: conversation.status === "open" };
 
-    const listener = await getListenerProfileByProfileId(
+    const xolacer = await getXolacerProfileByProfileId(
       ctx,
-      conversation.listenerProfileId,
+      conversation.xolacerProfileId,
     );
-    const openCount = await countOpen(ctx, conversation.listenerProfileId);
-    if (!listenerAvailable(listener, openCount)) {
+    const openCount = await countOpen(ctx, conversation.xolacerProfileId);
+    if (!xolacerAvailable(xolacer, openCount)) {
       return { resumed: false };
     }
     await ctx.db.patch(args.conversationId, {
@@ -695,7 +695,7 @@ export const resumeConversation = mutation({
 
 /** Client calls this after each sent message; drives the resting sweep. */
 export const touchConversation = mutation({
-  args: { conversationId: v.id("listener_conversations") },
+  args: { conversationId: v.id("xolacer_conversations") },
   returns: v.null(),
   handler: async (ctx, args) => {
     if (!chatEnabled()) return null;
@@ -714,21 +714,21 @@ export const touchConversation = mutation({
 // ============================================================
 
 /**
- * Rate the listener, or change a rating already given. Only the person who
+ * Rate the xolacer, or change a rating already given. Only the person who
  * asked to talk may rate, and only once real messages were exchanged.
  *
- * The listener's counters are denormalized (Convex has no count operator), so
+ * The xolacer's counters are denormalized (Convex has no count operator), so
  * an edit applies the delta rather than re-summing — the aggregate stays O(1)
- * no matter how many conversations a listener has held.
+ * no matter how many conversations a xolacer has held.
  */
 export const rateConversation = mutation({
   args: {
-    conversationId: v.id("listener_conversations"),
+    conversationId: v.id("xolacer_conversations"),
     rating: v.number(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
 
     const rounded = Math.round(args.rating);
     if (rounded < 1 || rounded > 5) {
@@ -739,20 +739,20 @@ export const rateConversation = mutation({
       ctx,
       args.conversationId,
     );
-    // A listener never rates the people who come to them — the relationship
+    // A xolacer never rates the people who come to them — the relationship
     // isn't symmetric and a rated user would be a reason not to reach out.
     if (role !== "user") throw new Error("Only the requester can rate");
     if (!hasRealExchange(conversation)) {
       throw new Error("Nothing to rate yet");
     }
 
-    const listener = await ctx.db
-      .query("listener_profiles")
+    const xolacer = await ctx.db
+      .query("xolacer_profiles")
       .withIndex("by_profile", (q) =>
-        q.eq("emotionalProfileId", conversation.listenerProfileId),
+        q.eq("emotionalProfileId", conversation.xolacerProfileId),
       )
       .unique();
-    if (!listener) throw new Error("Listener profile not found");
+    if (!xolacer) throw new Error("Xolacer profile not found");
 
     const existing = await findRating(ctx, args.conversationId);
     const now = Date.now();
@@ -760,8 +760,8 @@ export const rateConversation = mutation({
     if (existing) {
       if (existing.rating === rounded) return null;
       await ctx.db.patch(existing._id, { rating: rounded, updatedAt: now });
-      await ctx.db.patch(listener._id, {
-        ratingSum: (listener.ratingSum ?? 0) - existing.rating + rounded,
+      await ctx.db.patch(xolacer._id, {
+        ratingSum: (xolacer.ratingSum ?? 0) - existing.rating + rounded,
         updatedAt: now,
       });
       return null;
@@ -770,14 +770,14 @@ export const rateConversation = mutation({
     await ctx.db.insert("conversation_ratings", {
       conversationId: args.conversationId,
       raterProfileId: profile._id,
-      listenerProfileId: conversation.listenerProfileId,
+      xolacerProfileId: conversation.xolacerProfileId,
       rating: rounded,
       createdAt: now,
       updatedAt: now,
     });
-    await ctx.db.patch(listener._id, {
-      ratingSum: (listener.ratingSum ?? 0) + rounded,
-      ratingCount: (listener.ratingCount ?? 0) + 1,
+    await ctx.db.patch(xolacer._id, {
+      ratingSum: (xolacer.ratingSum ?? 0) + rounded,
+      ratingCount: (xolacer.ratingCount ?? 0) + 1,
       updatedAt: now,
     });
     return null;
@@ -797,14 +797,14 @@ export const getStreamIdentity = internalQuery({
   }),
   handler: async (ctx) => {
     const { user, profile } = await requireAuth(ctx);
-    const listener = user.isListener
-      ? await getListenerProfileByProfileId(ctx, profile._id)
+    const xolacer = user.isXolacer
+      ? await getXolacerProfileByProfileId(ctx, profile._id)
       : null;
     return {
       userId: profile._id,
-      name: listener?.complete ? (listener.displayName ?? "") : pseudonym(profile._id),
-      image: listener?.complete
-        ? listener.photoUrl
+      name: xolacer?.complete ? (xolacer.displayName ?? "") : pseudonym(profile._id),
+      image: xolacer?.complete
+        ? xolacer.photoUrl
         : await seekerImage(ctx, profile._id),
     };
   },
@@ -818,12 +818,12 @@ export const getStreamToken = action({
   args: {},
   returns: v.object({ apiKey: v.string(), token: v.string(), userId: v.string() }),
   handler: async (ctx) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
     const identity: {
       userId: Id<"emotional_profiles">;
       name: string;
       image?: string;
-    } = await ctx.runQuery(internal.listenerChat.getStreamIdentity, {});
+    } = await ctx.runQuery(internal.xolacerChat.getStreamIdentity, {});
     await upsertStreamUsers([
       { id: identity.userId, name: identity.name, image: identity.image },
     ]);
@@ -839,10 +839,10 @@ export const getStreamToken = action({
 });
 
 // ============================================================
-// Listener profile management
+// Xolacer profile management
 // ============================================================
 
-export const myListenerProfile = query({
+export const myXolacerProfile = query({
   args: {},
   returns: v.union(
     v.null(),
@@ -858,21 +858,21 @@ export const myListenerProfile = query({
   handler: async (ctx) => {
     if (!chatEnabled()) return null;
     const { user, profile } = await requireAuth(ctx);
-    if (!user.isListener) return null;
-    const listener = await getListenerProfileByProfileId(ctx, profile._id);
-    if (!listener) return null;
+    if (!user.isXolacer) return null;
+    const xolacer = await getXolacerProfileByProfileId(ctx, profile._id);
+    if (!xolacer) return null;
     return {
-      displayName: listener.displayName,
-      bio: listener.bio,
-      photoUrl: listener.photoUrl,
-      specialties: listener.specialties ?? [],
-      complete: listener.complete,
-      active: listener.active,
+      displayName: xolacer.displayName,
+      bio: xolacer.bio,
+      photoUrl: xolacer.photoUrl,
+      specialties: xolacer.specialties ?? [],
+      complete: xolacer.complete,
+      active: xolacer.active,
     };
   },
 });
 
-export const upsertMyListenerProfile = mutation({
+export const upsertMyXolacerProfile = mutation({
   args: {
     displayName: v.optional(v.string()),
     bio: v.optional(v.string()),
@@ -881,9 +881,9 @@ export const upsertMyListenerProfile = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
     const { user, profile } = await requireAuth(ctx);
-    if (!user.isListener) throw new Error("Not a listener");
+    if (!user.isXolacer) throw new Error("Not a xolacer");
 
     if (args.bio !== undefined && args.bio.length > 160) {
       throw new Error("Bio must be 160 characters or fewer");
@@ -895,12 +895,12 @@ export const upsertMyListenerProfile = mutation({
       throw new Error(`Pick at most ${MAX_SPECIALTIES}`);
     }
 
-    const existing = await getListenerProfileByProfileId(ctx, profile._id);
+    const existing = await getXolacerProfileByProfileId(ctx, profile._id);
     if (existing) {
       await ctx.db.patch(existing._id, { ...args, updatedAt: Date.now() });
       return null;
     }
-    await ctx.db.insert("listener_profiles", {
+    await ctx.db.insert("xolacer_profiles", {
       emotionalProfileId: profile._id,
       ...args,
       complete: false,
@@ -916,9 +916,9 @@ export const generatePhotoUploadUrl = mutation({
   args: {},
   returns: v.string(),
   handler: async (ctx) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
     const { user } = await requireAuth(ctx);
-    if (!user.isListener) throw new Error("Not a listener");
+    if (!user.isXolacer) throw new Error("Not a xolacer");
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -928,26 +928,26 @@ export const generatePhotoUploadUrl = mutation({
  * of the app keeps reading a plain `photoUrl` string. Convex serving URLs are
  * stable, so there's no per-read resolution to do.
  */
-export const setListenerPhoto = mutation({
+export const setXolacerPhoto = mutation({
   args: { storageId: v.id("_storage") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
     const { user, profile } = await requireAuth(ctx);
-    if (!user.isListener) throw new Error("Not a listener");
+    if (!user.isXolacer) throw new Error("Not a xolacer");
 
     const url = await ctx.storage.getUrl(args.storageId);
     if (!url) throw new Error("Upload not found");
 
-    const existing = await getListenerProfileByProfileId(ctx, profile._id);
+    const existing = await getXolacerProfileByProfileId(ctx, profile._id);
     if (existing) {
       // ponytail: replacing a photo orphans the previous blob — storing only
       // the URL means there's no storageId left to delete. Add a
-      // `photoStorageId` field if listener photo churn ever matters.
+      // `photoStorageId` field if xolacer photo churn ever matters.
       await ctx.db.patch(existing._id, { photoUrl: url, updatedAt: Date.now() });
       return null;
     }
-    await ctx.db.insert("listener_profiles", {
+    await ctx.db.insert("xolacer_profiles", {
       emotionalProfileId: profile._id,
       photoUrl: url,
       complete: false,
@@ -964,43 +964,43 @@ export const publishProfile = mutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
     const { user, profile } = await requireAuth(ctx);
-    if (!user.isListener) throw new Error("Not a listener");
+    if (!user.isXolacer) throw new Error("Not a xolacer");
 
-    const listener = await getListenerProfileByProfileId(ctx, profile._id);
+    const xolacer = await getXolacerProfileByProfileId(ctx, profile._id);
     if (
-      !listener?.displayName ||
-      !listener.bio ||
-      !listener.photoUrl ||
-      !listener.specialties?.length
+      !xolacer?.displayName ||
+      !xolacer.bio ||
+      !xolacer.photoUrl ||
+      !xolacer.specialties?.length
     ) {
       throw new Error("Profile is incomplete");
     }
-    await ctx.db.patch(listener._id, { complete: true, updatedAt: Date.now() });
+    await ctx.db.patch(xolacer._id, { complete: true, updatedAt: Date.now() });
     return null;
   },
 });
 
 /**
  * Pause / unpause. `active` already gates the directory index and both
- * `listenerAvailable` call sites, so flipping it is the whole feature: paused
- * listeners leave the roster and can't be requested or resumed, while every
+ * `xolacerAvailable` call sites, so flipping it is the whole feature: paused
+ * xolacers leave the roster and can't be requested or resumed, while every
  * conversation they already have keeps working. Deliberately not a "go
- * offline" state — it survives app restarts, because the point is a listener
+ * offline" state — it survives app restarts, because the point is a xolacer
  * stepping away for a week, not for an evening.
  */
-export const setListenerActive = mutation({
+export const setXolacerActive = mutation({
   args: { active: v.boolean() },
   returns: v.null(),
   handler: async (ctx, args) => {
-    if (!chatEnabled()) throw new Error("Listener chat is not available");
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
     const { user, profile } = await requireAuth(ctx);
-    if (!user.isListener) throw new Error("Not a listener");
+    if (!user.isXolacer) throw new Error("Not a xolacer");
 
-    const listener = await getListenerProfileByProfileId(ctx, profile._id);
-    if (!listener) throw new Error("No listener profile");
-    await ctx.db.patch(listener._id, { active: args.active, updatedAt: Date.now() });
+    const xolacer = await getXolacerProfileByProfileId(ctx, profile._id);
+    if (!xolacer) throw new Error("No xolacer profile");
+    await ctx.db.patch(xolacer._id, { active: args.active, updatedAt: Date.now() });
     return null;
   },
 });
@@ -1017,7 +1017,7 @@ export const sweep = internalMutation({
 
     // Open but quiet for 14 days → resting (silent; frees the cap slot).
     const quiet = await ctx.db
-      .query("listener_conversations")
+      .query("xolacer_conversations")
       .withIndex("by_status_and_lastMessageAt", (q) =>
         q.eq("status", "open").lt("lastMessageAt", now - RESTING_AFTER_MS),
       )
@@ -1027,10 +1027,10 @@ export const sweep = internalMutation({
     }
 
     // Requested but unanswered for 7 days → closed/expired.
-    // Requested rows are few (single-digit listeners), so a bounded take +
+    // Requested rows are few (single-digit xolacers), so a bounded take +
     // in-memory age check is fine. ponytail: index on requestedAt if this grows.
     const requested = await ctx.db
-      .query("listener_conversations")
+      .query("xolacer_conversations")
       .withIndex("by_status_and_lastMessageAt", (q) => q.eq("status", "requested"))
       .take(100);
     for (const conversation of requested) {
@@ -1060,7 +1060,7 @@ export const purgeStreamUser = internalAction({
       await deleteStreamUser(args.profileId);
     } catch (error) {
       console.error(
-        `[listenerChat] Stream user deletion failed for ${args.profileId}; retry manually`,
+        `[xolacerChat] Stream user deletion failed for ${args.profileId}; retry manually`,
         error,
       );
     }

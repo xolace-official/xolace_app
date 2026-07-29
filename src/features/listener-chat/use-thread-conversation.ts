@@ -13,12 +13,12 @@ import type { ThreadConversation } from './components/thread-screen';
 export function useThreadConversation(
   conversationId: string,
 ): ThreadConversation | null | undefined {
-  const conversation = useQuery(api.listenerChat.getConversation, {
-    conversationId: conversationId as Id<'listener_conversations'>,
+  const conversation = useQuery(api.xolacerChat.getConversation, {
+    conversationId: conversationId as Id<'xolacer_conversations'>,
   });
 
   const rows = useQuery(
-    api.listenerChat.myConversations,
+    api.xolacerChat.myConversations,
     conversation === undefined ? {} : 'skip',
   );
 
