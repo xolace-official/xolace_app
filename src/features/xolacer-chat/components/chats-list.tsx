@@ -60,7 +60,10 @@ export function ChatsList({
           conversation={conversation}
           onPress={() => {
             playSoftPress();
-            router.push(`/chat/${conversation.id}` as never);
+            router.push({
+              pathname: '/chat/[conversationId]',
+              params: { conversationId: conversation.id },
+            });
           }}
         />
       ))}

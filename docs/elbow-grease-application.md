@@ -54,7 +54,7 @@ Honestly, nothing crystallized enough yet to point to as *the* mistake — there
 
 ### Tell us something about your company that's not going well.
 
-Retention. We're early in a market where mental health isn't openly discussed, so a meaningful share of users try Xolace once and don't return — not because the product fails them, but because returning means re-engaging with something their environment has taught them to avoid. We don't fully know yet how much of that is product (onboarding, habit formation) versus market education, and we're actively instrumenting to find out.
+Retention. We're early in a market where mental health isn't openly discussed, so a meaningful share of users try Xolace once and don't return, not because the product fails them, but because returning means re-engaging with something their environment has taught them to avoid. We don't fully know yet how much of that is product (onboarding, habit formation) versus market education, and we're actively instrumenting to find out.
 
 ### Have you received any funding?
 

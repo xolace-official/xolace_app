@@ -127,7 +127,10 @@ function RatePrompt({ conversation }: { conversation: ThreadConversation }) {
     <PressableFeedback
       onPress={() => {
         playSoftPress();
-        router.push(`/rate/${conversation.id}` as never);
+        router.push({
+          pathname: '/rate/[conversationId]',
+          params: { conversationId: conversation.id },
+        });
       }}
       accessibilityRole="button"
       accessibilityLabel="Rate this conversation"

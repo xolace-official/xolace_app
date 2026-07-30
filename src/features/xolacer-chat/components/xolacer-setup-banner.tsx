@@ -19,7 +19,7 @@ export function XolacerSetupBanner() {
     <PressableFeedback
       onPress={() => {
         playSoftPress();
-        router.push('/xolacer-setup' as never);
+        router.push('/xolacer-setup');
       }}
       accessibilityRole="button"
       accessibilityLabel="Set up your Xolacer profile"

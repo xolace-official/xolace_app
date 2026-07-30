@@ -73,7 +73,10 @@ export function XolacerRoster({ conversations }: { conversations: ConversationLi
             key={xolacer.xolacerProfileId}
             onPress={() => {
               playSoftPress();
-              router.push(`/xolacer/${xolacer.xolacerProfileId}` as never);
+              router.push({
+                pathname: '/xolacer/[profileId]',
+                params: { profileId: xolacer.xolacerProfileId },
+              });
             }}
             accessibilityRole="button"
             accessibilityLabel={`View ${xolacer.displayName}'s profile`}
