@@ -8,19 +8,19 @@ import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 
 /**
- * Grant listener eligibility. Sets the flag and nothing else — the person
+ * Grant xolacer eligibility. Sets the flag and nothing else — the person
  * fills in their own profile through the setup wizard, which appears on the
  * Connect tab the next time they open the app.
  *
- * The id is Clerk's (`user_...`), found by searching the listener's email in
+ * The id is Clerk's (`user_...`), found by searching the xolacer's email in
  * the Clerk dashboard. We deliberately never store emails, so Clerk is the
  * only place that mapping exists.
  *
- *   bunx convex run --prod admin:promoteListener '{"clerkUserId":"user_..."}'
+ *   bunx convex run --prod admin:promoteXolacer '{"clerkUserId":"user_..."}'
  */
-export const promoteListener = internalMutation({
-  args: { clerkUserId: v.string(), isListener: v.optional(v.boolean()) },
-  returns: v.object({ displayName: v.string(), isListener: v.boolean() }),
+export const promoteXolacer = internalMutation({
+  args: { clerkUserId: v.string(), isXolacer: v.optional(v.boolean()) },
+  returns: v.object({ displayName: v.string(), isXolacer: v.boolean() }),
   handler: async (ctx, args) => {
     // The index is (authProvider, authProviderAccountId) and there are only
     // two providers, so checking both is cheaper than a new index.
@@ -47,19 +47,19 @@ export const promoteListener = internalMutation({
       throw new Error(`Account is ${user.accountStatus}, not active`);
     }
 
-    const isListener = args.isListener ?? true;
-    await ctx.db.patch(user._id, { isListener, updatedAt: Date.now() });
+    const isXolacer = args.isXolacer ?? true;
+    await ctx.db.patch(user._id, { isXolacer, updatedAt: Date.now() });
 
     // Echoing the profile name back is the confirmation that you promoted the
     // account you meant to — a Clerk id is not something you can eyeball.
     const profile = await ctx.db.get(user.emotionalProfileId);
-    const listenerProfile = profile
+    const xolacerProfile = profile
       ? await ctx.db
-          .query("listener_profiles")
+          .query("xolacer_profiles")
           .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
           .unique()
       : null;
 
-    return { displayName: listenerProfile?.displayName ?? "(profile not set up yet)", isListener };
+    return { displayName: xolacerProfile?.displayName ?? "(profile not set up yet)", isXolacer };
   },
 });

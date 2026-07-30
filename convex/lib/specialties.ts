@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 
 /**
- * What a listener is here for — a fixed, self-declared taxonomy, never free
+ * What a xolacer is here for — a fixed, self-declared taxonomy, never free
  * text. Free text would let a volunteer advertise "depression" or "trauma" on
  * a profile the app can't stand behind, and it makes the roster's filter chips
  * impossible.

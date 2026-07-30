@@ -54,12 +54,12 @@ crons.interval(
   {}
 );
 
-// Listener conversation lifecycle: open-but-quiet → resting (14d),
+// Xolacer conversation lifecycle: open-but-quiet → resting (14d),
 // requested-but-unanswered → expired (7d). Silent by design — no notification.
 crons.interval(
-  "sweep listener conversations",
+  "sweep xolacer conversations",
   isProd ? { hours: 24 } : { hours: 72 },
-  internal.listenerChat.sweep,
+  internal.xolacerChat.sweep,
   {}
 );
 

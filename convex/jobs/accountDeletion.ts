@@ -194,13 +194,13 @@ export const purgeUser = internalMutation({
     if (waitlistRows.length === BATCH_SIZE) hasMore = true;
     for (const row of waitlistRows) await ctx.db.delete(row._id);
 
-    // ── Listener conversations (both sides of every pair) ────────
+    // ── Xolacer conversations (both sides of every pair) ────────
     // Rows where this user was the requester, and rows where they were
-    // the listener. Stream-side message content is removed by the
+    // the xolacer. Stream-side message content is removed by the
     // purgeStreamUser action scheduled in the final batch.
     const conversationsAsUser = await ctx.db
-      .query("listener_conversations")
-      .withIndex("by_user", (q) => q.eq("userProfileId", profileId))
+      .query("xolacer_conversations")
+      .withIndex("by_user_and_status", (q) => q.eq("userProfileId", profileId))
       .take(BATCH_SIZE);
 
     if (conversationsAsUser.length === BATCH_SIZE) hasMore = true;
@@ -208,22 +208,21 @@ export const purgeUser = internalMutation({
       await ctx.db.delete(conversation._id);
     }
 
-    const conversationsAsListener = await ctx.db
-      .query("listener_conversations")
-      .withIndex("by_listener_and_status", (q) =>
-        q.eq("listenerProfileId", profileId)
+    const conversationsAsXolacer = await ctx.db
+      .query("xolacer_conversations")
+      .withIndex("by_xolacer_and_status", (q) =>
+        q.eq("xolacerProfileId", profileId)
       )
       .take(BATCH_SIZE);
 
-    if (conversationsAsListener.length === BATCH_SIZE) hasMore = true;
-    for (const conversation of conversationsAsListener) {
+    if (conversationsAsXolacer.length === BATCH_SIZE) hasMore = true;
+    for (const conversation of conversationsAsXolacer) {
       await ctx.db.delete(conversation._id);
     }
 
     // ── Conversation ratings this user gave ──────────────────────
-    // The listener's denormalized counters have to come down with the
-    // row, or a deleted account keeps voting. Ratings this user
-    // *received* as a listener die with their listener_profiles row.
+    // The xolacer's denormalized counters have to come down with the
+    // row, or a deleted account keeps voting.
     const ratingsGiven = await ctx.db
       .query("conversation_ratings")
       .withIndex("by_rater", (q) => q.eq("raterProfileId", profileId))
@@ -232,9 +231,9 @@ export const purgeUser = internalMutation({
     if (ratingsGiven.length === BATCH_SIZE) hasMore = true;
     for (const rating of ratingsGiven) {
       const rated = await ctx.db
-        .query("listener_profiles")
+        .query("xolacer_profiles")
         .withIndex("by_profile", (q) =>
-          q.eq("emotionalProfileId", rating.listenerProfileId)
+          q.eq("emotionalProfileId", rating.xolacerProfileId)
         )
         .unique();
       if (rated) {
@@ -246,6 +245,19 @@ export const purgeUser = internalMutation({
       }
       await ctx.db.delete(rating._id);
     }
+
+    // ── Conversation ratings this user received as a xolacer ──────
+    // The xolacer_profiles row (with its counters) is deleted in the final
+    // batch, so nothing reads these again — but they'd outlive the account
+    // still holding its profile id. No counter fixup: the profile they
+    // point at is going away.
+    const ratingsReceived = await ctx.db
+      .query("conversation_ratings")
+      .withIndex("by_xolacer", (q) => q.eq("xolacerProfileId", profileId))
+      .take(BATCH_SIZE);
+
+    if (ratingsReceived.length === BATCH_SIZE) hasMore = true;
+    for (const rating of ratingsReceived) await ctx.db.delete(rating._id);
 
     // ── Semantic profile versions ────────────────────────────────
     const semanticVersions = await ctx.db
@@ -283,17 +295,17 @@ export const purgeUser = internalMutation({
       emotionalProfileId: profileId,
     });
 
-    // Listener profile (1:1 with the profile, if this user was a listener)
-    const listenerProfile = await ctx.db
-      .query("listener_profiles")
+    // Xolacer profile (1:1 with the profile, if this user was a xolacer)
+    const xolacerProfile = await ctx.db
+      .query("xolacer_profiles")
       .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
       .unique();
-    if (listenerProfile) await ctx.db.delete(listenerProfile._id);
+    if (xolacerProfile) await ctx.db.delete(xolacerProfile._id);
 
     // Stream-hosted chat content is external — the row deletes above don't
     // reach it. Fail-open action: logs and continues on Stream outage so a
     // third party can never block a deletion request.
-    await ctx.scheduler.runAfter(0, internal.listenerChat.purgeStreamUser, {
+    await ctx.scheduler.runAfter(0, internal.xolacerChat.purgeStreamUser, {
       profileId: profileId,
     });
 
