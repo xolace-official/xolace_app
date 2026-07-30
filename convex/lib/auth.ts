@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { Id } from "../_generated/dataModel";
 import { QueryCtx, MutationCtx } from "../_generated/server";
 
@@ -13,7 +14,10 @@ import { QueryCtx, MutationCtx } from "../_generated/server";
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
-    throw new Error("Not authenticated");
+    throw new ConvexError({
+      code: "not_authenticated",
+      message: "Not authenticated",
+    });
   }
 
   const user = await ctx.db
@@ -21,12 +25,24 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
     .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
     .unique();
 
+  // user_not_found and account_inactive are both reachable transiently on a
+  // healthy client: every requireAuth-gated subscription re-runs the instant
+  // getOrCreate/requestDeletion patches the users row, and on sign-in they
+  // mount before getOrCreate lands. The client treats both as "auth is still
+  // settling" and only gives up after a grace window — see
+  // src/providers/account-bootstrap-boundary.tsx.
   if (!user) {
-    throw new Error("User not found. Call getOrCreate first.");
+    throw new ConvexError({
+      code: "user_not_found",
+      message: "User not found. Call getOrCreate first.",
+    });
   }
 
   if (user.accountStatus !== "active") {
-    throw new Error("Account is not active");
+    throw new ConvexError({
+      code: "account_inactive",
+      message: "Account is not active",
+    });
   }
 
   const profile = await ctx.db.get(user.emotionalProfileId);

@@ -1,3 +1,4 @@
+import { useAuth } from "@clerk/expo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useAppStore } from "@/src/store/store";
@@ -10,6 +11,7 @@ export const useDataSettings = () => {
   const updatePreferences = usePreferenceMutation();
   const requestDataWipe = useMutation(api.users.requestDataWipe);
   const requestDeletion = useMutation(api.users.requestDeletion);
+  const { signOut } = useAuth();
   const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
   const setBridgeEnabled = useAppStore((s) => s.setBridgeEnabled);
 
@@ -43,6 +45,13 @@ export const useDataSettings = () => {
 
   const performDeleteAccount = async () => {
     await requestDeletion();
+    // The patch invalidates every requireAuth-gated subscription immediately,
+    // so the session has to go or they all re-run against a dead row.
+    try {
+      await signOut();
+    } catch {
+      // Best-effort sign out after deletion request
+    }
   };
 
   return {

@@ -15,6 +15,50 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-07-30 — Delete account and sign-in both red-screen with `Server Error` (requireAuth throws at 15 subscriptions at once)
+
+**Symptom**
+Three reports that looked like three bugs:
+1. Tapping **Delete account** in the confirmation dialog → immediate full-screen `Something went wrong / Error: [CONVEX Q(premium:getEntitlement)] Server Error`.
+2. After force-quitting from recents, the user was signed out.
+3. Signing back in → the same red screen again. Hitting **Retry** a few times eventually worked.
+
+**Where it appeared**
+TestFlight (production Convex deployment), iOS.
+
+**Root cause**
+One cause, three faces: **`requireAuth` reads the `users` row, so every requireAuth-gated subscription re-runs the instant that row is patched — and it threw a bare `Error`, which React surfaces as a render throw and expo-router's root `ErrorBoundary` renders as the red screen.**
+
+- *Delete.* `users:requestDeletion` patches `accountStatus: "deleted"`. 12–23 ms later all ~15 live queries re-ran and threw `Account is not active`. No client-side ordering can win that race — the invalidation is pushed before any follow-up code runs.
+- *Signed out on relaunch.* `DataScreen` → `useDataSettings.performDeleteAccount` called `requestDeletion()` and stopped — **no `signOut`**. (The sibling `useSettings.performDeleteAccount` did sign out, but nothing called it; the delete UI had been moved to the other hook.) The Clerk session survived against a dead row until the app restarted.
+- *Sign-in.* `setActive()` flips Convex to authenticated, so the route guard mounts `(protected)` and fires every query **in parallel with** the `getOrCreate` mutation that creates/reactivates the row. They throw `User not found. Call getOrCreate first.` (new account) or `Account is not active` (reactivation inside the deletion grace period) until `getOrCreate` lands.
+
+The error names `premium:getEntitlement` specifically because `RevenueCatProvider` lives in `RootProvider` — **above** the route guard and the whole navigator. No boundary inside a route group could ever have caught it.
+
+**How we diagnosed it**
+1. The Convex log was already the whole story, once read in order: `users:requestDeletion` **success** at `08:34:02.196`, then a wall of `Account is not active` at `08:34:02.208–.219`. A successful mutation immediately followed by mass query failure is the signature of a reactive invalidation, not of a failed write.
+2. Same shape on the login attempt — failures at `09:21:19 / :21 / :49`, then success at `09:21:55` with no intervening deploy. Something server-side settled on its own; that points at a row being written, i.e. `getOrCreate` landing late.
+3. Traced the guard: `requireAuth` reads `users`, which is exactly the doc both mutations patch → every caller is a subscriber → all invalidate together.
+4. Grepped callers of `requestDeletion` and found the two hooks had diverged, only one of which signs out.
+5. Located the crashing query's mount point: `RevenueCatProvider` in `root-provider.tsx`, gated only on `isAuthenticated` and sitting above `<Stack>` — which is why the red screen was full-app and not scoped to a route.
+
+**Fix**
+- `convex/lib/auth.ts` — `requireAuth` throws `ConvexError` with `code: not_authenticated | user_not_found | account_inactive` instead of a bare `Error`. The original message strings are kept inside the data object, so `ConvexError.message` (the JSON) still contains them and existing substring matchers like `session-service.ts:125`'s `'Not authenticated'` check keep working against old shipped clients.
+- `src/providers/bootstrap-error.ts` — `isBootstrapError()`, the classifier: `user_not_found` / `account_inactive` are transient, everything else (including `not_authenticated`) is not. Split out of the component so it is testable without pulling in react-native — `bootstrap-error.test.ts` covers it.
+- `src/providers/account-bootstrap-boundary.tsx` — `react-error-boundary` mounted inside `ConvexClientProvider`, above `RevenueCatProvider`. Renders a loader and remounts on a backoff (4 × 800 ms); the remount drops the errored subscriptions so they re-issue against current server state instead of replaying the cached failure. `resetKeys` includes `isSignedIn`, because a landed sign-out is itself a resolution. Retry budget is tagged with the session so a slow sign-in cannot leave a later error with none. Non-bootstrap errors are rethrown from the fallback and land on the root boundary, so real crashes still reach Sentry.
+- `src/features/settings/hooks/use-data-settings.ts` — the missing `signOut` after `requestDeletion`.
+
+Used `react-error-boundary@5`, **not 6**: v6 is ESM-only and does not work on Hermes.
+
+**Prevention / future reference**
+- **A successful mutation followed within ~20 ms by a wall of failing queries is a reactive-invalidation cascade, not a failed write.** Read the Convex log in timestamp order and look at what the mutation patched.
+- Anything `requireAuth` reads is a subscription dependency of *every* authed query. Patching `users` re-runs all of them, so a state that guard rejects must be either unreachable or handled gracefully on the client — never both authenticated and rejected.
+- Server errors that must not crash the app need a **typed `ConvexError` code**; bare `Error` messages cannot be classified safely and message matching breaks silently.
+- When deciding where an error boundary goes, check whether the failing query is mounted in `RootProvider`. Anything there is above the route guard, so a boundary inside `(protected)` will never see it.
+- Duplicate hooks that wrap the same mutation drift. `useSettings.performDeleteAccount` is now dead and should be deleted rather than left as a second copy.
+
+---
+
 ## 2026-07-27 — Listener chat: thread screen hangs on a spinner forever (Stream key/secret mismatch)
 
 **Symptom**

@@ -73,7 +73,6 @@ export const useSettings = () => {
     }
   });
   const requestDataWipe = useMutation(api.users.requestDataWipe);
-  const requestDeletion = useMutation(api.users.requestDeletion);
   const registerToken = useMutation(api.notifications.registerToken);
   const removeToken = useMutation(api.notifications.removeToken);
 
@@ -274,15 +273,6 @@ export const useSettings = () => {
     await requestDataWipe();
   };
 
-  const performDeleteAccount = async () => {
-    await requestDeletion();
-    try {
-      await signOut();
-    } catch {
-      // Best-effort sign out after deletion request
-    }
-  };
-
   return {
     // Account
     signInMethod,
@@ -326,6 +316,5 @@ export const useSettings = () => {
     // Destructive actions
     performLogout,
     performDeleteData,
-    performDeleteAccount,
   };
 };
