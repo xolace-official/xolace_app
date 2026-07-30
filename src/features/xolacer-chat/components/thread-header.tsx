@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { formatLongAgo } from '../utils';
-import { XolacerAvatar } from './xolacer-avatar';
+import { XolacerAvatar } from '@/src/features/xolacer-chat/components/xolacer-avatar';
 import type { ThreadConversation } from './thread-screen';
 
 /**

@@ -7,10 +7,16 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
-import { XolacerAvatar } from './xolacer-avatar';
-import { NewXolacerChip, RatingStars } from './rating-stars';
-import { SpecialtyChips, SpecialtyFilter } from './specialty-chips';
-import type { ConversationList } from './chats-list';
+import { XolacerAvatar } from '@/src/features/xolacer-chat/components/xolacer-avatar';
+import {
+  NewXolacerChip,
+  RatingStars,
+} from '@/src/features/xolacer-chat/components/rating-stars';
+import {
+  SpecialtyChips,
+  SpecialtyFilter,
+} from '@/src/features/xolacer-chat/components/specialty-chips';
+import type { ConversationList } from '@/src/features/xolacer-chat/components/chats-list';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
 

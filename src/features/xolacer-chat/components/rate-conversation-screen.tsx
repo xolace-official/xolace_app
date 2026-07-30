@@ -8,7 +8,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
-import { XolacerAvatar } from './xolacer-avatar';
+import { XolacerAvatar } from '@/src/features/xolacer-chat/components/xolacer-avatar';
 import { RatingPicker } from './rating-stars';
 
 const HEADER_OPTIONS = {
