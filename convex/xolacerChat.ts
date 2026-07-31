@@ -81,6 +81,15 @@ const RESTING_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
  */
 const MIN_RATINGS_TO_DISPLAY = 5;
 
+/**
+ * Ceiling on how many specialty-declaring xolacers sessionSuggestion will pay
+ * per-candidate reads for. A safety valve, not a tuning knob: at any plausible
+ * roster size the specialty filter yields far fewer than this, so it should
+ * never bind. If it ever does, ranking sees a subset and least-loaded stops
+ * being exact — which is the signal to index specialties properly.
+ */
+const MAX_SUGGESTION_CANDIDATES = 200;
+
 /** Public rating shape: the average exists only past the display threshold. */
 function publicRating(profile: Doc<"xolacer_profiles">) {
   const count = profile.ratingCount ?? 0;
@@ -415,34 +424,42 @@ export const sessionSuggestion = query({
     const specialty = metadata?.suggestedSpecialty;
     if (!specialty) return null;
 
-    const roster = await ctx.db
+    // `specialties` is an array field, so it can't be indexed — the specialty
+    // filter has to run in memory, which means the scan feeding it must not be
+    // truncated first. A prefix would silently hide declaring xolacers the
+    // moment the roster outgrew it, and the failure looks like "no suggestion"
+    // rather than an error. Bounded in practice by roster size: this is the
+    // directory, a curated set.
+    // ponytail: full active-roster scan; needs a denormalized
+    // specialty->xolacer index if the roster reaches the low thousands.
+    const declaring: Doc<"xolacer_profiles">[] = [];
+    for await (const xolacer of ctx.db
       .query("xolacer_profiles")
       .withIndex("by_complete_and_active", (q) =>
         q.eq("complete", true).eq("active", true),
-      )
-      .take(50);
-
-    // Anyone this user already has a row with, at *any* status — a past
-    // decline or an expired request must not come back dressed as a fresh
-    // recommendation. One scan beats a per-candidate lookup.
-    const alreadyKnown = new Set(
-      (
-        await ctx.db
-          .query("xolacer_conversations")
-          .withIndex("by_user_and_status", (q) =>
-            q.eq("userProfileId", profile._id),
-          )
-          .take(100)
-      ).map((conversation) => conversation.xolacerProfileId),
-    );
-
-    const candidates = [];
-    for (const xolacer of roster) {
+      )) {
       if (xolacer.emotionalProfileId === profile._id) continue;
       if (!xolacer.specialties?.includes(specialty)) continue;
-      if (alreadyKnown.has(xolacer.emotionalProfileId)) continue;
       if (!meetsRatingFloor(xolacer)) continue;
-      // Last, because it's the only one that costs a read.
+      declaring.push(xolacer);
+      if (declaring.length >= MAX_SUGGESTION_CANDIDATES) break;
+    }
+
+    const candidates = [];
+    for (const xolacer of declaring) {
+      // Exact pair lookup, not a scan of this user's rows: a past decline or
+      // an expired request must not come back dressed as a fresh
+      // recommendation, and a capped scan would eventually miss one. This is
+      // what by_user_and_xolacer exists for.
+      const existing = await ctx.db
+        .query("xolacer_conversations")
+        .withIndex("by_user_and_xolacer", (q) =>
+          q
+            .eq("userProfileId", profile._id)
+            .eq("xolacerProfileId", xolacer.emotionalProfileId),
+        )
+        .unique();
+      if (existing) continue;
       const openCount = await countOpen(ctx, xolacer.emotionalProfileId);
       if (!xolacerAvailable(xolacer, openCount)) continue;
       candidates.push({
@@ -595,8 +612,11 @@ export const getConversation = query({
           ? xolacer?.photoUrl
           : await seekerImage(ctx, conversation.userProfileId),
       myStreamUserId: profile._id,
-      // Xolacer-side only: the seeker is never told how their request read.
-      origin: role === "xolacer" ? conversation.origin : undefined,
+      // Returned to both roles, matching myConversations: origin is the
+      // seeker's own data, so it leaks nothing back to them, and one field
+      // beats two code paths that can drift. Role-gating lives in the badge,
+      // which renders on xolacer-role rows only.
+      origin: conversation.origin,
     };
   },
 });
