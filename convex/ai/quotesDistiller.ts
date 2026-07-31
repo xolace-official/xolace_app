@@ -6,7 +6,7 @@ import { internal } from "../_generated/api";
 import { Doc, Id } from "../_generated/dataModel";
 import { getAnthropicClient } from "./providers/anthropic";
 import { renderSemanticProfile } from "../semanticProfiles";
-import { buildQuotePrompt } from "./quotesPrompt";
+import { buildQuotePrompt, parseQuoteResponse } from "./quotesPrompt";
 
 const DISTILLER_MODEL = "claude-haiku-4-5-20251001";
 
@@ -45,6 +45,9 @@ const ANGLE_SEEDS = [
   "contrast",
 ] as const;
 
+const RETRY_NUDGE =
+  "That attempt did not land — it ran long, drifted into explaining the reader, or was not valid JSON. Write it again: one breath, around 20 words, no interpretation, JSON only.";
+
 function dailyAngleSeed(dateString: string): string {
   const [year, month, day] = dateString.split("-").map(Number);
   const start = new Date(Date.UTC(year, 0, 0));
@@ -55,7 +58,7 @@ function dailyAngleSeed(dateString: string): string {
 
 function validateQuote(text: string): { ok: boolean; reason?: string } {
   if (text.length < 20) return { ok: false, reason: "too short" };
-  if (text.length > 300) return { ok: false, reason: "too long" };
+  if (text.length > 200) return { ok: false, reason: "too long" };
 
   const properNouns = text.match(PROPER_NOUN_RE);
   if (properNouns && properNouns.length > 2) {
@@ -213,41 +216,66 @@ export async function distillQuoteForUser(
       });
 
       const client = getAnthropicClient();
-      const response = await client.messages.create({
-        model: DISTILLER_MODEL,
-        max_tokens: 150,
-        messages: [{ role: "user", content: userPrompt }],
-        system: systemPrompt,
-      });
 
-      const rawText: string | null =
-        response.content[0].type === "text" ? response.content[0].text.trim() : null;
+      // Two attempts: the retry nudges the model back toward aphorism shape
+      // rather than dropping the user's session quote for the day.
+      const prompts = [userPrompt, `${userPrompt}\n\n${RETRY_NUDGE}`];
+      let quoteText: string | null = null;
 
-      if (!rawText) {
-        console.error(`[quotesDistiller] Empty response for ${args.emotionalProfileId}`);
-        return null;
-      }
+      for (const prompt of prompts) {
+        const response = await client.messages.create({
+          model: DISTILLER_MODEL,
+          max_tokens: 400,
+          messages: [{ role: "user", content: prompt }],
+          system: systemPrompt,
+        });
 
-      const validation = validateQuote(rawText);
-      if (!validation.ok) {
-        console.error(
-          `[quotesDistiller] Quote failed validation for ${args.emotionalProfileId}: ${validation.reason}`
+        const rawText: string | null =
+          response.content[0].type === "text" ? response.content[0].text.trim() : null;
+
+        if (!rawText) {
+          console.error(`[quotesDistiller] Empty response for ${args.emotionalProfileId}`);
+          continue;
+        }
+
+        const parsed = parseQuoteResponse(rawText);
+        if (!parsed) {
+          console.error(
+            `[quotesDistiller] Unparseable response for ${args.emotionalProfileId}: ${rawText.slice(0, 160)}`
+          );
+          continue;
+        }
+
+        console.log(
+          `[quotesDistiller] Seeds for ${args.emotionalProfileId}: ${parsed.seeds.join(" | ") || "(none)"}`
         );
-        return null;
+
+        const validation = validateQuote(parsed.quote);
+        if (!validation.ok) {
+          console.error(
+            `[quotesDistiller] Quote failed validation for ${args.emotionalProfileId}: ${validation.reason}`
+          );
+          continue;
+        }
+
+        quoteText = parsed.quote;
+        break;
       }
+
+      if (!quoteText) return null;
 
       const quoteId = await ctx.runMutation(internal.dailyQuotes.store, {
         emotionalProfileId: args.emotionalProfileId,
         date: args.date,
         type: "session",
-        text: rawText,
+        text: quoteText,
         sessionContextIds: context.sessionIds as any,
       });
 
       console.log(
         `[quotesDistiller] Stored session-derived quote ${quoteId} for ${args.emotionalProfileId} (${args.date})`
       );
-      return rawText;
+      return quoteText;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(

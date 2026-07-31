@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { buildQuotePrompt, type QuoteSession } from "./quotesPrompt";
+import { buildQuotePrompt, parseQuoteResponse, type QuoteSession } from "./quotesPrompt";
 
 const now = new Date("2026-07-07T00:00:00Z").getTime();
 
@@ -107,5 +107,34 @@ describe("buildQuotePrompt", () => {
 
     const empty = buildQuotePrompt({ ...baseParams, renderedProfile: null, sessions: [] });
     expect(empty.userPrompt).toContain("Recent emotional themes:\n");
+  });
+
+  it("asks for seed-and-write JSON output", () => {
+    const { systemPrompt } = buildQuotePrompt({ ...baseParams, renderedProfile: null });
+    expect(systemPrompt).toContain('{"seeds": ["...", "..."], "quote": "..."}');
+    expect(systemPrompt).toContain("NEVER narrate the reader's progress");
+  });
+});
+
+describe("parseQuoteResponse", () => {
+  it("reads a bare JSON object", () => {
+    const parsed = parseQuoteResponse('{"seeds":["a","b"],"quote":"  You are not the storm.  "}');
+    expect(parsed).toEqual({ quote: "You are not the storm.", seeds: ["a", "b"] });
+  });
+
+  it("tolerates fences and surrounding prose", () => {
+    const raw = 'Here you go:\n```json\n{"seeds":["a"],"quote":"Stillness is not surrender."}\n```';
+    expect(parseQuoteResponse(raw)?.quote).toBe("Stillness is not surrender.");
+  });
+
+  it("defaults seeds to an empty array when missing or malformed", () => {
+    expect(parseQuoteResponse('{"quote":"A line."}')?.seeds).toEqual([]);
+    expect(parseQuoteResponse('{"seeds":[1,"a"],"quote":"A line."}')?.seeds).toEqual(["a"]);
+  });
+
+  it("returns null for unusable responses", () => {
+    expect(parseQuoteResponse("You are not the storm.")).toBeNull();
+    expect(parseQuoteResponse('{"seeds":["a"],"quote":""}')).toBeNull();
+    expect(parseQuoteResponse('{"seeds":["a"], quote:}')).toBeNull();
   });
 });
