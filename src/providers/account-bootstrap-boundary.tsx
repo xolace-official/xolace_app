@@ -5,10 +5,7 @@ import * as Sentry from "@sentry/react-native";
 
 import { FullRippleLoader } from "@/src/components/shared/loader/ripple/full-ripple-loader";
 import { isBootstrapError } from "./bootstrap-error";
-
-/** Retries before we conclude the row will never become active. */
-const MAX_RETRIES = 4;
-const RETRY_DELAY_MS = 800;
+import { attemptsFor, MAX_RETRIES, RETRY_DELAY_MS } from "./bootstrap-retry";
 
 /**
  * Loader while the row settles. Anything that is not a bootstrap error is
@@ -49,20 +46,22 @@ function BootstrapFallback({ error }: FallbackProps) {
  * ErrorBoundary that reports it.
  */
 export function AccountBootstrapBoundary({ children }: { children: ReactNode }) {
-  const { signOut, isSignedIn } = useAuth();
+  const { signOut, sessionId } = useAuth();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Tagged with the session it was spent against so the budget is per sign-in,
-  // not per app launch — otherwise a slow sign-in that burns the retries leaves
-  // the next transient error with none. Derived, so no effect has to sync it.
-  const [budget, setBudget] = useState({ session: isSignedIn, attempt: 0 });
-  const attempt = budget.session === isSignedIn ? budget.attempt : 0;
+  // Tagged with the session id — not `isSignedIn`, which returns to `true` on
+  // the next sign-in and would hand a fresh session the old one's spent budget.
+  // Derived, so no effect has to sync it.
+  const [budget, setBudget] = useState({ session: sessionId, attempt: 0 });
+  const attempt = attemptsFor(budget, sessionId);
 
+  // Also runs when the session changes, dropping a retry queued by the session
+  // that just ended.
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
     },
-    [],
+    [sessionId],
   );
 
   const handleError = (error: unknown) => {
@@ -76,7 +75,7 @@ export function AccountBootstrapBoundary({ children }: { children: ReactNode }) 
       return;
     }
     timer.current = setTimeout(
-      () => setBudget({ session: isSignedIn, attempt: attempt + 1 }),
+      () => setBudget({ session: sessionId, attempt: attempt + 1 }),
       RETRY_DELAY_MS,
     );
   };
@@ -85,7 +84,7 @@ export function AccountBootstrapBoundary({ children }: { children: ReactNode }) 
     <ErrorBoundary
       // A landed sign-out is itself a resolution: the queries stop being
       // issued, so remount rather than sitting on the loader.
-      resetKeys={[attempt, isSignedIn]}
+      resetKeys={[attempt, sessionId]}
       onError={handleError}
       FallbackComponent={BootstrapFallback}
     >
