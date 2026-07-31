@@ -648,17 +648,22 @@ async function deriveOrigin(
   userProfileId: Id<"emotional_profiles">,
   xolacer: Doc<"xolacer_profiles">,
 ) {
+  // Streamed rather than collected: one row is enough to answer "suggestion",
+  // so a match stops the scan. Only the "direct" answer walks the whole
+  // window, and that is one row per session for one user over 24 hours.
   const since = Date.now() - SUGGESTION_ORIGIN_WINDOW_MS;
-  const recent = await ctx.db
+  for await (const row of ctx.db
     .query("emotional_metadata")
     .withIndex("by_profile_createdAt", (q) =>
       q.eq("emotionalProfileId", userProfileId).gte("createdAt", since),
-    )
-    .collect();
-  return conversationOrigin(
-    recent.flatMap((row) => row.suggestedSpecialty ?? []),
-    xolacer.specialties,
-  );
+    )) {
+    const suggested = row.suggestedSpecialty;
+    if (!suggested) continue;
+    if (conversationOrigin([suggested], xolacer.specialties) === "suggestion") {
+      return "suggestion";
+    }
+  }
+  return "direct";
 }
 
 export const requestConversation = mutation({

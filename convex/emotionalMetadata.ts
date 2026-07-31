@@ -46,17 +46,22 @@ async function resolveSuggestedSpecialty(
     if (live) return undefined;
   }
 
+  // Streamed rather than collected: the predicate short-circuits, so a user
+  // who *was* suggested recently stops at the first hit. Only the common
+  // no-suggestion case walks the window, and that is one row per session for
+  // one user over 7 days — bounded and small, which is why no timestamp field
+  // exists. The rule itself stays in the pure module; this only feeds it.
   const now = Date.now();
-  const recent = await ctx.db
+  for await (const row of ctx.db
     .query("emotional_metadata")
     .withIndex("by_profile_createdAt", (q) =>
       q
         .eq("emotionalProfileId", args.emotionalProfileId)
         .gte("createdAt", now - SUGGESTION_COOLDOWN_MS),
-    )
-    .collect();
-  const others = recent.filter((row) => row.sessionId !== args.sessionId);
-  if (isInSuggestionCooldown(others, now)) return undefined;
+    )) {
+    if (row.sessionId === args.sessionId) continue;
+    if (isInSuggestionCooldown([row], now)) return undefined;
+  }
 
   return specialty;
 }
