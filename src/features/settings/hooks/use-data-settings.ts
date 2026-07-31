@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useAuth } from "@clerk/expo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -12,6 +13,7 @@ export const useDataSettings = () => {
   const requestDataWipe = useMutation(api.users.requestDataWipe);
   const requestDeletion = useMutation(api.users.requestDeletion);
   const { signOut } = useAuth();
+  const deletionRequested = useRef(false);
   const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
   const setBridgeEnabled = useAppStore((s) => s.setBridgeEnabled);
 
@@ -44,14 +46,16 @@ export const useDataSettings = () => {
   };
 
   const performDeleteAccount = async () => {
-    await requestDeletion();
-    // The patch invalidates every requireAuth-gated subscription immediately,
-    // so the session has to go or they all re-run against a dead row.
-    try {
-      await signOut();
-    } catch {
-      // Best-effort sign out after deletion request
+    // Deletion already landed on a previous attempt that failed at sign-out —
+    // re-running it would only throw account_inactive from requireAuth.
+    if (!deletionRequested.current) {
+      await requestDeletion();
+      deletionRequested.current = true;
     }
+    // The patch invalidates every requireAuth-gated subscription immediately,
+    // so the session has to go or they all re-run against a dead row. Let a
+    // failure propagate so the confirm dialog surfaces its danger toast.
+    await signOut();
   };
 
   return {
