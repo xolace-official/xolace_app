@@ -4,76 +4,10 @@ import { v } from "convex/values";
 import { ActionCtx, internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Doc, Id } from "../_generated/dataModel";
-import { getAnthropicClient } from "./providers/anthropic";
 import { renderSemanticProfile } from "../semanticProfiles";
-import { buildQuotePrompt, parseQuoteResponse } from "./quotesPrompt";
-
-const DISTILLER_MODEL = "claude-haiku-4-5-20251001";
-
-// Regex: flag capitalized mid-sentence words that look like proper nouns
-const PROPER_NOUN_RE = /(?<!\. |\? |! |^)[A-Z][a-z]{2,}/g;
-
-// Short medical/clinical term blocklist — keeps quotes shareable
-const MEDICAL_BLOCKLIST = [
-  "depression",
-  "anxiety disorder",
-  "ptsd",
-  "bipolar",
-  "schizophrenia",
-  "diagnosis",
-  "disorder",
-  "symptom",
-  "therapy",
-  "medication",
-  "prescribed",
-];
-
-// 12 poetic lenses that rotate daily — forces a fresh rhetorical entry point
-// even when emotional input is identical across consecutive days.
-const ANGLE_SEEDS = [
-  "impermanence",
-  "self-compassion",
-  "paradox",
-  "movement",
-  "stillness",
-  "clarity",
-  "tenderness",
-  "observation",
-  "strength",
-  "surrender",
-  "distance",
-  "contrast",
-] as const;
-
-const RETRY_NUDGE =
-  "That attempt did not land — it ran long, drifted into explaining the reader, or was not valid JSON. Write it again: one breath, around 20 words, no interpretation, JSON only.";
-
-function dailyAngleSeed(dateString: string): string {
-  const [year, month, day] = dateString.split("-").map(Number);
-  const start = new Date(Date.UTC(year, 0, 0));
-  const current = new Date(Date.UTC(year, month - 1, day));
-  const dayOfYear = Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  return ANGLE_SEEDS[dayOfYear % ANGLE_SEEDS.length];
-}
-
-function validateQuote(text: string): { ok: boolean; reason?: string } {
-  if (text.length < 20) return { ok: false, reason: "too short" };
-  if (text.length > 200) return { ok: false, reason: "too long" };
-
-  const properNouns = text.match(PROPER_NOUN_RE);
-  if (properNouns && properNouns.length > 2) {
-    return { ok: false, reason: `too many proper nouns: ${properNouns.join(", ")}` };
-  }
-
-  const lowerText = text.toLowerCase();
-  for (const term of MEDICAL_BLOCKLIST) {
-    if (lowerText.includes(term)) {
-      return { ok: false, reason: `blocked term: ${term}` };
-    }
-  }
-
-  return { ok: true };
-}
+import { buildQuotePrompt } from "./quotesPrompt";
+import { dailyAngleSeed } from "./quotesQuality";
+import { requestQuoteText } from "./quotesRequest";
 
 /**
  * Load recent emotional metadata for session-derived quote generation.
@@ -218,61 +152,11 @@ export async function distillQuoteForUser(
         recentQuoteTexts,
       });
 
-      const client = getAnthropicClient();
-
-      // Two attempts: the retry nudges the model back toward aphorism shape
-      // rather than dropping the user's session quote for the day.
-      const prompts = [userPrompt, `${userPrompt}\n\n${RETRY_NUDGE}`];
-      let quoteText: string | null = null;
-
-      for (const prompt of prompts) {
-        let response;
-        try {
-          response = await client.messages.create({
-            model: DISTILLER_MODEL,
-            max_tokens: 400,
-            messages: [{ role: "user", content: prompt }],
-            system: systemPrompt,
-          });
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          console.error(
-            `[quotesDistiller] API call failed for ${args.emotionalProfileId}: ${message}`
-          );
-          continue;
-        }
-
-        const rawText: string | null =
-          response.content[0].type === "text" ? response.content[0].text.trim() : null;
-
-        if (!rawText) {
-          console.error(`[quotesDistiller] Empty response for ${args.emotionalProfileId}`);
-          continue;
-        }
-
-        const parsed = parseQuoteResponse(rawText);
-        if (!parsed) {
-          console.error(
-            `[quotesDistiller] Unparseable response for ${args.emotionalProfileId}: ${rawText.slice(0, 160)}`
-          );
-          continue;
-        }
-
-        console.log(
-          `[quotesDistiller] Seeds for ${args.emotionalProfileId}: ${parsed.seeds.join(" | ") || "(none)"}`
-        );
-
-        const validation = validateQuote(parsed.quote);
-        if (!validation.ok) {
-          console.error(
-            `[quotesDistiller] Quote failed validation for ${args.emotionalProfileId}: ${validation.reason}`
-          );
-          continue;
-        }
-
-        quoteText = parsed.quote;
-        break;
-      }
+      const quoteText = await requestQuoteText({
+        systemPrompt,
+        userPrompt,
+        label: args.emotionalProfileId,
+      });
 
       if (!quoteText) return null;
 

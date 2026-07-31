@@ -13,13 +13,15 @@ describe('isBootstrapError', () => {
     }
   });
 
-  it('matches legacy message throws from a pre-ConvexError backend', () => {
+  it('does not classify bare message throws', () => {
+    // Production redacts a bare `Error` to "Server Error" before it reaches the
+    // client, so an untyped throw is never safely classifiable as transient.
     expect(
       isBootstrapError(new Error('Uncaught Error: Account is not active')),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       isBootstrapError(new Error('User not found. Call getOrCreate first.')),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('does not swallow other auth or app errors', () => {
