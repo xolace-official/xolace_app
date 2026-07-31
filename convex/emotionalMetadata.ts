@@ -6,6 +6,60 @@ import {
   triggerTypeValidator,
 } from "./lib/validators";
 import { adjustImportance, DEFAULT_IMPORTANCE } from "./episodicImportance";
+import {
+  isInSuggestionCooldown,
+  suggestedSpecialty,
+  SUGGESTION_COOLDOWN_MS,
+  type SuggestionInput,
+} from "./lib/xolacerSuggestion";
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
+
+/**
+ * The two IO gates the pure suggestion module deliberately doesn't own: a
+ * user already talking to someone, and the 7-day cooldown. Both are plain
+ * index scans, so wrapping them would add a seam that only tests array
+ * membership.
+ *
+ * `sessionId` is excluded from the cooldown walk so a pipeline retry — the
+ * store mutation is an idempotent upsert — doesn't see its own earlier write
+ * and suppress the suggestion it already made.
+ */
+async function resolveSuggestedSpecialty(
+  ctx: MutationCtx,
+  args: SuggestionInput & {
+    sessionId: Id<"sessions">;
+    emotionalProfileId: Id<"emotional_profiles">;
+  },
+) {
+  const specialty = suggestedSpecialty(args);
+  if (!specialty) return undefined;
+
+  // Never talk over a request the user is already waiting on.
+  for (const status of ["requested", "open", "resting"] as const) {
+    const live = await ctx.db
+      .query("xolacer_conversations")
+      .withIndex("by_user_and_status", (q) =>
+        q.eq("userProfileId", args.emotionalProfileId).eq("status", status),
+      )
+      .first();
+    if (live) return undefined;
+  }
+
+  const now = Date.now();
+  const recent = await ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_profile_createdAt", (q) =>
+      q
+        .eq("emotionalProfileId", args.emotionalProfileId)
+        .gte("createdAt", now - SUGGESTION_COOLDOWN_MS),
+    )
+    .collect();
+  const others = recent.filter((row) => row.sessionId !== args.sessionId);
+  if (isInSuggestionCooldown(others, now)) return undefined;
+
+  return specialty;
+}
 
 /**
  * AI stores the emotional classification for a session.
@@ -49,12 +103,20 @@ export const store = internalMutation({
       .query("emotional_metadata")
       .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
       .unique();
+
+    // Part of the Understanding, decided here because every input it needs is
+    // already an argument. undefined clears the field on a re-classify.
+    const row = {
+      ...args,
+      suggestedSpecialty: await resolveSuggestedSpecialty(ctx, args),
+    };
+
     if (existing) {
-      await ctx.db.patch(existing._id, args);
+      await ctx.db.patch(existing._id, row);
       return;
     }
     await ctx.db.insert("emotional_metadata", {
-      ...args,
+      ...row,
       createdAt: Date.now(),
     });
   },

@@ -10,7 +10,11 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { QueryCtx } from "./_generated/server";
-import { requireAuth } from "./lib/auth";
+import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import {
+  meetsRatingFloor,
+  rankSuggestionCandidates,
+} from "./lib/xolacerSuggestion";
 import {
   createXolacerChannel,
   deleteStreamUser,
@@ -354,6 +358,92 @@ export const xolacerProfile = query({
             closedReason: conversation.closedReason,
           }
         : null,
+    };
+  },
+});
+
+/**
+ * The one xolacer this session would offer, or null — null being the correct
+ * and common answer.
+ *
+ * The person is chosen at read time and never stored. That is load-bearing for
+ * privacy, not an optimization: no record linking a session to a specific
+ * xolacer exists anywhere, which is what keeps the profile screen's promise
+ * that a chat is never linked to a user's reflections literally true. It also
+ * means availability is always current, so there is no stale suggestion to
+ * expire.
+ */
+export const sessionSuggestion = query({
+  args: { sessionId: v.id("sessions") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      xolacerProfileId: v.id("emotional_profiles"),
+      displayName: v.string(),
+      photoUrl: v.optional(v.string()),
+      specialties: v.array(specialtyValidator),
+      rating: v.optional(v.number()),
+      ratingCount: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) return null;
+    const { profile } = await requireSessionOwnership(ctx, args.sessionId);
+
+    // Decided once by the pipeline (lib/xolacerSuggestion); absent is the
+    // common case, and every gate that produced it already ran back then.
+    const metadata = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+    const specialty = metadata?.suggestedSpecialty;
+    if (!specialty) return null;
+
+    const roster = await ctx.db
+      .query("xolacer_profiles")
+      .withIndex("by_complete_and_active", (q) =>
+        q.eq("complete", true).eq("active", true),
+      )
+      .take(50);
+
+    // Anyone this user already has a row with, at *any* status — a past
+    // decline or an expired request must not come back dressed as a fresh
+    // recommendation. One scan beats a per-candidate lookup.
+    const alreadyKnown = new Set(
+      (
+        await ctx.db
+          .query("xolacer_conversations")
+          .withIndex("by_user_and_status", (q) =>
+            q.eq("userProfileId", profile._id),
+          )
+          .take(100)
+      ).map((conversation) => conversation.xolacerProfileId),
+    );
+
+    const candidates = [];
+    for (const xolacer of roster) {
+      if (xolacer.emotionalProfileId === profile._id) continue;
+      if (!xolacer.specialties?.includes(specialty)) continue;
+      if (alreadyKnown.has(xolacer.emotionalProfileId)) continue;
+      if (!meetsRatingFloor(xolacer)) continue;
+      // Last, because it's the only one that costs a read.
+      const openCount = await countOpen(ctx, xolacer.emotionalProfileId);
+      if (!xolacerAvailable(xolacer, openCount)) continue;
+      candidates.push({
+        xolacerProfileId: xolacer.emotionalProfileId,
+        openCount,
+        xolacer,
+      });
+    }
+
+    const [best] = rankSuggestionCandidates(candidates, args.sessionId);
+    if (!best) return null;
+    return {
+      xolacerProfileId: best.xolacerProfileId,
+      displayName: best.xolacer.displayName ?? "",
+      photoUrl: best.xolacer.photoUrl,
+      specialties: best.xolacer.specialties ?? [],
+      ...publicRating(best.xolacer),
     };
   },
 });

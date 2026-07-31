@@ -809,6 +809,15 @@ export default defineSchema({
     // null/undefined when the classifier did not request a follow-up.
     followUpReason: v.optional(v.string()),
 
+    // --- Session-suggested xolacer ---
+    // What a peer listener would be offered for at session end, decided once
+    // by the pipeline (see lib/xolacerSuggestion.ts) and absent when no
+    // suggestion applies. The *only* stored artifact of the feature: the
+    // person is chosen live at read time, so no session→xolacer link is ever
+    // written. Doubles as the cooldown record — its presence is what says a
+    // suggestion happened, which is why no timestamp field exists.
+    suggestedSpecialty: v.optional(specialtyValidator),
+
     // --- Timestamps ---
     createdAt: v.number(),
 
