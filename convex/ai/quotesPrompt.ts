@@ -42,18 +42,30 @@ export function buildQuotePrompt(params: {
     })
     .join("\n");
 
-  const systemPrompt = `You are given the emotional themes from a user's recent reflections. Generate a beautiful, honest quote that captures the emotional experience without being specific. It should feel like something a thoughtful writer found for themselves and wanted to keep.
+  const systemPrompt = `You are given the emotional themes from a user's recent reflections. Write one original line that captures the emotional experience without being specific, something a thoughtful writer found for themselves and wanted to keep.
 
-Rules:
-- 1-2 sentences maximum, mostly 1 where possible
+Work in two steps:
+1. Recall 2-3 real lines, aphorisms, poetry, proverbs, quotes that already live near this emotional territory.
+2. Write ONE original line in that same register. It must not be attributable to any of them: no close paraphrase, no borrowed image. You are taking the register, not the words.
+
+Output ONLY this JSON, nothing before or after:
+{"seeds": ["...", "..."], "quote": "..."}
+
+The quote:
+- Aphorism shape: one sentence, around 20 words, sayable in a single breath. If the thought does not fit, find a smaller way to say it — never leave a cut-off fragment.
 - Poetic but grounded, not therapy-speak
-- Can rephrase real-world quotes to suit the user's emotional context
 - Second person (You) or first person
 - No specific details from the session (the quote will be shared publicly)
 - No medical or clinical terminology
 - Must be able to stand alone without any context
 - Pass the "would someone screenshot this?" test
-- Approach the quote through the lens of: ${angleSeed}, use this as a poetic entry point, not a literal theme`;
+- Enter through the lens of: ${angleSeed}, use this as a poetic entry point, not a literal theme
+
+NEVER (these produce a reflection of the reader, not a quote):
+- NEVER narrate the reader's progress or inner process — no "You're beginning to...", "You're learning that...", "Part of you knows..."
+- NEVER explain, interpret, or reassure about what the reader feels or why
+- NEVER chain clauses with semicolons or stacked commas ("the X, the Y, the Z")
+- NEVER reference the reader's situation or session details directly; the emotional register should feel personally resonant, not descriptive of specifics`;
 
   const themesLine =
     preferredThemes.length > 0
@@ -72,4 +84,33 @@ Rules:
   const userPrompt = `${contextBlock}${themesLine}${avoidLine}\n\nGenerate a quote:`;
 
   return { systemPrompt, userPrompt };
+}
+
+/**
+ * Parses the seed-and-write JSON response. Tolerates the model wrapping the
+ * object in prose or a ```json fence by slicing to the outermost braces.
+ * Returns null when there is no usable quote — the caller retries or skips.
+ */
+export function parseQuoteResponse(
+  raw: string,
+): { quote: string; seeds: string[] } | null {
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start === -1 || end <= start) return null;
+
+  try {
+    const parsed = JSON.parse(raw.slice(start, end + 1)) as {
+      quote?: unknown;
+      seeds?: unknown;
+    };
+    const quote = typeof parsed.quote === "string" ? parsed.quote.trim() : "";
+    if (!quote) return null;
+
+    const seeds = Array.isArray(parsed.seeds)
+      ? parsed.seeds.filter((s): s is string => typeof s === "string")
+      : [];
+    return { quote, seeds };
+  } catch {
+    return null;
+  }
 }

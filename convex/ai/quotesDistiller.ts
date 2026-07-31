@@ -4,73 +4,10 @@ import { v } from "convex/values";
 import { ActionCtx, internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Doc, Id } from "../_generated/dataModel";
-import { getAnthropicClient } from "./providers/anthropic";
 import { renderSemanticProfile } from "../semanticProfiles";
 import { buildQuotePrompt } from "./quotesPrompt";
-
-const DISTILLER_MODEL = "claude-haiku-4-5-20251001";
-
-// Regex: flag capitalized mid-sentence words that look like proper nouns
-const PROPER_NOUN_RE = /(?<!\. |\? |! |^)[A-Z][a-z]{2,}/g;
-
-// Short medical/clinical term blocklist — keeps quotes shareable
-const MEDICAL_BLOCKLIST = [
-  "depression",
-  "anxiety disorder",
-  "ptsd",
-  "bipolar",
-  "schizophrenia",
-  "diagnosis",
-  "disorder",
-  "symptom",
-  "therapy",
-  "medication",
-  "prescribed",
-];
-
-// 12 poetic lenses that rotate daily — forces a fresh rhetorical entry point
-// even when emotional input is identical across consecutive days.
-const ANGLE_SEEDS = [
-  "impermanence",
-  "self-compassion",
-  "paradox",
-  "movement",
-  "stillness",
-  "clarity",
-  "tenderness",
-  "observation",
-  "strength",
-  "surrender",
-  "distance",
-  "contrast",
-] as const;
-
-function dailyAngleSeed(dateString: string): string {
-  const [year, month, day] = dateString.split("-").map(Number);
-  const start = new Date(Date.UTC(year, 0, 0));
-  const current = new Date(Date.UTC(year, month - 1, day));
-  const dayOfYear = Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  return ANGLE_SEEDS[dayOfYear % ANGLE_SEEDS.length];
-}
-
-function validateQuote(text: string): { ok: boolean; reason?: string } {
-  if (text.length < 20) return { ok: false, reason: "too short" };
-  if (text.length > 300) return { ok: false, reason: "too long" };
-
-  const properNouns = text.match(PROPER_NOUN_RE);
-  if (properNouns && properNouns.length > 2) {
-    return { ok: false, reason: `too many proper nouns: ${properNouns.join(", ")}` };
-  }
-
-  const lowerText = text.toLowerCase();
-  for (const term of MEDICAL_BLOCKLIST) {
-    if (lowerText.includes(term)) {
-      return { ok: false, reason: `blocked term: ${term}` };
-    }
-  }
-
-  return { ok: true };
-}
+import { dailyAngleSeed } from "./quotesQuality";
+import { requestQuoteText } from "./quotesRequest";
 
 /**
  * Load recent emotional metadata for session-derived quote generation.
@@ -85,16 +22,19 @@ export const loadEmotionalContext = internalQuery({
   handler: async (ctx, args) => {
     const fiveDaysAgo = args.referenceDate - 5 * 24 * 60 * 60 * 1000;
 
-    const recentSessions = await ctx.db
-      .query("sessions")
-      .withIndex("by_profile_time", (q) =>
-        q
-          .eq("emotionalProfileId", args.emotionalProfileId)
-          .gte("createdAt", fiveDaysAgo)
-      )
-      .order("desc")
-      .filter((q) => q.eq(q.field("state"), "completed"))
-      .take(2);
+    // by_profile_state lands the two newest completed sessions in exactly two
+    // doc reads; the 5-day cutoff is then a cheap in-memory check on those.
+    const recentSessions = (
+      await ctx.db
+        .query("sessions")
+        .withIndex("by_profile_state", (q) =>
+          q
+            .eq("emotionalProfileId", args.emotionalProfileId)
+            .eq("state", "completed")
+        )
+        .order("desc")
+        .take(2)
+    ).filter((s) => s.createdAt >= fiveDaysAgo);
 
     if (recentSessions.length === 0) return null;
 
@@ -212,42 +152,26 @@ export async function distillQuoteForUser(
         recentQuoteTexts,
       });
 
-      const client = getAnthropicClient();
-      const response = await client.messages.create({
-        model: DISTILLER_MODEL,
-        max_tokens: 150,
-        messages: [{ role: "user", content: userPrompt }],
-        system: systemPrompt,
+      const quoteText = await requestQuoteText({
+        systemPrompt,
+        userPrompt,
+        label: args.emotionalProfileId,
       });
 
-      const rawText: string | null =
-        response.content[0].type === "text" ? response.content[0].text.trim() : null;
-
-      if (!rawText) {
-        console.error(`[quotesDistiller] Empty response for ${args.emotionalProfileId}`);
-        return null;
-      }
-
-      const validation = validateQuote(rawText);
-      if (!validation.ok) {
-        console.error(
-          `[quotesDistiller] Quote failed validation for ${args.emotionalProfileId}: ${validation.reason}`
-        );
-        return null;
-      }
+      if (!quoteText) return null;
 
       const quoteId = await ctx.runMutation(internal.dailyQuotes.store, {
         emotionalProfileId: args.emotionalProfileId,
         date: args.date,
         type: "session",
-        text: rawText,
+        text: quoteText,
         sessionContextIds: context.sessionIds as any,
       });
 
       console.log(
         `[quotesDistiller] Stored session-derived quote ${quoteId} for ${args.emotionalProfileId} (${args.date})`
       );
-      return rawText;
+      return quoteText;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(

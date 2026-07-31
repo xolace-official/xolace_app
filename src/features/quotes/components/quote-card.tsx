@@ -1,9 +1,10 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { GlassView } from "expo-glass-effect";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
+import { quoteTextScale } from "@/src/features/quotes/quote-text-scale";
 import { Presets } from "react-native-pulsar";
 
 type Reaction = "resonates" | "not_today" | null | undefined;
@@ -82,8 +83,8 @@ export function QuoteCard({
       >
         <View className="w-8 mb-6" style={accentLineStyle} />
         <AppText
-          className="text-3xl font-semibold text-foreground"
-          style={styles.quoteLine}
+          className="font-semibold text-foreground"
+          style={quoteTextScale(text, { fontSize: 30, lineHeight: 42 })}
         >
           {text}
         </AppText>
@@ -209,7 +210,3 @@ function ActionButton({
     </PressableFeedback>
   );
 }
-
-const styles = StyleSheet.create({
-  quoteLine: { lineHeight: 42 },
-});

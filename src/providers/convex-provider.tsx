@@ -14,6 +14,7 @@ import { ReactNode } from "react";
 import { instrumentedTokenCache } from "@/src/lib/instrumented-token-cache";
 import { useResilientClerkAuth } from "./use-resilient-clerk-auth";
 import { AuthSyncGuard } from "./auth-sync-guard";
+import { AccountBootstrapBoundary } from "./account-bootstrap-boundary";
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
 
@@ -34,7 +35,10 @@ export function ConvexClientProvider({
     >
       <ConvexProviderWithClerk client={convex} useAuth={useResilientClerkAuth}>
         <AuthSyncGuard />
-        {children}
+        {/* Wraps everything below Convex — the crash it catches came from
+            RevenueCatProvider's premium.getEntitlement, which lives above the
+            route guard and so is unreachable by any boundary inside a group. */}
+        <AccountBootstrapBoundary>{children}</AccountBootstrapBoundary>
       </ConvexProviderWithClerk>
     </ClerkProvider>
   );
