@@ -169,6 +169,37 @@ export function rankSuggestionCandidates<
 }
 
 /**
+ * How recent a session must be for a request to read as "this person came
+ * here right after a session". One place, one number.
+ */
+export const SUGGESTION_ORIGIN_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+export type ConversationOrigin = "suggestion" | "direct";
+
+/**
+ * What a xolacer's inbox is allowed to say about where a request came from,
+ * derived from recency at request time — never from a token the client
+ * happened to still be holding, which measures navigation state and would
+ * badge a user who came back through the roster twenty minutes later as
+ * direct.
+ *
+ * Accepted consequence: someone who ignored the card, browsed the roster and
+ * independently picked a matching xolacer also badges as a suggestion. That
+ * is correct, because the badge asserts *freshness*, not assignment — a
+ * person who had a heavy burnout-shaped session an hour ago and went and
+ * found a burnout listener is exactly as raw and recent.
+ */
+export function conversationOrigin(
+  recentlySuggested: readonly string[],
+  declared: readonly string[] | undefined,
+): ConversationOrigin {
+  const listensTo = new Set(declared ?? []);
+  return recentlySuggested.some((specialty) => listensTo.has(specialty))
+    ? "suggestion"
+    : "direct";
+}
+
+/**
  * Has this user been offered a listener inside the cooldown window? Takes
  * already-loaded Understanding rows — the field that records *what* was
  * suggested is the same field that records *that* a suggestion happened, so

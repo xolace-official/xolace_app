@@ -32,5 +32,11 @@ export function useThreadConversation(
   // than the skeleton it replaced.
   if (!row || (row.status !== 'open' && row.status !== 'requested')) return undefined;
 
-  return { ...row, resumable: false, canRate: false, myRating: undefined };
+  return {
+    ...row,
+    origin: row.origin,
+    resumable: false,
+    canRate: false,
+    myRating: undefined,
+  };
 }

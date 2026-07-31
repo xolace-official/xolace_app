@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+  conversationOrigin,
   isInSuggestionCooldown,
   meetsRatingFloor,
   MIN_RATINGS_TO_JUDGE,
@@ -303,5 +304,32 @@ describe("isInSuggestionCooldown", () => {
 
   it("is open on an empty history", () => {
     expect(isInSuggestionCooldown([], now)).toBe(false);
+  });
+});
+
+describe("conversationOrigin", () => {
+  it("stamps a suggestion when a recent specialty overlaps what they declare", () => {
+    expect(conversationOrigin(["burnout"], ["burnout", "anxiety"])).toBe(
+      "suggestion",
+    );
+  });
+
+  it("stamps direct with no overlap", () => {
+    expect(conversationOrigin(["burnout"], ["grief", "family"])).toBe("direct");
+  });
+
+  it("stamps direct when nothing recent was suggested", () => {
+    expect(conversationOrigin([], ["burnout"])).toBe("direct");
+  });
+
+  it("stamps direct when the xolacer declares nothing", () => {
+    expect(conversationOrigin(["burnout"], undefined)).toBe("direct");
+    expect(conversationOrigin(["burnout"], [])).toBe("direct");
+  });
+
+  it("matches on any of several recent specialties", () => {
+    expect(conversationOrigin(["grief", "burnout"], ["burnout"])).toBe(
+      "suggestion",
+    );
   });
 });

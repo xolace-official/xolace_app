@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { useIsFocused } from 'expo-router/react-navigation';
 import { ConnectScreen } from '@/src/features/xolacer-chat/components/connect-screen';
 
@@ -15,11 +16,13 @@ import { ConnectScreen } from '@/src/features/xolacer-chat/components/connect-sc
  */
 export default function ConnectRoute() {
   const isFocused = useIsFocused();
+  // Optional: lands on the roster pre-filtered to this tag.
+  const { specialty } = useLocalSearchParams<{ specialty?: string }>();
   // Latched during render rather than in an effect, so the first focused frame
   // already renders the screen instead of a blank one.
   const [everFocused, setEverFocused] = useState(isFocused);
   if (isFocused && !everFocused) setEverFocused(true);
 
   if (!everFocused) return <View className="flex-1 bg-background" />;
-  return <ConnectScreen />;
+  return <ConnectScreen specialty={specialty} />;
 }

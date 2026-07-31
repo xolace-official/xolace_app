@@ -9,8 +9,7 @@ import { UnsureFeedbackPrompt } from "@/src/features/session-end/components/unsu
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
-import { BridgeCard } from "@/src/features/session-end/components/bridge-card";
-import { useAppStore } from "@/src/store/store";
+import { CloseOffer } from "@/src/features/session-end/components/close-offer";
 import { Presets } from "react-native-pulsar";
 import { ContributedConfirmation } from "@/src/features/session-end/components/contributed-confirmation";
 import { HeavierFeedbackPrompt } from "@/src/features/session-end/components/heavier-feedback-prompt";
@@ -97,9 +96,6 @@ export const ActivityVariant = ({
   const [unsureSheetOpen, setUnsureSheetOpen] = useState(false);
   const canAsk = useQuery(api.feedback.canAskContextual);
   const canAskUnsure = useQuery(api.feedback.canAskUnsureContextual);
-  const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
-  const setBridgeIntroSeen = useAppStore((s) => s.setBridgeIntroSeen);
-  const showBridgeCard = bridgeEnabled && mirrorText != null;
 
   const advancePhase = () => {
     if (phase === "acknowledge")
@@ -333,25 +329,14 @@ export const ActivityVariant = ({
             transition={EASE_IN}
             className="w-full items-center gap-5"
           >
-            {showBridgeCard && (
-              <BridgeCard
-                onPress={() =>
-                  onCompleteAndBridge(contributed, selectedMood ?? undefined)
-                }
-              />
-            )}
-            {__DEV__ && showBridgeCard && (
-              <Pressable
-                onPress={() => setBridgeIntroSeen(false)}
-                accessibilityLabel="Reset bridge intro"
-                hitSlop={8}
-                className="px-3 py-1"
-              >
-                <AppText className="text-xs text-foreground/25">
-                  ↺ bridge intro
-                </AppText>
-              </Pressable>
-            )}
+            <CloseOffer
+              sessionId={sessionId}
+              mirrorText={mirrorText}
+              onBridge={() =>
+                onCompleteAndBridge(contributed, selectedMood ?? undefined)
+              }
+              variant="activity"
+            />
             <Button
               variant="ghost"
               size="lg"

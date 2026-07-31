@@ -23,6 +23,17 @@ function chipFor(conversation: Conversation): { label: string; tone: 'warn' | 'm
   return null;
 }
 
+/**
+ * Freshness, never assignment. "Suggested" would read as the app dumping
+ * someone on a xolacer, which is exactly how the heaviest requests would end
+ * up deprioritised. It says when, and never what about — the first message is
+ * the user's to write.
+ */
+function originLabel(conversation: Conversation): string | null {
+  if (conversation.role !== 'xolacer') return null;
+  return conversation.origin === 'suggestion' ? 'Just after a session' : null;
+}
+
 function subtitleFor(conversation: Conversation): string {
   if (conversation.status === 'requested') {
     return conversation.role === 'xolacer'
@@ -72,6 +83,7 @@ export function ConversationRow({
 
   const dim = conversation.status !== 'open';
   const chip = chipFor(conversation);
+  const origin = originLabel(conversation);
   const showInlineActions =
     conversation.role === 'xolacer' && conversation.status === 'requested';
   const when = conversation.lastMessageAt ?? conversation.requestedAt;
@@ -124,6 +136,12 @@ export function ConversationRow({
             >
               {subtitleFor(conversation)}
             </AppText>
+            {origin && (
+              <View className="flex-row items-center gap-1.5 mt-1.5">
+                <View className="size-1.5 rounded-full bg-accent" />
+                <AppText className="text-[11px] text-muted">{origin}</AppText>
+              </View>
+            )}
           </View>
         </View>
 

@@ -1684,6 +1684,13 @@ export default defineSchema({
     acceptedAt: v.optional(v.number()),
     // Drives the resting sweep. Updated by touchConversation on send.
     lastMessageAt: v.optional(v.number()),
+
+    // Where this request came from, derived from session recency at request
+    // time (see lib/xolacerSuggestion.conversationOrigin) and recomputed on
+    // every transition back into "requested". Absent on rows written before
+    // the feature — those read as direct, and are not backfilled. Carries
+    // origin only: never the theme, never anything the user hasn't said yet.
+    origin: v.optional(v.union(v.literal("suggestion"), v.literal("direct"))),
   })
     // Seeker-side inbox (prefix scan) and pending-request cap counting.
     .index("by_user_and_status", ["userProfileId", "status"])

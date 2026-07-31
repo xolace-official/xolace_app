@@ -11,9 +11,11 @@ import type { ThreadConversation } from './thread-screen';
  */
 function subtitleFor(conversation: ThreadConversation): string {
   if (conversation.status === 'requested') {
-    return conversation.role === 'xolacer'
-      ? 'Waiting on you'
-      : 'Request sent — no reply yet';
+    if (conversation.role !== 'xolacer') return 'Request sent — no reply yet';
+    // Freshness only — what it's about is theirs to say first.
+    return conversation.origin === 'suggestion'
+      ? 'Waiting on you · just after a session'
+      : 'Waiting on you';
   }
   if (conversation.status === 'resting') {
     return conversation.lastMessageAt

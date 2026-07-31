@@ -9,12 +9,16 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
-import { QueryCtx } from "./_generated/server";
+import { MutationCtx, QueryCtx } from "./_generated/server";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import {
+  conversationOrigin,
+  type ConversationOrigin,
   meetsRatingFloor,
   rankSuggestionCandidates,
+  SUGGESTION_ORIGIN_WINDOW_MS,
 } from "./lib/xolacerSuggestion";
+import { posthog } from "./posthog";
 import {
   createXolacerChannel,
   deleteStreamUser,
@@ -38,6 +42,9 @@ const closedReasonValidator = v.optional(
     v.literal("xolacer_left"),
   ),
 );
+const originValidator = v.optional(
+  v.union(v.literal("suggestion"), v.literal("direct")),
+);
 const conversationRowValidator = v.object({
   id: v.id("xolacer_conversations"),
   role: v.union(v.literal("user"), v.literal("xolacer")),
@@ -51,6 +58,9 @@ const conversationRowValidator = v.object({
   xolacerProfileId: v.id("emotional_profiles"),
   counterpartName: v.string(),
   counterpartPhotoUrl: v.optional(v.string()),
+  // Xolacer-side only — the seeker never learns how their own request was
+  // stamped. Absent on rows predating the feature, which read as direct.
+  origin: originValidator,
 });
 
 // Volume cap counts OPEN conversations only — resting/closed free the slot.
@@ -161,7 +171,10 @@ async function requirePendingRequestSlot(
   }
 }
 
-function xolacerAvailable(profile: Doc<"xolacer_profiles"> | null, openCount: number) {
+function xolacerAvailable(
+  profile: Doc<"xolacer_profiles"> | null,
+  openCount: number,
+): profile is Doc<"xolacer_profiles"> {
   return Boolean(
     profile && profile.complete && profile.active && openCount < MAX_OPEN_CONVERSATIONS,
   );
@@ -382,6 +395,9 @@ export const sessionSuggestion = query({
       displayName: v.string(),
       photoUrl: v.optional(v.string()),
       specialties: v.array(specialtyValidator),
+      // The one that matched. The card says what they listen to with it, and
+      // carries it to the profile so the escape hatch there stays on-thread.
+      specialty: specialtyValidator,
       rating: v.optional(v.number()),
       ratingCount: v.number(),
     }),
@@ -443,6 +459,7 @@ export const sessionSuggestion = query({
       displayName: best.xolacer.displayName ?? "",
       photoUrl: best.xolacer.photoUrl,
       specialties: best.xolacer.specialties ?? [],
+      specialty,
       ...publicRating(best.xolacer),
     };
   },
@@ -504,6 +521,7 @@ export const myConversations = query({
         xolacerProfileId: conversation.xolacerProfileId,
         counterpartName: pseudonym(conversation.userProfileId),
         counterpartPhotoUrl: await seekerImage(ctx, conversation.userProfileId),
+        origin: conversation.origin,
       });
     }
 
@@ -535,6 +553,7 @@ export const getConversation = query({
       counterpartName: v.string(),
       counterpartPhotoUrl: v.optional(v.string()),
       myStreamUserId: v.id("emotional_profiles"),
+      origin: originValidator,
     }),
   ),
   handler: async (ctx, args) => {
@@ -576,16 +595,58 @@ export const getConversation = query({
           ? xolacer?.photoUrl
           : await seekerImage(ctx, conversation.userProfileId),
       myStreamUserId: profile._id,
+      // Xolacer-side only: the seeker is never told how their request read.
+      origin: role === "xolacer" ? conversation.origin : undefined,
     };
   },
 });
+
+/**
+ * Structural only: that a request was sent, and how fresh the sender was.
+ * No specialty, no theme, no session content — that would put the classifier's
+ * read of a person into analytics before the person has said a word.
+ */
+async function captureRequestSent(
+  ctx: MutationCtx,
+  distinctId: string,
+  origin: ConversationOrigin,
+) {
+  await posthog.capture(ctx, {
+    distinctId,
+    event: "xolacer_request_sent",
+    properties: { origin },
+  });
+}
+
+/**
+ * Origin, derived server-side from recency. No session id reaches this
+ * mutation and none is stored — the specialty on the Understanding is the
+ * only thing read, so no session→conversation link exists at any point.
+ */
+async function deriveOrigin(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+  xolacer: Doc<"xolacer_profiles">,
+) {
+  const since = Date.now() - SUGGESTION_ORIGIN_WINDOW_MS;
+  const recent = await ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_profile_createdAt", (q) =>
+      q.eq("emotionalProfileId", userProfileId).gte("createdAt", since),
+    )
+    .collect();
+  return conversationOrigin(
+    recent.flatMap((row) => row.suggestedSpecialty ?? []),
+    xolacer.specialties,
+  );
+}
 
 export const requestConversation = mutation({
   args: { xolacerProfileId: v.id("emotional_profiles") },
   returns: v.id("xolacer_conversations"),
   handler: async (ctx, args) => {
     if (!chatEnabled()) throw new Error("Xolacer chat is not available");
-    const { profile } = await requireAuth(ctx);
+    const { user, profile } = await requireAuth(ctx);
     if (profile._id === args.xolacerProfileId) {
       throw new Error("Cannot request a conversation with yourself");
     }
@@ -621,21 +682,30 @@ export const requestConversation = mutation({
         throw new Error("This conversation can no longer be reopened");
       }
       await requirePendingRequestSlot(ctx, profile._id);
+      // Overwritten, never merged: a re-request from the roster months later
+      // must badge as direct.
+      const origin = await deriveOrigin(ctx, profile._id, xolacer);
       await ctx.db.patch(existing._id, {
         status: "requested",
         closedReason: undefined,
         requestedAt: Date.now(),
+        origin,
       });
+      await captureRequestSent(ctx, user.tokenIdentifier, origin);
       return existing._id;
     }
 
     await requirePendingRequestSlot(ctx, profile._id);
-    return await ctx.db.insert("xolacer_conversations", {
+    const origin = await deriveOrigin(ctx, profile._id, xolacer);
+    const conversationId = await ctx.db.insert("xolacer_conversations", {
       userProfileId: profile._id,
       xolacerProfileId: args.xolacerProfileId,
       status: "requested",
       requestedAt: Date.now(),
+      origin,
     });
+    await captureRequestSent(ctx, user.tokenIdentifier, origin);
+    return conversationId;
   },
 });
 

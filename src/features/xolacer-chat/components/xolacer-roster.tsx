@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PressableFeedback } from 'heroui-native';
@@ -26,10 +25,18 @@ const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } })
  * would read as a bug. "Talking" marks xolacers you already have an open
  * thread with.
  */
-export function XolacerRoster({ conversations }: { conversations: ConversationList }) {
+export function XolacerRoster({
+  conversations,
+  filter,
+  onFilterChange,
+}: {
+  conversations: ConversationList;
+  /** Owned by the Connect screen so a routed specialty can preset it. */
+  filter: string | null;
+  onFilterChange: (slug: string | null) => void;
+}) {
   const router = useRouter();
   const directory = useQuery(api.xolacerChat.directory);
-  const [filter, setFilter] = useState<string | null>(null);
 
   if (directory !== undefined && directory.length === 0) {
     return (
@@ -64,7 +71,14 @@ export function XolacerRoster({ conversations }: { conversations: ConversationLi
 
   return (
     <View className="gap-2.5">
-      <SpecialtyFilter available={offered} selected={filter} onSelect={setFilter} />
+      {/* An active filter is always offered, even if nobody declares it right
+          now — otherwise a routed specialty no xolacer has leaves an empty
+          list with no way back to everyone. */}
+      <SpecialtyFilter
+        available={filter ? [...offered, filter] : offered}
+        selected={filter}
+        onSelect={onFilterChange}
+      />
 
       {visible.map((xolacer) => {
         const talking = openWith.has(xolacer.xolacerProfileId);
