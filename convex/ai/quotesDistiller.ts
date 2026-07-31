@@ -88,16 +88,19 @@ export const loadEmotionalContext = internalQuery({
   handler: async (ctx, args) => {
     const fiveDaysAgo = args.referenceDate - 5 * 24 * 60 * 60 * 1000;
 
-    const recentSessions = await ctx.db
-      .query("sessions")
-      .withIndex("by_profile_time", (q) =>
-        q
-          .eq("emotionalProfileId", args.emotionalProfileId)
-          .gte("createdAt", fiveDaysAgo)
-      )
-      .order("desc")
-      .filter((q) => q.eq(q.field("state"), "completed"))
-      .take(2);
+    // by_profile_state lands the two newest completed sessions in exactly two
+    // doc reads; the 5-day cutoff is then a cheap in-memory check on those.
+    const recentSessions = (
+      await ctx.db
+        .query("sessions")
+        .withIndex("by_profile_state", (q) =>
+          q
+            .eq("emotionalProfileId", args.emotionalProfileId)
+            .eq("state", "completed")
+        )
+        .order("desc")
+        .take(2)
+    ).filter((s) => s.createdAt >= fiveDaysAgo);
 
     if (recentSessions.length === 0) return null;
 
@@ -223,12 +226,21 @@ export async function distillQuoteForUser(
       let quoteText: string | null = null;
 
       for (const prompt of prompts) {
-        const response = await client.messages.create({
-          model: DISTILLER_MODEL,
-          max_tokens: 400,
-          messages: [{ role: "user", content: prompt }],
-          system: systemPrompt,
-        });
+        let response;
+        try {
+          response = await client.messages.create({
+            model: DISTILLER_MODEL,
+            max_tokens: 400,
+            messages: [{ role: "user", content: prompt }],
+            system: systemPrompt,
+          });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(
+            `[quotesDistiller] API call failed for ${args.emotionalProfileId}: ${message}`
+          );
+          continue;
+        }
 
         const rawText: string | null =
           response.content[0].type === "text" ? response.content[0].text.trim() : null;

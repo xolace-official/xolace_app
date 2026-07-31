@@ -65,7 +65,7 @@ NEVER (these produce a reflection of the reader, not a quote):
 - NEVER narrate the reader's progress or inner process — no "You're beginning to...", "You're learning that...", "Part of you knows..."
 - NEVER explain, interpret, or reassure about what the reader feels or why
 - NEVER chain clauses with semicolons or stacked commas ("the X, the Y, the Z")
-- NEVER reference the reader's situation, sessions but is it should be tailored to user/reader`;
+- NEVER reference the reader's situation or session details directly; the emotional register should feel personally resonant, not descriptive of specifics`;
 
   const themesLine =
     preferredThemes.length > 0
