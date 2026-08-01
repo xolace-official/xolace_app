@@ -7,6 +7,7 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { useStreamConnection } from '../providers/stream-chat-provider';
 import { useThreadConversation } from '../use-thread-conversation';
+import { BlockMenu } from './block-menu';
 import { ComposerPlaceholder } from './composer-placeholder';
 import { SafetyStrip } from './safety-strip';
 import { ThreadHeader } from './thread-header';
@@ -52,16 +53,21 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
   // safe area and glass background are the platform's. Rendered as a sibling of
   // every branch below rather than inside one, so the title is set on the first
   // frame and survives the connecting → ready swap without the header
-  // re-mounting under it.
+  // re-mounting under it. The overflow menu is a sibling here for the same
+  // reason, and is mounted unconditionally — never `hidden`, which would leave
+  // a transparent touch-eating band across the top on Android.
   const header = (
-    <Stack.Screen
-      options={{
-        // eslint-disable-next-line react/no-unstable-nested-components -- navigation header render prop, not a mounted subtree
-        headerTitle: () => <ThreadHeader conversation={conversation} />,
-        title: conversation.counterpartName,
-        gestureEnabled: overlay === 'none',
-      }}
-    />
+    <>
+      <Stack.Screen
+        options={{
+          // eslint-disable-next-line react/no-unstable-nested-components -- navigation header render prop, not a mounted subtree
+          headerTitle: () => <ThreadHeader conversation={conversation} />,
+          title: conversation.counterpartName,
+          gestureEnabled: overlay === 'none',
+        }}
+      />
+      <BlockMenu conversation={conversation} />
+    </>
   );
 
   // A request that hasn't been accepted has no channel yet — there is nothing

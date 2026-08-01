@@ -96,9 +96,24 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
     );
   }
 
-  // Resting-but-blocked and closed share one screen: inactive, unpublished, at
-  // cap, or declined. No-guilt framing, and the promise that nothing was
-  // deleted comes before the redirect — losing the conversation is the fear.
+  // Resting-but-not-resumable and closed share one screen: inactive,
+  // unpublished, at cap, declined, or blocked. Deliberately identical for every
+  // one of those — a blocked person is never told they were blocked.
+  //
+  // Role-aware, because a xolacer reaches this too: they may have blocked the
+  // seeker themselves, and offering them "find another Xolacer" would be
+  // nonsense. No-guilt framing on the seeker side, and the promise that nothing
+  // was deleted comes before the redirect — losing the conversation is the fear.
+  if (conversation.role === 'xolacer') {
+    return (
+      <Bar padBottom={padBottom}>
+        <Copy>
+          This conversation is closed. <Bold>Everything you two wrote is still here</Bold>.
+        </Copy>
+      </Bar>
+    );
+  }
+
   return (
     <Bar padBottom={padBottom}>
       <Copy>

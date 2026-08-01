@@ -50,6 +50,15 @@ function subtitleFor(conversation: Conversation): string {
     return `${conversation.counterpartName} couldn't take this one on`;
   }
   if (conversation.closedReason === 'expired') return 'This request quietly expired';
+  // Blocked rows are filtered out of the list server-side and left-xolacer rows
+  // aren't coming back, so neither can honestly be sold as still open to read —
+  // the fallthrough below is for a plain close with no reason recorded.
+  if (
+    conversation.closedReason === 'blocked' ||
+    conversation.closedReason === 'xolacer_left'
+  ) {
+    return 'This conversation is closed';
+  }
   return 'Everything you two wrote is still here';
 }
 
