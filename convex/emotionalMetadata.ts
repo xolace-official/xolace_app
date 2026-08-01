@@ -119,10 +119,23 @@ export const store = internalMutation({
 
     // Part of the Understanding, decided here because every input it needs is
     // already an argument. undefined clears the field on a re-classify.
-    const row = {
-      ...args,
-      suggestedSpecialty: await resolveSuggestedSpecialty(ctx, args),
-    };
+    //
+    // Never let it cost the classification write. Resolving a suggestion does
+    // real IO (a session read, up to three conversation index reads, a 7-day
+    // metadata walk), and this is the only write of the Understanding itself —
+    // the far more valuable half. On failure keep whatever was already stored
+    // rather than falling through to undefined: on a patch that field IS the
+    // cooldown record, so clearing it would reopen the 7-day window for a
+    // suggestion the user may already have been shown.
+    let suggestion: Awaited<ReturnType<typeof resolveSuggestedSpecialty>>;
+    try {
+      suggestion = await resolveSuggestedSpecialty(ctx, args);
+    } catch (error) {
+      console.error("[emotionalMetadata] suggestion resolve failed", error);
+      suggestion = existing?.suggestedSpecialty;
+    }
+
+    const row = { ...args, suggestedSpecialty: suggestion };
 
     if (existing) {
       await ctx.db.patch(existing._id, row);
