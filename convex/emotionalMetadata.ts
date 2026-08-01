@@ -27,12 +27,20 @@ import type { MutationCtx } from "./_generated/server";
  */
 async function resolveSuggestedSpecialty(
   ctx: MutationCtx,
-  args: SuggestionInput & {
+  args: Omit<SuggestionInput, "entryType"> & {
     sessionId: Id<"sessions">;
     emotionalProfileId: Id<"emotional_profiles">;
   },
 ) {
-  const specialty = suggestedSpecialty(args);
+  // Read rather than passed as an argument: `entryType` lives on the session
+  // and every store arg is spread into the metadata row, so taking it as an
+  // arg would either persist a duplicate of it or need destructuring out.
+  // Matches "open_prompt" to the pipeline's own default for legacy rows.
+  const session = await ctx.db.get(args.sessionId);
+  const specialty = suggestedSpecialty({
+    ...args,
+    entryType: session?.entryType ?? "open_prompt",
+  });
   if (!specialty) return undefined;
 
   // Never talk over a request the user is already waiting on.

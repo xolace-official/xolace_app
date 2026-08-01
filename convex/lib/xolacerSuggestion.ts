@@ -61,12 +61,28 @@ const EMOTION_SPECIALTY: Record<string, Specialty> = {
   loneliness: "loneliness",
 };
 
+/**
+ * Entry modes that are a tap rather than a sentence. Nobody gets routed to a
+ * stranger on the strength of a tapped word, so these never suggest.
+ *
+ * Keyed on the entry mode itself rather than on an empty `thematicTags`,
+ * which was the obvious proxy and is wrong in both directions: the classifier
+ * prompt says an empty array is *"fine"* for these modes, not required, so a
+ * tapped session that did get tagged would slip through the proxy — while a
+ * typed session that happened to produce no tags would be suppressed for no
+ * reason. The entry mode is a fact about what the user did; the tags are a
+ * model output about what it meant.
+ */
+const TAP_ONLY_ENTRY_TYPES = new Set(["word_cloud", "body_scan"]);
+
 export type SuggestionInput = {
   thematicTags: string[];
   primaryEmotion: string;
   granularLabel?: string;
   intensity: number;
   safeguardLevel?: "none" | "gentle" | "elevated" | "crisis";
+  /** How the session was entered — see TAP_ONLY_ENTRY_TYPES. */
+  entryType: string;
 };
 
 /**
@@ -76,24 +92,18 @@ export type SuggestionInput = {
  * where the system already suspects something is wrong but isn't sure, which
  * is the worst possible moment to hand a person to a volunteer.
  *
- * No specificity gate is needed — the classifier already returns an empty
- * `thematicTags` for texture words and body areas, so those map to nothing.
+ * No gate on the `specificity` score: it is a model-assigned number, and the
+ * thing actually worth excluding is an entry mode, which is a fact.
  */
 export function suggestedSpecialty(input: SuggestionInput): Specialty | null {
-  const { thematicTags, intensity, safeguardLevel } = input;
+  const { thematicTags, intensity, safeguardLevel, entryType } = input;
 
   if (thematicTags.some((tag) => SUPPRESSED_THEMES.has(tag.toLowerCase()))) {
     return null;
   }
+  if (TAP_ONLY_ENTRY_TYPES.has(entryType)) return null;
   if (safeguardLevel === "elevated" || safeguardLevel === "crisis") return null;
   if (intensity < MIN_SUGGESTION_INTENSITY) return null;
-
-  // Empty tags are how the classifier reports a texture word or a body area.
-  // Nobody gets routed to a stranger on the strength of one tapped word, and
-  // this is the whole reason no specificity gate is needed — so the emotion
-  // fallback below is a fallback within a session that did say something,
-  // never a way in for a session that said nothing.
-  if (thematicTags.length === 0) return null;
 
   for (const tag of thematicTags) {
     const themeMatch = THEME_SPECIALTY[tag.toLowerCase()];

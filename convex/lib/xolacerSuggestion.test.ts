@@ -16,6 +16,7 @@ const base: SuggestionInput = {
   primaryEmotion: "sadness",
   intensity: 7,
   safeguardLevel: "none",
+  entryType: "open_prompt",
 };
 
 describe("suggestedSpecialty — theme map", () => {
@@ -183,18 +184,52 @@ describe("suggestedSpecialty — suppression and gates", () => {
     ).toBeNull();
   });
 
-  it("returns null for empty thematic tags", () => {
-    expect(suggestedSpecialty({ ...base, thematicTags: [] })).toBeNull();
-  });
+  for (const entryType of ["word_cloud", "body_scan"]) {
+    it(`returns null for ${entryType}, a tap rather than a sentence`, () => {
+      expect(
+        suggestedSpecialty({
+          ...base,
+          entryType,
+          primaryEmotion: "anxiety",
+        }),
+      ).toBeNull();
+    });
 
-  it("returns null for empty thematic tags even when the emotion maps", () => {
+    // The case the empty-tags proxy missed: the classifier prompt says an
+    // empty array is "fine" for these modes, not required, so a tapped
+    // session that did get tagged used to fall straight through to a theme
+    // match — routing someone off two tapped words.
+    it(`returns null for ${entryType} even when a theme did get tagged`, () => {
+      expect(
+        suggestedSpecialty({
+          ...base,
+          entryType,
+          thematicTags: ["work"],
+        }),
+      ).toBeNull();
+    });
+  }
+
+  // The other direction: a typed session keeps the emotion fallback the map
+  // deliberately includes, even when the classifier tagged no life domain.
+  it("still suggests for a typed session with no thematic tags", () => {
     expect(
       suggestedSpecialty({
         ...base,
         thematicTags: [],
         primaryEmotion: "anxiety",
       }),
-    ).toBeNull();
+    ).toBe("anxiety");
+  });
+
+  it("does not suppress voice, which is an utterance not a tap", () => {
+    expect(
+      suggestedSpecialty({
+        ...base,
+        entryType: "voice",
+        thematicTags: ["work"],
+      }),
+    ).toBe("burnout");
   });
 });
 
