@@ -95,6 +95,45 @@ describe("suggestedSpecialty — emotion fallback", () => {
   });
 });
 
+// Every lookup lowercases first. The classifier is instructed to emit these
+// taxonomies in lowercase, but it is a model, and a capitalised tag silently
+// mapping to nothing would read as "the suggestion just doesn't fire much"
+// rather than as a bug.
+describe("suggestedSpecialty — case normalization", () => {
+  it("matches a capitalised theme", () => {
+    expect(suggestedSpecialty({ ...base, thematicTags: ["Work"] })).toBe(
+      "burnout",
+    );
+  });
+
+  it("matches a capitalised emotion in the fallback", () => {
+    expect(
+      suggestedSpecialty({
+        ...base,
+        thematicTags: ["health"],
+        primaryEmotion: "Anxiety",
+      }),
+    ).toBe("anxiety");
+  });
+
+  it("matches a capitalised granular label in the fallback", () => {
+    expect(
+      suggestedSpecialty({
+        ...base,
+        thematicTags: ["health"],
+        primaryEmotion: "sadness",
+        granularLabel: "Loneliness",
+      }),
+    ).toBe("loneliness");
+  });
+
+  it("suppresses a capitalised trauma tag", () => {
+    expect(
+      suggestedSpecialty({ ...base, thematicTags: ["family", "Trauma"] }),
+    ).toBeNull();
+  });
+});
+
 describe("suggestedSpecialty — suppression and gates", () => {
   it("suppresses trauma even when another theme would match", () => {
     expect(
@@ -255,6 +294,13 @@ describe("meetsRatingFloor", () => {
       meetsRatingFloor({ ratingCount: MIN_RATINGS_TO_JUDGE, ratingSum: 15 }),
     ).toBe(true);
   });
+
+  // Both counters are optional on the profile and are maintained separately by
+  // rateConversation, so a row can carry a count with no sum. That reads as an
+  // average of 0 and must exclude — the app is vouching for this person.
+  it("excludes a rated xolacer whose sum is missing", () => {
+    expect(meetsRatingFloor({ ratingCount: MIN_RATINGS_TO_JUDGE })).toBe(false);
+  });
 });
 
 describe("rankSuggestionCandidates", () => {
@@ -339,6 +385,43 @@ describe("isInSuggestionCooldown", () => {
 
   it("is open on an empty history", () => {
     expect(isInSuggestionCooldown([], now)).toBe(false);
+  });
+
+  // The real shape of the argument: a week of sessions, most carrying no
+  // suggestion, the one that does sitting somewhere in the middle. Every other
+  // case here passes a single row, which never exercises the walk.
+  it("finds a suggestion that is not the first row", () => {
+    const history = [
+      { createdAt: now - 6000 },
+      { createdAt: now - 5000 },
+      { createdAt: now - 4000, suggestedSpecialty: "family" },
+      { createdAt: now - 3000 },
+    ];
+    expect(isInSuggestionCooldown(history, now)).toBe(true);
+  });
+
+  it("is open when every suggestion in the history has aged out", () => {
+    const history = [
+      {
+        createdAt: now - SUGGESTION_COOLDOWN_MS - 1,
+        suggestedSpecialty: "grief",
+      },
+      { createdAt: now - 2000 },
+      { createdAt: now - 1000 },
+    ];
+    expect(isInSuggestionCooldown(history, now)).toBe(false);
+  });
+
+  // Mixed ages with a live one present — the aged-out row must not mask it.
+  it("is closed when an aged-out suggestion precedes a live one", () => {
+    const history = [
+      {
+        createdAt: now - SUGGESTION_COOLDOWN_MS - 1,
+        suggestedSpecialty: "grief",
+      },
+      { createdAt: now - 1000, suggestedSpecialty: "anxiety" },
+    ];
+    expect(isInSuggestionCooldown(history, now)).toBe(true);
   });
 });
 
