@@ -294,8 +294,12 @@ function OtherListeners({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`See other Xolacers who listen to ${specialtyListensTo(specialty)}`}
+      // A 13px line sat in ~20pt of tappable height, directly between the
+      // primary CTA and "Report a concern" — a near miss landed on the report
+      // flow.
+      hitSlop={8}
     >
-      <View className="flex-row items-center justify-center gap-1.5 pt-0.5">
+      <View className="flex-row items-center justify-center gap-1.5 py-2">
         <AppText className="text-[13px] font-medium text-accent">
           Others listen to {specialtyListensTo(specialty)} too
         </AppText>

@@ -41,7 +41,11 @@ export const SuggestionCard = ({
   return (
     <PressableFeedback
       onPress={onPress}
-      accessibilityLabel={`${displayName} listens to ${specialtyListensTo(specialty)}. Opens their profile.`}
+      // Carries the disclosure, not just the name: PressableFeedback groups its
+      // children into one node, so the "trained peer, not a therapist" line
+      // below is never read otherwise — and that line is the whole basis for
+      // what someone is agreeing to walk into.
+      accessibilityLabel={`${displayName} listens to ${specialtyListensTo(specialty)}. A trained peer, not a therapist. Opens their profile — nothing is sent.`}
       accessibilityRole="button"
       className="w-full overflow-hidden rounded-3xl border border-accent/30 bg-accent/[0.07] p-5"
     >

@@ -34,6 +34,8 @@ export function useThreadConversation(
 
   return {
     ...row,
+    // Not redundant with the spread: `...row` leaves `origin` optional, and
+    // ThreadConversation requires the key to be present even when undefined.
     origin: row.origin,
     resumable: false,
     canRate: false,

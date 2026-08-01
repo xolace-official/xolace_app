@@ -132,7 +132,15 @@ export const store = internalMutation({
       suggestion = await resolveSuggestedSpecialty(ctx, args);
     } catch (error) {
       console.error("[emotionalMetadata] suggestion resolve failed", error);
-      suggestion = existing?.suggestedSpecialty;
+      // Preserve the cooldown record, but never across a safety verdict that
+      // would itself have blocked a suggestion. The resolve does IO before the
+      // gate runs, so a throw can strand a stale non-crisis suggestion on a
+      // session the pipeline has just classified as crisis. Keeping it costs a
+      // crisis-flagged user being handed to a volunteer; clearing it costs at
+      // most one extra suggestion in a week.
+      const unsafe =
+        args.safeguardLevel === "crisis" || args.safeguardLevel === "elevated";
+      suggestion = unsafe ? undefined : existing?.suggestedSpecialty;
     }
 
     const row = { ...args, suggestedSpecialty: suggestion };
