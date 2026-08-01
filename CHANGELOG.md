@@ -39,17 +39,6 @@ All notable changes to Xolace are documented here.
 
 - **Custom voice (Xolace+)** — Plus members can now choose the voice that speaks their mirror *and* their vent coda, from a small curated cast: **Sage** (older, unhurried storyteller), **Wren** (warm, soft-spoken), **Vesper** (calm and grounded), and **Ash** (low, gravelly, close to the fire). The picker lives in Settings → Mirror as a new "Voice" section beneath Tone. **Auto** stays the free default — the mirror keeps using your tone-mapped voice and the vent keeps its Witnessed voice. Every named voice carries a play button that previews it (a fixed line, *"I'm here. Take whatever time you need."*) — playable even before you subscribe, since hearing the voice is the point. Free users tapping a voice are routed to the paywall. See `docs/voice-naming.md` for the naming rationale.
 
-### Backend
-
-- **`convex/lib/voices.ts`** — new single source of truth for TTS voices: the Plus `VOICE_CATALOG` (client-facing slugs → ElevenLabs ids, which never leave the server), the tone-default map, the vent default, and `resolveVoiceId`. The mirror (`ai/tts.ts`) and vent (`vent.ts`) pipelines now resolve through it. The stored preference is a **slug**, never a raw voice id.
-- **Generation-time premium fence** — the voice is gated both at write (`preferences.update`) and again when audio is generated (`process.ts` / `clarify.ts` pass the slug only when `isPremium`; the vent pipeline reads `preferences.getResolvedVoiceSlug`, which re-checks entitlement). A lapsed subscription silently falls back to the default voice **without wiping the saved choice**, so it returns intact on renewal.
-
----
-
-## [1.7.0] - (2026-07-05)
-
-### Added
-
 - **Cognition Layer: episodic & semantic memory** — the app now remembers you across sessions instead of re-deriving who you are from scratch each time. Every mirror-generating session is composited into an episodic memory (stored in a per-profile vector namespace) so relevant past moments can be recalled during mirror generation, not just the immediately preceding turn. Alongside this, a **semantic profile** — a versioned, AI-written narrative covering recurring themes, emotional signatures, and emotional trajectory — is now built per person and included in mirror prompts. A new "Personal memory" toggle in Settings → Data (on by default) lets anyone opt out; disabling it stops new episodic/semantic writes without touching history already gathered under the Constitution's data rules.
 - **Reflection Agent (Phase 3): light pass + consolidation** — the semantic profile updates itself in two tiers, off the critical path. A **light pass** (Haiku) runs after every completed session: it bootstraps a v1 profile on someone's first qualifying session, or patches the existing trajectory in place afterward — cheap, frequent, trajectory-only. A **consolidation pass** (Sonnet, tool-use loop) runs on a longer gate: it gathers evidence from recent sessions and commits a new full profile version (recurring themes, emotional signatures, and trajectory together), advancing the profile's version pointer. Both passes respect the privacy/data-wipe guard used by the rest of the Cognition Layer, and a version can be rolled back via `revertToVersion` without losing prior history.
 
@@ -60,6 +49,8 @@ All notable changes to Xolace are documented here.
 
 ### Backend
 
+- **`convex/lib/voices.ts`** — new single source of truth for TTS voices: the Plus `VOICE_CATALOG` (client-facing slugs → ElevenLabs ids, which never leave the server), the tone-default map, the vent default, and `resolveVoiceId`. The mirror (`ai/tts.ts`) and vent (`vent.ts`) pipelines now resolve through it. The stored preference is a **slug**, never a raw voice id.
+- **Generation-time premium fence** — the voice is gated both at write (`preferences.update`) and again when audio is generated (`process.ts` / `clarify.ts` pass the slug only when `isPremium`; the vent pipeline reads `preferences.getResolvedVoiceSlug`, which re-checks entitlement). A lapsed subscription silently falls back to the default voice **without wiping the saved choice**, so it returns intact on renewal.
 - **`finalizeCompletion` (convex/sessions.ts)** — single source of truth for flipping a session terminal and firing the post-session job tail (profile stats update, Reflection Agent trigger, follow-up gate). Called from `completePath`, `completeSession`, and the abandoned-session reconciliation path.
 - **`recordPostSessionFeedback`** — new mutation for optional post-session mood/contribution, replacing the fields that used to live on `completePath`'s args. For backward compatibility, `completePath` still accepts `contributedReflection` / `postSessionMood` (deprecated) from 1.6.x store clients and applies them through the same guarded path, and is idempotent when the session is already `completed` (e.g. cron-reconciled) — so deploying this backend ahead of store review can't strand old clients on the session-end screen.
 - **`semantic_profiles` refactor** — `createVersion` reworked; new `updateTrajectory` supports both bootstrap and in-place patch, with the same wipe-guard as the trusted `createVersion` path. `emotional_profiles.lastConsolidationAt` tracks the consolidation gate; cleared by `dataWipe` alongside existing profile-version purging.
