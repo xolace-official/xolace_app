@@ -31,6 +31,10 @@ function chipFor(conversation: Conversation): { label: string; tone: 'warn' | 'm
  */
 function originLabel(conversation: Conversation): string | null {
   if (conversation.role !== 'xolacer') return null;
+  // Only while the request is still unanswered, matching thread-header. The
+  // badge is context for the accept decision — once the conversation is open,
+  // how it arrived stops being useful and reads as clutter on every row.
+  if (conversation.status !== 'requested') return null;
   return conversation.origin === 'suggestion' ? 'Just after a session' : null;
 }
 
