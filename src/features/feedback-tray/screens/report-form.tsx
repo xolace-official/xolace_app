@@ -49,7 +49,7 @@ export const ReportForm = ({ kind: initialKind }: { kind: Kind }) => {
   const { currentTheme } = useAppTheme();
 
   const submit = useMutation(api.productFeedback.submit);
-  const canSubmit = useQuery(api.productFeedback.canSubmit);
+  const canSubmit = useQuery(api.productFeedback.canSubmit, { kind });
 
   const isRateLimited = canSubmit === false;
   const isDisabled = isSaving || !text.trim() || isRateLimited;
