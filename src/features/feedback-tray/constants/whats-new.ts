@@ -30,6 +30,33 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "1.8.0",
+    label: "Version 1.8.0",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "person.2.fill", android: "groups" },
+        title: "Talk to a real person",
+        body: "The new Connect tab holds Xolacers — people who've offered to listen. Browse who's there, see what they listen to, and send a request. They're trained peers, not therapists, and nothing is sent until they accept.",
+      },
+      {
+        icon: { ios: "hand.raised.fill", android: "front_hand" },
+        title: "Become a Xolacer",
+        body: "You can offer to listen too. Five short steps — a photo, a name, a line about you, and what you're here for. Your real name and contact details are never shown, and you can go Away anytime.",
+      },
+      {
+        icon: { ios: "figure.wave", android: "waving_hand" },
+        title: "Someone offered, at the end",
+        body: "When a session ends on something a xolacer listens to, we'll show you that one person before you close. Tapping only opens their profile — nothing is sent unless you reach out.",
+      },
+      {
+        icon: { ios: "sparkles", android: "auto_awesome" },
+        title: "A new way in",
+        body: "The app now opens on a home tab with a daily quote, and Reflect is always one tap away at the bottom of the screen.",
+      },
+    ],
+  },
+  {
     id: "2026-07-personal-memory",
     label: "Version 1.7.0",
     date: "July 2026",

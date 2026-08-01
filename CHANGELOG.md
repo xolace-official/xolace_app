@@ -4,6 +4,32 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.8.0] - (2026-08-01)
+
+### Added
+
+- **Xolacers — talk to a real person** — the fire is no longer the only thing in the dark. A new **Connect** tab holds two things: **Chats** (your conversations, in every state) and **Xolacers** (the roster of people who've offered to listen). A xolacer is a trained peer, never a therapist, and every surface says so. You browse real profiles — photo, name, a line about why they're here, what they listen to, and their rating — then send a request. Nothing is sent until they accept; you can hold at most **2 pending requests** and **8 open conversations** at a time. Chats are one-to-one and text-only, with a safety strip in every thread and a route to crisis resources always one tap away. Conversations can be closed and later resumed, and closing one opens a **rating** screen so the roster stays honest.
+- **Become a xolacer** — anyone can offer to listen. A guided five-step setup (photo → name → a short bio → up to three specialties → review) builds the profile other people will see, with a live progress meter and a plain "this is what people see; your real name and contact details are never shown" review step. Once published, an **Active / Away** toggle lets a xolacer step back without deleting anything — away means no new requests, existing chats untouched.
+- **A person offered at the end of a session** — when a session ends on something a xolacer has declared they listen to, the close phase offers one named person instead of the usual Bridge card. Never both, never an algorithmic "matched for you" claim — just the fact of what that person said they're here for, with their face and rating. Tapping opens their profile; nothing is sent until you choose to reach out.
+- **New home tab (Discovery)** — the app now opens on a poster masthead with a daily quote card and a **Reflect** dock that keeps starting a session one tap away from anywhere. Tabs replace the old single-screen entry.
+- **Reflection rank** — the timeline gains a percentile card showing how a reflection landed relative to the rest of the pool.
+
+### Changed
+
+- **Renamed "listeners" to "xolacers"** across every surface — the people who listen are Xolacers, and the language is consistent from the roster to the thread header to notifications.
+- **Chats open on messages, not a skeleton** — the Stream connection and every channel in your list are warmed as soon as the Connect tab loads, so tapping a row lands you in the conversation. An offline strip appears instead of an empty thread when the connection drops.
+- **Cold-start auth errors no longer red-screen** — a failure during the auth bootstrap now surfaces as a recoverable state rather than a crash.
+- **Account deletion fixes** — several errors in the delete-account flow are resolved.
+- **Daily quotes** — refreshed generator and card.
+
+### Backend
+
+- **`convex/xolacerChat.ts` + Stream integration** — profile publishing and photo upload, the roster/directory query, the request → accept/decline → resume → rate lifecycle (bounded by `MAX_PENDING_REQUESTS` / `MAX_OPEN_CONVERSATIONS`), short-lived Stream token minting, a sweep for stale conversations, and Stream user purging on account deletion. The whole feature sits behind a server-side `status.enabled` flag, so a deployment with it off renders an empty state rather than a broken tab.
+- **`sessionSuggestion`** — reads the Understanding already on the session (no new model call, per the Constitution rule) to decide whether the close phase has a xolacer to offer; returns `null` rather than throwing on a bad session, and a lookup failure can never cost the classification write. `chooseCloseOffer` is a pure, tested rule guaranteeing the suggestion and the Bridge card are never on screen together, with a bounded hold so a stalled query still falls through to the Bridge.
+- **Specialty taxonomy** (`convex/lib/specialties.ts`) — shared source of truth for what a xolacer can declare and how it's phrased to a reader, with test coverage.
+
+---
+
 ## [1.7.0] - (2026-07-14)
 
 ### Added
