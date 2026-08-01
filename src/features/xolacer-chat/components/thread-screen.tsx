@@ -7,7 +7,7 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { useStreamConnection } from '../providers/stream-chat-provider';
 import { useThreadConversation } from '../use-thread-conversation';
-import { ThreadMenu } from './thread-menu';
+import { XolacerMenu } from './xolacer-menu';
 import { ComposerPlaceholder } from './composer-placeholder';
 import { SafetyStrip } from './safety-strip';
 import { ThreadHeader } from './thread-header';
@@ -66,7 +66,11 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
           gestureEnabled: overlay === 'none',
         }}
       />
-      <ThreadMenu conversation={conversation} />
+      <XolacerMenu
+        profileId={conversation.counterpartProfileId}
+        name={conversation.counterpartName}
+        conversationId={conversation.id}
+      />
     </>
   );
 

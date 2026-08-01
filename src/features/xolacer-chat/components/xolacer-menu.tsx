@@ -5,27 +5,41 @@ import { useAction } from 'convex/react';
 import BlockIcon from '@expo/material-symbols/block.xml';
 import FlagIcon from '@expo/material-symbols/flag.xml';
 import { api } from '@/convex/_generated/api';
+import type { Id } from '@/convex/_generated/dataModel';
 import { OverflowMenu } from '@/src/components/shared/overflow-menu';
 import { ConfirmationDialog } from '@/src/components/shared/confirmation-dialog';
 import { useTray } from '@/src/features/feedback-tray/engine/tray-provider';
 import type { Trays } from '@/src/features/feedback-tray/screens/registry';
 import { playSoftPress } from '@/src/lib/haptics';
-import type { ThreadConversation } from './thread-screen';
 
 /**
- * The thread's overflow menu: Report and Block, together on purpose — someone
- * reaching for one usually wants the other.
+ * The overflow menu for a xolacer — mounted in the thread and on the profile:
+ * Report and Block, together on purpose, since someone reaching for one usually
+ * wants the other.
  *
  * Block sits behind a confirmation because it cannot be undone — the server
  * refuses to reopen a conversation closed this way, and that refusal is the
  * point. The confirmation says so out loud. Both roles get it: a xolacer's
  * only other exit stops working the moment they accept a request.
  *
- * Report opens the feedback tray in concern mode, carrying the counterpart's
- * profile id and this conversation's id. The display name goes no further than
- * the form's copy.
+ * Report opens the feedback tray in concern mode, carrying the subject's
+ * profile id and — from a thread — that conversation's id. The display name
+ * goes no further than the form's copy.
+ *
+ * Block is conditionally *mounted*, never `hidden`: a profile reached from the
+ * roster may have no conversation row, and there is no channel and nothing to
+ * escape. (A hidden toolbar item also leaves a transparent touch-eating band
+ * across the top on Android.)
  */
-export function ThreadMenu({ conversation }: { conversation: ThreadConversation }) {
+export function XolacerMenu({
+  profileId,
+  name,
+  conversationId,
+}: {
+  profileId: Id<'emotional_profiles'>;
+  name: string;
+  conversationId?: Id<'xolacer_conversations'>;
+}) {
   const router = useRouter();
   const { toast } = useToast();
   const { show } = useTray<Trays>();
@@ -34,9 +48,9 @@ export function ThreadMenu({ conversation }: { conversation: ThreadConversation 
   const [pending, setPending] = useState(false);
 
   const handleBlock = () => {
-    if (pending) return;
+    if (pending || !conversationId) return;
     setPending(true);
-    blockConversation({ conversationId: conversation.id })
+    blockConversation({ conversationId })
       .then(() => {
         setConfirming(false);
         // The row is gone from the list behind us; nothing here to return to.
@@ -64,27 +78,25 @@ export function ThreadMenu({ conversation }: { conversation: ThreadConversation 
             playSoftPress();
             show('report', {
               kind: 'concern',
-              subject: {
-                profileId: conversation.counterpartProfileId,
-                name: conversation.counterpartName,
-                conversationId: conversation.id,
-              },
+              subject: { profileId, name, conversationId },
             });
           }}
         >
           Report
         </OverflowMenu.Action>
 
-        <OverflowMenu.Action
-          destructive
-          icon={process.env.EXPO_OS === 'ios' ? 'hand.raised' : BlockIcon}
-          onPress={() => {
-            playSoftPress();
-            setConfirming(true);
-          }}
-        >
-          Block
-        </OverflowMenu.Action>
+        {conversationId && (
+          <OverflowMenu.Action
+            destructive
+            icon={process.env.EXPO_OS === 'ios' ? 'hand.raised' : BlockIcon}
+            onPress={() => {
+              playSoftPress();
+              setConfirming(true);
+            }}
+          >
+            Block
+          </OverflowMenu.Action>
+        )}
       </OverflowMenu>
 
       <ConfirmationDialog
