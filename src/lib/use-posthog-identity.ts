@@ -17,6 +17,7 @@ import { api } from '@/convex/_generated/api';
  * merge is clean on the next sign-in.
  */
 export function usePostHogIdentity() {
+
   const posthog = usePostHog();
   const context = useQuery(api.users.getFullContext);
   const identified = useRef<string | null>(null);
@@ -25,6 +26,11 @@ export function usePostHogIdentity() {
     const profileId = context?.profile?._id;
     if (!profileId || identified.current === profileId) return;
     identified.current = profileId;
+
+    // PostHog is disabled in dev (src/config/posthog.ts), so identify is a
+    // no-op there and the distinct id never visibly changes — this log is the
+    // only way to confirm the call on a dev build.
+    if (__DEV__) console.log('[posthog] identify', profileId);
 
     posthog.identify(profileId, {
       $set: { auth_provider: context.user.authProvider },
