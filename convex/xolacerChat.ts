@@ -9,8 +9,16 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
-import { QueryCtx } from "./_generated/server";
+import { MutationCtx, QueryCtx } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import {
+  conversationOrigin,
+  type ConversationOrigin,
+  meetsRatingFloor,
+  rankSuggestionCandidates,
+  SUGGESTION_ORIGIN_WINDOW_MS,
+} from "./lib/xolacerSuggestion";
+import { posthog } from "./posthog";
 import {
   createXolacerChannel,
   deleteStreamUser,
@@ -34,6 +42,9 @@ const closedReasonValidator = v.optional(
     v.literal("xolacer_left"),
   ),
 );
+const originValidator = v.optional(
+  v.union(v.literal("suggestion"), v.literal("direct")),
+);
 const conversationRowValidator = v.object({
   id: v.id("xolacer_conversations"),
   role: v.union(v.literal("user"), v.literal("xolacer")),
@@ -47,6 +58,9 @@ const conversationRowValidator = v.object({
   xolacerProfileId: v.id("emotional_profiles"),
   counterpartName: v.string(),
   counterpartPhotoUrl: v.optional(v.string()),
+  // Xolacer-side only — the seeker never learns how their own request was
+  // stamped. Absent on rows predating the feature, which read as direct.
+  origin: originValidator,
 });
 
 // Volume cap counts OPEN conversations only — resting/closed free the slot.
@@ -66,6 +80,15 @@ const RESTING_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
  * at all. Enforced server-side so the client never receives a hideable value.
  */
 const MIN_RATINGS_TO_DISPLAY = 5;
+
+/**
+ * Ceiling on how many specialty-declaring xolacers sessionSuggestion will pay
+ * per-candidate reads for. A safety valve, not a tuning knob: at any plausible
+ * roster size the specialty filter yields far fewer than this, so it should
+ * never bind. If it ever does, ranking sees a subset and least-loaded stops
+ * being exact — which is the signal to index specialties properly.
+ */
+const MAX_SUGGESTION_CANDIDATES = 200;
 
 /** Public rating shape: the average exists only past the display threshold. */
 function publicRating(profile: Doc<"xolacer_profiles">) {
@@ -157,7 +180,10 @@ async function requirePendingRequestSlot(
   }
 }
 
-function xolacerAvailable(profile: Doc<"xolacer_profiles"> | null, openCount: number) {
+function xolacerAvailable(
+  profile: Doc<"xolacer_profiles"> | null,
+  openCount: number,
+): profile is Doc<"xolacer_profiles"> {
   return Boolean(
     profile && profile.complete && profile.active && openCount < MAX_OPEN_CONVERSATIONS,
   );
@@ -358,6 +384,129 @@ export const xolacerProfile = query({
   },
 });
 
+/**
+ * The one xolacer this session would offer, or null — null being the correct
+ * and common answer.
+ *
+ * The person is chosen at read time and never stored. That is load-bearing for
+ * privacy, not an optimization: no record linking a session to a specific
+ * xolacer exists anywhere, which is what keeps the profile screen's promise
+ * that a chat is never linked to a user's reflections literally true. It also
+ * means availability is always current, so there is no stale suggestion to
+ * expire.
+ */
+export const sessionSuggestion = query({
+  args: { sessionId: v.id("sessions") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      xolacerProfileId: v.id("emotional_profiles"),
+      displayName: v.string(),
+      photoUrl: v.optional(v.string()),
+      specialties: v.array(specialtyValidator),
+      // The one that matched. The card says what they listen to with it, and
+      // carries it to the profile so the escape hatch there stays on-thread.
+      specialty: specialtyValidator,
+      rating: v.optional(v.number()),
+      ratingCount: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) return null;
+
+    // Null, never throw, when the session isn't this user's or is gone. The
+    // caller is the session-end close phase, which reads `sessionId` from a
+    // route param and renders inside no error boundary — a throw there takes
+    // the whole screen down. Two ordinary paths reach it: a session the
+    // retention sweep has since deleted, and a stale deep link. Returning null
+    // degrades to exactly the pre-feature behaviour (the Bridge card), which
+    // is what chooseCloseOffer already does with null.
+    // Still an ownership check, not a relaxation: a session that fails it
+    // yields no suggestion at all.
+    const { profile } = await requireAuth(ctx);
+    const session = await ctx.db.get(args.sessionId);
+    if (!session || session.emotionalProfileId !== profile._id) return null;
+
+    // Decided once by the pipeline (lib/xolacerSuggestion); absent is the
+    // common case, and every gate that produced it already ran back then.
+    const metadata = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+    const specialty = metadata?.suggestedSpecialty;
+    if (!specialty) return null;
+
+    // The stored verdict only ever saw the first input. Refinement turns are
+    // deliberately not re-classified (ai/clarify.ts: "Skips moderation +
+    // classification"), so anything the user added afterwards has been through
+    // no safeguard and no classifier — and the specialty above predates it.
+    // Suggesting on it would route someone to a volunteer on the strength of a
+    // verdict that never read what they last said.
+    // Bounded by design: a session has at most MAX_TURNS (2) refinement turns.
+    const turns = await ctx.db
+      .query("session_turns")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .take(4);
+    if (turns.some((turn) => turn.userInput)) return null;
+
+    // `specialties` is an array field, so it can't be indexed — the specialty
+    // filter has to run in memory, which means the scan feeding it must not be
+    // truncated first. A prefix would silently hide declaring xolacers the
+    // moment the roster outgrew it, and the failure looks like "no suggestion"
+    // rather than an error. Bounded in practice by roster size: this is the
+    // directory, a curated set.
+    // ponytail: full active-roster scan; needs a denormalized
+    // specialty->xolacer index if the roster reaches the low thousands.
+    const declaring: Doc<"xolacer_profiles">[] = [];
+    for await (const xolacer of ctx.db
+      .query("xolacer_profiles")
+      .withIndex("by_complete_and_active", (q) =>
+        q.eq("complete", true).eq("active", true),
+      )) {
+      if (xolacer.emotionalProfileId === profile._id) continue;
+      if (!xolacer.specialties?.includes(specialty)) continue;
+      if (!meetsRatingFloor(xolacer)) continue;
+      declaring.push(xolacer);
+      if (declaring.length >= MAX_SUGGESTION_CANDIDATES) break;
+    }
+
+    const candidates = [];
+    for (const xolacer of declaring) {
+      // Exact pair lookup, not a scan of this user's rows: a past decline or
+      // an expired request must not come back dressed as a fresh
+      // recommendation, and a capped scan would eventually miss one. This is
+      // what by_user_and_xolacer exists for.
+      const existing = await ctx.db
+        .query("xolacer_conversations")
+        .withIndex("by_user_and_xolacer", (q) =>
+          q
+            .eq("userProfileId", profile._id)
+            .eq("xolacerProfileId", xolacer.emotionalProfileId),
+        )
+        .unique();
+      if (existing) continue;
+      const openCount = await countOpen(ctx, xolacer.emotionalProfileId);
+      if (!xolacerAvailable(xolacer, openCount)) continue;
+      candidates.push({
+        xolacerProfileId: xolacer.emotionalProfileId,
+        openCount,
+        xolacer,
+      });
+    }
+
+    const [best] = rankSuggestionCandidates(candidates, args.sessionId);
+    if (!best) return null;
+    return {
+      xolacerProfileId: best.xolacerProfileId,
+      displayName: best.xolacer.displayName ?? "Xolacer",
+      photoUrl: best.xolacer.photoUrl,
+      specialties: best.xolacer.specialties ?? [],
+      specialty,
+      ...publicRating(best.xolacer),
+    };
+  },
+});
+
 // ============================================================
 // Conversations
 // ============================================================
@@ -414,6 +563,7 @@ export const myConversations = query({
         xolacerProfileId: conversation.xolacerProfileId,
         counterpartName: pseudonym(conversation.userProfileId),
         counterpartPhotoUrl: await seekerImage(ctx, conversation.userProfileId),
+        origin: conversation.origin,
       });
     }
 
@@ -445,6 +595,7 @@ export const getConversation = query({
       counterpartName: v.string(),
       counterpartPhotoUrl: v.optional(v.string()),
       myStreamUserId: v.id("emotional_profiles"),
+      origin: originValidator,
     }),
   ),
   handler: async (ctx, args) => {
@@ -486,9 +637,68 @@ export const getConversation = query({
           ? xolacer?.photoUrl
           : await seekerImage(ctx, conversation.userProfileId),
       myStreamUserId: profile._id,
+      // Returned to both roles, matching myConversations: origin is the
+      // seeker's own data, so it leaks nothing back to them, and one field
+      // beats two code paths that can drift. Role-gating lives in the badge,
+      // which renders on xolacer-role rows only.
+      origin: conversation.origin,
     };
   },
 });
+
+/**
+ * Structural only: that a request was sent, and how fresh the sender was.
+ * No specialty, no theme, no session content — that would put the classifier's
+ * read of a person into analytics before the person has said a word.
+ */
+async function captureRequestSent(
+  ctx: MutationCtx,
+  // Pseudonymous profile id, matching every other capture in the codebase.
+  // The Clerk tokenIdentifier never leaves Convex.
+  distinctId: Id<"emotional_profiles">,
+  origin: ConversationOrigin,
+) {
+  // Swallowed on purpose: this runs inside the request mutation's transaction,
+  // so a throw here would roll back the request the user just sent. Losing one
+  // analytics event beats losing the request.
+  try {
+    await posthog.capture(ctx, {
+      distinctId,
+      event: "xolacer_request_sent",
+      properties: { origin },
+    });
+  } catch (error) {
+    console.error("xolacer_request_sent capture failed", error);
+  }
+}
+
+/**
+ * Origin, derived server-side from recency. No session id reaches this
+ * mutation and none is stored — the specialty on the Understanding is the
+ * only thing read, so no session→conversation link exists at any point.
+ */
+async function deriveOrigin(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+  xolacer: Doc<"xolacer_profiles">,
+) {
+  // Streamed rather than collected: one row is enough to answer "suggestion",
+  // so a match stops the scan. Only the "direct" answer walks the whole
+  // window, and that is one row per session for one user over 24 hours.
+  const since = Date.now() - SUGGESTION_ORIGIN_WINDOW_MS;
+  for await (const row of ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_profile_createdAt", (q) =>
+      q.eq("emotionalProfileId", userProfileId).gte("createdAt", since),
+    )) {
+    const suggested = row.suggestedSpecialty;
+    if (!suggested) continue;
+    if (conversationOrigin([suggested], xolacer.specialties) === "suggestion") {
+      return "suggestion";
+    }
+  }
+  return "direct";
+}
 
 export const requestConversation = mutation({
   args: { xolacerProfileId: v.id("emotional_profiles") },
@@ -531,21 +741,30 @@ export const requestConversation = mutation({
         throw new Error("This conversation can no longer be reopened");
       }
       await requirePendingRequestSlot(ctx, profile._id);
+      // Overwritten, never merged: a re-request from the roster months later
+      // must badge as direct.
+      const origin = await deriveOrigin(ctx, profile._id, xolacer);
       await ctx.db.patch(existing._id, {
         status: "requested",
         closedReason: undefined,
         requestedAt: Date.now(),
+        origin,
       });
+      await captureRequestSent(ctx, profile._id, origin);
       return existing._id;
     }
 
     await requirePendingRequestSlot(ctx, profile._id);
-    return await ctx.db.insert("xolacer_conversations", {
+    const origin = await deriveOrigin(ctx, profile._id, xolacer);
+    const conversationId = await ctx.db.insert("xolacer_conversations", {
       userProfileId: profile._id,
       xolacerProfileId: args.xolacerProfileId,
       status: "requested",
       requestedAt: Date.now(),
+      origin,
     });
+    await captureRequestSent(ctx, profile._id, origin);
+    return conversationId;
   },
 });
 

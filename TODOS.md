@@ -4,6 +4,59 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P0 — `bun test` crashes on any test that imports react-native
+
+**What:** `src/store/store.test.ts` imports `./store`, which pulls in `react-native`,
+whose `index.js` opens with Flow syntax Bun's transpiler rejects:
+
+```
+27 | import typeof * as ReactNativePublicAPI from './index.js.flow';
+            ^
+error: Unexpected typeof
+```
+
+The run reports `1 error` and then **segfaults** (`panic(main thread): Segmentation
+fault`) after printing the summary.
+
+**Why it matters more than one red file:** this isn't specific to the store — it is a
+ceiling on what can be tested at all. Any test that imports a module which transitively
+reaches `react-native` hits it, which is most of `src/`. It is the reason the suite's
+coverage is concentrated in pure modules (`convex/lib/`, `features/*/[rule].ts`) and why
+component and hook behaviour is effectively untestable today. The segfault also means a
+CI runner would report a crash rather than a clean failure count.
+
+**The exact reach (confirmed, not guessed):**
+`store.ts:9` → `@/src/lib/storage/unified-storage` → `unified-storage.ts:9`
+`import { Platform } from 'react-native'`. That single `Platform` import — used only to
+branch localStorage vs `expo-sqlite/kv-store` — is what drags the whole RN entry point
+into the test graph.
+
+**How to start:** three candidate fixes, cheapest first.
+1. A `bunfig.toml` `preload` registering `mock.module('react-native', ...)` with a stub
+   `Platform`. Smallest win, and unblocks every store/hook test at once.
+2. Narrower: have `unified-storage.ts` pick its backend without importing `react-native`
+   (a `.web.ts` platform extension, which this repo already uses elsewhere, resolves the
+   split at bundle time and needs no `Platform` check at all).
+3. Move component/hook tests to a runner that already understands RN
+   (jest + `react-native` preset), keeping `bun test` for pure modules.
+
+Option 2 is the one that removes the problem rather than mocking around it, and it fits
+the documented platform-extension convention in CLAUDE.md.
+
+**Key files:** `src/store/store.test.ts`, `src/store/store.ts`,
+`src/lib/storage/unified-storage.ts`, `bunfig.toml` (does not exist yet).
+
+**Effort:** S–M — option 1 is plausibly 20 minutes; option 3 is a runner split.
+
+**Priority:** P0 — not because the store is broken (it isn't; this is a test-harness
+limit), but because it silently caps test coverage for the whole `src/` tree, and a
+segfaulting suite can't be trusted as a CI gate.
+
+**Found:** `/ship` triage on branch `feat/xolacer-suggestion-session` (2026-08-01).
+Pre-existing on `dev`, unrelated to that branch.
+
+---
+
 ## P3 — Automated mid-conversation escalation detection (Listener Chat)
 
 **What:** Detect a crisis-adjacent moment happening *inside* a live Stream conversation
@@ -855,3 +908,29 @@ Verify on simulator by running a full session through the bridge path and confir
 
 **Effort:** M–L (needs a design pass before an estimate means anything)
 **Priority:** P3 — the free card carries the retention value today; this is upside, not a gap
+
+---
+
+## P2 — PostHog identity split: client identifies `users._id`, server captures `emotional_profiles._id`
+
+**What:** Client and server events land on two different persons in PostHog. The client calls `posthog.identify(userId)` where `userId` is the `users._id` returned by `users.getOrCreate`. Every server-side `posthog.capture` uses the pseudonymous `emotional_profiles._id` instead. Those are two distinct documents, so there is no path by which PostHog merges them.
+
+**Why it matters:** any funnel that crosses the boundary is silently broken. `user_signed_in` (client) and `mirror_confirmed` / `xolacer_request_sent` / `entitlement_activated` (server) can never appear on the same person, so activation, paywall-conversion, and reflect-funnel analysis all under-count by construction — with no error to notice. It also inflates person count roughly 2× for any user who has both a client and a server event.
+
+**Confirmed reach (not guessed):** 14 server capture sites, all on the profile id — `ai/process.ts` (4), `ai/clarify.ts` (2), `ai/reflectionAgent/{consolidation,trigger,calibration}.ts` (4), `premium.ts` (2, via RevenueCat `appUserId`, which `premium.ts:69` documents as the same emotional profile id), `xolacerChat.ts` (1). Client side: `AuthScreen.tsx:72` (Apple) and `:139` (Google) are the only `identify` calls.
+
+**How to start:** two candidate fixes.
+1. `posthog.alias()` on the client after `getOrCreate`, linking `users._id` → profile id. Additive, no server change, but leaves two ids in flight forever and aliasing is order-sensitive on replay.
+2. Identify with the emotional profile id directly, so both sides agree on one pseudonymous key. Needs `users.getOrCreate` to return the profile id alongside the user id (additive optional field — the store-gap rule allows it; old clients keep reading the current return value).
+
+Option 2 is the one that removes the problem. It also matches what `premium.ts` already assumes, since RevenueCat's `appUserId` is the profile id — so the server is already internally consistent and only the client is out of step.
+
+**Caveat:** neither option retro-fixes historical events. Pick a cutover date and treat pre-cutover cross-boundary funnels as unreliable rather than trying to backfill.
+
+**Key files:** `src/features/auth/components/screens/AuthScreen.tsx:72,139`, `convex/users.ts` (`getOrCreate`), `convex/posthog.ts`, `convex/premium.ts:69`
+
+**Effort:** S–M — option 1 is under an hour; option 2 is a return-shape change plus a client update.
+
+**Priority:** P2 — nothing is user-visibly broken, but every cross-boundary metric currently in use is wrong, which makes it worse than it looks from the diff size.
+
+**Found:** PostHog `distinctId` audit on branch `feat/xolacer-suggestion-session` (2026-08-01), while fixing `xolacerChat.ts` passing `user.tokenIdentifier` as `distinctId`. Pre-existing on `dev`, unrelated to that branch.

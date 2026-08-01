@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useQuery } from 'convex/react';
 import { Skeleton } from 'heroui-native';
 import { api } from '@/convex/_generated/api';
+import { isSpecialty } from '@/convex/lib/specialties';
 import { AppText } from '@/src/components/shared/app-text';
 import { SegmentedControl } from '@/src/components/shared/segmented-control';
 import { cn } from '@/src/lib/utils';
@@ -36,10 +37,28 @@ function SegmentLabel({ label, active }: { label: string; active: boolean }) {
  * Chats when any conversation exists, on Xolacers otherwise — a first-time
  * user meets the roster, a returning user meets their thread.
  */
-export function ConnectScreen() {
+export function ConnectScreen({ specialty }: { specialty?: string }) {
   const status = useQuery(api.xolacerChat.status);
   const conversations = useQuery(api.xolacerChat.myConversations);
-  const [selected, setSelected] = useState<Segment | null>(null);
+  const [selected, setSelected] = useState<Segment | null>(
+    isSpecialty(specialty) ? 'xolacers' : null,
+  );
+  const [filter, setFilter] = useState<string | null>(
+    isSpecialty(specialty) ? specialty : null,
+  );
+
+  // Arriving with a specialty (from a profile's "others listen to this too")
+  // snaps to the roster filtered to it. The tab stays mounted across
+  // navigations, so the param is latched and re-applied when it changes rather
+  // than only read at mount.
+  const [routedSpecialty, setRoutedSpecialty] = useState(specialty);
+  if (specialty !== routedSpecialty) {
+    setRoutedSpecialty(specialty);
+    if (isSpecialty(specialty)) {
+      setFilter(specialty);
+      setSelected('xolacers');
+    }
+  }
 
   // Opens the Stream connection and warms every channel in the list, so tapping
   // a row lands on messages instead of a skeleton. Held off until `status`
@@ -108,7 +127,11 @@ export function ConnectScreen() {
               onBrowseXolacers={() => setSelected('xolacers')}
             />
           ) : (
-            <XolacerRoster conversations={conversations ?? []} />
+            <XolacerRoster
+              conversations={conversations ?? []}
+              filter={filter}
+              onFilterChange={setFilter}
+            />
           )}
         </>
       )}

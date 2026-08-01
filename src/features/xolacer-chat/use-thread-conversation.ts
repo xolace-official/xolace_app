@@ -32,5 +32,13 @@ export function useThreadConversation(
   // than the skeleton it replaced.
   if (!row || (row.status !== 'open' && row.status !== 'requested')) return undefined;
 
-  return { ...row, resumable: false, canRate: false, myRating: undefined };
+  return {
+    ...row,
+    // Not redundant with the spread: `...row` leaves `origin` optional, and
+    // ThreadConversation requires the key to be present even when undefined.
+    origin: row.origin,
+    resumable: false,
+    canRate: false,
+    myRating: undefined,
+  };
 }

@@ -809,6 +809,15 @@ export default defineSchema({
     // null/undefined when the classifier did not request a follow-up.
     followUpReason: v.optional(v.string()),
 
+    // --- Session-suggested xolacer ---
+    // What a peer listener would be offered for at session end, decided once
+    // by the pipeline (see lib/xolacerSuggestion.ts) and absent when no
+    // suggestion applies. The *only* stored artifact of the feature: the
+    // person is chosen live at read time, so no session→xolacer link is ever
+    // written. Doubles as the cooldown record — its presence is what says a
+    // suggestion happened, which is why no timestamp field exists.
+    suggestedSpecialty: v.optional(specialtyValidator),
+
     // --- Timestamps ---
     createdAt: v.number(),
 
@@ -1675,6 +1684,13 @@ export default defineSchema({
     acceptedAt: v.optional(v.number()),
     // Drives the resting sweep. Updated by touchConversation on send.
     lastMessageAt: v.optional(v.number()),
+
+    // Where this request came from, derived from session recency at request
+    // time (see lib/xolacerSuggestion.conversationOrigin) and recomputed on
+    // every transition back into "requested". Absent on rows written before
+    // the feature — those read as direct, and are not backfilled. Carries
+    // origin only: never the theme, never anything the user hasn't said yet.
+    origin: v.optional(v.union(v.literal("suggestion"), v.literal("direct"))),
   })
     // Seeker-side inbox (prefix scan) and pending-request cap counting.
     .index("by_user_and_status", ["userProfileId", "status"])

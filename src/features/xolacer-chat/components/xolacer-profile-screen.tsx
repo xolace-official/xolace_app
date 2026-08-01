@@ -7,6 +7,7 @@ import { useMutation, useQuery } from 'convex/react';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
+import { isSpecialty, specialtyListensTo } from '@/convex/lib/specialties';
 import { AppText } from '@/src/components/shared/app-text';
 import { useTray } from '@/src/features/feedback-tray/engine/tray-provider';
 import type { Trays } from '@/src/features/feedback-tray/screens/registry';
@@ -42,17 +43,23 @@ const CHAT_ICON = {
 } as const;
 const MOON_ICON = { ios: 'moon', android: 'bedtime', web: 'bedtime' } as const;
 
-export function XolacerProfileScreen({ profileId }: { profileId: string }) {
+export function XolacerProfileScreen({
+  profileId,
+  specialty,
+}: {
+  profileId: string;
+  specialty?: string;
+}) {
   const profile = useQuery(api.xolacerChat.xolacerProfile, {
     xolacerProfileId: profileId as Id<'emotional_profiles'>,
   });
 
   if (profile === undefined) return <ProfileSkeleton />;
   if (profile === null) return <ProfileUnavailable />;
-  return <ProfileBody profile={profile} />;
+  return <ProfileBody profile={profile} specialty={specialty} />;
 }
 
-function ProfileBody({ profile }: { profile: Profile }) {
+function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: string }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { toast } = useToast();
@@ -161,6 +168,15 @@ function ProfileBody({ profile }: { profile: Profile }) {
             if (conversation) openThread(conversation.id);
           }}
         />
+        {isSpecialty(specialty) && (
+          <OtherListeners
+            specialty={specialty}
+            onPress={() => {
+              playSoftPress();
+              router.push({ pathname: '/connect', params: { specialty } });
+            }}
+          />
+        )}
         <PressableFeedback
           onPress={() => {
             playSoftPress();
@@ -256,6 +272,44 @@ function ProfileCta({
       <Button onPress={onAsk}>Ask to talk</Button>
       <Note>They&apos;ll get a request and can accept when they&apos;re ready.</Note>
     </>
+  );
+}
+
+/**
+ * The way out that keeps the thread: not this person, but the roster narrowed
+ * to the same thing they listen to. Only shown when the route carried a
+ * specialty — which anyone can do by filtering the roster themselves.
+ */
+function OtherListeners({
+  specialty,
+  onPress,
+}: {
+  specialty: string;
+  onPress: () => void;
+}) {
+  const accent = useThemeColor('accent') as string;
+
+  return (
+    <PressableFeedback
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`See other Xolacers who listen to ${specialtyListensTo(specialty)}`}
+      // A 13px line sat in ~20pt of tappable height, directly between the
+      // primary CTA and "Report a concern" — a near miss landed on the report
+      // flow.
+      hitSlop={8}
+    >
+      <View className="flex-row items-center justify-center gap-1.5 py-2">
+        <AppText className="text-[13px] font-medium text-accent">
+          Others listen to {specialtyListensTo(specialty)} too
+        </AppText>
+        <SymbolView
+          name={{ ios: 'arrow.right', android: 'arrow_forward', web: 'arrow_forward' }}
+          size={12}
+          tintColor={accent}
+        />
+      </View>
+    </PressableFeedback>
   );
 }
 

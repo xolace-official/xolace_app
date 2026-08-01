@@ -5,8 +5,7 @@ import { EaseView } from "react-native-ease/uniwind";
 import { useRouter } from "expo-router";
 import { Button, LinkButton } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { BridgeCard } from "@/src/features/session-end/components/bridge-card";
-import { useAppStore } from "@/src/store/store";
+import { CloseOffer } from "@/src/features/session-end/components/close-offer";
 import type { Id } from "@/convex/_generated/dataModel";
 import { NIGHT_SESSION_END_EXIT } from "@/src/features/reflect/night-copy";
 
@@ -40,12 +39,15 @@ const styles = StyleSheet.create({
   },
 });
 
-export const ExitVariant = ({ onHaveMore, isNight = false, mirrorText, onCompleteAndBridge }: Props) => {
+export const ExitVariant = ({
+  onHaveMore,
+  isNight = false,
+  sessionId,
+  mirrorText,
+  onCompleteAndBridge,
+}: Props) => {
   const [phase, setPhase] = useState<Phase>("acknowledge");
   const router = useRouter();
-  const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
-  const setBridgeIntroSeen = useAppStore((s) => s.setBridgeIntroSeen);
-  const showBridgeCard = bridgeEnabled && mirrorText != null;
 
   useEffect(() => {
     if (phase !== "acknowledge") return;
@@ -104,17 +106,13 @@ export const ExitVariant = ({ onHaveMore, isNight = false, mirrorText, onComplet
             transition={EASE_IN}
             className="w-full items-center gap-4"
           >
-            {showBridgeCard && <BridgeCard onPress={onCompleteAndBridge} />}
-            {__DEV__ && showBridgeCard && (
-              <Pressable
-                onPress={() => setBridgeIntroSeen(false)}
-                accessibilityLabel="Reset bridge intro"
-                hitSlop={8}
-                className="px-3 py-1"
-              >
-                <AppText className="text-xs text-foreground/25">↺ bridge intro</AppText>
-              </Pressable>
-            )}
+            <CloseOffer
+              sessionId={sessionId}
+              mirrorText={mirrorText}
+              onBridge={onCompleteAndBridge}
+              variant="exit"
+            />
+
             <Button
               variant="ghost"
               size="lg"
