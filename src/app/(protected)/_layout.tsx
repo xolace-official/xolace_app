@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { useNotifications } from "@/src/lib/use-notifications";
+import { usePostHogIdentity } from "@/src/lib/use-posthog-identity";
 import {
   StreamChatProvider,
   StreamOverlayProvider,
@@ -32,6 +33,7 @@ const CHAT_OPTIONS = {
 
 export default function ProtectedLayout() {
   useNotifications();
+  usePostHogIdentity();
 
   return (
     // Above the Stack so the message overlay can lay itself out against the
