@@ -5,7 +5,21 @@ import type { CountryCode, Resource } from '@/src/features/crisis-resources/type
 const VALID_TYPES = new Set<Resource['type']>(['phone', 'url', 'text', 'email']);
 const VALID_SOURCES = new Set<Resource['source']>(['crisis_line', 'xolace_support', 'text_support', 'local_service', 'online_resource']);
 const TAPPABLE_TYPES = new Set<Resource['type']>(['phone', 'url', 'email']);
-const EXPECTED_COUNTRIES: CountryCode[] = ['GH', 'US', 'GB', 'AU', 'CA'];
+// Keep in sync with COUNTRY_RESOURCES in ./data — this list is the guard that
+// catches a country being added to the data without its resources being
+// checked, so it has to be updated deliberately rather than derived from it.
+const EXPECTED_COUNTRIES: CountryCode[] = [
+  'GH',
+  'US',
+  'GB',
+  'AU',
+  'CA',
+  'NG',
+  'DE',
+  'KE',
+  'FR',
+  'ZA',
+];
 
 describe('country resolution', () => {
   it('resolves GH from locale', () => expect(COUNTRY_RESOURCES['GH']).toBeDefined());
