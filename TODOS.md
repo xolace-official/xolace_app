@@ -4,6 +4,59 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P0 — `bun test` crashes on any test that imports react-native
+
+**What:** `src/store/store.test.ts` imports `./store`, which pulls in `react-native`,
+whose `index.js` opens with Flow syntax Bun's transpiler rejects:
+
+```
+27 | import typeof * as ReactNativePublicAPI from './index.js.flow';
+            ^
+error: Unexpected typeof
+```
+
+The run reports `1 error` and then **segfaults** (`panic(main thread): Segmentation
+fault`) after printing the summary.
+
+**Why it matters more than one red file:** this isn't specific to the store — it is a
+ceiling on what can be tested at all. Any test that imports a module which transitively
+reaches `react-native` hits it, which is most of `src/`. It is the reason the suite's
+coverage is concentrated in pure modules (`convex/lib/`, `features/*/[rule].ts`) and why
+component and hook behaviour is effectively untestable today. The segfault also means a
+CI runner would report a crash rather than a clean failure count.
+
+**The exact reach (confirmed, not guessed):**
+`store.ts:9` → `@/src/lib/storage/unified-storage` → `unified-storage.ts:9`
+`import { Platform } from 'react-native'`. That single `Platform` import — used only to
+branch localStorage vs `expo-sqlite/kv-store` — is what drags the whole RN entry point
+into the test graph.
+
+**How to start:** three candidate fixes, cheapest first.
+1. A `bunfig.toml` `preload` registering `mock.module('react-native', ...)` with a stub
+   `Platform`. Smallest win, and unblocks every store/hook test at once.
+2. Narrower: have `unified-storage.ts` pick its backend without importing `react-native`
+   (a `.web.ts` platform extension, which this repo already uses elsewhere, resolves the
+   split at bundle time and needs no `Platform` check at all).
+3. Move component/hook tests to a runner that already understands RN
+   (jest + `react-native` preset), keeping `bun test` for pure modules.
+
+Option 2 is the one that removes the problem rather than mocking around it, and it fits
+the documented platform-extension convention in CLAUDE.md.
+
+**Key files:** `src/store/store.test.ts`, `src/store/store.ts`,
+`src/lib/storage/unified-storage.ts`, `bunfig.toml` (does not exist yet).
+
+**Effort:** S–M — option 1 is plausibly 20 minutes; option 3 is a runner split.
+
+**Priority:** P0 — not because the store is broken (it isn't; this is a test-harness
+limit), but because it silently caps test coverage for the whole `src/` tree, and a
+segfaulting suite can't be trusted as a CI gate.
+
+**Found:** `/ship` triage on branch `feat/xolacer-suggestion-session` (2026-08-01).
+Pre-existing on `dev`, unrelated to that branch.
+
+---
+
 ## P3 — Automated mid-conversation escalation detection (Listener Chat)
 
 **What:** Detect a crisis-adjacent moment happening *inside* a live Stream conversation
