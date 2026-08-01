@@ -911,7 +911,15 @@ Verify on simulator by running a full session through the bridge path and confir
 
 ---
 
-## P2 — PostHog identity split: client identifies `users._id`, server captures `emotional_profiles._id`
+## ~~P2~~ FIXED (2026-08-01) — PostHog identity split: client identifies `users._id`, server captures `emotional_profiles._id`
+
+**Resolution:** neither listed option. `emotional_profiles._id` was already on the
+client via `api.users.getFullContext`, so no server change was needed: identify
+moved out of `AuthScreen` into `usePostHogIdentity` (`src/lib/use-posthog-identity.ts`),
+called from `(protected)/_layout.tsx` on app open. `user_signed_in` now lands on
+the anonymous id and is merged by that identify. App-open (not sign-in) so
+already-signed-in installs are covered — they never call `getOrCreate` again.
+Accepted: pre-cutover history stays split, no backfill.
 
 **What:** Client and server events land on two different persons in PostHog. The client calls `posthog.identify(userId)` where `userId` is the `users._id` returned by `users.getOrCreate`. Every server-side `posthog.capture` uses the pseudonymous `emotional_profiles._id` instead. Those are two distinct documents, so there is no path by which PostHog merges them.
 
