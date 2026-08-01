@@ -63,6 +63,10 @@ const conversationRowValidator = v.object({
   // Stable identity for the xolacer side of the thread — the roster matches
   // on this, never on display name (names repeat and can change).
   xolacerProfileId: v.id("emotional_profiles"),
+  // The other party's profile id — what a report is filed against, because a
+  // display name repeats and can change. No new exposure: this is also the
+  // Stream user id, so the client already sees it on every message.
+  counterpartProfileId: v.id("emotional_profiles"),
   counterpartName: v.string(),
   counterpartPhotoUrl: v.optional(v.string()),
   // Xolacer-side only — the seeker never learns how their own request was
@@ -545,6 +549,7 @@ export const myConversations = query({
         lastMessageAt: conversation.lastMessageAt,
         requestedAt: conversation.requestedAt,
         xolacerProfileId: conversation.xolacerProfileId,
+        counterpartProfileId: conversation.xolacerProfileId,
         counterpartName: xolacer?.displayName ?? "Xolacer",
         counterpartPhotoUrl: xolacer?.photoUrl,
       });
@@ -560,6 +565,7 @@ export const myConversations = query({
         lastMessageAt: conversation.lastMessageAt,
         requestedAt: conversation.requestedAt,
         xolacerProfileId: conversation.xolacerProfileId,
+        counterpartProfileId: conversation.userProfileId,
         counterpartName: pseudonym(conversation.userProfileId),
         counterpartPhotoUrl: await seekerImage(ctx, conversation.userProfileId),
         origin: conversation.origin,
@@ -591,6 +597,7 @@ export const getConversation = query({
       resumable: v.boolean(),
       canRate: v.boolean(),
       myRating: v.optional(v.number()),
+      counterpartProfileId: v.id("emotional_profiles"),
       counterpartName: v.string(),
       counterpartPhotoUrl: v.optional(v.string()),
       myStreamUserId: v.id("emotional_profiles"),
@@ -627,6 +634,10 @@ export const getConversation = query({
       resumable,
       canRate: canRate(conversation, role),
       myRating: existingRating?.rating,
+      counterpartProfileId:
+        role === "user"
+          ? conversation.xolacerProfileId
+          : conversation.userProfileId,
       counterpartName:
         role === "user"
           ? (xolacer?.displayName ?? "Xolacer")

@@ -1,5 +1,5 @@
 import { TrayMenu } from "./tray-menu";
-import { ReportForm } from "./report-form";
+import { ReportForm, type ReportSubject } from "./report-form";
 import { WhatsNew } from "./whats-new";
 
 /**
@@ -7,9 +7,10 @@ import { WhatsNew } from "./whats-new";
  */
 export const trays = {
   menu: () => <TrayMenu />,
-  report: (props?: { kind: "bug" | "idea" }) => (
-    <ReportForm kind={props?.kind ?? "bug"} />
-  ),
+  report: (props?: {
+    kind: "bug" | "idea" | "concern";
+    subject?: ReportSubject;
+  }) => <ReportForm kind={props?.kind ?? "bug"} subject={props?.subject} />,
   whatsNew: () => <WhatsNew />,
 } as const;
 
