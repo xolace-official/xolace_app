@@ -50,6 +50,11 @@ export const WHATS_NEW: WhatsNewEntry[] = [
         body: "When a session ends on something a xolacer listens to, we'll show you that one person before you close. Tapping only opens their profile — nothing is sent unless you reach out.",
       },
       {
+        icon: { ios: "hand.raised.slash.fill", android: "block" },
+        title: "Block and report",
+        body: "Every conversation and every Xolacer profile now has a menu with Block and Report. Blocking stops messages for both of you at once — we'll ask you to confirm, because it can't be undone, and the other person is never told. Nothing you wrote is deleted. Reports now say who they're about, so we can actually act on them.",
+      },
+      {
         icon: { ios: "sparkles", android: "auto_awesome" },
         title: "A new way in",
         body: "The app now opens on a home tab with a daily quote, and Reflect is always one tap away at the bottom of the screen.",
