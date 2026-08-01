@@ -10,7 +10,7 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
-import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import { requireAuth } from "./lib/auth";
 import {
   conversationOrigin,
   type ConversationOrigin,
@@ -413,7 +413,19 @@ export const sessionSuggestion = query({
   ),
   handler: async (ctx, args) => {
     if (!chatEnabled()) return null;
-    const { profile } = await requireSessionOwnership(ctx, args.sessionId);
+
+    // Null, never throw, when the session isn't this user's or is gone. The
+    // caller is the session-end close phase, which reads `sessionId` from a
+    // route param and renders inside no error boundary — a throw there takes
+    // the whole screen down. Two ordinary paths reach it: a session the
+    // retention sweep has since deleted, and a stale deep link. Returning null
+    // degrades to exactly the pre-feature behaviour (the Bridge card), which
+    // is what chooseCloseOffer already does with null.
+    // Still an ownership check, not a relaxation: a session that fails it
+    // yields no suggestion at all.
+    const { profile } = await requireAuth(ctx);
+    const session = await ctx.db.get(args.sessionId);
+    if (!session || session.emotionalProfileId !== profile._id) return null;
 
     // Decided once by the pipeline (lib/xolacerSuggestion); absent is the
     // common case, and every gate that produced it already ran back then.
