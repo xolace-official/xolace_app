@@ -9,6 +9,7 @@
  *  - auth:         ?api_key=<key> + Authorization: <jwt> + stream-auth-type: jwt
  *  - upsert users: POST /users            { users: { [id]: user } }
  *  - channel:      POST /channels/messaging/{id}/query { data, state }
+ *  - freeze:       PATCH /channels/messaging/{id} { set: { frozen: true } }
  *  - delete user:  DELETE /users/{id}?mark_messages_deleted&hard_delete
  */
 
@@ -118,6 +119,18 @@ export async function createXolacerChannel(
       data: { members: memberIds, created_by_id: createdById },
       state: false,
     },
+  });
+}
+
+/**
+ * Freeze a channel — Stream itself then refuses sends from both members, so a
+ * block is enforced at the server rather than in either client's view. Partial
+ * update: everything else about the channel is left alone, and re-freezing an
+ * already-frozen channel is a no-op on Stream's side.
+ */
+export async function freezeStreamChannel(channelId: string): Promise<void> {
+  await streamRequest("PATCH", `/channels/messaging/${encodeURIComponent(channelId)}`, {
+    body: { set: { frozen: true } },
   });
 }
 
