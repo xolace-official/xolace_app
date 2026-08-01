@@ -11,7 +11,6 @@ We're building the AI-native mental health app that takes people from 'I don't e
 
 #### What It Is NOT
 
-- Not a chatbot (no chat bubbles, no conversation threads, no back-and-forth)
 - Not clinical (no diagnoses, no therapeutic terminology)
 - Not an AI companion/relationship (no parasocial attachment by design)
 

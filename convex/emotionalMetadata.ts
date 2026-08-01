@@ -8,6 +8,7 @@ import {
 import { adjustImportance, DEFAULT_IMPORTANCE } from "./episodicImportance";
 import {
   isInSuggestionCooldown,
+  retainedSuggestion,
   suggestedSpecialty,
   SUGGESTION_COOLDOWN_MS,
   type SuggestionInput,
@@ -118,32 +119,31 @@ export const store = internalMutation({
       .unique();
 
     // Part of the Understanding, decided here because every input it needs is
-    // already an argument. undefined clears the field on a re-classify.
+    // already an argument.
     //
     // Never let it cost the classification write. Resolving a suggestion does
     // real IO (a session read, up to three conversation index reads, a 7-day
     // metadata walk), and this is the only write of the Understanding itself —
-    // the far more valuable half. On failure keep whatever was already stored
-    // rather than falling through to undefined: on a patch that field IS the
-    // cooldown record, so clearing it would reopen the 7-day window for a
-    // suggestion the user may already have been shown.
+    // the far more valuable half.
     let suggestion: Awaited<ReturnType<typeof resolveSuggestedSpecialty>>;
     try {
       suggestion = await resolveSuggestedSpecialty(ctx, args);
     } catch (error) {
       console.error("[emotionalMetadata] suggestion resolve failed", error);
-      // Preserve the cooldown record, but never across a safety verdict that
-      // would itself have blocked a suggestion. The resolve does IO before the
-      // gate runs, so a throw can strand a stale non-crisis suggestion on a
-      // session the pipeline has just classified as crisis. Keeping it costs a
-      // crisis-flagged user being handed to a volunteer; clearing it costs at
-      // most one extra suggestion in a week.
-      const unsafe =
-        args.safeguardLevel === "crisis" || args.safeguardLevel === "elevated";
-      suggestion = unsafe ? undefined : existing?.suggestedSpecialty;
     }
 
-    const row = { ...args, suggestedSpecialty: suggestion };
+    // Applies to both the resolve that declined (the user has since opened a
+    // conversation, or the re-classified session no longer qualifies) and the
+    // resolve that threw — in both cases undefined would erase the cooldown
+    // record rather than record an absence.
+    const row = {
+      ...args,
+      suggestedSpecialty: retainedSuggestion(
+        suggestion,
+        existing?.suggestedSpecialty,
+        args.safeguardLevel,
+      ),
+    };
 
     if (existing) {
       await ctx.db.patch(existing._id, row);

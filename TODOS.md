@@ -908,3 +908,29 @@ Verify on simulator by running a full session through the bridge path and confir
 
 **Effort:** M–L (needs a design pass before an estimate means anything)
 **Priority:** P3 — the free card carries the retention value today; this is upside, not a gap
+
+---
+
+## P2 — PostHog identity split: client identifies `users._id`, server captures `emotional_profiles._id`
+
+**What:** Client and server events land on two different persons in PostHog. The client calls `posthog.identify(userId)` where `userId` is the `users._id` returned by `users.getOrCreate`. Every server-side `posthog.capture` uses the pseudonymous `emotional_profiles._id` instead. Those are two distinct documents, so there is no path by which PostHog merges them.
+
+**Why it matters:** any funnel that crosses the boundary is silently broken. `user_signed_in` (client) and `mirror_confirmed` / `xolacer_request_sent` / `entitlement_activated` (server) can never appear on the same person, so activation, paywall-conversion, and reflect-funnel analysis all under-count by construction — with no error to notice. It also inflates person count roughly 2× for any user who has both a client and a server event.
+
+**Confirmed reach (not guessed):** 14 server capture sites, all on the profile id — `ai/process.ts` (4), `ai/clarify.ts` (2), `ai/reflectionAgent/{consolidation,trigger,calibration}.ts` (4), `premium.ts` (2, via RevenueCat `appUserId`, which `premium.ts:69` documents as the same emotional profile id), `xolacerChat.ts` (1). Client side: `AuthScreen.tsx:72` (Apple) and `:139` (Google) are the only `identify` calls.
+
+**How to start:** two candidate fixes.
+1. `posthog.alias()` on the client after `getOrCreate`, linking `users._id` → profile id. Additive, no server change, but leaves two ids in flight forever and aliasing is order-sensitive on replay.
+2. Identify with the emotional profile id directly, so both sides agree on one pseudonymous key. Needs `users.getOrCreate` to return the profile id alongside the user id (additive optional field — the store-gap rule allows it; old clients keep reading the current return value).
+
+Option 2 is the one that removes the problem. It also matches what `premium.ts` already assumes, since RevenueCat's `appUserId` is the profile id — so the server is already internally consistent and only the client is out of step.
+
+**Caveat:** neither option retro-fixes historical events. Pick a cutover date and treat pre-cutover cross-boundary funnels as unreliable rather than trying to backfill.
+
+**Key files:** `src/features/auth/components/screens/AuthScreen.tsx:72,139`, `convex/users.ts` (`getOrCreate`), `convex/posthog.ts`, `convex/premium.ts:69`
+
+**Effort:** S–M — option 1 is under an hour; option 2 is a return-shape change plus a client update.
+
+**Priority:** P2 — nothing is user-visibly broken, but every cross-boundary metric currently in use is wrong, which makes it worse than it looks from the diff size.
+
+**Found:** PostHog `distinctId` audit on branch `feat/xolacer-suggestion-session` (2026-08-01), while fixing `xolacerChat.ts` passing `user.tokenIdentifier` as `distinctId`. Pre-existing on `dev`, unrelated to that branch.

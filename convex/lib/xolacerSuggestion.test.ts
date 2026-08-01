@@ -6,6 +6,7 @@ import {
   MIN_RATINGS_TO_JUDGE,
   MIN_SUGGESTION_INTENSITY,
   rankSuggestionCandidates,
+  retainedSuggestion,
   suggestedSpecialty,
   SUGGESTION_COOLDOWN_MS,
   type SuggestionInput,
@@ -93,6 +94,27 @@ describe("suggestedSpecialty — emotion fallback", () => {
   it("returns null for an unmapped emotion and no mapped theme", () => {
     expect(suggestedSpecialty({ ...base, thematicTags: ["health"] })).toBeNull();
   });
+
+  // The taxonomies are keyed on model output, so a tag naming an Object
+  // prototype member must miss. On a plain-object lookup these resolve to a
+  // truthy inherited function that would be returned as a Specialty.
+  it.each(["constructor", "toString", "valueOf", "hasOwnProperty"])(
+    "returns null for the prototype key %s",
+    (key) => {
+      expect(suggestedSpecialty({ ...base, thematicTags: [key] })).toBeNull();
+      expect(
+        suggestedSpecialty({ ...base, thematicTags: [], primaryEmotion: key }),
+      ).toBeNull();
+      expect(
+        suggestedSpecialty({
+          ...base,
+          thematicTags: [],
+          primaryEmotion: "boredom",
+          granularLabel: key,
+        }),
+      ).toBeNull();
+    },
+  );
 });
 
 // Every lookup lowercases first. The classifier is instructed to emit these
@@ -449,5 +471,36 @@ describe("conversationOrigin", () => {
     expect(conversationOrigin(["grief", "burnout"], ["burnout"])).toBe(
       "suggestion",
     );
+  });
+});
+
+describe("retainedSuggestion", () => {
+  it("keeps the stored suggestion when this pass declines", () => {
+    expect(retainedSuggestion(undefined, "burnout", "none")).toBe("burnout");
+  });
+
+  it("takes a newly resolved suggestion over the stored one", () => {
+    expect(retainedSuggestion("grief", "burnout", "none")).toBe("grief");
+  });
+
+  it("stays undefined when nothing was ever suggested", () => {
+    expect(retainedSuggestion(undefined, undefined, "none")).toBeUndefined();
+  });
+
+  // The stored field is the cooldown record, so this is the case that used to
+  // reopen the 7-day window: a re-classify whose resolve declined because the
+  // user had, in the meantime, acted on the suggestion.
+  it("survives a gentle re-classify", () => {
+    expect(retainedSuggestion(undefined, "family", "gentle")).toBe("family");
+  });
+
+  for (const level of ["crisis", "elevated"] as const) {
+    it(`clears a stale suggestion on ${level}`, () => {
+      expect(retainedSuggestion(undefined, "burnout", level)).toBeUndefined();
+    });
+  }
+
+  it("treats a missing safeguard level as safe", () => {
+    expect(retainedSuggestion(undefined, "burnout", undefined)).toBe("burnout");
   });
 });

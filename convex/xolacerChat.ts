@@ -498,7 +498,7 @@ export const sessionSuggestion = query({
     if (!best) return null;
     return {
       xolacerProfileId: best.xolacerProfileId,
-      displayName: best.xolacer.displayName ?? "",
+      displayName: best.xolacer.displayName ?? "Xolacer",
       photoUrl: best.xolacer.photoUrl,
       specialties: best.xolacer.specialties ?? [],
       specialty,
@@ -653,14 +653,23 @@ export const getConversation = query({
  */
 async function captureRequestSent(
   ctx: MutationCtx,
-  distinctId: string,
+  // Pseudonymous profile id, matching every other capture in the codebase.
+  // The Clerk tokenIdentifier never leaves Convex.
+  distinctId: Id<"emotional_profiles">,
   origin: ConversationOrigin,
 ) {
-  await posthog.capture(ctx, {
-    distinctId,
-    event: "xolacer_request_sent",
-    properties: { origin },
-  });
+  // Swallowed on purpose: this runs inside the request mutation's transaction,
+  // so a throw here would roll back the request the user just sent. Losing one
+  // analytics event beats losing the request.
+  try {
+    await posthog.capture(ctx, {
+      distinctId,
+      event: "xolacer_request_sent",
+      properties: { origin },
+    });
+  } catch (error) {
+    console.error("xolacer_request_sent capture failed", error);
+  }
 }
 
 /**
@@ -696,7 +705,7 @@ export const requestConversation = mutation({
   returns: v.id("xolacer_conversations"),
   handler: async (ctx, args) => {
     if (!chatEnabled()) throw new Error("Xolacer chat is not available");
-    const { user, profile } = await requireAuth(ctx);
+    const { profile } = await requireAuth(ctx);
     if (profile._id === args.xolacerProfileId) {
       throw new Error("Cannot request a conversation with yourself");
     }
@@ -741,7 +750,7 @@ export const requestConversation = mutation({
         requestedAt: Date.now(),
         origin,
       });
-      await captureRequestSent(ctx, user.tokenIdentifier, origin);
+      await captureRequestSent(ctx, profile._id, origin);
       return existing._id;
     }
 
@@ -754,7 +763,7 @@ export const requestConversation = mutation({
       requestedAt: Date.now(),
       origin,
     });
-    await captureRequestSent(ctx, user.tokenIdentifier, origin);
+    await captureRequestSent(ctx, profile._id, origin);
     return conversationId;
   },
 });

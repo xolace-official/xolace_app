@@ -40,26 +40,30 @@ const SUPPRESSED_THEMES = new Set(["trauma", "abuse", "neglect"]);
  * `sleep` is intentionally unreachable: nothing in the classifier's taxonomies
  * maps to it. The fix is adding `sleep` to the classifier's thematicTags
  * taxonomy later, not free-text matching that fires on "I'm tired of this."
+ *
+ * A Map, not an object literal: the keys are model output, and on an object a
+ * tag of "constructor" or "toString" resolves to a truthy prototype member that
+ * would be returned as if it were a Specialty.
  */
-const THEME_SPECIALTY: Record<string, Specialty> = {
-  work: "burnout",
-  relationships: "relationships",
-  conflict: "relationships",
-  family: "family",
-  identity: "identity",
-  "self-worth": "identity",
-  purpose: "identity",
-  change: "change",
-  loss: "grief",
-  isolation: "loneliness",
-};
+const THEME_SPECIALTY = new Map<string, Specialty>([
+  ["work", "burnout"],
+  ["relationships", "relationships"],
+  ["conflict", "relationships"],
+  ["family", "family"],
+  ["identity", "identity"],
+  ["self-worth", "identity"],
+  ["purpose", "identity"],
+  ["change", "change"],
+  ["loss", "grief"],
+  ["isolation", "loneliness"],
+]);
 
 /** Fallback, only consulted when no theme mapped. */
-const EMOTION_SPECIALTY: Record<string, Specialty> = {
-  anxiety: "anxiety",
-  grief: "grief",
-  loneliness: "loneliness",
-};
+const EMOTION_SPECIALTY = new Map<string, Specialty>([
+  ["anxiety", "anxiety"],
+  ["grief", "grief"],
+  ["loneliness", "loneliness"],
+]);
 
 /**
  * Entry modes that are a tap rather than a sentence. Nobody gets routed to a
@@ -106,15 +110,41 @@ export function suggestedSpecialty(input: SuggestionInput): Specialty | null {
   if (intensity < MIN_SUGGESTION_INTENSITY) return null;
 
   for (const tag of thematicTags) {
-    const themeMatch = THEME_SPECIALTY[tag.toLowerCase()];
+    const themeMatch = THEME_SPECIALTY.get(tag.toLowerCase());
     if (themeMatch) return themeMatch;
   }
 
   return (
-    EMOTION_SPECIALTY[input.primaryEmotion.toLowerCase()] ??
-    EMOTION_SPECIALTY[input.granularLabel?.toLowerCase() ?? ""] ??
+    EMOTION_SPECIALTY.get(input.primaryEmotion.toLowerCase()) ??
+    EMOTION_SPECIALTY.get(input.granularLabel?.toLowerCase() ?? "") ??
     null
   );
+}
+
+/**
+ * What to store on a re-classify. `resolved` is this pass's decision, `stored`
+ * whatever the existing Understanding row already holds.
+ *
+ * An undefined `resolved` means "no suggestion on this pass", not "no
+ * suggestion ever happened" — and the stored field IS the cooldown record (see
+ * `isInSuggestionCooldown`; no timestamp exists). Overwriting it with undefined
+ * would reopen the window for a suggestion the user has already been shown, so
+ * the stored one is kept.
+ *
+ * The exception is a verdict `suggestedSpecialty` would itself have refused:
+ * keeping a stale non-crisis suggestion on a session just classified as crisis
+ * costs a crisis-flagged user being handed to a volunteer, which is worse than
+ * one extra suggestion in a week.
+ */
+export function retainedSuggestion<T extends string>(
+  resolved: T | undefined,
+  stored: T | undefined,
+  safeguardLevel: SuggestionInput["safeguardLevel"],
+): T | undefined {
+  if (safeguardLevel === "elevated" || safeguardLevel === "crisis") {
+    return undefined;
+  }
+  return resolved ?? stored;
 }
 
 /**
