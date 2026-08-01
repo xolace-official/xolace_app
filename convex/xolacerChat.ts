@@ -921,8 +921,9 @@ export const markBlocked = internalMutation({
   handler: async (ctx, args) => {
     const conversation = await ctx.db.get(args.conversationId);
     // Re-checked here, not just in the plan: the freeze is a network round
-    // trip, so the row can have closed in between.
-    if (!conversation || conversation.status === "closed") return null;
+    // trip, so the row can have been blocked in between. Any other closed
+    // reason is still overwritten — see `planBlock`.
+    if (!conversation || isBlocked(conversation.closedReason)) return null;
     await ctx.db.patch(args.conversationId, {
       status: "closed",
       closedReason: "blocked",

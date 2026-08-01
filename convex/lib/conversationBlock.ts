@@ -3,7 +3,10 @@ import type { Doc } from "../_generated/dataModel";
 type Conversation = Doc<"xolacer_conversations">;
 type ClosedReason = Conversation["closedReason"];
 
-type BlockPlanInputs = Pick<Conversation, "status" | "streamChannelId">;
+type BlockPlanInputs = Pick<
+  Conversation,
+  "status" | "streamChannelId" | "closedReason"
+>;
 type RatingInputs = Pick<
   Conversation,
   "closedReason" | "acceptedAt" | "lastMessageAt"
@@ -12,16 +15,22 @@ type RatingInputs = Pick<
 /**
  * What blocking this conversation has to do.
  *
- * - `noop` — already closed. Blocking twice is harmless, so a retry after a
+ * - `noop` — already blocked. Blocking twice is harmless, so a retry after a
  *   network failure must not error and must not make a second Stream call.
  * - `channelToFreeze` — absent for a still-`requested` conversation, which has
  *   no Stream channel yet: only the row is written.
+ *
+ * A row closed for any *other* reason is still blockable. Only `blocked` and
+ * `xolacer_left` stop `requestConversation` reopening a pair, so a declined or
+ * expired request leaves the seeker free to come back — exactly what blocking
+ * exists to prevent. Noop-ing on all of `closed` would take the action, report
+ * success and change nothing.
  */
 export function planBlock(conversation: BlockPlanInputs): {
   noop: boolean;
   channelToFreeze?: string;
 } {
-  if (conversation.status === "closed") return { noop: true };
+  if (isBlocked(conversation.closedReason)) return { noop: true };
   return { noop: false, channelToFreeze: conversation.streamChannelId };
 }
 

@@ -96,6 +96,7 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
           Block is mounted only when there is a conversation to block. */}
       {!profile.isSelf && (
         <XolacerMenu
+          origin="profile"
           profileId={profile.xolacerProfileId}
           name={profile.displayName}
           conversationId={conversation?.id}

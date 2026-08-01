@@ -3,13 +3,14 @@ import { View } from "react-native";
 import { Button, TextArea, PressableFeedback, useToast } from "heroui-native";
 import { usePathname } from "expo-router";
 import Constants from "expo-constants";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { useAppTheme } from "@/src/context/app-theme-context";
 import { cn } from "@/src/lib/utils";
+import { useStableQuery } from "@/src/lib/convex/use-stable-query";
 import { useTray } from "../engine/tray-provider";
 
 const MAX_LENGTH = 1000;
@@ -89,7 +90,10 @@ export const ReportForm = ({
   const { currentTheme } = useAppTheme();
 
   const submit = useMutation(api.productFeedback.submit);
-  const canSubmit = useQuery(api.productFeedback.canSubmit, { kind });
+  // Stable: `kind` changes on a Bug/Idea tap, and a plain `useQuery` returns
+  // `undefined` while the new budget loads — long enough for `isRateLimited` to
+  // fall back to false, dropping the notice and re-enabling submit mid-tap.
+  const canSubmit = useStableQuery(api.productFeedback.canSubmit, { kind });
 
   const isRateLimited = canSubmit === false;
   const isDisabled = isSaving || !text.trim() || isRateLimited;

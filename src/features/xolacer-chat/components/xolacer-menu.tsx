@@ -23,8 +23,12 @@ import { playSoftPress } from '@/src/lib/haptics';
  * only other exit stops working the moment they accept a request.
  *
  * Report opens the feedback tray in concern mode, carrying the subject's
- * profile id and — from a thread — that conversation's id. The display name
- * goes no further than the form's copy.
+ * profile id and — from a thread only — that conversation's id. A report from a
+ * profile is about the person, not an exchange: the bio or the display name can
+ * itself be what is being reported, and the profile is reachable from the
+ * roster with no conversation at all. `origin` is what decides that, not the
+ * presence of `conversationId`, which is also the block target. The display
+ * name goes no further than the form's copy.
  *
  * Block is conditionally *mounted*, never `hidden`: a profile reached from the
  * roster may have no conversation row, and there is no channel and nothing to
@@ -35,10 +39,12 @@ export function XolacerMenu({
   profileId,
   name,
   conversationId,
+  origin,
 }: {
   profileId: Id<'emotional_profiles'>;
   name: string;
   conversationId?: Id<'xolacer_conversations'>;
+  origin: 'thread' | 'profile';
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -78,7 +84,12 @@ export function XolacerMenu({
             playSoftPress();
             show('report', {
               kind: 'concern',
-              subject: { profileId, name, conversationId },
+              subject: {
+                profileId,
+                name,
+                conversationId:
+                  origin === 'thread' ? conversationId : undefined,
+              },
             });
           }}
         >

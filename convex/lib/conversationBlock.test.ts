@@ -2,16 +2,47 @@ import { describe, expect, it } from "bun:test";
 import { canRate, isBlocked, planBlock } from "./conversationBlock";
 
 describe("planBlock", () => {
-  // status | channel → noop, channel to freeze
+  // status | closedReason | channel → noop, channel to freeze
   const cases: Array<{
     status: "requested" | "open" | "resting" | "closed";
+    reason?: "declined" | "expired" | "blocked" | "xolacer_left";
     channel?: string;
     noop: boolean;
     freeze?: string;
+    label?: string;
   }> = [
     // Retry after a network failure — no error, no second Stream call.
-    { status: "closed", channel: "xolacer_abc", noop: true },
-    { status: "closed", noop: true },
+    {
+      status: "closed",
+      reason: "blocked",
+      channel: "xolacer_abc",
+      noop: true,
+      label: "already blocked",
+    },
+    { status: "closed", reason: "blocked", noop: true, label: "already blocked" },
+    // Closed for any other reason is still blockable: only `blocked` and
+    // `xolacer_left` stop the seeker re-requesting, so a declined or expired
+    // row left unblocked is a way back in.
+    {
+      status: "closed",
+      reason: "declined",
+      noop: false,
+      label: "declined is still blockable",
+    },
+    {
+      status: "closed",
+      reason: "expired",
+      noop: false,
+      label: "expired is still blockable",
+    },
+    {
+      status: "closed",
+      reason: "xolacer_left",
+      channel: "xolacer_abc",
+      noop: false,
+      freeze: "xolacer_abc",
+      label: "xolacer_left is still blockable",
+    },
     // Unaccepted request: nothing to freeze, but the row still closes.
     { status: "requested", noop: false },
     { status: "open", channel: "xolacer_abc", noop: false, freeze: "xolacer_abc" },
@@ -19,8 +50,13 @@ describe("planBlock", () => {
   ];
 
   for (const c of cases) {
-    it(`status=${c.status} channel=${c.channel} → noop=${c.noop} freeze=${c.freeze}`, () => {
-      const plan = planBlock({ status: c.status, streamChannelId: c.channel });
+    const name = `${c.label ? `${c.label}: ` : ""}status=${c.status} reason=${c.reason} channel=${c.channel} → noop=${c.noop} freeze=${c.freeze}`;
+    it(name, () => {
+      const plan = planBlock({
+        status: c.status,
+        closedReason: c.reason,
+        streamChannelId: c.channel,
+      });
       expect(plan.noop).toBe(c.noop);
       expect(plan.channelToFreeze).toBe(c.freeze as string | undefined);
     });
