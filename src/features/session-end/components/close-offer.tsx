@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { EaseView } from "react-native-ease/uniwind";
 import { useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
@@ -18,6 +19,11 @@ import { useAppStore } from "@/src/store/store";
  * doesn't cost the user their offer.
  */
 const SUGGESTION_WAIT_MS = 2000;
+
+/** Short and unhurried — the card should arrive, not announce itself. */
+const CARD_HIDDEN = { opacity: 0 };
+const CARD_SHOWN = { opacity: 1 };
+const CARD_ARRIVAL = { type: "timing" as const, duration: 320 };
 
 type Props = {
   sessionId?: Id<"sessions">;
@@ -85,26 +91,37 @@ export const CloseOffer = ({
 
   if (offer === "suggestion" && suggestion) {
     return (
-      <SuggestionCard
-        displayName={suggestion.displayName}
-        photoUrl={suggestion.photoUrl}
-        specialty={suggestion.specialty}
-        rating={suggestion.rating}
-        ratingCount={suggestion.ratingCount}
-        onPress={() => {
-          playSoftPress();
-          posthog.capture("xolacer_suggestion_opened", { variant });
-          router.push({
-            pathname: "/xolacer/[profileId]",
-            // The specialty rides along so the profile's escape hatch lands on
-            // a roster filtered to the same thing, not on everyone.
-            params: {
-              profileId: suggestion.xolacerProfileId,
-              specialty: suggestion.specialty,
-            },
-          });
-        }}
-      />
+      // Fades in on its own. The parent group has already animated by the time
+      // the query resolves, so without this the card snaps into place and
+      // shoves the button below it down — at the most fragile moment of the
+      // flow. Arriving is the point; a swap that pops reads as a glitch.
+      <EaseView
+        initialAnimate={CARD_HIDDEN}
+        animate={CARD_SHOWN}
+        transition={CARD_ARRIVAL}
+        className="w-full"
+      >
+        <SuggestionCard
+          displayName={suggestion.displayName}
+          photoUrl={suggestion.photoUrl}
+          specialty={suggestion.specialty}
+          rating={suggestion.rating}
+          ratingCount={suggestion.ratingCount}
+          onPress={() => {
+            playSoftPress();
+            posthog.capture("xolacer_suggestion_opened", { variant });
+            router.push({
+              pathname: "/xolacer/[profileId]",
+              // The specialty rides along so the profile's escape hatch lands
+              // on a roster filtered to the same thing, not on everyone.
+              params: {
+                profileId: suggestion.xolacerProfileId,
+                specialty: suggestion.specialty,
+              },
+            });
+          }}
+        />
+      </EaseView>
     );
   }
 

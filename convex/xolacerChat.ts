@@ -436,6 +436,19 @@ export const sessionSuggestion = query({
     const specialty = metadata?.suggestedSpecialty;
     if (!specialty) return null;
 
+    // The stored verdict only ever saw the first input. Refinement turns are
+    // deliberately not re-classified (ai/clarify.ts: "Skips moderation +
+    // classification"), so anything the user added afterwards has been through
+    // no safeguard and no classifier — and the specialty above predates it.
+    // Suggesting on it would route someone to a volunteer on the strength of a
+    // verdict that never read what they last said.
+    // Bounded by design: a session has at most MAX_TURNS (2) refinement turns.
+    const turns = await ctx.db
+      .query("session_turns")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .take(4);
+    if (turns.some((turn) => turn.userInput)) return null;
+
     // `specialties` is an array field, so it can't be indexed — the specialty
     // filter has to run in memory, which means the scan feeding it must not be
     // truncated first. A prefix would silently hide declaring xolacers the
