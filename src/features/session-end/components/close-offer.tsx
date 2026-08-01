@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
@@ -11,6 +11,13 @@ import { SuggestionCard } from "@/src/features/session-end/components/suggestion
 import { chooseCloseOffer } from "@/src/features/session-end/close-offer-rule";
 import { playSoftPress } from "@/src/lib/haptics";
 import { useAppStore } from "@/src/store/store";
+
+/**
+ * How long the close slot stays empty waiting for a suggestion. Long enough
+ * that a normal round-trip lands inside it, short enough that a stalled query
+ * doesn't cost the user their offer.
+ */
+const SUGGESTION_WAIT_MS = 2000;
 
 type Props = {
   sessionId?: Id<"sessions">;
@@ -56,9 +63,20 @@ export const CloseOffer = ({
     posthog.capture("xolacer_suggestion_shown", { variant });
   }, [suggestion, posthog, variant]);
 
+  // Bounds the hold. The slot stays empty while the suggestion query is in
+  // flight so a Bridge card never swaps for a stranger mid-fade, but an
+  // unresolved query — offline, or auth not yet hydrated — would otherwise
+  // hold it empty forever and the user would be offered nothing at all.
+  const [waitedOut, setWaitedOut] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setWaitedOut(true), SUGGESTION_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
   const offer = chooseCloseOffer({
     hasSession: sessionId !== undefined,
     suggestion,
+    waitedOut,
     bridgeEnabled,
     hasMirrorText: mirrorText != null,
   });

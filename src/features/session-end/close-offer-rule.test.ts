@@ -38,6 +38,47 @@ describe("chooseCloseOffer", () => {
     ).toBe("pending");
   });
 
+  // Offline, or auth not yet hydrated: the query never resolves. Holding the
+  // slot forever would offer the user nothing at all, which is worse than the
+  // Bridge card the wait was protecting.
+  it("falls back to Bridge once the wait is out", () => {
+    expect(
+      chooseCloseOffer({
+        hasSession: true,
+        suggestion: undefined,
+        waitedOut: true,
+        bridgeEnabled: true,
+        hasMirrorText: true,
+      }),
+    ).toBe("bridge");
+  });
+
+  it("shows nothing once the wait is out if Bridge is unavailable too", () => {
+    expect(
+      chooseCloseOffer({
+        hasSession: true,
+        suggestion: undefined,
+        waitedOut: true,
+        bridgeEnabled: false,
+        hasMirrorText: true,
+      }),
+    ).toBe("none");
+  });
+
+  // A late arrival still wins — waiting out bounds the hold, it doesn't
+  // discard a suggestion that lands afterwards.
+  it("still prefers a suggestion that arrives after the wait is out", () => {
+    expect(
+      chooseCloseOffer({
+        hasSession: true,
+        suggestion: person,
+        waitedOut: true,
+        bridgeEnabled: true,
+        hasMirrorText: true,
+      }),
+    ).toBe("suggestion");
+  });
+
   it("does not wait forever when there is no session to ask about", () => {
     expect(
       chooseCloseOffer({
