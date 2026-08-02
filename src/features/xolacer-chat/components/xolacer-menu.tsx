@@ -40,11 +40,14 @@ export function XolacerMenu({
   name,
   conversationId,
   origin,
+  hasHistory = true,
 }: {
   profileId: Id<'emotional_profiles'>;
   name: string;
   conversationId?: Id<'xolacer_conversations'>;
   origin: 'thread' | 'profile';
+  /** Whether anything was ever written here — see `hasSpoken`. */
+  hasHistory?: boolean;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -114,7 +117,11 @@ export function XolacerMenu({
         isOpen={confirming}
         onOpenChange={setConfirming}
         title="Block this conversation?"
-        description="Neither of you will be able to send another message here, and this can't be undone. Everything already written stays."
+        description={
+          hasHistory
+            ? "Neither of you will be able to send another message here, and this can't be undone. Everything already written stays."
+            : "Neither of you will be able to send another message here, and this can't be undone."
+        }
         confirmLabel="Block"
         onConfirm={handleBlock}
         isDestructive

@@ -10,7 +10,7 @@ import type { Id } from '@/convex/_generated/dataModel';
 import { isSpecialty, specialtyListensTo } from '@/convex/lib/specialties';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
-import { formatMonthYear } from '../utils';
+import { formatMonthYear, hasSpoken } from '../utils';
 import { XolacerMenu } from './xolacer-menu';
 import { XolacerAvatar } from './xolacer-avatar';
 import { NewXolacerChip, RatingStars } from './rating-stars';
@@ -89,17 +89,14 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
     <View className="flex-1 bg-background">
       <Stack.Screen options={HEADER_OPTIONS} />
 
-      {/* Report lives here, in the platform's own menu, rather than as a text
-          link in the footer — where an adjacent 13px line already produced a
-          near miss onto the report flow. Report is available on every profile:
-          a bio or a display name can itself be the objectionable content.
-          Block is mounted only when there is a conversation to block. */}
+
       {!profile.isSelf && (
         <XolacerMenu
           origin="profile"
           profileId={profile.xolacerProfileId}
           name={profile.displayName}
           conversationId={conversation?.id}
+          hasHistory={conversation ? hasSpoken(conversation) : false}
         />
       )}
 
@@ -294,10 +291,6 @@ function OtherListeners({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`See other Xolacers who listen to ${specialtyListensTo(specialty)}`}
-      // A 13px line sat in ~20pt of tappable height, directly between the
-      // primary CTA and the old "Report a concern" link — a near miss landed on
-      // the report flow. Report has since moved to the header menu; the slop
-      // stays because the line is still small and still under the CTA.
       hitSlop={8}
     >
       <View className="flex-row items-center justify-center gap-1.5 py-2">

@@ -61,14 +61,6 @@ export type ReportSubject = {
 
 /**
  * Bug | idea report form, plus a concern mode for reporting a person.
- *
- * Concern mode drops the Bug/Idea toggle on purpose: asking someone who was
- * frightened to classify it, and letting them file it as a feature idea, is
- * both a miscategorisation and an invitation. The kind is fixed by the caller.
- *
- * Trims + length-bounds client-side; the server re-validates and rate-limits.
- * On error the tray stays open, the typed text is preserved, and an inline
- * message is shown.
  */
 export const ReportForm = ({
   kind: initialKind,
@@ -137,12 +129,11 @@ export const ReportForm = ({
       {/* Names the person so the reporter can confirm the subject before
           sending. The name is display-only — the id is what gets submitted. */}
       {isConcern && subject && (
-        <AppText className="text-sm text-foreground/60">
+        <AppText className="text-sm text-foreground/65">
           About {subject.name}
         </AppText>
       )}
 
-      {/* bug | idea toggle — absent in concern mode */}
       {!isConcern && (
         <View className="flex-row gap-2">
           {(["bug", "idea"] as const).map((k) => {
@@ -160,7 +151,7 @@ export const ReportForm = ({
                 <AppText
                   className={cn(
                     "text-sm",
-                    active ? "text-accent-foreground" : "text-foreground/60",
+                    active ? "text-accent-foreground" : "text-foreground/65",
                   )}
                 >
                   {k === "bug" ? "Bug" : "Idea"}
@@ -190,7 +181,7 @@ export const ReportForm = ({
       </AppText>
 
       {isRateLimited && (
-        <AppText className="text-xs text-foreground/50">
+        <AppText className="text-xs text-foreground/55">
           {COPY[kind].rateLimited}
         </AppText>
       )}
@@ -201,7 +192,7 @@ export const ReportForm = ({
         variant="primary"
         onPress={handleSubmit}
         isDisabled={isDisabled}
-        accessibilityLabel="Send feedback"
+        accessibilityLabel={isConcern ? "Send report" : "Send feedback"}
       >
         {isSaving ? "Sending..." : "Send"}
       </Button>

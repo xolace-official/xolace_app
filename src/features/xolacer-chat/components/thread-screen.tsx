@@ -41,12 +41,7 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
   // link, or a cold launch straight into this route.
   const { status: streamStatus, retry } = useStreamConnection();
 
-  // The long-press menu and image gallery lift the message into a portal hosted
-  // by `StreamOverlayProvider`, above this stack. Popping the screen mid-portal
-  // tears the host out from under a view that is still being reparented — the
-  // same hazard `afterPortalSettles` works around in ThreadMessages, and the
-  // same JSI abort when it loses. The edge-swipe is the one way to pop without
-  // closing the overlay first, so it is off while one is open.
+
   const { overlay } = useOverlayContext();
 
   // Identity lives in the native header's title slot; the back affordance,
@@ -71,16 +66,12 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
         profileId={conversation.counterpartProfileId}
         name={conversation.counterpartName}
         conversationId={conversation.id}
+        hasHistory={Boolean(conversation.streamChannelId)}
       />
     </>
   );
 
-  // Only the region *under* the header branches. The header itself is rendered
-  // once below, at a fixed position in a fragment whose type never changes, so
-  // the connecting → ready swap replaces the body and leaves the toolbar
-  // mounted. Returning it inside each branch remounted it: the root element
-  // went from `View` to a fragment between the waiting and ready states, which
-  // is a different type at the same position and so a fresh subtree.
+
   const body = () => {
     // A request that hasn't been accepted has no channel yet — there is nothing
     // to read, so the whole screen is header + waiting/accept bar. Independent
@@ -91,9 +82,12 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
           <SafetyStrip />
           <View className="flex-1 items-center justify-center px-10">
             <AppText className="text-center text-[13px] leading-5 text-muted">
-              {conversation.role === 'xolacer'
-                ? 'Nothing has been said yet — the conversation opens once you accept.'
-                : 'Messages will appear here once your request is accepted.'}
+
+              {conversation.status === 'closed'
+                ? 'Nothing was said here.'
+                : conversation.role === 'xolacer'
+                  ? 'Nothing has been said yet, the conversation opens once you accept.'
+                  : 'Messages will appear here once your request is accepted.'}
             </AppText>
           </View>
           <ThreadStatusBar conversation={conversation} />

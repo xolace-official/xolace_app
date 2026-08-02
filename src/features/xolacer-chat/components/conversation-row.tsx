@@ -31,9 +31,6 @@ function chipFor(conversation: Conversation): { label: string; tone: 'warn' | 'm
  */
 function originLabel(conversation: Conversation): string | null {
   if (conversation.role !== 'xolacer') return null;
-  // Only while the request is still unanswered, matching thread-header. The
-  // badge is context for the accept decision — once the conversation is open,
-  // how it arrived stops being useful and reads as clutter on every row.
   if (conversation.status !== 'requested') return null;
   return conversation.origin === 'suggestion' ? 'Just after a session' : null;
 }
@@ -41,13 +38,16 @@ function originLabel(conversation: Conversation): string | null {
 function subtitleFor(conversation: Conversation): string {
   if (conversation.status === 'requested') {
     return conversation.role === 'xolacer'
-      ? 'Wants to talk — accept when you have space'
-      : `Request sent — ${conversation.counterpartName} will reply when they can`;
+      ? 'Wants to talk, accept when you have space'
+      : `Request sent, ${conversation.counterpartName} will reply when they can`;
   }
   if (conversation.status === 'open') return 'Tap to open your conversation';
-  if (conversation.status === 'resting') return 'Gone quiet — pick it back up anytime';
+  if (conversation.status === 'resting') return 'Gone quiet, pick it back up anytime';
+
   if (conversation.closedReason === 'declined') {
-    return `${conversation.counterpartName} couldn't take this one on`;
+    return conversation.role === 'xolacer'
+      ? 'You closed this request'
+      : `${conversation.counterpartName} couldn't take this one on`;
   }
   if (conversation.closedReason === 'expired') return 'This request quietly expired';
   // Blocked rows are filtered out of the list server-side and left-xolacer rows
