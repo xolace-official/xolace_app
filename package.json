@@ -1,7 +1,7 @@
 {
   "name": "expo-forge-starter",
   "main": "expo-router/entry",
-  "version": "1.6.0",
+  "version": "1.8.0",
   "expo": {
     "autolinking": {
       "// buildFromSource": "expo-image-manipulator@57.0.6's prebuilt xcframework was compiled against an older ExpoModulesCore ABI (AnyModule._decorateModule(object:in:), 2-arg) and dyld-crashes at launch against core 57.0.3 (3-arg, +appContext). Build it from source until the upstream prebuilt is rebuilt.",
