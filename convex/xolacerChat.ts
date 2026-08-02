@@ -22,10 +22,17 @@ import { posthog } from "./posthog";
 import {
   createXolacerChannel,
   deleteStreamUser,
+  freezeStreamChannel,
   getStreamApiKey,
   mintUserToken,
   upsertStreamUsers,
 } from "./integrations/stream";
+import {
+  canRate,
+  hasRealExchange,
+  isBlocked,
+  planBlock,
+} from "./lib/conversationBlock";
 import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 
 const statusValidator = v.union(
@@ -56,6 +63,10 @@ const conversationRowValidator = v.object({
   // Stable identity for the xolacer side of the thread — the roster matches
   // on this, never on display name (names repeat and can change).
   xolacerProfileId: v.id("emotional_profiles"),
+  // The other party's profile id — what a report is filed against, because a
+  // display name repeats and can change. No new exposure: this is also the
+  // Stream user id, so the client already sees it on every message.
+  counterpartProfileId: v.id("emotional_profiles"),
   counterpartName: v.string(),
   counterpartPhotoUrl: v.optional(v.string()),
   // Xolacer-side only — the seeker never learns how their own request was
@@ -207,20 +218,6 @@ async function findRating(
     .query("conversation_ratings")
     .withIndex("by_conversation", (q) => q.eq("conversationId", conversationId))
     .unique();
-}
-
-/**
- * The abuse guard: `lastMessageAt` is stamped once on accept and again by
- * `touchConversation` on every send, so a later timestamp is proof that at
- * least one real message followed the handshake. Without it, a request that
- * was accepted and then ignored could still be rated.
- */
-function hasRealExchange(conversation: Doc<"xolacer_conversations">) {
-  return Boolean(
-    conversation.acceptedAt &&
-      conversation.lastMessageAt &&
-      conversation.lastMessageAt > conversation.acceptedAt,
-  );
 }
 
 async function requireConversationParticipant(
@@ -532,8 +529,13 @@ export const myConversations = query({
           .take(100)
       : [];
 
+    // Blocked rows leave both lists, not just the blocker's — a permanent
+    // "stepped back" row the blocked party can keep tapping is more pointed
+    // than the conversation simply no longer appearing. Nothing is deleted:
+    // the row stays reachable by direct id for moderation.
     const rows = [];
     for (const conversation of asUser) {
+      if (isBlocked(conversation.closedReason)) continue;
       const xolacer = await getXolacerProfileByProfileId(
         ctx,
         conversation.xolacerProfileId,
@@ -547,11 +549,13 @@ export const myConversations = query({
         lastMessageAt: conversation.lastMessageAt,
         requestedAt: conversation.requestedAt,
         xolacerProfileId: conversation.xolacerProfileId,
+        counterpartProfileId: conversation.xolacerProfileId,
         counterpartName: xolacer?.displayName ?? "Xolacer",
         counterpartPhotoUrl: xolacer?.photoUrl,
       });
     }
     for (const conversation of asXolacer) {
+      if (isBlocked(conversation.closedReason)) continue;
       rows.push({
         id: conversation._id,
         role: "xolacer" as const,
@@ -561,6 +565,7 @@ export const myConversations = query({
         lastMessageAt: conversation.lastMessageAt,
         requestedAt: conversation.requestedAt,
         xolacerProfileId: conversation.xolacerProfileId,
+        counterpartProfileId: conversation.userProfileId,
         counterpartName: pseudonym(conversation.userProfileId),
         counterpartPhotoUrl: await seekerImage(ctx, conversation.userProfileId),
         origin: conversation.origin,
@@ -592,6 +597,7 @@ export const getConversation = query({
       resumable: v.boolean(),
       canRate: v.boolean(),
       myRating: v.optional(v.number()),
+      counterpartProfileId: v.id("emotional_profiles"),
       counterpartName: v.string(),
       counterpartPhotoUrl: v.optional(v.string()),
       myStreamUserId: v.id("emotional_profiles"),
@@ -626,8 +632,12 @@ export const getConversation = query({
       lastMessageAt: conversation.lastMessageAt,
       requestedAt: conversation.requestedAt,
       resumable,
-      canRate: role === "user" && hasRealExchange(conversation),
+      canRate: canRate(conversation, role),
       myRating: existingRating?.rating,
+      counterpartProfileId:
+        role === "user"
+          ? conversation.xolacerProfileId
+          : conversation.userProfileId,
       counterpartName:
         role === "user"
           ? (xolacer?.displayName ?? "Xolacer")
@@ -885,6 +895,77 @@ export const declineRequest = mutation({
   },
 });
 
+/**
+ * Participant guard + block plan in query ctx, so the action stays thin.
+ * Deliberately no role check: both roles may block. A xolacer's only exit
+ * today (`declineRequest`) stops working the moment they accept.
+ */
+export const getForBlock = internalQuery({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.object({
+    noop: v.boolean(),
+    channelToFreeze: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const { conversation } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    return planBlock(conversation);
+  },
+});
+
+export const markBlocked = internalMutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId);
+    // Re-checked here, not just in the plan: the freeze is a network round
+    // trip, so the row can have been blocked in between. Any other closed
+    // reason is still overwritten — see `planBlock`.
+    if (!conversation || isBlocked(conversation.closedReason)) return null;
+    await ctx.db.patch(args.conversationId, {
+      status: "closed",
+      closedReason: "blocked",
+    });
+    return null;
+  },
+});
+
+/**
+ * Block the other party: freeze the Stream channel, then close the row.
+ *
+ * Order is load-bearing. If the write fails after a successful freeze, the
+ * channel is frozen while the row still reads open — confusing, but safe, and
+ * corrected by calling again. The reverse order would leave a row claiming a
+ * block the server is not enforcing, which is the one outcome this exists to
+ * prevent. A failed freeze throws and no block happens.
+ *
+ * Permanent: `requestConversation` refuses to reopen a `blocked` row, and one
+ * conversation exists per pair forever. There is no unblock.
+ */
+export const blockConversation = action({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const plan: { noop: boolean; channelToFreeze?: string } = await ctx.runQuery(
+      internal.xolacerChat.getForBlock,
+      { conversationId: args.conversationId },
+    );
+    // Already closed — blocking twice is harmless, so a retry after a network
+    // error must not error and must not make a second Stream call.
+    if (plan.noop) return null;
+    // Absent while still `requested`: no channel exists yet, so only the row
+    // is written.
+    if (plan.channelToFreeze) await freezeStreamChannel(plan.channelToFreeze);
+    await ctx.runMutation(internal.xolacerChat.markBlocked, {
+      conversationId: args.conversationId,
+    });
+    return null;
+  },
+});
+
 export const resumeConversation = mutation({
   args: { conversationId: v.id("xolacer_conversations") },
   returns: v.object({ resumed: v.boolean() }),
@@ -961,6 +1042,13 @@ export const rateConversation = mutation({
     // A xolacer never rates the people who come to them — the relationship
     // isn't symmetric and a rated user would be a reason not to reach out.
     if (role !== "user") throw new Error("Only the requester can rate");
+    // getConversation already returns canRate: false here, so this only ever
+    // fires for a stale client — but it is the enforcement point standing
+    // between a block and a public rating written in anger, against a
+    // volunteer with no right of reply.
+    if (isBlocked(conversation.closedReason)) {
+      throw new Error("This conversation is closed");
+    }
     if (!hasRealExchange(conversation)) {
       throw new Error("Nothing to rate yet");
     }

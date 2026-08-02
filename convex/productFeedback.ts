@@ -1,19 +1,45 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, MutationCtx } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
+import { posthog } from "./posthog";
 
 const MAX_LENGTH = 1000;
 
+const kindValidator = v.union(
+  v.literal("bug"),
+  v.literal("idea"),
+  v.literal("concern"),
+);
+type Kind = "bug" | "idea" | "concern";
+
+// A concern is metered on its own budget so an abuse report is never refused
+// because the reporter spent the day sending feature ideas.
+const bucketFor = (kind: Kind) =>
+  kind === "concern" ? "concernReport" : "productFeedback";
+
+const RATE_LIMIT_MESSAGE: Record<Kind, string> = {
+  bug: "You're sending feedback too fast. Try again shortly.",
+  idea: "You're sending feedback too fast. Try again shortly.",
+  // Deliberately actionable: the concern budget is 2/day, so a rate-limited
+  // reporter may have a real safety problem and no route left in the app.
+  concern:
+    "You've reached today's report limit. If this is urgent, email support@xolaceinc.com and a human will pick it up.",
+};
+
 /**
- * Whether the current user can still submit product feedback (rate-limit check
- * without consuming a token). Mirrors `feedback.canSubmitGeneral`.
+ * Whether the current user can still submit feedback of this kind (rate-limit
+ * check without consuming a token). Mirrors `feedback.canSubmitGeneral`.
+ *
+ * `kind` is optional so clients built before concerns existed keep checking
+ * the feedback bucket they were written against.
  */
 export const canSubmit = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { kind: v.optional(kindValidator) },
+  handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
-    const { ok } = await rateLimiter.check(ctx, "productFeedback", {
+    const { ok } = await rateLimiter.check(ctx, bucketFor(args.kind ?? "bug"), {
       key: profile._id,
     });
     return ok;
@@ -21,15 +47,18 @@ export const canSubmit = query({
 });
 
 /**
- * Submit a bug report or idea from the feedback tray.
+ * Submit a bug report, an idea, or a concern about a person.
  *
  * The owner scope is derived server-side from the authenticated identity —
  * never accepted from the client. Text is trimmed + length-bounded and the
  * submission is rate-limited regardless of any client-side validation.
+ *
+ * A concern carries the subject's profile id and, when raised inside a thread,
+ * the conversation id. No display name is accepted or stored.
  */
 export const submit = mutation({
   args: {
-    kind: v.union(v.literal("bug"), v.literal("idea")),
+    kind: kindValidator,
     text: v.string(),
     context: v.object({
       appVersion: v.string(),
@@ -37,15 +66,17 @@ export const submit = mutation({
       themeName: v.string(),
       platform: v.string(),
     }),
+    subjectProfileId: v.optional(v.id("emotional_profiles")),
+    conversationId: v.optional(v.id("xolacer_conversations")),
   },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
-    const { ok } = await rateLimiter.limit(ctx, "productFeedback", {
+    const { ok } = await rateLimiter.limit(ctx, bucketFor(args.kind), {
       key: profile._id,
     });
     if (!ok) {
-      throw new Error("You're sending feedback too fast. Try again shortly.");
+      throw new Error(RATE_LIMIT_MESSAGE[args.kind]);
     }
 
     const text = args.text.trim();
@@ -58,9 +89,46 @@ export const submit = mutation({
       kind: args.kind,
       text,
       context: args.context,
+      subjectProfileId: args.subjectProfileId,
+      conversationId: args.conversationId,
       createdAt: Date.now(),
     });
+
+    if (args.kind === "concern") {
+      await captureConcernSubmitted(
+        ctx,
+        profile._id,
+        args.subjectProfileId !== undefined,
+      );
+    }
 
     return null;
   },
 });
+
+/**
+ * Structural only: that a concern was submitted, and whether it named someone.
+ * No free text, no subject id, no conversation id — a report about a person
+ * must not put that person into analytics. The identity stays in Convex, where
+ * moderation happens.
+ */
+async function captureConcernSubmitted(
+  ctx: MutationCtx,
+  // Pseudonymous profile id of the REPORTER, matching every other capture in
+  // the codebase. The Clerk tokenIdentifier never leaves Convex.
+  distinctId: Id<"emotional_profiles">,
+  hasSubject: boolean,
+) {
+  // Swallowed on purpose: this runs inside the submit mutation's transaction,
+  // so a throw here would roll back the report the user just filed. Losing one
+  // analytics event beats losing the report.
+  try {
+    await posthog.capture(ctx, {
+      distinctId,
+      event: "concern_report_submitted",
+      properties: { hasSubject },
+    });
+  } catch (error) {
+    console.error("concern_report_submitted capture failed", error);
+  }
+}

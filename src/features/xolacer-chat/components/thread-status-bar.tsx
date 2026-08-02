@@ -96,14 +96,53 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
     );
   }
 
-  // Resting-but-blocked and closed share one screen: inactive, unpublished, at
-  // cap, or declined. No-guilt framing, and the promise that nothing was
-  // deleted comes before the redirect — losing the conversation is the fear.
+  // Resting-but-not-resumable and closed share one screen: inactive,
+  // unpublished, at cap, declined, or blocked. Deliberately identical for every
+  // one of those — a blocked person is never told they were blocked, and a
+  // declined seeker is not told which of the two it was.
+  //
+  // Role-aware, because a xolacer reaches this too: they may have blocked the
+  // seeker themselves, and offering them "find another Xolacer" would be
+  // nonsense. No-guilt framing on the seeker side, and the promise that nothing
+  // was deleted comes before the redirect — losing the conversation is the fear.
+  //
+  // That promise is only made where there is something to keep. A request that
+  // was declined, blocked or left to expire never opened a channel, so "every-
+  // thing you two wrote is still here" would be reassuring someone about a
+  // history that was never written.
+  const hasHistory = Boolean(conversation.streamChannelId);
+
+  if (conversation.role === 'xolacer') {
+    return (
+      <Bar padBottom={padBottom}>
+        <Copy>
+          {hasHistory ? (
+            <>
+              This conversation is closed.{' '}
+              <Bold>Everything you two wrote is still here</Bold>.
+            </>
+          ) : (
+            <>This request is closed. Nothing was sent either way.</>
+          )}
+        </Copy>
+      </Bar>
+    );
+  }
+
   return (
     <Bar padBottom={padBottom}>
       <Copy>
-        {conversation.counterpartName} has stepped back for now. Nothing to do with you —{' '}
-        <Bold>everything you two wrote is still here</Bold>.
+        {hasHistory ? (
+          <>
+            {conversation.counterpartName} has stepped back for now. Nothing to do with you
+            — <Bold>everything you two wrote is still here</Bold>.
+          </>
+        ) : (
+          <>
+            {conversation.counterpartName} isn&apos;t able to pick this one up.{' '}
+            <Bold>Nothing to do with you</Bold> — it happens, and there are others here.
+          </>
+        )}
       </Copy>
       <Button variant="secondary" onPress={goToRoster}>
         Find another Xolacer

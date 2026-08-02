@@ -1414,7 +1414,18 @@ export default defineSchema({
     // Optional ONLY because account deletion anonymizes in place: the owner
     // link is stripped and the row is retained. Always set on insert.
     emotionalProfileId: v.optional(v.id("emotional_profiles")),
-    kind: v.union(v.literal("bug"), v.literal("idea")),
+    // "concern" is a safety report about a person, not a product complaint —
+    // same table, but its own rate-limit bucket and its own moderation inbox
+    // filter. It is the only kind that carries the two fields below.
+    kind: v.union(v.literal("bug"), v.literal("idea"), v.literal("concern")),
+    // Who the concern is about. Profile id ONLY — a display name is never
+    // persisted, for the same reason the conversation roster matches on
+    // profile id: names repeat and change, so a stored name is a stale label
+    // on a moderation record.
+    subjectProfileId: v.optional(v.id("emotional_profiles")),
+    // The thread the concern came from, when it came from one. Absent when the
+    // report was raised from a profile rather than inside a conversation.
+    conversationId: v.optional(v.id("xolacer_conversations")),
     // 1..1000 chars, trimmed + validated server-side.
     // RETAINED past account deletion by policy (see CONTEXT.md "Feedback
     // retention"). Treat as potentially identifying: a bug report can name

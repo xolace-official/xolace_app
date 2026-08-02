@@ -9,10 +9,9 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { isSpecialty, specialtyListensTo } from '@/convex/lib/specialties';
 import { AppText } from '@/src/components/shared/app-text';
-import { useTray } from '@/src/features/feedback-tray/engine/tray-provider';
-import type { Trays } from '@/src/features/feedback-tray/screens/registry';
 import { playSoftPress } from '@/src/lib/haptics';
-import { formatMonthYear } from '../utils';
+import { formatMonthYear, hasSpoken } from '../utils';
+import { XolacerMenu } from './xolacer-menu';
 import { XolacerAvatar } from './xolacer-avatar';
 import { NewXolacerChip, RatingStars } from './rating-stars';
 import { SpecialtyChips } from './specialty-chips';
@@ -63,7 +62,6 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { toast } = useToast();
-  const { show } = useTray<Trays>();
   const requestConversation = useMutation(api.xolacerChat.requestConversation);
 
   const { conversation } = profile;
@@ -90,6 +88,17 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
   return (
     <View className="flex-1 bg-background">
       <Stack.Screen options={HEADER_OPTIONS} />
+
+
+      {!profile.isSelf && (
+        <XolacerMenu
+          origin="profile"
+          profileId={profile.xolacerProfileId}
+          name={profile.displayName}
+          conversationId={conversation?.id}
+          hasHistory={conversation ? hasSpoken(conversation) : false}
+        />
+      )}
 
       <ScrollView
         className="flex-1"
@@ -177,18 +186,6 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
             }}
           />
         )}
-        <PressableFeedback
-          onPress={() => {
-            playSoftPress();
-            show('report', { kind: 'bug' });
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Report a concern"
-        >
-          <AppText className="pt-1 text-center text-xs text-muted underline">
-            Report a concern
-          </AppText>
-        </PressableFeedback>
       </View>
     </View>
   );
@@ -294,9 +291,6 @@ function OtherListeners({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`See other Xolacers who listen to ${specialtyListensTo(specialty)}`}
-      // A 13px line sat in ~20pt of tappable height, directly between the
-      // primary CTA and "Report a concern" — a near miss landed on the report
-      // flow.
       hitSlop={8}
     >
       <View className="flex-row items-center justify-center gap-1.5 py-2">

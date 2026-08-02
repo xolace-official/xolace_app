@@ -1,3 +1,25 @@
+/**
+ * Did these two ever actually exchange a message? A channel is only created on
+ * accept, so a request that was declined or left to expire has no history at
+ * all — and copy that reassures someone their words are kept is a false promise
+ * on a thread where nothing was ever written.
+ *
+ * Derived from status + closedReason because that pair is the one shape
+ * available on every screen; the profile query deliberately doesn't return
+ * `streamChannelId`.
+ */
+export function hasSpoken(conversation: {
+  status: 'requested' | 'open' | 'resting' | 'closed';
+  closedReason?: 'declined' | 'expired' | 'blocked' | 'xolacer_left';
+}): boolean {
+  if (conversation.status === 'requested') return false;
+  if (conversation.status !== 'closed') return true;
+  return (
+    conversation.closedReason !== 'declined' &&
+    conversation.closedReason !== 'expired'
+  );
+}
+
 /** Compact relative time for chat rows: "2h", "3d", "3w". */
 export function formatCompactTime(timestamp: number): string {
   const diffMs = Date.now() - timestamp;

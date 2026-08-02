@@ -73,6 +73,7 @@ import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js
 import type * as jobs_reflectionDistiller from "../jobs/reflectionDistiller.js";
 import type * as lib_aggregates from "../lib/aggregates.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_conversationBlock from "../lib/conversationBlock.js";
 import type * as lib_displayName from "../lib/displayName.js";
 import type * as lib_followUpCadence from "../lib/followUpCadence.js";
 import type * as lib_notificationPrefs from "../lib/notificationPrefs.js";
@@ -183,6 +184,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/reflectionDistiller": typeof jobs_reflectionDistiller;
   "lib/aggregates": typeof lib_aggregates;
   "lib/auth": typeof lib_auth;
+  "lib/conversationBlock": typeof lib_conversationBlock;
   "lib/displayName": typeof lib_displayName;
   "lib/followUpCadence": typeof lib_followUpCadence;
   "lib/notificationPrefs": typeof lib_notificationPrefs;

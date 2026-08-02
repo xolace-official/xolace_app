@@ -7,6 +7,7 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { useStreamConnection } from '../providers/stream-chat-provider';
 import { useThreadConversation } from '../use-thread-conversation';
+import { XolacerMenu } from './xolacer-menu';
 import { ComposerPlaceholder } from './composer-placeholder';
 import { SafetyStrip } from './safety-strip';
 import { ThreadHeader } from './thread-header';
@@ -40,73 +41,86 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
   // link, or a cold launch straight into this route.
   const { status: streamStatus, retry } = useStreamConnection();
 
-  // The long-press menu and image gallery lift the message into a portal hosted
-  // by `StreamOverlayProvider`, above this stack. Popping the screen mid-portal
-  // tears the host out from under a view that is still being reparented — the
-  // same hazard `afterPortalSettles` works around in ThreadMessages, and the
-  // same JSI abort when it loses. The edge-swipe is the one way to pop without
-  // closing the overlay first, so it is off while one is open.
+
   const { overlay } = useOverlayContext();
 
   // Identity lives in the native header's title slot; the back affordance,
   // safe area and glass background are the platform's. Rendered as a sibling of
   // every branch below rather than inside one, so the title is set on the first
   // frame and survives the connecting → ready swap without the header
-  // re-mounting under it.
+  // re-mounting under it. The overflow menu is a sibling here for the same
+  // reason, and is mounted unconditionally — never `hidden`, which would leave
+  // a transparent touch-eating band across the top on Android.
   const header = (
-    <Stack.Screen
-      options={{
-        // eslint-disable-next-line react/no-unstable-nested-components -- navigation header render prop, not a mounted subtree
-        headerTitle: () => <ThreadHeader conversation={conversation} />,
-        title: conversation.counterpartName,
-        gestureEnabled: overlay === 'none',
-      }}
-    />
+    <>
+      <Stack.Screen
+        options={{
+          // eslint-disable-next-line react/no-unstable-nested-components -- navigation header render prop, not a mounted subtree
+          headerTitle: () => <ThreadHeader conversation={conversation} />,
+          title: conversation.counterpartName,
+          gestureEnabled: overlay === 'none',
+        }}
+      />
+      <XolacerMenu
+        origin="thread"
+        profileId={conversation.counterpartProfileId}
+        name={conversation.counterpartName}
+        conversationId={conversation.id}
+        hasHistory={Boolean(conversation.streamChannelId)}
+      />
+    </>
   );
 
-  // A request that hasn't been accepted has no channel yet — there is nothing
-  // to read, so the whole screen is header + waiting/accept bar. Independent of
-  // Stream: this state never needs a connection.
-  if (!conversation.streamChannelId) {
-    return (
-      <View className="flex-1 bg-background">
-        {header}
-        <SafetyStrip />
-        <View className="flex-1 items-center justify-center px-10">
-          <AppText className="text-center text-[13px] leading-5 text-muted">
-            {conversation.role === 'xolacer'
-              ? 'Nothing has been said yet — the conversation opens once you accept.'
-              : 'Messages will appear here once your request is accepted.'}
-          </AppText>
-        </View>
-        <ThreadStatusBar conversation={conversation} />
-      </View>
-    );
-  }
 
-  // Chrome is Convex-driven and already loaded, so it stays put while the
-  // Stream connection opens underneath it. Only the message region waits.
-  if (streamStatus !== 'ready') {
-    return (
-      <View className="flex-1 bg-background">
-        {header}
-        <SafetyStrip />
-        {streamStatus === 'connecting' ? <ThreadSkeleton /> : <MessagesUnavailable onRetry={retry} />}
-        {conversation.status === 'open' ? (
-          // Only while connecting. On the error path the messages never arrive,
-          // so a composer stub would promise a send that cannot happen.
-          streamStatus === 'connecting' ? <ComposerPlaceholder /> : null
-        ) : (
+  const body = () => {
+    // A request that hasn't been accepted has no channel yet — there is nothing
+    // to read, so the whole screen is header + waiting/accept bar. Independent
+    // of Stream: this state never needs a connection.
+    if (!conversation.streamChannelId) {
+      return (
+        <View className="flex-1 bg-background">
+          <SafetyStrip />
+          <View className="flex-1 items-center justify-center px-10">
+            <AppText className="text-center text-[13px] leading-5 text-muted">
+
+              {conversation.status === 'closed'
+                ? 'Nothing was said here.'
+                : conversation.role === 'xolacer'
+                  ? 'Nothing has been said yet, the conversation opens once you accept.'
+                  : 'Messages will appear here once your request is accepted.'}
+            </AppText>
+          </View>
           <ThreadStatusBar conversation={conversation} />
-        )}
-      </View>
-    );
-  }
+        </View>
+      );
+    }
+
+    // Chrome is Convex-driven and already loaded, so it stays put while the
+    // Stream connection opens underneath it. Only the message region waits.
+    if (streamStatus !== 'ready') {
+      return (
+        <View className="flex-1 bg-background">
+          <SafetyStrip />
+          {streamStatus === 'connecting' ? <ThreadSkeleton /> : <MessagesUnavailable onRetry={retry} />}
+          {conversation.status === 'open' ? (
+            // Only while connecting. On the error path the messages never
+            // arrive, so a composer stub would promise a send that cannot
+            // happen.
+            streamStatus === 'connecting' ? <ComposerPlaceholder /> : null
+          ) : (
+            <ThreadStatusBar conversation={conversation} />
+          )}
+        </View>
+      );
+    }
+
+    return <ThreadMessages conversation={conversation} />;
+  };
 
   return (
     <>
       {header}
-      <ThreadMessages conversation={conversation} />
+      {body()}
     </>
   );
 }

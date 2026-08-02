@@ -11,8 +11,8 @@ import type { ThreadConversation } from './thread-screen';
  */
 function subtitleFor(conversation: ThreadConversation): string {
   if (conversation.status === 'requested') {
-    if (conversation.role !== 'xolacer') return 'Request sent — no reply yet';
-    // Freshness only — what it's about is theirs to say first.
+    if (conversation.role !== 'xolacer') return 'Request sent, no reply yet';
+
     return conversation.origin === 'suggestion'
       ? 'Waiting on you · just after a session'
       : 'Waiting on you';
@@ -22,7 +22,13 @@ function subtitleFor(conversation: ThreadConversation): string {
       ? `Resting · last spoke ${formatLongAgo(conversation.lastMessageAt)}`
       : 'Resting';
   }
-  if (conversation.status === 'closed') return 'Not taking conversations right now';
+
+  
+  if (conversation.status === 'closed') {
+    return conversation.role === 'xolacer'
+      ? 'This request is closed'
+      : 'Not taking conversations right now';
+  }
   return conversation.role === 'user'
     ? 'Xolacer · usually replies within a day'
     : 'Usually replies within a day';

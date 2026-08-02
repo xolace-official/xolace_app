@@ -83,6 +83,16 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // easy to spam, so this guard is not optional. 10 per 24h per profile.
   productFeedback: { kind: "fixed window", rate: 10, period: DAY },
 
+  // Safety concerns — SEPARATE bucket so an abuse report is never refused
+  // because the reporter spent the day sending feature ideas. The
+  // productFeedback rationale does not transfer: a concern is reached from an
+  // overflow menu on a specific person, not from a shake. 2/day is
+  // deliberately low — genuine concerns are rare, and a low ceiling stops the
+  // form being a useful mass-reporting tool. A user with trouble in two
+  // threads plus one mis-send is locked out for 24h; that is why the rejection
+  // points at support rather than at tomorrow.
+  concernReport: { kind: "fixed window", rate: 2, period: DAY },
+
   // Reflection Agent light pass (Cognition Layer Phase 3) — runs ~1/session.
   // Token bucket ~12/hour, capacity 4: a pure runaway guard, generous enough
   // that a normal burst of completions never drops a trajectory refresh.
