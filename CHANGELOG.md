@@ -4,7 +4,7 @@ All notable changes to Xolace are documented here.
 
 ---
 
-## [1.8.0] - (2026-08-01)
+## [1.8.0] Released - (2026-08-01)
 
 ### Added
 
