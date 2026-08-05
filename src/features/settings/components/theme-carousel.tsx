@@ -19,6 +19,7 @@ const DIVIDER_WIDTH = 28;
 const SECTION_INSET = 20;
 
 const ALL_THEMES = [...FREE_THEMES, ...PREMIUM_THEMES];
+const ACCENT_COLORS = ALL_THEMES.map((t) => t.preview.accent);
 
 /** Center-x offset (content-local, including left padding) of every card,
  *  plus the side padding needed so the first/last card can reach the
@@ -68,23 +69,26 @@ export const ThemeCarousel = ({
     [viewportWidth],
   );
 
-  const scrollX = useSharedValue(0);
+  const initialIndex = getInitialThemeCarouselIndex(ALL_THEMES, activeThemeId);
+  const initialScrollX = Math.max(cardCenters[initialIndex] - viewportWidth / 2, 0);
+  const snapOffsets = cardCenters.map((c) => Math.max(c - viewportWidth / 2, 0));
+
+  // Seeded with initialScrollX (not 0): the ScrollView starts at that offset
+  // via `contentOffset` below, but RN doesn't fire onScroll for a prop-driven
+  // initial position — an unseeded shared value would leave every card's
+  // scale/opacity and the glow color computed as if scrolled to the start.
+  const scrollX = useSharedValue(initialScrollX);
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollX.set(event.contentOffset.x);
     },
   });
 
-  const initialIndex = getInitialThemeCarouselIndex(ALL_THEMES, activeThemeId);
-  const initialScrollX = Math.max(cardCenters[initialIndex] - viewportWidth / 2, 0);
-  const snapOffsets = cardCenters.map((c) => Math.max(c - viewportWidth / 2, 0));
-  const accentColors = useMemo(() => ALL_THEMES.map((t) => t.preview.accent), []);
-
   const glowStyle = useAnimatedStyle(() => {
     const backgroundColor = interpolateColor(
       scrollX.get() + viewportWidth / 2,
       cardCenters,
-      accentColors,
+      ACCENT_COLORS,
     );
     return { backgroundColor };
   });
