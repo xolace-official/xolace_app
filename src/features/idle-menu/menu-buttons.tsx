@@ -62,15 +62,6 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
   // Housekeeping — shares one compact row.
   const compactItems: MenuButtonItem[] = [
     {
-      label: "Timeline",
-      iconName: { ios: "clock", android: "history" },
-      accessibilityLabel: "Open your session timeline",
-      onPress: () => {
-        onClose();
-        router.push("/(protected)/timeline");
-      },
-    },
-    {
       label: "Settings",
       iconName: { ios: "gearshape", android: "settings" },
       accessibilityLabel: "Open settings",

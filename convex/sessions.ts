@@ -708,6 +708,7 @@ export const listForTimeline = query({
           return {
             _id: session._id,
             mirrorText: session.mirrorText!,
+            entryType: session.entryType,
             confirmationState: session.confirmationState ?? null,
             pathChosen: session.pathChosen ?? null,
             toneUsed: session.toneUsed ?? null,

@@ -1,5 +1,33 @@
 import type { TimelineEntry, TimelineFlatItem } from '@/src/features/timeline/types';
 
+/** Shape returned by `sessions.listForTimeline` per enriched session. */
+type TimelineSession = {
+  _id: string;
+  mirrorText: string;
+  entryType: string;
+  primaryEmotion: string | null;
+  granularLabel: string | null;
+  pathChosen: string | null;
+  toneUsed: string | null;
+  confirmationState: string | null;
+  createdAt: number;
+};
+
+/** Maps a `listForTimeline` result row to the client-side `TimelineEntry` shape. */
+export function toTimelineEntry(session: TimelineSession): TimelineEntry {
+  return {
+    id: session._id,
+    mirrorText: session.mirrorText,
+    entryType: session.entryType,
+    primaryEmotion: session.primaryEmotion,
+    granularLabel: session.granularLabel,
+    pathChosen: session.pathChosen,
+    toneUsed: session.toneUsed,
+    confirmationState: session.confirmationState,
+    createdAt: session.createdAt,
+  };
+}
+
 /**
  * Produce a human-friendly relative day label for a timestamp.
  *

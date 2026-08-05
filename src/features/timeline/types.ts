@@ -1,6 +1,7 @@
 export interface TimelineEntry {
   id: string;
   mirrorText: string;
+  entryType: string;
   primaryEmotion: string | null;
   granularLabel: string | null;
   pathChosen: string | null;

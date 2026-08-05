@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DiscoveryHeader } from './discovery-header';
 import { DailyQuotesCard } from './daily-quotes-card';
+import { DiscoveryTimelineSection } from './discovery-timeline-section';
 import { DOCK_CLEARANCE, ReflectDock } from './reflect-dock';
 
 /**
@@ -28,6 +29,8 @@ export function DiscoveryScreen() {
         <View className="gap-3 px-4 pt-5">
           <DailyQuotesCard />
         </View>
+
+        <DiscoveryTimelineSection />
       </ScrollView>
 
       <ReflectDock />
