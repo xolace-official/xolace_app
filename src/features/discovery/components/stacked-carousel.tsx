@@ -15,7 +15,7 @@ import { CarouselPaginator } from "./carousel-paginator";
 // under discovery and used exactly once; add props back if a second caller
 // needs different values.
 const STACK_OFFSET = 8;
-const PAGINATOR_VISIBLE_DOTS = 5;
+const PAGINATOR_VISIBLE_DOTS = 3;
 const PAGINATOR_DOT_SIZE = 10;
 const PAGINATOR_SPACING = 10;
 

@@ -69,7 +69,6 @@ export function CarouselPaginator({
             key={index}
             index={index}
             visibleDotsIndices={visibleDotsIndices}
-            currentPageIndex={currentPageIndex}
             spacing={spacing}
             dotSize={dotSize}
             dotColor={dotColor}
@@ -84,28 +83,31 @@ type AnimatedDotProps = {
   index: number;
   visibleDotsIndices: SharedValue<{ start: number; end: number; currentIndex: number }>;
   spacing: number;
-  currentPageIndex: SharedValue<number>;
   dotSize: number;
   dotColor: string;
 };
 
-function AnimatedDot({ index, visibleDotsIndices, spacing, currentPageIndex, dotSize, dotColor }: AnimatedDotProps) {
+function AnimatedDot({ index, visibleDotsIndices, spacing, dotSize, dotColor }: AnimatedDotProps) {
   const isVisible = useDerivedValue(() => {
     return index >= visibleDotsIndices.get().start && index < visibleDotsIndices.get().end;
   });
 
+  // Compare against the window's already-rounded currentIndex, not the raw
+  // fractional scrollX/cardWidth — that value is mid-swipe almost every
+  // frame, so an exact-equality check against it flickered the active dot
+  // in and out on every drag instead of holding steady until a page settles.
   const visibility = useDerivedValue(() => {
-    const isActive = currentPageIndex.get() === index;
+    const isActive = visibleDotsIndices.get().currentIndex === index;
     const opacity = isActive ? 1 : isVisible.get() ? 0.75 : 0;
 
     return withTiming(opacity, {
       duration: 500,
       easing: Easing.linear,
     });
-  }, [currentPageIndex, index]);
+  }, [visibleDotsIndices, index]);
 
   const rContainerStyle = useAnimatedStyle(() => {
-    const scale = withSpring(currentPageIndex.get() !== index ? 0.75 : 1, SpringConfig);
+    const scale = withSpring(visibleDotsIndices.get().currentIndex !== index ? 0.75 : 1, SpringConfig);
     return {
       opacity: visibility.get(),
       marginRight: spacing,
