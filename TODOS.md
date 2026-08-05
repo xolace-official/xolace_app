@@ -933,3 +933,29 @@ Anything new that identifies or aliases on `users._id` reintroduces the split.
 **Key files:** `src/lib/use-posthog-identity.ts`, `src/app/(protected)/_layout.tsx`, `convex/posthog.ts`
 
 **Found:** PostHog `distinctId` audit on branch `feat/xolacer-suggestion-session` (2026-08-01).
+
+---
+
+## P3 — Android: drop implied `android.hardware.camera` requirement
+
+**What:** Google Play Console's "Drop in support for Phone devices" release check flags 60 camera-less devices (Zebra scanners, budget Android phones, etc.) as newly unsupported due to an implied `android.hardware.camera` required feature.
+
+**Why:** `expo-image-picker` is installed (`package.json`) but not listed in `app.config.ts`'s `plugins` array, so it runs with default config-plugin behavior — which unconditionally injects `<uses-permission android:name="android.permission.CAMERA" />` into the merged manifest (confirmed in `android/app/build/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml`). Android Gradle then auto-infers `<uses-feature android:name="android.hardware.camera" android:required="true">` from that permission. The app only calls `ImagePicker.launchImageLibraryAsync` (gallery picker) — `launchCameraAsync` is never used anywhere in the codebase (checked `src/features/xolacer-chat/`, the only two call sites). The permission and resulting device-support drop are both unnecessary.
+
+**How to fix:** Add `expo-image-picker` explicitly to the `plugins` array in `app.config.ts` with `"cameraPermission": false`:
+```ts
+[
+  "expo-image-picker",
+  {
+    "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+    "cameraPermission": false
+  }
+],
+```
+Then rebuild (native change, not OTA-safe).
+
+**Key files:** `app.config.ts` (plugins array, near line 209 `"expo-sqlite"` / `"@clerk/expo"`)
+
+**Effort:** XS (1 config change + rebuild)
+**Priority:** P3 — cosmetic Play Console warning, 0 installs affected per the console's own report; fix on the next native build rather than a dedicated release
+**Depends on:** Nothing — deferred only because iOS was already submitted for the current build and this needs a shared rebuild cycle

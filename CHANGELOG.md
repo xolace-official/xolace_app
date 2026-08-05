@@ -4,7 +4,19 @@ All notable changes to Xolace are documented here.
 
 ---
 
-## [1.8.0] - (2026-08-01)
+## [1.8.0] - OTA Update (2026-08-05)
+
+### Added
+
+- **Your Moments timeline teaser on Discovery** — the first 4 timeline moments now surface in a themed stacked carousel right after the quotes card, with a static voice badge for voice-entered sessions and a "See more" link to the full timeline. The now-redundant "Timeline" entry is removed from the reflect idle menu, since Discovery is the primary entry point.
+
+### Changed
+
+- **Appearance: theme picker is now a snap-to-center carousel** — the "App Themes" section in Settings → Appearance is a bounded, scroll-driven carousel instead of a flat scroll list: the centered card scales up while its neighbors recede, the section background subtly glows toward the centered theme's accent color, and a divider marks the boundary between free and Xolace+ themes. Scrolling only changes visual focus — applying a theme is still a deliberate tap, unchanged from before. The falloff and glow animation are disabled under Reduced Motion.
+
+---
+
+## [1.8.0] Released - (2026-08-01)
 
 ### Added
 

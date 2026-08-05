@@ -30,6 +30,23 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-08-ota-discovery-appearance",
+    label: "OTA Update",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "rectangle.stack.fill", android: "view_carousel" },
+        title: "Your Moments, right up front",
+        body: "A few of your recent moments now show up on the home tab, right after your daily quote — tap through to see the rest on your timeline.",
+      },
+      {
+        icon: { ios: "paintpalette.fill", android: "palette" },
+        title: "A better way to pick a theme",
+        body: "Browsing themes in Settings → Appearance feels alive now — the one you're centered on grows, and the background gives you a hint of its color before you commit.",
+      },
+    ],
+  },
+  {
     id: "1.8.0",
     label: "Version 1.8.0",
     date: "August 2026",

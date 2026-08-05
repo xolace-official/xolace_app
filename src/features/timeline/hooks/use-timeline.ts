@@ -1,6 +1,6 @@
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { buildTimelineSections } from "@/src/features/timeline/utils";
+import { buildTimelineSections, toTimelineEntry } from "@/src/features/timeline/utils";
 import type { TimelineEntry } from "@/src/features/timeline/types";
 
 const PAGE_SIZE = 15;
@@ -28,16 +28,7 @@ export function useTimeline() {
 
   const isLoading = status === "LoadingFirstPage";
 
-  const entries: TimelineEntry[] = results.map((s) => ({
-    id: s._id,
-    mirrorText: s.mirrorText,
-    primaryEmotion: s.primaryEmotion,
-    granularLabel: s.granularLabel,
-    pathChosen: s.pathChosen,
-    toneUsed: s.toneUsed,
-    confirmationState: s.confirmationState,
-    createdAt: s.createdAt,
-  }));
+  const entries: TimelineEntry[] = results.map(toTimelineEntry);
 
   const sections = buildTimelineSections(entries);
 

@@ -31,7 +31,7 @@ function play(pattern: HapticPatternData): void {
   });
 }
 
-export function tap(intensity = 0.2, sharpness = 0.1): void {
+export function tap(intensity = 0.5, sharpness = 0.3): void {
   CoreHaptics.impact(sharpness, intensity).catch((e: unknown) => {
     console.warn('[haptics] impact failed:', e);
   });

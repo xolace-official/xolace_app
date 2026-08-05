@@ -8,9 +8,8 @@ import { SettingsSection } from "@/src/features/settings/components/settings-sec
 import { SettingsRow } from "@/src/features/settings/components/settings-row";
 import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
 import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
-import { ThemePreviewCard } from "@/src/features/settings/components/theme-preview-card";
+import { ThemeCarousel } from "@/src/features/settings/components/theme-carousel";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { FREE_THEMES, PREMIUM_THEMES } from "@/src/lib/themes";
 import { useAppearanceSettings, type ThemeMode } from "@/src/features/settings/hooks/use-appearance-settings";
 import type { MotionPreference } from "@/src/lib/motion/use-effective-reduced-motion";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
@@ -85,7 +84,6 @@ const playThemeSelect = Platform.OS === "android" ? Presets.strike : Presets.son
 
 const styles = StyleSheet.create({
   contentContainer: { paddingTop: 16, paddingBottom: 48 },
-  themeScrollerContent: { paddingHorizontal: 20, gap: 12 },
 });
 
 export const AppearanceScreen = () => {
@@ -198,31 +196,13 @@ export const AppearanceScreen = () => {
           <AppText className="text-xs font-semibold tracking-widest text-accent uppercase px-5 pb-3">
             App Themes
           </AppText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.themeScrollerContent}
-          >
-            {FREE_THEMES.map((theme) => (
-              <ThemePreviewCard
-                key={theme.id}
-                theme={theme}
-                isActive={colorThemeId === theme.id}
-                onPress={() => handleFreeThemePress(theme.id)}
-              />
-            ))}
-            {PREMIUM_THEMES.map((theme) => (
-              <ThemePreviewCard
-                key={theme.id}
-                theme={theme}
-                isActive={colorThemeId === theme.id}
-                isLocked={!isPlus || theme.available === false}
-                onPress={() =>
-                  handlePremiumThemePress(theme.id, theme.available !== false)
-                }
-              />
-            ))}
-          </ScrollView>
+          <ThemeCarousel
+            activeThemeId={colorThemeId}
+            isPlus={isPlus}
+            reducedMotion={effectiveReducedMotion}
+            onFreeThemePress={handleFreeThemePress}
+            onPremiumThemePress={handlePremiumThemePress}
+          />
         </EaseView>
 
         {/* ── MOTION ───────────────────────────────────────────── */}

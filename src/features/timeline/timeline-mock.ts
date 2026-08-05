@@ -7,6 +7,8 @@ const daysAgo = (n: number) => now - n * 24 * 60 * 60 * 1000;
 export const MOCK_ENTRIES: TimelineEntry[] = [
   {
     id: "1",
+    entryType: "open_prompt",
+    hasMirrorAudio: false,
     mirrorText:
       "There's something heavy sitting in your chest today. Not sharp — more like a weight you've been carrying so long you forgot it wasn't always there.",
     primaryEmotion: "Frustration",
@@ -18,6 +20,8 @@ export const MOCK_ENTRIES: TimelineEntry[] = [
   },
   {
     id: "2",
+    entryType: "voice",
+    hasMirrorAudio: true,
     mirrorText: "A quiet, steady day. Solid ground.",
     primaryEmotion: "Calm",
     granularLabel: null,
@@ -28,6 +32,8 @@ export const MOCK_ENTRIES: TimelineEntry[] = [
   },
   {
     id: "3",
+    entryType: "open_prompt",
+    hasMirrorAudio: false,
     mirrorText:
       "A pattern you keep hoping will change. There's grief in watching something repeat itself — and still showing up anyway.",
     primaryEmotion: "Frustration",
