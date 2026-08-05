@@ -38,7 +38,7 @@ export const StackedCarousel = <T,>({
   const { width: screenWidth } = useWindowDimensions();
   const cardBackground = useThemeColor("surface");
   const shadowColor = useThemeColor("foreground") + "0D";
-  const dotColor = useThemeColor("foreground") + "66";
+  const dotColor = useThemeColor("foreground") + "56";
 
   // All children below are position:"absolute" (cards, the invisible
   // scroll-driver FlatList, the paginator), so Yoga gives the container zero
