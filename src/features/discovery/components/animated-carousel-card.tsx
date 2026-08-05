@@ -57,8 +57,8 @@ export function AnimatedCarouselCard({
     const opacity = interpolate(
       scrollX.get(),
       extendedInputRange,
-      [0.2, 0.8, 1, -1, -2],
-      Extrapolation.EXTEND,
+      [0.2, 0.8, 1, 0, 0],
+      Extrapolation.CLAMP,
     );
 
     return {

@@ -48,12 +48,12 @@ export function CarouselPaginator({
 
   const containerAnimatedStyle = useAnimatedStyle(() => {
     const { currentIndex } = visibleDotsIndices.get();
-    const dotFullWidth = dotSize * 2.5;
-    const regularDotWidth = dotSize;
-    const totalSpacing = spacing * (pagesAmount - 1);
-    const totalWidth = (pagesAmount - 1) * regularDotWidth + dotFullWidth;
-    const centerOffset = (totalWidth + totalSpacing) / 2;
-    const currentPosition = currentIndex * (regularDotWidth + spacing) + dotFullWidth / 2;
+    // Every dot (including the last) carries a trailing marginRight, and all
+    // dots lay out at the same `dotSize` — the active dot's emphasis comes
+    // from a scale transform, not extra layout width.
+    const totalWidth = pagesAmount * (dotSize + spacing);
+    const centerOffset = totalWidth / 2;
+    const currentPosition = currentIndex * (dotSize + spacing) + dotSize / 2;
     const translateX = centerOffset - currentPosition;
 
     return {

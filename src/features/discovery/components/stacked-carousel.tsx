@@ -114,7 +114,11 @@ export const StackedCarousel = <T,>({
           zIndex: 1000,
         }}
         contentContainerStyle={{
+          // Symmetric padding — without a matching paddingRight, the content
+          // ends flush with the last card and scroll runs out `paddingLeft`
+          // short of the offset needed to center it.
           paddingLeft: (screenWidth - cardWidth) / 2,
+          paddingRight: (screenWidth - cardWidth) / 2,
           paddingTop: STACK_OFFSET * 3,
         }}
       />

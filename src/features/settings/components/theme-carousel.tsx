@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 import Animated, {
   interpolateColor,
+  scrollTo,
+  useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
@@ -78,11 +80,26 @@ export const ThemeCarousel = ({
   // initial position — an unseeded shared value would leave every card's
   // scale/opacity and the glow color computed as if scrolled to the start.
   const scrollX = useSharedValue(initialScrollX);
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollX.set(event.contentOffset.x);
     },
   });
+
+  // contentOffset only applies on mount, so a viewport change (Android
+  // split-screen resize, iPad multitasking) recomputes cardCenters/
+  // initialScrollX above but leaves the native scroll position and scrollX
+  // pointing at the old, now-mismatched offset. Re-sync both when the
+  // viewport actually changes; skip the mount run since contentOffset
+  // already placed it there.
+  const lastViewportWidth = useRef(viewportWidth);
+  useEffect(() => {
+    if (lastViewportWidth.current === viewportWidth) return;
+    lastViewportWidth.current = viewportWidth;
+    scrollX.set(initialScrollX);
+    scrollTo(scrollRef, initialScrollX, 0, false);
+  }, [viewportWidth, initialScrollX, scrollRef, scrollX]);
 
   const glowStyle = useAnimatedStyle(() => {
     const backgroundColor = interpolateColor(
@@ -102,6 +119,7 @@ export const ThemeCarousel = ({
         />
       )}
       <Animated.ScrollView
+        ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         onScroll={scrollHandler}
