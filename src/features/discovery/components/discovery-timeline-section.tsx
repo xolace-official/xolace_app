@@ -11,7 +11,7 @@ import { DiscoveryMomentCard } from "./discovery-moment-card";
 import type { TimelineEntry } from "@/src/features/timeline/types";
 
 const MOMENT_COUNT = 4;
-const CARD_HEIGHT = 176;
+const CARD_HEIGHT = 166;
 // Matches the horizontal px-4 the rest of the screen (e.g. DailyQuotesCard)
 // uses, so the centered card's edges line up with everything above it.
 const SCREEN_PADDING_X = 32;
@@ -49,7 +49,7 @@ export function DiscoveryTimelineSection() {
   };
 
   return (
-    <View className="mt-3">
+    <View className="mt-10">
       <View className="flex-row items-start justify-between px-4">
         <View className="flex-1 pr-3">
           <AppText className="text-lg font-semibold text-foreground">

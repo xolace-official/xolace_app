@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   paginatorContainer: {
     alignItems: "center",
     bottom: 0,
-    height: 40,
+    height: 20,
     justifyContent: "center",
     left: 0,
     overflow: "hidden",

@@ -48,7 +48,7 @@ export const StackedCarousel = <T,>({
   // is clipped below, so the brief scale-1.15 "exiting" card extreme during
   // a swipe crops cleanly against this box instead of needing headroom kept
   // empty at rest just to fit a transient animation peak.
-  const carouselHeight = cardHeight + 84;
+  const carouselHeight = cardHeight + 52;
 
   const scrollX = useSharedValue(0);
 
