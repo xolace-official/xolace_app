@@ -1,3 +1,8 @@
+/**
+ * Every "may this conversation happen?" decision, in one place: blocking,
+ * block symmetry across the two role-orderings a pair can hold, and the
+ * open-conversation caps both sides are held to.
+ */
 import type { Doc } from "../_generated/dataModel";
 
 type Conversation = Doc<"xolacer_conversations">;
@@ -19,12 +24,6 @@ type RatingInputs = Pick<
  *   network failure must not error and must not make a second Stream call.
  * - `channelToFreeze` — absent for a still-`requested` conversation, which has
  *   no Stream channel yet: only the row is written.
- *
- * A row closed for any *other* reason is still blockable. Only `blocked` and
- * `xolacer_left` stop `requestConversation` reopening a pair, so a declined or
- * expired request leaves the seeker free to come back — exactly what blocking
- * exists to prevent. Noop-ing on all of `closed` would take the action, report
- * success and change nothing.
  */
 export function planBlock(conversation: BlockPlanInputs): {
   noop: boolean;
@@ -41,6 +40,34 @@ export function planBlock(conversation: BlockPlanInputs): {
  */
 export function isBlocked(closedReason: ClosedReason): boolean {
   return closedReason === "blocked";
+}
+
+/**
+ * Is either direction of this pair blocked?
+ *
+ * Two people can hold two independent rows — one where A asked B, one where B
+ * asked A — and a block only ever closed the row it was filed on. That left
+ * the person who blocked findable and reachable through the reverse role. The
+ * pair is the unit a block applies to, so both rows are read wherever one used
+ * to be. Either argument is absent when that direction was never opened.
+ */
+export function isPairBlocked(
+  forward: Pick<Conversation, "closedReason"> | null | undefined,
+  reverse: Pick<Conversation, "closedReason"> | null | undefined,
+): boolean {
+  return isBlocked(forward?.closedReason) || isBlocked(reverse?.closedReason);
+}
+
+/**
+ * Has this party used up their simultaneously-open conversations?
+ *
+ * Parameterized by cap so the xolacer side (8) and the seeker side (3) run the
+ * same comparison. `openCount` comes from a `.take(cap)`, so it saturates
+ * rather than overcounting — `>=` is what makes a grandfathered seeker already
+ * past the cap read as full instead of wrapping around.
+ */
+export function isAtOpenCap(openCount: number, cap: number): boolean {
+  return openCount >= cap;
 }
 
 /**

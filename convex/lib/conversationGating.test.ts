@@ -1,5 +1,85 @@
 import { describe, expect, it } from "bun:test";
-import { canRate, isBlocked, planBlock } from "./conversationBlock";
+import {
+  canRate,
+  isAtOpenCap,
+  isBlocked,
+  isPairBlocked,
+  planBlock,
+} from "./conversationGating";
+
+type Reason = "declined" | "expired" | "blocked" | "xolacer_left";
+
+describe("isPairBlocked", () => {
+  // forward row | reverse row → is the pair closed?
+  const cases: Array<{
+    forward?: Reason | null;
+    reverse?: Reason | null;
+    expected: boolean;
+    label: string;
+  }> = [
+    { expected: false, label: "neither direction was ever opened" },
+    {
+      forward: "blocked",
+      expected: true,
+      label: "forward pairing blocked",
+    },
+    // The regression this predicate exists for: A blocked B on the row where A
+    // asked, so B must not be able to open the row where B asks.
+    {
+      reverse: "blocked",
+      expected: true,
+      label: "reverse pairing blocked",
+    },
+    { forward: null, reverse: null, expected: false, label: "both unblocked" },
+    // A decline or an expiry is not a block — the seeker may come back.
+    {
+      forward: "declined",
+      reverse: "expired",
+      expected: false,
+      label: "closed for a non-blocked reason",
+    },
+    {
+      forward: "xolacer_left",
+      expected: false,
+      label: "xolacer_left is not a block",
+    },
+  ];
+
+  for (const c of cases) {
+    it(`${c.label}: forward=${c.forward} reverse=${c.reverse} → ${c.expected}`, () => {
+      expect(
+        isPairBlocked(
+          c.forward === undefined ? undefined : { closedReason: c.forward ?? undefined },
+          c.reverse === undefined ? undefined : { closedReason: c.reverse ?? undefined },
+        ),
+      ).toBe(c.expected);
+    });
+  }
+});
+
+describe("isAtOpenCap", () => {
+  const XOLACER_CAP = 8;
+  const SEEKER_CAP = 3;
+
+  // openCount | cap → is this party full?
+  const cases: Array<{ open: number; cap: number; expected: boolean }> = [
+    { open: 0, cap: SEEKER_CAP, expected: false },
+    { open: 2, cap: SEEKER_CAP, expected: false },
+    { open: 3, cap: SEEKER_CAP, expected: true },
+    // Grandfathered seekers from before the cap existed: still full, never
+    // negative-space back under it.
+    { open: 5, cap: SEEKER_CAP, expected: true },
+    { open: 7, cap: XOLACER_CAP, expected: false },
+    { open: 8, cap: XOLACER_CAP, expected: true },
+    { open: 9, cap: XOLACER_CAP, expected: true },
+  ];
+
+  for (const c of cases) {
+    it(`open=${c.open} cap=${c.cap} → ${c.expected}`, () => {
+      expect(isAtOpenCap(c.open, c.cap)).toBe(c.expected);
+    });
+  }
+});
 
 describe("planBlock", () => {
   // status | closedReason | channel → noop, channel to freeze

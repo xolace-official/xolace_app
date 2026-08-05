@@ -20,6 +20,66 @@ export function hasSpoken(conversation: {
   );
 }
 
+/**
+ * Who to show for one message bubble, or null to leave the SDK's own answer
+ * alone.
+ *
+ * The SDK's answer is a globally-shared, mutable user record keyed by profile
+ * id — one record per person for the whole app. A seeker who is *also* an
+ * active xolacer has that record written with their real name and photo, and
+ * it then renders in conversations where they are anonymous. The conversation
+ * itself already carries the right answer (`counterpartName` /
+ * `counterpartPhotoUrl`, computed per-conversation and per-role by the
+ * server), so that is the only thing read here.
+ *
+ * Pure, and resolved at render time from data already fetched for the header —
+ * which makes the fix retroactive for free: every existing message corrects
+ * itself the moment this ships, with nothing stored and nothing to backfill.
+ * Assumes exactly two members per channel, which is what this feature is.
+ */
+export function resolveMessageIdentity(
+  senderId: string | undefined,
+  myUserId: string | undefined,
+  conversation: { counterpartName: string; counterpartPhotoUrl?: string },
+): { name: string; image?: string } | null {
+  // Your own bubbles keep the SDK's identity: it's yours, and the header
+  // deliberately carries the *other* person.
+  if (!senderId || senderId === myUserId) return null;
+  return {
+    name: conversation.counterpartName,
+    image: conversation.counterpartPhotoUrl,
+  };
+}
+
+/**
+ * The `{ code, max, party }` payload a Convex limit refusal carries, or null
+ * for any other failure. Shared so the surfaces that can hit a cap read it the
+ * same way and only differ in the sentence they show.
+ */
+export function chatLimitError(
+  error: unknown,
+): { code?: string; max?: number; party?: 'seeker' | 'xolacer' } | null {
+  const data = (error as { data?: unknown } | null)?.data;
+  if (!data || typeof data !== 'object') return null;
+  return data as { code?: string; max?: number; party?: 'seeker' | 'xolacer' };
+}
+
+/**
+ * Why an accept didn't go through. `party` matters here and nowhere else: the
+ * xolacer tapping Accept is not always the one who is full, and "you have too
+ * many open conversations" is a confusing thing to read when you have two.
+ * The seeker is never named — only that they have no room right now.
+ */
+export function acceptFailureLabel(error: unknown): string {
+  const data = chatLimitError(error);
+  if (data?.code !== 'open_conversation_limit') {
+    return "Couldn't open the conversation. Try again.";
+  }
+  return data.party === 'xolacer'
+    ? `You're holding ${data.max ?? 8} open conversations. Let one rest before accepting another.`
+    : "They've got as many conversations open as they can hold right now. This request stays in your inbox.";
+}
+
 /** Compact relative time for chat rows: "2h", "3d", "3w". */
 export function formatCompactTime(timestamp: number): string {
   const diffMs = Date.now() - timestamp;

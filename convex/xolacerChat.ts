@@ -6,10 +6,10 @@ import {
   internalQuery,
   mutation,
   query,
+  MutationCtx, QueryCtx
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
-import { MutationCtx, QueryCtx } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import {
   conversationOrigin,
@@ -30,9 +30,11 @@ import {
 import {
   canRate,
   hasRealExchange,
+  isAtOpenCap,
   isBlocked,
+  isPairBlocked,
   planBlock,
-} from "./lib/conversationBlock";
+} from "./lib/conversationGating";
 import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 
 const statusValidator = v.union(
@@ -76,6 +78,17 @@ const conversationRowValidator = v.object({
 
 // Volume cap counts OPEN conversations only — resting/closed free the slot.
 export const MAX_OPEN_CONVERSATIONS = 8;
+/**
+ * The seeker's side of the same ceiling. Lower than the xolacer's 8 because
+ * the load is the opposite shape: a volunteer holds space for many people,
+ * someone seeking support spread across more than three threads is not being
+ * heard in any of them.
+ *
+ * Enforced only on new transitions. Seekers already past it when this shipped
+ * keep every conversation they have — a cap that retroactively closed threads
+ * would be the app walking out on someone mid-sentence.
+ */
+export const MAX_SEEKER_OPEN_CONVERSATIONS = 3;
 /**
  * Outbound requests a seeker may have awaiting an answer at once. Only
  * "requested" rows count — once a xolacer accepts or declines, the slot is
@@ -160,6 +173,80 @@ async function countOpen(ctx: QueryCtx, xolacerProfileId: Id<"emotional_profiles
   return open.length;
 }
 
+/** Conversations a seeker currently holds open. Stops at the cap. */
+async function countOpenAsSeeker(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+) {
+  const open = await ctx.db
+    .query("xolacer_conversations")
+    .withIndex("by_user_and_status", (q) =>
+      q.eq("userProfileId", userProfileId).eq("status", "open"),
+    )
+    .take(MAX_SEEKER_OPEN_CONVERSATIONS);
+  return open.length;
+}
+
+/**
+ * Guard for any transition that would put another conversation into "open" for
+ * either party. Distinct error code from `pending_request_limit` so the client
+ * can say which ceiling was hit, and `party` so the message names the right
+ * person — the xolacer hitting this on accept is not the one who is full.
+ */
+async function requireOpenSlot(
+  ctx: QueryCtx,
+  party: "seeker" | "xolacer",
+  profileId: Id<"emotional_profiles">,
+) {
+  const [openCount, cap] =
+    party === "seeker"
+      ? [await countOpenAsSeeker(ctx, profileId), MAX_SEEKER_OPEN_CONVERSATIONS]
+      : [await countOpen(ctx, profileId), MAX_OPEN_CONVERSATIONS];
+  if (isAtOpenCap(openCount, cap)) {
+    throw new ConvexError({ code: "open_conversation_limit", max: cap, party });
+  }
+}
+
+/**
+ * Both rows that can exist between two people — `forward` where the first
+ * argument asked, `reverse` where the second did. Two point lookups on
+ * `by_user_and_xolacer`, never a scan. The pair, not the row, is the unit a
+ * block applies to, so every gate reads both.
+ */
+async function loadPairRows(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+  xolacerProfileId: Id<"emotional_profiles">,
+) {
+  const forward = await ctx.db
+    .query("xolacer_conversations")
+    .withIndex("by_user_and_xolacer", (q) =>
+      q.eq("userProfileId", userProfileId).eq("xolacerProfileId", xolacerProfileId),
+    )
+    .unique();
+  const reverse = await ctx.db
+    .query("xolacer_conversations")
+    .withIndex("by_user_and_xolacer", (q) =>
+      q.eq("userProfileId", xolacerProfileId).eq("xolacerProfileId", userProfileId),
+    )
+    .unique();
+  return { forward, reverse };
+}
+
+/** `isPairBlocked` over both rows, for the gates that need only the verdict. */
+async function loadPairBlocked(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+  xolacerProfileId: Id<"emotional_profiles">,
+) {
+  const { forward, reverse } = await loadPairRows(
+    ctx,
+    userProfileId,
+    xolacerProfileId,
+  );
+  return isPairBlocked(forward, reverse);
+}
+
 /** Outbound requests a seeker has awaiting an answer. Stops at the cap. */
 async function countPendingRequests(
   ctx: QueryCtx,
@@ -196,7 +283,10 @@ function xolacerAvailable(
   openCount: number,
 ): profile is Doc<"xolacer_profiles"> {
   return Boolean(
-    profile && profile.complete && profile.active && openCount < MAX_OPEN_CONVERSATIONS,
+    profile &&
+      profile.complete &&
+      profile.active &&
+      !isAtOpenCap(openCount, MAX_OPEN_CONVERSATIONS),
   );
 }
 
@@ -302,6 +392,10 @@ export const directory = query({
     for (const xolacer of xolacers) {
       // A xolacer browsing the roster shouldn't see themselves.
       if (xolacer.emotionalProfileId === profile._id) continue;
+      // Blocking hides, it doesn't just refuse
+      if (await loadPairBlocked(ctx, profile._id, xolacer.emotionalProfileId)) {
+        continue;
+      }
       const openCount = await countOpen(ctx, xolacer.emotionalProfileId);
       rows.push({
         xolacerProfileId: xolacer.emotionalProfileId,
@@ -310,7 +404,7 @@ export const directory = query({
         photoUrl: xolacer.photoUrl,
         specialties: xolacer.specialties ?? [],
         ...publicRating(xolacer),
-        atCapacity: openCount >= MAX_OPEN_CONVERSATIONS,
+        atCapacity: isAtOpenCap(openCount, MAX_OPEN_CONVERSATIONS),
         xolacerSince: xolacer.createdAt,
       });
     }
@@ -351,6 +445,16 @@ export const xolacerProfile = query({
 
     const xolacer = await getXolacerProfileByProfileId(ctx, args.xolacerProfileId);
     if (!xolacer || !xolacer.complete) return null;
+
+    // Same as the directory, for the path that skips it: a deep link, or a
+    // row still cached on the client. Null renders "unavailable", not a
+    // dead-end request CTA.
+    if (
+      profile._id !== args.xolacerProfileId &&
+      (await loadPairBlocked(ctx, profile._id, args.xolacerProfileId))
+    ) {
+      return null;
+    }
 
     const openCount = await countOpen(ctx, args.xolacerProfileId);
     const conversation = await ctx.db
@@ -401,8 +505,6 @@ export const sessionSuggestion = query({
       displayName: v.string(),
       photoUrl: v.optional(v.string()),
       specialties: v.array(specialtyValidator),
-      // The one that matched. The card says what they listen to with it, and
-      // carries it to the profile so the escape hatch there stays on-thread.
       specialty: specialtyValidator,
       rating: v.optional(v.number()),
       ratingCount: v.number(),
@@ -414,18 +516,12 @@ export const sessionSuggestion = query({
     // Null, never throw, when the session isn't this user's or is gone. The
     // caller is the session-end close phase, which reads `sessionId` from a
     // route param and renders inside no error boundary — a throw there takes
-    // the whole screen down. Two ordinary paths reach it: a session the
-    // retention sweep has since deleted, and a stale deep link. Returning null
-    // degrades to exactly the pre-feature behaviour (the Bridge card), which
-    // is what chooseCloseOffer already does with null.
-    // Still an ownership check, not a relaxation: a session that fails it
-    // yields no suggestion at all.
+    // the whole screen down.
     const { profile } = await requireAuth(ctx);
     const session = await ctx.db.get(args.sessionId);
     if (!session || session.emotionalProfileId !== profile._id) return null;
 
-    // Decided once by the pipeline (lib/xolacerSuggestion); absent is the
-    // common case, and every gate that produced it already ran back then.
+
     const metadata = await ctx.db
       .query("emotional_metadata")
       .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
@@ -473,15 +569,14 @@ export const sessionSuggestion = query({
       // an expired request must not come back dressed as a fresh
       // recommendation, and a capped scan would eventually miss one. This is
       // what by_user_and_xolacer exists for.
-      const existing = await ctx.db
-        .query("xolacer_conversations")
-        .withIndex("by_user_and_xolacer", (q) =>
-          q
-            .eq("userProfileId", profile._id)
-            .eq("xolacerProfileId", xolacer.emotionalProfileId),
-        )
-        .unique();
-      if (existing) continue;
+      const { forward, reverse } = await loadPairRows(
+        ctx,
+        profile._id,
+        xolacer.emotionalProfileId,
+      );
+      if (forward) continue;
+
+      if (isPairBlocked(forward, reverse)) continue;
       const openCount = await countOpen(ctx, xolacer.emotionalProfileId);
       if (!xolacerAvailable(xolacer, openCount)) continue;
       candidates.push({
@@ -663,8 +758,6 @@ export const getConversation = query({
  */
 async function captureRequestSent(
   ctx: MutationCtx,
-  // Pseudonymous profile id, matching every other capture in the codebase.
-  // The Clerk tokenIdentifier never leaves Convex.
   distinctId: Id<"emotional_profiles">,
   origin: ConversationOrigin,
 ) {
@@ -726,30 +819,46 @@ export const requestConversation = mutation({
       throw new Error("This xolacer is not taking conversations right now");
     }
 
-    const existing = await ctx.db
-      .query("xolacer_conversations")
-      .withIndex("by_user_and_xolacer", (q) =>
-        q.eq("userProfileId", profile._id).eq("xolacerProfileId", args.xolacerProfileId),
-      )
-      .unique();
+    // `reverse` is the row where these two hold the opposite roles. A block
+    // filed there is the same block: without reading it, whoever was blocked
+    // could still open a fresh conversation simply by being the one who asks.
+    const { forward: existing, reverse } = await loadPairRows(
+      ctx,
+      profile._id,
+      args.xolacerProfileId,
+    );
 
     if (existing) {
       // One conversation per pair, ever. Re-requesting reopens the same row.
+      //
+      // Ahead of both new gates on purpose. The open cap, because this
+      // conversation is already one of the ones counted against it. The pair
+      // block, because a pair that was independently reachable before this
+      // shipped is grandfathered — throwing here would close a live thread
+      // whose "Open chat" worked yesterday.
       if (existing.status === "requested" || existing.status === "open") {
         return existing._id;
       }
+    }
+
+    if (isPairBlocked(existing, reverse)) {
+      throw new Error("This conversation can no longer be reopened");
+    }
+
+    if (existing) {
       if (existing.status === "resting") {
-        // Profile CTA says "Open chat" here; a request is just a resume.
+        // Profile CTA says "Open chat" here; a request is just a resume — and
+        // a resume takes an open slot, so it answers to the same cap.
+        await requireOpenSlot(ctx, "seeker", profile._id);
         await ctx.db.patch(existing._id, { status: "open" });
         return existing._id;
       }
-      // Closed: declined/expired may re-request; blocked/xolacer_left may not.
-      if (
-        existing.closedReason === "blocked" ||
-        existing.closedReason === "xolacer_left"
-      ) {
+      // Closed: declined/expired may re-request; xolacer_left may not.
+      // (`blocked` was already refused above, in either direction.)
+      if (existing.closedReason === "xolacer_left") {
         throw new Error("This conversation can no longer be reopened");
       }
+      await requireOpenSlot(ctx, "seeker", profile._id);
       await requirePendingRequestSlot(ctx, profile._id);
       // Overwritten, never merged: a re-request from the roster months later
       // must badge as direct.
@@ -764,6 +873,7 @@ export const requestConversation = mutation({
       return existing._id;
     }
 
+    await requireOpenSlot(ctx, "seeker", profile._id);
     await requirePendingRequestSlot(ctx, profile._id);
     const origin = await deriveOrigin(ctx, profile._id, xolacer);
     const conversationId = await ctx.db.insert("xolacer_conversations", {
@@ -797,6 +907,13 @@ export const getForAccept = internalQuery({
     if (conversation.status !== "requested") {
       throw new Error("Request is no longer pending");
     }
+    // Both caps, before any Stream call. The xolacer's was never re-checked
+    // here at all: requests that arrived while they had room could be accepted
+    // long after they hit 8, which is how someone ended up holding more than
+    // the cap allows. `markAccepted` re-checks transactionally; this pass is
+    // what stops a doomed accept from creating a channel first.
+    await requireOpenSlot(ctx, "xolacer", conversation.xolacerProfileId);
+    await requireOpenSlot(ctx, "seeker", conversation.userProfileId);
     const xolacer = await getXolacerProfileByProfileId(
       ctx,
       conversation.xolacerProfileId,
@@ -820,6 +937,13 @@ export const markAccepted = internalMutation({
   handler: async (ctx, args) => {
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation || conversation.status !== "requested") return;
+    // The transactional guard. Between `getForAccept` and here sits a Stream
+    // round trip, and either party can have filled their last slot in another
+    // conversation during it. Throwing leaves the row `requested` — the 7-day
+    // expiry sweep already cleans it up if nobody ever frees a slot, so no new
+    // lifecycle state is needed.
+    await requireOpenSlot(ctx, "xolacer", conversation.xolacerProfileId);
+    await requireOpenSlot(ctx, "seeker", conversation.userProfileId);
     await ctx.db.patch(args.conversationId, {
       status: "open",
       streamChannelId: args.streamChannelId,
@@ -935,12 +1059,6 @@ export const markBlocked = internalMutation({
 /**
  * Block the other party: freeze the Stream channel, then close the row.
  *
- * Order is load-bearing. If the write fails after a successful freeze, the
- * channel is frozen while the row still reads open — confusing, but safe, and
- * corrected by calling again. The reverse order would leave a row claiming a
- * block the server is not enforcing, which is the one outcome this exists to
- * prevent. A failed freeze throws and no block happens.
- *
  * Permanent: `requestConversation` refuses to reopen a `blocked` row, and one
  * conversation exists per pair forever. There is no unblock.
  */
@@ -985,6 +1103,24 @@ export const resumeConversation = mutation({
     if (!xolacerAvailable(xolacer, openCount)) {
       return { resumed: false };
     }
+    // A block on the reverse pairing closes this door too — resuming is
+    // exactly the "reach them again through the other role" this stops.
+    // Reported as `resumed: false`, never thrown: the resting/closed copy is
+    // deliberately identical for capacity and for a block, because nobody is
+    // ever told they were blocked.
+    if (
+      await loadPairBlocked(
+        ctx,
+        conversation.userProfileId,
+        conversation.xolacerProfileId,
+      )
+    ) {
+      return { resumed: false };
+    }
+    // Resuming re-takes a slot, so it can't be the way around the cap. Thrown
+    // rather than reported as `resumed: false`, which the client reads as the
+    // xolacer being unavailable — the wrong person to explain.
+    await requireOpenSlot(ctx, "seeker", conversation.userProfileId);
     await ctx.db.patch(args.conversationId, {
       status: "open",
       lastMessageAt: Date.now(),
