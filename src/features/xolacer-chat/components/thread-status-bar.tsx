@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
-import { acceptFailureLabel, chatLimitError } from '../utils';
+import { acceptFailureLabel, chatLimitError } from '@/src/features/xolacer-chat/utils';
 import type { ThreadConversation } from './thread-screen';
 
 /**

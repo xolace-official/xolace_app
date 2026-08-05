@@ -10,7 +10,7 @@ import type { Id } from '@/convex/_generated/dataModel';
 import { isSpecialty, specialtyListensTo } from '@/convex/lib/specialties';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
-import { chatLimitError, formatMonthYear, hasSpoken } from '../utils';
+import { chatLimitError, formatMonthYear, hasSpoken } from '@/src/features/xolacer-chat/utils';
 import { XolacerMenu } from './xolacer-menu';
 import { XolacerAvatar } from './xolacer-avatar';
 import { NewXolacerChip, RatingStars } from './rating-stars';

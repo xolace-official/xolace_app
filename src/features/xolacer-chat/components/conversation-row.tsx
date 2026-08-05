@@ -6,7 +6,7 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
-import { acceptFailureLabel, chatLimitError, formatCompactTime } from '../utils';
+import { acceptFailureLabel, chatLimitError, formatCompactTime } from '@/src/features/xolacer-chat/utils';
 import { XolacerAvatar } from './xolacer-avatar';
 import type { ConversationList } from './chats-list';
 
