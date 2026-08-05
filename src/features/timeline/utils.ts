@@ -5,6 +5,7 @@ type TimelineSession = {
   _id: string;
   mirrorText: string;
   entryType: string;
+  hasMirrorAudio: boolean;
   primaryEmotion: string | null;
   granularLabel: string | null;
   pathChosen: string | null;
@@ -19,6 +20,7 @@ export function toTimelineEntry(session: TimelineSession): TimelineEntry {
     id: session._id,
     mirrorText: session.mirrorText,
     entryType: session.entryType,
+    hasMirrorAudio: session.hasMirrorAudio,
     primaryEmotion: session.primaryEmotion,
     granularLabel: session.granularLabel,
     pathChosen: session.pathChosen,

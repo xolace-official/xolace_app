@@ -44,11 +44,12 @@ export const StackedCarousel = <T,>({
   // scroll-driver FlatList, the paginator), so Yoga gives the container zero
   // intrinsic height on its own — without this it collapses to just its
   // padding and the animated cards bleed into whatever sits above/below it
-  // in the page. Sized tight to the resting card + paginator row; overflow
-  // is clipped below, so the brief scale-1.15 "exiting" card extreme during
-  // a swipe crops cleanly against this box instead of needing headroom kept
-  // empty at rest just to fit a transient animation peak.
-  const carouselHeight = cardHeight + 52;
+  // in the page. Sized tight to the resting card + paginator row (20pt dots
+  // + 10pt breathing room); overflow is clipped below, so the brief
+  // scale-1.15 "exiting" card extreme during a swipe crops cleanly against
+  // this box instead of needing headroom kept empty at rest just to fit a
+  // transient animation peak.
+  const carouselHeight = cardHeight + 40;
 
   const scrollX = useSharedValue(0);
 
@@ -142,7 +143,15 @@ export const StackedCarousel = <T,>({
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    justifyContent: "center",
+    // flex-start (not "center"): cards have no explicit top/bottom inset, so
+    // Yoga's static position for them is derived from this. "center" was
+    // vertically centering the resting card across the *full* carouselHeight
+    // (card + paginator tail combined), pulling its bottom edge down into the
+    // paginator's pinned region and letting the card's higher zIndex paint
+    // over the dots. flex-start pins the card flush to the top so the tail
+    // below it is exactly `carouselHeight - cardHeight`, matching the gap
+    // the paginator math assumes.
+    justifyContent: "flex-start",
     overflow: "hidden",
   },
 });

@@ -142,7 +142,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
               accessibilityRole="menuitem"
               accessibilityLabel={item.accessibilityLabel}
             >
-              <View className="flex-row items-center justify-center gap-2.5 rounded-2xl bg-surface px-4 py-4">
+              <View className="flex-row items-center gap-4 rounded-2xl bg-surface px-6 py-4">
                 {renderIcon(item, 20)}
                 <AppText
                   className="text-sm font-medium text-foreground"

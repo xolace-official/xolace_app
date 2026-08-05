@@ -70,13 +70,15 @@ export function DiscoveryTimelineSection() {
         </PressableFeedback>
       </View>
 
-      <StackedCarousel
-        data={entries}
-        renderCard={(entry) => <DiscoveryMomentCard entry={entry} />}
-        onCardPress={goToSession}
-        cardWidth={cardWidth}
-        cardHeight={CARD_HEIGHT}
-      />
+      <View className="mt-4">
+        <StackedCarousel
+          data={entries}
+          renderCard={(entry) => <DiscoveryMomentCard entry={entry} />}
+          onCardPress={goToSession}
+          cardWidth={cardWidth}
+          cardHeight={CARD_HEIGHT}
+        />
+      </View>
     </View>
   );
 }

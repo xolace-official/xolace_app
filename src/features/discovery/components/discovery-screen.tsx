@@ -20,7 +20,7 @@ export function DiscoveryScreen() {
         contentInsetAdjustmentBehavior="never"
         alwaysBounceVertical={false}
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: insets.bottom + DOCK_CLEARANCE }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + DOCK_CLEARANCE - 4 }}
       >
         <DiscoveryHeader />
 

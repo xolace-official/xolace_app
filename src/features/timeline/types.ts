@@ -2,6 +2,7 @@ export interface TimelineEntry {
   id: string;
   mirrorText: string;
   entryType: string;
+  hasMirrorAudio: boolean;
   primaryEmotion: string | null;
   granularLabel: string | null;
   pathChosen: string | null;

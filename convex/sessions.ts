@@ -709,6 +709,7 @@ export const listForTimeline = query({
             _id: session._id,
             mirrorText: session.mirrorText!,
             entryType: session.entryType,
+            hasMirrorAudio: session.mirrorAudioStorageId != null,
             confirmationState: session.confirmationState ?? null,
             pathChosen: session.pathChosen ?? null,
             toneUsed: session.toneUsed ?? null,
