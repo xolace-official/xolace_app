@@ -1,5 +1,4 @@
 import { ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DiscoveryHeader } from './discovery-header';
 import { DailyQuotesCard } from './daily-quotes-card';
@@ -12,15 +11,13 @@ import { DOCK_CLEARANCE, ReflectDock } from './reflect-dock';
  * pads the safe area itself.
  */
 export function DiscoveryScreen() {
-  const insets = useSafeAreaInsets();
-
   return (
     <View className="flex-1 bg-background">
       <ScrollView
         contentInsetAdjustmentBehavior="never"
         alwaysBounceVertical={false}
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: insets.bottom + DOCK_CLEARANCE - 4 }}
+        contentContainerStyle={{ paddingBottom: DOCK_CLEARANCE + 30 }}
       >
         <DiscoveryHeader />
 
