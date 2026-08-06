@@ -3,14 +3,14 @@
  * block symmetry across the two role-orderings a pair can hold, and the
  * open-conversation caps both sides are held to.
  */
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 
 type Conversation = Doc<"xolacer_conversations">;
 type ClosedReason = Conversation["closedReason"];
 
-type BlockPlanInputs = Pick<
+export type BlockPlanRow = Pick<
   Conversation,
-  "status" | "streamChannelId" | "closedReason"
+  "_id" | "streamChannelId" | "closedReason"
 >;
 type RatingInputs = Pick<
   Conversation,
@@ -18,19 +18,45 @@ type RatingInputs = Pick<
 >;
 
 /**
- * What blocking this conversation has to do.
+ * What blocking this pair has to do — the whole decision, in one place, so the
+ * pair-versus-row question cannot drift apart again.
  *
- * - `noop` — already blocked. Blocking twice is harmless, so a retry after a
- *   network failure must not error and must not make a second Stream call.
- * - `channelToFreeze` — absent for a still-`requested` conversation, which has
- *   no Stream channel yet: only the row is written.
+ * A block applies to the person, so both role-orderings are planned together:
+ * every row the pair holds closes, and every channel those rows carry freezes.
+ * A sibling still in `requested` closes too (no live invitation survives from
+ * someone just blocked), and a sibling already closed for another reason has
+ * its reason overwritten — `closedReason` is a gate input, not an audit log,
+ * and a `declined` row would otherwise be re-requestable.
+ *
+ * - `noop` — either direction is already blocked, which means the whole pair
+ *   is already down: nothing survives a block for the sibling to be reached
+ *   through. Blocking twice is harmless, so a retry after a network failure
+ *   must not error and must not make a second Stream call.
+ * - `channelsToFreeze` — empty for a still-`requested` row, which has no Stream
+ *   channel yet: only the row is written. Freezing is what actually stops a
+ *   message; the client holds its own Stream token, so a Convex read gate only
+ *   decides what the UI shows.
  */
-export function planBlock(conversation: BlockPlanInputs): {
+export function planBlock(pair: {
+  forward: BlockPlanRow | null | undefined;
+  reverse: BlockPlanRow | null | undefined;
+}): {
   noop: boolean;
-  channelToFreeze?: string;
+  channelsToFreeze: string[];
+  rowsToClose: Id<"xolacer_conversations">[];
 } {
-  if (isBlocked(conversation.closedReason)) return { noop: true };
-  return { noop: false, channelToFreeze: conversation.streamChannelId };
+  if (isPairBlocked(pair.forward, pair.reverse))
+    return { noop: true, channelsToFreeze: [], rowsToClose: [] };
+  const rows = [pair.forward, pair.reverse].filter((row): row is BlockPlanRow =>
+    Boolean(row),
+  );
+  return {
+    noop: false,
+    channelsToFreeze: rows
+      .map((row) => row.streamChannelId)
+      .filter((id): id is string => Boolean(id)),
+    rowsToClose: rows.map((row) => row._id),
+  };
 }
 
 /**

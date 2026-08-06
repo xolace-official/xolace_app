@@ -957,6 +957,15 @@ export const markAccepted = internalMutation({
  * Accept a request: create the Stream channel (network I/O → action), then
  * flip the row to open. Channel id is deterministic per conversation, so a
  * retry after a partial failure is idempotent.
+ *
+ * Known and deliberately unfixed: the Stream round trip sits between the
+ * pre-flight cap check in `getForAccept` and the transactional re-check in
+ * `markAccepted`, so an accept that loses that race leaves an orphaned channel
+ * in Stream. It is unreachable through the product — the client can only reach
+ * a channel via the id stored on the row — the deterministic id means a retry
+ * reuses it, and channels are not metered. Every fix adds a network call and a
+ * new failure path to defend against a stray empty channel in Stream's
+ * database.
  */
 export const acceptRequest = action({
   args: { conversationId: v.id("xolacer_conversations") },
@@ -1023,62 +1032,84 @@ export const declineRequest = mutation({
  * Participant guard + block plan in query ctx, so the action stays thin.
  * Deliberately no role check: both roles may block. A xolacer's only exit
  * today (`declineRequest`) stops working the moment they accept.
+ *
+ * Planned over both rows the pair can hold, never the one the block was filed
+ * on: a pair with a second open row would otherwise keep messaging through it.
  */
 export const getForBlock = internalQuery({
   args: { conversationId: v.id("xolacer_conversations") },
   returns: v.object({
     noop: v.boolean(),
-    channelToFreeze: v.optional(v.string()),
+    channelsToFreeze: v.array(v.string()),
+    rowsToClose: v.array(v.id("xolacer_conversations")),
   }),
   handler: async (ctx, args) => {
     const { conversation } = await requireConversationParticipant(
       ctx,
       args.conversationId,
     );
-    return planBlock(conversation);
+    return planBlock(
+      await loadPairRows(
+        ctx,
+        conversation.userProfileId,
+        conversation.xolacerProfileId,
+      ),
+    );
   },
 });
 
 export const markBlocked = internalMutation({
-  args: { conversationId: v.id("xolacer_conversations") },
+  args: { conversationIds: v.array(v.id("xolacer_conversations")) },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const conversation = await ctx.db.get(args.conversationId);
-    // Re-checked here, not just in the plan: the freeze is a network round
-    // trip, so the row can have been blocked in between. Any other closed
-    // reason is still overwritten — see `planBlock`.
-    if (!conversation || isBlocked(conversation.closedReason)) return null;
-    await ctx.db.patch(args.conversationId, {
-      status: "closed",
-      closedReason: "blocked",
-    });
+    for (const conversationId of args.conversationIds) {
+      const conversation = await ctx.db.get(conversationId);
+      // Re-checked here, not just in the plan: the freeze is a network round
+      // trip, so the row can have been blocked in between. Any other closed
+      // reason is still overwritten — see `planBlock`.
+      if (!conversation || isBlocked(conversation.closedReason)) continue;
+      await ctx.db.patch(conversationId, {
+        status: "closed",
+        closedReason: "blocked",
+      });
+    }
     return null;
   },
 });
 
 /**
- * Block the other party: freeze the Stream channel, then close the row.
+ * Block the other party: freeze every Stream channel the pair holds, then
+ * close every row they hold, in one mutation.
  *
- * Permanent: `requestConversation` refuses to reopen a `blocked` row, and one
- * conversation exists per pair forever. There is no unblock.
+ * If a freeze throws, nothing is marked and the user retries — freezing is
+ * idempotent on Stream's side and an already-blocked pair plans as a noop, so
+ * the retry is clean. No compensation logic.
+ *
+ * Permanent: `requestConversation` refuses to reopen a `blocked` row, and the
+ * pair is read through `isPairBlocked` everywhere. There is no unblock.
  */
 export const blockConversation = action({
   args: { conversationId: v.id("xolacer_conversations") },
   returns: v.null(),
   handler: async (ctx, args) => {
     if (!chatEnabled()) throw new Error("Xolacer chat is not available");
-    const plan: { noop: boolean; channelToFreeze?: string } = await ctx.runQuery(
-      internal.xolacerChat.getForBlock,
-      { conversationId: args.conversationId },
-    );
-    // Already closed — blocking twice is harmless, so a retry after a network
+    const plan: {
+      noop: boolean;
+      channelsToFreeze: string[];
+      rowsToClose: Id<"xolacer_conversations">[];
+    } = await ctx.runQuery(internal.xolacerChat.getForBlock, {
+      conversationId: args.conversationId,
+    });
+    // Already blocked — blocking twice is harmless, so a retry after a network
     // error must not error and must not make a second Stream call.
     if (plan.noop) return null;
-    // Absent while still `requested`: no channel exists yet, so only the row
-    // is written.
-    if (plan.channelToFreeze) await freezeStreamChannel(plan.channelToFreeze);
+    // Empty while a row is still `requested`: no channel exists yet, so only
+    // the row is written.
+    for (const channelId of plan.channelsToFreeze) {
+      await freezeStreamChannel(channelId);
+    }
     await ctx.runMutation(internal.xolacerChat.markBlocked, {
-      conversationId: args.conversationId,
+      conversationIds: plan.rowsToClose,
     });
     return null;
   },

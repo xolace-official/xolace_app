@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+  type BlockPlanRow,
   canRate,
   isAtOpenCap,
   isBlocked,
@@ -82,63 +83,88 @@ describe("isAtOpenCap", () => {
 });
 
 describe("planBlock", () => {
-  // status | closedReason | channel → noop, channel to freeze
+  type Row = { id: string; reason?: Reason; channel?: string };
+  const row = (r: Row | undefined): BlockPlanRow | undefined =>
+    r === undefined
+      ? undefined
+      : {
+          _id: r.id as BlockPlanRow["_id"],
+          closedReason: r.reason,
+          streamChannelId: r.channel,
+        };
+
+  // forward row | reverse row → noop, channels to freeze, rows to close
   const cases: Array<{
-    status: "requested" | "open" | "resting" | "closed";
-    reason?: "declined" | "expired" | "blocked" | "xolacer_left";
-    channel?: string;
+    forward?: Row;
+    reverse?: Row;
     noop: boolean;
-    freeze?: string;
-    label?: string;
+    freeze: string[];
+    close: string[];
+    label: string;
   }> = [
-    // Retry after a network failure — no error, no second Stream call.
+    // The regression this ticket exists for: a pair holding two open rows must
+    // lose both, or they keep messaging through the sibling.
     {
-      status: "closed",
-      reason: "blocked",
-      channel: "xolacer_abc",
+      forward: { id: "f", channel: "ch_f" },
+      reverse: { id: "r", channel: "ch_r" },
+      noop: false,
+      freeze: ["ch_f", "ch_r"],
+      close: ["f", "r"],
+      label: "both rows open",
+    },
+    // A still-`requested` sibling has no channel, but must still close — a
+    // live invitation from the person just blocked cannot survive.
+    {
+      forward: { id: "f", channel: "ch_f" },
+      reverse: { id: "r" },
+      noop: false,
+      freeze: ["ch_f"],
+      close: ["f", "r"],
+      label: "sibling requested, no channel",
+    },
+    // `closedReason` is a gate input, not an audit log: a declined sibling
+    // left unblocked is a way back in.
+    {
+      forward: { id: "f", channel: "ch_f" },
+      reverse: { id: "r", reason: "declined", channel: "ch_r" },
+      noop: false,
+      freeze: ["ch_f", "ch_r"],
+      close: ["f", "r"],
+      label: "sibling closed for another reason is overwritten",
+    },
+    {
+      forward: { id: "f", channel: "ch_f" },
+      noop: false,
+      freeze: ["ch_f"],
+      close: ["f"],
+      label: "only one row present",
+    },
+    { forward: { id: "f" }, noop: false, freeze: [], close: ["f"], label: "only one row, requested" },
+    // Retry after a network failure, or a double-tap — no error, no Stream call.
+    {
+      forward: { id: "f", reason: "blocked", channel: "ch_f" },
+      reverse: { id: "r", channel: "ch_r" },
       noop: true,
-      label: "already blocked",
-    },
-    { status: "closed", reason: "blocked", noop: true, label: "already blocked" },
-    // Closed for any other reason is still blockable: only `blocked` and
-    // `xolacer_left` stop the seeker re-requesting, so a declined or expired
-    // row left unblocked is a way back in.
-    {
-      status: "closed",
-      reason: "declined",
-      noop: false,
-      label: "declined is still blockable",
+      freeze: [],
+      close: [],
+      label: "already blocked on the forward row",
     },
     {
-      status: "closed",
-      reason: "expired",
-      noop: false,
-      label: "expired is still blockable",
+      forward: { id: "f", channel: "ch_f" },
+      reverse: { id: "r", reason: "blocked", channel: "ch_r" },
+      noop: true,
+      freeze: [],
+      close: [],
+      label: "already blocked on the reverse row",
     },
-    {
-      status: "closed",
-      reason: "xolacer_left",
-      channel: "xolacer_abc",
-      noop: false,
-      freeze: "xolacer_abc",
-      label: "xolacer_left is still blockable",
-    },
-    // Unaccepted request: nothing to freeze, but the row still closes.
-    { status: "requested", noop: false },
-    { status: "open", channel: "xolacer_abc", noop: false, freeze: "xolacer_abc" },
-    { status: "resting", channel: "xolacer_abc", noop: false, freeze: "xolacer_abc" },
   ];
 
   for (const c of cases) {
-    const name = `${c.label ? `${c.label}: ` : ""}status=${c.status} reason=${c.reason} channel=${c.channel} → noop=${c.noop} freeze=${c.freeze}`;
-    it(name, () => {
-      const plan = planBlock({
-        status: c.status,
-        closedReason: c.reason,
-        streamChannelId: c.channel,
-      });
+    it(`${c.label} → noop=${c.noop} freeze=[${c.freeze}] close=[${c.close}]`, () => {
+      const plan = planBlock({ forward: row(c.forward), reverse: row(c.reverse) });
       expect(plan.noop).toBe(c.noop);
-      expect(plan.channelToFreeze).toBe(c.freeze as string | undefined);
+      expect(plan.channelsToFreeze).toEqual(c.freeze);
+      expect(plan.rowsToClose).toEqual(c.close as never[]);
     });
   }
 });
