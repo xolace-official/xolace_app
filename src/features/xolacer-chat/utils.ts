@@ -35,16 +35,24 @@ export function hasSpoken(conversation: {
  * Pure, and resolved at render time from data already fetched for the header —
  * which makes the fix retroactive for free: every existing message corrects
  * itself the moment this ships, with nothing stored and nothing to backfill.
- * Assumes exactly two members per channel, which is what this feature is.
+ *
+ * The match is positive — sender *is* the counterpart — rather than "sender is
+ * not me". Matching by negation fails open onto the counterpart for every
+ * sender it can't classify: your own bubbles wear the other person's name for
+ * the moment the client's user id is unset during a reconnect, and any sender
+ * who is neither member (a system notice, a safety intervention) would render
+ * as if the other person wrote it. Anything unrecognised keeps the SDK's own
+ * record instead, so nothing is impersonated.
  */
 export function resolveMessageIdentity(
   senderId: string | undefined,
-  myUserId: string | undefined,
-  conversation: { counterpartName: string; counterpartPhotoUrl?: string },
+  conversation: {
+    counterpartProfileId: string;
+    counterpartName: string;
+    counterpartPhotoUrl?: string;
+  },
 ): { name: string; image?: string } | null {
-  // Your own bubbles keep the SDK's identity: it's yours, and the header
-  // deliberately carries the *other* person.
-  if (!senderId || senderId === myUserId) return null;
+  if (senderId !== conversation.counterpartProfileId) return null;
   return {
     name: conversation.counterpartName,
     image: conversation.counterpartPhotoUrl,

@@ -98,7 +98,19 @@ async function streamRequest(
 
 export type StreamUser = { id: string; name?: string; image?: string };
 
-/** Batch upsert Stream users (id = emotionalProfileId, display data only). */
+/**
+ * Batch upsert Stream users (id = emotionalProfileId, display data only).
+ *
+ * **The record is deliberately pseudonymous, always.** There is one global,
+ * mutable Stream user per profile id, and the same person is a named xolacer in
+ * one conversation and an anonymous seeker in another — so no single record can
+ * be right, and a real name written here would render wherever their anonymous
+ * side is shown. Every caller passes the pseudonym and the catalog avatar,
+ * whether or not the person is a published xolacer. Real identity is resolved
+ * per-conversation and per-role by `getConversation`, and the client overrides
+ * every Stream surface that renders a name or image with it — see
+ * COMPONENT_OVERRIDES in `thread-messages.tsx`.
+ */
 export async function upsertStreamUsers(users: StreamUser[]): Promise<void> {
   const userMap: Record<string, StreamUser> = {};
   for (const user of users) userMap[user.id] = user;

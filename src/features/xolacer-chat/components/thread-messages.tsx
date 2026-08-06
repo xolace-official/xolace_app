@@ -62,6 +62,14 @@ const TEXT_ONLY_CAPABILITIES = { sendReaction: false, uploadFile: false };
  * and the per-message avatar to ConversationMessageAuthor, so a bubble's
  * identity comes from the conversation rather than Stream's globally-shared,
  * mutable user record.
+ *
+ * **The rule for anything added here:** any Stream component that renders a
+ * user's name or image must be overridden with conversation-sourced identity.
+ * The Stream user record is deliberately pseudonymous for everyone (see
+ * `upsertStreamUsers` server-side), so it is never the right thing to show a
+ * seeker — and it is one record per person, so it can't be. That covers the
+ * typing indicator, read receipts, and anything else that grows an avatar:
+ * enabling one without an override leaks the wrong identity by default.
  */
 const COMPONENT_OVERRIDES = {
   NetworkDownIndicator: ChannelErrorIndicator,
@@ -171,10 +179,7 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
         override reads its conversation from the context below rather than
         from a closure. */}
       <WithComponents overrides={COMPONENT_OVERRIDES}>
-        <ConversationIdentityProvider
-          conversation={conversation}
-          myUserId={client.userID}
-        >
+        <ConversationIdentityProvider conversation={conversation}>
           <Channel
             channel={channel}
             // Must be explicit: Channel destructures both with no default, so

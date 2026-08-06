@@ -18,22 +18,19 @@ import type { ThreadConversation } from './thread-screen';
  */
 const ConversationIdentityContext = createContext<{
   conversation: ThreadConversation;
-  myUserId?: string;
 } | null>(null);
 
 export function ConversationIdentityProvider({
   conversation,
-  myUserId,
   children,
 }: {
   conversation: ThreadConversation;
-  myUserId?: string;
   children: ReactNode;
 }) {
   // Kept despite the React Compiler: a new value object here re-renders every
   // message bubble in the list, and the compiler doesn't stabilize across a
   // context boundary.
-  const value = useMemo(() => ({ conversation, myUserId }), [conversation, myUserId]);
+  const value = useMemo(() => ({ conversation }), [conversation]);
   return (
     <ConversationIdentityContext.Provider value={value}>
       {children}
@@ -57,11 +54,7 @@ export function ConversationMessageAuthor(props: MessageAuthorProps) {
   const identity = useContext(ConversationIdentityContext);
 
   const override = identity
-    ? resolveMessageIdentity(
-        message.user?.id,
-        identity.myUserId,
-        identity.conversation,
-      )
+    ? resolveMessageIdentity(message.user?.id, identity.conversation)
     : null;
   if (!override || !message.user) return <MessageAuthor {...props} />;
 

@@ -142,16 +142,17 @@ function pseudonym(profileId: string) {
 }
 
 /**
- * The seeker's chat picture — their chosen catalog avatar. `avatars.url` is
- * already a denormalized public storage URL, so Stream takes it as-is.
- * Curated illustrations only, never a photo, so it leaks nothing the
- * pseudonym doesn't.
+ * Anyone's anonymous chat picture — the catalog avatar they chose.
+ * `avatars.url` is already a denormalized public storage URL, so Stream takes
+ * it as-is. Curated illustrations only, never a photo, so it leaks nothing the
+ * pseudonym doesn't — which is why it's also the right picture for a published
+ * xolacer's own Stream record.
  *
  * Two reads per row in myConversations (up to 100 conversations) is the only
  * cost worth naming; if that ever bites, denormalize avatarUrl onto
  * xolacer_conversations at request time. Not yet.
  */
-async function seekerImage(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
+async function catalogAvatar(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
   const prefs = await ctx.db
     .query("preferences")
     .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
@@ -662,7 +663,7 @@ export const myConversations = query({
         xolacerProfileId: conversation.xolacerProfileId,
         counterpartProfileId: conversation.userProfileId,
         counterpartName: pseudonym(conversation.userProfileId),
-        counterpartPhotoUrl: await seekerImage(ctx, conversation.userProfileId),
+        counterpartPhotoUrl: await catalogAvatar(ctx, conversation.userProfileId),
         origin: conversation.origin,
       });
     }
@@ -740,7 +741,7 @@ export const getConversation = query({
       counterpartPhotoUrl:
         role === "user"
           ? xolacer?.photoUrl
-          : await seekerImage(ctx, conversation.userProfileId),
+          : await catalogAvatar(ctx, conversation.userProfileId),
       myStreamUserId: profile._id,
       // Returned to both roles, matching myConversations: origin is the
       // seeker's own data, so it leaks nothing back to them, and one field
@@ -894,9 +895,8 @@ export const getForAccept = internalQuery({
   returns: v.object({
     userProfileId: v.id("emotional_profiles"),
     xolacerProfileId: v.id("emotional_profiles"),
-    xolacerName: v.string(),
-    xolacerPhotoUrl: v.optional(v.string()),
-    userPhotoUrl: v.optional(v.string()),
+    xolacerImage: v.optional(v.string()),
+    userImage: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
     const { conversation, role } = await requireConversationParticipant(
@@ -914,16 +914,11 @@ export const getForAccept = internalQuery({
     // what stops a doomed accept from creating a channel first.
     await requireOpenSlot(ctx, "xolacer", conversation.xolacerProfileId);
     await requireOpenSlot(ctx, "seeker", conversation.userProfileId);
-    const xolacer = await getXolacerProfileByProfileId(
-      ctx,
-      conversation.xolacerProfileId,
-    );
     return {
       userProfileId: conversation.userProfileId,
       xolacerProfileId: conversation.xolacerProfileId,
-      xolacerName: xolacer?.displayName ?? "Xolacer",
-      xolacerPhotoUrl: xolacer?.photoUrl,
-      userPhotoUrl: await seekerImage(ctx, conversation.userProfileId),
+      xolacerImage: await catalogAvatar(ctx, conversation.xolacerProfileId),
+      userImage: await catalogAvatar(ctx, conversation.userProfileId),
     };
   },
 });
@@ -975,9 +970,8 @@ export const acceptRequest = action({
     const info: {
       userProfileId: Id<"emotional_profiles">;
       xolacerProfileId: Id<"emotional_profiles">;
-      xolacerName: string;
-      xolacerPhotoUrl?: string;
-      userPhotoUrl?: string;
+      xolacerImage?: string;
+      userImage?: string;
     } = await ctx.runQuery(internal.xolacerChat.getForAccept, {
       conversationId: args.conversationId,
     });
@@ -986,13 +980,13 @@ export const acceptRequest = action({
     await upsertStreamUsers([
       {
         id: info.xolacerProfileId,
-        name: info.xolacerName,
-        image: info.xolacerPhotoUrl,
+        name: pseudonym(info.xolacerProfileId),
+        image: info.xolacerImage,
       },
       {
         id: info.userProfileId,
         name: pseudonym(info.userProfileId),
-        image: info.userPhotoUrl,
+        image: info.userImage,
       },
     ]);
     await createXolacerChannel(
@@ -1270,16 +1264,14 @@ export const getStreamIdentity = internalQuery({
     image: v.optional(v.string()),
   }),
   handler: async (ctx) => {
-    const { user, profile } = await requireAuth(ctx);
-    const xolacer = user.isXolacer
-      ? await getXolacerProfileByProfileId(ctx, profile._id)
-      : null;
+    const { profile } = await requireAuth(ctx);
+    // No branch on whether they're a published xolacer: this record is global
+    // and would follow them into the conversations where they're an anonymous
+    // seeker. See `upsertStreamUsers` — nothing reads it for display.
     return {
       userId: profile._id,
-      name: xolacer?.complete ? (xolacer.displayName ?? "") : pseudonym(profile._id),
-      image: xolacer?.complete
-        ? xolacer.photoUrl
-        : await seekerImage(ctx, profile._id),
+      name: pseudonym(profile._id),
+      image: await catalogAvatar(ctx, profile._id),
     };
   },
 });
