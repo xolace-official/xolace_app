@@ -51,6 +51,23 @@ const NO_REACTIONS: ReactionData[] = [];
 const TEXT_ONLY_CAPABILITIES = { sendReaction: false, uploadFile: false };
 
 /**
+ * Bounds the channel's height so the composer stays on screen.
+ *
+ * `Channel`'s root is a `KeyboardCompatibleView` that it renders with no style
+ * of its own — a plain View, height `auto` — and its only child is
+ * `<View style={{ height: '100%' }}>`. A percentage height resolves to `auto`
+ * inside an auto-height parent, so the whole column ends up unbounded: the
+ * message list's `flex: 1` has no free space to divide and grows to its own
+ * content height instead, and the composer is pushed however far past the
+ * bottom edge that content runs. Short threads fit and look fine; a thread with
+ * history pushes the composer clean off the screen.
+ *
+ * `flex: 1` here is the only place a definite height can enter — the prop is
+ * spread last, so this is the style the view actually renders with.
+ */
+const CHANNEL_ROOT_PROPS = { style: { flex: 1 } };
+
+/**
  * Everything except threadReply and quotedReply — v1 has no reply surface.
  *
  * Subtractive on purpose. Building the array by hand skipped Stream's own
@@ -185,6 +202,7 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
             // Must be explicit: Channel destructures both with no default, so
             // omitting them passes `undefined`, not 0.
             keyboardVerticalOffset={headerOffset}
+            additionalKeyboardAvoidingViewProps={CHANNEL_ROOT_PROPS}
             topInset={insets.top}
             supportedReactions={NO_REACTIONS}
             overrideOwnCapabilities={TEXT_ONLY_CAPABILITIES}
