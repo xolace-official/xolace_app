@@ -26,12 +26,14 @@ import { ChannelErrorIndicator, OfflineStrip } from './offline-strip';
 import { SafetyStrip } from './safety-strip';
 import { ThreadSkeleton } from './thread-skeleton';
 import { ThreadStatusBar } from './thread-status-bar';
+import { ConversationTypingIndicator } from './typing-indicator';
 import type { ThreadConversation } from './thread-screen';
 
 /**
- * v1 surfaces text only: no thread replies, no quoted replies, no reactions,
- * no typing indicator. Stream provides all of them — the constraint is the
- * deliberate "small surface" posture, not a capability gap.
+ * v1 surfaces text only: no thread replies, no quoted replies, no reactions.
+ * Stream provides all of them — the constraint is the deliberate "small
+ * surface" posture, not a capability gap. Typing indicator and unread count
+ * were added post-v1 to improve the live chat experience.
  */
 const NO_REACTIONS: ReactionData[] = [];
 
@@ -76,21 +78,22 @@ const CHANNEL_ROOT_PROPS = { style: { flex: 1 } };
  */
 /**
  * Hands the offline half of Stream's indicator to OfflineStrip — see there —
- * and the per-message avatar to ConversationMessageAuthor, so a bubble's
- * identity comes from the conversation rather than Stream's globally-shared,
- * mutable user record.
+ * the per-message avatar to ConversationMessageAuthor, and the typing
+ * indicator to ConversationTypingIndicator, so identity everywhere comes from
+ * the conversation rather than Stream's globally-shared, mutable user record.
  *
  * **The rule for anything added here:** any Stream component that renders a
  * user's name or image must be overridden with conversation-sourced identity.
  * The Stream user record is deliberately pseudonymous for everyone (see
  * `upsertStreamUsers` server-side), so it is never the right thing to show a
- * seeker — and it is one record per person, so it can't be. That covers the
- * typing indicator, read receipts, and anything else that grows an avatar:
- * enabling one without an override leaks the wrong identity by default.
+ * seeker — and it is one record per person, so it can't be. That still covers
+ * read receipts and anything else that grows an avatar: enabling one without
+ * an override leaks the wrong identity by default.
  */
 const COMPONENT_OVERRIDES = {
   NetworkDownIndicator: ChannelErrorIndicator,
   MessageAuthor: ConversationMessageAuthor,
+  TypingIndicator: ConversationTypingIndicator,
 };
 
 const ALLOWED_ACTIONS = new Set([
@@ -215,7 +218,7 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
             messageActions={minimalMessageActions}
           >
             <SafetyStrip />
-            <MessageList disableTypingIndicator />
+            <MessageList />
             {conversation.status === 'open' ? (
               <>
                 <OfflineStrip />

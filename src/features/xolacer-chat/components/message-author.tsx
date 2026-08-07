@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, use, useMemo, type ReactNode } from 'react';
 import {
   MessageAuthor,
   useMessageContext,
@@ -19,6 +19,11 @@ import type { ThreadConversation } from './thread-screen';
 const ConversationIdentityContext = createContext<{
   conversation: ThreadConversation;
 } | null>(null);
+
+/** The conversation behind the currently mounted `WithComponents` override tree. */
+export function useConversationIdentity() {
+  return use(ConversationIdentityContext);
+}
 
 export function ConversationIdentityProvider({
   conversation,
@@ -51,7 +56,7 @@ export function ConversationIdentityProvider({
  */
 export function ConversationMessageAuthor(props: MessageAuthorProps) {
   const { message } = useMessageContext();
-  const identity = useContext(ConversationIdentityContext);
+  const identity = useConversationIdentity();
 
   const override = identity
     ? resolveMessageIdentity(message.user?.id, identity.conversation)

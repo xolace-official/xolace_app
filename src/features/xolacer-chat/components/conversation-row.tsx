@@ -7,6 +7,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
 import { acceptFailureLabel, chatLimitError, formatCompactTime } from '@/src/features/xolacer-chat/utils';
+import { useConversationUnreadCount } from '@/src/features/xolacer-chat/use-conversation-unread-count';
 import { XolacerAvatar } from './xolacer-avatar';
 import type { ConversationList } from './chats-list';
 
@@ -73,6 +74,9 @@ export function ConversationRow({
   const declineRequest = useMutation(api.xolacerChat.declineRequest);
   const { toast } = useToast();
   const [pending, setPending] = useState<'accept' | 'decline' | null>(null);
+  const unreadCount = useConversationUnreadCount(
+    conversation.status === 'open' ? conversation.streamChannelId : undefined,
+  );
 
   const run = (kind: 'accept' | 'decline', failLabel: string) => {
     if (pending) return;
@@ -147,6 +151,13 @@ export function ConversationRow({
               <AppText className="text-[11px] text-muted ml-auto">
                 {formatCompactTime(when)}
               </AppText>
+              {unreadCount > 0 && (
+                <View className="min-w-[18px] h-[18px] rounded-full bg-accent items-center justify-center px-1">
+                  <AppText className="text-[10px] font-semibold text-accent-foreground">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </AppText>
+                </View>
+              )}
             </View>
             <AppText
               className={cn('text-xs mt-0.5', dim ? 'text-muted' : 'text-foreground/70')}
