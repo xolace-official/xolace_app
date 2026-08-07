@@ -1,3 +1,5 @@
+export type ConversationStatus = 'requested' | 'open' | 'resting' | 'closed';
+
 /**
  * Did these two ever actually exchange a message? A channel is only created on
  * accept, so a request that was declined or left to expire has no history at
@@ -9,7 +11,7 @@
  * `streamChannelId`.
  */
 export function hasSpoken(conversation: {
-  status: 'requested' | 'open' | 'resting' | 'closed';
+  status: ConversationStatus;
   closedReason?: 'declined' | 'expired' | 'blocked' | 'xolacer_left';
 }): boolean {
   if (conversation.status === 'requested') return false;
@@ -56,6 +58,43 @@ export function resolveMessageIdentity(
   return {
     name: conversation.counterpartName,
     image: conversation.counterpartPhotoUrl,
+  };
+}
+
+/** Past this the pill stops growing and starts counting for itself. */
+const UNREAD_CAP = 99;
+
+/**
+ * Whether unread messages mean anything on a conversation in this state.
+ *
+ * `requested` has nothing to read yet — a badge there would read as "there is
+ * something to decide" rather than "there is something to read" — and `closed`
+ * is finished and should stop asking for attention. `resting` is not dormant:
+ * it is a live thread the row itself invites you back into, so a new message
+ * there is exactly the signal that should surface.
+ *
+ * Exported so the row can also skip *subscribing* on a conversation that could
+ * never show a count, without holding a second copy of this rule.
+ */
+export function canHoldUnread(status: ConversationStatus): boolean {
+  return status === 'open' || status === 'resting';
+}
+
+/**
+ * What a conversation row shows for its unread count, or null for no badge.
+ *
+ * `label` caps; `a11y` never does. A screen reader has no layout constraint,
+ * and "99+ unread" is worse information than "150 unread".
+ */
+export function unreadBadge(
+  status: ConversationStatus,
+  count: number,
+): { label: string; a11y: string } | null {
+  if (!canHoldUnread(status)) return null;
+  if (count <= 0) return null;
+  return {
+    label: count > UNREAD_CAP ? `${UNREAD_CAP}+` : String(count),
+    a11y: `${count} unread message${count === 1 ? '' : 's'}`,
   };
 }
 
