@@ -4,6 +4,21 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.8.0] - OTA Update (2026-08-07)
+
+### Added
+
+- **Unread badges on conversation rows** — a row in Connect → Chats now carries a pill with the number of messages waiting in that thread, live from Stream. The rule lives in `unreadBadge()` with a test table: no badge on `requested` (nothing to read yet — a count there would read as "something to decide") or `closed` (finished, it should stop asking for attention), a badge on `resting` as well as `open` (a resting thread is live, and a new message in one is exactly the signal worth surfacing). The visible label caps at `99+`; the accessibility string never caps, since a screen reader has no layout constraint and "150 unread" is better information than "99+". The count is appended to the row's accessibility label so VoiceOver hears what the pill shows.
+- **Typing indicator in threads** — "<name> is typing…" is back in a conversation, rendered by a custom `ConversationTypingIndicator` registered over Stream's stock one (which draws the raw Stream avatar and profile name with no override slot).
+
+### Fixed
+
+- **The typing indicator wears the right name** — it used to ask "is someone *other than me* typing?", the negation rule removed from message bubbles in #138. That attributes the user's own typing to the counterpart for the window where the local user id is unset during a reconnect, and dresses any third party — a system notice, a safety intervention — in the counterpart's name. It now asks `resolveMessageIdentity` whether the typing user *is* the counterpart and takes the name from the resolver's answer, so one function decides identity on every surface; an unrecognised typer gets no indicator at all.
+- **The unread count keeps up with reality** — the subscription was a fresh closure each render, so React tore it down and re-registered it on every row re-render; it is wrapped now. It also watched four hand-picked channel events, missing three real paths: a read on another device (client-level only, no channel id), a truncated history, and a new message in an unwatched channel. One client-level subscription covers all of them.
+- **Badges are there on first paint** — the warmup's `queryChannels` populates unread counts as a side effect of hydrating channel state, and Stream dispatches `channels.queried` *before* that hydration, so a row re-reading on it saw zero and stayed blank until an unrelated re-render happened along. The warmup re-announces the event once the counts are there, through the client's event bus rather than a React state bump — the compiler caches the list subtree on props a hydration flag would not be part of, so the re-render would never have reached the rows.
+
+---
+
 ## [1.8.0] - OTA Update (2026-08-05)
 
 ### Added

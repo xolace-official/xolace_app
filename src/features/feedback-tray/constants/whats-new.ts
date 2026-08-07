@@ -30,6 +30,23 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-08-ota-chat-unread-typing",
+    label: "OTA Update",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "bell.badge.fill", android: "notifications_active" },
+        title: "You can see what's waiting",
+        body: "Conversations in Connect now show how many messages are waiting for you, on the ones you're still in — including a chat that's gone quiet. Requests and closed conversations stay quiet.",
+      },
+      {
+        icon: { ios: "ellipsis.bubble.fill", android: "more_horiz" },
+        title: "You'll know when they're writing",
+        body: "When the person you're talking to is typing, you'll see it — with their name, never anyone else's.",
+      },
+    ],
+  },
+  {
     id: "2026-08-ota-discovery-appearance",
     label: "OTA Update",
     date: "August 2026",
