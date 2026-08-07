@@ -222,6 +222,7 @@ The React Compiler is active in this project. It automatically memoizes values, 
 |------|-----|
 | `useMemo` on Context Provider `value` objects | Context subscriptions propagate to all consumers when the value reference changes; React Compiler does not stabilize across context boundaries the same way |
 | `useCallback` for functions used in `useEffect` dependency arrays | Removing them causes infinite effect loops regardless of compiler output |
+| `useCallback` on a `useSyncExternalStore` `subscribe` function | An unstable `subscribe` makes React unsubscribe and re-register on every render; stability is part of the store protocol, not an optimization |
 | `useCallback`/`useMemo` on functions/values with `try/finally` bodies | The compiler skips optimization for `try/finally` blocks |
 | `memo()` on components with `"use no memo"` directive | The directive explicitly opts the component out of compiler optimization |
 

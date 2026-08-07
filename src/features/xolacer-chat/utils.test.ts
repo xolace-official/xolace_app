@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'bun:test';
-import { hasSpoken, resolveMessageIdentity } from './utils';
+import {
+  hasSpoken,
+  resolveMessageIdentity,
+  unreadBadge,
+  type ConversationStatus,
+} from './utils';
 
 describe('hasSpoken', () => {
   // status | closedReason → did these two ever exchange a message?
   const cases: {
-    status: 'requested' | 'open' | 'resting' | 'closed';
+    status: ConversationStatus;
     reason?: 'declined' | 'expired' | 'blocked' | 'xolacer_left';
     expected: boolean;
     label?: string;
@@ -47,6 +52,69 @@ describe('hasSpoken', () => {
       expect(hasSpoken({ status: c.status, closedReason: c.reason })).toBe(
         c.expected,
       );
+    });
+  }
+});
+
+describe('unreadBadge', () => {
+  // status | count → what the row's pill shows (null = no pill)
+  const cases: {
+    status: ConversationStatus;
+    count: number;
+    expected: { label: string; a11y: string } | null;
+    label: string;
+  }[] = [
+    {
+      status: 'open',
+      count: 0,
+      expected: null,
+      label: 'nothing unread, nothing shown',
+    },
+    {
+      status: 'open',
+      count: 1,
+      expected: { label: '1', a11y: '1 unread message' },
+      label: 'one unread reads singular',
+    },
+    {
+      status: 'open',
+      count: 3,
+      expected: { label: '3', a11y: '3 unread messages' },
+      label: 'a live conversation shows its count',
+    },
+    // A resting thread is still one the user can pick back up, and the row says
+    // so — suppressing the badge would mute the one signal that brings them back.
+    {
+      status: 'resting',
+      count: 3,
+      expected: { label: '3', a11y: '3 unread messages' },
+      label: 'a quiet conversation still counts',
+    },
+    // "There is something to decide", not "there is something to read".
+    {
+      status: 'requested',
+      count: 3,
+      expected: null,
+      label: 'an unaccepted request never badges',
+    },
+    {
+      status: 'closed',
+      count: 3,
+      expected: null,
+      label: 'a finished conversation stops asking',
+    },
+    // The pill has a fixed width; a screen reader does not.
+    {
+      status: 'open',
+      count: 150,
+      expected: { label: '99+', a11y: '150 unread messages' },
+      label: 'past the cap the label caps and the announcement does not',
+    },
+  ];
+
+  for (const c of cases) {
+    it(`${c.label}: status=${c.status} count=${c.count}`, () => {
+      expect(unreadBadge(c.status, c.count)).toEqual(c.expected);
     });
   }
 });

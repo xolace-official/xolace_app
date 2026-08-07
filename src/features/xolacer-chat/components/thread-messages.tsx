@@ -29,12 +29,11 @@ import { ThreadStatusBar } from './thread-status-bar';
 import { ConversationTypingIndicator } from './typing-indicator';
 import type { ThreadConversation } from './thread-screen';
 
-/**
- * v1 surfaces text only: no thread replies, no quoted replies, no reactions.
- * Stream provides all of them — the constraint is the deliberate "small
- * surface" posture, not a capability gap. Typing indicator and unread count
- * were added post-v1 to improve the live chat experience.
- */
+// The message surface is text only: no thread replies, no quoted replies, no
+// reactions. Stream provides all of them — the constraint is the deliberate
+// "small surface" posture, not a capability gap. The typing indicator is the
+// one live affordance added since.
+
 const NO_REACTIONS: ReactionData[] = [];
 
 /**
@@ -70,13 +69,6 @@ const TEXT_ONLY_CAPABILITIES = { sendReaction: false, uploadFile: false };
 const CHANNEL_ROOT_PROPS = { style: { flex: 1 } };
 
 /**
- * Everything except threadReply and quotedReply — v1 has no reply surface.
- *
- * Subtractive on purpose. Building the array by hand skipped Stream's own
- * gating and offered actions that cannot run: Copy with no clipboard handler
- * registered, Retry on a message that never failed, Flag on your own message.
- */
-/**
  * Hands the offline half of Stream's indicator to OfflineStrip — see there —
  * the per-message avatar to ConversationMessageAuthor, and the typing
  * indicator to ConversationTypingIndicator, so identity everywhere comes from
@@ -89,6 +81,13 @@ const CHANNEL_ROOT_PROPS = { style: { flex: 1 } };
  * seeker — and it is one record per person, so it can't be. That still covers
  * read receipts and anything else that grows an avatar: enabling one without
  * an override leaks the wrong identity by default.
+ *
+ * **Registering the override is only half of it.** The other half is where the
+ * override sources its answer: it must ask `resolveMessageIdentity` whether
+ * the sender *is* the counterpart, and take the name it returns. An override
+ * that decides for itself — typically by asking whether the sender is someone
+ * other than the local user — reintroduces the exact leak this map exists to
+ * close, one file further down.
  */
 const COMPONENT_OVERRIDES = {
   NetworkDownIndicator: ChannelErrorIndicator,
@@ -96,6 +95,13 @@ const COMPONENT_OVERRIDES = {
   TypingIndicator: ConversationTypingIndicator,
 };
 
+/**
+ * Everything except threadReply and quotedReply — v1 has no reply surface.
+ *
+ * Subtractive on purpose. Building the array by hand skipped Stream's own
+ * gating and offered actions that cannot run: Copy with no clipboard handler
+ * registered, Retry on a message that never failed, Flag on your own message.
+ */
 const ALLOWED_ACTIONS = new Set([
   'copyMessage',
   'editMessage',

@@ -6,7 +6,13 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
-import { acceptFailureLabel, chatLimitError, formatCompactTime } from '@/src/features/xolacer-chat/utils';
+import {
+  acceptFailureLabel,
+  canHoldUnread,
+  chatLimitError,
+  formatCompactTime,
+  unreadBadge,
+} from '@/src/features/xolacer-chat/utils';
 import { useConversationUnreadCount } from '@/src/features/xolacer-chat/use-conversation-unread-count';
 import { XolacerAvatar } from './xolacer-avatar';
 import type { ConversationList } from './chats-list';
@@ -74,9 +80,12 @@ export function ConversationRow({
   const declineRequest = useMutation(api.xolacerChat.declineRequest);
   const { toast } = useToast();
   const [pending, setPending] = useState<'accept' | 'decline' | null>(null);
+  // Both the subscription and the pill read the same rule, so a row that could
+  // never show a count doesn't register a listener for one either.
   const unreadCount = useConversationUnreadCount(
-    conversation.status === 'open' ? conversation.streamChannelId : undefined,
+    canHoldUnread(conversation.status) ? conversation.streamChannelId : undefined,
   );
+  const badge = unreadBadge(conversation.status, unreadCount);
 
   const run = (kind: 'accept' | 'decline', failLabel: string) => {
     if (pending) return;
@@ -114,7 +123,9 @@ export function ConversationRow({
     <PressableFeedback
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Conversation with ${conversation.counterpartName}`}
+      accessibilityLabel={`Conversation with ${conversation.counterpartName}${
+        badge ? `, ${badge.a11y}` : ''
+      }`}
     >
       <View
         className="rounded-3xl bg-surface border border-border/40 p-3.5 gap-3"
@@ -151,10 +162,16 @@ export function ConversationRow({
               <AppText className="text-[11px] text-muted ml-auto">
                 {formatCompactTime(when)}
               </AppText>
-              {unreadCount > 0 && (
-                <View className="min-w-[18px] h-[18px] rounded-full bg-accent items-center justify-center px-1">
+              {badge && (
+                // Decorative: the count is already in the row's own
+                // accessibility label, so the pill shouldn't announce it twice.
+                <View
+                  className="min-w-[18px] h-[18px] rounded-full bg-accent items-center justify-center px-1"
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                >
                   <AppText className="text-[10px] font-semibold text-accent-foreground">
-                    {unreadCount > 99 ? '99+' : unreadCount}
+                    {badge.label}
                   </AppText>
                 </View>
               )}
