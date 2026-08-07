@@ -777,6 +777,28 @@ async function captureRequestSent(
 }
 
 /**
+ * Tell the xolacer someone is waiting on them.
+ *
+ * Scheduled, not called: a push failure must not roll back the request that
+ * earned it. Fires on the two branches that actually create a pending
+ * request — never on the idempotent early return, where the xolacer was
+ * already told and the row did not change.
+ */
+async function notifyRequested(
+  ctx: MutationCtx,
+  conversationId: Id<"xolacer_conversations">,
+  seekerProfileId: Id<"emotional_profiles">,
+  xolacerProfileId: Id<"emotional_profiles">,
+) {
+  await ctx.scheduler.runAfter(0, internal.chatNotifications.send, {
+    emotionalProfileId: xolacerProfileId,
+    type: "chat_request",
+    counterpartName: pseudonym(seekerProfileId),
+    conversationId,
+  });
+}
+
+/**
  * Origin, derived server-side from recency. No session id reaches this
  * mutation and none is stored — the specialty on the Understanding is the
  * only thing read, so no session→conversation link exists at any point.
@@ -871,6 +893,12 @@ export const requestConversation = mutation({
         origin,
       });
       await captureRequestSent(ctx, profile._id, origin);
+      await notifyRequested(
+        ctx,
+        existing._id,
+        profile._id,
+        args.xolacerProfileId,
+      );
       return existing._id;
     }
 
@@ -885,6 +913,12 @@ export const requestConversation = mutation({
       origin,
     });
     await captureRequestSent(ctx, profile._id, origin);
+    await notifyRequested(
+      ctx,
+      conversationId,
+      profile._id,
+      args.xolacerProfileId,
+    );
     return conversationId;
   },
 });

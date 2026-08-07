@@ -135,6 +135,10 @@ export const registerToken = mutation({
         gentleReturn: true,
         patternNudge: true,
         milestone: true,
+        // Chat notifications ride the same permission grant and the same
+        // token; a user who just allowed notifications gets the feature
+        // without having to find a setting.
+        chat: true,
         reach: preferences.notifications.reach ?? "warm",
       });
     }

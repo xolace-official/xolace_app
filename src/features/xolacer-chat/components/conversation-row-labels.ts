@@ -1,3 +1,4 @@
+import { CHAT_REQUEST_SUBTITLE } from '@/convex/lib/chatNotifications';
 import type { ConversationList } from './chats-list';
 
 type Conversation = ConversationList[number];
@@ -28,7 +29,7 @@ export function originLabel(conversation: Conversation): string | null {
 export function subtitleFor(conversation: Conversation): string {
   if (conversation.status === 'requested') {
     return conversation.role === 'xolacer'
-      ? 'Wants to talk, accept when you have space'
+      ? CHAT_REQUEST_SUBTITLE
       : `Request sent, ${conversation.counterpartName} will reply when they can`;
   }
   if (conversation.status === 'open') return 'Tap to open your conversation';

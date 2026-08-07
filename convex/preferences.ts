@@ -118,6 +118,10 @@ export const update = mutation({
         gentleReturn: v.boolean(),
         patternNudge: v.boolean(),
         milestone: v.boolean(),
+        // Accepted so the object a client read back is still a legal argument.
+        // Without it, any caller that spreads the stored preferences instead of
+        // building a literal would fail argument validation outright.
+        chat: v.optional(v.boolean()),
         reach: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
         quietWindow: v.optional(v.object({ dontReachBefore: v.number(), dontReachAfter: v.number() })),
         timezone: v.optional(v.string()),
@@ -192,7 +196,6 @@ export const update = mutation({
       patch.reducedMotion = args.reducedMotion;
       patch.motionPreference = args.reducedMotion ? "reduced" : "system";
     }
-    if (args.notifications !== undefined) patch.notifications = args.notifications;
 
     if (args.mirrorTone !== undefined) patch.mirrorTone = args.mirrorTone;
     if (args.contributeByDefault !== undefined)
@@ -222,8 +225,21 @@ export const update = mutation({
       await ctx.db.patch(preferences._id, patch);
     }
 
-    // Notification sub-field merges run last so they're preserved even if
-    // args.notifications was also provided above.
+    // Notification writes are merges, never replacements. `args.notifications`
+    // is the whole-object form the settings toggles send, and it carries only
+    // the fields whatever UI is installed knows about — a shipped client that
+    // predates a preference would otherwise silently erase it on an unrelated
+    // toggle. Absent-means-enabled makes that erasure fail open, which is the
+    // worse direction: someone who muted chat would start being pushed again.
+    if (args.notifications !== undefined) {
+      await updateNotificationPrefs(
+        ctx,
+        preferences.emotionalProfileId,
+        args.notifications,
+      );
+    }
+
+    // Sub-field merges run last so they win over the whole-object form above.
     if (
       args.notificationReach !== undefined ||
       args.notificationQuietWindow !== undefined ||

@@ -3,10 +3,11 @@ import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useAuth } from "@clerk/expo";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { chatNotificationRoute } from "@/convex/lib/chatNotifications";
 import { useRouter } from "expo-router";
 import { useAppStore } from "@/src/store/store";
 
@@ -35,6 +36,8 @@ export function useNotifications() {
   const router = useRouter();
   const setLastNotification = useAppStore((s) => s.setLastNotification);
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
+  const preferences = useQuery(api.preferences.get);
+  const notificationsEnabled = preferences?.notifications.enabled;
 
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
@@ -45,8 +48,17 @@ export function useNotifications() {
     let cancelled = false;
 
     async function register() {
-      // Only register if the user has already granted permission.
-      // Contextual moments (session end, quote setup) handle the initial ask.
+      // This path is token *refresh* for someone already opted in — never an
+      // opt-in of its own. The contextual moments (session end, quote setup,
+      // Settings) each register their own token, and that first registration
+      // is what auto-enables the preferences.
+      //
+      // Without the switch check, turning notifications off did not survive a
+      // relaunch: `removeToken` drops the token but the OS grant remains, so
+      // the next launch re-registered and `registerToken` flipped every
+      // preference back on. The master switch has to mean what it says.
+      if (notificationsEnabled !== true) return;
+
       const { status } = await Notifications.getPermissionsAsync();
       if (status !== 'granted') return;
 
@@ -89,7 +101,12 @@ export function useNotifications() {
           }
         }
 
-        if (data?.screen === "quotes") {
+        if (data?.type === "chat_request") {
+          // Conversation notifications carry a conversationId rather than a
+          // logId — there is no analytics row to mark — so they branch here
+          // instead of through markResultedInSession above.
+          router.push(chatNotificationRoute("chat_request"));
+        } else if (data?.screen === "quotes") {
           router.push("/(protected)/quotes");
         } else if (
           data?.type === "gentle_return" ||
@@ -105,7 +122,7 @@ export function useNotifications() {
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, [isSignedIn, registerToken, markResultedInSession, updatePreferences, router, setLastNotification]);
+  }, [isSignedIn, notificationsEnabled, registerToken, markResultedInSession, updatePreferences, router, setLastNotification]);
 
   return { expoPushToken };
 }

@@ -270,6 +270,11 @@ export default defineSchema({
       gentleReturn: v.boolean(), // "It's been a while..."
       patternNudge: v.boolean(), // "Sunday evening..."
       milestone: v.boolean(), // "30 days of showing up"
+      // Xolacer chat: requests, accepts, declines, messages. Optional because
+      // every row written before it existed has to keep working, and absent
+      // means enabled — see `chatNotificationsAllowed`. One toggle for the
+      // whole feature; nobody wants to mute "accepted" but keep "new message".
+      chat: v.optional(v.boolean()),
       // Reach preset: how the AI sounds when it reaches out.
       // Defaults to "warm" on first enable. User-adjustable in Settings.
       reach: v.optional(
