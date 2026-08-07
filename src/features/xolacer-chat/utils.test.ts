@@ -4,7 +4,7 @@ import {
   resolveMessageIdentity,
   unreadBadge,
   type ConversationStatus,
-} from './utils';
+} from '@/src/features/xolacer-chat/utils';
 
 describe('hasSpoken', () => {
   // status | closedReason → did these two ever exchange a message?

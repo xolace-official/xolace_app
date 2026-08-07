@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react';
-import { useStreamStatus } from './providers/stream-chat-provider';
+import { useStreamStatus } from '@/src/features/xolacer-chat/providers/stream-chat-provider';
 
 /**
  * Live unread count for a `ConversationRow`. Reads `channel.countUnread()`,
@@ -33,16 +33,20 @@ export function useConversationUnreadCount(streamChannelId: string | undefined) 
 
   // Kept despite the React Compiler, for correctness rather than perf: a fresh
   // closure here makes React tear down and re-register the listener on every
-  // render of the row. Keyed on the client alone — the listener is client-wide,
-  // so it has nothing channel-specific to re-key on; the channel only enters
-  // through the snapshot below, which re-reads on every notification anyway.
+  // render of the row. Keyed on the client and on whether there is a channel at
+  // all, never on its id — the listener is client-wide, so it has nothing
+  // channel-specific to re-key on; the channel only enters through the snapshot
+  // below, which re-reads on every notification anyway. A row with no channel
+  // (a request that can't hold unreads) always reads 0, so it stays unsubscribed
+  // rather than waking on every event to re-derive that.
+  const hasChannel = channel !== null;
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
-      if (!connectedClient) return () => {};
+      if (!connectedClient || !hasChannel) return () => {};
       const { unsubscribe } = connectedClient.on(onStoreChange);
       return unsubscribe;
     },
-    [connectedClient],
+    [connectedClient, hasChannel],
   );
 
   return useSyncExternalStore(subscribe, () => channel?.countUnread() ?? 0);
