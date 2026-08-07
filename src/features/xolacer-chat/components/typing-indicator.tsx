@@ -1,7 +1,7 @@
 import { useTypingContext } from 'stream-chat-expo';
 import { AppText } from '@/src/components/shared/app-text';
-import { resolveMessageIdentity } from '../utils';
-import { useConversationIdentity } from './message-author';
+import { resolveMessageIdentity } from '@/src/features/xolacer-chat/utils';
+import { useConversationIdentity } from '@/src/features/xolacer-chat/components/message-author';
 
 /**
  * Replaces Stream's stock `TypingIndicator` (registered via `WithComponents`

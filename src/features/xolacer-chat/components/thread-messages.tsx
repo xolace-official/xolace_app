@@ -11,20 +11,20 @@ import {
   useChatContext,
 } from 'stream-chat-expo';
 import { api } from '@/convex/_generated/api';
-import { ComposerPlaceholder } from './composer-placeholder';
-import { ConversationIdentityProvider } from './message-author';
-import { OfflineStrip } from './offline-strip';
-import { SafetyStrip } from './safety-strip';
+import { ComposerPlaceholder } from '@/src/features/xolacer-chat/components/composer-placeholder';
+import { ConversationIdentityProvider } from '@/src/features/xolacer-chat/components/message-author';
+import { OfflineStrip } from '@/src/features/xolacer-chat/components/offline-strip';
+import { SafetyStrip } from '@/src/features/xolacer-chat/components/safety-strip';
 import {
   CHANNEL_ROOT_PROPS,
   COMPONENT_OVERRIDES,
   NO_REACTIONS,
   TEXT_ONLY_CAPABILITIES,
   minimalMessageActions,
-} from './thread-channel-config';
-import { ThreadSkeleton } from './thread-skeleton';
-import { ThreadStatusBar } from './thread-status-bar';
-import type { ThreadConversation } from './thread-screen';
+} from '@/src/features/xolacer-chat/components/thread-channel-config';
+import { ThreadSkeleton } from '@/src/features/xolacer-chat/components/thread-skeleton';
+import { ThreadStatusBar } from '@/src/features/xolacer-chat/components/thread-status-bar';
+import type { ThreadConversation } from '@/src/features/xolacer-chat/components/thread-screen';
 
 /**
  * The message surface, mounted only once `Chat` holds a connected client.
