@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
+import { acceptFailureLabel, chatLimitError } from '@/src/features/xolacer-chat/utils';
 import type { ThreadConversation } from './thread-screen';
 
 /**
@@ -25,8 +26,8 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
 
   const handleAccept = () => {
     playSoftPress();
-    acceptRequest({ conversationId: conversation.id }).catch(() =>
-      toast.show({ label: "Couldn't open the conversation. Try again." }),
+    acceptRequest({ conversationId: conversation.id }).catch((error: unknown) =>
+      toast.show({ label: acceptFailureLabel(error) }),
     );
   };
 
@@ -45,7 +46,15 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
           toast.show({ label: 'This one has gone quiet on their end too.' });
         }
       })
-      .catch(() => toast.show({ label: "Couldn't pick this back up. Try again." }));
+      .catch((error: unknown) => {
+        const limit = chatLimitError(error);
+        toast.show({
+          label:
+            limit?.code === 'open_conversation_limit'
+              ? `You've got ${limit.max ?? 3} conversations open. Let one rest before picking this back up.`
+              : "Couldn't pick this back up. Try again.",
+        });
+      });
   };
 
   const goToRoster = () => {

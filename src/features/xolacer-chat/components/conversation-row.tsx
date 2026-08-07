@@ -6,7 +6,7 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
-import { formatCompactTime } from '../utils';
+import { acceptFailureLabel, chatLimitError, formatCompactTime } from '@/src/features/xolacer-chat/utils';
 import { XolacerAvatar } from './xolacer-avatar';
 import type { ConversationList } from './chats-list';
 
@@ -83,11 +83,16 @@ export function ConversationRow({
         ? acceptRequest({ conversationId: conversation.id })
         : declineRequest({ conversationId: conversation.id });
     call
-      .catch((err) => {
+      .catch((err: unknown) => {
         console.error(`[xolacer-chat] ${kind} failed`, err);
+
+        const isCap = chatLimitError(err)?.code === 'open_conversation_limit';
         toast.show({
           label: failLabel,
-          description: 'Something went wrong. Try again.',
+          description:
+            kind === 'accept' && isCap
+              ? acceptFailureLabel(err)
+              : 'Something went wrong. Try again.',
           variant: 'default',
         });
       })

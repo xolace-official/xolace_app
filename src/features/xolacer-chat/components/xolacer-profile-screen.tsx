@@ -10,7 +10,7 @@ import type { Id } from '@/convex/_generated/dataModel';
 import { isSpecialty, specialtyListensTo } from '@/convex/lib/specialties';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
-import { formatMonthYear, hasSpoken } from '../utils';
+import { chatLimitError, formatMonthYear, hasSpoken } from '@/src/features/xolacer-chat/utils';
 import { XolacerMenu } from './xolacer-menu';
 import { XolacerAvatar } from './xolacer-avatar';
 import { NewXolacerChip, RatingStars } from './rating-stars';
@@ -75,12 +75,14 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
     requestConversation({ xolacerProfileId: profile.xolacerProfileId })
       .then(openThread)
       .catch((error: unknown) => {
-        const data = (error as { data?: { code?: string; max?: number } } | null)?.data;
+        const data = chatLimitError(error);
         toast.show({
           label:
             data?.code === 'pending_request_limit'
               ? `You're already waiting on ${data.max ?? 2} Xolacers. Give them a moment to reply.`
-              : `${profile.displayName} isn't taking conversations right now.`,
+              : data?.code === 'open_conversation_limit'
+                ? `You've got ${data.max ?? 3} conversations open. Let one rest before starting another.`
+                : `${profile.displayName} isn't taking conversations right now.`,
         });
       });
   };

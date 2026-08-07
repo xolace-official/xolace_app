@@ -18,6 +18,10 @@ import type {
 } from 'stream-chat-expo';
 import { api } from '@/convex/_generated/api';
 import { ComposerPlaceholder } from './composer-placeholder';
+import {
+  ConversationIdentityProvider,
+  ConversationMessageAuthor,
+} from './message-author';
 import { ChannelErrorIndicator, OfflineStrip } from './offline-strip';
 import { SafetyStrip } from './safety-strip';
 import { ThreadSkeleton } from './thread-skeleton';
@@ -47,14 +51,47 @@ const NO_REACTIONS: ReactionData[] = [];
 const TEXT_ONLY_CAPABILITIES = { sendReaction: false, uploadFile: false };
 
 /**
+ * Bounds the channel's height so the composer stays on screen.
+ *
+ * `Channel`'s root is a `KeyboardCompatibleView` that it renders with no style
+ * of its own — a plain View, height `auto` — and its only child is
+ * `<View style={{ height: '100%' }}>`. A percentage height resolves to `auto`
+ * inside an auto-height parent, so the whole column ends up unbounded: the
+ * message list's `flex: 1` has no free space to divide and grows to its own
+ * content height instead, and the composer is pushed however far past the
+ * bottom edge that content runs. Short threads fit and look fine; a thread with
+ * history pushes the composer clean off the screen.
+ *
+ * `flex: 1` here is the only place a definite height can enter — the prop is
+ * spread last, so this is the style the view actually renders with.
+ */
+const CHANNEL_ROOT_PROPS = { style: { flex: 1 } };
+
+/**
  * Everything except threadReply and quotedReply — v1 has no reply surface.
  *
  * Subtractive on purpose. Building the array by hand skipped Stream's own
  * gating and offered actions that cannot run: Copy with no clipboard handler
  * registered, Retry on a message that never failed, Flag on your own message.
  */
-/** Hands the offline half of Stream's indicator to OfflineStrip — see there. */
-const COMPONENT_OVERRIDES = { NetworkDownIndicator: ChannelErrorIndicator };
+/**
+ * Hands the offline half of Stream's indicator to OfflineStrip — see there —
+ * and the per-message avatar to ConversationMessageAuthor, so a bubble's
+ * identity comes from the conversation rather than Stream's globally-shared,
+ * mutable user record.
+ *
+ * **The rule for anything added here:** any Stream component that renders a
+ * user's name or image must be overridden with conversation-sourced identity.
+ * The Stream user record is deliberately pseudonymous for everyone (see
+ * `upsertStreamUsers` server-side), so it is never the right thing to show a
+ * seeker — and it is one record per person, so it can't be. That covers the
+ * typing indicator, read receipts, and anything else that grows an avatar:
+ * enabling one without an override leaks the wrong identity by default.
+ */
+const COMPONENT_OVERRIDES = {
+  NetworkDownIndicator: ChannelErrorIndicator,
+  MessageAuthor: ConversationMessageAuthor,
+};
 
 const ALLOWED_ACTIONS = new Set([
   'copyMessage',
@@ -155,40 +192,40 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
       {/* Component overrides arrive through this, not through Channel props.
         Module-level constant because WithComponents reads `overrides` once at
         mount and never again — a fresh object each render would be silently
-        ignored, which is worse than a crash. */}
+        ignored, which is worse than a crash — and why the message-avatar
+        override reads its conversation from the context below rather than
+        from a closure. */}
       <WithComponents overrides={COMPONENT_OVERRIDES}>
-        <Channel
-          channel={channel}
-          // Must be explicit: Channel destructures both with no default, so
-          // omitting them passes `undefined`, not 0.
-          keyboardVerticalOffset={headerOffset}
-          topInset={insets.top}
-          supportedReactions={NO_REACTIONS}
-          overrideOwnCapabilities={TEXT_ONLY_CAPABILITIES}
-          // The capability alone does not remove the attach button: InputButtons
-          // sits behind a memo whose comparator checks only these three picker
-          // props, so a change to `uploadFile` never re-renders it. These do.
-          hasImagePicker={false}
-          hasFilePicker={false}
-          hasCameraPicker={false}
-          // And the button survives on slash commands alone — a messaging
-          // channel ships with giphy enabled by default.
-          hasCommands={false}
-          messageActions={minimalMessageActions}
-        >
-          <SafetyStrip />
-          <MessageList disableTypingIndicator />
-          {conversation.status === 'open' ? (
-            <>
-              {/* Above the composer, not below it: the answer to "why did that
-                not send" has to be visible before the tap, not after. */}
-              <OfflineStrip />
-              <MessageComposer />
-            </>
-          ) : (
-            <ThreadStatusBar conversation={conversation} />
-          )}
-        </Channel>
+        <ConversationIdentityProvider conversation={conversation}>
+          <Channel
+            channel={channel}
+            // Must be explicit: Channel destructures both with no default, so
+            // omitting them passes `undefined`, not 0.
+            keyboardVerticalOffset={headerOffset}
+            additionalKeyboardAvoidingViewProps={CHANNEL_ROOT_PROPS}
+            topInset={insets.top}
+            supportedReactions={NO_REACTIONS}
+            overrideOwnCapabilities={TEXT_ONLY_CAPABILITIES}
+            hasImagePicker={false}
+            hasFilePicker={false}
+            hasCameraPicker={false}
+            // And the button survives on slash commands alone — a messaging
+            // channel ships with giphy enabled by default.
+            hasCommands={false}
+            messageActions={minimalMessageActions}
+          >
+            <SafetyStrip />
+            <MessageList disableTypingIndicator />
+            {conversation.status === 'open' ? (
+              <>
+                <OfflineStrip />
+                <MessageComposer />
+              </>
+            ) : (
+              <ThreadStatusBar conversation={conversation} />
+            )}
+          </Channel>
+        </ConversationIdentityProvider>
       </WithComponents>
     </View>
   );
