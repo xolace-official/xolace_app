@@ -26,7 +26,34 @@ If someone can understand the experience from black-and-white boxes, the design 
 Overall Flow
 ============
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   ┌───────────────────────┐  │ Expression            │  └──────────┬────────────┘             │             ▼  ┌───────────────────────┐  │ Mirror                │  └──────────┬────────────┘             │             ▼  ┌───────────────────────┐  │ Confirmation          │  └──────────┬────────────┘             │             ▼   Invisible Detection   Invisible Connection   Invisible Routing             │             ▼  ┌───────────────────────┐  │ Dynamic Path          │  └──────────┬────────────┘             │             ▼          Session Ends   `
+```
+┌───────────────────────┐
+│ Expression            │
+└──────────┬────────────┘
+           │
+           ▼
+┌───────────────────────┐
+│ Mirror                │
+└──────────┬────────────┘
+           │
+           ▼
+┌───────────────────────┐
+│ Confirmation          │
+└──────────┬────────────┘
+           │
+           ▼
+ Invisible Detection
+ Invisible Connection
+ Invisible Routing
+           │
+           ▼
+┌───────────────────────┐
+│ Dynamic Path          │
+└──────────┬────────────┘
+           │
+           ▼
+        Session Ends
+```
 
 Notice:
 
@@ -37,7 +64,23 @@ Everything else happens internally.
 Screen 1 — Expression
 =====================
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   ────────────────────────────  👤                       ⚙️  Still awake.  What's carrying  over?  ────────────────────────────  [ Text Input ]  ────────────────────────────  [ Emotion Chips ]  wide awake  too much  can't stop thinking  ...  ────────────────────────────             Let it out  ────────────────────────────   `
+```
+────────────────────────────
+👤                       ⚙️
+Still awake.
+What's carrying
+over?
+────────────────────────────
+[ Text Input ]
+────────────────────────────
+[ Emotion Chips ]
+wide awake
+too much
+can't stop thinking
+...
+────────────────────────────             Let it out
+────────────────────────────
+```
 
 No redesign.
 
@@ -46,7 +89,19 @@ This screen already feels like Xolace.
 Screen 2 — Mirror
 =================
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   ────────────────────────────  too much  THE MIRROR  Everything pressing in again...  The warmth that was just there...  ...  ────────────────────────────  That's it  Not quite  Say more  ────────────────────────────   `
+```
+────────────────────────────
+too much
+THE MIRROR
+Everything pressing in again...
+The warmth that was just there...
+...
+────────────────────────────
+That's it
+Not quite
+Say more
+────────────────────────────
+```
 
 Again...
 
@@ -59,11 +114,23 @@ Internal Transition
 
 User sees...
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   That's it   `
+```
+That's it
+```
 
 Internally...
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Mirror Confidence  ↓  Need Detection  ↓  Connection Type  ↓  Best Path  ↓  Generate Path   `
+```
+Mirror Confidence
+↓
+Need Detection
+↓
+Connection Type
+↓
+Best Path
+↓
+Generate Path
+```
 
 No loading spinner.
 
@@ -76,19 +143,63 @@ Screen 3 — Dynamic Path
 
 Example A
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   ────────────────────────────  YOUR PATH  Sit With This  The feeling hasn't disappeared.  It just doesn't need solving immediately.  Spend one quiet minute noticing your breathing.  ────────────────────────────  Start Exercise  ────────────────────────────  Skip  ────────────────────────────   `
+```
+────────────────────────────
+YOUR PATH
+Sit With This
+The feeling hasn't disappeared.
+It just doesn't need solving immediately.
+Spend one quiet minute noticing your breathing.
+────────────────────────────
+Start Exercise
+────────────────────────────
+Skip
+────────────────────────────
+```
 
 Example B
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   ────────────────────────────  YOUR PATH  Take This With You  You've been trying to fight this feeling.  This week...  Notice when it first appears.  Nothing else.  ────────────────────────────  Done  ────────────────────────────   `
+```
+────────────────────────────
+YOUR PATH
+Take This With You
+You've been trying to fight this feeling.
+This week...
+Notice when it first appears.
+Nothing else.
+────────────────────────────
+Done
+────────────────────────────
+```
 
 Example C
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   ────────────────────────────  YOUR PATH  Something Keeps Returning  Across several reflections...  This feeling appears after difficult conversations.  That isn't an answer.  But it might be somewhere to begin.  ────────────────────────────  View Insights  ────────────────────────────   `
+```
+────────────────────────────
+YOUR PATH
+Something Keeps Returning
+Across several reflections...
+This feeling appears after difficult conversations.
+That isn't an answer.
+But it might be somewhere to begin.
+────────────────────────────
+View Insights
+────────────────────────────
+```
 
 Example D
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   ────────────────────────────  YOUR PATH  You're Not Alone  Someone else wrote this.  "I thought nobody would understand."  Maybe read what helped them.  ────────────────────────────  Read Reflections  ────────────────────────────   `
+```
+────────────────────────────
+YOUR PATH
+You're Not Alone
+Someone else wrote this.
+"I thought nobody would understand."
+Maybe read what helped them.
+────────────────────────────
+Read Reflections
+────────────────────────────
+```
 
 Notice something.
 
@@ -99,7 +210,17 @@ Only the content changes.
 Screen Anatomy
 ==============
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Small Label  ↓  Large Title  ↓  Reflection  ↓  Action  ↓  Exit   `
+```
+Small Label
+↓
+Large Title
+↓
+Reflection
+↓
+Action
+↓
+Exit
+```
 
 Nothing else.
 
@@ -108,30 +229,45 @@ Component Hierarchy
 
 Priority
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Reflection   `
+```
+Reflection
+```
 
 ↓
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Path   `
+```
+Path
+```
 
 ↓
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Primary Action   `
+```
+Primary Action
+```
 
 ↓
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Secondary Action   `
+```
+Secondary Action
+```
 
 ↓
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Navigation   `
+```
+Navigation
+```
 
 Dynamic Areas
 =============
 
 Only these areas change.
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Title  Body  CTA  Optional Insight   `
+```
+Title
+Body
+CTA
+Optional Insight
+```
 
 Everything else stays fixed.
 
@@ -196,15 +332,21 @@ Not three primary buttons.
 
 Example
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Start Exercise   `
+```
+Start Exercise
+```
 
 or
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   View Insights   `
+```
+View Insights
+```
 
 or
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Done   `
+```
+Done
+```
 
 One decision.
 

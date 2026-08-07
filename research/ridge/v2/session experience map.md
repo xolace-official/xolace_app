@@ -23,7 +23,21 @@ without becoming therapy, coaching, or productivity.
 Experience Flow
 ===============
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Expression  ↓  Mirror  ↓  Confirmation  ↓  Detection (Invisible)  ↓  Connection (Invisible)  ↓  Path (Visible)  ↓  Close   `
+```
+Expression
+↓
+Mirror
+↓
+Confirmation
+↓
+Detection (Invisible)
+↓
+Connection (Invisible)
+↓
+Path (Visible)
+↓
+Close
+```
 
 Moment 1 — Expression
 ---------------------
@@ -124,15 +138,27 @@ It simply determines the user's primary need.
 
 Example:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Primary Need  ↓  Grounding   `
+```
+Primary Need
+↓
+Grounding
+```
 
 or
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Primary Need  ↓  Perspective   `
+```
+Primary Need
+↓
+Perspective
+```
 
 or
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Primary Need  ↓  Human Connection   `
+```
+Primary Need
+↓
+Human Connection
+```
 
 Moment 6 — Path (Visible)
 -------------------------
@@ -200,11 +226,25 @@ Design Principles
 
 The flow should feel
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Natural  ↓  Calm  ↓  Intentional  ↓  Personal   `
+```
+Natural
+↓
+Calm
+↓
+Intentional
+↓
+Personal
+```
 
 Never
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Complicated  ↓  Clinical  ↓  Gamified   `
+```
+Complicated
+↓
+Clinical
+↓
+Gamified
+```
 
 Internal Responsibilities
 =========================
@@ -238,7 +278,15 @@ External Experience
 
 The user only experiences
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Speak  ↓  Mirror  ↓  One meaningful Path  ↓  Done   `
+```
+Speak
+↓
+Mirror
+↓
+One meaningful Path
+↓
+Done
+```
 
 Everything else happens internally.
 
