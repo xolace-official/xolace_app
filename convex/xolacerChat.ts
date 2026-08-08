@@ -11,6 +11,7 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
+import type { ChatNotificationType } from "./lib/chatNotifications";
 import {
   conversationOrigin,
   type ConversationOrigin,
@@ -777,23 +778,30 @@ async function captureRequestSent(
 }
 
 /**
- * Tell the xolacer someone is waiting on them.
+ * Tell someone the other person is waiting on them, or has answered.
  *
- * Scheduled, not called: a push failure must not roll back the request that
- * earned it. Fires on the two branches that actually create a pending
- * request — never on the idempotent early return, where the xolacer was
- * already told and the row did not change.
+ * Scheduled, not called: a push failure must not roll back the lifecycle change
+ * that earned it. Fires only where the row actually moved — never on the
+ * idempotent request early-return, and never on expiry, block, resume, or a
+ * xolacer leaving, which are closures to find in the app rather than push at
+ * someone.
+ *
+ * `counterpartName` is whatever the recipient already calls that person on
+ * every other surface — a pseudonym looking at a seeker, the public display
+ * name looking at a xolacer. It is omitted for a decline: that notification
+ * names nobody, so nobody's name is sent.
  */
-async function notifyRequested(
+async function notifyConversation(
   ctx: MutationCtx,
+  type: ChatNotificationType,
   conversationId: Id<"xolacer_conversations">,
-  seekerProfileId: Id<"emotional_profiles">,
-  xolacerProfileId: Id<"emotional_profiles">,
+  recipientProfileId: Id<"emotional_profiles">,
+  counterpartName?: string,
 ) {
   await ctx.scheduler.runAfter(0, internal.chatNotifications.send, {
-    emotionalProfileId: xolacerProfileId,
-    type: "chat_request",
-    counterpartName: pseudonym(seekerProfileId),
+    emotionalProfileId: recipientProfileId,
+    type,
+    counterpartName,
     conversationId,
   });
 }
@@ -893,11 +901,12 @@ export const requestConversation = mutation({
         origin,
       });
       await captureRequestSent(ctx, profile._id, origin);
-      await notifyRequested(
+      await notifyConversation(
         ctx,
+        "chat_request",
         existing._id,
-        profile._id,
         args.xolacerProfileId,
+        pseudonym(profile._id),
       );
       return existing._id;
     }
@@ -913,11 +922,12 @@ export const requestConversation = mutation({
       origin,
     });
     await captureRequestSent(ctx, profile._id, origin);
-    await notifyRequested(
+    await notifyConversation(
       ctx,
+      "chat_request",
       conversationId,
-      profile._id,
       args.xolacerProfileId,
+      pseudonym(profile._id),
     );
     return conversationId;
   },
@@ -979,6 +989,23 @@ export const markAccepted = internalMutation({
       acceptedAt: Date.now(),
       lastMessageAt: Date.now(),
     });
+    // Here rather than in the surrounding action, so the seeker is only told
+    // the conversation is open once the cap re-check above has let it open.
+    //
+    // The seeker knows this xolacer by their public display name — the same
+    // one their chats list and the profile they requested from both show. A
+    // pseudonym would name someone they have never met.
+    const xolacer = await getXolacerProfileByProfileId(
+      ctx,
+      conversation.xolacerProfileId,
+    );
+    await notifyConversation(
+      ctx,
+      "chat_accepted",
+      args.conversationId,
+      conversation.userProfileId,
+      xolacer?.displayName ?? "Xolacer",
+    );
   },
 });
 
@@ -1052,6 +1079,12 @@ export const declineRequest = mutation({
       status: "closed",
       closedReason: "declined",
     });
+    await notifyConversation(
+      ctx,
+      "chat_declined",
+      args.conversationId,
+      conversation.userProfileId,
+    );
     return null;
   },
 });

@@ -28,10 +28,15 @@ import { pushNotifications } from "./lib/pushNotifications";
 export const send = internalMutation({
   args: {
     emotionalProfileId: v.id("emotional_profiles"),
-    type: v.literal("chat_request"),
-    // The recipient's counterpart, already pseudonymised by the caller — this
-    // path never resolves an identity of its own.
-    counterpartName: v.string(),
+    type: v.union(
+      v.literal("chat_request"),
+      v.literal("chat_accepted"),
+      v.literal("chat_declined"),
+    ),
+    // The recipient's counterpart, named by the caller exactly as the recipient
+    // already sees them elsewhere — this path never resolves an identity of its
+    // own. Absent for a decline, which names nobody.
+    counterpartName: v.optional(v.string()),
     conversationId: v.id("xolacer_conversations"),
   },
   returns: v.null(),

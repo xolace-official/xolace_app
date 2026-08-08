@@ -37,27 +37,41 @@ function SegmentLabel({ label, active }: { label: string; active: boolean }) {
  * Chats when any conversation exists, on Xolacers otherwise — a first-time
  * user meets the roster, a returning user meets their thread.
  */
-export function ConnectScreen({ specialty }: { specialty?: string }) {
+export function ConnectScreen({
+  specialty,
+  view,
+  navToken,
+}: {
+  specialty?: string;
+  view?: string;
+  navToken?: string;
+}) {
   const status = useQuery(api.xolacerChat.status);
   const conversations = useQuery(api.xolacerChat.myConversations);
-  const [selected, setSelected] = useState<Segment | null>(
-    isSpecialty(specialty) ? 'xolacers' : null,
-  );
+  // A specialty always means the roster; otherwise the segment is whatever the
+  // route named, if it named one.
+  const routedSegment: Segment | null = isSpecialty(specialty)
+    ? 'xolacers'
+    : view === 'chats' || view === 'xolacers'
+      ? view
+      : null;
+  const [selected, setSelected] = useState<Segment | null>(routedSegment);
   const [filter, setFilter] = useState<string | null>(
     isSpecialty(specialty) ? specialty : null,
   );
 
   // Arriving with a specialty (from a profile's "others listen to this too")
-  // snaps to the roster filtered to it. The tab stays mounted across
-  // navigations, so the param is latched and re-applied when it changes rather
-  // than only read at mount.
-  const [routedSpecialty, setRoutedSpecialty] = useState(specialty);
-  if (specialty !== routedSpecialty) {
-    setRoutedSpecialty(specialty);
-    if (isSpecialty(specialty)) {
-      setFilter(specialty);
-      setSelected('xolacers');
-    }
+  // snaps to the roster filtered to it; arriving from a notification snaps to
+  // the segment that notification is about. The tab stays mounted across
+  // navigations, so the params are latched and re-applied when they change
+  // rather than only read at mount — and `navToken` differs per tap, so a
+  // second notification for the same segment still lands.
+  const routed = `${specialty ?? ''}|${view ?? ''}|${navToken ?? ''}`;
+  const [routedParams, setRoutedParams] = useState(routed);
+  if (routed !== routedParams) {
+    setRoutedParams(routed);
+    if (isSpecialty(specialty)) setFilter(specialty);
+    if (routedSegment) setSelected(routedSegment);
   }
 
   // Opens the Stream connection and warms every channel in the list, so tapping

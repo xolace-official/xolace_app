@@ -16,13 +16,20 @@ import { ConnectScreen } from '@/src/features/xolacer-chat/components/connect-sc
  */
 export default function ConnectRoute() {
   const isFocused = useIsFocused();
-  // Optional: lands on the roster pre-filtered to this tag.
-  const { specialty } = useLocalSearchParams<{ specialty?: string }>();
+  // Optional: `specialty` lands on the roster pre-filtered to that tag, `view`
+  // picks a segment outright (a notification tap, which cannot be left to the
+  // tab's remembered one), and `t` is the tap's timestamp — without it a second
+  // tap carries identical params and reads as no navigation at all.
+  const { specialty, view, t } = useLocalSearchParams<{
+    specialty?: string;
+    view?: string;
+    t?: string;
+  }>();
   // Latched during render rather than in an effect, so the first focused frame
   // already renders the screen instead of a blank one.
   const [everFocused, setEverFocused] = useState(isFocused);
   if (isFocused && !everFocused) setEverFocused(true);
 
   if (!everFocused) return <View className="flex-1 bg-background" />;
-  return <ConnectScreen specialty={specialty} />;
+  return <ConnectScreen specialty={specialty} view={view} navToken={t} />;
 }

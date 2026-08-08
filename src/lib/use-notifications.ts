@@ -7,7 +7,10 @@ import { useMutation, useQuery } from "convex/react";
 import { useAuth } from "@clerk/expo";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { chatNotificationRoute } from "@/convex/lib/chatNotifications";
+import {
+  chatNotificationRoute,
+  isChatNotificationType,
+} from "@/convex/lib/chatNotifications";
 import { useRouter } from "expo-router";
 import { useAppStore } from "@/src/store/store";
 
@@ -101,11 +104,17 @@ export function useNotifications() {
           }
         }
 
-        if (data?.type === "chat_request") {
+        if (isChatNotificationType(data?.type)) {
           // Conversation notifications carry a conversationId rather than a
           // logId — there is no analytics row to mark — so they branch here
           // instead of through markResultedInSession above.
-          router.push(chatNotificationRoute("chat_request"));
+          router.push(
+            chatNotificationRoute(
+              data.type,
+              String(data.conversationId),
+              Date.now(),
+            ),
+          );
         } else if (data?.screen === "quotes") {
           router.push("/(protected)/quotes");
         } else if (
