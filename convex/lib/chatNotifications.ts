@@ -16,12 +16,14 @@
 export type ChatNotificationType =
   | "chat_request"
   | "chat_accepted"
-  | "chat_declined";
+  | "chat_declined"
+  | "chat_message";
 
 const TYPES: ChatNotificationType[] = [
   "chat_request",
   "chat_accepted",
   "chat_declined",
+  "chat_message",
 ];
 
 /** Narrows the `type` field off a push payload, which arrives untyped. */
@@ -69,6 +71,7 @@ export function chatNotificationRoute(
         params: { view: "chats", t: String(tappedAt) },
       } as const;
     case "chat_accepted":
+    case "chat_message":
       return {
         pathname: "/chat/[conversationId]",
         params: { conversationId },
@@ -113,7 +116,78 @@ export function chatNotificationContent(
         title: "Xolace",
         body: "That conversation didn't open. Other xolacers are available.",
       };
+    case "chat_message":
+      return { title: counterpartName, body: "Sent you a message" };
   }
+}
+
+// ============================================================
+// Message notifications (Stream `message.new` webhook)
+// ============================================================
+
+/**
+ * The Stream channel id for a conversation — deterministic per row, which is
+ * what makes an accept retry idempotent, and what lets the webhook find its
+ * way back to our row without a second Stream call.
+ */
+const CHANNEL_ID_PREFIX = "xolacer_";
+
+export function xolacerChannelId(conversationId: string): string {
+  return `${CHANNEL_ID_PREFIX}${conversationId}`;
+}
+
+/**
+ * The inverse, applied to whatever the webhook claims the channel is. Returns
+ * the raw id string only — the caller still has to check it names a real row,
+ * because a forged payload can put any text after the prefix.
+ */
+export function conversationIdFromChannelId(
+  channelId: unknown,
+): string | null {
+  if (typeof channelId !== "string") return null;
+  if (!channelId.startsWith(CHANNEL_ID_PREFIX)) return null;
+  const id = channelId.slice(CHANNEL_ID_PREFIX.length);
+  return id.length > 0 ? id : null;
+}
+
+/**
+ * Who gets told about a message, derived from **our** conversation row rather
+ * than from the webhook's member list.
+ *
+ * Two things fall out of that for free: the sender can never be the recipient,
+ * and a payload naming a sender who is not on this row addresses nobody at all
+ * — so a forged event cannot push a notification at an arbitrary profile.
+ */
+export function messageNotificationRecipient<T extends string>(
+  conversation: { userProfileId: T; xolacerProfileId: T },
+  senderId: unknown,
+): T | null {
+  if (senderId === conversation.userProfileId) {
+    return conversation.xolacerProfileId;
+  }
+  if (senderId === conversation.xolacerProfileId) {
+    return conversation.userProfileId;
+  }
+  return null;
+}
+
+/**
+ * One notification per conversation per two minutes. Someone typing four
+ * thoughts in a row is one arrival, not four buzzes.
+ *
+ * Dropped rather than batched: there is nothing to batch, since the body never
+ * carries content. Keyed on the conversation and not on the recipient, so a
+ * second person messaging you in a different thread always gets through — the
+ * suppression can quiet a chatty friend, never hide a stranger.
+ */
+export const MESSAGE_NOTIFICATION_WINDOW_MS = 2 * 60 * 1000;
+
+export function messageNotificationSuppressed(
+  lastNotifiedAt: number | undefined,
+  now: number,
+): boolean {
+  if (lastNotifiedAt === undefined) return false;
+  return now - lastNotifiedAt < MESSAGE_NOTIFICATION_WINDOW_MS;
 }
 
 /**

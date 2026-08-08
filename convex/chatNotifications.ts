@@ -32,6 +32,7 @@ export const send = internalMutation({
       v.literal("chat_request"),
       v.literal("chat_accepted"),
       v.literal("chat_declined"),
+      v.literal("chat_message"),
     ),
     // The recipient's counterpart, named by the caller exactly as the recipient
     // already sees them elsewhere — this path never resolves an identity of its

@@ -1700,6 +1700,12 @@ export default defineSchema({
     acceptedAt: v.optional(v.number()),
     // Drives the resting sweep. Updated by touchConversation on send.
     lastMessageAt: v.optional(v.number()),
+    // When a message notification last went out for this conversation. The
+    // whole suppression window lives in this one field: a burst inside it
+    // sends nothing, and it is keyed on the conversation rather than the
+    // recipient so a loud thread can never silence a different person's first
+    // message. Absent until the first message notification.
+    lastMessageNotifiedAt: v.optional(v.number()),
 
     // Where this request came from, derived from session recency at request
     // time (see lib/xolacerSuggestion.conversationOrigin) and recomputed on

@@ -11,7 +11,13 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
-import type { ChatNotificationType } from "./lib/chatNotifications";
+import {
+  type ChatNotificationType,
+  conversationIdFromChannelId,
+  messageNotificationRecipient,
+  messageNotificationSuppressed,
+  xolacerChannelId,
+} from "./lib/chatNotifications";
 import {
   conversationOrigin,
   type ConversationOrigin,
@@ -1037,7 +1043,7 @@ export const acceptRequest = action({
       conversationId: args.conversationId,
     });
 
-    const channelId = `xolacer_${args.conversationId}`;
+    const channelId = xolacerChannelId(args.conversationId);
     await upsertStreamUsers([
       {
         id: info.xolacerProfileId,
@@ -1233,6 +1239,71 @@ export const touchConversation = mutation({
     );
     if (conversation.status !== "open") return null;
     await ctx.db.patch(args.conversationId, { lastMessageAt: Date.now() });
+    return null;
+  },
+});
+
+/**
+ * Tell the other party a message arrived, from Stream's `message.new` webhook.
+ *
+ * Every identity here comes off **our** row: the channel id names a
+ * conversation, the sender is matched against that row's two participants, and
+ * the recipient is whichever one is not them. Nothing in the webhook payload is
+ * trusted to say who anyone is — so a forged event can address nobody it was
+ * not already able to address, and sender-exclusion needs no check of its own.
+ *
+ * Every drop returns quietly rather than throwing: the caller answers Stream
+ * with a 200 either way, and a webhook that reports failure is a webhook Stream
+ * retries.
+ */
+export const notifyNewMessage = internalMutation({
+  args: { channelId: v.string(), senderId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) return null;
+
+    const rawId = conversationIdFromChannelId(args.channelId);
+    if (!rawId) return null;
+    // Not just a shape check: an id from another table would otherwise be a
+    // valid-looking `db.get` against the wrong row.
+    const conversationId = ctx.db.normalizeId("xolacer_conversations", rawId);
+    if (!conversationId) return null;
+
+    const conversation = await ctx.db.get(conversationId);
+    // Stream cannot deliver into a channel we consider shut, but a resting or
+    // blocked pair whose channel Stream has not frozen yet would still arrive
+    // here — a closed conversation notifies nobody.
+    if (!conversation || conversation.status !== "open") return null;
+
+    const recipientProfileId = messageNotificationRecipient(
+      conversation,
+      args.senderId,
+    );
+    if (!recipientProfileId) return null;
+
+    const now = Date.now();
+    if (messageNotificationSuppressed(conversation.lastMessageNotifiedAt, now)) {
+      return null;
+    }
+    // Stamped before the send is scheduled, in the same transaction, so a
+    // burst arriving as separate webhook calls cannot each read a stale window.
+    await ctx.db.patch(conversationId, { lastMessageNotifiedAt: now });
+
+    // Whatever the recipient already calls the sender everywhere else: a
+    // xolacer sees a pseudonym, a seeker sees the public display name.
+    const senderIsXolacer = recipientProfileId === conversation.userProfileId;
+    const xolacer = senderIsXolacer
+      ? await getXolacerProfileByProfileId(ctx, conversation.xolacerProfileId)
+      : null;
+    await notifyConversation(
+      ctx,
+      "chat_message",
+      conversationId,
+      recipientProfileId,
+      senderIsXolacer
+        ? (xolacer?.displayName ?? "Xolacer")
+        : pseudonym(conversation.userProfileId),
+    );
     return null;
   },
 });
