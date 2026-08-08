@@ -13,15 +13,24 @@ import {
 } from "@/convex/lib/chatNotifications";
 import { useRouter } from "expo-router";
 import { useAppStore } from "@/src/store/store";
+import { suppressedInForeground } from "@/src/lib/notification-suppression";
 
 // Configure how notifications appear when the app is in the foreground.
+//
+// This handler runs *only* while the app is foregrounded, which is what makes
+// one branch enough: a conversation notification is silent whenever the user is
+// in the app, and the thread being open is a subset of that. Backgrounded
+// arrivals never reach here and display as normal.
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
+  handleNotification: async (notification) => {
+    const show = !suppressedInForeground(notification.request.content.data);
+    return {
+      shouldShowBanner: show,
+      shouldShowList: show,
+      shouldPlaySound: show,
+      shouldSetBadge: false,
+    };
+  },
 });
 
 /**
