@@ -1,14 +1,43 @@
 import { describe, it, expect } from 'bun:test';
 import {
+  clearActiveNotificationConversation,
   conversationNotificationIds,
+  setActiveNotificationConversation,
   suppressedInForeground,
 } from '@/src/lib/notification-suppression';
 
 describe('suppressedInForeground', () => {
-  it('suppresses every conversation type', () => {
+  it('suppresses every conversation type for the active thread', () => {
+    setActiveNotificationConversation('c1');
+
     for (const type of ['chat_request', 'chat_accepted', 'chat_declined', 'chat_message']) {
       expect(suppressedInForeground({ type, conversationId: 'c1' })).toBe(true);
     }
+
+    clearActiveNotificationConversation('c1');
+  });
+
+  it('shows conversation notifications for a different thread', () => {
+    setActiveNotificationConversation('c1');
+    expect(
+      suppressedInForeground({ type: 'chat_message', conversationId: 'c2' }),
+    ).toBe(false);
+    clearActiveNotificationConversation('c1');
+  });
+
+  it('shows conversation notifications when no thread is active', () => {
+    expect(
+      suppressedInForeground({ type: 'chat_request', conversationId: 'c1' }),
+    ).toBe(false);
+  });
+
+  it('does not let a stale screen clear a newer active thread', () => {
+    setActiveNotificationConversation('c2');
+    clearActiveNotificationConversation('c1');
+    expect(
+      suppressedInForeground({ type: 'chat_message', conversationId: 'c2' }),
+    ).toBe(true);
+    clearActiveNotificationConversation('c2');
   });
 
   it('leaves AI nudges alone', () => {

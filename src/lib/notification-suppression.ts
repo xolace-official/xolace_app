@@ -2,11 +2,10 @@
  * Keeping the app from talking over itself.
  *
  * Suppression is client-side and lives here rather than in the sender, because
- * the notification handler only runs while the app is foregrounded — so a
- * single branch on conversation types covers both "the app is open" and "this
- * thread is open", the second being a subset of the first. Stream sends push
- * irrespective of online status and holds a websocket for up to a minute after
- * backgrounding, so server-side eligibility could not be relied on either way.
+ * the notification handler only runs while the app is foregrounded. It stays
+ * quiet only when the matching thread is focused; conversation events from any
+ * other thread still need to reach the user. Stream sends push irrespective of
+ * online status, so server-side eligibility cannot make that distinction.
  */
 import { isChatNotificationType } from '@/convex/lib/chatNotifications';
 
@@ -22,13 +21,26 @@ type PresentedNotification = {
   request: { identifier: string; content: { data?: NotificationData } };
 };
 
+let activeConversationId: string | null = null;
+
+export function setActiveNotificationConversation(conversationId: string) {
+  activeConversationId = conversationId;
+}
+
+export function clearActiveNotificationConversation(conversationId: string) {
+  if (activeConversationId === conversationId) activeConversationId = null;
+}
+
 /**
- * Conversation notifications are the ones the app must stay quiet about while
- * it is in use — the thread itself is the notification. AI nudges are not:
- * nothing on screen is already saying what they say.
+ * The open thread already shows its own events. A different thread does not,
+ * so its foreground arrival must still use the OS notification surfaces.
  */
 export function suppressedInForeground(data: NotificationData): boolean {
-  return isChatNotificationType(data?.type);
+  return (
+    isChatNotificationType(data?.type) &&
+    typeof data?.conversationId === 'string' &&
+    data.conversationId === activeConversationId
+  );
 }
 
 /**

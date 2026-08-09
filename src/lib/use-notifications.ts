@@ -21,10 +21,9 @@ import { suppressedInForeground } from "@/src/lib/notification-suppression";
 
 // Configure how notifications appear when the app is in the foreground.
 //
-// This handler runs *only* while the app is foregrounded, which is what makes
-// one branch enough: a conversation notification is silent whenever the user is
-// in the app, and the thread being open is a subset of that. Backgrounded
-// arrivals never reach here and display as normal.
+// This handler runs *only* while the app is foregrounded. The currently focused
+// thread handles its own events, but chat arrivals for other threads still need
+// the OS banner, list entry, and sound. Backgrounded arrivals display as normal.
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => {
     const show = !suppressedInForeground(notification.request.content.data);
@@ -121,7 +120,7 @@ export function useNotifications() {
           // Conversation notifications carry a conversationId rather than a
           // logId — there is no analytics row to mark — so they branch here
           // instead of through markResultedInSession above.
-          router.push(
+          router.navigate(
             chatNotificationRoute(
               data.type,
               String(data.conversationId),
