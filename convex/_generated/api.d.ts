@@ -79,6 +79,7 @@ import type * as lib_conversationGating from "../lib/conversationGating.js";
 import type * as lib_displayName from "../lib/displayName.js";
 import type * as lib_followUpCadence from "../lib/followUpCadence.js";
 import type * as lib_notificationPrefs from "../lib/notificationPrefs.js";
+import type * as lib_notificationSounds from "../lib/notificationSounds.js";
 import type * as lib_poolability from "../lib/poolability.js";
 import type * as lib_premium from "../lib/premium.js";
 import type * as lib_pushNotifications from "../lib/pushNotifications.js";
@@ -193,6 +194,7 @@ declare const fullApi: ApiFromModules<{
   "lib/displayName": typeof lib_displayName;
   "lib/followUpCadence": typeof lib_followUpCadence;
   "lib/notificationPrefs": typeof lib_notificationPrefs;
+  "lib/notificationSounds": typeof lib_notificationSounds;
   "lib/poolability": typeof lib_poolability;
   "lib/premium": typeof lib_premium;
   "lib/pushNotifications": typeof lib_pushNotifications;
