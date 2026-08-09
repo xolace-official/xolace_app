@@ -172,13 +172,14 @@ export function messageNotificationRecipient<T extends string>(
 }
 
 /**
- * One notification per conversation per two minutes. Someone typing four
- * thoughts in a row is one arrival, not four buzzes.
+ * One notification per person per two minutes. Someone typing four thoughts in
+ * a row is one arrival, not four buzzes.
  *
  * Dropped rather than batched: there is nothing to batch, since the body never
- * carries content. Keyed on the conversation and not on the recipient, so a
- * second person messaging you in a different thread always gets through — the
- * suppression can quiet a chatty friend, never hide a stranger.
+ * carries content. Scoped per recipient per conversation, so neither a chatty
+ * thread nor the person you are already talking to can hide someone else's
+ * first message — see `messageNotifiedField` for why the recipient half of that
+ * matters as much as the conversation half.
  */
 export const MESSAGE_NOTIFICATION_WINDOW_MS = 2 * 60 * 1000;
 
@@ -188,6 +189,23 @@ export function messageNotificationSuppressed(
 ): boolean {
   if (lastNotifiedAt === undefined) return false;
   return now - lastNotifiedAt < MESSAGE_NOTIFICATION_WINDOW_MS;
+}
+
+/**
+ * Which of a conversation's two stamps belongs to the person being notified.
+ *
+ * The window has to be keyed on the recipient, not on the row: one shared
+ * stamp means a seeker's own message opens a window that then swallows the
+ * xolacer's reply arriving inside it — message-then-reply, the ordinary shape
+ * of a chat, going silent. Two participants, so two fields rather than a map.
+ */
+export function messageNotifiedField<T extends string>(
+  conversation: { userProfileId: T },
+  recipientProfileId: T,
+): "lastNotifiedUserAt" | "lastNotifiedXolacerAt" {
+  return recipientProfileId === conversation.userProfileId
+    ? "lastNotifiedUserAt"
+    : "lastNotifiedXolacerAt";
 }
 
 /**

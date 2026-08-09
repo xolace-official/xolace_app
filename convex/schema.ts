@@ -1700,11 +1700,17 @@ export default defineSchema({
     acceptedAt: v.optional(v.number()),
     // Drives the resting sweep. Updated by touchConversation on send.
     lastMessageAt: v.optional(v.number()),
-    // When a message notification last went out for this conversation. The
-    // whole suppression window lives in this one field: a burst inside it
-    // sends nothing, and it is keyed on the conversation rather than the
-    // recipient so a loud thread can never silence a different person's first
-    // message. Absent until the first message notification.
+    // When a message notification last went out to each side. Two fields and
+    // not one: a single row-wide stamp let the seeker's own message open a
+    // window that then swallowed the xolacer's reply to it. Absent until that
+    // side has been notified once, and written only when a push actually goes
+    // out — see `notifyNewMessage`.
+    lastNotifiedUserAt: v.optional(v.number()),
+    lastNotifiedXolacerAt: v.optional(v.number()),
+    // DEPRECATED(remove-after: no live rows carry it): the row-wide stamp the
+    // two fields above replaced. Nothing reads or writes it; kept only so rows
+    // written before the split still validate. A stale value is harmless — the
+    // window it described was two minutes long.
     lastMessageNotifiedAt: v.optional(v.number()),
 
     // Where this request came from, derived from session recency at request

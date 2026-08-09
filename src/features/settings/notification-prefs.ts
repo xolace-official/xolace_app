@@ -39,23 +39,27 @@ export const gentleChoice = (prefs: NotificationPrefs | undefined) =>
   prefs?.gentleReturn ?? false;
 
 /**
- * The whole notification object for a given pair of toggle positions.
+ * What the two toggles say, and nothing else.
  *
- * Written as a whole object rather than a merge because the client is the one
- * that knows both toggle positions; `registerToken` auto-enables everything on
- * a first grant, and this write lands after it to say what the user actually
- * asked for.
+ * States the toggle fields as a whole because the client is the one that knows
+ * both positions; `registerToken` auto-enables everything on a first grant, and
+ * this write lands after it to say what the user actually asked for.
+ *
+ * It deliberately carries no `reach`, `quietWindow`, or `timezone`. The server
+ * merges notification writes, so an absent field is a field left alone —
+ * whereas echoing one back from `current` re-asserts a value read at the last
+ * render, and that snapshot goes stale the moment anything else writes. The
+ * timezone `applyToggles` syncs moments earlier was being erased exactly that
+ * way. Absent `reach` reads as "warm" on both the settings screen and the
+ * dispatch path, so nothing needs it restated here either.
  */
-export const nextNotificationPrefs = (
-  current: NotificationPrefs | undefined,
-  next: { gentle: boolean; chat: boolean },
-): NotificationPrefs => ({
+export const nextNotificationPrefs = (next: {
+  gentle: boolean;
+  chat: boolean;
+}): NotificationPrefs => ({
   enabled: next.gentle || next.chat,
   gentleReturn: next.gentle,
   patternNudge: next.gentle,
   milestone: next.gentle,
   chat: next.chat,
-  reach: current?.reach ?? "warm",
-  quietWindow: current?.quietWindow,
-  timezone: current?.timezone,
 });

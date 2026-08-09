@@ -47,13 +47,13 @@ describe("stored choice vs delivered state", () => {
 
 describe("nextNotificationPrefs", () => {
   it("keeps the master on while either family wants delivery", () => {
-    expect(nextNotificationPrefs(prefs(), { gentle: false, chat: true }).enabled).toBe(true);
-    expect(nextNotificationPrefs(prefs(), { gentle: true, chat: false }).enabled).toBe(true);
-    expect(nextNotificationPrefs(prefs(), { gentle: false, chat: false }).enabled).toBe(false);
+    expect(nextNotificationPrefs({ gentle: false, chat: true }).enabled).toBe(true);
+    expect(nextNotificationPrefs({ gentle: true, chat: false }).enabled).toBe(true);
+    expect(nextNotificationPrefs({ gentle: false, chat: false }).enabled).toBe(false);
   });
 
   it("mutes chat without touching the AI nudges", () => {
-    const next = nextNotificationPrefs(prefs(), { gentle: true, chat: false });
+    const next = nextNotificationPrefs({ gentle: true, chat: false });
     expect(next.chat).toBe(false);
     expect(next.gentleReturn).toBe(true);
     expect(next.patternNudge).toBe(true);
@@ -61,7 +61,7 @@ describe("nextNotificationPrefs", () => {
   });
 
   it("mutes the AI nudges without touching chat", () => {
-    const next = nextNotificationPrefs(prefs(), { gentle: false, chat: true });
+    const next = nextNotificationPrefs({ gentle: false, chat: true });
     expect(next.chat).toBe(true);
     expect(next.gentleReturn).toBe(false);
     expect(next.patternNudge).toBe(false);
@@ -71,27 +71,22 @@ describe("nextNotificationPrefs", () => {
   it("round-trips through the read helpers", () => {
     for (const gentle of [true, false]) {
       for (const chat of [true, false]) {
-        const next = nextNotificationPrefs(prefs(), { gentle, chat });
+        const next = nextNotificationPrefs({ gentle, chat });
         expect(gentleRemindersOn(next)).toBe(gentle);
         expect(chatNotificationsAllowed(next)).toBe(chat);
       }
     }
   });
 
-  it("preserves the reach and quiet window the user already chose", () => {
-    const current = prefs({
-      reach: "quiet",
-      quietWindow: { dontReachBefore: 8, dontReachAfter: 21 },
-      timezone: "Africa/Accra",
-    });
-    const next = nextNotificationPrefs(current, { gentle: false, chat: true });
-    expect(next.reach).toBe("quiet");
-    expect(next.quietWindow).toEqual({ dontReachBefore: 8, dontReachAfter: 21 });
-    expect(next.timezone).toBe("Africa/Accra");
-  });
-
-  it("defaults reach for a profile that has never set one", () => {
-    expect(nextNotificationPrefs(undefined, { gentle: true, chat: true }).reach).toBe("warm");
+  // The server merges notification writes, so what this object leaves out is
+  // what survives untouched. Restating a value read at the last render is how
+  // the timezone `applyToggles` had just synced got erased by the toggle write
+  // that followed it.
+  it("says nothing about reach, quiet window, or timezone", () => {
+    const next = nextNotificationPrefs({ gentle: false, chat: true });
+    expect("reach" in next).toBe(false);
+    expect("quietWindow" in next).toBe(false);
+    expect("timezone" in next).toBe(false);
   });
 });
 
@@ -101,9 +96,9 @@ describe("nextNotificationPrefs", () => {
  * the hook uses rather than against the pieces alone.
  */
 const enableGentle = (p: NotificationPrefs) =>
-  nextNotificationPrefs(p, { gentle: true, chat: chatChoice(p) });
+  nextNotificationPrefs({ gentle: true, chat: chatChoice(p) });
 const enableChat = (p: NotificationPrefs) =>
-  nextNotificationPrefs(p, { gentle: gentleChoice(p), chat: true });
+  nextNotificationPrefs({ gentle: gentleChoice(p), chat: true });
 
 describe("toggling one family from a cold start", () => {
   it("leaves chat on when a fresh user turns on gentle reminders", () => {

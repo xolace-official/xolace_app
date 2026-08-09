@@ -8,6 +8,7 @@ import {
   MESSAGE_NOTIFICATION_WINDOW_MS,
   messageNotificationRecipient,
   messageNotificationSuppressed,
+  messageNotifiedField,
   xolacerChannelId,
 } from "./chatNotifications";
 
@@ -255,12 +256,70 @@ describe("messageNotificationSuppressed", () => {
     ).toBe(false);
   });
 
-  // Keyed on the conversation: a second conversation carries its own stamp, so
-  // a chatty thread can never hide a different person entirely.
-  it("is per-conversation, so a quiet thread is unaffected by a loud one", () => {
+  // Each stamp stands alone: a second conversation, or the other side of this
+  // one, carries its own, so a loud thread can never hide a quiet one.
+  it("is per stamp, so a quiet thread is unaffected by a loud one", () => {
     const loud = now - 1_000;
     const quiet = undefined;
     expect(messageNotificationSuppressed(loud, now)).toBe(true);
     expect(messageNotificationSuppressed(quiet, now)).toBe(false);
+  });
+});
+
+describe("messageNotifiedField", () => {
+  const conversation = {
+    userProfileId: "seeker1",
+    xolacerProfileId: "xolacer1",
+  };
+
+  it("gives each participant their own stamp", () => {
+    expect(messageNotifiedField(conversation, "seeker1")).toBe(
+      "lastNotifiedUserAt",
+    );
+    expect(messageNotifiedField(conversation, "xolacer1")).toBe(
+      "lastNotifiedXolacerAt",
+    );
+  });
+
+  // The regression this split exists for: with one stamp on the row, the
+  // seeker's own message opened a window that then swallowed the reply to it —
+  // message-then-reply, the ordinary shape of a chat, going silent.
+  it("does not let a message silence the reply to it", () => {
+    const now = 1_754_600_000_000;
+    const row: {
+      userProfileId: string;
+      xolacerProfileId: string;
+      lastNotifiedUserAt?: number;
+      lastNotifiedXolacerAt?: number;
+    } = { ...conversation };
+
+    // Seeker writes at T0 — the xolacer is told, and their stamp is set.
+    const toXolacer = messageNotificationRecipient(row, "seeker1")!;
+    const xolacerField = messageNotifiedField(row, toXolacer);
+    expect(messageNotificationSuppressed(row[xolacerField], now)).toBe(false);
+    row[xolacerField] = now;
+
+    // Xolacer replies 45s later, well inside the window the seeker's own
+    // message opened. The seeker is still told.
+    const toSeeker = messageNotificationRecipient(row, "xolacer1")!;
+    const seekerField = messageNotifiedField(row, toSeeker);
+    expect(seekerField).not.toBe(xolacerField);
+    expect(messageNotificationSuppressed(row[seekerField], now + 45_000)).toBe(
+      false,
+    );
+  });
+
+  // The half that must keep working: one person typing four thoughts in a row
+  // is still one buzz for the person reading them.
+  it("still suppresses a burst from the same sender", () => {
+    const now = 1_754_600_000_000;
+    const row: {
+      userProfileId: string;
+      xolacerProfileId: string;
+      lastNotifiedUserAt?: number;
+      lastNotifiedXolacerAt?: number;
+    } = { ...conversation, lastNotifiedXolacerAt: now };
+    const field = messageNotifiedField(row, "xolacer1");
+    expect(messageNotificationSuppressed(row[field], now + 30_000)).toBe(true);
   });
 });

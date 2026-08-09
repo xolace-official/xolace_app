@@ -71,6 +71,10 @@ export function ConnectScreen({
   if (routed !== routedParams) {
     setRoutedParams(routed);
     if (isSpecialty(specialty)) setFilter(specialty);
+    // Sent to the roster without a specialty — a decline, whose copy promises
+    // "other xolacers are available". A filter left over from earlier browsing
+    // would answer that with a narrowed, possibly empty list.
+    else if (routedSegment === 'xolacers') setFilter(null);
     if (routedSegment) setSelected(routedSegment);
   }
 

@@ -105,14 +105,21 @@ export const useNotificationSettings = () => {
       if (permission === "undetermined" || !alreadyDelivering) {
         const token = await requestPushToken();
         if (!token) return;
-        await registerToken({ pushToken: token });
+        try {
+          await registerToken({ pushToken: token });
+        } catch {
+          // Same answer as no token at all: nothing is written, so the toggle
+          // stays where it was rather than promising delivery to a server that
+          // has no token to deliver against.
+          return;
+        }
         await syncTimezone();
       }
     }
 
     // Lands after registerToken, whose first-grant auto-enable would otherwise
     // switch on a family the user didn't ask for.
-    updatePreferences({ notifications: nextNotificationPrefs(notifications, next) });
+    updatePreferences({ notifications: nextNotificationPrefs(next) });
 
     if (!next.gentle && !next.chat) {
       try {

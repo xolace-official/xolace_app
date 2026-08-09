@@ -13,9 +13,11 @@ import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import {
   type ChatNotificationType,
+  chatNotificationsAllowed,
   conversationIdFromChannelId,
   messageNotificationRecipient,
   messageNotificationSuppressed,
+  messageNotifiedField,
   xolacerChannelId,
 } from "./lib/chatNotifications";
 import {
@@ -1281,13 +1283,29 @@ export const notifyNewMessage = internalMutation({
     );
     if (!recipientProfileId) return null;
 
+    // The recipient's own stamp, never the row's: the reply to a message must
+    // not land inside the window that message opened.
     const now = Date.now();
-    if (messageNotificationSuppressed(conversation.lastMessageNotifiedAt, now)) {
+    const notifiedField = messageNotifiedField(conversation, recipientProfileId);
+    if (messageNotificationSuppressed(conversation[notifiedField], now)) {
       return null;
     }
+
+    // Asked here as well as in the dispatch itself, because the stamp has to
+    // mean "this person was buzzed". Burning the window on a send that the
+    // recipient's preferences were always going to drop would leave them
+    // silent for two minutes after turning chat notifications back on.
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", recipientProfileId),
+      )
+      .unique();
+    if (!chatNotificationsAllowed(preferences?.notifications)) return null;
+
     // Stamped before the send is scheduled, in the same transaction, so a
     // burst arriving as separate webhook calls cannot each read a stale window.
-    await ctx.db.patch(conversationId, { lastMessageNotifiedAt: now });
+    await ctx.db.patch(conversationId, { [notifiedField]: now });
 
     // Whatever the recipient already calls the sender everywhere else: a
     // xolacer sees a pseudonym, a seeker sees the public display name.
