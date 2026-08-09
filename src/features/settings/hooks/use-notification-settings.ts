@@ -1,6 +1,15 @@
+import { useEffect, useState } from "react";
+import { AppState } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { requestPushToken } from "@/src/lib/use-notifications";
+import { chatNotificationsAllowed } from "@/convex/lib/chatNotifications";
+import { getPushPermissionState, requestPushToken } from "@/src/lib/use-notifications";
+import {
+  chatChoice,
+  gentleChoice,
+  gentleRemindersOn,
+  nextNotificationPrefs,
+} from "@/src/features/settings/notification-prefs";
 import { usePreferenceMutation } from "./use-preference-mutation";
 
 export type NotificationReach = "warm" | "direct" | "quiet";
@@ -11,10 +20,42 @@ export const useNotificationSettings = () => {
   const updatePreferences = usePreferenceMutation();
   const registerToken = useMutation(api.notifications.registerToken);
   const removeToken = useMutation(api.notifications.removeToken);
+  const [permissionBlocked, setPermissionBlocked] = useState(false);
+  const [osBlocked, setOsBlocked] = useState(false);
 
-  const gentleReminders = preferences?.notifications?.enabled ?? false;
-  const reach = (preferences?.notifications?.reach ?? "warm") as NotificationReach;
-  const quietWindow = preferences?.notifications?.quietWindow ?? null;
+  // Permission can be revoked in device settings, which no preference knows
+  // about — that is the state where a toggle reads ON and delivers nothing.
+  // Re-checked on every foreground, so returning from the Settings app (our
+  // own "Open Settings" included) settles the toggles without a relaunch.
+  useEffect(() => {
+    let cancelled = false;
+
+    const check = async () => {
+      const state = await getPushPermissionState();
+      if (!cancelled) setOsBlocked(state === "blocked");
+    };
+
+    check();
+    const subscription = AppState.addEventListener("change", (status) => {
+      if (status === "active") check();
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.remove();
+    };
+  }, []);
+
+  const notifications = preferences?.notifications;
+
+  // What each toggle shows: what actually gets delivered. A blocked OS makes
+  // both read off, so flipping one runs the enable path and explains itself
+  // rather than leaving a switch that promises delivery.
+  const gentleReminders = !osBlocked && gentleRemindersOn(notifications);
+  const chatNotifications = !osBlocked && chatNotificationsAllowed(notifications);
+
+  const reach = (notifications?.reach ?? "warm") as NotificationReach;
+  const quietWindow = notifications?.quietWindow ?? null;
 
   const setReach = (next: NotificationReach) => {
     updatePreferences({ notificationReach: next });
@@ -33,53 +74,47 @@ export const useNotificationSettings = () => {
     }
   };
 
-  const setGentleReminders = async (enabled: boolean) => {
-    const current = preferences?.notifications;
-    updatePreferences({
-      notifications: {
-        enabled,
-        gentleReturn: enabled,
-        patternNudge: enabled,
-        milestone: enabled,
-        reach: current?.reach ?? "warm",
-        quietWindow: current?.quietWindow,
-        timezone: current?.timezone,
-      },
-    });
+  /**
+   * Move both toggles to a new position at once.
+   *
+   * Only turning something on has to clear the OS, and only from a state that
+   * isn't already delivering: a user who granted permission and merely muted
+   * one family is not re-prompted. Turning something off never consults the OS
+   * at all, so a blocked device can still mute what it isn't delivering.
+   *
+   * Nothing is written when the permission route runs out — the toggle is
+   * driven off the stored preference, so it stays where it was rather than
+   * flipping to a promise the device can't keep.
+   */
+  const applyToggles = async (next: { gentle: boolean; chat: boolean }) => {
+    const turningOn =
+      (next.gentle && !gentleReminders) || (next.chat && !chatNotifications);
+    const alreadyDelivering = gentleReminders || chatNotifications;
 
-    if (enabled) {
-      try {
+    if (turningOn) {
+      const permission = await getPushPermissionState();
+      if (permission === "blocked") {
+        setOsBlocked(true);
+        setPermissionBlocked(true);
+        return;
+      }
+      setOsBlocked(false);
+
+      // The token is dropped whenever both families go quiet, so coming back
+      // from that needs a fresh registration even though permission stands.
+      if (permission === "undetermined" || !alreadyDelivering) {
         const token = await requestPushToken();
-        if (!token) {
-          updatePreferences({
-            notifications: {
-              enabled: false,
-              gentleReturn: false,
-              patternNudge: false,
-              milestone: false,
-              reach: current?.reach ?? "warm",
-              quietWindow: current?.quietWindow,
-              timezone: current?.timezone,
-            },
-          });
-          return;
-        }
+        if (!token) return;
         await registerToken({ pushToken: token });
         await syncTimezone();
-      } catch {
-        updatePreferences({
-          notifications: {
-            enabled: false,
-            gentleReturn: false,
-            patternNudge: false,
-            milestone: false,
-            reach: current?.reach ?? "warm",
-            quietWindow: current?.quietWindow,
-            timezone: current?.timezone,
-          },
-        });
       }
-    } else {
+    }
+
+    // Lands after registerToken, whose first-grant auto-enable would otherwise
+    // switch on a family the user didn't ask for.
+    updatePreferences({ notifications: nextNotificationPrefs(notifications, next) });
+
+    if (!next.gentle && !next.chat) {
       try {
         await removeToken();
       } catch {
@@ -87,6 +122,15 @@ export const useNotificationSettings = () => {
       }
     }
   };
+
+  // Each setter carries the other family's *stored choice*, never its
+  // displayed value: from all-off, or with the OS blocking, both read off, and
+  // writing that back would mute a family the user never touched.
+  const setGentleReminders = (enabled: boolean) =>
+    applyToggles({ gentle: enabled, chat: chatChoice(notifications) });
+
+  const setChatNotifications = (enabled: boolean) =>
+    applyToggles({ gentle: gentleChoice(notifications), chat: enabled });
 
   const reachDisplay =
     reach === "warm" ? "Warm" : reach === "direct" ? "Direct" : "Quiet";
@@ -98,6 +142,10 @@ export const useNotificationSettings = () => {
   return {
     gentleReminders,
     setGentleReminders,
+    chatNotifications,
+    setChatNotifications,
+    permissionBlocked,
+    dismissPermissionBlocked: () => setPermissionBlocked(false),
     reach,
     reachDisplay,
     setReach,

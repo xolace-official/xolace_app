@@ -145,6 +145,22 @@ export function useNotifications() {
   return { expoPushToken };
 }
 
+export type PushPermissionState = "granted" | "undetermined" | "blocked";
+
+/**
+ * Which of the three permission states this device is in.
+ *
+ * `blocked` is the one worth naming: iOS allows exactly one ask and Android
+ * hard-denies after two dismissals, so no dialog will ever appear again and
+ * the only route back is device settings. A toggle that flips anyway would
+ * read ON while delivering nothing.
+ */
+export async function getPushPermissionState(): Promise<PushPermissionState> {
+  const { status, canAskAgain } = await Notifications.getPermissionsAsync();
+  if (status === "granted") return "granted";
+  return canAskAgain ? "undetermined" : "blocked";
+}
+
 /**
  * Request OS push notification permission and return the Expo push token.
  * Exported so settings can trigger re-registration when notifications are enabled.

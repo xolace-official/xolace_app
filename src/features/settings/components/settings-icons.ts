@@ -49,6 +49,11 @@ export const REACH_ICON: CrossPlatformSymbol = {
   android: "send",
   web: "send",
 };
+export const CHAT_NOTIFICATIONS_ICON: CrossPlatformSymbol = {
+  ios: "bubble.left.and.bubble.right",
+  android: "forum",
+  web: "forum",
+};
 export const QUIET_HOURS_ICON: CrossPlatformSymbol = {
   ios: "moon.zzz",
   android: "bedtime",

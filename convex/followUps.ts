@@ -361,7 +361,13 @@ export const sendFollowUpNudge = internalMutation({
         q.eq("emotionalProfileId", card.emotionalProfileId),
       )
       .unique();
-    if (!prefs?.notifications.enabled) return null; // enabled-only gating
+    // The master switch is now held on by either family — chat notifications
+    // or the AI's own reaching out — so it no longer implies a follow-up is
+    // wanted. `gentleReturn` is the nudge family this belongs to, and it moves
+    // with the master on every row written before chat had its own toggle.
+    if (!prefs?.notifications.enabled || !prefs.notifications.gentleReturn) {
+      return null;
+    }
 
     const body =
       card.tier === "acute"
