@@ -38,11 +38,13 @@ import {
 } from "./integrations/stream";
 import {
   canRate,
+  declineCooldownUntil,
   hasRealExchange,
   isAtOpenCap,
   isBlocked,
   isPairBlocked,
   planBlock,
+  REQUEST_EXPIRY_MS,
 } from "./lib/conversationGating";
 import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 
@@ -104,7 +106,6 @@ export const MAX_SEEKER_OPEN_CONVERSATIONS = 3;
  * free again. Without this a user can blanket every xolacer in the directory.
  */
 export const MAX_PENDING_REQUESTS = 2;
-const REQUEST_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 const RESTING_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
 
 /**
@@ -445,6 +446,10 @@ export const xolacerProfile = query({
           id: v.id("xolacer_conversations"),
           status: statusValidator,
           closedReason: closedReasonValidator,
+          // Present only while a decline is still resting. The CTA reads it so
+          // the wait is on screen before anyone writes anything — finding out
+          // on submit is the version of this that reads as a second refusal.
+          retryAvailableAt: v.optional(v.number()),
         }),
       ),
     }),
@@ -489,6 +494,7 @@ export const xolacerProfile = query({
             id: conversation._id,
             status: conversation.status,
             closedReason: conversation.closedReason,
+            retryAvailableAt: declineCooldownUntil(conversation, Date.now()),
           }
         : null,
     };
@@ -897,6 +903,16 @@ export const requestConversation = mutation({
       if (existing.closedReason === "xolacer_left") {
         throw new Error("This conversation can no longer be reopened");
       }
+      // A decline is not a door that reopens on the next tap. Ahead of the caps
+      // and of every write below, so a re-request inside the window moves no
+      // row and fires no `chat_request` — the whole point is that the xolacer's
+      // phone stays quiet. The client already shows this on the profile before
+      // anyone taps; reaching it means a stale screen, so the error carries the
+      // date the same sentence needs.
+      const retryAt = declineCooldownUntil(existing, Date.now());
+      if (retryAt !== undefined) {
+        throw new ConvexError({ code: "decline_cooldown", until: retryAt });
+      }
       await requireOpenSlot(ctx, "seeker", profile._id);
       await requirePendingRequestSlot(ctx, profile._id);
       // Overwritten, never merged: a re-request from the roster months later
@@ -1086,6 +1102,7 @@ export const declineRequest = mutation({
     await ctx.db.patch(args.conversationId, {
       status: "closed",
       closedReason: "declined",
+      declinedAt: Date.now(),
     });
     await notifyConversation(
       ctx,

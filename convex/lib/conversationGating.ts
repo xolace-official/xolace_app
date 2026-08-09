@@ -1,7 +1,8 @@
 /**
  * Every "may this conversation happen?" decision, in one place: blocking,
- * block symmetry across the two role-orderings a pair can hold, and the
- * open-conversation caps both sides are held to.
+ * block symmetry across the two role-orderings a pair can hold, the
+ * open-conversation caps both sides are held to, and the windows a request
+ * lives and a decline rests for.
  */
 import type { Doc, Id } from "../_generated/dataModel";
 
@@ -82,6 +83,59 @@ export function isPairBlocked(
   reverse: Pick<Conversation, "closedReason"> | null | undefined,
 ): boolean {
   return isBlocked(forward?.closedReason) || isBlocked(reverse?.closedReason);
+}
+
+/** How long a request waits for an answer before the sweep closes it. */
+export const REQUEST_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * How long a declined pair waits before the seeker may ask that xolacer again.
+ *
+ * Declining frees the pending-request slot immediately, so without this the
+ * same person can re-request in a loop — and every loop now reaches the
+ * xolacer's lock screen. The window is the life of an unanswered request:
+ * long enough that a decline can't be pushed through in an afternoon, short
+ * enough that a genuine second attempt weeks later still works.
+ *
+ * Derived rather than written out again, so that reasoning stays true. The two
+ * are the same span by argument, not by coincidence — a cooldown outliving the
+ * request lifetime it was justified by is exactly the drift a second literal
+ * would let through silently.
+ *
+ * Per pair, and for a decline only. A seeker turned down by several xolacers
+ * hits nothing broader — someone reaching out repeatedly is who this app is
+ * for, and a global cooldown would read as the app deciding they'd had enough.
+ * An expiry carries no cooldown at all: silence is not a refusal, and treating
+ * it as one penalises the seeker for their xolacer going quiet.
+ */
+export const DECLINE_COOLDOWN_MS = REQUEST_EXPIRY_MS;
+
+type CooldownInputs = Pick<
+  Conversation,
+  "status" | "closedReason" | "declinedAt"
+>;
+
+/**
+ * When this pair may request again, or undefined if they may now.
+ *
+ * Returns the moment the door reopens rather than a boolean, so one call
+ * answers both the gate and the sentence the seeker reads — a refusal with no
+ * date attached is the version of this that reads as punishment.
+ *
+ * Read off `declinedAt`, not `requestedAt`: a xolacer who declines on day six
+ * of a week-old request would otherwise hand out an already-expired cooldown.
+ * A row with no stamp predates the field and waits for nothing — the only
+ * alternative is inventing a decline time.
+ */
+export function declineCooldownUntil(
+  conversation: CooldownInputs | null | undefined,
+  now: number,
+): number | undefined {
+  if (conversation?.status !== "closed") return undefined;
+  if (conversation.closedReason !== "declined") return undefined;
+  if (!conversation.declinedAt) return undefined;
+  const until = conversation.declinedAt + DECLINE_COOLDOWN_MS;
+  return until > now ? until : undefined;
 }
 
 /**

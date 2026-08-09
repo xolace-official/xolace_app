@@ -2,6 +2,8 @@ import { describe, expect, it } from "bun:test";
 import {
   type BlockPlanRow,
   canRate,
+  DECLINE_COOLDOWN_MS,
+  declineCooldownUntil,
   isAtOpenCap,
   isBlocked,
   isPairBlocked,
@@ -9,6 +11,113 @@ import {
 } from "./conversationGating";
 
 type Reason = "declined" | "expired" | "blocked" | "xolacer_left";
+
+describe("declineCooldownUntil", () => {
+  const DECLINED = 1_000_000;
+  const OPEN_AGAIN = DECLINED + DECLINE_COOLDOWN_MS;
+
+  // row state | now → when the pair may ask again, or undefined for "now"
+  const cases: Array<{
+    status?: "requested" | "open" | "resting" | "closed";
+    reason?: Reason;
+    declinedAt?: number;
+    now: number;
+    expected?: number;
+    label: string;
+  }> = [
+    // The loop this exists to break: declined, asked again the same hour.
+    {
+      status: "closed",
+      reason: "declined",
+      declinedAt: DECLINED,
+      now: DECLINED + 3_600_000,
+      expected: OPEN_AGAIN,
+      label: "declined an hour ago",
+    },
+    {
+      status: "closed",
+      reason: "declined",
+      declinedAt: DECLINED,
+      now: OPEN_AGAIN - 1,
+      expected: OPEN_AGAIN,
+      label: "one tick before the window closes",
+    },
+    // The genuine second attempt has to still work.
+    {
+      status: "closed",
+      reason: "declined",
+      declinedAt: DECLINED,
+      now: OPEN_AGAIN,
+      label: "exactly at the boundary",
+    },
+    {
+      status: "closed",
+      reason: "declined",
+      declinedAt: DECLINED,
+      now: DECLINED + 30 * 24 * 60 * 60 * 1000,
+      label: "a month later",
+    },
+    // Expiry is silence, not a refusal — no cooldown, whatever the stamp says.
+    {
+      status: "closed",
+      reason: "expired",
+      declinedAt: DECLINED,
+      now: DECLINED + 1,
+      label: "expired rather than declined",
+    },
+    // Blocked has its own, permanent refusal upstream; it must not read as a
+    // timed one that expires into a reopened door.
+    {
+      status: "closed",
+      reason: "blocked",
+      declinedAt: DECLINED,
+      now: DECLINED + 1,
+      label: "blocked",
+    },
+    {
+      status: "closed",
+      reason: "xolacer_left",
+      declinedAt: DECLINED,
+      now: DECLINED + 1,
+      label: "xolacer left",
+    },
+    // Rows declined before the stamp existed wait for nothing.
+    {
+      status: "closed",
+      reason: "declined",
+      now: DECLINED + 1,
+      label: "declined with no stamp (grandfathered)",
+    },
+    // A re-request already through the door reopens this row — status is what
+    // says so, and a stale declinedAt must not gate the live request.
+    {
+      status: "requested",
+      declinedAt: DECLINED,
+      now: DECLINED + 1,
+      label: "re-requested, stamp still on the row",
+    },
+    { status: "open", declinedAt: DECLINED, now: DECLINED + 1, label: "open" },
+    { status: "resting", declinedAt: DECLINED, now: DECLINED + 1, label: "resting" },
+    { now: DECLINED, label: "no row at all" },
+  ];
+
+  for (const c of cases) {
+    it(`${c.label} → ${c.expected ?? "may ask now"}`, () => {
+      expect(
+        declineCooldownUntil(
+          c.status === undefined
+            ? null
+            : {
+                status: c.status,
+                closedReason: c.reason,
+                declinedAt: c.declinedAt,
+              },
+          c.now,
+        ),
+      ).toBe(c.expected as number);
+    });
+  }
+});
 
 describe("isPairBlocked", () => {
   // forward row | reverse row → is the pair closed?

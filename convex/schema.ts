@@ -1698,6 +1698,11 @@ export default defineSchema({
 
     requestedAt: v.number(),
     acceptedAt: v.optional(v.number()),
+    // When the xolacer declined, which is what the re-request cooldown counts
+    // from — `requestedAt` would start the clock when the request was sent, so
+    // a decline on day six of a week-old request would already be spent.
+    // Absent on rows declined before the field existed: those wait for nothing.
+    declinedAt: v.optional(v.number()),
     // Drives the resting sweep. Updated by touchConversation on send.
     lastMessageAt: v.optional(v.number()),
     // When a message notification last went out to each side. Two fields and
