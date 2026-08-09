@@ -4,6 +4,7 @@ import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
 import { pushNotifications } from "./lib/pushNotifications";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
+import { NUDGE_NOTIFICATION_SOUND } from "./lib/notificationSounds";
 
 /**
  * Schedule a notification for delivery.
@@ -95,7 +96,13 @@ export const schedule = internalMutation({
       notification: {
         title: "Xolace",
         body: args.content,
-        sound: "default",
+        // iOS reads the sound off the payload; Android ignores it and takes the
+        // sound from the channel. Sending both is what covers the two platforms
+        // in one call. Deliberately not the `default` channel — that one exists
+        // without a sound on every device already running the app, and a
+        // channel's sound can never be changed after creation.
+        sound: NUDGE_NOTIFICATION_SOUND.sound,
+        channelId: NUDGE_NOTIFICATION_SOUND.channelId,
         data: { type: args.type, logId },
       },
       allowUnregisteredTokens: true,

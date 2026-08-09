@@ -210,7 +210,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "@clerk/expo",
       "expo-secure-store",
       "expo-apple-authentication",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          // Bundling is the only way a custom sound reaches either platform:
+          // iOS names the file in the payload but plays it from the binary, and
+          // Android copies it to res/raw where a channel can point at it.
+          // Basenames become Android resource names, so they must stay
+          // lowercase and free of dots beyond the extension.
+          "sounds": [
+            "./assets/sounds/notifications/reach.wav",
+            "./assets/sounds/notifications/message.wav",
+            "./assets/sounds/notifications/nudge.wav"
+          ]
+        }
+      ],
       "expo-localization",
       [
         "expo-speech-recognition",

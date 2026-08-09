@@ -11,6 +11,10 @@ import {
   chatNotificationRoute,
   isChatNotificationType,
 } from "@/convex/lib/chatNotifications";
+import {
+  DEFAULT_CHANNEL_ID,
+  SOUND_CHANNELS,
+} from "@/convex/lib/notificationSounds";
 import { useRouter } from "expo-router";
 import { useAppStore } from "@/src/store/store";
 import { suppressedInForeground } from "@/src/lib/notification-suppression";
@@ -172,12 +176,33 @@ export async function requestPushToken(): Promise<string | null> {
   }
 
   if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
+    // Left exactly as it was. Nothing targets it any more, but it stays created
+    // as the landing spot for any notification that arrives without a channel.
+    await Notifications.setNotificationChannelAsync(DEFAULT_CHANNEL_ID, {
       name: "default",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#6C63FF",
     });
+
+    // One channel per sound, because on Android a sound belongs to the channel
+    // rather than to the payload. Splitting them also buys the user real
+    // OS-level control: chatter can be silenced without silencing a person
+    // asking to talk, or the AI's reaching out.
+    //
+    // A channel's sound is fixed the moment it is first created on a device, so
+    // re-running this with a different sound changes nothing for anyone who
+    // already has the app. Replacing a sound needs a new id, and that discards
+    // whatever tuning the user had applied to the old one.
+    for (const channel of SOUND_CHANNELS) {
+      await Notifications.setNotificationChannelAsync(channel.id, {
+        name: channel.name,
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#6C63FF",
+        sound: channel.sound,
+      });
+    }
   }
 
   const { status: existingStatus } =

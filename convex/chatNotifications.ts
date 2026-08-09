@@ -4,6 +4,7 @@ import {
   chatNotificationContent,
   chatNotificationsAllowed,
 } from "./lib/chatNotifications";
+import { chatNotificationSound } from "./lib/notificationSounds";
 import { pushNotifications } from "./lib/pushNotifications";
 
 /**
@@ -56,6 +57,11 @@ export const send = internalMutation({
       args.counterpartName,
     );
 
+    // iOS reads the sound off the payload; Android ignores it and takes the
+    // sound from the channel. Sending both is what makes one call cover the two
+    // platforms.
+    const { sound, channelId } = chatNotificationSound(args.type);
+
     // allowUnregisteredTokens: the recipient may have preferences on and no
     // token yet (never opened the app on a physical device).
     await pushNotifications.sendPushNotification(ctx, {
@@ -63,7 +69,8 @@ export const send = internalMutation({
       notification: {
         title,
         body,
-        sound: "default",
+        sound,
+        channelId,
         data: { type: args.type, conversationId: args.conversationId },
       },
       allowUnregisteredTokens: true,
