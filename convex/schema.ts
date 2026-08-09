@@ -12,29 +12,20 @@ import { voiceSlugValidator } from "./lib/voices";
 import { specialtyValidator } from "./lib/specialties";
 
 // =============================================================
-// XOLACE — LAYER 1 MVP SCHEMA (MERGED)
+// XOLACE BETA
 // =============================================================
-//
-// Nine tables. Each one justified.
 //
 // This schema merges two design philosophies:
 // - Privacy-first structural separation (auth identity decoupled
 //   from emotional identity — a breach of one reveals nothing
 //   about the other)
-// - Ship-fast scope discipline (no tables for features that
-//   don't exist yet, no fields for data we can't use yet)
 //
 // Design principles:
 // 1. The users ↔ emotional_profiles mapping is the most
 //    sensitive record in the system. Treat it accordingly.
-// 2. Session turns are first-class entities, not counters.
-//    The delta between attempt 1 and the confirmed mirror
-//    is your most valuable training data.
+// 2. Session turns are first-class entities.
 // 3. Emotional metadata lives separately from sessions so
 //    it can be re-classified when models improve.
-// 4. The reflection pool has NO path back to its source.
-//    Anonymity is structural, not policy.
-// 5. Every field must justify its existence at MVP.
 // 6. Consent is append-only. Never mutate, always audit.
 // =============================================================
 
@@ -44,31 +35,15 @@ export default defineSchema({
   // ===========================================================
   //
   // The authentication shell. Deliberately thin.
-  // Contains NOTHING emotional. This table answers one
-  // question: "Is this a valid, authenticated human?"
-  //
-  // If this table is breached, an attacker learns:
-  // - An opaque auth provider ID
-  // - An account status
-  // - A reference to another table (useless without that table)
-  //
-  // They do NOT learn how this person feels, what they've
-  // written, or anything about their emotional life.
-  //
+  // Contains NOTHING emotional.
   users: defineTable({
-    // --- Auth ---
-
-    // Which provider authenticated this user. Self-reported by the client;
-    // a display hint (e.g. the settings screen), not an authority.
     authProvider: v.union(v.literal("apple"), v.literal("google")),
 
     // The verified Clerk user id (identity.subject, "user_..."), set server-side
     // from the JWT — never the client. Not their email. Not their name.
     authProviderAccountId: v.string(),
 
-    // The bridge to emotional data. This single reference
-    // is the most sensitive mapping in the system — it
-    // connects a real-world identity to emotional data.
+    // The bridge to emotional data.
     emotionalProfileId: v.id("emotional_profiles"),
 
     // Canonical stable identifier from ctx.auth.getUserIdentity().
@@ -94,10 +69,6 @@ export default defineSchema({
     // Null if no deletion requested.
     deletionRequestedAt: v.optional(v.number()),
 
-    // Trained peer-xolacer (ambassador) eligibility. Set by an operator,
-    // never self-service. Public-facing xolacer data lives in
-    // xolacer_profiles — this flag only answers "may this account act
-    // as a xolacer?"
     isXolacer: v.optional(v.boolean()),
 
     // --- Timestamps ---
@@ -123,26 +94,9 @@ export default defineSchema({
   //
   // Decoupled from auth so that a breach of this table
   // reveals emotional patterns but NO real-world identities.
-  //
-  // If this table is breached, an attacker learns:
-  // - Someone has 47 sessions
-  // - Their dominant emotions are frustration and anxiety
-  // - They prefer gentle mirroring
-  //
-  // They do NOT learn who this person is.
-  //
   emotional_profiles: defineTable({
-    // --- Onboarding ---
-
-    // Has the user completed the onboarding flow?
-    // Checked on every app open.
     onboardingComplete: v.boolean(),
 
-    // --- Usage Stats ---
-
-    // Total completed sessions. Calibrates AI tone —
-    // first-timers get warmth, veterans get precision.
-    //
     // MIRRORED: this field is the sort key of the `reflectionRank` aggregate
     // (convex/lib/aggregates.ts), which powers the profile percentile card.
     // Any new writer — insert, patch, or delete — must call the matching
@@ -150,8 +104,6 @@ export default defineSchema({
     // every user's percentile goes wrong with no error surfaced.
     sessionCount: v.number(),
 
-    // Timestamp of first completed session.
-    // Anchors the longitudinal timeline.
     firstSessionAt: v.optional(v.number()),
 
     // Timestamp of most recent session.
