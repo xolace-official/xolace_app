@@ -26,6 +26,14 @@ type OnboardingSlice = {
   setIntroSeen: (v: boolean) => void;
   founderWelcomeSeen: boolean;
   setFounderWelcomeSeen: (v: boolean) => void;
+  /**
+   * True while any home sheet (founder welcome, return welcome, follow-up,
+   * monthly event) is open or armed to open. Transient — never persisted.
+   * The reflect tour reads this so its coach marks don't render underneath a
+   * sheet that is about to cover them.
+   */
+  homeSheetBlocking: boolean;
+  setHomeSheetBlocking: (v: boolean) => void;
 };
 
 type TogglesSlice = {
@@ -117,6 +125,8 @@ export const useAppStore = create<AppState>()(
 
         founderWelcomeSeen: false,
         setFounderWelcomeSeen: (v) => set({ founderWelcomeSeen: v }),
+        homeSheetBlocking: false,
+        setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 
         nightModeEnabled: true,
         setNightModeEnabled: (v) => set({ nightModeEnabled: v }),

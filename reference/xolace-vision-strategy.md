@@ -4,6 +4,10 @@
 
 ---
 
+#### 1. What Xolace Is
+
+We are building an AI-native end-to-end mental health support app; from when a user can't even name what they are feeling to getting actual support.
+
 ## The Problem Worth Solving
 
 Most people are not fine. They carry weight they cannot name — heavy, anxious, numb, confused — but are not "bad enough" for therapy. They exist in a gap that nearly every existing tool ignores: between social performance ("everything is fine") and clinical intervention ("I need help").
@@ -132,11 +136,11 @@ These are not positioning statements. They are hard design constraints.
 
 **Not a therapist.** No diagnoses, no clinical framing, no advice. "You may be experiencing anxiety" is a failure state. "There's a restlessness — like your body is bracing for something your mind hasn't caught up to yet" is what success looks like.
 
-**Not a social platform.** No feeds, no public profiles, no follower counts, no validation loops. The peer layer exists for recognition, not performance.
+**Not a traditional social platform.** no follower counts, no validation loops. The peer layer exists for recognition and release at best, not performance.
 
 **Not a companion.** The AI is not a friend, coach, or relationship. There is memory of the user between sessions that creates a sense of naturally personalized feel from mirrors but not to create a sense of ongoing connection to the AI. Longitudinal data serves the user's self-understanding, not the AI's simulated relationship.
 
-**Not an addiction engine.** Sessions are complete. Users leave with something named or released. The goal is to make users feel understood faster, not to keep them longer than neccessary; okay to stay longer if they want to or give them value. Return happens because the product delivers real value, not because it leaves people unresolved.
+
 
 ---
 
@@ -195,7 +199,7 @@ Not time spent. Not daily active users as a vanity metric. Not streaks completed
 
 **Human layer activation rate:** What percentage of users progress from AI processing to any form of real human recognition — a peer reflection, a Glimpse fully watched, a resonance exchange, a Circle session, a therapy referral?
 
-**The question that decides everything:** If Xolace disappeared tomorrow, would users say "I miss the place where I processed my feelings" — or "I miss the people there"? The answer should eventually be both. The Mirror and Vent prove the tool. Glimpses, resonance, and Circles build the home.
+**The question that decides everything:** If Xolace disappeared tomorrow, would users say "I miss the place where I processed my feelings" — or "I miss the people there"? The answer should eventually be both. The Mirror and Vent prove the tool. Glimpses, resonance, and Circles/Campfires build the home.
 
 ---
 

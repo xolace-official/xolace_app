@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
+import { purgeSessions } from "../lib/sessionCascade";
+import { rankReplace } from "../lib/aggregates";
 
 const BATCH_SIZE = 100;
 
@@ -34,26 +36,7 @@ export const wipe = internalMutation({
 
     if (sessions.length === BATCH_SIZE) hasMore = true;
 
-    for (const session of sessions) {
-      // Delete metadata (1:1)
-      const metadata = await ctx.db
-        .query("emotional_metadata")
-        .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-        .unique();
-      if (metadata) await ctx.db.delete(metadata._id);
-
-      // Delete all turns (loop until batch is empty)
-      let turns;
-      do {
-        turns = await ctx.db
-          .query("session_turns")
-          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-          .take(10);
-        for (const turn of turns) await ctx.db.delete(turn._id);
-      } while (turns.length === 10);
-
-      await ctx.db.delete(session._id);
-    }
+    await purgeSessions(ctx, emotionalProfileId, sessions);
 
     // ── Delete reflection resonances ─────────────────────────────
     const resonances = await ctx.db
@@ -77,6 +60,18 @@ export const wipe = internalMutation({
     if (notifications.length === BATCH_SIZE) hasMore = true;
     for (const n of notifications) await ctx.db.delete(n._id);
 
+    // ── Delete daily quotes ──────────────────────────────────────
+    // Session-derived quotes are distilled from the words being wiped.
+    const quotes = await ctx.db
+      .query("daily_quotes")
+      .withIndex("by_profile_date", (q) =>
+        q.eq("emotionalProfileId", emotionalProfileId)
+      )
+      .take(BATCH_SIZE);
+
+    if (quotes.length === BATCH_SIZE) hasMore = true;
+    for (const q of quotes) await ctx.db.delete(q._id);
+
     // ── Anonymize escalation events ──────────────────────────────
     const escalations = await ctx.db
       .query("escalation_events")
@@ -98,9 +93,23 @@ export const wipe = internalMutation({
       });
     }
 
+    // ── Delete semantic profile versions (all of them) ───────────
+    // The AI's narrative understanding is memory; a wipe erases it.
+    const semanticVersions = await ctx.db
+      .query("semantic_profiles")
+      .withIndex("by_profile_version", (q) =>
+        q.eq("emotionalProfileId", emotionalProfileId)
+      )
+      .take(BATCH_SIZE);
+    if (semanticVersions.length === BATCH_SIZE) hasMore = true;
+    for (const version of semanticVersions) await ctx.db.delete(version._id);
+
     // ── Reset emotional profile counters ─────────────────────────
     // Only reset on the final batch (no more sessions to delete)
     if (!hasMore) {
+      // Read before the patch — the percentile aggregate needs the old
+      // sessionCount to find and move this profile's key.
+      const profileBeforeReset = await ctx.db.get(emotionalProfileId);
       await ctx.db.patch(emotionalProfileId, {
         sessionCount: 0,
         currentStreak: 0,
@@ -110,8 +119,11 @@ export const wipe = internalMutation({
         averageSessionDuration: undefined,
         typicalUsagePattern: undefined,
         dataWipeInProgress: undefined,
+        currentSemanticProfileId: undefined,
+        lastConsolidationAt: undefined,
         updatedAt: Date.now(),
       });
+      if (profileBeforeReset) await rankReplace(ctx, profileBeforeReset);
     }
 
     // ── Self-reschedule if more data remains ─────────────────────

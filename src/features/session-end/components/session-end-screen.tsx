@@ -10,12 +10,14 @@ import { SessionEndNotifNudge } from "@/src/features/session-end/components/sess
 import { playSessionComplete } from "@/src/lib/haptics";
 import { useSessionMode } from "@/src/context/session-mode-context";
 
+import type { Id } from "@/convex/_generated/dataModel";
+
 type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
 type PathType = "solo" | "peers" | "exit";
 
 type Props = {
   path: PathType;
-  pathCompleted?: boolean;
+  sessionId: Id<"sessions"> | null;
 };
 
 const styles = StyleSheet.create({
@@ -25,7 +27,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export const SessionEndScreen = ({ path, pathCompleted = true }: Props) => {
+export const SessionEndScreen = ({ path, sessionId: routeSessionId }: Props) => {
   const insets = useSafeAreaInsets();
   const {
     sessionId,
@@ -37,7 +39,7 @@ export const SessionEndScreen = ({ path, pathCompleted = true }: Props) => {
     dismiss,
     haveMore,
     completeAndBridge,
-  } = useSessionEnd(pathCompleted);
+  } = useSessionEnd(routeSessionId);
   const { isNight } = useSessionMode();
   const insetsStyle = [
     styles.insetsContainer,

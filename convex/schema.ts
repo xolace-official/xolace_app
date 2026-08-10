@@ -1,32 +1,31 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { vWorkflowId } from "@convex-dev/workflow";
-import { insightFeatureValidator, resourceValidator } from "./lib/validators";
+import {
+  insightFeatureValidator,
+  motionPreferenceValidator,
+  resourceValidator,
+  safeguardLevelValidator,
+  triggerTypeValidator,
+} from "./lib/validators";
+import { voiceSlugValidator } from "./lib/voices";
+import { specialtyValidator } from "./lib/specialties";
 
 // =============================================================
-// XOLACE — LAYER 1 MVP SCHEMA (MERGED)
+// XOLACE BETA
 // =============================================================
-//
-// Nine tables. Each one justified.
 //
 // This schema merges two design philosophies:
 // - Privacy-first structural separation (auth identity decoupled
 //   from emotional identity — a breach of one reveals nothing
 //   about the other)
-// - Ship-fast scope discipline (no tables for features that
-//   don't exist yet, no fields for data we can't use yet)
 //
 // Design principles:
 // 1. The users ↔ emotional_profiles mapping is the most
 //    sensitive record in the system. Treat it accordingly.
-// 2. Session turns are first-class entities, not counters.
-//    The delta between attempt 1 and the confirmed mirror
-//    is your most valuable training data.
+// 2. Session turns are first-class entities.
 // 3. Emotional metadata lives separately from sessions so
 //    it can be re-classified when models improve.
-// 4. The reflection pool has NO path back to its source.
-//    Anonymity is structural, not policy.
-// 5. Every field must justify its existence at MVP.
 // 6. Consent is append-only. Never mutate, always audit.
 // =============================================================
 
@@ -36,30 +35,15 @@ export default defineSchema({
   // ===========================================================
   //
   // The authentication shell. Deliberately thin.
-  // Contains NOTHING emotional. This table answers one
-  // question: "Is this a valid, authenticated human?"
-  //
-  // If this table is breached, an attacker learns:
-  // - An opaque auth provider ID
-  // - An account status
-  // - A reference to another table (useless without that table)
-  //
-  // They do NOT learn how this person feels, what they've
-  // written, or anything about their emotional life.
-  //
+  // Contains NOTHING emotional.
   users: defineTable({
-    // --- Auth ---
-
-    // Which provider authenticated this user.
     authProvider: v.union(v.literal("apple"), v.literal("google")),
 
-    // The opaque identifier from the auth provider.
-    // Not their email. Not their name. An opaque token.
+    // The verified Clerk user id (identity.subject, "user_..."), set server-side
+    // from the JWT — never the client. Not their email. Not their name.
     authProviderAccountId: v.string(),
 
-    // The bridge to emotional data. This single reference
-    // is the most sensitive mapping in the system — it
-    // connects a real-world identity to emotional data.
+    // The bridge to emotional data.
     emotionalProfileId: v.id("emotional_profiles"),
 
     // Canonical stable identifier from ctx.auth.getUserIdentity().
@@ -68,19 +52,24 @@ export default defineSchema({
 
     // --- Account State ---
 
-    // Active, suspended, or soft-deleted.
-    // "deleted" means deletion has been requested — a
-    // background job will purge associated data.
+    // Active, suspended, soft-deleted, or actively purging.
+    // "deleted" means deletion has been requested — the purge
+    // sweep will claim it. "purging" means the sweep has claimed
+    // it and a purgeUser drain is in flight; this claim keeps the
+    // sweep from re-selecting (and double-enqueuing) the same user.
     accountStatus: v.union(
       v.literal("active"),
       v.literal("suspended"),
       v.literal("deleted"),
+      v.literal("purging"),
     ),
 
     // When the user requested account deletion.
     // Triggers the data purge pipeline.
     // Null if no deletion requested.
     deletionRequestedAt: v.optional(v.number()),
+
+    isXolacer: v.optional(v.boolean()),
 
     // --- Timestamps ---
     createdAt: v.number(),
@@ -105,29 +94,16 @@ export default defineSchema({
   //
   // Decoupled from auth so that a breach of this table
   // reveals emotional patterns but NO real-world identities.
-  //
-  // If this table is breached, an attacker learns:
-  // - Someone has 47 sessions
-  // - Their dominant emotions are frustration and anxiety
-  // - They prefer gentle mirroring
-  //
-  // They do NOT learn who this person is.
-  //
   emotional_profiles: defineTable({
-    // --- Onboarding ---
-
-    // Has the user completed the onboarding flow?
-    // Checked on every app open.
     onboardingComplete: v.boolean(),
 
-    // --- Usage Stats ---
-
-    // Total completed sessions. Calibrates AI tone —
-    // first-timers get warmth, veterans get precision.
+    // MIRRORED: this field is the sort key of the `reflectionRank` aggregate
+    // (convex/lib/aggregates.ts), which powers the profile percentile card.
+    // Any new writer — insert, patch, or delete — must call the matching
+    // rankInsert/rankReplace/rankDelete helper, or the aggregate drifts and
+    // every user's percentile goes wrong with no error surfaced.
     sessionCount: v.number(),
 
-    // Timestamp of first completed session.
-    // Anchors the longitudinal timeline.
     firstSessionAt: v.optional(v.number()),
 
     // Timestamp of most recent session.
@@ -187,6 +163,19 @@ export default defineSchema({
     // Prevents duplicate wipe jobs from being scheduled.
     dataWipeInProgress: v.optional(v.boolean()),
 
+    // --- Cognition Layer: semantic memory pointer ---
+    // Current semantic profile version (row in semantic_profiles).
+    // Versions are append-only; this pointer selects the live one so a
+    // bad agent pass is a one-step revert. Undefined until the Reflection
+    // Agent writes the first version.
+    currentSemanticProfileId: v.optional(v.id("semantic_profiles")),
+
+    // When the Reflection Agent's consolidation pass last ran. Set ONLY by
+    // that pass; anchors the activity gate (≥5 sessions OR ≥7 days since this
+    // point). Undefined → anchor on firstSessionAt ?? createdAt. Cleared by
+    // the data-wipe pipeline alongside currentSemanticProfileId.
+    lastConsolidationAt: v.optional(v.number()),
+
     // --- Timestamps ---
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -215,7 +204,15 @@ export default defineSchema({
     // Stored separately from light/dark mode so both can change independently.
     colorTheme: v.optional(v.string()),
 
-    // Disable breath animation and motion effects.
+    // Tri-state motion preference (system | reduced | full), resolved against
+    // the OS reduce-motion flag at read time. This is the source of truth going
+    // forward — undefined on rows written before it shipped.
+    motionPreference: v.optional(motionPreferenceValidator),
+    // DEPRECATED(remove-after: app >= min-supported-version-that-writes
+    // motionPreference): back-compat boolean mirror of motionPreference. Old
+    // shipped UIs still read/write this, so the mutation keeps the two fields in
+    // sync. Resolver precedence: motionPreference ?? (reducedMotion ? "reduced"
+    // : "system"). Delete once no store-published client references it.
     reducedMotion: v.boolean(),
 
     // --- Notifications ---
@@ -225,6 +222,11 @@ export default defineSchema({
       gentleReturn: v.boolean(), // "It's been a while..."
       patternNudge: v.boolean(), // "Sunday evening..."
       milestone: v.boolean(), // "30 days of showing up"
+      // Xolacer chat: requests, accepts, declines, messages. Optional because
+      // every row written before it existed has to keep working, and absent
+      // means enabled — see `chatNotificationsAllowed`. One toggle for the
+      // whole feature; nobody wants to mute "accepted" but keep "new message".
+      chat: v.optional(v.boolean()),
       // Reach preset: how the AI sounds when it reaches out.
       // Defaults to "warm" on first enable. User-adjustable in Settings.
       reach: v.optional(
@@ -259,6 +261,12 @@ export default defineSchema({
       v.literal("witnessed"),
     ),
 
+    // Plus-only TTS voice override. Undefined = default (tone-mapped mirror
+    // voice, Witnessed vent voice). Slug into VOICE_CATALOG, never a raw
+    // ElevenLabs id. Premium is re-checked at generation time, so a lapsed
+    // subscription silently falls back without wiping the choice.
+    voice: v.optional(voiceSlugValidator),
+
     // --- Privacy ---
 
     // Pre-select "share anonymously" at session end.
@@ -272,6 +280,11 @@ export default defineSchema({
       v.literal("6_months"),
       v.literal("1_year"),
     ),
+
+    // Personal memory (Cognition Layer §1.1b). On by default (undefined =
+    // true). Off = new sessions embed metadata-only into episodic memory —
+    // no raw text, no mirror text. Converts disclosure into agency.
+    personalMemoryEnabled: v.optional(v.boolean()),
 
     // --- Input ---
 
@@ -554,6 +567,13 @@ export default defineSchema({
     // Uses the component's branded WorkflowId validator, not v.string().
     followUpWorkflowId: v.optional(vWorkflowId),
 
+    // --- Semantic matching (Xolace+) ---
+    // Precomputed peer-reflection ids from RAG vector search, written by
+    // computeSemanticMatches for premium users when the peers path is chosen.
+    // matchForSession returns these when present; otherwise it falls back to
+    // the tag-based cascade (also the graceful path if the embed action failed).
+    semanticMatchIds: v.optional(v.array(v.id("reflections"))),
+
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated
     completedAt: v.optional(v.number()), // Session closed
@@ -570,6 +590,9 @@ export default defineSchema({
 
     // Aggregate analytics.
     .index("by_date", ["createdAt"])
+
+    // Abandoned-session sweep: stale sessions in a given non-terminal state.
+    .index("by_state_and_updatedAt", ["state", "updatedAt"])
 
     // Model quality tracking: compare confirmation rates across versions.
     .index("by_model_version", ["mirrorModelVersion", "confirmationState"]),
@@ -701,12 +724,56 @@ export default defineSchema({
     // --- Safety ---
     riskFlag: v.boolean(),
 
+    // --- Understanding (Cognition Layer Phase 2) ---
+    //
+    // This table IS the per-session Understanding object: everything the
+    // system concluded about one moment, produced exactly once by the
+    // pipeline, then effectively frozen. Read only via
+    // understanding.getUnderstanding — no feature may call an LLM to
+    // re-derive what these fields already know.
+
+    // Full safeguard verdict at mirror time (rule-code, never model).
+    // Previously scattered across sessions/escalation_events; recorded
+    // here so the Understanding is complete in one row.
+    safeguardLevel: v.optional(safeguardLevelValidator),
+    safeguardTrigger: v.optional(triggerTypeValidator),
+
+    // RAG keys (= sessionIds) of the episodic memories that informed this
+    // mirror. Required by the Phase 4 relevance loop (confirmed mirrors
+    // bump these memories' importance; "not quite" decays them).
+    episodicMatchKeys: v.optional(v.array(v.string())),
+
+    // Phase 4, Loop #3 — memory relevance feedback. The running salience
+    // weight (0.2–1) for THIS session AS an episodic memory, and the source
+    // of truth mirrored into the RAG vector's native `importance`. When a
+    // LATER session's mirror lands with this one in its episodicMatchKeys,
+    // this weight is bumped; when that mirror is given up on, it decays.
+    // Undefined = never adjusted = the default weight of 1. Stored here
+    // (not just in the vector) because @convex-dev/rag has no in-place
+    // importance setter — every change re-embeds, so we need a cheap,
+    // transactional source of truth that survives re-ingestion.
+    episodicImportance: v.optional(v.number()),
+
+    // Which semantic profile version was in the articulator's context.
+    // Enables "confirmation rate dropped after profile v14" attribution
+    // and reconstructing exactly what the system believed at this moment.
+    profileVersion: v.optional(v.number()),
+
     // --- Follow-Up ---
     // Brief internal sentence explaining why the classifier flagged this
     // session for a follow-up. Never shown to the user — debugging + prompt
     // tuning only. Co-located here with all other classifier output.
     // null/undefined when the classifier did not request a follow-up.
     followUpReason: v.optional(v.string()),
+
+    // --- Session-suggested xolacer ---
+    // What a peer listener would be offered for at session end, decided once
+    // by the pipeline (see lib/xolacerSuggestion.ts) and absent when no
+    // suggestion applies. The *only* stored artifact of the feature: the
+    // person is chosen live at read time, so no session→xolacer link is ever
+    // written. Doubles as the cooldown record — its presence is what says a
+    // suggestion happened, which is why no timestamp field exists.
+    suggestedSpecialty: v.optional(specialtyValidator),
 
     // --- Timestamps ---
     createdAt: v.number(),
@@ -719,6 +786,9 @@ export default defineSchema({
 
     // Theme analysis: "which life domains keep appearing?"
     .index("by_profile_theme", ["emotionalProfileId"])
+
+    // Week-bounded range scans: intensity chart paging (current + earlier weeks).
+    .index("by_profile_createdAt", ["emotionalProfileId", "createdAt"])
 
     // Model quality: compare classification accuracy across versions.
     .index("by_classifier_version", ["classifierVersion"])
@@ -1087,7 +1157,10 @@ export default defineSchema({
   // mood_unsure (session end), mirror_miss (clarify state), gave_up (gave-up state).
   //
   feedback: defineTable({
-    emotionalProfileId: v.id("emotional_profiles"),
+    // Optional ONLY because account deletion anonymizes in place: the owner
+    // link and `text` are stripped, the structural signal (type,
+    // selectedOption, turnIndex) is retained. Always set on insert.
+    emotionalProfileId: v.optional(v.id("emotional_profiles")),
     type: v.union(
       v.literal("general"),
       v.literal("mood_heavier"),
@@ -1162,7 +1235,8 @@ export default defineSchema({
     // Which sessions were used as context (session-derived only).
     sessionContextIds: v.optional(v.array(v.id("sessions"))),
 
-    // Reserved for future premium enforcement. Always false at MVP.
+    // true for session-derived (personalized) quotes, gated to Xolace+ via
+    // hasPremium() in dailyQuotes.getToday. Always false for curated quotes.
     isPremium: v.boolean(),
 
     // User reaction. Null until the user reacts.
@@ -1294,9 +1368,25 @@ export default defineSchema({
   //
   product_feedback: defineTable({
     // Server-derived owner scope (never accepted from client).
-    emotionalProfileId: v.id("emotional_profiles"),
-    kind: v.union(v.literal("bug"), v.literal("idea")),
+    // Optional ONLY because account deletion anonymizes in place: the owner
+    // link is stripped and the row is retained. Always set on insert.
+    emotionalProfileId: v.optional(v.id("emotional_profiles")),
+    // "concern" is a safety report about a person, not a product complaint —
+    // same table, but its own rate-limit bucket and its own moderation inbox
+    // filter. It is the only kind that carries the two fields below.
+    kind: v.union(v.literal("bug"), v.literal("idea"), v.literal("concern")),
+    // Who the concern is about. Profile id ONLY — a display name is never
+    // persisted, for the same reason the conversation roster matches on
+    // profile id: names repeat and change, so a stored name is a stale label
+    // on a moderation record.
+    subjectProfileId: v.optional(v.id("emotional_profiles")),
+    // The thread the concern came from, when it came from one. Absent when the
+    // report was raised from a profile rather than inside a conversation.
+    conversationId: v.optional(v.id("xolacer_conversations")),
     // 1..1000 chars, trimmed + validated server-side.
+    // RETAINED past account deletion by policy (see CONTEXT.md "Feedback
+    // retention"). Treat as potentially identifying: a bug report can name
+    // a person or place. Never surface it in anything user-facing.
     text: v.string(),
     // Submission context — helps triage without touching content.
     context: v.object({
@@ -1425,5 +1515,202 @@ export default defineSchema({
     .index("by_profile_created", ["emotionalProfileId", "createdAt"])
 
     // Workflow cancellation / onComplete lookup.
-    .index("by_workflow", ["workflowId"]),
+    .index("by_workflow", ["workflowId"])
+
+    // Session cascade delete (lib/sessionCascade.purgeSessions).
+    .index("by_session", ["sessionId"]),
+
+  // ===========================================================
+  // 21. SEMANTIC PROFILES (Cognition Layer §1.2)
+  // ===========================================================
+  //
+  // The AI-written narrative of who this person is emotionally.
+  // Written ONLY by the Reflection Agent (Phase 3); read by the
+  // articulator context and, progressively, the insights UI.
+  //
+  // Versioning is append-only: each consolidation pass inserts a
+  // new row and moves emotional_profiles.currentSemanticProfileId.
+  // Rollback = point the pointer at an older row. Old versions are
+  // swept by retention; ALL versions die in dataWipe/accountDeletion.
+  //
+  // Written in user-safe, non-clinical language from day one — the
+  // same artifact is both the internal working document and the
+  // earned insights surface.
+  //
+  semantic_profiles: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+
+    // Monotonic version number per profile (1, 2, 3...).
+    version: v.number(),
+
+    // --- Narrative sections ---
+    // What this person keeps carrying.
+    recurringThemes: v.optional(v.string()),
+    // e.g. "anger usually masks fear; goes quiet rather than escalating"
+    emotionalSignatures: v.optional(v.string()),
+    // What lands: tone that gets confirmations, mirror length preference.
+    // Written by the Phase 4 tone loop via the consolidation pass.
+    calibration: v.optional(v.string()),
+    // Where things have been heading recently. Fast-moving — the
+    // post-session light pass updates this most often.
+    trajectory: v.optional(v.string()),
+
+    // Which writer produced this version, for feedback attribution
+    // ("confirmation rate dropped after profile v14") and auditability.
+    // Format mirrors mirrorModelVersion: "{writer}-v{N}-{model}".
+    writerVersion: v.string(),
+
+    createdAt: v.number(),
+  })
+    // Pointer resolution + version history, newest first.
+    .index("by_profile_version", ["emotionalProfileId", "version"]),
+
+  // ===========================================================
+  // XOLACER PROFILES
+  // ===========================================================
+  //
+  // Public-facing data for trained peer xolacers (ambassadors).
+  // Keyed by emotionalProfileId like every other child table —
+  // the Stream chat identity is the pseudonymous profile id, so
+  // a xolacer's real-world identity never reaches Stream.
+  //
+  // A profile is not listed in the directory until the xolacer
+  // finishes filling it in (complete) and is taking conversations
+  // (active).
+  //
+  xolacer_profiles: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+
+    // All optional until the xolacer publishes. `complete` mirrors
+    // "displayName + bio + photoUrl all present" — set server-side
+    // on publish, never client-computed.
+    displayName: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    photoUrl: v.optional(v.string()),
+    // What this xolacer is comfortable sitting with — max 3, life
+    // situations rather than diagnoses (see lib/specialties.ts).
+    specialties: v.optional(v.array(specialtyValidator)),
+
+    // Denormalized rating counters. Convex has no count operator, so the
+    // aggregate is maintained by rateConversation rather than scanned.
+    // Averages stay hidden until MIN_RATINGS_TO_DISPLAY (see xolacerChat).
+    ratingSum: v.optional(v.number()),
+    ratingCount: v.optional(v.number()),
+
+    complete: v.boolean(),
+    // Operator/xolacer availability switch. Inactive xolacers stay
+    // out of the directory and can't receive new requests, but open
+    // conversations keep working.
+    active: v.boolean(),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_profile", ["emotionalProfileId"])
+    // Directory listing: complete && active.
+    .index("by_complete_and_active", ["complete", "active"]),
+
+  // ===========================================================
+  // XOLACER CONVERSATIONS
+  // ===========================================================
+  //
+  // One row per (user, xolacer) pair, ever — re-requesting someone
+  // you already talked to reopens this row, never creates a second.
+  // The row is the source of truth for lifecycle; Stream only holds
+  // message content for accepted conversations.
+  //
+  // Lifecycle: requested → open → resting ⇄ open, → closed.
+  //  - requested: user asked, xolacer hasn't answered (7d expiry).
+  //  - open: accepted; counts against the xolacer's volume cap.
+  //  - resting: 14d with no message; readable, frees the cap slot.
+  //  - closed: declined, expired, blocked, or xolacer left.
+  //
+  xolacer_conversations: defineTable({
+    userProfileId: v.id("emotional_profiles"),
+    xolacerProfileId: v.id("emotional_profiles"),
+
+    status: v.union(
+      v.literal("requested"),
+      v.literal("open"),
+      v.literal("resting"),
+      v.literal("closed"),
+    ),
+    // Why a conversation is closed — drives the no-guilt copy variant.
+    closedReason: v.optional(
+      v.union(
+        v.literal("declined"),
+        v.literal("expired"),
+        v.literal("blocked"),
+        v.literal("xolacer_left"),
+      ),
+    ),
+
+    // Stream channel id (not cid). Set on accept; absent while requested.
+    streamChannelId: v.optional(v.string()),
+
+    requestedAt: v.number(),
+    acceptedAt: v.optional(v.number()),
+    // When the xolacer declined, which is what the re-request cooldown counts
+    // from — `requestedAt` would start the clock when the request was sent, so
+    // a decline on day six of a week-old request would already be spent.
+    // Absent on rows declined before the field existed: those wait for nothing.
+    declinedAt: v.optional(v.number()),
+    // Drives the resting sweep. Updated by touchConversation on send.
+    lastMessageAt: v.optional(v.number()),
+    // When a message notification last went out to each side. Two fields and
+    // not one: a single row-wide stamp let the seeker's own message open a
+    // window that then swallowed the xolacer's reply to it. Absent until that
+    // side has been notified once, and written only when a push actually goes
+    // out — see `notifyNewMessage`.
+    lastNotifiedUserAt: v.optional(v.number()),
+    lastNotifiedXolacerAt: v.optional(v.number()),
+    // DEPRECATED(remove-after: no live rows carry it): the row-wide stamp the
+    // two fields above replaced. Nothing reads or writes it; kept only so rows
+    // written before the split still validate. A stale value is harmless — the
+    // window it described was two minutes long.
+    lastMessageNotifiedAt: v.optional(v.number()),
+
+    // Where this request came from, derived from session recency at request
+    // time (see lib/xolacerSuggestion.conversationOrigin) and recomputed on
+    // every transition back into "requested". Absent on rows written before
+    // the feature — those read as direct, and are not backfilled. Carries
+    // origin only: never the theme, never anything the user hasn't said yet.
+    origin: v.optional(v.union(v.literal("suggestion"), v.literal("direct"))),
+  })
+    // Seeker-side inbox (prefix scan) and pending-request cap counting.
+    .index("by_user_and_status", ["userProfileId", "status"])
+    // Volume-cap counting and xolacer-side inbox.
+    .index("by_xolacer_and_status", ["xolacerProfileId", "status"])
+    // One-conversation-per-pair lookup.
+    .index("by_user_and_xolacer", ["userProfileId", "xolacerProfileId"])
+    // Cron sweep: open-but-quiet → resting, requested-but-stale → closed.
+    .index("by_status_and_lastMessageAt", ["status", "lastMessageAt"]),
+
+  // ===========================================================
+  // CONVERSATION RATINGS
+  // ===========================================================
+  //
+  // One row per conversation, written only by the person who asked to
+  // talk (a xolacer never rates the people who come to them). Editable
+  // — re-rating patches this row and adjusts the xolacer's counters by
+  // the delta, so the aggregate can't be inflated by rating twice.
+  //
+  // Only ratable once real messages were exchanged, which makes a
+  // drive-by rating from a never-answered request impossible.
+  //
+  conversation_ratings: defineTable({
+    conversationId: v.id("xolacer_conversations"),
+    raterProfileId: v.id("emotional_profiles"),
+    xolacerProfileId: v.id("emotional_profiles"),
+    // 1–5, integer. Validated server-side, never trusted from the client.
+    rating: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    // One rating per conversation — also the "have I already rated?" lookup.
+    .index("by_conversation", ["conversationId"])
+    // Account deletion sweeps a rater's rows.
+    .index("by_rater", ["raterProfileId"])
+    // Account deletion sweeps the rows a xolacer received.
+    .index("by_xolacer", ["xolacerProfileId"]),
 });

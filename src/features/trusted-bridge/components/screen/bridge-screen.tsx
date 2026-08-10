@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import {
   Button,
+  Description,
   PressableFeedback,
   TextField,
   TextArea,
@@ -21,6 +22,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { useAppStore } from "@/src/store/store";
 import { useBridgeDraft } from "@/src/features/trusted-bridge/hooks/use-bridge-draft";
 import { BridgeIntro } from "@/src/features/trusted-bridge/components/bridge-intro";
+import { BridgeQuotaHint } from "@/src/features/trusted-bridge/components/bridge-quota-hint";
 import { ShimmerLoadingText } from "@/src/features/trusted-bridge/components/shimmer-loading-text";
 import { BridgeDoneButton } from "@/src/features/trusted-bridge/components/bridge-done-button";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -43,6 +45,13 @@ const ADDRESS_TERMS: Record<Relationship, string[]> = {
   friend: [],
   sibling: ["bro", "sis", "bruh"],
 };
+// Mirrors the caps enforced in convex/ai/bridge.ts — the server trims to these,
+// so the field stops the user at the boundary rather than silently losing text.
+// The counter stays hidden until they're close, so a quiet screen stays quiet.
+const MAX_NAME_LENGTH = 60;
+const MAX_ADDRESS_TERM_LENGTH = 40;
+const COUNTER_REVEAL_THRESHOLD = 10;
+
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const EASE_IN = {
   type: "timing" as const,
@@ -75,6 +84,9 @@ export function BridgeScreen({ sessionId }: Props) {
   const [hasShared, setHasShared] = useState(false);
   const { status, draft, setDraft, generate } = useBridgeDraft();
   const addressInputRef = useRef<TextInput>(null);
+
+  const nameRemaining = MAX_NAME_LENGTH - name.length;
+  const addressRemaining = MAX_ADDRESS_TERM_LENGTH - (addressTerm?.length ?? 0);
 
   const selectRelationship = (rel: Relationship) => {
     setRelationship((prev) => (prev === rel ? null : rel));
@@ -204,8 +216,14 @@ export function BridgeScreen({ sessionId }: Props) {
                     value={name}
                     onChangeText={setName}
                     placeholder="their name or how you think of them"
+                    maxLength={MAX_NAME_LENGTH}
                     autoFocus
                   />
+                  {nameRemaining <= COUNTER_REVEAL_THRESHOLD && (
+                    <Description>
+                      {nameRemaining} characters left
+                    </Description>
+                  )}
                 </TextField>
 
                 {/* Relationship section */}
@@ -284,7 +302,13 @@ export function BridgeScreen({ sessionId }: Props) {
                           setAddressTerm(t.length > 0 ? t : null)
                         }
                         placeholder="or type what you call them"
+                        maxLength={MAX_ADDRESS_TERM_LENGTH}
                       />
+                      {addressRemaining <= COUNTER_REVEAL_THRESHOLD && (
+                        <Description>
+                          {addressRemaining} characters left
+                        </Description>
+                      )}
                     </TextField>
                   </View>
                 )}
@@ -304,6 +328,7 @@ export function BridgeScreen({ sessionId }: Props) {
               >
                 Write this together
               </Button>
+              <BridgeQuotaHint />
             </View>
           </KeyboardStickyView>
         </View>
@@ -367,20 +392,30 @@ export function BridgeScreen({ sessionId }: Props) {
                   </View>
 
                   {/* Error banner */}
-                  {status === "error" && (
+                  {(status === "error" || status === "rate_limited") && (
                     <View className="flex-row items-start gap-3 rounded-2xl bg-surface/40 border border-border/40 px-4 py-3">
                       <SymbolView
                         name={{
-                          ios: "exclamationmark.circle",
-                          android: "error_outline",
-                          web: "error_outline",
+                          ios:
+                            status === "rate_limited"
+                              ? "clock"
+                              : "exclamationmark.circle",
+                          android:
+                            status === "rate_limited"
+                              ? "schedule"
+                              : "error_outline",
+                          web:
+                            status === "rate_limited"
+                              ? "schedule"
+                              : "error_outline",
                         }}
                         size={15}
                         tintColor={mutedColor}
                       />
                       <AppText className="text-xs font-light text-foreground/55 flex-1 leading-4">
-                        Couldn&apos;t personalize this time, but the template
-                        below is yours to edit.
+                        {status === "rate_limited"
+                          ? "That's every draft you have today. It comes back tomorrow, the template below is yours to edit in the meantime."
+                          : "Couldn't personalize this time, but the template below is yours to edit."}
                       </AppText>
                     </View>
                   )}

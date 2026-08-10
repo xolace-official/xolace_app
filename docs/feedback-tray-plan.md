@@ -327,3 +327,21 @@ Per [[project_posthog_convex]]: structural events, no free-text content.
   also works on sim).
 - Multi-theme correctness — the sample is hardcoded dark; the adaptation must read every color
   from tokens or the tray will look wrong in light/`quiet`/etc.
+
+---
+
+## 15. Removed surfaces (log before delete)
+
+**`src/features/reflect/components/states/clarify-feedback-card.tsx`** — deleted 2026-07-12.
+An inline card rendered inside the clarify screen ("Did the mirror miss?") with the same four
+`mirror_miss` chips as `ClarifyFeedbackSheet`, animated in/out with `EaseView` and self-unmounting
+on chip select. It was superseded by the bottom-sheet version and was no longer mounted anywhere —
+dead code carrying a second hardcoded `mirror_miss` write. Recover from git history if the inline
+(non-modal) placement is ever wanted back.
+
+**"Say more" no longer opens the clarify feedback sheet** (2026-07-12). It previously armed the
+same "What didn't land?" sheet as "Not quite" and logged `type: "mirror_miss"`. Say-more is
+elaboration, not a rejection, so the prompt was wrong and the data was polluted. Dropped rather
+than split — a chip survey interrupts a user who is mid-elaboration. If we ever want that signal,
+it needs a new `feedback.type` literal (the union is closed in `convex/schema.ts` and
+`convex/feedback.ts`), not a reuse of `mirror_miss`.

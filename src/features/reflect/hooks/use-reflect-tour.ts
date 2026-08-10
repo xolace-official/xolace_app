@@ -35,6 +35,7 @@ export function useReflectTour() {
   const reflectTourSeen = useAppStore((s) => s.reflectTourSeen);
   const setReflectTourSeen = useAppStore((s) => s.setReflectTourSeen);
   const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
+  const homeSheetBlocking = useAppStore((s) => s.homeSheetBlocking);
   const { isNight } = useSessionMode();
 
   const steps = isNight ? TOUR_STEPS.slice(0, 3) : [...TOUR_STEPS];
@@ -47,13 +48,17 @@ export function useReflectTour() {
 
   const isAdvancing = useRef(false);
 
-  // Start tour after idle screen settles — but only after founder welcome is dismissed
+  // Start tour after the idle screen settles, once founder welcome is dismissed
+  // and no other home sheet is covering the screen. A returning user on a build
+  // that added the tour has founderWelcomeSeen already true, so without the
+  // homeSheetBlocking gate the coach marks would render under the return-welcome
+  // or awareness sheet.
   useEffect(() => {
-    if (!reflectTourSeen && founderWelcomeSeen) {
+    if (!reflectTourSeen && founderWelcomeSeen && !homeSheetBlocking) {
       const t = setTimeout(() => dispatch({ type: 'START_TOUR' }), 800);
       return () => clearTimeout(t);
     }
-  }, [reflectTourSeen, founderWelcomeSeen]);
+  }, [reflectTourSeen, founderWelcomeSeen, homeSheetBlocking]);
 
   // Fire tour_started once the first step is shown
   const hasFiredStartEvent = useRef(false);

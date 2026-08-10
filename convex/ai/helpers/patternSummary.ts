@@ -68,55 +68,7 @@ export function buildPatternSummary(input: PatternSummaryInput): string {
     );
   }
 
-  // Recent emotion patterns
-  if (recentMetadata.length > 0) {
-    const emotionCounts = new Map<string, number>();
-    let totalIntensity = 0;
-    const allThemes = new Set<string>();
-
-    for (const m of recentMetadata) {
-      emotionCounts.set(
-        m.primaryEmotion,
-        (emotionCounts.get(m.primaryEmotion) ?? 0) + 1
-      );
-      totalIntensity += m.intensity;
-      for (const t of m.thematicTags) {
-        allThemes.add(t);
-      }
-    }
-
-    const sorted = [...emotionCounts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .map(([emotion, count]) => `${emotion} (${count}x)`)
-      .join(", ");
-
-    lines.push(`Recent emotions: ${sorted}.`);
-    lines.push(
-      `Avg intensity: ${(totalIntensity / recentMetadata.length).toFixed(1)}/10.`
-    );
-
-    if (allThemes.size > 0) {
-      lines.push(`Themes: ${[...allThemes].slice(0, 5).join(", ")}.`);
-    }
-
-    // Intensity trend (non-overlapping windows)
-    if (recentMetadata.length >= 4) {
-      const windowSize = Math.floor(recentMetadata.length / 2);
-      const recent = recentMetadata.slice(0, windowSize).map((m) => m.intensity);
-      const older = recentMetadata.slice(-windowSize).map((m) => m.intensity);
-      const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
-      const olderAvg = older.reduce((a, b) => a + b, 0) / older.length;
-      const delta = recentAvg - olderAvg;
-
-      if (delta > 1) {
-        lines.push("Intensity trend: increasing.");
-      } else if (delta < -1) {
-        lines.push("Intensity trend: decreasing.");
-      } else {
-        lines.push("Intensity trend: stable.");
-      }
-    }
-  }
+  lines.push(...buildEmotionPatternLines(recentMetadata));
 
   // Path preferences
   if (recentSessions.length > 0) {
@@ -138,6 +90,81 @@ export function buildPatternSummary(input: PatternSummaryInput): string {
   lines.push(`Mirror tone: ${mirrorTone}.`);
 
   return lines.join(" ");
+}
+
+/**
+ * Slim variant for the ARTICULATOR prompt: only the signals that shape
+ * how a mirror is written — recent emotions, average intensity, themes,
+ * and the intensity trend. Session/streak counts, path preferences, and
+ * mirror tone are omitted: they don't inform mirror-writing, and tone
+ * already has its own dedicated section in the articulator prompt.
+ * Longitudinal identity comes from the semantic profile block instead.
+ */
+export function buildArticulatorPatternSummary(
+  input: Pick<PatternSummaryInput, "recentMetadata" | "isFirstSession">
+): string {
+  if (input.isFirstSession) {
+    return "First session. No history.";
+  }
+  const lines = buildEmotionPatternLines(input.recentMetadata);
+  return lines.length > 0 ? lines.join(" ") : "No recent emotional data.";
+}
+
+/** Emotion-pattern lines computed from recent metadata, shared by both variants. */
+function buildEmotionPatternLines(
+  recentMetadata: RecentMetadataEntry[]
+): string[] {
+  if (recentMetadata.length === 0) return [];
+
+  const lines: string[] = [];
+  const emotionCounts = new Map<string, number>();
+  let totalIntensity = 0;
+  const allThemes = new Set<string>();
+
+  for (const m of recentMetadata) {
+    emotionCounts.set(
+      m.primaryEmotion,
+      (emotionCounts.get(m.primaryEmotion) ?? 0) + 1
+    );
+    totalIntensity += m.intensity;
+    for (const t of m.thematicTags) {
+      allThemes.add(t);
+    }
+  }
+
+  const sorted = [...emotionCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([emotion, count]) => `${emotion} (${count}x)`)
+    .join(", ");
+
+  lines.push(`Recent emotions: ${sorted}.`);
+  lines.push(
+    `Avg intensity: ${(totalIntensity / recentMetadata.length).toFixed(1)}/10.`
+  );
+
+  if (allThemes.size > 0) {
+    lines.push(`Themes: ${[...allThemes].slice(0, 5).join(", ")}.`);
+  }
+
+  // Intensity trend (non-overlapping windows)
+  if (recentMetadata.length >= 4) {
+    const windowSize = Math.floor(recentMetadata.length / 2);
+    const recent = recentMetadata.slice(0, windowSize).map((m) => m.intensity);
+    const older = recentMetadata.slice(-windowSize).map((m) => m.intensity);
+    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+    const olderAvg = older.reduce((a, b) => a + b, 0) / older.length;
+    const delta = recentAvg - olderAvg;
+
+    if (delta > 1) {
+      lines.push("Intensity trend: increasing.");
+    } else if (delta < -1) {
+      lines.push("Intensity trend: decreasing.");
+    } else {
+      lines.push("Intensity trend: stable.");
+    }
+  }
+
+  return lines;
 }
 
 /**

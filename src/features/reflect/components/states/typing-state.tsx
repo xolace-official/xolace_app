@@ -31,6 +31,12 @@ const NUDGE_MESSAGES = [
   "You don't need to explain, just say what's there.",
 ];
 
+// Mirror of MAX_RAW_INPUT in convex/sessions.ts. The input simply stops
+// accepting past this, so a user never hits the server's anti-tamper throw.
+// No visible counter: a live count under an emotional freeform field reads as
+// "your feelings must fit," and ~800 words is unreachable in normal use.
+const MAX_RAW_INPUT = 5_000;
+
 export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismiss, onVoiceTap, isRecording, autoFocus = true }: Props) => {
   const { isNight } = useSessionMode();
   const { resetTimer, clearTimer } = useTypingPause(
@@ -106,6 +112,7 @@ export const TypingState = ({ showNudge, entryText, dispatch, onSubmit, onDismis
         <View className="flex-1">
           <TextArea
             autoFocus={autoFocus}
+            maxLength={MAX_RAW_INPUT}
             placeholder={isRecording ? "I'm listening..." : "Start typing..."}
             value={entryText}
             onChangeText={handleChangeText}

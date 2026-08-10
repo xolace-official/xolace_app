@@ -30,6 +30,94 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-08-ota-chat-unread-typing",
+    label: "OTA Update",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "bell.badge.fill", android: "notifications_active" },
+        title: "You can see what's waiting",
+        body: "Conversations in Connect now show how many messages are waiting for you, on the ones you're still in — including a chat that's gone quiet. Requests and closed conversations stay quiet.",
+      },
+      {
+        icon: { ios: "ellipsis.bubble.fill", android: "more_horiz" },
+        title: "You'll know when they're writing",
+        body: "When the person you're talking to is typing, you'll see it — with their name, never anyone else's.",
+      },
+    ],
+  },
+  {
+    id: "2026-08-ota-discovery-appearance",
+    label: "OTA Update",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "rectangle.stack.fill", android: "view_carousel" },
+        title: "Your Moments, right up front",
+        body: "A few of your recent moments now show up on the home tab, right after your daily quote — tap through to see the rest on your timeline.",
+      },
+      {
+        icon: { ios: "paintpalette.fill", android: "palette" },
+        title: "A better way to pick a theme",
+        body: "Browsing themes in Settings → Appearance feels alive now — the one you're centered on grows, and the background gives you a hint of its color before you commit.",
+      },
+    ],
+  },
+  {
+    id: "1.8.0",
+    label: "Version 1.8.0",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "person.2.fill", android: "groups" },
+        title: "Talk to a real person",
+        body: "The new Connect tab holds Xolacers — people who've offered to listen. Browse who's there, see what they listen to, and send a request. They're trained peers, not therapists, and nothing is sent until they accept.",
+      },
+      {
+        icon: { ios: "hand.raised.fill", android: "front_hand" },
+        title: "Become a Xolacer",
+        body: "You can offer to listen too. Five short steps — a photo, a name, a line about you, and what you're here for. Your real name and contact details are never shown, and you can go Away anytime.",
+      },
+      {
+        icon: { ios: "figure.wave", android: "waving_hand" },
+        title: "Someone offered, at the end",
+        body: "When a session ends on something a xolacer listens to, we'll show you that one person before you close. Tapping only opens their profile — nothing is sent unless you reach out.",
+      },
+      {
+        icon: { ios: "hand.raised.slash.fill", android: "block" },
+        title: "Block and report",
+        body: "Every conversation and every Xolacer profile now has a menu with Block and Report. Blocking stops messages for both of you at once — we'll ask you to confirm, because it can't be undone, and the other person is never told. Nothing you wrote is deleted. Reports now say who they're about, so we can actually act on them.",
+      },
+      {
+        icon: { ios: "sparkles", android: "auto_awesome" },
+        title: "A new way in",
+        body: "The app now opens on a home tab with a daily quote, and Reflect is always one tap away at the bottom of the screen.",
+      },
+    ],
+  },
+  {
+    id: "2026-07-personal-memory",
+    label: "Version 1.7.0",
+    date: "July 2026",
+    highlights: [
+      {
+        icon: { ios: "brain.head.profile", android: "psychology" },
+        title: "Personal memory",
+        body: "Xolace now remembers what's come up for you across sessions, so mirrors can reflect your patterns, not just the moment in front of you. It's on by default — find the toggle in Settings → Data if you'd rather turn it off.",
+      },
+      {
+        icon: { ios: "paintpalette.fill", android: "palette" },
+        title: "Premium themes",
+        body: "Xolace+ members can now dress the fire in five new palettes — Emerald, Rosé, Platinum, Velvet, and Noir. Find them in Settings → Appearance.",
+      },
+      {
+        icon: { ios: "waveform", android: "graphic_eq" },
+        title: "Choose your voice",
+        body: "Xolace+ members can pick who speaks their mirror and their vent: Sage, Wren, Vesper, or Ash. Preview each one in Settings → Mirror before you choose.",
+      },
+    ],
+  },
+  {
     id: "1.6.1",
     label: "OTA Update",
     date: "June 2026",

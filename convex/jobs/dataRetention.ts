@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { purgeSessions } from "../lib/sessionCascade";
 
 const TIERS = ["6_months", "1_year"] as const;
 type Tier = (typeof TIERS)[number];
@@ -14,7 +15,6 @@ const tierValidator = v.union(v.literal("6_months"), v.literal("1_year"));
 
 const BATCH_SIZE = 50;
 const PREFS_PAGE_SIZE = 100;
-const TURNS_PER_SESSION_BATCH = 100;
 
 function nextTier(tier: Tier): Tier | null {
   const idx = TIERS.indexOf(tier);
@@ -59,31 +59,25 @@ export const enforce = internalMutation({
         moreSessionWork = true;
       }
 
-      for (const session of oldSessions) {
-        const metadata = await ctx.db
-          .query("emotional_metadata")
-          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-          .unique();
-        if (metadata) {
-          await ctx.db.delete(metadata._id);
-        }
+      await purgeSessions(ctx, pref.emotionalProfileId, oldSessions);
 
-        const turns = await ctx.db
-          .query("session_turns")
-          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-          .take(TURNS_PER_SESSION_BATCH);
-        for (const turn of turns) {
-          await ctx.db.delete(turn._id);
+      // Sweep old semantic profile VERSIONS past the cutoff. The current
+      // version is always kept — retention shortens history, it doesn't
+      // lobotomize the live profile. Full deletion happens in dataWipe.
+      const profileRow = await ctx.db.get(pref.emotionalProfileId);
+      const oldProfileVersions = await ctx.db
+        .query("semantic_profiles")
+        .withIndex("by_profile_version", (q) =>
+          q.eq("emotionalProfileId", pref.emotionalProfileId)
+        )
+        .take(BATCH_SIZE);
+      for (const version of oldProfileVersions) {
+        if (
+          version.createdAt < cutoff &&
+          version._id !== profileRow?.currentSemanticProfileId
+        ) {
+          await ctx.db.delete(version._id);
         }
-
-        if (turns.length === TURNS_PER_SESSION_BATCH) {
-          // More turns remain for this session — leave the session row so the
-          // next scan revisits it and finishes the turn cleanup first.
-          moreSessionWork = true;
-          continue;
-        }
-
-        await ctx.db.delete(session._id);
       }
 
       // Delete feedback records for this profile older than the retention cutoff

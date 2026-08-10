@@ -5,22 +5,24 @@ import Settings from "@expo/material-symbols/settings.xml";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
-import { AuroraArc } from "../aurora-arc";
-import { ProfileHero } from "../profile-hero";
-import { StatBand } from "../stat-band";
-import { EmotionChips } from "../emotion-chips";
-import { MirrorLines } from "../mirror-lines";
-import { WeekIntensityCard } from "../week-intensity-card";
-import { WordsTeaserCard } from "../words-teaser-card";
-import { WordsTeaserEmpty } from "../words-teaser-empty";
-import { FollowUpsSection } from "../follow-ups-section";
-import { InsightWaitlistSheet } from "../insight-waitlist-sheet";
-import { AvatarPickerSheet } from "../avatar-picker-sheet";
-import { useProfileSummary } from "../../hooks/use-profile-summary";
-import { useMoodDelta } from "../../hooks/use-mood-delta";
-import { useWeekIntensity } from "../../hooks/use-week-intensity";
-import { useInsightWaitlist } from "../../hooks/use-insight-waitlist";
-import { useAvatars, resolveAvatar } from "../../hooks/use-avatars";
+import { AuroraArc } from "@/src/features/profile/components/aurora-arc";
+import { ProfileSkeleton } from "@/src/features/profile/components/profile-skeleton";
+import { ProfileHero } from "@/src/features/profile/components/profile-hero";
+import { StatBand } from "@/src/features/profile/components/stat-band";
+import { EmotionChips } from "@/src/features/profile/components/emotion-chips";
+import { MirrorLines } from "@/src/features/profile/components/mirror-lines";
+import { RankCard } from "@/src/features/profile/components/rank-card";
+import { WeekIntensityCard } from "@/src/features/profile/components/week-intensity-card";
+import { WordsTeaserCard } from "@/src/features/profile/components/words-teaser-card";
+import { WordsTeaserEmpty } from "@/src/features/profile/components/words-teaser-empty";
+import { FollowUpsSection } from "@/src/features/profile/components/follow-ups-section";
+import { AvatarPickerSheet } from "@/src/features/profile/components/avatar-picker-sheet";
+import { useProfileSummary } from "@/src/features/profile/hooks/use-profile-summary";
+import { useMoodDelta } from "@/src/features/profile/hooks/use-mood-delta";
+import { useWeekIntensity } from "@/src/features/profile/hooks/use-week-intensity";
+import { useInsightGate } from "@/src/features/profile/hooks/use-insight-gate";
+import { useReflectionRank } from "@/src/features/profile/hooks/use-reflection-rank";
+import { useAvatars, resolveAvatar } from "@/src/features/profile/hooks/use-avatars";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -30,14 +32,19 @@ export function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const summary = useProfileSummary();
   const moodDelta = useMoodDelta();
-  const weekIntensity = useWeekIntensity();
-  const waitlist = useInsightWaitlist();
+  const rank = useReflectionRank();
+  const [weekOffset, setWeekOffset] = useState(0);
   const avatars = useAvatars();
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const currentAvatar = resolveAvatar(avatars, summary?.avatarId);
 
   const sessionCount = summary?.sessionCount ?? 0;
+  const gate = useInsightGate(sessionCount);
+  // Lapsed Plus mid-navigation shouldn't strand the query on a locked week —
+  // derive the effective offset from current entitlement instead of syncing
+  // it back into state.
+  const weekIntensity = useWeekIntensity(gate.isPlus ? weekOffset : 0);
   const hasEnoughForChips = sessionCount >= 1 && (summary?.dominantEmotionTags?.length ?? 0) > 0;
   const hasEnoughForMirrorLines = sessionCount >= 3;
   const hasEnoughForRhythm = sessionCount >= 5;
@@ -45,7 +52,7 @@ export function ProfileScreen() {
   // Need 3 distinct recurring words so every teaser row is genuine — no
   // fabricated fallbacks. Below that, show the honest empty state once the
   // user has at least one session (their language just hasn't repeated yet).
-  const wordCount = summary?.recentWords?.length ?? 0;
+  const wordCount = summary?.wordCount ?? 0;
   const hasEnoughForWords = wordCount >= 3;
   const showWordsEmpty = sessionCount >= 1 && !hasEnoughForWords;
 
@@ -84,6 +91,8 @@ export function ProfileScreen() {
           paddingBottom: insets.bottom + 40,
         }}
       >
+        {!summary && <ProfileSkeleton />}
+
         {summary && (
           <ProfileHero
             displayName={summary.displayName}
@@ -118,7 +127,9 @@ export function ProfileScreen() {
           />
         )}
 
-        {hasEnoughForChart && (
+        {/* The rank card renders from session zero, so the section header must
+            too — otherwise a new user sees a lone card with no heading. */}
+        {(hasEnoughForChart || rank) && (
           <EaseView
             initialAnimate={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -134,15 +145,29 @@ export function ProfileScreen() {
           </EaseView>
         )}
 
+        {/* Widest lens first: you among everyone, then your week, then your
+            words. Always rendered — the card carries its own pending state. */}
+        {rank && (
+          <View className="mb-4">
+            <RankCard rank={rank} staggerDelay={300} />
+          </View>
+        )}
+
         {hasEnoughForChart && weekIntensity && (
           <WeekIntensityCard
             days={weekIntensity.days}
             peakDay={weekIntensity.peakDay}
             hasData={weekIntensity.hasData}
             momentsTotal={sessionCount}
-            onView={() => waitlist.trackView("intensity_history")}
-            onUnlock={() => waitlist.open("intensity_history")}
-            staggerDelay={300}
+            isPlus={gate.isPlus}
+            weekLabel={weekIntensity.weekLabel}
+            isCurrentWeek={weekIntensity.weekOffset === 0}
+            isEarliestWeek={weekIntensity.isEarliestWeek}
+            onPrevWeek={() => setWeekOffset((w) => w - 1)}
+            onNextWeek={() => setWeekOffset((w) => Math.min(0, w + 1))}
+            onView={() => gate.trackView("intensity_history")}
+            onUnlock={() => gate.open("intensity_history")}
+            staggerDelay={360}
           />
         )}
 
@@ -150,29 +175,22 @@ export function ProfileScreen() {
           <View className="mt-4">
             <WordsTeaserCard
               words={summary.recentWords}
-              onView={() => waitlist.trackView("words_language")}
-              onUnlock={() => waitlist.open("words_language")}
-              staggerDelay={360}
+              isPlus={gate.isPlus}
+              onView={() => gate.trackView("words_language")}
+              onUnlock={() => gate.open("words_language")}
+              staggerDelay={420}
             />
           </View>
         )}
 
         {showWordsEmpty && (
           <View className="mt-4">
-            <WordsTeaserEmpty staggerDelay={360} />
+            <WordsTeaserEmpty staggerDelay={420} />
           </View>
         )}
 
-        <FollowUpsSection staggerDelay={420} />
+        <FollowUpsSection staggerDelay={480} />
       </ScrollView>
-
-      <InsightWaitlistSheet
-        isOpen={waitlist.isOpen}
-        feature={waitlist.activeFeature}
-        joined={waitlist.joined}
-        onConfirm={waitlist.confirm}
-        onClose={waitlist.close}
-      />
 
       <AvatarPickerSheet
         isOpen={pickerOpen}

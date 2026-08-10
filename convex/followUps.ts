@@ -1,8 +1,9 @@
-import { v } from "convex/values";
+import { v, type Infer } from "convex/values";
 import {
   WorkflowManager,
   vWorkflowId,
   vResultValidator,
+  type WorkflowId,
 } from "@convex-dev/workflow";
 import { components, internal } from "./_generated/api";
 import {
@@ -11,6 +12,7 @@ import {
   internalQuery,
   mutation,
   query,
+  type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -20,16 +22,19 @@ import {
   followUpTier,
   minReturnGapForTier,
   shouldEmitReturn,
+  shouldReshowShownCard,
   shouldSupersede,
 } from "./lib/followUpCadence";
 import {
   getAnthropicClient,
   extractTextFromResponse,
 } from "./ai/providers/anthropic";
+import { safeguardLevelValidator } from "./lib/validators";
 import {
   buildFollowUpCardPrompt,
   fallbackFollowUpCard,
 } from "./ai/prompts/followUpCardWriter";
+import { renderSemanticProfile } from "./semanticProfiles";
 
 const CARD_MODEL = "claude-haiku-4-5-20251001";
 const MAX_CARD_CHARS = 200;
@@ -47,7 +52,23 @@ const userResponseValidator = v.union(
 );
 
 // Active = a card whose lifecycle is still owned by a live workflow.
-const ACTIVE_STATUSES = new Set(["pending", "ready", "shown"]);
+// Exported for lib/sessionCascade, which purges cards per-session.
+export const ACTIVE_STATUSES = new Set(["pending", "ready", "shown"]);
+
+/**
+ * Cancel a card's workflow, tolerating an already-terminal one.
+ * Shared with lib/sessionCascade so both purge paths swallow identically.
+ */
+export async function cancelFollowUpWorkflow(
+  ctx: MutationCtx,
+  workflowId: WorkflowId,
+): Promise<void> {
+  try {
+    await workflow.cancel(ctx, workflowId);
+  } catch {
+    // Already terminal — nothing to cancel.
+  }
+}
 
 // =============================================================
 // The durable follow-up workflow
@@ -99,25 +120,46 @@ export const followUpWorkflow = workflow
  * saving a wasted Haiku call. The authoritative idempotency + supersede check
  * is re-done atomically in `createAndStart`.
  */
+type StartContextSignals = {
+  safeguardLevel: Infer<typeof safeguardLevelValidator> | null;
+  intensity: number | null;
+  primaryEmotion: string | null;
+  granularLabel: string | null;
+  confirmationState: string | null;
+};
+
+type StartContext = {
+  emotionalProfileId: Id<"emotional_profiles">;
+  escalationDerived: boolean;
+  signals: StartContextSignals;
+  cardCtx: {
+    mirrorText: string | null;
+    followUpReason: string | null;
+    primaryEmotion: string | null;
+    granularLabel: string | null;
+    gaveUp: boolean;
+  };
+};
+
 export const getStartContext = internalQuery({
   args: { sessionId: v.id("sessions") },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<StartContext | null> => {
     const session = await ctx.db.get(args.sessionId);
     if (!session) return null;
     if (session.followUpWorkflowId) return null; // already started (idempotent)
     if (session.requiresFollowUp !== true) return null;
 
-    const metadata = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-      .unique();
+    const metadata: Doc<"emotional_metadata"> | null = await ctx.runQuery(
+      internal.understanding.getUnderstanding,
+      { sessionId: args.sessionId },
+    );
 
     const gaveUp = session.confirmationState === "gave_up";
     const escalationDerived = session.escalationTriggered === true;
 
     // Concrete (non-optional) shape — every field present (null when absent) so
     // it matches the createAndStart `signals` validator exactly.
-    const signals = {
+    const signals: StartContextSignals = {
       safeguardLevel: session.safeguardLevel ?? null,
       intensity: metadata?.intensity ?? null,
       primaryEmotion: metadata?.primaryEmotion ?? null,
@@ -158,6 +200,18 @@ export const startFollowUpWorkflow = internalAction({
 
     const tier = followUpTier(start.signals);
 
+    // Memory enrichment: suppressed for acute tier — a crisis check-in stays
+    // presence-first and wound-light, never "you keep feeling this way".
+    const semanticProfileDoc =
+      tier === "acute"
+        ? null
+        : await ctx.runQuery(internal.semanticProfiles.getCurrent, {
+            emotionalProfileId: start.emotionalProfileId,
+          });
+    const semanticProfile = semanticProfileDoc
+      ? renderSemanticProfile(semanticProfileDoc)
+      : null;
+
     let cardText: string;
     try {
       const anthropic = getAnthropicClient();
@@ -168,6 +222,7 @@ export const startFollowUpWorkflow = internalAction({
         primaryEmotion: start.cardCtx.primaryEmotion,
         granularLabel: start.cardCtx.granularLabel,
         gaveUp: start.cardCtx.gaveUp,
+        semanticProfile,
       });
 
       const response = await anthropic.messages.create({
@@ -306,7 +361,13 @@ export const sendFollowUpNudge = internalMutation({
         q.eq("emotionalProfileId", card.emotionalProfileId),
       )
       .unique();
-    if (!prefs?.notifications.enabled) return null; // enabled-only gating
+    // The master switch is now held on by either family — chat notifications
+    // or the AI's own reaching out — so it no longer implies a follow-up is
+    // wanted. `gentleReturn` is the nudge family this belongs to, and it moves
+    // with the master on every row written before chat had its own toggle.
+    if (!prefs?.notifications.enabled || !prefs.notifications.gentleReturn) {
+      return null;
+    }
 
     const body =
       card.tier === "acute"
@@ -380,7 +441,13 @@ export const markReturn = mutation({
 // Client read + write surface (the check-in sheet + profile section)
 // =============================================================
 
-/** The card to surface on reopen, if any (ready first, then shown). */
+/**
+ * The card to surface on reopen, if any. A `ready` card (fresh return / nudge)
+ * always surfaces. An unresolved `shown` card — one the user saw but never
+ * answered, e.g. backgrounded the app mid-check-in — only re-surfaces once its
+ * re-show cooldown has elapsed, so it doesn't nag on every launch. Gating here
+ * (server) keeps the client render pure — it never has to read the clock.
+ */
 export const getReadyCard = query({
   args: {},
   handler: async (ctx) => {
@@ -393,26 +460,39 @@ export const getReadyCard = query({
       .order("desc")
       .first();
 
-    console.log("ready ", ready)
     if (ready) return ready;
-    return await ctx.db
+
+    const shown = await ctx.db
       .query("follow_up_cards")
       .withIndex("by_profile_status", (q) =>
         q.eq("emotionalProfileId", profile._id).eq("status", "shown"),
       )
       .order("desc")
       .first();
+
+    if (
+      shown &&
+      shouldReshowShownCard({ shownAt: shown.shownAt, now: Date.now() })
+    ) {
+      return shown;
+    }
+    return null;
   },
 });
 
-/** Mark a ready card as shown when the sheet mounts (idempotent). */
+/**
+ * Stamp a card as shown when the sheet mounts. Flips `ready → shown` on the
+ * first surface, and re-stamps `shownAt` when an unresolved `shown` card
+ * re-surfaces after its cooldown (client-gated) — so the next re-show cooldown
+ * is measured from the latest viewing. Any terminal status is left untouched.
+ */
 export const markShown = mutation({
   args: { cardId: v.id("follow_up_cards") },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const card = await ctx.db.get(args.cardId);
     if (!card || card.emotionalProfileId !== profile._id) return null;
-    if (card.status !== "ready") return null; // idempotent
+    if (card.status !== "ready" && card.status !== "shown") return null;
     await ctx.db.patch(args.cardId, { status: "shown", shownAt: Date.now() });
     return null;
   },
@@ -470,6 +550,8 @@ export const listForProfile = query({
  * Cancel any active workflow and purge all follow-up cards for a profile.
  * Idempotent; safe to call repeatedly. Returns the number of cards purged.
  */
+const PURGE_BATCH_SIZE = 200;
+
 export const purgeForProfile = internalMutation({
   args: { emotionalProfileId: v.id("emotional_profiles") },
   handler: async (ctx, args) => {
@@ -478,19 +560,25 @@ export const purgeForProfile = internalMutation({
       .withIndex("by_profile_created", (q) =>
         q.eq("emotionalProfileId", args.emotionalProfileId),
       )
-      .take(200);
+      .take(PURGE_BATCH_SIZE);
 
     for (const card of cards) {
       if (ACTIVE_STATUSES.has(card.status)) {
         // Cancel the live workflow so it stops nudging a deleted user.
-        try {
-          await workflow.cancel(ctx, card.workflowId);
-        } catch {
-          // Already terminal — nothing to cancel.
-        }
+        await cancelFollowUpWorkflow(ctx, card.workflowId);
       }
       await ctx.db.delete(card._id);
     }
+
+    // A profile accrues one card per session, so it can hold more than a
+    // single transaction can drain. Reschedule while we filled a batch and
+    // stop once the tail comes back short, so deletion clears every card.
+    if (cards.length === PURGE_BATCH_SIZE) {
+      await ctx.scheduler.runAfter(0, internal.followUps.purgeForProfile, {
+        emotionalProfileId: args.emotionalProfileId,
+      });
+    }
+
     return cards.length;
   },
 });

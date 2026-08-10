@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
-import { BottomSheet, Button, PressableFeedback, useBottomSheetAwareHandlers, useThemeColor } from "heroui-native";
+import { BottomSheet, Button, CloseButton, PressableFeedback, useBottomSheetAwareHandlers, useThemeColor } from "heroui-native";
 import { BottomSheetTextInput, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
 import { AppText } from "@/src/components/shared/app-text";
@@ -72,18 +72,27 @@ function FeedbackSheetFrame({ snapPoints, isOpen, onClose, children, keyboardBeh
 type HeaderProps = {
   children: ReactNode;
   subtitle?: string;
+  // Renders an explicit close affordance. Pass it on any sheet the user can
+  // reach without another exit — the backdrop and pan-down are the only other
+  // ways out, and if the sheet ever mis-snaps low neither is obvious.
+  onDismiss?: () => void;
 };
 
-function FeedbackSheetHeader({ children, subtitle }: HeaderProps) {
+function FeedbackSheetHeader({ children, subtitle, onDismiss }: HeaderProps) {
   return (
-    <View>
-      {typeof children === "string" ? (
-        <AppText className="font-serif text-xl text-foreground mb-1">{children}</AppText>
-      ) : (
-        children
-      )}
-      {subtitle && (
-        <AppText className="text-sm font-light text-foreground/40">{subtitle}</AppText>
+    <View className="flex-row items-start gap-3">
+      <View className="flex-1">
+        {typeof children === "string" ? (
+          <AppText className="font-serif text-xl text-foreground mb-1">{children}</AppText>
+        ) : (
+          children
+        )}
+        {subtitle && (
+          <AppText className="text-sm font-light text-foreground/40">{subtitle}</AppText>
+        )}
+      </View>
+      {onDismiss && (
+        <CloseButton onPress={onDismiss} accessibilityLabel="Dismiss" className="mt-0.5" />
       )}
     </View>
   );

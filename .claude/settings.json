@@ -3,5 +3,13 @@
     "allow": [
       "mcp__argent"
     ]
+  },
+  "worktree": {
+    "bgIsolation": "none"
+  },
+  "enabledPlugins": {
+    "cwb-app-icon@cwb-plugins": true,
+    "ponytail@ponytail": true,
+    "mattpocock-skills@claude-plugins-official": true
   }
 }

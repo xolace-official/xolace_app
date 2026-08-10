@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
+import { rankInsert } from "./lib/aggregates";
 import { generateDisplayName } from "./lib/displayName";
 
 /**
@@ -11,12 +12,20 @@ import { generateDisplayName } from "./lib/displayName";
  */
 export const getOrCreate = mutation({
   args: {
+    // Self-reported by the client, non-authoritative — a display hint (settings
+    // screen), never a security-sensitive read. Stored as given.
     authProvider: v.union(v.literal("apple"), v.literal("google")),
-    authProviderAccountId: v.string(),
+    // DEPRECATED(remove-after: app >= next shipped build): the server now stores
+    // identity.subject (the verified Clerk user id) instead of this client arg,
+    // which was untrusted and — on sign-in, where the client had no createdUserId
+    // — a hardcoded placeholder string. Optional; value ignored.
+    /** @deprecated server stores identity.subject; value ignored */
+    authProviderAccountId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     console.log("getOrCreate", args);
     const identity = await ctx.auth.getUserIdentity();
+
     if (!identity) {
       console.log("getOrCreate-error: not authenticated");
       throw new Error("Not authenticated");
@@ -33,7 +42,16 @@ export const getOrCreate = mutation({
     if (existingUser) {
       // Grace period: if the user signed back in before the cron
       // purged their account, cancel the deletion and reactivate.
-      if (existingUser.accountStatus === "deleted") {
+      // "purging" is treated the same as "deleted": the sweep has
+      // claimed the account but the drain checks status per batch, so
+      // flipping back to "active" stops it (accountDeletion.ts:purgeUser).
+      // Without this, a stalled/failed purge leaves the user permanently
+      // stuck at "purging" — never re-selected by the sweep, never able
+      // to reactivate — and requireAuth locks them out.
+      if (
+        existingUser.accountStatus === "deleted" ||
+        existingUser.accountStatus === "purging"
+      ) {
         await ctx.db.patch(existingUser._id, {
           accountStatus: "active",
           deletionRequestedAt: undefined,
@@ -54,11 +72,13 @@ export const getOrCreate = mutation({
       createdAt: now,
       updatedAt: now,
     });
+    await rankInsert(ctx, profileId);
 
     // Create preferences with defaults
     await ctx.db.insert("preferences", {
       emotionalProfileId: profileId,
       theme: "system",
+      motionPreference: "system",
       reducedMotion: false,
       notifications: {
         enabled: false,
@@ -73,11 +93,12 @@ export const getOrCreate = mutation({
       displayName: generateDisplayName(),
       avatarId: "default",
     });
-
-    // Create user
+    
+    // Create user. authProviderAccountId is the server-verified Clerk subject,
+    // never the client arg. authProvider is the self-reported display hint.
     const userId = await ctx.db.insert("users", {
       authProvider: args.authProvider,
-      authProviderAccountId: args.authProviderAccountId,
+      authProviderAccountId: identity.subject,
       emotionalProfileId: profileId,
       tokenIdentifier: identity.tokenIdentifier,
       accountStatus: "active",

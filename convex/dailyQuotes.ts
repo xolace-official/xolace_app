@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import { hasPremium } from "./lib/premium";
 import { internal } from "./_generated/api";
 
 function utcDateString(): string {
@@ -17,9 +18,9 @@ export const getToday = query({
     const { profile } = await requireAuth(ctx);
     const today = utcDateString();
 
-    console.log("today ", today)
+    const fiveDaysAgo = new Date(today + "T00:00:00Z").getTime() - 5 * 24 * 60 * 60 * 1000;
 
-    const [quotes, sessionToday] = await Promise.all([
+    const [quotes, sessionToday, isPremium, recentCompletedSession] = await Promise.all([
       ctx.db
         .query("daily_quotes")
         .withIndex("by_profile_date", (q) =>
@@ -35,12 +36,31 @@ export const getToday = query({
         )
         .filter((q) => q.eq(q.field("state"), "completed"))
         .first(),
+      hasPremium(ctx, profile),
+      // Mirrors the eligibility window in ai/quotesDistiller.ts loadEmotionalContext —
+      // this is what would make a session-derived quote get generated for a premium user.
+      ctx.db
+        .query("sessions")
+        .withIndex("by_profile_time", (q) =>
+          q.eq("emotionalProfileId", profile._id).gte("createdAt", fiveDaysAgo)
+        )
+        .filter((q) => q.eq(q.field("state"), "completed"))
+        .first(),
     ]);
 
+    // Session-derived (personalized) quotes are Xolace+ only — the LLM call is
+    // skipped entirely for free users (see jobs/quotesGenerator.ts), so most free
+    // users never have a `daily_quotes` row to withhold. `sessionLocked` instead
+    // reflects whether they *would* have gotten one: either a row already exists
+    // (e.g. downgraded after it was generated) or they have the recent session
+    // history that would trigger generation.
+    const sessionQuote = quotes.find((q) => q.type === "session") ?? null;
+
     return {
-      session: quotes.find((q) => q.type === "session") ?? null,
+      session: isPremium ? sessionQuote : null,
       curated: quotes.find((q) => q.type === "curated") ?? null,
       hasSessionToday: sessionToday !== null,
+      sessionLocked: !isPremium && (sessionQuote !== null || recentCompletedSession !== null),
     };
   },
 });
@@ -124,7 +144,7 @@ export const store = internalMutation({
       type: args.type,
       text: args.text,
       sessionContextIds: args.sessionContextIds,
-      isPremium: false,
+      isPremium: args.type === "session",
       reaction: undefined,
       createdAt: Date.now(),
     });

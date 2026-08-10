@@ -36,6 +36,18 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
   // Primary actions — what you came to do. Full rows.
   const primaryItems: MenuButtonItem[] = [
     {
+      label: "Discovery",
+      iconName: { ios: "safari", android: "explore" },
+      accessibilityLabel: "Open discovery",
+      newKey: "discovery",
+      onPress: () => {
+        onClose();
+        // replace, not push — reflect stays the "/" landing with no back stack.
+        // Cast until typedRoutes regenerates on next expo start (see /quotes).
+        router.replace("/discovery" as any);
+      },
+    },
+    {
       label: "Vent",
       iconName: { ios: "mic", android: "mic" },
       accessibilityLabel: "Open voice vent, speak your weight",
@@ -45,28 +57,10 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
         router.push("/(protected)/voice-vent");
       },
     },
-    {
-      label: "Today",
-      iconName: { ios: "quote.bubble", android: "format_quote" },
-      accessibilityLabel: "Open your daily quote",
-      onPress: () => {
-        onClose();
-        router.push("/(protected)/quotes" as any);
-      },
-    },
   ];
 
   // Housekeeping — shares one compact row.
   const compactItems: MenuButtonItem[] = [
-    {
-      label: "Timeline",
-      iconName: { ios: "clock", android: "history" },
-      accessibilityLabel: "Open your session timeline",
-      onPress: () => {
-        onClose();
-        router.push("/(protected)/timeline");
-      },
-    },
     {
       label: "Settings",
       iconName: { ios: "gearshape", android: "settings" },
@@ -148,7 +142,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
               accessibilityRole="menuitem"
               accessibilityLabel={item.accessibilityLabel}
             >
-              <View className="flex-row items-center justify-center gap-2.5 rounded-2xl bg-surface px-4 py-4">
+              <View className="flex-row items-center gap-4 rounded-2xl bg-surface px-6 py-4">
                 {renderIcon(item, 20)}
                 <AppText
                   className="text-sm font-medium text-foreground"

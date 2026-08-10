@@ -6,26 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 #### 1. What Xolace Is
 
-Xolace is an emotional processing app/infrastructure. Not a chatbot. Not a social network. Not therapy.
+We're building the AI-native mental health app that takes people from 'I don't even know what I'm feeling' to real support; end to end.
 
-People open Xolace when they feel something they can't name — heavy, anxious, numb, confused — but not "bad enough" for therapy. The app asks one question: "What's here right now?" The user writes whatever is true (or taps texture words if they can't find words). An AI reads what they expressed and mirrors it back with more precision than they could find themselves — 1-3 sentences that make them think "yes, exactly, that's what I'm feeling." Then they choose: sit with a short guided exercise, see that strangers have felt something similar, or simply close the app knowing they were heard.
-
-#### Core Thesis
-
-There is a massive gap between "Everything is fine" (social media performance mode) and "I need therapy" (clinical intervention). Most people live in that gap. Xolace exists in that gap as **emotional processing infrastructure** — the daily layer of mental wellness.
 
 #### What It Is NOT
 
-- Not a chatbot (no chat bubbles, no conversation threads, no back-and-forth)
-- Not a social app (no feed, no profiles, no followers, no public content)
 - Not clinical (no diagnoses, no therapeutic terminology)
 - Not an AI companion/relationship (no parasocial attachment by design)
 
 #### Retention & Engagement
 
-Retention mechanics are on the table. Gamification is welcome when it serves the user — streaks, milestones, insight unlocks, progress tracking, and consistency acknowledgment are all legitimate tools. The distinction is between **extractive** gamification (dark patterns that create anxiety about breaking streaks) and **generative** gamification (rewards that give the user more of what the app promises: deeper self-knowledge, acknowledgment, growth tracking). Build the latter. A user who has processed 90 moments deserves to see their emotional frequency map unlock — that's not manipulation, that's earned access to understanding.
-
-Insights and analytics are a core product layer, not an afterthought. With each session, we collect: emotion tags, mirror confirmation rates, clarification turns, path choices, mood delta, input length, pause patterns, and session timing. That's a rich longitudinal dataset per user. Build on it.
+Retention mechanics are on the table. Gamification is welcome when it serves the user — streaks, milestones, insight unlocks, progress tracking, and consistency acknowledgment are all legitimate tools. We need to build features that enable proactive mental health care and engagement.
 
 #### The Metaphor
 
@@ -39,7 +30,7 @@ A digital campfire. You sit by the fire alone. The flames help you see what you'
 - **Android**: `bun expo start --android`
 - **Web**: `bun expo start --web`
 - **Lint**: `bun expo lint`
-- **Install Expo packages**: `npx expo install <package>` (ensures SDK-compatible versions)
+- **Install Expo packages**: `bunx expo install <package>` (ensures SDK-compatible versions)
 - **Dev build (iOS)**: `bunx expo run:ios` (required when adding native modules)
 - **Variant local builds**: `bun android:dev` / `bun android:preview` / `bun ios:dev` / `bun ios:preview` — these set `APP_VARIANT` so the right package id (`com.xolaceincorg.xolace.dev` / `.preview` / base) is baked in. Plain `bun android` / `bun ios` falls through to the production package.
 - **EAS build**: `eas build --profile development|preview|production`
@@ -50,60 +41,6 @@ Before diagnosing a tricky bug from scratch, **check `docs/bug-log.md`**. It's a
 
 When solving a new bug that took more than ~30 min to diagnose, or whose fix touched something outside the codebase (cloud console, certificates, build infra), add a new entry at the top of `docs/bug-log.md` following the existing six-section shape.
 
-## App Flow
-
-The app uses `Stack.Protected` guards in the root layout to conditionally render route groups:
-
-```
-!introSeen          → (onboarding)
-introSeen && !auth  → (auth)
-introSeen && auth   → (protected)
-```
-
-### Phase 1: Onboarding
-1. **Promise Screen** (`(onboarding)/index`) — Mood marquee carousel + privacy promise. Press "Continue".
-2. **Frame Screen** (`(onboarding)/frame`) — Ember orb animation, framework principles revealed in timed phases. Press "That makes sense" → sets `introSeen = true`, replaces to auth.
-
-### Phase 2: Authentication
-3. **Auth Screen** (`(auth)/auth`) — Google OAuth via Clerk. On success, calls `getOrCreate()` mutation to sync user with Convex. Auto-routes to protected via guard.
-
-### Phase 3: Core Loop (Reflect → Path → Complete)
-
-The reflect screen (`(protected)/index`) is a **9-state machine** driven by `useReflectionMachine()`:
-
-```
-Idle → Typing → Processing → Mirror → Path Selection → Activity → Session End → Idle
-                                ↕
-                          Clarify (max 2 turns)
-                                ↓
-                            Gave Up
-```
-
-**States in detail:**
-
-- **Idle** — "What's here right now?" + texture word tags (heavy, tight, foggy, buzzing, empty, scattered, numb, raw). Tap to type or select tags to scaffold.
-- **Typing** — Freeform text input. 8-second pause detection triggers a gentle nudge ("There's no rush. Let it come."). Submit via "Let it out".
-- **Processing** — Server generates AI mirror via Anthropic. Tracks input duration, freeze occurrence, entry type.
-- **Mirror** — AI reflection displayed. User chooses: "That's it" (confirm) / "Not quite" or "Say more" (clarify, max 2 turns).
-- **Clarify** — Follow-up text input. Server refines mirror. After 2 turns without confirmation → Gave Up.
-- **Gave Up** — Empathetic message. "See my options" → path selection, or "Start fresh" → idle.
-- **Escalation** — Conditional. Triggers if server flags `escalationTriggered`. User can engage or dismiss.
-- **Path Selection** — After mirror confirmed. Three choices:
-  - **Solo** → `sit-with-this` screen (breathing/guided exercise placeholder) → session end
-  - **Peers** → `peer-reflections` screen (matched anonymous reflections, resonance buttons) → session end
-  - **Exit** → session end directly
-- **Error** — Retry or reset.
-
-### Session End
-- **Exit variant** — "Heard." + link to timeline.
-- **Activity variant** (solo/peers) — "You showed up for yourself today." + optional mood check (lighter/same/heavier/unsure) + optional anonymous contribution toggle.
-- Both offer "Have more? I'm here." to start a new session.
-
-### Secondary Screens
-- **Timeline** (`(protected)/timeline/`) — Past sessions list. Tap a session → session details (`timeline/session/[id]`).
-- **Settings** (`(protected)/settings/`) — App preferences.
-
-**Navigation guards**: `sit-with-this`, `peer-reflections`, and `session-end` have `gestureEnabled: false` — user must use button navigation.
 
 ## Architecture
 
@@ -154,6 +91,55 @@ convex/
   sessions.ts, sessionTurns.ts, reflections.ts, users.ts, preferences.ts, etc.
 ```
 
+### The Cognition Layer Constitution Rule
+
+> **No feature may call an LLM to re-derive something the Understanding already
+> knows.** Every session's Understanding (classification, safeguard verdict,
+> which episodic memories informed the mirror, which semantic profile version
+> was in context) lives in `emotional_metadata` and is read only via
+> `internal.understanding.getUnderstanding`. All AI features take
+> Understanding + Memory (episodic RAG namespaces + `semantic_profiles`) as
+> input. A new model call is justified only for genuinely new signal — a new
+> modality (voice/vent) or a new artifact type — and **all model calls live
+> under `convex/ai/`**. See `docs/cognition-layer-architecture.md`.
+
+Note: the quotes → cognition layer transition keeps `loadEmotionalContext` as
+an active cold-start fallback — it is not a deprecation candidate.
+
+### Deferred Deprecations (Store-Gap Rule)
+
+Backend deploys before app store review clears, so a new backend runs against
+the old shipped UI for days. Never delete a server function, field, or arg the
+minimum-supported UI may still call. Instead mark, don't delete:
+
+- Add JSDoc `@deprecated` + a marker comment:
+  `// DEPRECATED(remove-after: app >= X.Y.Z): <reason + what replaces it>`
+- Add a line to the Pending Deprecations ledger below.
+- Delete only once the store-published minimum supported version no longer
+  references it.
+
+**Pending Deprecations** (remove each once the store-published minimum supported app version no longer sends the arg)
+- `users.getOrCreate` arg `authProviderAccountId` — server now stores `identity.subject`; value ignored.
+- `sessions.submitInput` args `rawText`, `rawInputLength` — derived from `rawInput` server-side; values ignored.
+- `sessions.retrySession` arg `rawText` — retry reprocesses `session.rawInput`; value ignored.
+- `preferences.reducedMotion` (schema field + `update` arg) — superseded by tri-state `motionPreference`. Server keeps the boolean in sync as a back-compat mirror. Remove the field and arg once no store-published client reads `reducedMotion` (old UIs read it directly for the "sit with this" breathing).
+- Client `isMaxRefinementError` message-substring fallback (`.includes('Maximum refinement turns')` in `src/features/reflect/session-service.ts`) — the server now throws a `ConvexError` with code `max_refinement_turns`; remove the fallback once the backend deployed before that code is no longer reachable. Conversely, the server's error message must keep the "Maximum refinement turns" substring until no store-published client matches on it.
+
+## Good to know
+
+Schema must always match existing data. Convex enforces this constraint. You cannot push a schema to a deployment with existing data that doesn't match it, unless you turn off schema enforcement. In general it safe to:
+Add new tables to the schema.
+Add an optional field to an existing table's schema, set the field on all documents in the table, and then make the field required.
+Mark an existing field as optional, remove the field from all documents, and then remove the field.
+Mark an existing field as a union of the existing type and a new type, modify the field on all documents to match the new type, and then change the type to the new type.
+Functions should be backwards compatible. Even if your only client is a website, and you deploy it together with your backend, your users might still be running the old version of your website when your backend changes. Therefore you should make your functions backwards compatible until you are OK to break old clients. In general it is safe to:
+Add new functions.
+Add an optional named argument to an existing function.
+Mark an existing named argument as optional.
+Mark an existing named argument as a union of the existing type and a new type.
+Change the behavior of the function in such a way that given the arguments from an old client its behavior will still be acceptable to the old client.
+Scheduled functions should be backwards compatible. When you schedule a function to run in the future, you provide the argument values it will receive. Whenever a function runs, it always runs its currently deployed version. If you change the function between the time it was scheduled and the time it runs, you must ensure the new version will behave acceptably given the old arguments.
+
 ### Build Variants
 `app.config.ts` reads `APP_VARIANT` (development/preview/production) to set bundle identifiers:
 - `com.xolaceincorg.xolace.dev` / `com.xolaceincorg.xolace.preview` / `com.xolaceincorg.xolace`
@@ -164,11 +150,6 @@ convex/
 
 ## Key Hooks
 
-- **`useReflectionMachine()`** — 9-state UI machine for the reflect screen. Bridges server state to UI dispatch, tracks typing metrics, exposes action handlers.
-- **`useSession()`** — Server session API bridge. Manages `sessionId`, exposes mutations: initiate, submit, confirmMirror, selectPath, startPath, completePath, submitRefinement, abandon, retry.
-- **`reflection-reducer.ts`** — Pure state reducer with 11 action types. `MAX_TURNS = 2` for clarifications.
-- **`usePathSession()`** — Used by sit-with-this and peer-reflections screens.
-- **`useSessionEnd()`** — Session completion + auto-navigate home.
 
 ## Key Conventions
 
@@ -180,6 +161,7 @@ convex/
 - **File size**: Keep files under 200 lines. Extract logic into hooks, utils, services.
 - **Imports**: Always use `@/src/` path alias. Avoid barrel re-exports that pull in unused code.
 - **State**: Zustand for shared/form state. `useState` only for trivial local UI.
+- **Convex reactive reads whose args change from user interaction**: use `useStableQuery` / `useStablePaginatedQuery` from `@/src/lib/convex/use-stable-query`, not raw `useQuery` / `usePaginatedQuery`. When a query's args change (paging, filtering, sorting, tab switches), Convex returns `undefined` (or resets a paginated list to `LoadingFirstPage` + `[]`) until the new data loads — any `&& data` guard then unmounts the subtree mid-interaction, blanking it and replaying mount animations (the "overreacting" problem, see https://stack.convex.dev/help-my-app-is-overreacting). The stable variants hold the previously loaded result during the reload so the UI swaps in place. Keep plain `useQuery` / `usePaginatedQuery` when args are stable — there the `undefined`/first-page-loading state is a genuine cold start you want to render a skeleton for.
 - **Services**: Backend logic in `src/services/`, never directly in UI components.
 - **No new horizontal files**: Do not add new files to top-level horizontal directories (`hooks/`, `services/`, `interfaces/`, `types/`, `helpers/`). Instead, colocate new code with the feature it belongs to (e.g. a new hook for the reflect flow goes in `components/reflect/` or a dedicated `features/reflect/` directory, not `hooks/`). Exceptions: `shared/` design system primitives, cross-cutting infrastructure (`providers/`, `store/`, `lib/`), and `themes/`.
 - **Adding themes**: Create a new CSS file in `src/themes/`, define `@variant <name>-light` and `@variant <name>-dark` with all required CSS variables, import it in `global.css`, register both variants in `metro.config.js` `extraThemes`, add the names to the `ThemeName` union in `src/context/app-theme-context.tsx`, and add a `toggleTheme` case for the light/dark pair.
@@ -197,18 +179,32 @@ app/           — Expo Router pages & layouts
   (auth)/       — Authentication (Google OAuth)
   (protected)/  — Core app (reflect, sit-with-this, peer-reflections, session-end, timeline/, settings/)
 components/    — UI components (shared/, ui/, icons/, reflect/states/, session-end/)
-constants/     — Colors, fonts, tabs, theme values
+config/
 context/       — React contexts (AppThemeContext for multi-theme)
 providers/     — Provider composition (RootProvider)
-hooks/         — Custom hooks (reflection machine, session, path, settings, timeline)
+features/
 helpers/       — Helper functions and hooks (utils/, hooks/)
 lib/           — Library code (utils.ts, storage/)
 store/         — Zustand stores
 services/      — API & integrations
-themes/        — CSS theme files (quiet, reverie, human, nightly, alpha)
 interfaces/    — TypeScript interfaces by domain
 types/         — Type definitions
 ```
+
+## Design Principles
+
+Critique and iterate every screen against these eight. They are the qualities
+people register as "that looks right" — when a layout feels off, one of them is
+missing, and naming which one is faster than guessing at fixes.
+
+- **Contrast** — makes elements distinguishable. Differences in size, color, weight, or shape create hierarchy and draw the eye to what matters most. Without contrast, everything competes equally and nothing stands out.
+- **Hierarchy** — guides the viewer through content in order of importance. Headlines before body text, primary actions looking different from secondary ones. Size, position, color, and weight all signal "look here first."
+- **Alignment** — creates order and connection. Elements sharing an edge or axis feel related and intentional. Strong alignment is invisible; its absence looks sloppy immediately.
+- **Proximity** — groups related items and separates unrelated ones. White space between groups tells the eye what belongs together without needing borders or boxes.
+- **Repetition (consistency)** — builds cohesion. Reusing colors, fonts, shapes, and spacing patterns makes a design feel unified and helps users learn the system quickly.
+- **Balance** — distributes visual weight across the composition. Symmetrical feels stable and formal, asymmetrical feels dynamic but still resolved. Either works; an unbalanced layout feels off.
+- **White space (negative space)** — gives content room to breathe. It is not empty, it is active, and it determines how premium, calm, or cluttered a design feels.
+- **Unity** — the overall sense that every element belongs. It emerges when the other principles work together; nothing feels arbitrary or out of place.
 
 ## Performance Best Practices
 
@@ -226,6 +222,7 @@ The React Compiler is active in this project. It automatically memoizes values, 
 |------|-----|
 | `useMemo` on Context Provider `value` objects | Context subscriptions propagate to all consumers when the value reference changes; React Compiler does not stabilize across context boundaries the same way |
 | `useCallback` for functions used in `useEffect` dependency arrays | Removing them causes infinite effect loops regardless of compiler output |
+| `useCallback` on a `useSyncExternalStore` `subscribe` function | An unstable `subscribe` makes React unsubscribe and re-register on every render; stability is part of the store protocol, not an optimization |
 | `useCallback`/`useMemo` on functions/values with `try/finally` bodies | The compiler skips optimization for `try/finally` blocks |
 | `memo()` on components with `"use no memo"` directive | The directive explicitly opts the component out of compiler optimization |
 
@@ -305,6 +302,20 @@ Key routing rules:
 - Review what gstack has learned → invoke /learn
 - Tune question sensitivity → invoke /plan-tune
 - Code quality dashboard → invoke /health
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `xolace-official/xolace_app`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical roles, unchanged: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
 <!-- HEROUI-NATIVE-AGENTS-MD-START -->
 [HeroUI Native Docs Index]|root: ./.heroui-docs/native|STOP. What you remember about HeroUI Native is WRONG for this project. Always search docs and read before any task.|If docs missing, run this command first: heroui agents-md --native --output AGENTS.md|components/(buttons):{button.mdx,close-button.mdx,link-button.mdx}|components/(collections):{menu.mdx,tag-group.mdx}|components/(controls):{slider.mdx,switch.mdx}|components/(data-display):{chip.mdx}|components/(feedback):{alert.mdx,skeleton-group.mdx,skeleton.mdx,spinner.mdx}|components/(forms):{checkbox.mdx,control-field.mdx,description.mdx,field-error.mdx,input-group.mdx,input-otp.mdx,input.mdx,label.mdx,radio-group.mdx,search-field.mdx,select.mdx,text-area.mdx,text-field.mdx}|components/(layout):{card.mdx,separator.mdx,surface.mdx}|components/(media):{avatar.mdx}|components/(navigation):{accordion.mdx,list-group.mdx,tabs.mdx}|components/(overlays):{bottom-sheet.mdx,dialog.mdx,popover.mdx,toast.mdx}|components/(typography):{text.mdx}|components/(utilities):{pressable-feedback.mdx,scroll-shadow.mdx}|getting-started/(handbook):{animation.mdx,colors.mdx,composition.mdx,portal.mdx,provider.mdx,styling.mdx,theming.mdx}|getting-started/(overview):{design-principles.mdx,quick-start.mdx}|getting-started/(ui-for-agents):{agent-skills.mdx,agents-md.mdx,llms-txt.mdx,mcp-server.mdx}|releases:{beta-10.mdx,beta-11.mdx,beta-12.mdx,beta-13.mdx,rc-1.mdx,rc-2.mdx,rc-3.mdx,rc-4.mdx,v1-0-0.mdx,v1-0-1.mdx,v1-0-2.mdx,v1-0-3.mdx}

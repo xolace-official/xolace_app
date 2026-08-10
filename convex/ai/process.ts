@@ -14,17 +14,21 @@ import { moderationCache, classifierCache } from "./cached";
 import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt } from "./prompts/articulator";
+import { applyAudioFence } from "./prompts/mirrorAudioTags";
 import { evaluateSafeguard } from "./safeguard";
+import { decideMirrorOutcome, resolveMirrorTone } from "./mirrorPlan";
+import { scheduleMirrorAudio } from "./tts";
 import {
+  buildArticulatorPatternSummary,
   buildPatternSummary,
   collectRecentMirrors,
 } from "./helpers/patternSummary";
 
-import { rateLimiter } from "../lib/rateLimits";
+import { rateLimiter, AI_MIRROR_LIMITS_PLUS } from "../lib/rateLimits";
 import { posthog } from "../posthog";
+import { rag } from "../rag";
 
 import type { SessionContext } from "./context";
-import { matchExercise } from "../exercises/match";
 
 const FALLBACK_MIRROR = "I hear you, and what you're feeling matters.";
 
@@ -39,6 +43,7 @@ export const generateMirror = internalAction({
     sessionId: v.id("sessions"),
     rawText: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     let session:
       | {
@@ -50,18 +55,19 @@ export const generateMirror = internalAction({
         }
       | undefined;
     try {
-      // 1. Load full context (single DB transaction)
+      // Load full context (single DB transaction)
       const context: SessionContext = await ctx.runQuery(
         internal.ai.context.buildSessionContext,
         { sessionId: args.sessionId },
       );
 
-      // 1a. Rate limit AI requests (main cost control)
+      // Rate limit AI requests (main cost control)
       const { ok, retryAfter } = await rateLimiter.limit(
         ctx,
         "aiMirrorRequest",
         {
           key: context.session.emotionalProfileId as string,
+          ...(context.isPremium ? { config: AI_MIRROR_LIMITS_PLUS } : {}),
         },
       );
 
@@ -81,11 +87,17 @@ export const generateMirror = internalAction({
           event: "mirror_rate_limited",
           properties: { retryAfterMs: retryAfter ?? 0 },
         });
-        return;
+        return null;
       }
 
-      // 2. Build pattern summary (pure function)
-      const mirrorTone = context.preferences?.mirrorTone ?? "adaptive";
+      // Build pattern summaries (pure functions). The classifier gets
+      // the full variant (its only historical context); the articulator
+      // gets the slim emotion-signal variant — longitudinal identity
+      // reaches it via the semantic profile block instead.
+      const mirrorTone = resolveMirrorTone(
+        context.preferences?.mirrorTone,
+        context.isPremium,
+      );
       const patternSummary = buildPatternSummary({
         profile: context.profile,
         recentMetadata: context.recentMetadata,
@@ -93,9 +105,13 @@ export const generateMirror = internalAction({
         isFirstSession: context.isFirstSession,
         mirrorTone,
       });
+      const articulatorPatternSummary = buildArticulatorPatternSummary({
+        recentMetadata: context.recentMetadata,
+        isFirstSession: context.isFirstSession,
+      });
       console.log("pattern Summary ", patternSummary);
 
-      // 3. Parallel: moderation + classification (both cached)
+      // Parallel: moderation + classification (both cached)
       const anthropic = getAnthropicClient();
 
       session = context.session as {
@@ -115,16 +131,30 @@ export const generateMirror = internalAction({
       );
       console.log("classifier prompt ", classifierPrompt);
 
-      // 4. Fetch moderation + classification in parallel (cache-backed)
-      const [moderationResult, classification] = await Promise.all([
-        moderationCache
-          .fetch(ctx, { text: args.rawText })
-          .catch(() => MODERATION_UNAVAILABLE),
-        classifierCache.fetch(ctx, {
-          systemPrompt: classifierPrompt.system,
-          userPrompt: classifierPrompt.user,
-        }),
-      ]);
+      // Fetch moderation + classification + episodic recall in parallel.
+      // Episodic recall (Cognition Layer §1.3): top-K past composites
+      // from the user's personal namespace, matched raw-to-raw against
+      // tonight's input. Best-effort — memory failing must never block
+      // the mirror.
+      const [moderationResult, classification, episodicMatches] =
+        await Promise.all([
+          moderationCache
+            .fetch(ctx, { text: args.rawText })
+            .catch(() => MODERATION_UNAVAILABLE),
+          classifierCache.fetch(ctx, {
+            systemPrompt: classifierPrompt.system,
+            userPrompt: classifierPrompt.user,
+          }),
+          context.isFirstSession
+            ? Promise.resolve([] as EpisodicMatch[])
+            : searchEpisodicMemory(
+                ctx,
+                session.emotionalProfileId,
+                args.sessionId,
+                args.rawText,
+              ),
+        ]);
+      const episodicRecall = episodicMatches.map((m) => m.text);
 
       // 5. Evaluate safeguard (rule engine, no LLM)
       const safeguard = evaluateSafeguard(
@@ -147,8 +177,19 @@ export const generateMirror = internalAction({
             rejectionReason: safeguard.rejectionReason ?? "content_policy_violation",
           },
         });
-        return;
+        return null;
       }
+
+      // Decide the outcome (pure — all routing rules in one place).
+      // Claim strength stays deterministic rule-code: the hot path
+      // never gets agentic.
+      const plan = decideMirrorOutcome({
+        rawMirrorTone: context.preferences?.mirrorTone,
+        isPremium: context.isPremium,
+        classification,
+        safeguard,
+        entryType: session.entryType ?? "open_prompt",
+      });
 
       // 6. Articulate mirror (Sonnet)
       const recentMirrors = collectRecentMirrors(context.recentSessions);
@@ -158,7 +199,7 @@ export const generateMirror = internalAction({
         const articulatorPrompt = buildArticulatorPrompt({
           rawInput: args.rawText,
           classification,
-          patternSummary,
+          patternSummary: articulatorPatternSummary,
           safeguardLevel: safeguard.level,
           mirrorTone,
           isFirstSession: context.isFirstSession,
@@ -168,6 +209,10 @@ export const generateMirror = internalAction({
           freezeOccurred: context.session.freezeOccurred as boolean | undefined,
           sessionMode: session.sessionMode,
           spaceName: context.preferences?.spaceName,
+          semanticProfile: context.semanticProfile,
+          episodicRecall,
+          claimStrength: plan.claimStrength,
+          useAudioTags: context.isPremium,
         });
 
         const mirrorResponse = await anthropic.messages.create({
@@ -179,7 +224,6 @@ export const generateMirror = internalAction({
 
         mirrorText = extractTextFromResponse(mirrorResponse).trim();
 
-        // Fallback if Sonnet returned empty
         if (!mirrorText) {
           mirrorText = FALLBACK_MIRROR;
         }
@@ -188,66 +232,59 @@ export const generateMirror = internalAction({
         mirrorText = FALLBACK_MIRROR;
       }
 
-      // 7. Deliver mirror (include escalation flag atomically so the
-      //    client sees both state and escalationTriggered in one update)
-      const isEscalation =
-        (safeguard.level === "crisis" || safeguard.level === "elevated") &&
-        !!safeguard.triggerType;
+      // Xolace+ audio tags (when applied) live only in the TTS input — the
+      // stored/displayed mirror, recentMirrors, and pattern context all read
+      // the stripped text so a tag never leaks into anything but speech.
+      const isFallback = mirrorText === FALLBACK_MIRROR;
+      const { ttsText, displayText } = applyAudioFence({
+        mirrorText,
+        isFallback,
+        isPremium: context.isPremium,
+      });
+      mirrorText = displayText;
 
-      // Preliminary follow-up flag (the gave_up rule is folded in later, at
-      // session completion — confirmationState isn't known yet here).
-      const requiresFollowUp =
-        isEscalation || classification.requiresFollowUp === true;
-
+      // Deliver mirror (include escalation flag atomically so the
+      // client sees both state and escalationTriggered in one update)
       await ctx.runMutation(internal.sessions.deliverMirror, {
         sessionId: args.sessionId,
         mirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
-        toneUsed: mirrorTone as
-          | "poetic"
-          | "gentle"
-          | "direct"
-          | "adaptive"
-          | "witnessed",
+        toneUsed: plan.tone,
         safeguardLevel: safeguard.level,
-        ...(isEscalation
+        ...(plan.isEscalation
           ? {
               escalationTriggered: true,
               escalationResources: safeguard.resourcesPresented,
             }
           : {}),
-        ...(requiresFollowUp ? { requiresFollowUp: true } : {}),
+        ...(plan.requiresFollowUp ? { requiresFollowUp: true } : {}),
       });
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,
         event: "mirror_delivered",
         properties: {
           entryType: session.entryType ?? "open_prompt",
-          toneUsed: mirrorTone,
+          toneUsed: plan.tone,
+          claimStrength: plan.claimStrength,
           safeguardLevel: safeguard.level,
-          escalationTriggered: isEscalation,
+          escalationTriggered: plan.isEscalation,
           usedFallback: mirrorText === FALLBACK_MIRROR,
           isFirstSession: context.isFirstSession,
           sessionMode: session.sessionMode ?? "day",
         },
       });
 
-      // 7.5. Schedule TTS generation (fire-and-forget, non-blocking)
-      //      Skipped for fallback mirrors — nothing meaningful to speak.
-      if (mirrorText !== FALLBACK_MIRROR) {
-        await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
-          sessionId: args.sessionId,
-          mirrorText,
-          mirrorTone: mirrorTone as
-            | "poetic"
-            | "gentle"
-            | "direct"
-            | "adaptive"
-            | "witnessed",
-        });
-      }
+      // Schedule TTS generation (fire-and-forget, non-blocking)
+      await scheduleMirrorAudio(ctx, {
+        sessionId: args.sessionId,
+        ttsText,
+        isFallback,
+        tone: plan.tone,
+        isPremium: context.isPremium,
+        voice: context.preferences?.voice as string | undefined,
+      });
 
-      // 8. Store emotional metadata
+      // Store emotional metadata
       await ctx.runMutation(internal.emotionalMetadata.store, {
         sessionId: args.sessionId,
         emotionalProfileId: session.emotionalProfileId as ReturnType<
@@ -263,30 +300,23 @@ export const generateMirror = internalAction({
         thematicTags: classification.thematicTags,
         userLanguageTags: classification.userLanguageTags,
         temporalContext: classification.temporalContext,
-        riskFlag:
-          (safeguard.level === "crisis" || safeguard.level === "elevated") &&
-          safeguard.triggerType !== "pattern_escalation",
+        riskFlag: plan.riskFlag,
+        safeguardLevel: safeguard.level,
+        ...(safeguard.triggerType
+          ? { safeguardTrigger: safeguard.triggerType }
+          : {}),
+        episodicMatchKeys: episodicMatches.map((m) => m.key),
+        ...(context.semanticProfileVersion !== null
+          ? { profileVersion: context.semanticProfileVersion }
+          : {}),
         ...(classification.followUpReason
           ? { followUpReason: classification.followUpReason }
           : {}),
       });
 
-      // 8.5. Match exercise from emotional classification.
-      //      Confidence < 0.6 = ambiguous input → safe fallback to "reset".
-      const rankedTitles = matchExercise({
-        primaryEmotion: classification.primaryEmotion,
-        granularLabel: classification.granularLabel,
-        intensity: classification.intensity,
-        userLanguageTags: classification.userLanguageTags,
-        entryType: session.entryType ?? "open_prompt",
-        confirmationState: "confirmed",
-      });
-      const primaryTitle =
-        classification.primaryEmotionConfidence < 0.6
-          ? "reset"
-          : rankedTitles[0];
+      // Look up the exercise the plan matched.
       const matched = await ctx.runQuery(internal.exercises.getByTitle, {
-        title: primaryTitle,
+        title: plan.exerciseTitle,
       });
       if (matched) {
         await ctx.runMutation(internal.exercises.setMatched, {
@@ -294,7 +324,7 @@ export const generateMirror = internalAction({
           matchedExerciseId: matched._id,
         });
 
-        // 8.7: Slot-fill — fire-and-forget so it doesn't block mirror delivery.
+        // Slot-fill — fire-and-forget so it doesn't block mirror delivery.
         const slotKeys = [
           ...new Set(
             matched.steps.flatMap(
@@ -305,7 +335,7 @@ export const generateMirror = internalAction({
         if (slotKeys.length > 0) {
           await ctx.scheduler.runAfter(0, internal.ai.slotFill.fillSlots, {
             sessionId: args.sessionId,
-            exerciseTitle: primaryTitle,
+            exerciseTitle: plan.exerciseTitle,
             slotKeys,
             mirrorText,
             userLanguageTags: classification.userLanguageTags,
@@ -314,11 +344,10 @@ export const generateMirror = internalAction({
         }
       }
 
-      // 9. Schedule speculative distillation (for reflection pool)
-      //    Skip if mirror is the fallback — nothing meaningful to distill.
-      //    Skip entirely for crisis sessions
-      const isCrisis = safeguard.level === "crisis";
-      if (mirrorText !== FALLBACK_MIRROR && !isCrisis) {
+      // Schedule speculative distillation (for reflection pool)
+      // Skip if mirror is the fallback — nothing meaningful to distill.
+      // Skip entirely for crisis sessions
+      if (mirrorText !== FALLBACK_MIRROR && !plan.isCrisis) {
         await ctx.scheduler.runAfter(
           0,
           internal.jobs.reflectionDistiller.distill,
@@ -335,11 +364,19 @@ export const generateMirror = internalAction({
         );
       }
 
-      // 10. Create escalation event if needed
-      if (
-        (safeguard.level === "crisis" || safeguard.level === "elevated") &&
-        safeguard.triggerType
-      ) {
+      // Schedule episodic memory ingestion.
+      // Keyed by sessionId → idempotent replace. Delayed slightly so
+      // the speculative distiller has usually written distilledText
+      // by the time the composite is built. ingestSession itself
+      // handles crisis (metadata-only) and the personal-memory toggle.
+      await ctx.scheduler.runAfter(
+        30_000,
+        internal.episodicMemory.ingestSession,
+        { sessionId: args.sessionId },
+      );
+
+      // Create escalation event if needed
+      if (plan.isEscalation && safeguard.triggerType) {
         await ctx.runMutation(internal.escalation.create, {
           emotionalProfileId: session.emotionalProfileId as ReturnType<
             typeof v.id<"emotional_profiles">
@@ -352,6 +389,7 @@ export const generateMirror = internalAction({
           resourcesPresented: safeguard.resourcesPresented,
         });
       }
+      return null;
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -367,9 +405,43 @@ export const generateMirror = internalAction({
         event: "mirror_generation_failed",
         properties: { errorType: classifyAiError(error) },
       });
+      return null;
     }
   },
 });
+
+/**
+ * One episodic memory that informed a mirror: composite text for the
+ * articulator, RAG key (= sessionId) for Understanding provenance.
+ */
+type EpisodicMatch = { text: string; key: string };
+
+/**
+ * Top-K episodic matches for the current input from the user's personal
+ * namespace. Returns composite texts, newest-format
+ * or metadata-only alike. Best-effort: any failure (no namespace yet,
+ * embedding outage) returns [] so memory can never block the mirror.
+ */
+async function searchEpisodicMemory(
+  ctx: Parameters<typeof rag.search>[0],
+  emotionalProfileId: string,
+  currentSessionId: string,
+  rawText: string,
+): Promise<EpisodicMatch[]> {
+  try {
+    const { entries } = await rag.search(ctx, {
+      namespace: emotionalProfileId,
+      query: rawText,
+      limit: 4,
+    });
+    return entries
+      .filter((e) => e.key !== undefined && e.key !== currentSessionId)
+      .slice(0, 3)
+      .map((e) => ({ text: e.text, key: e.key as string }));
+  } catch {
+    return [];
+  }
+}
 
 function sanitizeAiError(error: Error): string {
   const msg = error.message;

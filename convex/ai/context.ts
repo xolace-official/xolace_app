@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 import { internalQuery } from "../_generated/server";
+import { renderSemanticProfile } from "../semanticProfiles";
+import { hasPremium } from "../lib/premium";
 
 /** Canonical return type of buildSessionContext. */
 export interface SessionContext {
@@ -16,6 +18,7 @@ export interface SessionContext {
     mirrorTone: string;
     reducedMotion: boolean;
     spaceName?: string;
+    voice?: string;
   } | null;
   turns: Record<string, unknown>[];
   recentSessions: {
@@ -36,6 +39,14 @@ export interface SessionContext {
     riskFlag: boolean;
     createdAt: number;
   }[];
+  // Semantic memory (Cognition Layer §1.3): the current AI-written
+  // narrative profile, rendered whole — it is never vector-searched.
+  // Null until the Reflection Agent writes the first version.
+  semanticProfile: string | null;
+  semanticProfileVersion: number | null;
+  // Xolace+ entitlement — the real fence for tone-gated behavior (mirrorTone
+  // preference alone isn't trustworthy after a downgrade).
+  isPremium: boolean;
 }
 
 /**
@@ -81,6 +92,13 @@ export const buildSessionContext = internalQuery({
       .order("desc")
       .take(10);
 
+    // Load the current semantic profile version (read whole — the
+    // profile carries the longitudinal weight; recent rows below stay
+    // as a recency signal).
+    const semanticProfileDoc = profile.currentSemanticProfileId
+      ? await ctx.db.get(profile.currentSemanticProfileId)
+      : null;
+
     // Load recent emotional metadata (ordered by _creationTime desc)
     // Using by_profile_theme index [emotionalProfileId] so .order("desc")
     // sorts by _creationTime, not by primaryEmotion.
@@ -107,6 +125,7 @@ export const buildSessionContext = internalQuery({
             mirrorTone: preferences.mirrorTone,
             reducedMotion: preferences.reducedMotion,
             spaceName: preferences.spaceName,
+            voice: preferences.voice,
           }
         : null,
       turns,
@@ -131,6 +150,11 @@ export const buildSessionContext = internalQuery({
         riskFlag: m.riskFlag,
         createdAt: m.createdAt,
       })),
+      semanticProfile: semanticProfileDoc
+        ? renderSemanticProfile(semanticProfileDoc)
+        : null,
+      semanticProfileVersion: semanticProfileDoc?.version ?? null,
+      isPremium: await hasPremium(ctx, profile),
     };
   },
 });

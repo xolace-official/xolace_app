@@ -64,15 +64,14 @@ export const AuthScreen = () => {
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
 
-        const userId = await getOrCreate({
+        await getOrCreate({
           authProvider: 'apple',
           authProviderAccountId: signUp?.createdUserId ?? 'apple-user',
         });
 
-        posthog.identify(userId, {
-          $set: { auth_provider: 'apple' },
-          $set_once: { first_sign_in_date: new Date().toISOString() },
-        });
+        // Identify happens on app open against the emotional profile id
+        // (usePostHogIdentity), not here — this event lands on the anonymous
+        // id and is merged by that identify call.
         posthog.capture('user_signed_in', {
           auth_provider: 'apple',
           is_new_user: !!signUp?.createdUserId,
@@ -131,15 +130,12 @@ export const AuthScreen = () => {
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
 
-        const userId = await getOrCreate({
+        await getOrCreate({
           authProvider: 'google',
           authProviderAccountId: signUp?.createdUserId ?? 'google-user',
         });
 
-        posthog.identify(userId, {
-          $set: { auth_provider: 'google' },
-          $set_once: { first_sign_in_date: new Date().toISOString() },
-        });
+        // See the Apple branch: identify runs on app open, not here.
         posthog.capture('user_signed_in', {
           auth_provider: 'google',
           is_new_user: !!signUp?.createdUserId,

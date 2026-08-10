@@ -1,14 +1,59 @@
 import { v } from "convex/values";
-import { internalAction } from "../_generated/server";
+import { internalAction, type ActionCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
+import {
+  TONE_DEFAULT_VOICE,
+  resolveVoiceId,
+  voiceSlugValidator,
+  type VoiceSlug,
+} from "../lib/voices";
+import type { MirrorTone } from "./mirrorPlan";
 
-const VOICE_MAP: Record<string, string> = {
-  gentle: "BpjGufoPiobT79j2vtj4", // Priyanka — calm, soothing, late-night warmth
-  poetic: "Z3R5wn05IrDiVCyEkUrK", // Arabella — mysterious, emotive
-  direct: "EkK5I93UQWFDigLMpZcX", // James — modulated, controlled, direct
-  adaptive: "c6SfcYrb2t09NHXiT80T", // Jarnathan — versatile, wide emotional range
-  witnessed: "NOpBlnGInO9m6vDvFkFC", // Spuds Oxley — wise, approachable
-};
+/**
+ * Owns the mirror-audio TTS lifecycle for both the initial mirror (process.ts)
+ * and refinement turns (clarify.ts). Applies the generation-time premium voice
+ * fence once (the mutation gate alone wouldn't cover a subscription that lapsed
+ * after the voice was chosen), skips the fallback mirror (nothing to speak),
+ * and — for clarify — deletes the stale audio before scheduling the fresh one.
+ */
+export async function scheduleMirrorAudio(
+  ctx: ActionCtx,
+  args: {
+    sessionId: Id<"sessions">;
+    ttsText: string;
+    isFallback: boolean;
+    tone: MirrorTone;
+    isPremium: boolean;
+    voice: string | undefined;
+    /** clarify: replace the prior turn's audio before generating anew. */
+    replaceExisting?: boolean;
+  },
+): Promise<void> {
+  if (args.replaceExisting) {
+    const oldStorageId = await ctx.runQuery(
+      internal.sessions.getMirrorAudioStorageId,
+      { sessionId: args.sessionId },
+    );
+    if (oldStorageId) {
+      await ctx.storage.delete(oldStorageId);
+      await ctx.runMutation(internal.sessions.clearMirrorAudio, {
+        sessionId: args.sessionId,
+      });
+    }
+  }
+
+  if (args.isFallback) return;
+
+  await ctx.scheduler.runAfter(0, internal.ai.tts.generateMirrorAudio, {
+    sessionId: args.sessionId,
+    mirrorText: args.ttsText,
+    mirrorTone: args.tone,
+    voiceSlug: args.isPremium
+      ? (args.voice as VoiceSlug | undefined)
+      : undefined,
+  });
+}
 
 /**
  * Generates ElevenLabs TTS for a mirror text and stores the audio in Convex
@@ -26,7 +71,12 @@ export const generateMirrorAudio = internalAction({
       v.literal("adaptive"),
       v.literal("witnessed"),
     ),
+    // Plus custom-voice override. Resolved to an ElevenLabs id below; when
+    // absent, falls back to the tone-mapped voice. Premium is re-checked at
+    // the scheduling call site, not here.
+    voiceSlug: v.optional(voiceSlugValidator),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     // Idempotency: bail if audio was already generated (e.g. duplicate schedule)
     const existingStorageId = await ctx.runQuery(
@@ -41,7 +91,12 @@ export const generateMirrorAudio = internalAction({
       return;
     }
 
-    const voiceId = VOICE_MAP[args.mirrorTone] ?? VOICE_MAP.adaptive;
+    const voiceId = resolveVoiceId(
+      args.voiceSlug,
+      TONE_DEFAULT_VOICE[args.mirrorTone] ?? TONE_DEFAULT_VOICE.adaptive,
+    );
+    console.log("[tts] voice:", args.voiceSlug ?? `tone:${args.mirrorTone}`, "->", voiceId);
+    console.log("mirror ", args.mirrorText)
 
     let audioBuffer: ArrayBuffer;
     const controller = new AbortController();

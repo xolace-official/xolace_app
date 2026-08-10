@@ -3,6 +3,8 @@
  */
 
 import type { ClassificationResult } from "../providers/anthropic";
+import type { ClaimStrength } from "../routing";
+import { AUDIO_TAG_INSTRUCTIONS } from "./mirrorAudioTags";
 
 interface ArticulatorInput {
   rawInput: string;
@@ -10,6 +12,9 @@ interface ArticulatorInput {
   patternSummary: string;
   safeguardLevel: "none" | "gentle" | "elevated" | "crisis";
   mirrorTone: string;
+  // Uncertainty routing (Phase 4, Loop #2): deterministic claim-strength gate
+  // derived from confidence × specificity. Omitted → "measured" (normal path).
+  claimStrength?: ClaimStrength;
   isFirstSession: boolean;
   recentMirrors: string[];
   entryType?: string;
@@ -23,6 +28,15 @@ interface ArticulatorInput {
   sessionMode?: "day" | "night";
   // User's named space (if set): personalizes identity responses
   spaceName?: string;
+  // Cognition Layer memory (Phase 1):
+  // The AI-written narrative of who this person is emotionally.
+  semanticProfile?: string | null;
+  // Top-K episodic matches for the current input — past composites
+  // (their words + the mirror) semantically close to what they wrote now.
+  episodicRecall?: string[];
+  // Xolace+ perk: bake ElevenLabs audio tags into the mirror for a more
+  // expressive read. Gated on isPremium only — applies across all tones.
+  useAudioTags?: boolean;
 }
 
 /**
@@ -60,9 +74,14 @@ export function buildArticulatorPrompt(
     additionalInput,
     sessionMode,
     spaceName,
+    semanticProfile,
+    episodicRecall,
+    claimStrength,
+    useAudioTags,
   } = input;
 
   const toneInstructions = getToneInstructions(mirrorTone);
+  const claimStrengthInstructions = getClaimStrengthInstructions(claimStrength);
   const safeguardInstructions = getSafeguardInstructions(safeguardLevel);
   const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
   const entryTypeInstructions = getEntryTypeInstructions(entryType);
@@ -95,7 +114,7 @@ In some rare cases you can give acknowledgement as part of the mirror but only i
 ${toneInstructions}
 
 ## Intensity × Specificity
-${getIntensitySpecificityGuidance(classification.intensity, classification.specificity)}
+${getIntensitySpecificityGuidance(classification.intensity, classification.specificity)}${claimStrengthInstructions}
 ${entryTypeInstructions}
 ## Classification Context
 Primary: ${classification.primaryEmotion} (${classification.primaryEmotionConfidence.toFixed(2)})${classification.granularLabel ? ` → ${classification.granularLabel}` : ""}${classification.secondaryEmotion ? `\nUnderneath: ${classification.secondaryEmotion}` : ""}
@@ -106,11 +125,45 @@ ${safeguardInstructions}${behaviorNotes}${isFirstSession ? "\nFirst session. Be 
 ${sessionMode === "night" ? getLateNightAddendum() : ""}
 ## Pattern Context (this is the emotional terrain they tend to carry, let it actively shape what you notice and how precisely you name it; never reference past sessions explicitly)
 ${patternSummary}
-${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}`;
+${buildMemoryContext(semanticProfile, episodicRecall)}
+${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}${useAudioTags ? `\n${AUDIO_TAG_INSTRUCTIONS}` : ""}`;
 
   const user = rawInput;
 
   return { system, user };
+}
+
+/**
+ * Builds the memory context block: the semantic profile (who this person
+ * is emotionally) and episodic recall (past moments similar to this one).
+ *
+ * Recall rules are deliberately asymmetric with Pattern Context: episodic
+ * memory MAY surface continuity ("this specific thing is back"), including
+ * the user's own past words verbatim — that specificity is the whole point.
+ * The profile stays invisible scaffolding.
+ */
+function buildMemoryContext(
+  semanticProfile?: string | null,
+  episodicRecall?: string[]
+): string {
+  const parts: string[] = [];
+
+  if (semanticProfile) {
+    parts.push(`## What You Know About This Person (an internal working understanding built over time; let it sharpen your read; never quote it, never mention that a profile exists)
+${semanticProfile}`);
+  }
+
+  if (episodicRecall && episodicRecall.length > 0) {
+    parts.push(`## Past Moments Like This One (their own earlier words and mirrors, retrieved because they resemble tonight's input)
+${episodicRecall.map((m, i) => `-- moment ${i + 1} -- \n${m}`).join("\n")}
+Use these for continuity: if the same situation or feeling has clearly returned, you may acknowledge that quietly, and you may reuse the user's own exact words from a past moment when they name it better than anything else could.
+- Never recall something not present in these moments, and never guess at details beyond them
+- Never recite history back ("last time you said...", dates, session counts)
+- Never force a connection; if tonight is unrelated, ignore these entirely
+- Never reuse YOUR own past mirror phrasing — only THEIR words are quotable`);
+  }
+
+  return parts.length > 0 ? `\n${parts.join("\n\n")}\n` : "";
 }
 
 /**
@@ -203,6 +256,33 @@ function getIntensitySpecificityGuidance(intensity: number, specificity: number)
     return "Low intensity, high specificity: observational and reflective. Match their measured tone.";
   }
   return "Low intensity, low specificity: light and curious. Something is there but hasn't announced itself yet.";
+}
+
+/**
+ * Uncertainty routing (Phase 4, Loop #2): shape the mirror's CLAIM STRENGTH
+ * from how sure the classifier was about tonight's read. Distinct axis from
+ * Intensity × Specificity (which governs depth): this governs certainty. Only
+ * the confident/tentative poles emit guidance; "measured" is the normal path
+ * and says nothing so the base rules stand.
+ *
+ * Composes with the profile's longitudinal "what lands" calibration: that is
+ * the prior about this person, this is the evidence about this moment.
+ */
+function getClaimStrengthInstructions(claimStrength?: ClaimStrength): string {
+  switch (claimStrength) {
+    case "tentative":
+      return `
+## Claim Strength: Tentative
+The read on this one is genuinely uncertain (the signal is faint and unformed). Offer the mirror as a naming that leaves room to be wrong, not an assertion. Reach toward the feeling rather than pinning it, and make it easy for them to say "not quite" and correct you. Do not hedge into vagueness; be specific, just held loosely.
+`;
+    case "confident":
+      return `
+## Claim Strength: Confident
+The read here is clear and well-formed. Trust it. Name the feeling precisely and directly, no hedging, no softening qualifiers. This is where a sharp, sure mirror lands hardest.
+`;
+    default:
+      return "";
+  }
 }
 
 /**

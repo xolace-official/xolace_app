@@ -7,6 +7,9 @@ type Props = {
   theme: ThemeEntry;
   isActive: boolean;
   onPress: () => void;
+  /** Overrides the default lock (premium + no CSS yet), e.g. premium && !isPlus. */
+  isLocked?: boolean;
+  width?: number;
 };
 
 const EASE_EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -22,9 +25,16 @@ const EASE_TRANSITION = { type: 'timing' as const, duration: 200, easing: EASE_E
  * Active: accent ring + "Active" micro-label.
  * Premium/unavailable: lock glyph overlay; tap is handled by parent.
  */
-export const ThemePreviewCard = ({ theme, isActive, onPress }: Props) => {
+export const ThemePreviewCard = ({
+  theme,
+  isActive,
+  onPress,
+  isLocked: lockedOverride,
+  width = 130,
+}: Props) => {
   const { preview } = theme;
-  const isLocked = theme.tier === 'premium' && theme.available === false;
+  const isLocked =
+    lockedOverride ?? (theme.tier === 'premium' && theme.available === false);
 
   const outerRingStyle = {
     borderRadius: 16,
@@ -92,7 +102,7 @@ export const ThemePreviewCard = ({ theme, isActive, onPress }: Props) => {
   return (
     <Pressable
       onPress={onPress}
-      style={styles.card}
+      style={[styles.card, { width }]}
       accessibilityRole="button"
       accessibilityLabel={`${theme.name} theme${isActive ? ', active' : ''}`}
     >
@@ -152,7 +162,7 @@ export const ThemePreviewCard = ({ theme, isActive, onPress }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  card: { width: 130 },
+  card: {},
   labelRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 4 },
   lockIcon: { fontSize: 18 },
 });

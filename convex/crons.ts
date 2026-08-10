@@ -54,6 +54,24 @@ crons.interval(
   {}
 );
 
+// Xolacer conversation lifecycle: open-but-quiet → resting (14d),
+// requested-but-unanswered → expired (7d). Silent by design — no notification.
+crons.interval(
+  "sweep xolacer conversations",
+  isProd ? { hours: 24 } : { hours: 72 },
+  internal.xolacerChat.sweep,
+  {}
+);
+
+// Weekly reflectionRank drift audit (Mon 04:00 UTC) — detection only, logs on
+// mismatch. See convex/jobs/rankAudit.ts for the repair path.
+crons.cron(
+  "audit reflection rank aggregate",
+  "0 4 * * 1",
+  internal.jobs.rankAudit.audit,
+  {}
+);
+
 // Nightly daily quotes generation (midnight UTC)
 crons.cron(
   "nightly daily quotes",

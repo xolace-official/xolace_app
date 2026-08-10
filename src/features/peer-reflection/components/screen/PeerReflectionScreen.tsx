@@ -29,8 +29,12 @@ export const PeerReflectionScreen = () => {
   const { toast } = useToast();
   const startedRef = useRef(false);
 
-  const { sessionId, session, isLoading, startPath } = usePathSession();
+  const { sessionId, session, isLoading, startPath, completePath } =
+    usePathSession();
   const posthog = usePostHog();
+  // Once we complete + navigate to session-end, getActive goes null. Claim the
+  // finish so the "no active session" guard below doesn't race us home.
+  const finishingRef = useRef(false);
 
   useEffect(() => {
     Presets.murmur();
@@ -50,9 +54,10 @@ export const PeerReflectionScreen = () => {
     }
   }, [sessionId, session, startPath]);
 
-  // Guard: no active session (e.g. completed or abandoned externally)
+  // Guard: no active session (e.g. completed or abandoned externally). Skipped
+  // once we're deliberately finishing — that null is our own completion.
   useEffect(() => {
-    if (!isLoading && !sessionId) {
+    if (!isLoading && !sessionId && !finishingRef.current) {
       router.replace('/');
     }
   }, [isLoading, sessionId, router]);
@@ -133,8 +138,16 @@ export const PeerReflectionScreen = () => {
     }
   };
 
-  const handleDone = () => {
-    router.replace('/session-end?path=peers');
+  const handleDone = async () => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    // Complete before navigating so the session is durably terminal even if the
+    // user closes the app on session-end. Carry the id — getActive is now null.
+    const id = sessionId;
+    await completePath(true);
+    router.replace(
+      id ? `/session-end?path=peers&sessionId=${id}` : '/session-end?path=peers',
+    );
   };
 
   const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };

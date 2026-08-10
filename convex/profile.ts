@@ -1,15 +1,11 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import { hasPremium } from "./lib/premium";
 import { insightFeatureValidator } from "./lib/validators";
 import { generateDisplayName } from "./lib/displayName";
 import { displayStreak } from "./lib/streak";
-
-// Premium stub — swap for hasEntitlement() when RevenueCat is wired in Wave 2.
-// Gate server-side so client never receives locked data, only null + premiumRequired.
-function hasPremium(): boolean {
-  return false;
-}
+import { reflectionRank } from "./lib/aggregates";
 
 // Deterministic fallback name for users created before displayName existed.
 // Consistent per-profile so the same user always sees the same name.
@@ -40,10 +36,12 @@ export const getSummary = query({
 
     // Frequency-ranked language for the P5 words teaser. Read from the
     // denormalized profile field (recomputed in profileStats after each
-    // session) — no scan on this hot, reactive query. Counts stay
-    // server-side while the feature is premium-gated; only the ranked
-    // display words cross the wire. Top 4 for the teaser rows.
-    const recentWords = (profile.frequentWords ?? []).slice(0, 4).map((w) => w.word);
+    // session) — no scan on this hot, reactive query. Both the word and its
+    // real count are premium-gated together: whichever rows are unlocked for
+    // this tier ship their true count, everything else stays server-side.
+    const premium = await hasPremium(ctx, profile);
+    const allWords = profile.frequentWords ?? [];
+    const recentWords = premium ? allWords.slice(0, 4) : allWords.slice(0, 1);
 
     return {
       displayName: prefs?.displayName ?? seededDisplayName(profile._id),
@@ -60,6 +58,10 @@ export const getSummary = query({
       dominantEmotionTags: profile.dominantEmotionTags,
       typicalUsagePattern: profile.typicalUsagePattern ?? null,
       recentWords,
+      // Genuine recurring-word count, independent of tier truncation — lets
+      // the client decide teaser vs. empty state without seeing locked words.
+      wordCount: allWords.length,
+      premiumRequired: !premium,
     };
   },
 });
@@ -99,33 +101,137 @@ export const getMoodDelta = query({
   },
 });
 
+// Own sessions needed before the card appears. Matches the existing "rhythm"
+// gate on the profile screen — below this, a rank says more about being new
+// than about how you reflect.
+const RANK_MIN_SESSIONS = 5;
+
+// Reflectors needed before a percentile means anything. Under this, the number
+// is noise dressed up as an insight, so the card withholds it.
+//
+// Overridable per-deployment because dev will never hold 50 real reflectors —
+// without this, the card is permanently stuck in `warming` there and its ranked
+// state is untestable. Set `RANK_MIN_POPULATION=2` on dev; leave it unset in
+// prod so the honest floor applies.
+// A malformed value must fall back to 50, not disable the floor: Number("abc")
+// is NaN, and `population < NaN` is always false — the warming gate would
+// silently vanish and tiny-population percentiles would ship as ranked.
+const RANK_MIN_POPULATION = (() => {
+  const parsed = Number(process.env.RANK_MIN_POPULATION);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
+})();
+
 /**
- * Current-week intensity data for the P2 chart teaser (Mon–Sun).
- * Returns per-day averages and which day peaked.
- * Earlier-week depth is gated premium — returns null + premiumRequired flag.
+ * Percentile rank by session count, for the "among the fires" profile card.
+ *
+ * The population is everyone with at least one completed session — NOT every
+ * signup. Including zero-session accounts would put a large block of people
+ * below every active user, inflating everyone's percentile, and would make the
+ * number track signup-abandonment (a marketing artifact) rather than the user's
+ * own reflecting. The client copy says "people who reflect here" to match this
+ * denominator exactly.
+ *
+ * Ties are excluded from the numerator, so "more than N%" means N% have
+ * strictly fewer moments than you. Kept out of `getSummary` on purpose: this
+ * query is invalidated whenever any user anywhere completes a session, and the
+ * profile summary must not inherit that global churn.
  */
-export const getWeekIntensity = query({
+export const getReflectionRank = query({
   args: {},
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
+    const mine = profile.sessionCount;
+
+    // Withheld, not hidden: the card still renders and says what it's waiting
+    // for. Returning the *reason* lets the copy be specific ("3 more moments")
+    // instead of vague — a promise the user can actually act on.
+    if (mine < RANK_MIN_SESSIONS) {
+      return {
+        status: "pending" as const,
+        sessionCount: mine,
+        threshold: RANK_MIN_SESSIONS,
+        remaining: RANK_MIN_SESSIONS - mine,
+      };
+    }
+
+    const reflectors = { lower: { key: 1, inclusive: true } } as const;
+    const population = await reflectionRank.count(ctx, { bounds: reflectors });
+
+    // The user has done their part; the sample hasn't. Distinct from "pending"
+    // so we never tell someone to reflect more when that isn't what's missing.
+    if (population < RANK_MIN_POPULATION) {
+      return { status: "warming" as const, sessionCount: mine };
+    }
+
+    const below = await reflectionRank.count(ctx, {
+      bounds: {
+        lower: { key: 1, inclusive: true },
+        upper: { key: mine, inclusive: false },
+      },
+    });
+
+    // The cap is a defensive no-op: you are in the population but never in
+    // your own `below` bucket, so this can't reach 100 on its own.
+    const percentile = Math.min(Math.floor((below / population) * 100), 99);
+
+    return { status: "ranked" as const, percentile, sessionCount: mine };
+  },
+});
+
+// How far back a Plus user can page. Matches the longest data-retention
+// tier ("1_year") — beyond this, earlier sessions are already purged.
+const MAX_WEEKS_BACK = 52;
+const MONTH_LABELS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+function formatWeekLabel(weekStart: Date, weekEnd: Date): string {
+  const lastDay = new Date(weekEnd.getTime() - 86_400_000);
+  const sameMonth = weekStart.getMonth() === lastDay.getMonth();
+  const start = `${MONTH_LABELS[weekStart.getMonth()]} ${weekStart.getDate()}`;
+  const end = sameMonth
+    ? `${lastDay.getDate()}`
+    : `${MONTH_LABELS[lastDay.getMonth()]} ${lastDay.getDate()}`;
+  return `${start}–${end}`;
+}
+
+/**
+ * Intensity data for the P2 chart teaser (Mon–Sun), current week by default.
+ * Free tier can only ever request the current week (weekOffset forced to 0
+ * server-side); Plus can page up to MAX_WEEKS_BACK weeks into history.
+ */
+export const getWeekIntensity = query({
+  args: { weekOffset: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+    const premium = await hasPremium(ctx, profile);
+
+    // v.number() is a Float64: NaN and ±Infinity pass validation and would
+    // otherwise propagate into Invalid Date and NaN index bounds below.
+    const rawOffset = args.weekOffset ?? 0;
+    const requestedOffset = Number.isFinite(rawOffset) ? Math.trunc(rawOffset) : 0;
+    const weekOffset = premium
+      ? Math.max(-MAX_WEEKS_BACK, Math.min(0, requestedOffset))
+      : 0;
+
     const now = Date.now();
     // Shift so Mon=0, Sun=6
     const dayOfWeek = (new Date(now).getDay() + 6) % 7;
-    const weekStart = new Date(now - dayOfWeek * 86_400_000);
-    weekStart.setHours(0, 0, 0, 0);
+    const currentWeekStart = new Date(now - dayOfWeek * 86_400_000);
+    currentWeekStart.setHours(0, 0, 0, 0);
+    const weekStart = new Date(currentWeekStart.getTime() + weekOffset * 7 * 86_400_000);
     const weekEnd = new Date(weekStart.getTime() + 7 * 86_400_000);
 
-    // Bounded scan: take up to 50, filter to current week in JS.
-    const allMeta = await ctx.db
+    const metadata = await ctx.db
       .query("emotional_metadata")
-      .withIndex("by_profile_theme", (q) => q.eq("emotionalProfileId", profile._id))
-      .order("desc")
-      .take(50);
-
-    const metadata = allMeta.filter(
-      (m) => m.createdAt >= weekStart.getTime() && m.createdAt < weekEnd.getTime(),
-    );
+      .withIndex("by_profile_createdAt", (q) =>
+        q
+          .eq("emotionalProfileId", profile._id)
+          .gte("createdAt", weekStart.getTime())
+          .lt("createdAt", weekEnd.getTime()),
+      )
+      .take(300);
 
     const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
     const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -136,7 +242,7 @@ export const getWeekIntensity = query({
       buckets[idx].push(m.intensity);
     }
 
-    const todayIdx = (new Date(now).getDay() + 6) % 7;
+    const todayIdx = weekOffset === 0 ? (new Date(now).getDay() + 6) % 7 : -1;
 
     const days = DAY_LABELS.map((label, i) => {
       const vals = buckets[i];
@@ -154,7 +260,10 @@ export const getWeekIntensity = query({
       days,
       peakDay: peakIdx !== null ? days[peakIdx].dayName : null,
       hasData: days.some((d) => d.intensity !== null),
-      premiumRequired: !hasPremium(),
+      premiumRequired: !premium,
+      weekOffset,
+      weekLabel: weekOffset === 0 ? "This week" : formatWeekLabel(weekStart, weekEnd),
+      isEarliestWeek: weekOffset <= -MAX_WEEKS_BACK,
     };
   },
 });

@@ -24,6 +24,14 @@
 /* Night mode palette — activated automatically by SessionModeProvider */
 @import "./themes/nightly.css";
 
+/* xolace+ premium themes — gated behind an active Plus entitlement.
+ * See src/lib/themes.ts (tier: 'premium') and use-appearance-settings.ts. */
+@import "./themes/xolace-plus/emerald.css";
+@import "./themes/xolace-plus/rose.css";
+@import "./themes/xolace-plus/platinum.css";
+@import "./themes/xolace-plus/velvet.css";
+@import "./themes/xolace-plus/noir.css";
+
 @source '../node_modules/heroui-native/lib';
 
 /* @theme {

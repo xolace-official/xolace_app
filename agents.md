@@ -137,12 +137,72 @@ The command file is located at `command/convex.md`.
 4. **Use internal functions** for sensitive operations
 5. **Batch operations** for large datasets
 
+### Client-Side Reactive Reads (React)
+
+Convex `useQuery` / `usePaginatedQuery` are reactive: when their **arguments
+change**, they briefly return `undefined` (or reset a paginated list to
+`status: "LoadingFirstPage"` + `page: []`) until the new data loads. Any
+`{data && <X/>}` guard then **unmounts** the subtree during that window,
+blanking the UI mid-interaction and replaying mount/entrance animations. This is
+the "overreacting" problem: https://stack.convex.dev/help-my-app-is-overreacting
+
+- **Args change from user interaction** (paging, filtering, sorting, tab/segment
+  switches): use `useStableQuery` / `useStablePaginatedQuery` from
+  `@/src/lib/convex/use-stable-query`. They hold the previously loaded result
+  during the reload so the UI swaps **in place** (only the data props change).
+  - Example: `src/features/profile/hooks/use-week-intensity.ts` — the profile
+    week pager changes a `weekOffset` arg on each chevron tap.
+- **Args are stable** (fixed-arg reads, plain infinite-scroll lists): keep raw
+  `useQuery` / `usePaginatedQuery`. Here the `undefined` / first-page-loading
+  state is a genuine cold start — render a skeleton/loading state for it.
+
 ## DO NOT
 
 - Run `npx convex deploy` without explicit instruction
 - Run any git commands without explicit instruction
 - Edit files in `convex/_generated/`
 - Use `filter()` instead of `withIndex()`
+
+## Good to know
+
+Schema must always match existing data. Convex enforces this constraint. You cannot push a schema to a deployment with existing data that doesn't match it, unless you turn off schema enforcement. In general it safe to:
+Add new tables to the schema.
+Add an optional field to an existing table's schema, set the field on all documents in the table, and then make the field required.
+Mark an existing field as optional, remove the field from all documents, and then remove the field.
+Mark an existing field as a union of the existing type and a new type, modify the field on all documents to match the new type, and then change the type to the new type.
+Functions should be backwards compatible. Even if your only client is a website, and you deploy it together with your backend, your users might still be running the old version of your website when your backend changes. Therefore you should make your functions backwards compatible until you are OK to break old clients. In general it is safe to:
+Add new functions.
+Add an optional named argument to an existing function.
+Mark an existing named argument as optional.
+Mark an existing named argument as a union of the existing type and a new type.
+Change the behavior of the function in such a way that given the arguments from an old client its behavior will still be acceptable to the old client.
+Scheduled functions should be backwards compatible. When you schedule a function to run in the future, you provide the argument values it will receive. Whenever a function runs, it always runs its currently deployed version. If you change the function between the time it was scheduled and the time it runs, you must ensure the new version will behave acceptably given the old arguments.
+
+## Xolace Constitution Rule (Cognition Layer)
+
+**No feature may call an LLM to re-derive something the Understanding already
+knows.** A session's Understanding (classification + safeguard verdict +
+episodic memories in context + semantic profile version) lives in
+`emotional_metadata`; read it only via `internal.understanding.getUnderstanding`.
+All AI features take Understanding + Memory as input; new model calls are
+justified only for genuinely new signal (new modality or new artifact type),
+and all model calls live under `convex/ai/`. See
+`docs/cognition-layer-architecture.md`.
+
+## Deferred Deprecations (Store-Gap Rule)
+
+Backend deploys before app store review clears, so a new backend runs against
+the old shipped UI for days. Never delete a server function, field, or arg the
+minimum-supported UI may still call. Instead mark, don't delete:
+
+- Add JSDoc `@deprecated` + a marker comment:
+  `// DEPRECATED(remove-after: app >= X.Y.Z): <reason + what replaces it>`
+- Add a line to the Pending Deprecations ledger below.
+- Delete only once the store-published minimum supported version no longer
+  references it.
+
+**Pending Deprecations**
+- `preferences.reducedMotion` (schema field + `update` arg) — superseded by tri-state `motionPreference`. Server keeps the boolean in sync as a back-compat mirror. Remove once no store-published client reads `reducedMotion`.
 
 ## Quick Reference
 

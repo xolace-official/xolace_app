@@ -19,7 +19,7 @@ import { PressableFeedback } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useAppStore } from '@/src/store/store';
-import { MAX_VENT_DURATION_MS, useVentFlow } from '../../hooks/use-vent-flow';
+import { useVentFlow } from '@/src/features/vent/hooks/use-vent-flow';
 import { useVentSounds } from '../../hooks/use-vent-sounds';
 import { ParticleField, type ParticleStage } from '../particles/particle-field';
 import { VentAcknowledgement } from '../vent-acknowledgement';
@@ -60,6 +60,7 @@ export function VentScreen() {
     onGoneComplete,
     metering,
     durationMs,
+    maxDurationMs,
   } = useVentFlow();
 
   useVentSounds(state);
@@ -87,10 +88,10 @@ export function VentScreen() {
   // Soft ceiling: auto-release at the max duration. No visible timer —
   // the field simply stops expanding at max radius (handled by the engine).
   useEffect(() => {
-    if (state === 'recording' && durationMs >= MAX_VENT_DURATION_MS) {
+    if (state === 'recording' && durationMs >= maxDurationMs) {
       stopVent();
     }
-  }, [state, durationMs, stopVent]);
+  }, [state, durationMs, maxDurationMs, stopVent]);
 
   const labelStyle = useAnimatedStyle(() => ({ opacity: labelOpacity.get() }));
 

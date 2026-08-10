@@ -10,6 +10,7 @@ import { usePostHog } from "posthog-react-native";
 import { ExerciseRunner } from "./runner/exercise-runner";
 import { SwapSheet } from "./swap-sheet";
 import { AppText } from "@/src/components/shared/app-text";
+import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 import type { ExerciseData } from "./runner/exercise-runner.types";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -28,7 +29,7 @@ export function SitWithThisScreen() {
     { paddingTop: insets.top, paddingBottom: insets.bottom },
   ];
 
-  const { sessionId, session, startPath } = usePathSession();
+  const { sessionId, session, startPath, completePath } = usePathSession();
   const posthog = usePostHog();
   const exerciseResult = useQuery(
     api.exercises.getForSession,
@@ -39,6 +40,7 @@ export function SitWithThisScreen() {
     sessionId ? { sessionId } : "skip",
   );
   const preferences = useQuery(api.preferences.get);
+  const reducedMotion = useEffectiveReducedMotion();
   const recordSwapMutation = useMutation(api.exercises.recordSwap);
 
   useEffect(() => {
@@ -54,17 +56,25 @@ export function SitWithThisScreen() {
     }
   }, [sessionId, session, startPath]);
 
-  // Don't complete the session here — that would flip it to a terminal state and
-  // strand session-end (its "no active session" guard bounces home, and it loses
-  // the distilled/mirror text it reads from the active session). Like the peer
-  // and exit paths, we just navigate and let session-end complete on dismiss,
-  // carrying whether the exercise was finished.
+  // Complete the session the moment the exercise ends — before navigating — so
+  // it's durably terminal even if the user closes the app on session-end.
+  // session-end fetches the session by id (not getActive), so it renders fine
+  // on a completed session and only records optional post-session feedback.
+  const goToSessionEnd = async (pathCompleted: boolean) => {
+    await completePath(pathCompleted);
+    router.replace(
+      sessionId
+        ? `/session-end?path=solo&sessionId=${sessionId}`
+        : "/session-end?path=solo",
+    );
+  };
+
   const handleComplete = async () => {
-    router.replace("/session-end?path=solo&completed=true");
+    await goToSessionEnd(true);
   };
 
   const handleExitEarly = async () => {
-    router.replace("/session-end?path=solo&completed=false");
+    await goToSessionEnd(false);
   };
 
   const handleSwap = async (newExerciseId: Id<"exercises">) => {
@@ -149,7 +159,7 @@ export function SitWithThisScreen() {
       <ExerciseRunner
         key={exerciseData?.exercise._id}
         exercise={exerciseData!}
-        reducedMotion={preferences.reducedMotion}
+        reducedMotion={reducedMotion}
         showPreRoll={!hasSwapped}
         onComplete={handleComplete}
         onExitEarly={handleExitEarly}

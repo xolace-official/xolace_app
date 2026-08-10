@@ -7,6 +7,7 @@ import { playPathChoice } from '@/src/lib/haptics';
 
 type Props = {
   mirror: string;
+  sessionId: string | null;
   onSelectSolo: () => Promise<void>;
   onSelectPeers: () => Promise<void>;
   onSelectExit: () => Promise<void>;
@@ -22,6 +23,7 @@ const SCROLL_STYLE = { flexGrow: 0, maxHeight: '40%' as const };
 
 export const PathSelectionState = ({
   mirror,
+  sessionId,
   onSelectSolo,
   onSelectPeers,
   onSelectExit,
@@ -81,7 +83,13 @@ export const PathSelectionState = ({
       return;
     }
     try {
-      router.replace('/session-end?path=exit');
+      // onSelectExit already completed the session, so getActive is now null.
+      // Carry the id so session-end can fetch it by id instead of getActive.
+      router.replace(
+        sessionId
+          ? `/session-end?path=exit&sessionId=${sessionId}`
+          : '/session-end?path=exit',
+      );
     } catch {
       // non-fatal nav error
     } finally {

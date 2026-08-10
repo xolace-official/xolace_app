@@ -10,16 +10,13 @@
  * suite asserts overall accuracy >= 0.8 across the labeled set plus exact
  * correctness on the unambiguous anchors.
  */
-import { describe, expect, it } from "bun:test";
 import { getAnthropicClient, parseClassificationResponse, CLASSIFIER_MODEL } from "../../providers/anthropic";
 import { buildClassifierPrompt } from "../classifier";
+import { runLabeledEval, type LabeledCase } from "./harness.eval";
 
-type Case = {
+type Case = LabeledCase<boolean> & {
   input: string;
   entryType?: string;
-  expected: boolean;
-  anchor?: boolean; // unambiguous — must be exactly right
-  note: string;
 };
 
 const CASES: Case[] = [
@@ -44,8 +41,6 @@ const CASES: Case[] = [
   { input: "I was frustrated earlier but I talked it through with a friend and we're good now.", expected: false, note: "resolved" },
 ];
 
-const hasKey = !!process.env.ANTHROPIC_API_KEY;
-
 async function classify(c: Case): Promise<boolean> {
   const prompt = buildClassifierPrompt(c.input, "(no prior pattern context)", false, c.entryType ?? "open_prompt");
   const anthropic = getAnthropicClient();
@@ -60,24 +55,6 @@ async function classify(c: Case): Promise<boolean> {
   return parsed.requiresFollowUp;
 }
 
-describe("classifier requiresFollowUp eval (live Haiku)", () => {
-  let correct = 0;
-
-  for (const c of CASES) {
-    it(`${c.expected ? "TRUE " : "FALSE"} — ${c.note}`, async () => {
-      // Skip cleanly without a key so CI without secrets stays green.
-      if (!hasKey) return;
-      const got = await classify(c);
-      if (got === c.expected) correct++;
-      // Anchors must be exactly right; non-anchors feed the aggregate.
-      if (c.anchor) {
-        expect(got).toBe(c.expected);
-      }
-    });
-  }
-
-  it("aggregate accuracy across the labeled set is >= 0.8", () => {
-    if (!hasKey) return;
-    expect(correct / CASES.length).toBeGreaterThanOrEqual(0.8);
-  });
+runLabeledEval("classifier requiresFollowUp eval (live Haiku)", CASES, classify, {
+  threshold: 0.8,
 });

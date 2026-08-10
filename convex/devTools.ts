@@ -4,9 +4,12 @@
  * with `bunx convex env set DEV_TOOLS_ENABLED true` on the dev deployment.
  */
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { internalMutation, mutation } from "./_generated/server";
 import type { WorkflowId } from "@convex-dev/workflow";
+import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
+import { rankReplace, reflectionRank } from "./lib/aggregates";
+import { migrations } from "./migrations";
 import { workflow } from "./followUps";
 
 function assertDevToolsEnabled() {
@@ -38,7 +41,35 @@ export const setStreak = mutation({
       // computeUserVariant needs sessionCount > 0 to show the calendar
       sessionCount: Math.max(profile.sessionCount, 1),
     });
+    // sessionCount can move 0→1 here — keep the percentile aggregate in step.
+    await rankReplace(ctx, profile);
     return newStreak;
+  },
+});
+
+/**
+ * Wipe and rebuild the reflectionRank aggregate from the table. The repair for
+ * drift flagged by jobs/rankAudit — e.g. the key-0 orphans that pre-fix
+ * setStreak runs left on dev. Safe against live writes: the clear commits with
+ * this mutation, the backfill runs after it in batches, and a session completed
+ * in between lands via replaceOrInsert and is then skipped by the backfill's
+ * insertIfDoesNotExist.
+ *
+ *   bunx convex run devTools:rebuildReflectionRank
+ *
+ * Verify afterwards (once the backfill finishes) with jobs/rankAudit:audit.
+ */
+export const rebuildReflectionRank = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    assertDevToolsEnabled();
+    await reflectionRank.clear(ctx);
+    // cursor: null restarts from the beginning even if a previous run completed.
+    await migrations.runOne(ctx, internal.migrations.backfillReflectionRank, {
+      cursor: null,
+    });
+    return null;
   },
 });
 
@@ -144,5 +175,58 @@ export const cleanupStuckFollowUps = mutation({
       }
     }
     return retired;
+  },
+});
+
+/**
+ * Seed a published xolacer so the Connect roster has something in it.
+ * Takes an explicit user id (rather than requireAuth) so it can promote a
+ * *different* test account than the one signed into the simulator — which is
+ * exactly why it's `internalMutation`: an unauthenticated, public function
+ * that flips `isXolacer` on an arbitrary user would be an impersonation
+ * hole the moment DEV_TOOLS_ENABLED reached a real deployment.
+ *
+ *   bunx convex run devTools:seedXolacer '{"userId":"...","displayName":"Maya","bio":"..."}'
+ */
+export const seedXolacer = internalMutation({
+  args: {
+    userId: v.id("users"),
+    displayName: v.string(),
+    bio: v.string(),
+    photoUrl: v.optional(v.string()),
+  },
+  returns: v.id("emotional_profiles"),
+  handler: async (ctx, args) => {
+    assertDevToolsEnabled();
+
+    const user = await ctx.db.get(args.userId);
+    if (!user) throw new Error("No such user");
+    await ctx.db.patch(user._id, { isXolacer: true });
+
+    const emotionalProfileId = user.emotionalProfileId;
+    const existing = await ctx.db
+      .query("xolacer_profiles")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", emotionalProfileId))
+      .unique();
+
+    const fields = {
+      displayName: args.displayName,
+      bio: args.bio,
+      photoUrl: args.photoUrl,
+      complete: true,
+      active: true,
+      updatedAt: Date.now(),
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, fields);
+      return emotionalProfileId;
+    }
+    await ctx.db.insert("xolacer_profiles", {
+      emotionalProfileId,
+      createdAt: Date.now(),
+      ...fields,
+    });
+    return emotionalProfileId;
   },
 });

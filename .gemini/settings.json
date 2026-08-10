@@ -5,9 +5,6 @@
       "args": [
         "mcp"
       ],
-      "env": {
-        "ARGENT_MCP_LOG": "/Users/nathan/.argent/mcp-calls.log"
-      },
       "trust": true
     }
   }

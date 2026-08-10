@@ -4,6 +4,355 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
+## P0 — `bun test` crashes on any test that imports react-native
+
+**What:** `src/store/store.test.ts` imports `./store`, which pulls in `react-native`,
+whose `index.js` opens with Flow syntax Bun's transpiler rejects:
+
+```
+27 | import typeof * as ReactNativePublicAPI from './index.js.flow';
+            ^
+error: Unexpected typeof
+```
+
+The run reports `1 error` and then **segfaults** (`panic(main thread): Segmentation
+fault`) after printing the summary.
+
+**Why it matters more than one red file:** this isn't specific to the store — it is a
+ceiling on what can be tested at all. Any test that imports a module which transitively
+reaches `react-native` hits it, which is most of `src/`. It is the reason the suite's
+coverage is concentrated in pure modules (`convex/lib/`, `features/*/[rule].ts`) and why
+component and hook behaviour is effectively untestable today. The segfault also means a
+CI runner would report a crash rather than a clean failure count.
+
+**The exact reach (confirmed, not guessed):**
+`store.ts:9` → `@/src/lib/storage/unified-storage` → `unified-storage.ts:9`
+`import { Platform } from 'react-native'`. That single `Platform` import — used only to
+branch localStorage vs `expo-sqlite/kv-store` — is what drags the whole RN entry point
+into the test graph.
+
+**How to start:** three candidate fixes, cheapest first.
+1. A `bunfig.toml` `preload` registering `mock.module('react-native', ...)` with a stub
+   `Platform`. Smallest win, and unblocks every store/hook test at once.
+2. Narrower: have `unified-storage.ts` pick its backend without importing `react-native`
+   (a `.web.ts` platform extension, which this repo already uses elsewhere, resolves the
+   split at bundle time and needs no `Platform` check at all).
+3. Move component/hook tests to a runner that already understands RN
+   (jest + `react-native` preset), keeping `bun test` for pure modules.
+
+Option 2 is the one that removes the problem rather than mocking around it, and it fits
+the documented platform-extension convention in CLAUDE.md.
+
+**Key files:** `src/store/store.test.ts`, `src/store/store.ts`,
+`src/lib/storage/unified-storage.ts`, `bunfig.toml` (does not exist yet).
+
+**Effort:** S–M — option 1 is plausibly 20 minutes; option 3 is a runner split.
+
+**Priority:** P0 — not because the store is broken (it isn't; this is a test-harness
+limit), but because it silently caps test coverage for the whole `src/` tree, and a
+segfaulting suite can't be trusted as a CI gate.
+
+**Found:** `/ship` triage on branch `feat/xolacer-suggestion-session` (2026-08-01).
+Pre-existing on `dev`, unrelated to that branch.
+
+---
+
+## P3 — Automated mid-conversation escalation detection (Listener Chat)
+
+**What:** Detect a crisis-adjacent moment happening *inside* a live Stream conversation
+between a user and a listener, not just at Xolace session boundaries (see the Listener Chat
+design doc, `nathan-chore-listener-chat-design-design-20260724-054614.md`).
+
+**Why:** Deferred during `/plan-eng-review` (Issue 4). Xolace's `escalation_events` signal only
+fires from the AI-processed session pipeline — a live Stream chat never touches that pipeline,
+so there's no existing signal to key off. v1 relies on ambassadors being trained to recognize
+concerning conversations themselves and point the user back to Xolace's existing crisis-resource
+path, same as any human-to-human conversation would require. This is judged sufficient for a
+small, personally-vetted cohort (see the original Listener Suggestion design's Premise #2), but
+should be revisited if the listener cohort grows past that scale.
+
+**How to start:** Would require a Stream webhook on new messages, piping message content through
+`convex/ai/safeguard.ts` (or a lighter-weight classifier) per message — a genuinely new AI-call
+surface, real-time cost, and worth weighing against the Cognition Layer Constitution ("no feature
+may call an LLM to re-derive something the Understanding already knows" — arguably justified here
+since chat content is new signal the Understanding never sees, but that argument should be made
+explicitly when this is picked up, not assumed).
+
+**Key files:** `convex/ai/safeguard.ts`, `convex/integrations/stream.ts` (once it exists),
+whatever webhook/channel-event handler the Listener Chat build adds.
+
+**Effort:** M-L — new webhook surface, new classification call, real-time latency/cost tradeoffs.
+
+**Priority:** P3 — no urgency at current ambassador-cohort scale.
+
+**Depends on:** Listener Chat (Approach B, Stream-based) shipping first.
+
+---
+
+## P3 — Ambassador self-service pause toggle (Listener Suggestion feature)
+
+**What:** Let each of the 6 ambassadors flip their own `active: false` flag on the
+`ambassadors` table (see the Listener Suggestion design doc,
+`~/.gstack/projects/xolace-official-xolace_app/nathan-chore-channels-research-design-20260718-165134.md`)
+instead of the founder hand-editing the row when someone needs a break.
+
+**Why:** Deferred during `/plan-ceo-review`'s SELECTIVE EXPANSION cherry-pick pass. At 6
+ambassadors the founder personally trains and talks to, hand-editing one DB row when someone
+messages "I need a break" costs one query — real ROI on self-service only arrives if the
+ambassador cohort grows well past a handful. (A convex-flags-based approach was considered
+during review and rejected as scope creep — a plain `active: boolean` field is the v1
+mechanism; this TODO stays a genuine UI/access gap, not a data-layer one.)
+
+**How to start:** A minimal auth-gated (or obscure-link) toggle scoped only to the 6
+ambassador accounts — needs its own light identification mechanism since ambassadors are not
+Xolace users in the schema (see the design doc's Open Questions on whether ambassadors ever
+become real Xolace accounts).
+
+**Key files:** `convex/schema.ts` (`ambassadors` table, once it exists), the Listener
+Suggestion design doc referenced above.
+
+**Effort:** S — small toggle, but genuinely new surface area (identification/light auth for
+non-user actors), not just a UI change.
+
+**Priority:** P3 — no urgency at current cohort size.
+
+**Depends on:** Listener Suggestion pilot (Approach A) shipping first; only relevant once the
+`ambassadors` table exists.
+
+---
+
+## P2 — WhatsApp as second delivery channel for Trusted Contact Notify
+
+**What:** Once the SMS-only Trusted Contact Notify feature (see
+`~/.gstack/projects/xolace-official-xolace_app/ceo-plans/2026-07-18-trusted-contact-notify.md`)
+ships and has 2+ weeks of real accept-rate / confirm-tap data, add a per-contact channel
+preference so the check-in message can go via WhatsApp Cloud API instead of Twilio SMS.
+
+**Why:** WhatsApp gets roughly 4x SMS open rates (`docs/feat-analysis.md`), which matters
+for a message whose entire value depends on being seen promptly. Deferred rather than built
+alongside SMS because sequencing risk favors validating the mechanism (does a real contact
+accept, does the confirm-tap flow work, does the message land right) on one channel before
+adding a second provider's integration surface.
+
+**How to start:** Add a `preferredChannel: "sms" | "whatsapp"` field to `trustedContacts`.
+Wire the WhatsApp Cloud API component (`convex-whatsapp`, already scoped in
+`docs/feat-analysis.md`) as a second outbound (and inbound, for accept/opt-out) provider
+alongside the Twilio SMS integration built for the base feature. Reuse the same
+`escalation_events`-triggered send logic — only the delivery provider branches on
+`preferredChannel`.
+
+**Key files:** `convex/schema.ts` (`trustedContacts`), new `convex/trustedContactNotify.ts`
+or wherever the base feature's Twilio wiring lands, `docs/feat-analysis.md` (WhatsApp
+component reference)
+
+**Effort:** M (CC ~30-40min) — second messaging provider integration plus per-contact
+channel branching, both inbound and outbound
+
+**Priority:** P2 — gated on SMS-only version shipping and validating first
+
+**Depends on:** Trusted Contact Notify (Approach A, SMS-only) shipped + 2 weeks of
+accept-rate/confirm-tap analytics
+
+---
+
+## P2 — Instrument follow-up push delivery before/alongside WhatsApp channel work
+
+**What:** Add PostHog capture (and/or extend the `notification_log` table) for follow-up
+push `delivered`/opened/tapped rates specifically, run for 1-2 weeks in parallel with
+building the WhatsApp follow-up delivery channel (see design doc
+`~/.gstack/projects/xolace-official-xolace_app/nathan-chore-channels-research-design-20260718-134117.md`).
+
+**Why:** The WhatsApp-follow-up design's Premise #1 explicitly accepts an unconfirmed-demand
+gap — no PostHog data exists on whether Xolace's follow-up push is actually underperforming;
+the wedge is built on founder intuition + generic industry stats, not Xolace's own numbers.
+This was surfaced as Approach C during the `/office-hours` session that produced the design
+doc, and the founder chose Approach A (build WhatsApp directly) over it — but Approach C is
+cheap enough to run in parallel rather than dropped entirely. Closing this gap in time gives
+the next review (or a retro) a real number instead of a hunch, and doesn't block Approach A.
+
+**How to start:** `convex/notifications.ts`'s `schedule` mutation already writes to
+`notification_log` with a `delivered` boolean; extend it with an `opened`/`tapped` state
+(client marks it on notification-tap deep link) and add a PostHog capture mirroring it,
+scoped to `type: "follow_up"`.
+
+**Key files:** `convex/notifications.ts` (`schedule`), `convex/followUps.ts`
+(`sendFollowUpNudge`), client-side notification-tap handler (deep link entry point)
+
+**Effort:** XS (human ~1-2h / CC ~15min)
+
+**Priority:** P2 — parallel to WhatsApp follow-up delivery work, not blocking it
+
+**Depends on:** Nothing — can start immediately, independent of the WhatsApp channel build
+
+---
+
+## P3 — Verified WhatsApp number ↔ Xolace user table (shared auth gate)
+
+**What:** Build the WhatsApp number opt-in/verification table (already required for the
+follow-up delivery feature, see `nathan-chore-channels-research-design-20260718-134117.md`)
+as a standalone mapping — verified WhatsApp number ↔ Xolace user/profile — rather than a
+field scoped only to the follow-up feature, so it can double as an identity gate for a
+possible future ElevenLabs WhatsApp voice/text agent persona.
+
+**Why:** WhatsApp Business numbers are publicly reachable by anyone — there's no
+platform-level allowlist. If Xolace ever adds an ElevenLabs agent persona on WhatsApp
+(raised as a "probably, not yet designed" idea, not current scope), it needs an app-side way
+to distinguish a real, verified Xolace user from a random inbound number before handing over
+any personal context or engaging in anything therapeutic-toned. ElevenLabs supports a
+conversation-initiation webhook that receives the caller's WhatsApp ID before a conversation
+starts — that webhook would look the number up against this same table to allow/deny and
+personalize. Building the table once, generically, avoids redoing the verification flow
+later for a second feature.
+
+**How to start:** When `/plan-eng-review` designs the follow-up feature's WhatsApp
+opt-in/verification table, shape it as a general `verifiedWhatsAppNumbers` (or similar)
+mapping keyed by profile, not a field embedded only in follow-up-specific state. The
+follow-up feature is the first consumer; an ElevenLabs conversation-initiation webhook would
+be a second, later consumer of the same lookup.
+
+**Key files:** wherever `/plan-eng-review` lands the follow-up feature's WhatsApp
+verification schema (not yet decided — see that design doc's Open Questions)
+
+**Effort:** No extra effort now — this is a shaping note for how the follow-up feature's
+existing verification table gets designed, not new work. Effort attaches to the (not yet
+real) ElevenLabs integration later: webhook + lookup, S.
+
+**Priority:** P3 — speculative; the ElevenLabs idea is not yet scoped or designed
+
+**Depends on:** Follow-up WhatsApp delivery feature (Approach A) shipping first, since it's
+the table's first real consumer
+
+---
+
+## P2 — Weekly emotional summary fan-out via WhatsApp
+
+**What:** Send the existing Workflow+RAG weekly emotional summary pipeline's output over
+WhatsApp instead of, or alongside, the current in-app/push delivery.
+
+**Why:** This is a re-engagement lever, not a proactive-support-to-third-parties feature —
+distinct problem from Trusted Contact Notify. WhatsApp's higher open rate makes it a
+plausible upgrade for content the user has already opted into receiving (a Sunday-morning
+digest is more likely read in a messaging app already open than a push notification that
+gets swiped away). Deferred because it needs its own design pass, not because the idea is
+weak — bundling it into the trusted-contact plan would conflate two different products
+(reaching the user vs. reaching someone else).
+
+**How to start:** Once the WhatsApp Cloud API component is installed (see the P2 item
+above, or independently if that lands first), wire the existing weekly summary generation
+job to fan out a WhatsApp message alongside its current delivery path, gated by a user
+opt-in toggle (do not default this on — matches the existing notification consent pattern
+in `convex/lib/notificationPrefs.ts`).
+
+**Key files:** whichever job currently generates/delivers the weekly summary (locate via
+the Workflow+RAG pipeline references in `convex/jobs/` or `convex/ai/`),
+`convex/lib/notificationPrefs.ts` (consent pattern to follow), `docs/feat-analysis.md`
+(WhatsApp component reference)
+
+**Effort:** M (CC ~30-40min) — WhatsApp Cloud API integration (if not already installed by
+the sibling P2 item above) plus weekly cron wiring to the existing summary content
+
+**Priority:** P2 — real idea, needs its own design pass before scoping further
+
+**Depends on:** WhatsApp Cloud API component installed (shared dependency with the sibling
+P2 item above — install once, use for both if both are picked up together)
+
+---
+
+## P3 — Telegram bot as low-friction, no-identity-anchor front door
+
+**What:** A Telegram bot entry point ("message the bot with whatever's here, get one line
+back") as an alternative onboarding surface, using inline keyboards for the texture-word
+tap targets (heavy/tight/foggy/buzzing/empty/scattered/numb/raw) instead of free text only.
+
+**Why:** Per `docs/feat-analysis.md`'s privacy comparison, a Telegram bot only ever receives
+a platform-scoped numeric `user_id`/`chat_id` — never a phone number unless the user
+explicitly shares a contact card, which a well-designed flow never asks for. That's a
+materially better privacy story than the SMS/WhatsApp front-door ideas in the same doc, for
+the segment of the target audience already on Telegram (skews privacy-conscious and
+international). This is an acquisition/onboarding bet, structurally different from Trusted
+Contact Notify (reaching a third party) or the WhatsApp re-engagement idea above (reaching
+an existing user) — it's about lowering the barrier for someone who hasn't started with
+Xolace at all.
+
+**How to start:** Do not scope implementation yet — this needs its own `/office-hours`
+session to establish real demand evidence (is there actually a Telegram-native segment of
+the target audience, and what's the smallest testable version) before committing to bot
+infrastructure. When ready: `convex-telegram` component (`docs/feat-analysis.md` has the
+link), inbound webhook (`registerRoutes`) keyed by update type, `bot.api.*` client for
+outbound.
+
+**Key files:** none yet — greenfield within this repo; `docs/feat-analysis.md` for the
+component reference and privacy comparison
+
+**Effort:** L (CC ~1-1.5h once scoped) — new bot infra, webhook registration, inline-keyboard
+UI mapping to the existing texture-word set, entirely separate from the Twilio/WhatsApp
+integrations above
+
+**Priority:** P3 — needs its own demand-validation session before further scoping
+
+**Depends on:** Nothing technically, but should not be built before a dedicated
+`/office-hours` session validates demand
+
+---
+
+## P2 — Clarify feedback sheet: `mirrorFeedbackShown` ref never resets
+
+**What:** The "What didn't land?" sheet can only ever appear **once per `ReflectScreen` mount**. `mirrorFeedbackShown` is a `useRef(false)` that is set to `true` the first time the user taps "Not quite" and is never cleared — not on `handleReset`, not on a new session, not on the give-up path.
+
+**Why it matters (two distinct losses):**
+1. **Second session in the same mount gets nothing.** After a session completes, the user taps "Have more? I'm here." → `handleReset` → a fresh session in the *same* mount. Rejecting that session's mirror silently shows no sheet. We collect `mirror_miss` feedback only from a user's first rejection after a cold app launch, which quietly biases the dataset toward first-session mirrors.
+2. **The MAX_TURNS give-up path burns the ref without ever showing the sheet.** `handleNotQuiteWithFeedback` sets `mirrorFeedbackShown.current = true` and arms the sheet *before* calling `handleNotQuite()`. When `turnsCount >= MAX_TURNS`, `handleNotQuite` dispatches to `gave-up` rather than `clarify` — so the derived `mirrorFeedbackOpen` (which requires `current === "clarify"`) never becomes true, the disarm guard clears the armed state, and the ref stays burned. The user is then never asked again in that mount.
+
+**Why the ref exists at all:** to show the sheet at most once per session so a user rejecting both turns isn't surveyed twice. That intent is right; the scope (mount) is wrong — it should be per *session*.
+
+**How to fix:** Key the once-only latch on the session rather than the mount. Options, in order of preference:
+1. Replace the ref with state holding the `sessionId` the sheet has already been shown for (`shownForSession: Id<"sessions"> | null`), and gate on `shownForSession !== sessionId`. Resets naturally on every new session, no cleanup path to forget. Prefer this — the reset is derived, not remembered.
+2. Failing that, clear the ref wherever a session ends (`handleReset` and any other reset path) — but this is the fragile shape: every future reset path must remember to clear it.
+
+Also move the latch-burning **after** the MAX_TURNS branch decision, or only burn it when the sheet actually opens (e.g. set it in the same derived condition that opens the sheet), so the give-up path can't consume a showing that never happened.
+
+**Note:** the sheet is only armed by "Not quite" — "Say more" deliberately does not arm it (elaboration is not a rejection; see `docs/feedback-tray-plan.md` §15).
+
+**Key files:** `src/features/reflect/components/reflect-screen.tsx` (`mirrorFeedbackShown`, `mirrorFeedbackTurn`, `handleNotQuiteWithFeedback`, the `mirrorFeedbackOpen` derivation and the disarm guard), `src/features/reflect/hooks/use-reflection-machine.ts` (`handleNotQuite` MAX_TURNS branch, `handleReset`)
+
+**Verify:** complete a session, tap "Have more? I'm here." (no app restart), reject the new mirror → the sheet must appear. Separately, reject twice to exhaust MAX_TURNS → land on `gave-up` → start a new session → the sheet must still be available.
+
+**Effort:** S (CC ~20min incl. emulator verification)
+**Priority:** P2 — silent feedback loss, biases the `mirror_miss` dataset
+**Depends on:** Nothing
+
+---
+
+## P1 — `dailyQuotes.coldStart` fan-out (security audit H2, second half)
+
+**What:** `coldStart` schedules `jobs.quotesGenerator.processUser` without an idempotency check of its own. The check (`getProfileStatus` → `alreadyDone`) lives *inside* the scheduled job and keys on a curated quote already existing for today — which is false for everyone until the first quote lands. So N concurrent `coldStart` calls fan out N jobs, and each one reaches `distillQuoteForUser`: a real Anthropic call per job, for every Plus user.
+
+**Why:** Second half of finding H2 in the Convex security audit (the `requestBridgeDraft` half is fixed). The client's `coldStartIssuedRef` guard in `quotes-screen.tsx` is per-mount, so background/foreground, a remount, or a second device re-fires it. Unmetered LLM spend on a public action.
+
+**How to fix — a lease, not a rate limit.** A rate limiter would bound damage (e.g. 3/day) but still permit 3 concurrent LLM calls, and would dead-end the screen's retry button after a genuine failure.
+
+1. Add `quotesColdStartAt: v.optional(v.number())` to `emotional_profiles` in `convex/schema.ts`.
+2. New `internalMutation` `claimColdStart` in `convex/dailyQuotes.ts`: `requireAuth`, then in one transaction — return early if a quote already exists for today; return early if `quotesColdStartAt` is within a 5-minute lease window (job in flight); otherwise patch the timestamp and `ctx.scheduler.runAfter(0, processUser)`.
+3. `coldStart` **stays an `action`** and becomes a one-line `ctx.runMutation(internal.dailyQuotes.claimColdStart)`.
+
+Convex mutations are serializable: two concurrent claims reading and writing the same profile doc conflict on OCC, so one retries and observes the lease. The 5-minute lease therefore guarantees at most one *in-flight* job per lease window — not exactly one job per user per day. Once a curated quote is stored for the day, `alreadyDone` short-circuits every later run; but a slow or failed job that never stores a quote leaves the lease to expire, after which a subsequent `coldStart` can legitimately retry.
+
+**Two constraints worth not rediscovering:**
+- Keep `coldStart` an action. The shipped client calls it via `useAction`; changing its kind to a mutation breaks every build in the store (store-gap rule). Thin-wrapper is the safe shape.
+- The 5-minute expiry is what preserves the retry button. A plain "already claimed today" flag would silently no-op `quotes-screen.tsx`'s retry and strand the user with no quotes until UTC midnight.
+
+**Also:** `getMyProfile` and `hasQuotesForToday` become dead once this lands (`claimColdStart` does its own `requireAuth` and inlines the quote check). Both are `internalQuery`, unreachable from clients, so they can be deleted outright.
+
+**Not fixed by this:** if the session-quote distill succeeds but the curated store fails, `alreadyDone` stays false and a later run re-distills. Pre-existing; the lease bounds it to one retry per 5 minutes rather than unbounded.
+
+**Key files:** `convex/dailyQuotes.ts` (`coldStart`, `getMyProfile`, `hasQuotesForToday`), `convex/schema.ts` (`emotional_profiles`), `convex/jobs/quotesGenerator.ts` (`processUser`, `getProfileStatus`), `src/features/quotes/components/screen/quotes-screen.tsx` (retry path — verify unchanged)
+
+**Effort:** S (CC ~20min)
+**Priority:** P1 — open LLM spend on a public action
+**Depends on:** Nothing
+
+---
+
 ## P3 — Dedicated "See all check-ins" screen
 
 **What:** A full-list screen for follow-up check-ins, reached via a "See all check-ins" row on the profile. The profile's Follow-Ups section is now capped at the 5 most recent (`PROFILE_FOLLOWUP_LIMIT` in `convex/followUps.ts`) so it can't grow unbounded; the rest of the history needs a home.
@@ -380,7 +729,7 @@ Items deferred from CEO/Eng reviews. Each entry has context to pick it up cold.
 
 ---
 
-## P2 — Settings: Restructure into Per-Section Sub-Screens
+## P2 — Settings: Restructure into Per-Section Sub-Screens ✅
 
 **What:** Break the single monolithic settings scroll into a root screen with ~6 navigation rows, each pushing to a dedicated sub-screen (Appearance, Mirror, Notifications, Privacy & Data, Account, Follow & Support).
 
@@ -462,3 +811,151 @@ Verify on simulator by running a full session through the bridge path and confir
 **Effort:** S (CC ~30min incl. simulator verification)
 **Priority:** P3 — not blocking; normal flow works, only the bridge path misses
 **Depends on:** Nothing
+
+---
+
+## P3 — Vent acknowledgement: Episodic RAG context
+
+**What:** Add top-K episodic memory retrieval (RAG over past reflections) as an input to the vent acknowledgement prompt, alongside the semantic profile it now reads.
+
+**Why:** Deferred out of v1 of the vent → Memory-aware witness change. Retrieving specific past moments into a cathartic release pulls the acknowledgement toward specific content and off-tone — a vent is meant to feel traceless and in-the-moment, not cross-referenced. The semantic profile (who they are) is the right and only Memory input for v1; specific episodic content risks breaking the "stay in this moment" guard. Revisit only as an explicit, separate product decision.
+
+**Key files:** `convex/vent.ts` (`runVentPipeline`), `convex/ai/ventAcknowledge.ts` (`buildVentAcknowledgePrompt`)
+
+**Effort:** M (depends on existing episodic RAG infra maturity)
+**Priority:** P3 — revisit only if semantic-profile attunement proves insufficient
+**Depends on:** Nothing blocking; purely a "revisit if" item
+
+---
+
+## P3 — Vent acknowledgement: Entitlement/gating changes
+
+**What:** Any change to how the vent cap or premium/entitlement gating interacts with the (now Memory-aware) vent acknowledgement pipeline.
+
+**Why:** The semantic-profile read added to `runVentPipeline` is independent of the vent daily cap (`checkAndIncrementCap`) and any premium gate — it was deliberately left untouched in the vent → Memory-aware witness change. If entitlement changes are ever needed here, they should be scoped and decided separately rather than folded into the Memory-read work.
+
+**Key files:** `convex/vent.ts` (`checkAndIncrementCap`, `processVentAudio`)
+
+**Effort:** — (scope unknown until a concrete entitlement change is proposed)
+**Priority:** P3 — no current driver; listed so it isn't silently bundled into future vent work
+**Depends on:** Nothing blocking; purely a "revisit if" item
+
+---
+
+## P3 — Follow-up card: Episodic RAG context
+
+**What:** Add top-K episodic memory retrieval (RAG over past reflections) as a third input to the follow-up card writer, alongside Understanding (`getUnderstanding`) and the semantic profile (Memory) it already uses.
+
+**Why:** Deferred out of v1 of the follow-up card's Cognition Layer transition (Understanding hygiene + semantic-profile continuity line, gated off for acute tier). The confirmed mirror text is already the moment being followed up on, so top-K episodic retrieval adds little for a same-day/next-day check-in — this mirrors the same call made for the quotes-generator Cognition Layer transition. Revisit only if follow-up cards need to reference specific past sessions beyond what the semantic profile's rolled-up trajectory already captures.
+
+**Key files:** `convex/followUps.ts` (`startFollowUpWorkflow`), `convex/ai/prompts/followUpCardWriter.ts` (`FollowUpCardContext`)
+
+**Effort:** M (CC ~30min, depends on existing episodic RAG infra maturity)
+**Priority:** P3 — revisit only if semantic-profile continuity proves insufficient
+**Depends on:** Nothing blocking; purely a "revisit if" item
+
+---
+
+## P3 — Quotes generator: Episodic RAG context
+
+**What:** Add top-K episodic memory retrieval (RAG over past reflections) as an input to the session-derived quotes generator, alongside the semantic profile (Memory) it already consumes.
+
+**Why:** Deferred out of v1 of the quotes-generator Cognition Layer transition (semantic-profile-first with the 2-session `loadEmotionalContext` scan kept as cold-start fallback/provenance). There is no session query text at quote-generation time, so episodic retrieval would need a themes-derived search (deriving a query from the profile's recurring themes) rather than a natural query vector. The semantic profile already delivers most of the value, so this is low-priority. Mirrors the same call made for the follow-up card and notification transitions.
+
+**Key files:** `convex/ai/quotesDistiller.ts` (`distillQuoteForUser`), `convex/semanticProfiles.ts`
+
+**Effort:** M (CC ~30min, depends on existing episodic RAG infra maturity)
+**Priority:** P3 — revisit only if semantic-profile themes prove insufficient
+**Depends on:** Nothing blocking; purely a "revisit if" item
+
+---
+
+## P3 — Quotes generator: Profile-only quotes (no recent session)
+
+**What:** Allow a session-derived quote to be generated purely from the semantic profile when the user has **no** recent completed session in the eligibility window, instead of skipping generation.
+
+**Why:** v1 of the quotes Cognition Layer transition kept the existing eligibility gate (≥1 completed session within the window) so `sessionContextIds` provenance stays intact for the retention/wipe cascade. A profile-only quote has no source sessions to key on, so it would need a new `profileVersion` provenance field on the `daily_quotes` table (schema addition) to keep wipe-keying honest. Deferred to avoid the schema change and preserve current cadence.
+
+**How to start:**
+1. Add an optional `profileVersion` (or similar) provenance field to the `daily_quotes` table in `convex/schema.ts`, alongside the existing optional `sessionContextIds`.
+2. Relax the eligibility gate in the quotes generator to also fire when a semantic profile exists but no recent session does, keying provenance on `profileVersion`.
+3. Confirm the retention/wipe cascade handles profile-version-keyed rows correctly (no orphaned quotes after a session wipe).
+
+**Key files:** `convex/schema.ts` (`daily_quotes`), `convex/ai/quotesDistiller.ts`, `convex/jobs/quotesGenerator.ts`
+
+**Effort:** M (CC ~30min — schema + gate + wipe-cascade check)
+**Priority:** P3 — only matters for users with a profile but sparse recent activity
+**Depends on:** Nothing blocking; schema addition is additive/backward-compatible
+
+---
+
+## P3 — "Where you sit in the distribution" (deeper rank view, likely Xolace+)
+
+**What:** The profile percentile card ("You've sat with more moments than 73% of people who reflect here") ships free and shows a single number plus the ember field. The deeper view — actually *seeing* the distribution you sit inside, rather than being told one number about it — is deferred for its own analysis and is the natural Xolace+ upgrade of this surface.
+
+**Why it's deferred, not just unbuilt:** the free card answers "where am I?" A distribution view answers "what does the field of people here actually look like, and what does my position inside it mean?" That's a different (and more valuable) question, and it needs product thinking before design — a histogram of session counts is the templated answer and probably the wrong one.
+
+**What already exists to build on:**
+- `reflectionRank` aggregate (`convex/lib/aggregates.ts`) — a sorted index over `emotional_profiles.sessionCount`. It already supports everything a distribution view needs beyond `count`: `at(ctx, offset)` for the value at any rank, `min`/`max` for the tails, and bounded `count` for arbitrary buckets. **No new backend data is required** — this is a read-shape and design question, not a modelling one.
+- `convex/profile.ts:getReflectionRank` — the free query, returning a `ranked | pending | warming` union.
+- `src/features/profile/components/rank-card.tsx` + `ember-field.tsx` — the free surface and its Skia field.
+
+**Open questions to settle first:**
+1. What does the user actually learn from seeing the distribution that the single number doesn't tell them? If the answer is "nothing, it's just prettier", don't build it.
+2. Buckets vs. a continuous curve — and does either survive the privacy posture? A histogram with thin buckets at the tail edges toward identifying the handful of people in them.
+3. Population is ~61 reflectors in prod (2026-07). A distribution over 61 points is mostly noise; this may simply be premature until the population is a few hundred.
+4. If it's the Plus upgrade of a free card, the free card must not feel deliberately crippled — see the gating rules in `project_paywall_gating_audit`.
+
+**Effort:** M–L (needs a design pass before an estimate means anything)
+**Priority:** P3 — the free card carries the retention value today; this is upside, not a gap
+
+---
+
+## ~~P2~~ FIXED (2026-08-01) — PostHog identity split: client identifies `users._id`, server captures `emotional_profiles._id`
+
+**Resolution:** neither listed option. `emotional_profiles._id` was already on the
+client via `api.users.getFullContext`, so no server change was needed: identify
+moved out of `AuthScreen` into `usePostHogIdentity` (`src/lib/use-posthog-identity.ts`),
+called from `(protected)/_layout.tsx` on app open. `user_signed_in` now lands on
+the anonymous id and is merged by that identify. App-open (not sign-in) so
+already-signed-in installs are covered — they never call `getOrCreate` again.
+Accepted: pre-cutover history stays split, no backfill.
+
+**Historical context (pre-fix):** the client identified on `users._id` while all 14
+server capture sites used the pseudonymous `emotional_profiles._id` (RevenueCat's
+`appUserId` is that same id — `convex/premium.ts`). Two distinct documents, never
+merged, so every funnel crossing the client/server boundary silently under-counted
+and person count roughly doubled for users with events on both sides.
+
+**Invariant to keep:** the client's `identify` key must stay `emotional_profiles._id`.
+Anything new that identifies or aliases on `users._id` reintroduces the split.
+
+**Key files:** `src/lib/use-posthog-identity.ts`, `src/app/(protected)/_layout.tsx`, `convex/posthog.ts`
+
+**Found:** PostHog `distinctId` audit on branch `feat/xolacer-suggestion-session` (2026-08-01).
+
+---
+
+## P3 — Android: drop implied `android.hardware.camera` requirement
+
+**What:** Google Play Console's "Drop in support for Phone devices" release check flags 60 camera-less devices (Zebra scanners, budget Android phones, etc.) as newly unsupported due to an implied `android.hardware.camera` required feature.
+
+**Why:** `expo-image-picker` is installed (`package.json`) but not listed in `app.config.ts`'s `plugins` array, so it runs with default config-plugin behavior — which unconditionally injects `<uses-permission android:name="android.permission.CAMERA" />` into the merged manifest (confirmed in `android/app/build/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml`). Android Gradle then auto-infers `<uses-feature android:name="android.hardware.camera" android:required="true">` from that permission. The app only calls `ImagePicker.launchImageLibraryAsync` (gallery picker) — `launchCameraAsync` is never used anywhere in the codebase (checked `src/features/xolacer-chat/`, the only two call sites). The permission and resulting device-support drop are both unnecessary.
+
+**How to fix:** Add `expo-image-picker` explicitly to the `plugins` array in `app.config.ts` with `"cameraPermission": false`:
+```ts
+[
+  "expo-image-picker",
+  {
+    "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+    "cameraPermission": false
+  }
+],
+```
+Then rebuild (native change, not OTA-safe).
+
+**Key files:** `app.config.ts` (plugins array, near line 209 `"expo-sqlite"` / `"@clerk/expo"`)
+
+**Effort:** XS (1 config change + rebuild)
+**Priority:** P3 — cosmetic Play Console warning, 0 installs affected per the console's own report; fix on the next native build rather than a dedicated release
+**Depends on:** Nothing — deferred only because iOS was already submitted for the current build and this needs a shared rebuild cycle

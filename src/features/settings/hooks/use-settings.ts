@@ -7,7 +7,6 @@ import type { RetentionOption } from "@/src/features/settings/components/retenti
 import type { MirrorTone } from "@/src/features/settings/components/mirror-tone-picker-dialog";
 import { useAppStore } from "@/src/store/store";
 import { useAppTheme } from "@/src/context/app-theme-context";
-import { requestPushToken } from "@/src/lib/use-notifications";
 
 export type ThemeMode = "system" | "light" | "dark";
 
@@ -73,9 +72,6 @@ export const useSettings = () => {
     }
   });
   const requestDataWipe = useMutation(api.users.requestDataWipe);
-  const requestDeletion = useMutation(api.users.requestDeletion);
-  const registerToken = useMutation(api.notifications.registerToken);
-  const removeToken = useMutation(api.notifications.removeToken);
 
   // ─── Reach & Quiet Window ────────────────────────────────────────────
   const reach = (preferences?.notifications?.reach ?? "warm") as "warm" | "direct" | "quiet";
@@ -143,74 +139,11 @@ export const useSettings = () => {
 
   // ─── Toggles (derived from Convex preferences) ─────────────────────
   const reducedMotion = preferences?.reducedMotion ?? false;
-  const gentleReminders = preferences?.notifications?.enabled ?? false;
   const contributeAnonymously =
     preferences?.contributeByDefault ?? false;
 
   const setReducedMotion = (v: boolean) => {
     updatePreferences({ reducedMotion: v });
-  };
-
-  const setGentleReminders = async (enabled: boolean) => {
-    // Master toggle: all notification types follow the single switch.
-    // Spread existing preferences to preserve reach/quietWindow/timezone.
-    const current = preferences?.notifications;
-    updatePreferences({
-      notifications: {
-        enabled,
-        gentleReturn: enabled,
-        patternNudge: enabled,
-        milestone: enabled,
-        reach: current?.reach ?? "warm",
-        quietWindow: current?.quietWindow,
-        timezone: current?.timezone,
-      },
-    });
-
-    if (enabled) {
-      try {
-        // Request OS permission (no-op if already granted) and register token
-        const token = await requestPushToken();
-        if (!token) {
-          // Permission denied or non-device — revert the optimistic update
-          updatePreferences({
-            notifications: {
-              enabled: false,
-              gentleReturn: false,
-              patternNudge: false,
-              milestone: false,
-              reach: current?.reach ?? "warm",
-              quietWindow: current?.quietWindow,
-              timezone: current?.timezone,
-            },
-          });
-          return;
-        }
-        await registerToken({ pushToken: token });
-      } catch {
-        // Registration failed — revert so UI reflects the real state
-        updatePreferences({
-          notifications: {
-            enabled: false,
-            gentleReturn: false,
-            patternNudge: false,
-            milestone: false,
-            reach: current?.reach ?? "warm",
-            quietWindow: current?.quietWindow,
-            timezone: current?.timezone,
-          },
-        });
-      }
-    } else {
-      // Unregister token so no push is delivered while disabled.
-      // Best-effort — server preferences are already false so no
-      // notifications will be sent even if this call fails.
-      try {
-        await removeToken();
-      } catch {
-        // Ignore — server-side notifications are already disabled
-      }
-    }
   };
 
   const setContributeAnonymously = (v: boolean) => {
@@ -274,15 +207,6 @@ export const useSettings = () => {
     await requestDataWipe();
   };
 
-  const performDeleteAccount = async () => {
-    await requestDeletion();
-    try {
-      await signOut();
-    } catch {
-      // Best-effort sign out after deletion request
-    }
-  };
-
   return {
     // Account
     signInMethod,
@@ -297,8 +221,6 @@ export const useSettings = () => {
     // Toggles
     reducedMotion,
     setReducedMotion,
-    gentleReminders,
-    setGentleReminders,
     contributeAnonymously,
     setContributeAnonymously,
 
@@ -326,6 +248,5 @@ export const useSettings = () => {
     // Destructive actions
     performLogout,
     performDeleteData,
-    performDeleteAccount,
   };
 };

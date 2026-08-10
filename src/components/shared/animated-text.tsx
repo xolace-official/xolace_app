@@ -63,7 +63,7 @@ export function AnimatedText({ children, ...textProps }: AnimatedTextProps) {
     >
       {chars.map((char, i) => {
         // eslint-disable-next-line react/no-array-index-key
-        return <AnimatedChar key={`${char}-${i}`} char={char} index={i} {...textProps} />;
+        return <AnimatedChar {...textProps} key={`${char}-${i}`} char={char} index={i} />;
       })}
     </Animated.View>
   );

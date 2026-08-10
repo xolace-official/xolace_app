@@ -1,9 +1,10 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { GlassView } from "expo-glass-effect";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
+import { quoteTextScale } from "@/src/features/quotes/quote-text-scale";
 import { Presets } from "react-native-pulsar";
 
 type Reaction = "resonates" | "not_today" | null | undefined;
@@ -19,9 +20,12 @@ type Props = {
   top: number;
   bottom: number;
   showNudge?: boolean;
+  locked?: boolean;
+  onUnlock?: () => void;
 };
 
 const NUDGE_ICON = { ios: "wand.and.stars" as const, android: "auto_fix_high" as const };
+const LOCK_ICON = { ios: "lock.fill" as const, android: "lock" as const };
 const EASING: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 const EASE_INITIAL = { opacity: 0, translateY: 24 };
 const EASE_ANIMATE = { opacity: 1, translateY: 0 };
@@ -38,6 +42,8 @@ export function QuoteCard({
   top,
   bottom,
   showNudge,
+  locked,
+  onUnlock,
 }: Props) {
   const accentColor = useThemeColor("accent") as string;
   const foregroundColor = useThemeColor("foreground") as string;
@@ -77,8 +83,8 @@ export function QuoteCard({
       >
         <View className="w-8 mb-6" style={accentLineStyle} />
         <AppText
-          className="text-3xl font-semibold text-foreground"
-          style={styles.quoteLine}
+          className="font-semibold text-foreground"
+          style={quoteTextScale(text, { fontSize: 30, lineHeight: 42 })}
         >
           {text}
         </AppText>
@@ -88,13 +94,28 @@ export function QuoteCard({
         >
           {label}
         </AppText>
-        {showNudge && (
-          <View className="mt-5" style={nudgePillStyle}>
-            <SymbolView name={NUDGE_ICON} size={12} tintColor={`${accentColor}CC`} />
-            <AppText className="text-xs font-medium" style={nudgeTextStyle}>
-              Reflect often, your quotes get more personal
-            </AppText>
-          </View>
+        {locked ? (
+          <PressableFeedback
+            onPress={onUnlock}
+            accessibilityRole="button"
+            accessibilityLabel="Unlock your personalized quote with Xolace+"
+          >
+            <View className="mt-5" style={nudgePillStyle}>
+              <SymbolView name={LOCK_ICON} size={12} tintColor={`${accentColor}CC`} />
+              <AppText className="text-xs font-medium" style={nudgeTextStyle}>
+                Get personalized quotes - unlock with Xolace+
+              </AppText>
+            </View>
+          </PressableFeedback>
+        ) : (
+          showNudge && (
+            <View className="mt-5" style={nudgePillStyle}>
+              <SymbolView name={NUDGE_ICON} size={12} tintColor={`${accentColor}CC`} />
+              <AppText className="text-xs font-medium" style={nudgeTextStyle}>
+                Reflect often, your quotes get more personal
+              </AppText>
+            </View>
+          )
         )}
       </View>
 
@@ -189,7 +210,3 @@ function ActionButton({
     </PressableFeedback>
   );
 }
-
-const styles = StyleSheet.create({
-  quoteLine: { lineHeight: 42 },
-});

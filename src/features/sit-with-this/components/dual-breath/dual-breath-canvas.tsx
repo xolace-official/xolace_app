@@ -21,6 +21,11 @@ const INHALE_EASE = Easing.bezier(0.4, 0, 0.2, 1)
 const EXHALE_EASE = Easing.bezier(0.2, 0, 0.1, 1)
 const WOBBLE_EASE = Easing.inOut(Easing.sin)
 
+// Reduced motion: a single short, smooth transition to the phase's target pose —
+// legible as "breathe in / out" without the prolonged scaling or hold wobble.
+const REDUCED_MOTION_SNAP_MS = 400
+const REDUCED_MOTION_EASE = Easing.inOut(Easing.ease)
+
 type Props = { reducedMotion?: boolean }
 
 export const DualBreathCanvas = forwardRef<PacedOrbHandle, Props>(
@@ -94,11 +99,20 @@ export const DualBreathCanvas = forwardRef<PacedOrbHandle, Props>(
             let cursorMs = 0
             for (let c = 0; c < cycles; c++) {
               for (const step of steps) {
+                const { phase } = step
                 const t = cursorMs
                 timersRef.current.push(
                   setTimeout(() => {
-                    onPhaseTransition?.(step.phase, step.duration)
-                    changeLabel(step.phase)
+                    onPhaseTransition?.(phase, step.duration)
+                    changeLabel(phase)
+
+                    // Gentle snap to the target pose — no hold wobble, no haptic
+                    // (onPhaseTransition is undefined under reduced motion).
+                    if (phase === 'inhale') {
+                      progress.set(withTiming(1, { duration: REDUCED_MOTION_SNAP_MS, easing: REDUCED_MOTION_EASE }))
+                    } else if (phase === 'exhale') {
+                      progress.set(withTiming(0, { duration: REDUCED_MOTION_SNAP_MS, easing: REDUCED_MOTION_EASE }))
+                    }
                   }, t),
                 )
                 cursorMs += step.duration

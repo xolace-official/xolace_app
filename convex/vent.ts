@@ -1,8 +1,11 @@
 import { v } from "convex/values";
 import { internalMutation, action, internalAction, type ActionCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
+import { hasPremium } from "./lib/premium";
 import { ACKNOWLEDGE_MODEL, buildVentAcknowledgePrompt } from "./ai/ventAcknowledge";
+import { renderSemanticProfile } from "./semanticProfiles";
 import {
   getAnthropicClient,
   extractTextFromResponse,
@@ -11,16 +14,27 @@ import {
   moderateInput,
   MODERATION_UNAVAILABLE,
 } from "./ai/providers/moderation";
+import { resolveVoiceId, VENT_DEFAULT_VOICE_ID } from "./lib/voices";
 
-const WITNESSED_VOICE_ID = "NOpBlnGInO9m6vDvFkFC"; // Spuds Oxley — wise, approachable
 const CRISIS_FALLBACK = "you don't have to carry this alone";
 
 // Ceiling on what a single vent can charge — also the fallback when the
 // caller can't know the real duration (e.g. the legacy agent session token).
-const MAX_INCREMENT_MINUTES = 3;
+// Tiered so a longer Plus recording isn't clipped when charged against the cap.
+const MAX_INCREMENT_MINUTES_FREE = 3;
+const MAX_INCREMENT_MINUTES_PLUS = 5;
+
+function getMaxIncrementMinutes(premium: boolean): number {
+  return premium ? MAX_INCREMENT_MINUTES_PLUS : MAX_INCREMENT_MINUTES_FREE;
+}
 // Mono 48kbps AAC ≈ 6KB/s. Used to sanity-check the client-claimed duration
 // against the actual payload so a tampered client can't under-report.
 const AUDIO_BYTES_PER_SECOND = 6000;
+
+// How long a vent's TTS blob lives before it's reclaimed. Playback needs
+// seconds; an hour absorbs a backgrounded app returning to the coda. After
+// this the URL 404s, which is fine — the words are already on screen.
+const VENT_AUDIO_TTL_MS = 60 * 60 * 1000;
 
 function startOfTodayUTC(): number {
   const now = new Date();
@@ -31,10 +45,11 @@ function startOfTodayUTC(): number {
  * Gate voice vent sessions behind a daily usage cap.
  *
  * Lazy daily reset: if ventDailyResetAt < startOfTodayUTC, the counter is
- * treated as 0 for today. The cap is read from ELEVENLABS_DAILY_CAP_MINUTES
- * (default 2). Increments by the actual session length in whole minutes
- * (clamped to 1..MAX_INCREMENT_MINUTES) — callers derive it from the
- * recording duration and payload size.
+ * treated as 0 for today. The cap is read from ELEVENLABS_DAILY_CAP_MINUTES_FREE
+ * / ELEVENLABS_DAILY_CAP_MINUTES_PLUS (default 2 / 8) depending on tier.
+ * Increments by the actual session length in whole minutes (clamped to
+ * 1..getMaxIncrementMinutes(tier)) — callers derive it from the recording
+ * duration and payload size.
  *
  * Returns { allowed: false } without incrementing when cap is exceeded.
  */
@@ -42,15 +57,27 @@ export const checkAndIncrementCap = internalMutation({
   args: { minutes: v.number() },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+    const premium = await hasPremium(ctx, profile);
 
     const minutes = Math.min(
       Math.max(Math.ceil(args.minutes), 1),
-      MAX_INCREMENT_MINUTES,
+      getMaxIncrementMinutes(premium),
     );
 
     const todayStart = startOfTodayUTC();
-    const capRaw = Number(process.env.ELEVENLABS_DAILY_CAP_MINUTES ?? "2");
-    const cap = Number.isFinite(capRaw) && capRaw >= 0 ? Math.floor(capRaw) : 2;
+    const capRaw = Number(
+      process.env[
+        premium
+          ? "ELEVENLABS_DAILY_CAP_MINUTES_PLUS"
+          : "ELEVENLABS_DAILY_CAP_MINUTES_FREE"
+      ] ?? (premium ? "8" : "2"),
+    );
+    const cap =
+      Number.isFinite(capRaw) && capRaw >= 0
+        ? Math.floor(capRaw)
+        : premium
+          ? 8
+          : 2;
 
     const needsReset =
       !profile.ventDailyResetAt || profile.ventDailyResetAt < todayStart;
@@ -58,7 +85,7 @@ export const checkAndIncrementCap = internalMutation({
     const currentUsed = needsReset ? 0 : (profile.ventDailyMinutesUsed ?? 0);
 
     if (currentUsed >= cap) {
-      return { allowed: false };
+      return { allowed: false as const };
     }
 
     await ctx.db.patch(profile._id, {
@@ -67,74 +94,25 @@ export const checkAndIncrementCap = internalMutation({
       updatedAt: Date.now(),
     });
 
-    return { allowed: true };
+    return { allowed: true as const, emotionalProfileId: profile._id };
   },
 });
 
 /**
- * Obtain a short-lived signed URL for the ElevenLabs conversational AI agent.
- *
- * The signed URL expires quickly (ElevenLabs default: ~60s) and is used
- * client-side to start the voice session without exposing the API key.
+ * Reclaim a vent's TTS blob after its short playback life (see
+ * VENT_AUDIO_TTL_MS). Scheduled from runVentPipeline; no-op-safe if the file
+ * is already gone.
  */
-export const getVentSessionToken = action({
-  args: {},
-  handler: async (ctx): Promise<{ signedUrl: string }> => {
-    // Fast-fail only — full requireAuth (user, accountStatus, profile) runs
-    // inside checkAndIncrementCap below, transactionally with the cap charge.
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    // Open-ended agent session — duration unknown up front, charge the max.
-    const capResult: { allowed: boolean } = await ctx.runMutation(
-      internal.vent.checkAndIncrementCap,
-      { minutes: MAX_INCREMENT_MINUTES },
-    );
-    if (!capResult.allowed) throw new Error("Daily voice cap reached");
-
-    const apiKey = process.env.ELEVENLABS_AGENT_KEY;
-    if (!apiKey) {
-      throw new Error("ELEVENLABS_AGENT_KEY not configured");
-    }
-
-    const agentId = process.env.ELEVENLABS_VENT_AGENT_ID;
-    if (!agentId) {
-      throw new Error("ELEVENLABS_VENT_AGENT_ID not configured");
-    }
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
-
-    let response: Response;
-    try {
-      response = await fetch(
-        `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(agentId)}`,
-        {
-          method: "GET",
-          headers: { "xi-api-key": apiKey },
-          signal: controller.signal,
-        }
-      );
-    } finally {
-      clearTimeout(timeout);
-    }
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error(`[vent] ElevenLabs signed URL error ${response.status}: ${body}`);
-      throw new Error(`Failed to get signed URL: ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (!data || typeof data.signed_url !== "string") {
-      throw new Error("ElevenLabs response missing signed_url");
-    }
-    return { signedUrl: data.signed_url };
+export const deleteVentAudio = internalMutation({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    await ctx.storage.delete(args.storageId);
+    return null;
   },
 });
 
-// Crisis keywords for client-side detection fallback (Phase 4).
-// Used by classifyVentSafety when STT produces a transcript.
+// Crisis keywords for the vent pipeline's server-side pre-filter. A hit is
+// confirmed via moderation before it changes behavior (see runVentPipeline).
 const CRISIS_KEYWORDS = [
   "kill myself",
   "hurt myself",
@@ -175,36 +153,6 @@ async function confirmCrisisWithModeration(
   );
 }
 
-/**
- * Classify a voice vent transcript for safety signals.
- *
- * - Empty or very short transcripts are skipped (no error, no side effect).
- * - Transcript is NEVER stored. Only safety_flag metadata persists.
- * - When a crisis keyword is detected, an escalation_event is written.
- *
- * Called from the client after expo-speech-recognition produces a partial
- * transcript. The sessionId here is a Mirror session created to hold the
- * escalation_event reference (vent sessions are otherwise ephemeral).
- */
-export const classifyVentSafety = internalAction({
-  args: {
-    transcript: v.string(),
-    emotionalProfileId: v.id("emotional_profiles"),
-  },
-  handler: async (ctx, args) => {
-    if (args.transcript.trim().length < 20) return;
-
-    const lower = args.transcript.toLowerCase();
-    const matched = CRISIS_KEYWORDS.find((kw) => lower.includes(kw));
-    if (!matched) return;
-
-    console.warn(
-      `[vent] Crisis keyword detected for profile ${args.emotionalProfileId}. ` +
-        `Trigger type: crisis_keywords. Transcript NOT stored.`
-    );
-  },
-});
-
 // ---------------------------------------------------------------------------
 // Vent pipeline — Approach B (expo-audio + Scribe STT + Claude + ElevenLabs)
 // ---------------------------------------------------------------------------
@@ -224,18 +172,10 @@ type VentResult = {
  * All failures are soft — returns null words/audioUrl so the client can still
  * play the destruction animation regardless.
  */
-async function runVentPipeline(
-  ctx: ActionCtx,
+async function transcribeVentAudio(
+  apiKey: string,
   audioBytes: ArrayBuffer,
-): Promise<VentResult> {
-  const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
-  if (!apiKey) {
-    console.error("[vent] ELEVENLABS_VOICE_API_KEY not set — skipping pipeline");
-    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
-  }
-
-  // --- Step 1: Scribe v2 STT ---
-  let transcript = "";
+): Promise<string | null> {
   const scribeController = new AbortController();
   const scribeTimeout = setTimeout(() => scribeController.abort(), 30_000);
   try {
@@ -254,21 +194,51 @@ async function runVentPipeline(
     if (!scribeRes.ok) {
       const body = await scribeRes.text();
       console.error(`[vent] Scribe error ${scribeRes.status}: ${body}`);
-      return { words: null, audioUrl: null, isCrisis: false, capReached: false };
+      return null;
     }
 
     const data = await scribeRes.json();
-    transcript = typeof data.text === "string" ? data.text.trim() : "";
+    return typeof data.text === "string" ? data.text.trim() : "";
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
       console.error("[vent] Scribe request timed out");
     } else {
       console.error("[vent] Scribe fetch failed:", err);
     }
-    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
+    return null;
   } finally {
     clearTimeout(scribeTimeout);
   }
+}
+
+async function runVentPipeline(
+  ctx: ActionCtx,
+  audioBytes: ArrayBuffer,
+  emotionalProfileId?: Id<"emotional_profiles">,
+): Promise<VentResult> {
+  const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
+  if (!apiKey) {
+    console.error("[vent] ELEVENLABS_VOICE_API_KEY not set — skipping pipeline");
+    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
+  }
+
+  // --- Step 1: Scribe v2 STT, run alongside the (read-only) semantic profile
+  // and resolved-voice fetches — both depend only on emotionalProfileId, not
+  // the transcript, so their cost is fully hidden behind the STT round-trip.
+  const [transcriptResult, semanticProfileDoc, voiceSlug] = await Promise.all([
+    transcribeVentAudio(apiKey, audioBytes),
+    emotionalProfileId
+      ? ctx.runQuery(internal.semanticProfiles.getCurrent, { emotionalProfileId })
+      : Promise.resolve(null),
+    emotionalProfileId
+      ? ctx.runQuery(internal.preferences.getResolvedVoiceSlug, { emotionalProfileId })
+      : Promise.resolve(null),
+  ]);
+
+  if (transcriptResult === null) {
+    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
+  }
+  const transcript = transcriptResult;
 
   if (transcript.length < 20) {
     console.log("[vent] Transcript too short — skipping acknowledgement");
@@ -276,6 +246,10 @@ async function runVentPipeline(
   }
 
   console.log("[vent] Transcript length:", transcript.length, "(not stored)");
+
+  const semanticProfile = semanticProfileDoc
+    ? renderSemanticProfile(semanticProfileDoc)
+    : null;
 
   // --- Step 2: Crisis check (keyword pre-filter → moderation confirm) ---
   const lower = transcript.toLowerCase();
@@ -296,7 +270,7 @@ async function runVentPipeline(
   } else {
     try {
       const client = getAnthropicClient();
-      const { system, user } = buildVentAcknowledgePrompt(transcript);
+      const { system, user } = buildVentAcknowledgePrompt(transcript, semanticProfile);
       const response = await client.messages.create({
         model: ACKNOWLEDGE_MODEL,
         max_tokens: 120,
@@ -317,8 +291,10 @@ async function runVentPipeline(
   const ttsController = new AbortController();
   const ttsTimeout = setTimeout(() => ttsController.abort(), 30_000);
   try {
+    const ventVoiceId = resolveVoiceId(voiceSlug ?? undefined, VENT_DEFAULT_VOICE_ID);
+    console.log("[vent] voice:", voiceSlug ?? "default", "->", ventVoiceId);
     const ttsRes = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${WITNESSED_VOICE_ID}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${ventVoiceId}`,
       {
         method: "POST",
         headers: {
@@ -343,6 +319,13 @@ async function runVentPipeline(
       const audioBlob = new Blob([audioBuffer], { type: "audio/mpeg" });
       const storageId = await ctx.storage.store(audioBlob);
       audioUrl = await ctx.storage.getUrl(storageId);
+      // The client plays this once, right after the burn animation, then pops
+      // the route — the blob is never replayed or persisted. Nothing keeps its
+      // id anywhere, so schedule its own deletion or it orphans in storage
+      // forever. The TTL covers a user who backgrounds mid-coda and returns.
+      await ctx.scheduler.runAfter(VENT_AUDIO_TTL_MS, internal.vent.deleteVentAudio, {
+        storageId,
+      });
     }
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
@@ -389,15 +372,15 @@ export const processVentAudio = action({
     const payloadSeconds = args.audioBytes.byteLength / AUDIO_BYTES_PER_SECOND;
     const minutes = Math.max(claimedSeconds, payloadSeconds) / 60;
 
-    const capResult: { allowed: boolean } = await ctx.runMutation(
-      internal.vent.checkAndIncrementCap,
-      { minutes },
-    );
+    const capResult: (
+      | { allowed: true; emotionalProfileId: Id<"emotional_profiles"> }
+      | { allowed: false }
+    ) = await ctx.runMutation(internal.vent.checkAndIncrementCap, { minutes });
     if (!capResult.allowed) {
       console.log("[vent] Daily cap reached — skipping pipeline");
       return { words: null, audioUrl: null, isCrisis: false, capReached: true };
     }
 
-    return runVentPipeline(ctx, args.audioBytes);
+    return runVentPipeline(ctx, args.audioBytes, capResult.emotionalProfileId);
   },
 });

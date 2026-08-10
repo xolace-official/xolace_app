@@ -49,6 +49,11 @@ export const REACH_ICON: CrossPlatformSymbol = {
   android: "send",
   web: "send",
 };
+export const CHAT_NOTIFICATIONS_ICON: CrossPlatformSymbol = {
+  ios: "bubble.left.and.bubble.right",
+  android: "forum",
+  web: "forum",
+};
 export const QUIET_HOURS_ICON: CrossPlatformSymbol = {
   ios: "moon.zzz",
   android: "bedtime",
@@ -63,6 +68,11 @@ export const FEEDBACK_ICON: CrossPlatformSymbol = {
   ios: "text.bubble",
   android: "feedback",
   web: "feedback",
+};
+export const MEMORY_ICON: CrossPlatformSymbol = {
+  ios: "brain",
+  android: "auto_awesome",
+  web: "auto_awesome",
 };
 export const RETENTION_ICON: CrossPlatformSymbol = {
   ios: "clock.arrow.circlepath",
@@ -98,4 +108,9 @@ export const HEART_ICON: CrossPlatformSymbol = {
   ios: "heart",
   android: "favorite",
   web: "favorite",
+};
+export const PLUS_TIER_ICON: CrossPlatformSymbol = {
+  ios: "sparkles",
+  android: "auto_awesome",
+  web: "auto_awesome",
 };

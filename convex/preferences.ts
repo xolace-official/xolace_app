@@ -1,9 +1,11 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
-import { mirrorToneValidator } from "./lib/validators";
+import { mirrorToneValidator, motionPreferenceValidator } from "./lib/validators";
 import { validateSpaceName } from "./lib/spaceName";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
+import { requirePremium, hasPremium } from "./lib/premium";
+import { voiceSlugValidator } from "./lib/voices";
 
 /**
  * Get the user's quote preferences (themes, notification settings).
@@ -106,6 +108,9 @@ export const update = mutation({
     theme: v.optional(
       v.union(v.literal("light"), v.literal("dark"), v.literal("system"))
     ),
+    // Tri-state motion preference. Source of truth going forward.
+    motionPreference: v.optional(motionPreferenceValidator),
+    // Back-compat boolean mirror. Kept in sync with motionPreference below.
     reducedMotion: v.optional(v.boolean()),
     notifications: v.optional(
       v.object({
@@ -113,6 +118,10 @@ export const update = mutation({
         gentleReturn: v.boolean(),
         patternNudge: v.boolean(),
         milestone: v.boolean(),
+        // Accepted so the object a client read back is still a legal argument.
+        // Without it, any caller that spreads the stored preferences instead of
+        // building a literal would fail argument validation outright.
+        chat: v.optional(v.boolean()),
         reach: v.optional(v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))),
         quietWindow: v.optional(v.object({ dontReachBefore: v.number(), dontReachAfter: v.number() })),
         timezone: v.optional(v.string()),
@@ -127,6 +136,9 @@ export const update = mutation({
     notificationTimezone: v.optional(v.string()),
     mirrorTone: v.optional(mirrorToneValidator),
     contributeByDefault: v.optional(v.boolean()),
+    // Personal memory (Cognition Layer §1.1b). Off = new sessions embed
+    // metadata-only into episodic memory.
+    personalMemoryEnabled: v.optional(v.boolean()),
     dataRetentionPreference: v.optional(
       v.union(
         v.literal("indefinite"),
@@ -141,6 +153,9 @@ export const update = mutation({
     // null = clear the name; string = set/update; undefined = no-op
     spaceName: v.optional(v.union(v.string(), v.null())),
     spaceNamePromptDismissed: v.optional(v.boolean()),
+    // Plus-only custom voice. null clears back to "Auto"; a slug sets it;
+    // undefined = no-op. Gated below, same shape as spaceName.
+    voice: v.optional(v.union(voiceSlugValidator, v.null())),
   },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
@@ -156,15 +171,37 @@ export const update = mutation({
       throw new Error("Preferences not found");
     }
 
+    if (args.mirrorTone === "witnessed") {
+      await requirePremium(ctx, profile, "witnessed mirror tone");
+    }
+
+    // Setting a voice is Plus-only; clearing it (null) is always allowed.
+    if (args.voice != null) {
+      await requirePremium(ctx, profile, "custom voice");
+    }
+
     // Build patch from provided args only
     const patch: Record<string, unknown> = {};
     if (args.theme !== undefined) patch.theme = args.theme;
-    if (args.reducedMotion !== undefined) patch.reducedMotion = args.reducedMotion;
-    if (args.notifications !== undefined) patch.notifications = args.notifications;
+    // Keep motionPreference (source of truth) and reducedMotion (back-compat
+    // mirror) in sync regardless of which one the caller wrote:
+    //  - New UI writes motionPreference → mirror to the boolean (reduced only
+    //    when forced "reduced"; "system"/"full" both map to false).
+    //  - Old UI writes reducedMotion → project onto the tri-state
+    //    (true → "reduced", false → "system"), preserving the resolver.
+    if (args.motionPreference !== undefined) {
+      patch.motionPreference = args.motionPreference;
+      patch.reducedMotion = args.motionPreference === "reduced";
+    } else if (args.reducedMotion !== undefined) {
+      patch.reducedMotion = args.reducedMotion;
+      patch.motionPreference = args.reducedMotion ? "reduced" : "system";
+    }
 
     if (args.mirrorTone !== undefined) patch.mirrorTone = args.mirrorTone;
     if (args.contributeByDefault !== undefined)
       patch.contributeByDefault = args.contributeByDefault;
+    if (args.personalMemoryEnabled !== undefined)
+      patch.personalMemoryEnabled = args.personalMemoryEnabled;
     if (args.dataRetentionPreference !== undefined)
       patch.dataRetentionPreference = args.dataRetentionPreference;
     if (args.preferredInputType !== undefined)
@@ -182,13 +219,27 @@ export const update = mutation({
     if (args.spaceNamePromptDismissed !== undefined) {
       patch.spaceNamePromptDismissed = args.spaceNamePromptDismissed;
     }
+    if (args.voice !== undefined) patch.voice = args.voice ?? undefined;
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(preferences._id, patch);
     }
 
-    // Notification sub-field merges run last so they're preserved even if
-    // args.notifications was also provided above.
+    // Notification writes are merges, never replacements. `args.notifications`
+    // is the whole-object form the settings toggles send, and it carries only
+    // the fields whatever UI is installed knows about — a shipped client that
+    // predates a preference would otherwise silently erase it on an unrelated
+    // toggle. Absent-means-enabled makes that erasure fail open, which is the
+    // worse direction: someone who muted chat would start being pushed again.
+    if (args.notifications !== undefined) {
+      await updateNotificationPrefs(
+        ctx,
+        preferences.emotionalProfileId,
+        args.notifications,
+      );
+    }
+
+    // Sub-field merges run last so they win over the whole-object form above.
     if (
       args.notificationReach !== undefined ||
       args.notificationQuietWindow !== undefined ||
@@ -204,6 +255,28 @@ export const update = mutation({
     }
 
     return null;
+  },
+});
+
+/**
+ * Resolve the effective custom-voice slug for a profile, re-checking premium.
+ * Used by the vent pipeline, which runs mid-action with no auth context.
+ * Returns null when there's no voice preference OR the subscription lapsed —
+ * the caller then falls back to the default vent voice.
+ */
+export const getResolvedVoiceSlug = internalQuery({
+  args: { emotionalProfileId: v.id("emotional_profiles") },
+  handler: async (ctx, args): Promise<string | null> => {
+    const profile = await ctx.db.get(args.emotionalProfileId);
+    if (!profile) return null;
+    const prefs = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId),
+      )
+      .unique();
+    if (!prefs?.voice) return null;
+    return (await hasPremium(ctx, profile)) ? prefs.voice : null;
   },
 });
 

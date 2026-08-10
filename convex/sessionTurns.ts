@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireSessionOwnership } from "./lib/auth";
@@ -31,7 +31,12 @@ export const submitFeedback = mutation({
       .take(MAX_TURNS + 1);
 
     if (existingTurns.length >= MAX_TURNS) {
-      throw new Error("Maximum refinement turns reached");
+      // The message keeps the "Maximum refinement turns" substring so app
+      // versions matching on error.message still detect this rejection.
+      throw new ConvexError({
+        code: "max_refinement_turns",
+        message: "Maximum refinement turns reached",
+      });
     }
 
     const turnNumber = existingTurns.length + 1;

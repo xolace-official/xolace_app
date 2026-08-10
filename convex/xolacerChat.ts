@@ -1,0 +1,1708 @@
+import { ConvexError, v } from "convex/values";
+import {
+  action,
+  internalAction,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+  MutationCtx, QueryCtx
+} from "./_generated/server";
+import { internal } from "./_generated/api";
+import { Doc, Id } from "./_generated/dataModel";
+import { requireAuth } from "./lib/auth";
+import {
+  type ChatNotificationType,
+  chatNotificationsAllowed,
+  conversationIdFromChannelId,
+  messageNotificationRecipient,
+  messageNotificationSuppressed,
+  messageNotifiedField,
+  xolacerChannelId,
+} from "./lib/chatNotifications";
+import {
+  conversationOrigin,
+  type ConversationOrigin,
+  meetsRatingFloor,
+  rankSuggestionCandidates,
+  SUGGESTION_ORIGIN_WINDOW_MS,
+} from "./lib/xolacerSuggestion";
+import { posthog } from "./posthog";
+import {
+  createXolacerChannel,
+  deleteStreamUser,
+  freezeStreamChannel,
+  getStreamApiKey,
+  mintUserToken,
+  upsertStreamUsers,
+} from "./integrations/stream";
+import {
+  canRate,
+  declineCooldownUntil,
+  hasRealExchange,
+  isAtOpenCap,
+  isBlocked,
+  isPairBlocked,
+  planBlock,
+  REQUEST_EXPIRY_MS,
+} from "./lib/conversationGating";
+import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
+
+const statusValidator = v.union(
+  v.literal("requested"),
+  v.literal("open"),
+  v.literal("resting"),
+  v.literal("closed"),
+);
+const closedReasonValidator = v.optional(
+  v.union(
+    v.literal("declined"),
+    v.literal("expired"),
+    v.literal("blocked"),
+    v.literal("xolacer_left"),
+  ),
+);
+const originValidator = v.optional(
+  v.union(v.literal("suggestion"), v.literal("direct")),
+);
+const conversationRowValidator = v.object({
+  id: v.id("xolacer_conversations"),
+  role: v.union(v.literal("user"), v.literal("xolacer")),
+  status: statusValidator,
+  closedReason: closedReasonValidator,
+  streamChannelId: v.optional(v.string()),
+  lastMessageAt: v.optional(v.number()),
+  requestedAt: v.number(),
+  // Stable identity for the xolacer side of the thread — the roster matches
+  // on this, never on display name (names repeat and can change).
+  xolacerProfileId: v.id("emotional_profiles"),
+  // The other party's profile id — what a report is filed against, because a
+  // display name repeats and can change. No new exposure: this is also the
+  // Stream user id, so the client already sees it on every message.
+  counterpartProfileId: v.id("emotional_profiles"),
+  counterpartName: v.string(),
+  counterpartPhotoUrl: v.optional(v.string()),
+  // Xolacer-side only — the seeker never learns how their own request was
+  // stamped. Absent on rows predating the feature, which read as direct.
+  origin: originValidator,
+});
+
+// Volume cap counts OPEN conversations only — resting/closed free the slot.
+export const MAX_OPEN_CONVERSATIONS = 8;
+/**
+ * The seeker's side of the same ceiling. Lower than the xolacer's 8 because
+ * the load is the opposite shape: a volunteer holds space for many people,
+ * someone seeking support spread across more than three threads is not being
+ * heard in any of them.
+ *
+ * Enforced only on new transitions. Seekers already past it when this shipped
+ * keep every conversation they have — a cap that retroactively closed threads
+ * would be the app walking out on someone mid-sentence.
+ */
+export const MAX_SEEKER_OPEN_CONVERSATIONS = 3;
+/**
+ * Outbound requests a seeker may have awaiting an answer at once. Only
+ * "requested" rows count — once a xolacer accepts or declines, the slot is
+ * free again. Without this a user can blanket every xolacer in the directory.
+ */
+export const MAX_PENDING_REQUESTS = 2;
+const RESTING_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * Below this, no average is shown anywhere — one bad night shouldn't read as
+ * a xolacer's score, and a 5.0 from a single rating is worse than no number
+ * at all. Enforced server-side so the client never receives a hideable value.
+ */
+const MIN_RATINGS_TO_DISPLAY = 5;
+
+/**
+ * Ceiling on how many specialty-declaring xolacers sessionSuggestion will pay
+ * per-candidate reads for. A safety valve, not a tuning knob: at any plausible
+ * roster size the specialty filter yields far fewer than this, so it should
+ * never bind. If it ever does, ranking sees a subset and least-loaded stops
+ * being exact — which is the signal to index specialties properly.
+ */
+const MAX_SUGGESTION_CANDIDATES = 200;
+
+/** Public rating shape: the average exists only past the display threshold. */
+function publicRating(profile: Doc<"xolacer_profiles">) {
+  const count = profile.ratingCount ?? 0;
+  return {
+    rating:
+      count >= MIN_RATINGS_TO_DISPLAY
+        ? Math.round(((profile.ratingSum ?? 0) / count) * 10) / 10
+        : undefined,
+    ratingCount: count,
+  };
+}
+
+// Global kill-switch (env-var gate, same pattern as devTools). The feature
+// ships dark until the ambassador-consent + DPA review clears.
+function chatEnabled() {
+  return process.env.XOLACER_CHAT_ENABLED === "true";
+}
+
+/**
+ * Xolacer-side counterparts are anonymous users — no public identity exists
+ * for them by design. A stable pseudonym derived from the profile id keeps
+ * multiple conversations distinguishable without leaking anything.
+ */
+function pseudonym(profileId: string) {
+  return `Camper ${profileId.slice(-4).toUpperCase()}`;
+}
+
+/**
+ * Anyone's anonymous chat picture — the catalog avatar they chose.
+ * `avatars.url` is already a denormalized public storage URL, so Stream takes
+ * it as-is. Curated illustrations only, never a photo, so it leaks nothing the
+ * pseudonym doesn't — which is why it's also the right picture for a published
+ * xolacer's own Stream record.
+ *
+ * Two reads per row in myConversations (up to 100 conversations) is the only
+ * cost worth naming; if that ever bites, denormalize avatarUrl onto
+ * xolacer_conversations at request time. Not yet.
+ */
+async function catalogAvatar(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
+  const prefs = await ctx.db
+    .query("preferences")
+    .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
+    .unique();
+  const avatar = await ctx.db
+    .query("avatars")
+    .withIndex("by_key", (q) => q.eq("key", prefs?.avatarId ?? "default"))
+    .unique();
+  return avatar?.url;
+}
+
+async function countOpen(ctx: QueryCtx, xolacerProfileId: Id<"emotional_profiles">) {
+  const open = await ctx.db
+    .query("xolacer_conversations")
+    .withIndex("by_xolacer_and_status", (q) =>
+      q.eq("xolacerProfileId", xolacerProfileId).eq("status", "open"),
+    )
+    .take(MAX_OPEN_CONVERSATIONS);
+  return open.length;
+}
+
+/** Conversations a seeker currently holds open. Stops at the cap. */
+async function countOpenAsSeeker(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+) {
+  const open = await ctx.db
+    .query("xolacer_conversations")
+    .withIndex("by_user_and_status", (q) =>
+      q.eq("userProfileId", userProfileId).eq("status", "open"),
+    )
+    .take(MAX_SEEKER_OPEN_CONVERSATIONS);
+  return open.length;
+}
+
+/**
+ * Guard for any transition that would put another conversation into "open" for
+ * either party. Distinct error code from `pending_request_limit` so the client
+ * can say which ceiling was hit, and `party` so the message names the right
+ * person — the xolacer hitting this on accept is not the one who is full.
+ */
+async function requireOpenSlot(
+  ctx: QueryCtx,
+  party: "seeker" | "xolacer",
+  profileId: Id<"emotional_profiles">,
+) {
+  const [openCount, cap] =
+    party === "seeker"
+      ? [await countOpenAsSeeker(ctx, profileId), MAX_SEEKER_OPEN_CONVERSATIONS]
+      : [await countOpen(ctx, profileId), MAX_OPEN_CONVERSATIONS];
+  if (isAtOpenCap(openCount, cap)) {
+    throw new ConvexError({ code: "open_conversation_limit", max: cap, party });
+  }
+}
+
+/**
+ * Both rows that can exist between two people — `forward` where the first
+ * argument asked, `reverse` where the second did. Two point lookups on
+ * `by_user_and_xolacer`, never a scan. The pair, not the row, is the unit a
+ * block applies to, so every gate reads both.
+ */
+async function loadPairRows(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+  xolacerProfileId: Id<"emotional_profiles">,
+) {
+  const forward = await ctx.db
+    .query("xolacer_conversations")
+    .withIndex("by_user_and_xolacer", (q) =>
+      q.eq("userProfileId", userProfileId).eq("xolacerProfileId", xolacerProfileId),
+    )
+    .unique();
+  const reverse = await ctx.db
+    .query("xolacer_conversations")
+    .withIndex("by_user_and_xolacer", (q) =>
+      q.eq("userProfileId", xolacerProfileId).eq("xolacerProfileId", userProfileId),
+    )
+    .unique();
+  return { forward, reverse };
+}
+
+/** `isPairBlocked` over both rows, for the gates that need only the verdict. */
+async function loadPairBlocked(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+  xolacerProfileId: Id<"emotional_profiles">,
+) {
+  const { forward, reverse } = await loadPairRows(
+    ctx,
+    userProfileId,
+    xolacerProfileId,
+  );
+  return isPairBlocked(forward, reverse);
+}
+
+/** Outbound requests a seeker has awaiting an answer. Stops at the cap. */
+async function countPendingRequests(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+) {
+  const pending = await ctx.db
+    .query("xolacer_conversations")
+    .withIndex("by_user_and_status", (q) =>
+      q.eq("userProfileId", userProfileId).eq("status", "requested"),
+    )
+    .take(MAX_PENDING_REQUESTS);
+  return pending.length;
+}
+
+/**
+ * Guard for any transition that puts a row into "requested". Distinct error
+ * code so the client can say "waiting on 2 already" instead of blaming the
+ * xolacer's availability.
+ */
+async function requirePendingRequestSlot(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+) {
+  if ((await countPendingRequests(ctx, userProfileId)) >= MAX_PENDING_REQUESTS) {
+    throw new ConvexError({
+      code: "pending_request_limit",
+      max: MAX_PENDING_REQUESTS,
+    });
+  }
+}
+
+function xolacerAvailable(
+  profile: Doc<"xolacer_profiles"> | null,
+  openCount: number,
+): profile is Doc<"xolacer_profiles"> {
+  return Boolean(
+    profile &&
+      profile.complete &&
+      profile.active &&
+      !isAtOpenCap(openCount, MAX_OPEN_CONVERSATIONS),
+  );
+}
+
+async function getXolacerProfileByProfileId(
+  ctx: QueryCtx,
+  emotionalProfileId: Id<"emotional_profiles">,
+) {
+  return await ctx.db
+    .query("xolacer_profiles")
+    .withIndex("by_profile", (q) => q.eq("emotionalProfileId", emotionalProfileId))
+    .unique();
+}
+
+async function findRating(
+  ctx: QueryCtx,
+  conversationId: Id<"xolacer_conversations">,
+) {
+  return await ctx.db
+    .query("conversation_ratings")
+    .withIndex("by_conversation", (q) => q.eq("conversationId", conversationId))
+    .unique();
+}
+
+async function requireConversationParticipant(
+  ctx: QueryCtx,
+  conversationId: Id<"xolacer_conversations">,
+) {
+  const { user, profile } = await requireAuth(ctx);
+  const conversation = await ctx.db.get(conversationId);
+  if (!conversation) throw new Error("Conversation not found");
+  const role =
+    conversation.userProfileId === profile._id
+      ? ("user" as const)
+      : conversation.xolacerProfileId === profile._id
+        ? ("xolacer" as const)
+        : null;
+  if (!role) throw new Error("Conversation does not belong to this user");
+  return { user, profile, conversation, role };
+}
+
+// ============================================================
+// Status / gating
+// ============================================================
+
+/** Feature + role status for the Connect tab. Null-safe when disabled. */
+export const status = query({
+  args: {},
+  returns: v.union(
+    v.object({ enabled: v.literal(false) }),
+    v.object({
+      enabled: v.literal(true),
+      isXolacer: v.boolean(),
+      xolacerProfileComplete: v.boolean(),
+      xolacerActive: v.boolean(),
+    }),
+  ),
+  handler: async (ctx) => {
+    if (!chatEnabled()) return { enabled: false as const };
+    const { user, profile } = await requireAuth(ctx);
+    const xolacerProfile = user.isXolacer
+      ? await getXolacerProfileByProfileId(ctx, profile._id)
+      : null;
+    return {
+      enabled: true as const,
+      isXolacer: Boolean(user.isXolacer),
+      xolacerProfileComplete: Boolean(xolacerProfile?.complete),
+      xolacerActive: Boolean(xolacerProfile?.active),
+    };
+  },
+});
+
+// ============================================================
+// Directory
+// ============================================================
+
+export const directory = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      xolacerProfileId: v.id("emotional_profiles"),
+      displayName: v.string(),
+      bio: v.string(),
+      photoUrl: v.optional(v.string()),
+      specialties: v.array(specialtyValidator),
+      rating: v.optional(v.number()),
+      ratingCount: v.number(),
+      atCapacity: v.boolean(),
+      xolacerSince: v.number(),
+    }),
+  ),
+  handler: async (ctx) => {
+    if (!chatEnabled()) return [];
+    const { profile } = await requireAuth(ctx);
+
+    const xolacers = await ctx.db
+      .query("xolacer_profiles")
+      .withIndex("by_complete_and_active", (q) =>
+        q.eq("complete", true).eq("active", true),
+      )
+      .take(50);
+
+    const rows = [];
+    for (const xolacer of xolacers) {
+      // A xolacer browsing the roster shouldn't see themselves.
+      if (xolacer.emotionalProfileId === profile._id) continue;
+      // Blocking hides, it doesn't just refuse
+      if (await loadPairBlocked(ctx, profile._id, xolacer.emotionalProfileId)) {
+        continue;
+      }
+      const openCount = await countOpen(ctx, xolacer.emotionalProfileId);
+      rows.push({
+        xolacerProfileId: xolacer.emotionalProfileId,
+        displayName: xolacer.displayName ?? "",
+        bio: xolacer.bio ?? "",
+        photoUrl: xolacer.photoUrl,
+        specialties: xolacer.specialties ?? [],
+        ...publicRating(xolacer),
+        atCapacity: isAtOpenCap(openCount, MAX_OPEN_CONVERSATIONS),
+        xolacerSince: xolacer.createdAt,
+      });
+    }
+    return rows;
+  },
+});
+
+/** Public profile + my relationship to this xolacer (drives the CTA). */
+export const xolacerProfile = query({
+  args: { xolacerProfileId: v.id("emotional_profiles") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      xolacerProfileId: v.id("emotional_profiles"),
+      displayName: v.string(),
+      bio: v.string(),
+      photoUrl: v.optional(v.string()),
+      specialties: v.array(specialtyValidator),
+      rating: v.optional(v.number()),
+      ratingCount: v.number(),
+      xolacerSince: v.number(),
+      available: v.boolean(),
+      /** Viewing your own profile — the request CTA is replaced, not disabled. */
+      isSelf: v.boolean(),
+      conversation: v.union(
+        v.null(),
+        v.object({
+          id: v.id("xolacer_conversations"),
+          status: statusValidator,
+          closedReason: closedReasonValidator,
+          // Present only while a decline is still resting. The CTA reads it so
+          // the wait is on screen before anyone writes anything — finding out
+          // on submit is the version of this that reads as a second refusal.
+          retryAvailableAt: v.optional(v.number()),
+        }),
+      ),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) return null;
+    const { profile } = await requireAuth(ctx);
+
+    const xolacer = await getXolacerProfileByProfileId(ctx, args.xolacerProfileId);
+    if (!xolacer || !xolacer.complete) return null;
+
+    // Same as the directory, for the path that skips it: a deep link, or a
+    // row still cached on the client. Null renders "unavailable", not a
+    // dead-end request CTA.
+    if (
+      profile._id !== args.xolacerProfileId &&
+      (await loadPairBlocked(ctx, profile._id, args.xolacerProfileId))
+    ) {
+      return null;
+    }
+
+    const openCount = await countOpen(ctx, args.xolacerProfileId);
+    const conversation = await ctx.db
+      .query("xolacer_conversations")
+      .withIndex("by_user_and_xolacer", (q) =>
+        q.eq("userProfileId", profile._id).eq("xolacerProfileId", args.xolacerProfileId),
+      )
+      .unique();
+
+    return {
+      xolacerProfileId: args.xolacerProfileId,
+      displayName: xolacer.displayName ?? "",
+      bio: xolacer.bio ?? "",
+      photoUrl: xolacer.photoUrl,
+      specialties: xolacer.specialties ?? [],
+      ...publicRating(xolacer),
+      xolacerSince: xolacer.createdAt,
+      available: xolacerAvailable(xolacer, openCount),
+      isSelf: profile._id === args.xolacerProfileId,
+      conversation: conversation
+        ? {
+            id: conversation._id,
+            status: conversation.status,
+            closedReason: conversation.closedReason,
+            retryAvailableAt: declineCooldownUntil(conversation, Date.now()),
+          }
+        : null,
+    };
+  },
+});
+
+/**
+ * The one xolacer this session would offer, or null — null being the correct
+ * and common answer.
+ *
+ * The person is chosen at read time and never stored. That is load-bearing for
+ * privacy, not an optimization: no record linking a session to a specific
+ * xolacer exists anywhere, which is what keeps the profile screen's promise
+ * that a chat is never linked to a user's reflections literally true. It also
+ * means availability is always current, so there is no stale suggestion to
+ * expire.
+ */
+export const sessionSuggestion = query({
+  args: { sessionId: v.id("sessions") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      xolacerProfileId: v.id("emotional_profiles"),
+      displayName: v.string(),
+      photoUrl: v.optional(v.string()),
+      specialties: v.array(specialtyValidator),
+      specialty: specialtyValidator,
+      rating: v.optional(v.number()),
+      ratingCount: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) return null;
+
+    // Null, never throw, when the session isn't this user's or is gone. The
+    // caller is the session-end close phase, which reads `sessionId` from a
+    // route param and renders inside no error boundary — a throw there takes
+    // the whole screen down.
+    const { profile } = await requireAuth(ctx);
+    const session = await ctx.db.get(args.sessionId);
+    if (!session || session.emotionalProfileId !== profile._id) return null;
+
+
+    const metadata = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+    const specialty = metadata?.suggestedSpecialty;
+    if (!specialty) return null;
+
+    // The stored verdict only ever saw the first input. Refinement turns are
+    // deliberately not re-classified (ai/clarify.ts: "Skips moderation +
+    // classification"), so anything the user added afterwards has been through
+    // no safeguard and no classifier — and the specialty above predates it.
+    // Suggesting on it would route someone to a volunteer on the strength of a
+    // verdict that never read what they last said.
+    // Bounded by design: a session has at most MAX_TURNS (2) refinement turns.
+    const turns = await ctx.db
+      .query("session_turns")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .take(4);
+    if (turns.some((turn) => turn.userInput)) return null;
+
+    // `specialties` is an array field, so it can't be indexed — the specialty
+    // filter has to run in memory, which means the scan feeding it must not be
+    // truncated first. A prefix would silently hide declaring xolacers the
+    // moment the roster outgrew it, and the failure looks like "no suggestion"
+    // rather than an error. Bounded in practice by roster size: this is the
+    // directory, a curated set.
+    // ponytail: full active-roster scan; needs a denormalized
+    // specialty->xolacer index if the roster reaches the low thousands.
+    const declaring: Doc<"xolacer_profiles">[] = [];
+    for await (const xolacer of ctx.db
+      .query("xolacer_profiles")
+      .withIndex("by_complete_and_active", (q) =>
+        q.eq("complete", true).eq("active", true),
+      )) {
+      if (xolacer.emotionalProfileId === profile._id) continue;
+      if (!xolacer.specialties?.includes(specialty)) continue;
+      if (!meetsRatingFloor(xolacer)) continue;
+      declaring.push(xolacer);
+      if (declaring.length >= MAX_SUGGESTION_CANDIDATES) break;
+    }
+
+    const candidates = [];
+    for (const xolacer of declaring) {
+      // Exact pair lookup, not a scan of this user's rows: a past decline or
+      // an expired request must not come back dressed as a fresh
+      // recommendation, and a capped scan would eventually miss one. This is
+      // what by_user_and_xolacer exists for.
+      const { forward, reverse } = await loadPairRows(
+        ctx,
+        profile._id,
+        xolacer.emotionalProfileId,
+      );
+      if (forward) continue;
+
+      if (isPairBlocked(forward, reverse)) continue;
+      const openCount = await countOpen(ctx, xolacer.emotionalProfileId);
+      if (!xolacerAvailable(xolacer, openCount)) continue;
+      candidates.push({
+        xolacerProfileId: xolacer.emotionalProfileId,
+        openCount,
+        xolacer,
+      });
+    }
+
+    const [best] = rankSuggestionCandidates(candidates, args.sessionId);
+    if (!best) return null;
+    return {
+      xolacerProfileId: best.xolacerProfileId,
+      displayName: best.xolacer.displayName ?? "Xolacer",
+      photoUrl: best.xolacer.photoUrl,
+      specialties: best.xolacer.specialties ?? [],
+      specialty,
+      ...publicRating(best.xolacer),
+    };
+  },
+});
+
+// ============================================================
+// Conversations
+// ============================================================
+
+export const myConversations = query({
+  args: {},
+  returns: v.array(conversationRowValidator),
+  handler: async (ctx) => {
+    if (!chatEnabled()) return [];
+    const { user, profile } = await requireAuth(ctx);
+
+    const asUser = await ctx.db
+      .query("xolacer_conversations")
+      .withIndex("by_user_and_status", (q) => q.eq("userProfileId", profile._id))
+      .take(100);
+
+    const asXolacer = user.isXolacer
+      ? await ctx.db
+          .query("xolacer_conversations")
+          .withIndex("by_xolacer_and_status", (q) =>
+            q.eq("xolacerProfileId", profile._id),
+          )
+          .take(100)
+      : [];
+
+    // Blocked rows leave both lists, not just the blocker's — a permanent
+    // "stepped back" row the blocked party can keep tapping is more pointed
+    // than the conversation simply no longer appearing. Nothing is deleted:
+    // the row stays reachable by direct id for moderation.
+    const rows = [];
+    for (const conversation of asUser) {
+      if (isBlocked(conversation.closedReason)) continue;
+      const xolacer = await getXolacerProfileByProfileId(
+        ctx,
+        conversation.xolacerProfileId,
+      );
+      rows.push({
+        id: conversation._id,
+        role: "user" as const,
+        status: conversation.status,
+        closedReason: conversation.closedReason,
+        streamChannelId: conversation.streamChannelId,
+        lastMessageAt: conversation.lastMessageAt,
+        requestedAt: conversation.requestedAt,
+        xolacerProfileId: conversation.xolacerProfileId,
+        counterpartProfileId: conversation.xolacerProfileId,
+        counterpartName: xolacer?.displayName ?? "Xolacer",
+        counterpartPhotoUrl: xolacer?.photoUrl,
+      });
+    }
+    for (const conversation of asXolacer) {
+      if (isBlocked(conversation.closedReason)) continue;
+      rows.push({
+        id: conversation._id,
+        role: "xolacer" as const,
+        status: conversation.status,
+        closedReason: conversation.closedReason,
+        streamChannelId: conversation.streamChannelId,
+        lastMessageAt: conversation.lastMessageAt,
+        requestedAt: conversation.requestedAt,
+        xolacerProfileId: conversation.xolacerProfileId,
+        counterpartProfileId: conversation.userProfileId,
+        counterpartName: pseudonym(conversation.userProfileId),
+        counterpartPhotoUrl: await catalogAvatar(ctx, conversation.userProfileId),
+        origin: conversation.origin,
+      });
+    }
+
+    // Requested first (xolacer inbox), then most recent activity.
+    rows.sort((a, b) => {
+      const aKey = a.lastMessageAt ?? a.requestedAt;
+      const bKey = b.lastMessageAt ?? b.requestedAt;
+      return bKey - aKey;
+    });
+    return rows;
+  },
+});
+
+export const getConversation = query({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      id: v.id("xolacer_conversations"),
+      role: v.union(v.literal("user"), v.literal("xolacer")),
+      status: statusValidator,
+      closedReason: closedReasonValidator,
+      streamChannelId: v.optional(v.string()),
+      lastMessageAt: v.optional(v.number()),
+      requestedAt: v.number(),
+      resumable: v.boolean(),
+      canRate: v.boolean(),
+      myRating: v.optional(v.number()),
+      counterpartProfileId: v.id("emotional_profiles"),
+      counterpartName: v.string(),
+      counterpartPhotoUrl: v.optional(v.string()),
+      myStreamUserId: v.id("emotional_profiles"),
+      origin: originValidator,
+    }),
+  ),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) return null;
+    const { profile, conversation, role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+
+    const xolacer = await getXolacerProfileByProfileId(
+      ctx,
+      conversation.xolacerProfileId,
+    );
+    const openCount = await countOpen(ctx, conversation.xolacerProfileId);
+    // Resting → Open without a fresh request only while the xolacer is
+    // still published, active, and under cap.
+    const resumable = xolacerAvailable(xolacer, openCount);
+
+    const existingRating =
+      role === "user" ? await findRating(ctx, conversation._id) : null;
+
+    return {
+      id: conversation._id,
+      role,
+      status: conversation.status,
+      closedReason: conversation.closedReason,
+      streamChannelId: conversation.streamChannelId,
+      lastMessageAt: conversation.lastMessageAt,
+      requestedAt: conversation.requestedAt,
+      resumable,
+      canRate: canRate(conversation, role),
+      myRating: existingRating?.rating,
+      counterpartProfileId:
+        role === "user"
+          ? conversation.xolacerProfileId
+          : conversation.userProfileId,
+      counterpartName:
+        role === "user"
+          ? (xolacer?.displayName ?? "Xolacer")
+          : pseudonym(conversation.userProfileId),
+      counterpartPhotoUrl:
+        role === "user"
+          ? xolacer?.photoUrl
+          : await catalogAvatar(ctx, conversation.userProfileId),
+      myStreamUserId: profile._id,
+      // Returned to both roles, matching myConversations: origin is the
+      // seeker's own data, so it leaks nothing back to them, and one field
+      // beats two code paths that can drift. Role-gating lives in the badge,
+      // which renders on xolacer-role rows only.
+      origin: conversation.origin,
+    };
+  },
+});
+
+/**
+ * Structural only: that a request was sent, and how fresh the sender was.
+ * No specialty, no theme, no session content — that would put the classifier's
+ * read of a person into analytics before the person has said a word.
+ */
+async function captureRequestSent(
+  ctx: MutationCtx,
+  distinctId: Id<"emotional_profiles">,
+  origin: ConversationOrigin,
+) {
+  // Swallowed on purpose: this runs inside the request mutation's transaction,
+  // so a throw here would roll back the request the user just sent. Losing one
+  // analytics event beats losing the request.
+  try {
+    await posthog.capture(ctx, {
+      distinctId,
+      event: "xolacer_request_sent",
+      properties: { origin },
+    });
+  } catch (error) {
+    console.error("xolacer_request_sent capture failed", error);
+  }
+}
+
+/**
+ * Tell someone the other person is waiting on them, or has answered.
+ *
+ * Scheduled, not called: a push failure must not roll back the lifecycle change
+ * that earned it. Fires only where the row actually moved — never on the
+ * idempotent request early-return, and never on expiry, block, resume, or a
+ * xolacer leaving, which are closures to find in the app rather than push at
+ * someone.
+ *
+ * `counterpartName` is whatever the recipient already calls that person on
+ * every other surface — a pseudonym looking at a seeker, the public display
+ * name looking at a xolacer. It is omitted for a decline: that notification
+ * names nobody, so nobody's name is sent.
+ */
+async function notifyConversation(
+  ctx: MutationCtx,
+  type: ChatNotificationType,
+  conversationId: Id<"xolacer_conversations">,
+  recipientProfileId: Id<"emotional_profiles">,
+  counterpartName?: string,
+) {
+  await ctx.scheduler.runAfter(0, internal.chatNotifications.send, {
+    emotionalProfileId: recipientProfileId,
+    type,
+    counterpartName,
+    conversationId,
+  });
+}
+
+/**
+ * Origin, derived server-side from recency. No session id reaches this
+ * mutation and none is stored — the specialty on the Understanding is the
+ * only thing read, so no session→conversation link exists at any point.
+ */
+async function deriveOrigin(
+  ctx: QueryCtx,
+  userProfileId: Id<"emotional_profiles">,
+  xolacer: Doc<"xolacer_profiles">,
+) {
+  // Streamed rather than collected: one row is enough to answer "suggestion",
+  // so a match stops the scan. Only the "direct" answer walks the whole
+  // window, and that is one row per session for one user over 24 hours.
+  const since = Date.now() - SUGGESTION_ORIGIN_WINDOW_MS;
+  for await (const row of ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_profile_createdAt", (q) =>
+      q.eq("emotionalProfileId", userProfileId).gte("createdAt", since),
+    )) {
+    const suggested = row.suggestedSpecialty;
+    if (!suggested) continue;
+    if (conversationOrigin([suggested], xolacer.specialties) === "suggestion") {
+      return "suggestion";
+    }
+  }
+  return "direct";
+}
+
+export const requestConversation = mutation({
+  args: { xolacerProfileId: v.id("emotional_profiles") },
+  returns: v.id("xolacer_conversations"),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { profile } = await requireAuth(ctx);
+    if (profile._id === args.xolacerProfileId) {
+      throw new Error("Cannot request a conversation with yourself");
+    }
+
+    const xolacer = await getXolacerProfileByProfileId(ctx, args.xolacerProfileId);
+    const openCount = await countOpen(ctx, args.xolacerProfileId);
+    if (!xolacerAvailable(xolacer, openCount)) {
+      throw new Error("This xolacer is not taking conversations right now");
+    }
+
+    // `reverse` is the row where these two hold the opposite roles. A block
+    // filed there is the same block: without reading it, whoever was blocked
+    // could still open a fresh conversation simply by being the one who asks.
+    const { forward: existing, reverse } = await loadPairRows(
+      ctx,
+      profile._id,
+      args.xolacerProfileId,
+    );
+
+    if (existing) {
+      // One conversation per pair, ever. Re-requesting reopens the same row.
+      //
+      // Ahead of both new gates on purpose. The open cap, because this
+      // conversation is already one of the ones counted against it. The pair
+      // block, because a pair that was independently reachable before this
+      // shipped is grandfathered — throwing here would close a live thread
+      // whose "Open chat" worked yesterday.
+      if (existing.status === "requested" || existing.status === "open") {
+        return existing._id;
+      }
+    }
+
+    if (isPairBlocked(existing, reverse)) {
+      throw new Error("This conversation can no longer be reopened");
+    }
+
+    if (existing) {
+      if (existing.status === "resting") {
+        // Profile CTA says "Open chat" here; a request is just a resume — and
+        // a resume takes an open slot, so it answers to the same cap.
+        await requireOpenSlot(ctx, "seeker", profile._id);
+        await ctx.db.patch(existing._id, { status: "open" });
+        return existing._id;
+      }
+      // Closed: declined/expired may re-request; xolacer_left may not.
+      // (`blocked` was already refused above, in either direction.)
+      if (existing.closedReason === "xolacer_left") {
+        throw new Error("This conversation can no longer be reopened");
+      }
+      // A decline is not a door that reopens on the next tap. Ahead of the caps
+      // and of every write below, so a re-request inside the window moves no
+      // row and fires no `chat_request` — the whole point is that the xolacer's
+      // phone stays quiet. The client already shows this on the profile before
+      // anyone taps; reaching it means a stale screen, so the error carries the
+      // date the same sentence needs.
+      const retryAt = declineCooldownUntil(existing, Date.now());
+      if (retryAt !== undefined) {
+        throw new ConvexError({ code: "decline_cooldown", until: retryAt });
+      }
+      await requireOpenSlot(ctx, "seeker", profile._id);
+      await requirePendingRequestSlot(ctx, profile._id);
+      // Overwritten, never merged: a re-request from the roster months later
+      // must badge as direct.
+      const origin = await deriveOrigin(ctx, profile._id, xolacer);
+      await ctx.db.patch(existing._id, {
+        status: "requested",
+        closedReason: undefined,
+        requestedAt: Date.now(),
+        origin,
+      });
+      await captureRequestSent(ctx, profile._id, origin);
+      await notifyConversation(
+        ctx,
+        "chat_request",
+        existing._id,
+        args.xolacerProfileId,
+        pseudonym(profile._id),
+      );
+      return existing._id;
+    }
+
+    await requireOpenSlot(ctx, "seeker", profile._id);
+    await requirePendingRequestSlot(ctx, profile._id);
+    const origin = await deriveOrigin(ctx, profile._id, xolacer);
+    const conversationId = await ctx.db.insert("xolacer_conversations", {
+      userProfileId: profile._id,
+      xolacerProfileId: args.xolacerProfileId,
+      status: "requested",
+      requestedAt: Date.now(),
+      origin,
+    });
+    await captureRequestSent(ctx, profile._id, origin);
+    await notifyConversation(
+      ctx,
+      "chat_request",
+      conversationId,
+      args.xolacerProfileId,
+      pseudonym(profile._id),
+    );
+    return conversationId;
+  },
+});
+
+/** Xolacer-side validation for accept — runs in query ctx so the action stays thin. */
+export const getForAccept = internalQuery({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.object({
+    userProfileId: v.id("emotional_profiles"),
+    xolacerProfileId: v.id("emotional_profiles"),
+    xolacerImage: v.optional(v.string()),
+    userImage: v.optional(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const { conversation, role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    if (role !== "xolacer") throw new Error("Only the xolacer can accept");
+    if (conversation.status !== "requested") {
+      throw new Error("Request is no longer pending");
+    }
+    // Both caps, before any Stream call. The xolacer's was never re-checked
+    // here at all: requests that arrived while they had room could be accepted
+    // long after they hit 8, which is how someone ended up holding more than
+    // the cap allows. `markAccepted` re-checks transactionally; this pass is
+    // what stops a doomed accept from creating a channel first.
+    await requireOpenSlot(ctx, "xolacer", conversation.xolacerProfileId);
+    await requireOpenSlot(ctx, "seeker", conversation.userProfileId);
+    return {
+      userProfileId: conversation.userProfileId,
+      xolacerProfileId: conversation.xolacerProfileId,
+      xolacerImage: await catalogAvatar(ctx, conversation.xolacerProfileId),
+      userImage: await catalogAvatar(ctx, conversation.userProfileId),
+    };
+  },
+});
+
+export const markAccepted = internalMutation({
+  args: {
+    conversationId: v.id("xolacer_conversations"),
+    streamChannelId: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation || conversation.status !== "requested") return;
+    // The transactional guard. Between `getForAccept` and here sits a Stream
+    // round trip, and either party can have filled their last slot in another
+    // conversation during it. Throwing leaves the row `requested` — the 7-day
+    // expiry sweep already cleans it up if nobody ever frees a slot, so no new
+    // lifecycle state is needed.
+    await requireOpenSlot(ctx, "xolacer", conversation.xolacerProfileId);
+    await requireOpenSlot(ctx, "seeker", conversation.userProfileId);
+    await ctx.db.patch(args.conversationId, {
+      status: "open",
+      streamChannelId: args.streamChannelId,
+      acceptedAt: Date.now(),
+      lastMessageAt: Date.now(),
+    });
+    // Here rather than in the surrounding action, so the seeker is only told
+    // the conversation is open once the cap re-check above has let it open.
+    //
+    // The seeker knows this xolacer by their public display name — the same
+    // one their chats list and the profile they requested from both show. A
+    // pseudonym would name someone they have never met.
+    const xolacer = await getXolacerProfileByProfileId(
+      ctx,
+      conversation.xolacerProfileId,
+    );
+    await notifyConversation(
+      ctx,
+      "chat_accepted",
+      args.conversationId,
+      conversation.userProfileId,
+      xolacer?.displayName ?? "Xolacer",
+    );
+  },
+});
+
+/**
+ * Accept a request: create the Stream channel (network I/O → action), then
+ * flip the row to open. Channel id is deterministic per conversation, so a
+ * retry after a partial failure is idempotent.
+ *
+ * Known and deliberately unfixed: the Stream round trip sits between the
+ * pre-flight cap check in `getForAccept` and the transactional re-check in
+ * `markAccepted`, so an accept that loses that race leaves an orphaned channel
+ * in Stream. It is unreachable through the product — the client can only reach
+ * a channel via the id stored on the row — the deterministic id means a retry
+ * reuses it, and channels are not metered. Every fix adds a network call and a
+ * new failure path to defend against a stray empty channel in Stream's
+ * database.
+ */
+export const acceptRequest = action({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const info: {
+      userProfileId: Id<"emotional_profiles">;
+      xolacerProfileId: Id<"emotional_profiles">;
+      xolacerImage?: string;
+      userImage?: string;
+    } = await ctx.runQuery(internal.xolacerChat.getForAccept, {
+      conversationId: args.conversationId,
+    });
+
+    const channelId = xolacerChannelId(args.conversationId);
+    await upsertStreamUsers([
+      {
+        id: info.xolacerProfileId,
+        name: pseudonym(info.xolacerProfileId),
+        image: info.xolacerImage,
+      },
+      {
+        id: info.userProfileId,
+        name: pseudonym(info.userProfileId),
+        image: info.userImage,
+      },
+    ]);
+    await createXolacerChannel(
+      channelId,
+      [info.xolacerProfileId, info.userProfileId],
+      info.xolacerProfileId,
+    );
+
+    await ctx.runMutation(internal.xolacerChat.markAccepted, {
+      conversationId: args.conversationId,
+      streamChannelId: channelId,
+    });
+    return null;
+  },
+});
+
+export const declineRequest = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { conversation, role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    if (role !== "xolacer") throw new Error("Only the xolacer can decline");
+    if (conversation.status !== "requested") return null;
+    await ctx.db.patch(args.conversationId, {
+      status: "closed",
+      closedReason: "declined",
+      declinedAt: Date.now(),
+    });
+    await notifyConversation(
+      ctx,
+      "chat_declined",
+      args.conversationId,
+      conversation.userProfileId,
+    );
+    return null;
+  },
+});
+
+/**
+ * Participant guard + block plan in query ctx, so the action stays thin.
+ * Deliberately no role check: both roles may block. A xolacer's only exit
+ * today (`declineRequest`) stops working the moment they accept.
+ *
+ * Planned over both rows the pair can hold, never the one the block was filed
+ * on: a pair with a second open row would otherwise keep messaging through it.
+ */
+export const getForBlock = internalQuery({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.object({
+    noop: v.boolean(),
+    channelsToFreeze: v.array(v.string()),
+    rowsToClose: v.array(v.id("xolacer_conversations")),
+  }),
+  handler: async (ctx, args) => {
+    const { conversation } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    return planBlock(
+      await loadPairRows(
+        ctx,
+        conversation.userProfileId,
+        conversation.xolacerProfileId,
+      ),
+    );
+  },
+});
+
+export const markBlocked = internalMutation({
+  args: { conversationIds: v.array(v.id("xolacer_conversations")) },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    for (const conversationId of args.conversationIds) {
+      const conversation = await ctx.db.get(conversationId);
+      // Re-checked here, not just in the plan: the freeze is a network round
+      // trip, so the row can have been blocked in between. Any other closed
+      // reason is still overwritten — see `planBlock`.
+      if (!conversation || isBlocked(conversation.closedReason)) continue;
+      await ctx.db.patch(conversationId, {
+        status: "closed",
+        closedReason: "blocked",
+      });
+    }
+    return null;
+  },
+});
+
+/**
+ * Block the other party: freeze every Stream channel the pair holds, then
+ * close every row they hold, in one mutation.
+ *
+ * If a freeze throws, nothing is marked and the user retries — freezing is
+ * idempotent on Stream's side and an already-blocked pair plans as a noop, so
+ * the retry is clean. No compensation logic.
+ *
+ * Permanent: `requestConversation` refuses to reopen a `blocked` row, and the
+ * pair is read through `isPairBlocked` everywhere. There is no unblock.
+ */
+export const blockConversation = action({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const plan: {
+      noop: boolean;
+      channelsToFreeze: string[];
+      rowsToClose: Id<"xolacer_conversations">[];
+    } = await ctx.runQuery(internal.xolacerChat.getForBlock, {
+      conversationId: args.conversationId,
+    });
+    // Already blocked — blocking twice is harmless, so a retry after a network
+    // error must not error and must not make a second Stream call.
+    if (plan.noop) return null;
+    // Empty while a row is still `requested`: no channel exists yet, so only
+    // the row is written.
+    for (const channelId of plan.channelsToFreeze) {
+      await freezeStreamChannel(channelId);
+    }
+    await ctx.runMutation(internal.xolacerChat.markBlocked, {
+      conversationIds: plan.rowsToClose,
+    });
+    return null;
+  },
+});
+
+export const resumeConversation = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.object({ resumed: v.boolean() }),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { conversation } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    if (conversation.status !== "resting") return { resumed: conversation.status === "open" };
+
+    const xolacer = await getXolacerProfileByProfileId(
+      ctx,
+      conversation.xolacerProfileId,
+    );
+    const openCount = await countOpen(ctx, conversation.xolacerProfileId);
+    if (!xolacerAvailable(xolacer, openCount)) {
+      return { resumed: false };
+    }
+    // A block on the reverse pairing closes this door too — resuming is
+    // exactly the "reach them again through the other role" this stops.
+    // Reported as `resumed: false`, never thrown: the resting/closed copy is
+    // deliberately identical for capacity and for a block, because nobody is
+    // ever told they were blocked.
+    if (
+      await loadPairBlocked(
+        ctx,
+        conversation.userProfileId,
+        conversation.xolacerProfileId,
+      )
+    ) {
+      return { resumed: false };
+    }
+    // Resuming re-takes a slot, so it can't be the way around the cap. Thrown
+    // rather than reported as `resumed: false`, which the client reads as the
+    // xolacer being unavailable — the wrong person to explain.
+    await requireOpenSlot(ctx, "seeker", conversation.userProfileId);
+    await ctx.db.patch(args.conversationId, {
+      status: "open",
+      lastMessageAt: Date.now(),
+    });
+    return { resumed: true };
+  },
+});
+
+/** Client calls this after each sent message; drives the resting sweep. */
+export const touchConversation = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) return null;
+    const { conversation } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    if (conversation.status !== "open") return null;
+    await ctx.db.patch(args.conversationId, { lastMessageAt: Date.now() });
+    return null;
+  },
+});
+
+/**
+ * Tell the other party a message arrived, from Stream's `message.new` webhook.
+ *
+ * Every identity here comes off **our** row: the channel id names a
+ * conversation, the sender is matched against that row's two participants, and
+ * the recipient is whichever one is not them. Nothing in the webhook payload is
+ * trusted to say who anyone is — so a forged event can address nobody it was
+ * not already able to address, and sender-exclusion needs no check of its own.
+ *
+ * Every drop returns quietly rather than throwing: the caller answers Stream
+ * with a 200 either way, and a webhook that reports failure is a webhook Stream
+ * retries.
+ */
+export const notifyNewMessage = internalMutation({
+  args: { channelId: v.string(), senderId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) return null;
+
+    const rawId = conversationIdFromChannelId(args.channelId);
+    if (!rawId) return null;
+    // Not just a shape check: an id from another table would otherwise be a
+    // valid-looking `db.get` against the wrong row.
+    const conversationId = ctx.db.normalizeId("xolacer_conversations", rawId);
+    if (!conversationId) return null;
+
+    const conversation = await ctx.db.get(conversationId);
+    // Stream cannot deliver into a channel we consider shut, but a resting or
+    // blocked pair whose channel Stream has not frozen yet would still arrive
+    // here — a closed conversation notifies nobody.
+    if (!conversation || conversation.status !== "open") return null;
+
+    const recipientProfileId = messageNotificationRecipient(
+      conversation,
+      args.senderId,
+    );
+    if (!recipientProfileId) return null;
+
+    // The recipient's own stamp, never the row's: the reply to a message must
+    // not land inside the window that message opened.
+    const now = Date.now();
+    const notifiedField = messageNotifiedField(conversation, recipientProfileId);
+    if (messageNotificationSuppressed(conversation[notifiedField], now)) {
+      return null;
+    }
+
+    // Asked here as well as in the dispatch itself, because the stamp has to
+    // mean "this person was buzzed". Burning the window on a send that the
+    // recipient's preferences were always going to drop would leave them
+    // silent for two minutes after turning chat notifications back on.
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", recipientProfileId),
+      )
+      .unique();
+    if (!chatNotificationsAllowed(preferences?.notifications)) return null;
+
+    // Stamped before the send is scheduled, in the same transaction, so a
+    // burst arriving as separate webhook calls cannot each read a stale window.
+    await ctx.db.patch(conversationId, { [notifiedField]: now });
+
+    // Whatever the recipient already calls the sender everywhere else: a
+    // xolacer sees a pseudonym, a seeker sees the public display name.
+    const senderIsXolacer = recipientProfileId === conversation.userProfileId;
+    const xolacer = senderIsXolacer
+      ? await getXolacerProfileByProfileId(ctx, conversation.xolacerProfileId)
+      : null;
+    await notifyConversation(
+      ctx,
+      "chat_message",
+      conversationId,
+      recipientProfileId,
+      senderIsXolacer
+        ? (xolacer?.displayName ?? "Xolacer")
+        : pseudonym(conversation.userProfileId),
+    );
+    return null;
+  },
+});
+
+// ============================================================
+// Ratings
+// ============================================================
+
+/**
+ * Rate the xolacer, or change a rating already given. Only the person who
+ * asked to talk may rate, and only once real messages were exchanged.
+ *
+ * The xolacer's counters are denormalized (Convex has no count operator), so
+ * an edit applies the delta rather than re-summing — the aggregate stays O(1)
+ * no matter how many conversations a xolacer has held.
+ */
+export const rateConversation = mutation({
+  args: {
+    conversationId: v.id("xolacer_conversations"),
+    rating: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+
+    const rounded = Math.round(args.rating);
+    if (rounded < 1 || rounded > 5) {
+      throw new Error("Rating must be between 1 and 5");
+    }
+
+    const { profile, conversation, role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    // A xolacer never rates the people who come to them — the relationship
+    // isn't symmetric and a rated user would be a reason not to reach out.
+    if (role !== "user") throw new Error("Only the requester can rate");
+    // getConversation already returns canRate: false here, so this only ever
+    // fires for a stale client — but it is the enforcement point standing
+    // between a block and a public rating written in anger, against a
+    // volunteer with no right of reply.
+    if (isBlocked(conversation.closedReason)) {
+      throw new Error("This conversation is closed");
+    }
+    if (!hasRealExchange(conversation)) {
+      throw new Error("Nothing to rate yet");
+    }
+
+    const xolacer = await ctx.db
+      .query("xolacer_profiles")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", conversation.xolacerProfileId),
+      )
+      .unique();
+    if (!xolacer) throw new Error("Xolacer profile not found");
+
+    const existing = await findRating(ctx, args.conversationId);
+    const now = Date.now();
+
+    if (existing) {
+      if (existing.rating === rounded) return null;
+      await ctx.db.patch(existing._id, { rating: rounded, updatedAt: now });
+      await ctx.db.patch(xolacer._id, {
+        ratingSum: (xolacer.ratingSum ?? 0) - existing.rating + rounded,
+        updatedAt: now,
+      });
+      return null;
+    }
+
+    await ctx.db.insert("conversation_ratings", {
+      conversationId: args.conversationId,
+      raterProfileId: profile._id,
+      xolacerProfileId: conversation.xolacerProfileId,
+      rating: rounded,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await ctx.db.patch(xolacer._id, {
+      ratingSum: (xolacer.ratingSum ?? 0) + rounded,
+      ratingCount: (xolacer.ratingCount ?? 0) + 1,
+      updatedAt: now,
+    });
+    return null;
+  },
+});
+
+// ============================================================
+// Stream token
+// ============================================================
+
+export const getStreamIdentity = internalQuery({
+  args: {},
+  returns: v.object({
+    userId: v.id("emotional_profiles"),
+    name: v.string(),
+    image: v.optional(v.string()),
+  }),
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    // No branch on whether they're a published xolacer: this record is global
+    // and would follow them into the conversations where they're an anonymous
+    // seeker. See `upsertStreamUsers` — nothing reads it for display.
+    return {
+      userId: profile._id,
+      name: pseudonym(profile._id),
+      image: await catalogAvatar(ctx, profile._id),
+    };
+  },
+});
+
+/**
+ * Mint the Stream user token for the authenticated user. The Stream user id
+ * is always the server-derived pseudonymous profile id — never a client arg.
+ */
+export const getStreamToken = action({
+  args: {},
+  returns: v.object({ apiKey: v.string(), token: v.string(), userId: v.string() }),
+  handler: async (ctx) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const identity: {
+      userId: Id<"emotional_profiles">;
+      name: string;
+      image?: string;
+    } = await ctx.runQuery(internal.xolacerChat.getStreamIdentity, {});
+    await upsertStreamUsers([
+      { id: identity.userId, name: identity.name, image: identity.image },
+    ]);
+    const token = await mintUserToken(identity.userId);
+    // apiKey ships with the token so the pair can never disagree — see
+    // getStreamApiKey. Publishable value, safe to hand to the client.
+    return {
+      apiKey: getStreamApiKey(),
+      token,
+      userId: identity.userId as string,
+    };
+  },
+});
+
+// ============================================================
+// Xolacer profile management
+// ============================================================
+
+export const myXolacerProfile = query({
+  args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      displayName: v.optional(v.string()),
+      bio: v.optional(v.string()),
+      photoUrl: v.optional(v.string()),
+      specialties: v.array(specialtyValidator),
+      complete: v.boolean(),
+      active: v.boolean(),
+    }),
+  ),
+  handler: async (ctx) => {
+    if (!chatEnabled()) return null;
+    const { user, profile } = await requireAuth(ctx);
+    if (!user.isXolacer) return null;
+    const xolacer = await getXolacerProfileByProfileId(ctx, profile._id);
+    if (!xolacer) return null;
+    return {
+      displayName: xolacer.displayName,
+      bio: xolacer.bio,
+      photoUrl: xolacer.photoUrl,
+      specialties: xolacer.specialties ?? [],
+      complete: xolacer.complete,
+      active: xolacer.active,
+    };
+  },
+});
+
+export const upsertMyXolacerProfile = mutation({
+  args: {
+    displayName: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    photoUrl: v.optional(v.string()),
+    specialties: v.optional(v.array(specialtyValidator)),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { user, profile } = await requireAuth(ctx);
+    if (!user.isXolacer) throw new Error("Not a xolacer");
+
+    if (args.bio !== undefined && args.bio.length > 160) {
+      throw new Error("Bio must be 160 characters or fewer");
+    }
+    if (args.displayName !== undefined && args.displayName.length > 40) {
+      throw new Error("Display name must be 40 characters or fewer");
+    }
+    if (args.specialties && args.specialties.length > MAX_SPECIALTIES) {
+      throw new Error(`Pick at most ${MAX_SPECIALTIES}`);
+    }
+
+    const existing = await getXolacerProfileByProfileId(ctx, profile._id);
+    if (existing) {
+      await ctx.db.patch(existing._id, { ...args, updatedAt: Date.now() });
+      return null;
+    }
+    await ctx.db.insert("xolacer_profiles", {
+      emotionalProfileId: profile._id,
+      ...args,
+      complete: false,
+      active: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const generatePhotoUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { user } = await requireAuth(ctx);
+    if (!user.isXolacer) throw new Error("Not a xolacer");
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/**
+ * Resolves the uploaded file to its serving URL and stores that, so the rest
+ * of the app keeps reading a plain `photoUrl` string. Convex serving URLs are
+ * stable, so there's no per-read resolution to do.
+ */
+export const setXolacerPhoto = mutation({
+  args: { storageId: v.id("_storage") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { user, profile } = await requireAuth(ctx);
+    if (!user.isXolacer) throw new Error("Not a xolacer");
+
+    const url = await ctx.storage.getUrl(args.storageId);
+    if (!url) throw new Error("Upload not found");
+
+    const existing = await getXolacerProfileByProfileId(ctx, profile._id);
+    if (existing) {
+      // ponytail: replacing a photo orphans the previous blob — storing only
+      // the URL means there's no storageId left to delete. Add a
+      // `photoStorageId` field if xolacer photo churn ever matters.
+      await ctx.db.patch(existing._id, { photoUrl: url, updatedAt: Date.now() });
+      return null;
+    }
+    await ctx.db.insert("xolacer_profiles", {
+      emotionalProfileId: profile._id,
+      photoUrl: url,
+      complete: false,
+      active: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+/** Publish = the server-side mirror of "all fields present". */
+export const publishProfile = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { user, profile } = await requireAuth(ctx);
+    if (!user.isXolacer) throw new Error("Not a xolacer");
+
+    const xolacer = await getXolacerProfileByProfileId(ctx, profile._id);
+    if (
+      !xolacer?.displayName ||
+      !xolacer.bio ||
+      !xolacer.photoUrl ||
+      !xolacer.specialties?.length
+    ) {
+      throw new Error("Profile is incomplete");
+    }
+    await ctx.db.patch(xolacer._id, { complete: true, updatedAt: Date.now() });
+    return null;
+  },
+});
+
+/**
+ * Pause / unpause. `active` already gates the directory index and both
+ * `xolacerAvailable` call sites, so flipping it is the whole feature: paused
+ * xolacers leave the roster and can't be requested or resumed, while every
+ * conversation they already have keeps working. Deliberately not a "go
+ * offline" state — it survives app restarts, because the point is a xolacer
+ * stepping away for a week, not for an evening.
+ */
+export const setXolacerActive = mutation({
+  args: { active: v.boolean() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { user, profile } = await requireAuth(ctx);
+    if (!user.isXolacer) throw new Error("Not a xolacer");
+
+    const xolacer = await getXolacerProfileByProfileId(ctx, profile._id);
+    if (!xolacer) throw new Error("No xolacer profile");
+    await ctx.db.patch(xolacer._id, { active: args.active, updatedAt: Date.now() });
+    return null;
+  },
+});
+
+// ============================================================
+// Lifecycle sweep (cron)
+// ============================================================
+
+export const sweep = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    // Open but quiet for 14 days → resting (silent; frees the cap slot).
+    const quiet = await ctx.db
+      .query("xolacer_conversations")
+      .withIndex("by_status_and_lastMessageAt", (q) =>
+        q.eq("status", "open").lt("lastMessageAt", now - RESTING_AFTER_MS),
+      )
+      .take(100);
+    for (const conversation of quiet) {
+      await ctx.db.patch(conversation._id, { status: "resting" });
+    }
+
+    // Requested but unanswered for 7 days → closed/expired.
+    // Requested rows are few (single-digit xolacers), so a bounded take +
+    // in-memory age check is fine. ponytail: index on requestedAt if this grows.
+    const requested = await ctx.db
+      .query("xolacer_conversations")
+      .withIndex("by_status_and_lastMessageAt", (q) => q.eq("status", "requested"))
+      .take(100);
+    for (const conversation of requested) {
+      if (conversation.requestedAt < now - REQUEST_EXPIRY_MS) {
+        await ctx.db.patch(conversation._id, {
+          status: "closed",
+          closedReason: "expired",
+        });
+      }
+    }
+  },
+});
+
+// ============================================================
+// Account-deletion support
+// ============================================================
+
+/**
+ * Fail-open Stream cleanup: a Stream outage must never block a user's
+ * deletion request. Failures are logged for manual retry.
+ */
+export const purgeStreamUser = internalAction({
+  args: { profileId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    try {
+      await deleteStreamUser(args.profileId);
+    } catch (error) {
+      console.error(
+        `[xolacerChat] Stream user deletion failed for ${args.profileId}; retry manually`,
+        error,
+      );
+    }
+    return null;
+  },
+});

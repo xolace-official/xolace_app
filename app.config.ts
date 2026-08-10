@@ -56,7 +56,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
     name: getAppName(),
     slug: "xolace",
-    version: "1.6.1",
+    version: "1.8.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "xolace",
@@ -157,6 +157,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO",
         "android.permission.ACTIVITY_RECOGNITION",
+        "com.google.android.gms.permission.AD_ID",
       ]
     },
     web: {
@@ -209,7 +210,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "@clerk/expo",
       "expo-secure-store",
       "expo-apple-authentication",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          // Bundling is the only way a custom sound reaches either platform:
+          // iOS names the file in the payload but plays it from the binary, and
+          // Android copies it to res/raw where a channel can point at it.
+          // Basenames become Android resource names, so they must stay
+          // lowercase and free of dots beyond the extension.
+          "sounds": [
+            "./assets/sounds/notifications/reach.wav",
+            "./assets/sounds/notifications/message.wav",
+            "./assets/sounds/notifications/nudge.wav"
+          ]
+        }
+      ],
       "expo-localization",
       [
         "expo-speech-recognition",
@@ -266,6 +281,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
       posthogProjectToken: process.env.POSTHOG_PROJECT_TOKEN,
       posthogHost: process.env.POSTHOG_HOST,
+      // Optional until the RevenueCat dashboard exists — gates stay inert
+      // while appConfig.features.payments is false, so no requireEnv here.
+      revenueCat: {
+        iosKey: process.env.REVENUECAT_IOS_KEY,
+        androidKey: process.env.REVENUECAT_ANDROID_KEY,
+        iosTestKey: process.env.REVENUECAT_IOS_TEST_KEY,
+        androidTestKey: process.env.REVENUECAT_ANDROID_TEST_KEY,
+      },
       EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME", process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME),
       EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID", process.env.EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID),
       EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: requireEnv("EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID", process.env.EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID),
