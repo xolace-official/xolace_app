@@ -8,7 +8,6 @@ type UseMirrorAudioReturn = {
   isPlaying: boolean;
   isLoading: boolean;
   toggle: () => void;
-  stop: () => void;
 };
 
 export function useMirrorAudio(
@@ -43,18 +42,10 @@ export function useMirrorAudio(
     }
   };
 
-  const stop = () => {
-    if (status.playing) {
-      player.pause();
-      player.seekTo(0);
-    }
-  };
-
   return {
     isReady,
     isPlaying: status.playing,
     isLoading: !!sessionId && audioUrl === undefined,
     toggle,
-    stop,
   };
 }
