@@ -11,6 +11,8 @@
  *  - channel:      POST /channels/messaging/{id}/query { data, state }
  *  - freeze:       PATCH /channels/messaging/{id} { set: { frozen: true } }
  *  - delete user:  DELETE /users/{id}?mark_messages_deleted&hard_delete
+ *  - app settings: GET /app, PATCH /app { event_hooks: [...] }
+ *  - webhook sig:  hex HMAC-SHA256 of the raw body, keyed by the API secret
  */
 
 const BASE_URL = "https://chat.stream-io-api.com";
@@ -30,6 +32,17 @@ function base64url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/** The one HMAC-SHA256 key import — shared by JWT signing and webhook verification. */
+async function hmacKey(secret: string): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+}
+
 async function signJwt(
   payload: Record<string, unknown>,
   secret: string,
@@ -37,19 +50,49 @@ async function signJwt(
   const encoder = new TextEncoder();
   const header = base64url(encoder.encode(JSON.stringify({ alg: "HS256", typ: "JWT" })));
   const body = base64url(encoder.encode(JSON.stringify(payload)));
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
   const signature = await crypto.subtle.sign(
     "HMAC",
-    key,
+    await hmacKey(secret),
     encoder.encode(`${header}.${body}`),
   );
   return `${header}.${body}.${base64url(new Uint8Array(signature))}`;
+}
+
+/**
+ * Byte-by-byte with no early return on the first mismatch. The length check is
+ * not a leak: a valid signature is always 64 hex chars, so the length carries
+ * nothing secret.
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/**
+ * Is this webhook really from Stream?
+ *
+ * Stream signs the **raw** request body with the app secret — hex HMAC-SHA256,
+ * in the `X-Signature` header — which is the same secret and the same primitive
+ * the JWTs above use, so no new environment variable exists for the webhook.
+ * Mirrors `verifySignature` in the `stream-chat` package's signing.ts.
+ */
+export async function verifyStreamWebhookSignature(
+  rawBody: string,
+  signature: string | null,
+): Promise<boolean> {
+  if (!signature) return false;
+  const { apiSecret } = getStreamEnv();
+  const digest = await crypto.subtle.sign(
+    "HMAC",
+    await hmacKey(apiSecret),
+    new TextEncoder().encode(rawBody),
+  );
+  const hex = Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+  return timingSafeEqual(hex, signature);
 }
 
 /**
@@ -144,6 +187,38 @@ export async function freezeStreamChannel(channelId: string): Promise<void> {
   await streamRequest("PATCH", `/channels/messaging/${encodeURIComponent(channelId)}`, {
     body: { set: { frozen: true } },
   });
+}
+
+/**
+ * A Stream V2 event hook, as it appears in app settings. Only the fields we
+ * read or write — Stream returns more, and every one of them has to survive a
+ * round trip untouched, so hooks we did not create are passed back verbatim.
+ */
+export type StreamEventHook = {
+  hook_type?: string;
+  enabled?: boolean;
+  webhook_url?: string;
+  event_types?: string[];
+  [key: string]: unknown;
+};
+
+/** Every event hook currently registered on this Stream app. */
+export async function listStreamEventHooks(): Promise<StreamEventHook[]> {
+  const response = await streamRequest("GET", "/app");
+  const app = response.app as { event_hooks?: StreamEventHook[] } | undefined;
+  return app?.event_hooks ?? [];
+}
+
+/**
+ * Replace the app's event-hook array.
+ *
+ * **Stream deletes any hook absent from what you submit**, so the caller must
+ * pass the full list — read, append, write. There is no add-one endpoint.
+ */
+export async function setStreamEventHooks(
+  hooks: StreamEventHook[],
+): Promise<void> {
+  await streamRequest("PATCH", "/app", { body: { event_hooks: hooks } });
 }
 
 /** Hard-delete a Stream user and their messages (account-deletion path). */

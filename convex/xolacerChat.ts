@@ -12,6 +12,15 @@ import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import {
+  type ChatNotificationType,
+  chatNotificationsAllowed,
+  conversationIdFromChannelId,
+  messageNotificationRecipient,
+  messageNotificationSuppressed,
+  messageNotifiedField,
+  xolacerChannelId,
+} from "./lib/chatNotifications";
+import {
   conversationOrigin,
   type ConversationOrigin,
   meetsRatingFloor,
@@ -29,11 +38,13 @@ import {
 } from "./integrations/stream";
 import {
   canRate,
+  declineCooldownUntil,
   hasRealExchange,
   isAtOpenCap,
   isBlocked,
   isPairBlocked,
   planBlock,
+  REQUEST_EXPIRY_MS,
 } from "./lib/conversationGating";
 import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 
@@ -95,7 +106,6 @@ export const MAX_SEEKER_OPEN_CONVERSATIONS = 3;
  * free again. Without this a user can blanket every xolacer in the directory.
  */
 export const MAX_PENDING_REQUESTS = 2;
-const REQUEST_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 const RESTING_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
 
 /**
@@ -436,6 +446,10 @@ export const xolacerProfile = query({
           id: v.id("xolacer_conversations"),
           status: statusValidator,
           closedReason: closedReasonValidator,
+          // Present only while a decline is still resting. The CTA reads it so
+          // the wait is on screen before anyone writes anything — finding out
+          // on submit is the version of this that reads as a second refusal.
+          retryAvailableAt: v.optional(v.number()),
         }),
       ),
     }),
@@ -480,6 +494,7 @@ export const xolacerProfile = query({
             id: conversation._id,
             status: conversation.status,
             closedReason: conversation.closedReason,
+            retryAvailableAt: declineCooldownUntil(conversation, Date.now()),
           }
         : null,
     };
@@ -777,6 +792,35 @@ async function captureRequestSent(
 }
 
 /**
+ * Tell someone the other person is waiting on them, or has answered.
+ *
+ * Scheduled, not called: a push failure must not roll back the lifecycle change
+ * that earned it. Fires only where the row actually moved — never on the
+ * idempotent request early-return, and never on expiry, block, resume, or a
+ * xolacer leaving, which are closures to find in the app rather than push at
+ * someone.
+ *
+ * `counterpartName` is whatever the recipient already calls that person on
+ * every other surface — a pseudonym looking at a seeker, the public display
+ * name looking at a xolacer. It is omitted for a decline: that notification
+ * names nobody, so nobody's name is sent.
+ */
+async function notifyConversation(
+  ctx: MutationCtx,
+  type: ChatNotificationType,
+  conversationId: Id<"xolacer_conversations">,
+  recipientProfileId: Id<"emotional_profiles">,
+  counterpartName?: string,
+) {
+  await ctx.scheduler.runAfter(0, internal.chatNotifications.send, {
+    emotionalProfileId: recipientProfileId,
+    type,
+    counterpartName,
+    conversationId,
+  });
+}
+
+/**
  * Origin, derived server-side from recency. No session id reaches this
  * mutation and none is stored — the specialty on the Understanding is the
  * only thing read, so no session→conversation link exists at any point.
@@ -859,6 +903,16 @@ export const requestConversation = mutation({
       if (existing.closedReason === "xolacer_left") {
         throw new Error("This conversation can no longer be reopened");
       }
+      // A decline is not a door that reopens on the next tap. Ahead of the caps
+      // and of every write below, so a re-request inside the window moves no
+      // row and fires no `chat_request` — the whole point is that the xolacer's
+      // phone stays quiet. The client already shows this on the profile before
+      // anyone taps; reaching it means a stale screen, so the error carries the
+      // date the same sentence needs.
+      const retryAt = declineCooldownUntil(existing, Date.now());
+      if (retryAt !== undefined) {
+        throw new ConvexError({ code: "decline_cooldown", until: retryAt });
+      }
       await requireOpenSlot(ctx, "seeker", profile._id);
       await requirePendingRequestSlot(ctx, profile._id);
       // Overwritten, never merged: a re-request from the roster months later
@@ -871,6 +925,13 @@ export const requestConversation = mutation({
         origin,
       });
       await captureRequestSent(ctx, profile._id, origin);
+      await notifyConversation(
+        ctx,
+        "chat_request",
+        existing._id,
+        args.xolacerProfileId,
+        pseudonym(profile._id),
+      );
       return existing._id;
     }
 
@@ -885,6 +946,13 @@ export const requestConversation = mutation({
       origin,
     });
     await captureRequestSent(ctx, profile._id, origin);
+    await notifyConversation(
+      ctx,
+      "chat_request",
+      conversationId,
+      args.xolacerProfileId,
+      pseudonym(profile._id),
+    );
     return conversationId;
   },
 });
@@ -945,6 +1013,23 @@ export const markAccepted = internalMutation({
       acceptedAt: Date.now(),
       lastMessageAt: Date.now(),
     });
+    // Here rather than in the surrounding action, so the seeker is only told
+    // the conversation is open once the cap re-check above has let it open.
+    //
+    // The seeker knows this xolacer by their public display name — the same
+    // one their chats list and the profile they requested from both show. A
+    // pseudonym would name someone they have never met.
+    const xolacer = await getXolacerProfileByProfileId(
+      ctx,
+      conversation.xolacerProfileId,
+    );
+    await notifyConversation(
+      ctx,
+      "chat_accepted",
+      args.conversationId,
+      conversation.userProfileId,
+      xolacer?.displayName ?? "Xolacer",
+    );
   },
 });
 
@@ -976,7 +1061,7 @@ export const acceptRequest = action({
       conversationId: args.conversationId,
     });
 
-    const channelId = `xolacer_${args.conversationId}`;
+    const channelId = xolacerChannelId(args.conversationId);
     await upsertStreamUsers([
       {
         id: info.xolacerProfileId,
@@ -1017,7 +1102,14 @@ export const declineRequest = mutation({
     await ctx.db.patch(args.conversationId, {
       status: "closed",
       closedReason: "declined",
+      declinedAt: Date.now(),
     });
+    await notifyConversation(
+      ctx,
+      "chat_declined",
+      args.conversationId,
+      conversation.userProfileId,
+    );
     return null;
   },
 });
@@ -1166,6 +1258,87 @@ export const touchConversation = mutation({
     );
     if (conversation.status !== "open") return null;
     await ctx.db.patch(args.conversationId, { lastMessageAt: Date.now() });
+    return null;
+  },
+});
+
+/**
+ * Tell the other party a message arrived, from Stream's `message.new` webhook.
+ *
+ * Every identity here comes off **our** row: the channel id names a
+ * conversation, the sender is matched against that row's two participants, and
+ * the recipient is whichever one is not them. Nothing in the webhook payload is
+ * trusted to say who anyone is — so a forged event can address nobody it was
+ * not already able to address, and sender-exclusion needs no check of its own.
+ *
+ * Every drop returns quietly rather than throwing: the caller answers Stream
+ * with a 200 either way, and a webhook that reports failure is a webhook Stream
+ * retries.
+ */
+export const notifyNewMessage = internalMutation({
+  args: { channelId: v.string(), senderId: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) return null;
+
+    const rawId = conversationIdFromChannelId(args.channelId);
+    if (!rawId) return null;
+    // Not just a shape check: an id from another table would otherwise be a
+    // valid-looking `db.get` against the wrong row.
+    const conversationId = ctx.db.normalizeId("xolacer_conversations", rawId);
+    if (!conversationId) return null;
+
+    const conversation = await ctx.db.get(conversationId);
+    // Stream cannot deliver into a channel we consider shut, but a resting or
+    // blocked pair whose channel Stream has not frozen yet would still arrive
+    // here — a closed conversation notifies nobody.
+    if (!conversation || conversation.status !== "open") return null;
+
+    const recipientProfileId = messageNotificationRecipient(
+      conversation,
+      args.senderId,
+    );
+    if (!recipientProfileId) return null;
+
+    // The recipient's own stamp, never the row's: the reply to a message must
+    // not land inside the window that message opened.
+    const now = Date.now();
+    const notifiedField = messageNotifiedField(conversation, recipientProfileId);
+    if (messageNotificationSuppressed(conversation[notifiedField], now)) {
+      return null;
+    }
+
+    // Asked here as well as in the dispatch itself, because the stamp has to
+    // mean "this person was buzzed". Burning the window on a send that the
+    // recipient's preferences were always going to drop would leave them
+    // silent for two minutes after turning chat notifications back on.
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", recipientProfileId),
+      )
+      .unique();
+    if (!chatNotificationsAllowed(preferences?.notifications)) return null;
+
+    // Stamped before the send is scheduled, in the same transaction, so a
+    // burst arriving as separate webhook calls cannot each read a stale window.
+    await ctx.db.patch(conversationId, { [notifiedField]: now });
+
+    // Whatever the recipient already calls the sender everywhere else: a
+    // xolacer sees a pseudonym, a seeker sees the public display name.
+    const senderIsXolacer = recipientProfileId === conversation.userProfileId;
+    const xolacer = senderIsXolacer
+      ? await getXolacerProfileByProfileId(ctx, conversation.xolacerProfileId)
+      : null;
+    await notifyConversation(
+      ctx,
+      "chat_message",
+      conversationId,
+      recipientProfileId,
+      senderIsXolacer
+        ? (xolacer?.displayName ?? "Xolacer")
+        : pseudonym(conversation.userProfileId),
+    );
     return null;
   },
 });

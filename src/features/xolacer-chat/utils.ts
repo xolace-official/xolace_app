@@ -99,16 +99,63 @@ export function unreadBadge(
 }
 
 /**
- * The `{ code, max, party }` payload a Convex limit refusal carries, or null
- * for any other failure. Shared so the surfaces that can hit a cap read it the
- * same way and only differ in the sentence they show.
+ * The `{ code, max, party, until }` payload a Convex refusal carries, or null
+ * for any other failure. Shared so the surfaces that can hit a limit read it
+ * the same way and only differ in the sentence they show.
  */
-export function chatLimitError(
-  error: unknown,
-): { code?: string; max?: number; party?: 'seeker' | 'xolacer' } | null {
+export function chatLimitError(error: unknown): {
+  code?: string;
+  max?: number;
+  party?: 'seeker' | 'xolacer';
+  until?: number;
+} | null {
   const data = (error as { data?: unknown } | null)?.data;
   if (!data || typeof data !== 'object') return null;
-  return data as { code?: string; max?: number; party?: 'seeker' | 'xolacer' };
+  return data as {
+    code?: string;
+    max?: number;
+    party?: 'seeker' | 'xolacer';
+    until?: number;
+  };
+}
+
+/**
+ * Is a decline cooldown still running right now?
+ *
+ * The server computes `retryAvailableAt` with its own clock inside a reactive
+ * query, and nothing writes to that query's read set when the window elapses —
+ * a Convex query only re-runs when a document it read is written. So a seeker
+ * returning to a quiet xolacer's profile after the window can be handed a
+ * cached timestamp that is already in the past. Reading it as "a cooldown
+ * exists" rather than comparing it leaves the CTA disabled on a request the
+ * server would now accept, and disabled means no write, so nothing ever
+ * invalidates the cache — the door stays shut permanently.
+ */
+export function declineCooldownActive(until: number | undefined): until is number {
+  return until !== undefined && until > Date.now();
+}
+
+/**
+ * Whole days from now until `timestamp`, floored at 1. Rounds up so the last
+ * few hours read as "1 day" rather than "0 days", which would be a wait the
+ * sentence claims is already over.
+ */
+export function daysUntil(timestamp: number): number {
+  return Math.max(1, Math.ceil((timestamp - Date.now()) / 86400000));
+}
+
+/**
+ * What a seeker reads in place of the request CTA on a xolacer who turned them
+ * down inside the cooldown window.
+ *
+ * Says when the door reopens and points outward in the same breath. A refusal
+ * with no date is the version of this that reads as the app taking a side, and
+ * a decline is already a hard enough moment without the product agreeing with
+ * it.
+ */
+export function declineCooldownNote(displayName: string, until: number): string {
+  const days = daysUntil(until);
+  return `${displayName} couldn't take this one on. You can ask them again in ${days} day${days === 1 ? '' : 's'} — others on the roster have space in the meantime.`;
 }
 
 /**

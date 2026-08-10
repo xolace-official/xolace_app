@@ -162,8 +162,13 @@ function useWatchedChannel(channel: StreamChannel) {
 
 /**
  * Keeps `lastMessageAt` current so the resting sweep measures real silence.
- * Each client touches on its own sends, so both sides stay covered without a
- * Stream webhook. (ponytail: webhook later only if client drift shows up.)
+ * Each client touches on its own sends, so both sides stay covered.
+ *
+ * The Stream `message.new` webhook added since does not replace this: it fires
+ * on the notification path and stamps the recipient's own notified-at, which is
+ * suppressed for two minutes at a time and so cannot stand in for a sweep that
+ * has to measure every message. (ponytail: fold the touch into the webhook only
+ * if client drift shows up.)
  */
 function useTouchOnSend(
   channel: StreamChannel,

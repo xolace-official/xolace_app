@@ -20,7 +20,11 @@ export const usePreferenceMutation = () =>
 
     const mergedNotifications = hasNotificationsChange
       ? {
-          ...(args.notifications ?? current.notifications),
+          // Merge, mirroring the server: the whole-object form carries only the
+          // fields this installed client knows about, so replacing would drop
+          // any newer preference from the snapshot until the round-trip lands.
+          ...current.notifications,
+          ...args.notifications,
           ...(args.notificationReach !== undefined && { reach: args.notificationReach }),
           ...(args.notificationQuietWindow !== undefined && {
             quietWindow: args.notificationQuietWindow ?? undefined,

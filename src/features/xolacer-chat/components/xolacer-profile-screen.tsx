@@ -10,7 +10,13 @@ import type { Id } from '@/convex/_generated/dataModel';
 import { isSpecialty, specialtyListensTo } from '@/convex/lib/specialties';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
-import { chatLimitError, formatMonthYear, hasSpoken } from '@/src/features/xolacer-chat/utils';
+import {
+  chatLimitError,
+  declineCooldownActive,
+  declineCooldownNote,
+  formatMonthYear,
+  hasSpoken,
+} from '@/src/features/xolacer-chat/utils';
 import { XolacerMenu } from './xolacer-menu';
 import { XolacerAvatar } from './xolacer-avatar';
 import { NewXolacerChip, RatingStars } from './rating-stars';
@@ -66,6 +72,7 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
 
   const { conversation } = profile;
   const hasThread = conversation !== null && conversation.status !== 'closed';
+  const coolingDown = declineCooldownActive(conversation?.retryAvailableAt);
 
   const openThread = (conversationId: string) =>
     router.replace(`/chat/${conversationId}`);
@@ -78,11 +85,15 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
         const data = chatLimitError(error);
         toast.show({
           label:
-            data?.code === 'pending_request_limit'
-              ? `You're already waiting on ${data.max ?? 2} Xolacers. Give them a moment to reply.`
-              : data?.code === 'open_conversation_limit'
-                ? `You've got ${data.max ?? 3} conversations open. Let one rest before starting another.`
-                : `${profile.displayName} isn't taking conversations right now.`,
+            // Only reachable from a screen that loaded before the decline —
+            // the CTA below replaces itself once the cooldown is in the query.
+            data?.code === 'decline_cooldown' && data.until
+              ? declineCooldownNote(profile.displayName, data.until)
+              : data?.code === 'pending_request_limit'
+                ? `You're already waiting on ${data.max ?? 2} Xolacers. Give them a moment to reply.`
+                : data?.code === 'open_conversation_limit'
+                  ? `You've got ${data.max ?? 3} conversations open. Let one rest before starting another.`
+                  : `${profile.displayName} isn't taking conversations right now.`,
         });
       });
   };
@@ -145,7 +156,10 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
             </Block>
           )}
 
-          {!profile.available && !hasThread && (
+          {/* Suppressed under a cooldown: the CTA already names the real
+              reason and its end date, and "isn't taking new conversations"
+              alongside it reads as a second, different no. */}
+          {!profile.available && !hasThread && !coolingDown && (
             <Block accent title="Not right now">
               <Fact icon={MOON_ICON}>
                 {profile.displayName} isn&apos;t taking new conversations at the moment.
@@ -236,6 +250,7 @@ function ProfileCta({
   onOpen: () => void;
 }) {
   const { conversation, available, displayName, isSelf } = profile;
+  const retryAt = conversation?.retryAvailableAt;
 
 
   if (isSelf) {
@@ -251,6 +266,23 @@ function ProfileCta({
         {conversation.status === 'requested' && (
           <Note>{displayName} has your request and can accept when they&apos;re ready.</Note>
         )}
+      </>
+    );
+  }
+
+  // Ahead of the availability branch: this xolacer having space is not the
+  // reason, and "not taking conversations" would be the app telling a seeker
+  // something untrue about the person who turned them down.
+  // Compared, never merely present: a cached timestamp already in the past
+  // would disable the button on a request the server would accept, and a
+  // disabled button writes nothing, so the cache would never refresh.
+  if (declineCooldownActive(retryAt)) {
+    return (
+      <>
+        <Button variant="secondary" isDisabled>
+          Not right now
+        </Button>
+        <Note>{declineCooldownNote(displayName, retryAt)}</Note>
       </>
     );
   }

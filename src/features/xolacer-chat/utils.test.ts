@@ -1,10 +1,61 @@
 import { describe, expect, it } from 'bun:test';
 import {
+  daysUntil,
+  declineCooldownActive,
   hasSpoken,
   resolveMessageIdentity,
   unreadBadge,
   type ConversationStatus,
 } from '@/src/features/xolacer-chat/utils';
+
+describe('declineCooldownActive', () => {
+  const DAY = 86400000;
+
+  // server-computed retryAvailableAt → is the door still shut?
+  const cases: { inMs?: number; expected: boolean; label: string }[] = [
+    { expected: false, label: 'no cooldown on the row' },
+    { inMs: 3 * DAY, expected: true, label: 'three days left' },
+    { inMs: 1000, expected: true, label: 'a second left' },
+    // The dead-end this guard exists for: the server stamps this timestamp
+    // inside a reactive query, and nothing writes when the window elapses — so
+    // a stale, already-past value arrives from cache. Reading it as "a cooldown
+    // exists" would disable the CTA forever, since a disabled button never
+    // writes anything that could refresh the cache.
+    { inMs: 0, expected: false, label: 'exactly now' },
+    { inMs: -1000, expected: false, label: 'a second ago' },
+    { inMs: -30 * DAY, expected: false, label: 'long expired, still cached' },
+  ];
+
+  for (const c of cases) {
+    it(`${c.label} → ${c.expected}`, () => {
+      expect(
+        declineCooldownActive(c.inMs === undefined ? undefined : Date.now() + c.inMs),
+      ).toBe(c.expected);
+    });
+  }
+});
+
+describe('daysUntil', () => {
+  const DAY = 86400000;
+
+  // ms from now → whole days the sentence says to wait
+  const cases: { inMs: number; expected: number; label: string }[] = [
+    { inMs: 7 * DAY, expected: 7, label: 'a full week out' },
+    { inMs: 6.5 * DAY, expected: 7, label: 'part-days round up, never down' },
+    { inMs: 1.1 * DAY, expected: 2, label: 'just over a day' },
+    // The floor: hours left must never read as "ask again in 0 days", which
+    // describes a wait that is already over.
+    { inMs: 3600_000, expected: 1, label: 'an hour left' },
+    { inMs: 0, expected: 1, label: 'already elapsed' },
+    { inMs: -5 * DAY, expected: 1, label: 'well past' },
+  ];
+
+  for (const c of cases) {
+    it(`${c.label} → ${c.expected}`, () => {
+      expect(daysUntil(Date.now() + c.inMs)).toBe(c.expected);
+    });
+  }
+});
 
 describe('hasSpoken', () => {
   // status | closedReason → did these two ever exchange a message?

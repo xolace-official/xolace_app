@@ -6,6 +6,7 @@ import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { useStreamConnection } from '../providers/stream-chat-provider';
+import { useDismissThreadNotifications } from '../use-dismiss-thread-notifications';
 import { useThreadConversation } from '../use-thread-conversation';
 import { XolacerMenu } from './xolacer-menu';
 import { ComposerPlaceholder } from './composer-placeholder';
@@ -29,6 +30,10 @@ export type ThreadConversation = Omit<
 
 export function ThreadScreen({ conversationId }: { conversationId: string }) {
   const conversation = useThreadConversation(conversationId);
+
+  // Above the loading branches on purpose: the tray should clear on the way in,
+  // not once the conversation has finished loading.
+  useDismissThreadNotifications(conversationId);
 
   if (conversation === undefined) return <ThreadSkeleton />;
   if (conversation === null) return <ThreadUnavailable />;
