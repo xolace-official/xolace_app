@@ -1,98 +1,55 @@
-import { useEffect, useReducer, useRef } from 'react';
-import { useSessionMode } from '@/src/context/session-mode-context';
-import { posthog } from '@/src/config/posthog';
-import { useAppStore } from '@/src/store/store';
-import { TOUR_STEPS } from '@/src/features/reflect/tour-copy';
+import { useEffect, useRef, useState } from "react";
+import { posthog } from "@/src/config/posthog";
+import { useAppStore } from "@/src/store/store";
 
-type TourState = {
-  currentStepIndex: number;
-  isActive: boolean;
-  isComplete: boolean;
-};
-
-type TourAction =
-  | { type: 'START_TOUR' }
-  | { type: 'NEXT_STEP' }
-  | { type: 'COMPLETE_TOUR' }
-  | { type: 'SKIP_TOUR' };
-
-function tourReducer(state: TourState, action: TourAction): TourState {
-  switch (action.type) {
-    case 'START_TOUR':
-      return { isActive: true, isComplete: false, currentStepIndex: 0 };
-    case 'NEXT_STEP':
-      return { ...state, currentStepIndex: state.currentStepIndex + 1 };
-    case 'COMPLETE_TOUR':
-      return { isActive: false, isComplete: true, currentStepIndex: 0 };
-    case 'SKIP_TOUR':
-      return { isActive: false, isComplete: true, currentStepIndex: 0 };
-    default:
-      return state;
-  }
-}
-
+/**
+ * When the first-install walkthrough runs, and what to record about it.
+ *
+ * Stepping belongs to `<Tour>` — this only decides whether it is open, and
+ * marks it seen once it closes either way.
+ */
 export function useReflectTour() {
   const reflectTourSeen = useAppStore((s) => s.reflectTourSeen);
   const setReflectTourSeen = useAppStore((s) => s.setReflectTourSeen);
   const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
   const homeSheetBlocking = useAppStore((s) => s.homeSheetBlocking);
-  const { isNight } = useSessionMode();
 
-  const steps = isNight ? TOUR_STEPS.slice(0, 3) : [...TOUR_STEPS];
+  const [isActive, setIsActive] = useState(false);
+  // Only read when the tour is abandoned, so a ref rather than state: the
+  // number the event wants is the last step shown, not a render input.
+  const lastStep = useRef(0);
 
-  const [tourState, dispatch] = useReducer(tourReducer, {
-    currentStepIndex: 0,
-    isActive: false,
-    isComplete: false,
-  });
-
-  const isAdvancing = useRef(false);
-
-  // Start tour after the idle screen settles, once founder welcome is dismissed
+  // Start after the idle screen settles, once the founder welcome is dismissed
   // and no other home sheet is covering the screen. A returning user on a build
   // that added the tour has founderWelcomeSeen already true, so without the
-  // homeSheetBlocking gate the coach marks would render under the return-welcome
+  // homeSheetBlocking gate the spotlight would render under the return-welcome
   // or awareness sheet.
   useEffect(() => {
-    if (!reflectTourSeen && founderWelcomeSeen && !homeSheetBlocking) {
-      const t = setTimeout(() => dispatch({ type: 'START_TOUR' }), 800);
-      return () => clearTimeout(t);
-    }
+    if (reflectTourSeen || !founderWelcomeSeen || homeSheetBlocking) return;
+
+    const timer = setTimeout(() => {
+      setIsActive(true);
+      posthog.capture("tour_started");
+    }, 800);
+
+    return () => clearTimeout(timer);
   }, [reflectTourSeen, founderWelcomeSeen, homeSheetBlocking]);
 
-  // Fire tour_started once the first step is shown
-  const hasFiredStartEvent = useRef(false);
-  useEffect(() => {
-    if (tourState.isActive && !hasFiredStartEvent.current) {
-      hasFiredStartEvent.current = true;
-      posthog.capture('tour_started');
-    }
-  }, [tourState.isActive]);
-
-  // Complete when step index passes the last step
-  useEffect(() => {
-    if (!tourState.isActive) return;
-    if (tourState.currentStepIndex >= steps.length) {
-      dispatch({ type: 'COMPLETE_TOUR' });
-      setReflectTourSeen(true);
-      posthog.capture('tour_completed');
-    }
-  }, [tourState.currentStepIndex, tourState.isActive, steps.length, setReflectTourSeen]);
-
-  const advance = () => {
-    if (!tourState.isActive || isAdvancing.current) return;
-    isAdvancing.current = true;
-    dispatch({ type: 'NEXT_STEP' });
-    setTimeout(() => {
-      isAdvancing.current = false;
-    }, 600);
+  const finish = () => {
+    setIsActive(false);
+    setReflectTourSeen(true);
+    posthog.capture("tour_completed");
   };
 
   const skip = () => {
-    dispatch({ type: 'SKIP_TOUR' });
+    setIsActive(false);
     setReflectTourSeen(true);
-    posthog.capture('tour_skipped', { at_step: tourState.currentStepIndex });
+    posthog.capture("tour_skipped", { at_step: lastStep.current });
   };
 
-  return { tourState, steps, advance, skip };
+  const trackStep = (order: number) => {
+    lastStep.current = order;
+  };
+
+  return { isActive, finish, skip, trackStep };
 }

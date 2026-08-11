@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { BackHandler, Platform } from 'react-native';
+import { useEffect, useRef } from "react";
+import { BackHandler, Platform } from "react-native";
 
 /**
  * Runs a handler when the Android hardware back button is pressed.
@@ -21,16 +21,23 @@ import { BackHandler, Platform } from 'react-native';
 export function useBackHandler(enabled: boolean, onBack: () => void): void {
   // Held in a ref so a caller passing an inline `() => setOpen(false)` does not
   // resubscribe the listener on every render — only a change in `enabled` does.
+  // Written in an effect rather than during render, which is where a ref is
+  // allowed to be touched at all.
   const onBackRef = useRef(onBack);
-  onBackRef.current = onBack;
+  useEffect(() => {
+    onBackRef.current = onBack;
+  });
 
   useEffect(() => {
-    if (Platform.OS !== 'android' || !enabled) return;
+    if (Platform.OS !== "android" || !enabled) return;
 
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      onBackRef.current();
-      return true;
-    });
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        onBackRef.current();
+        return true;
+      },
+    );
 
     return () => subscription.remove();
   }, [enabled]);
