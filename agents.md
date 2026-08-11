@@ -203,6 +203,8 @@ minimum-supported UI may still call. Instead mark, don't delete:
 
 **Pending Deprecations**
 - `preferences.reducedMotion` (schema field + `update` arg) — superseded by tri-state `motionPreference`. Server keeps the boolean in sync as a back-compat mirror. Remove once no store-published client reads `reducedMotion`.
+- `notifications.removeToken` absent `pushToken` arg (remove-after: app >= 1.9.0) — old clients call `removeToken({})`, which removes every device for the profile. Require the token once no store-published client omits it.
+- Profile-keyed push recipient fallback in `sendPushToProfile` (`convex/lib/pushNotifications.ts`, remove-after: app >= 1.9.0) — keeps users who haven't relaunched since the multi-device deploy reachable. Any registration retires their profile-keyed recipient; remove the fallback once the supported version floor has passed.
 
 ## Quick Reference
 

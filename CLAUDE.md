@@ -123,6 +123,8 @@ minimum-supported UI may still call. Instead mark, don't delete:
 - `sessions.submitInput` args `rawText`, `rawInputLength` — derived from `rawInput` server-side; values ignored.
 - `sessions.retrySession` arg `rawText` — retry reprocesses `session.rawInput`; value ignored.
 - `preferences.reducedMotion` (schema field + `update` arg) — superseded by tri-state `motionPreference`. Server keeps the boolean in sync as a back-compat mirror. Remove the field and arg once no store-published client reads `reducedMotion` (old UIs read it directly for the "sit with this" breathing).
+- `notifications.removeToken` absent `pushToken` arg (remove-after: app >= 1.9.0) — old clients call `removeToken({})`, which is treated as "remove every device for this profile". Require the token once no store-published client omits it.
+- Profile-keyed push recipient fallback in `sendPushToProfile` (`convex/lib/pushNotifications.ts`, remove-after: app >= 1.9.0) — a user who hasn't relaunched since the multi-device deploy still has their token under the old profile-keyed recipient, and the nudge meant to bring them back has to reach them. Any registration retires that recipient; remove the fallback once the supported version floor has passed.
 - Client `isMaxRefinementError` message-substring fallback (`.includes('Maximum refinement turns')` in `src/features/reflect/session-service.ts`) — the server now throws a `ConvexError` with code `max_refinement_turns`; remove the fallback once the backend deployed before that code is no longer reachable. Conversely, the server's error message must keep the "Maximum refinement turns" substring until no store-published client matches on it.
 
 ## Good to know

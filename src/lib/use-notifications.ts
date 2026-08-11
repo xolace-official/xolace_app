@@ -165,6 +165,20 @@ export async function getPushPermissionState(): Promise<PushPermissionState> {
 }
 
 /**
+ * This installation's Expo push token, or null when permission isn't granted.
+ *
+ * Never prompts, unlike `requestPushToken`. Used by the unregister paths —
+ * turning notifications off and signing out — where a permission dialog would
+ * be absurd, and where the token is what scopes removal to this installation
+ * instead of every device on the account.
+ */
+export async function getGrantedPushToken(): Promise<string | null> {
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status !== "granted") return null;
+  return requestPushToken();
+}
+
+/**
  * Request OS push notification permission and return the Expo push token.
  * Exported so settings can trigger re-registration when notifications are enabled.
  */

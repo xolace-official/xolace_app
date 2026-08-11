@@ -1124,6 +1124,40 @@ export default defineSchema({
     .index("by_profile_and_reach", ["emotionalProfileId", "reachUsed"]),
 
   // ===========================================================
+  // 10b. PUSH DEVICES
+  // ===========================================================
+  //
+  // One row per installation holding a live Expo token for a profile.
+  //
+  // The push component stores exactly one token per recipient key, so keying
+  // it by profile id made the last device to register replace every other. The
+  // registry exists so each installation gets its own recipient key (this
+  // row's id) and dispatch can fan out to all of them.
+  //
+  // The Expo token is the device key — it is already stable per installation,
+  // so no generated device id is stored. `by_token` is what enforces single
+  // ownership: registering a token held by another profile evicts the prior
+  // holder, so a reinstalled or handed-down device cannot inherit someone
+  // else's notifications.
+  //
+  // No `platform` field (sound and channel id are chosen per notification type
+  // and both are always sent) and no `timezone` field (quiet windows are
+  // evaluated at the trigger, profile-globally, never per device).
+  //
+  push_devices: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    expoPushToken: v.string(),
+    lastRegisteredAt: v.number(),
+  })
+    // Fan-out: every installation for a profile, most recently registered
+    // first. The ordering matters because token rotation leaves orphan rows
+    // behind (see above) — read descending and the bounded read can never
+    // return only orphans while the live device sits outside the window.
+    .index("by_profile", ["emotionalProfileId", "lastRegisteredAt"])
+    // Single ownership: who currently holds this token.
+    .index("by_token", ["expoPushToken"]),
+
+  // ===========================================================
   // 11. REFLECTION REPORTS
   // ===========================================================
   //

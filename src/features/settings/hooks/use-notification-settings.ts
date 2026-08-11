@@ -3,7 +3,11 @@ import { AppState } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { chatNotificationsAllowed } from "@/convex/lib/chatNotifications";
-import { getPushPermissionState, requestPushToken } from "@/src/lib/use-notifications";
+import {
+  getGrantedPushToken,
+  getPushPermissionState,
+  requestPushToken,
+} from "@/src/lib/use-notifications";
 import {
   chatChoice,
   gentleChoice,
@@ -123,7 +127,11 @@ export const useNotificationSettings = () => {
 
     if (!next.gentle && !next.chat) {
       try {
-        await removeToken();
+        // Scoped to this installation. The preference above is what silences
+        // the account; dropping another device's token here would mute a phone
+        // the user never touched.
+        const token = await getGrantedPushToken();
+        if (token) await removeToken({ pushToken: token });
       } catch {
         // Best-effort
       }

@@ -82,6 +82,7 @@ import type * as lib_notificationPrefs from "../lib/notificationPrefs.js";
 import type * as lib_notificationSounds from "../lib/notificationSounds.js";
 import type * as lib_poolability from "../lib/poolability.js";
 import type * as lib_premium from "../lib/premium.js";
+import type * as lib_pushDevices from "../lib/pushDevices.js";
 import type * as lib_pushNotifications from "../lib/pushNotifications.js";
 import type * as lib_rateLimits from "../lib/rateLimits.js";
 import type * as lib_reflectionMatching from "../lib/reflectionMatching.js";
@@ -197,6 +198,7 @@ declare const fullApi: ApiFromModules<{
   "lib/notificationSounds": typeof lib_notificationSounds;
   "lib/poolability": typeof lib_poolability;
   "lib/premium": typeof lib_premium;
+  "lib/pushDevices": typeof lib_pushDevices;
   "lib/pushNotifications": typeof lib_pushNotifications;
   "lib/rateLimits": typeof lib_rateLimits;
   "lib/reflectionMatching": typeof lib_reflectionMatching;

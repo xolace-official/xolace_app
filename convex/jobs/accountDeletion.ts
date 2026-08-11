@@ -2,7 +2,11 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { purgeSessions } from "../lib/sessionCascade";
-import { pushNotifications } from "../lib/pushNotifications";
+import {
+  deletePushDevice,
+  profilePushDevices,
+  pushNotifications,
+} from "../lib/pushNotifications";
 import { rankDelete } from "../lib/aggregates";
 
 const USER_BATCH_SIZE = 10;
@@ -309,8 +313,12 @@ export const purgeUser = internalMutation({
       profileId: profileId,
     });
 
-    // Push tokens live in the component, keyed by profile id — deleting the
-    // profile row does not reach them.
+    // Push tokens live in the component, keyed by device row id — deleting the
+    // profile row does not reach them. Every installation has to go, plus the
+    // pre-migration profile-keyed recipient for anyone who never re-registered.
+    for (const device of await profilePushDevices(ctx, profileId)) {
+      await deletePushDevice(ctx, device._id);
+    }
     await pushNotifications.removeToken(ctx, { userId: profileId });
 
     // Must run before the row is gone — the aggregate needs the doc to locate

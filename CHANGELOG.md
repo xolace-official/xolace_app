@@ -4,6 +4,15 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.8.0] - OTA Update (2026-08-11)
+
+### Fixed
+
+- **Notifications reach every device you use** — the push component stores one token per recipient key, and Xolace was using the emotional profile as that key, so the last device to open the app silently replaced every other one: a phone re-registering moved delivery off the tablet, and turning notifications off anywhere turned them off everywhere. An app-owned `push_devices` registry now gives each installation its own recipient key, and both dispatch paths — AI nudges and conversation events — fan out through one shared helper so a fix can never land on one and not the other. Turning notifications off in Settings still silences the whole account, because that is the preference doing it, not the token.
+- **A reinstalled or handed-down device can't inherit someone else's notifications** — nothing enforced one owner per Expo push token, so a device that changed hands could keep receiving the previous account's notification content. Registering a token now evicts whoever held it before, and signing out detaches the installation on the way past. One logical nudge still consumes one rate-limit event and writes one log row, whatever the device count.
+
+---
+
 ## [1.8.0] - OTA Update (2026-08-07)
 
 ### Added

@@ -2,7 +2,14 @@ import { v } from "convex/values";
 import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
-import { pushNotifications } from "./lib/pushNotifications";
+import {
+  deletePushDevice,
+  MAX_DEVICES_PER_PROFILE,
+  profilePushDevices,
+  pushNotifications,
+  sendPushToProfile,
+} from "./lib/pushNotifications";
+import { reconcilePushDevice } from "./lib/pushDevices";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
 import { NUDGE_NOTIFICATION_SOUND } from "./lib/notificationSounds";
 
@@ -87,12 +94,11 @@ export const schedule = internalMutation({
       ...(args.generatedBy && { generatedBy: args.generatedBy }),
     });
 
-    // Dispatch via push notifications component.
-    // allowUnregisteredTokens: true — don't throw if user hasn't
-    // registered a token yet (e.g. notifications enabled in prefs
-    // but app not yet opened on a physical device).
-    await pushNotifications.sendPushNotification(ctx, {
-      userId: args.emotionalProfileId,
+    // Dispatch to every installation this profile has registered. One log row
+    // above, one rate-limit event above, one call here — the device count
+    // changes none of that.
+    await sendPushToProfile(ctx, {
+      emotionalProfileId: args.emotionalProfileId,
       notification: {
         title: "Xolace",
         body: args.content,
@@ -105,26 +111,65 @@ export const schedule = internalMutation({
         channelId: NUDGE_NOTIFICATION_SOUND.channelId,
         data: { type: args.type, logId },
       },
-      allowUnregisteredTokens: true,
     });
   },
 });
 
 /**
- * Register an Expo push token for the authenticated user.
- * Called from the client after obtaining permissions and a token.
+ * Register an Expo push token for the authenticated installation.
+ *
+ * An upsert into the app-owned device registry rather than a single write to
+ * the component: the component stores one token per recipient key, so keying
+ * it by profile made the last device to register replace every other one.
+ *
+ * The payload is unchanged from before the registry existed, so old store
+ * clients keep working without a compatibility branch.
  */
 export const registerToken = mutation({
   args: {
     pushToken: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
+    // Single ownership. A reinstalled or handed-down device would otherwise
+    // keep delivering the previous account's notifications, and the component
+    // does not deduplicate by token — two profiles holding one token means two
+    // pushes to one phone.
+    const rowsForToken = await ctx.db
+      .query("push_devices")
+      .withIndex("by_token", (q) => q.eq("expoPushToken", args.pushToken))
+      .take(MAX_DEVICES_PER_PROFILE);
+
+    const { keepId, deleteIds } = reconcilePushDevice(rowsForToken, profile._id);
+
+    for (const staleId of deleteIds) {
+      await deletePushDevice(ctx, staleId);
+    }
+
+    const now = Date.now();
+    let deviceId = keepId;
+    if (deviceId) {
+      await ctx.db.patch(deviceId, { lastRegisteredAt: now });
+    } else {
+      deviceId = await ctx.db.insert("push_devices", {
+        emotionalProfileId: profile._id,
+        expoPushToken: args.pushToken,
+        lastRegisteredAt: now,
+      });
+    }
+
     await pushNotifications.recordToken(ctx, {
-      userId: profile._id,
+      userId: deviceId,
       pushToken: args.pushToken,
     });
+
+    // Retire any pre-migration profile-keyed recipient, which would otherwise
+    // duplicate every notification to this same device. Idempotent, and the
+    // only available move — the component never exposes the token it stored,
+    // so there is nothing to match on.
+    await pushNotifications.removeToken(ctx, { userId: profile._id });
 
     // Auto-enable notification preferences on first token registration
     // so cron jobs include this user. If the user later disables via
@@ -155,17 +200,41 @@ export const registerToken = mutation({
 });
 
 /**
- * Remove the push token for the authenticated user.
- * Called when the user disables notifications.
+ * Unregister a push token for the authenticated user.
+ *
+ * Scoped to the calling installation: disabling notifications on a phone must
+ * not silence a tablet. The account-wide "off" is the preference, which both
+ * dispatch paths gate on, not the token.
  */
 export const removeToken = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    // DEPRECATED(remove-after: app >= 1.9.0): absent pushToken means "remove
+    // every device for this profile". Old store clients call removeToken({})
+    // with no argument, and that is what the master switch meant to them —
+    // identical behavior for a single-device user. Require the token once no
+    // store-published client omits it.
+    pushToken: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
-    await pushNotifications.removeToken(ctx, {
-      userId: profile._id,
-    });
+    const devices = await profilePushDevices(ctx, profile._id);
+
+    const targets = args.pushToken
+      ? devices.filter((device) => device.expoPushToken === args.pushToken)
+      : devices;
+
+    for (const device of targets) {
+      await deletePushDevice(ctx, device._id);
+    }
+
+    // Once nothing is left, retire the pre-migration profile-keyed recipient
+    // too, or the fan-out fallback would keep reaching a device that just
+    // unregistered.
+    if (targets.length === devices.length) {
+      await pushNotifications.removeToken(ctx, { userId: profile._id });
+    }
 
     return null;
   },
@@ -327,12 +396,15 @@ export const lastDelivered = query({
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
+    // `by_profile` is (emotionalProfileId, sentAt) and sentAt is only ever
+    // written alongside delivered: true, so the descending head is already the
+    // most recent delivered row — undelivered rows have no sentAt and sort
+    // below every number.
     const latest = await ctx.db
       .query("notification_log")
       .withIndex("by_profile", (q) =>
         q.eq("emotionalProfileId", profile._id)
       )
-      .filter((q) => q.eq(q.field("delivered"), true))
       .order("desc")
       .first();
 
