@@ -82,6 +82,16 @@ export const TourOverlay = ({
 
   const [cardHeight, setCardHeight] = useState<number | null>(null);
 
+  // The card is keyed on the step and remounts with it, but its height lives
+  // here — so without this the next step is placed by the previous card's
+  // height, visible at full opacity, until its own layout lands a frame later.
+  // Dropped during render for the same reason TourRoot resets the step there.
+  const [measuredOrder, setMeasuredOrder] = useState(active?.order);
+  if (measuredOrder !== active?.order) {
+    setMeasuredOrder(active?.order);
+    setCardHeight(null);
+  }
+
   /*
    * A step with no measurable target — a welcome card, or one whose control has
    * gone — gets no hole and a card in the middle of the screen. Dimming the

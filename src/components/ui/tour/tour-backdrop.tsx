@@ -1,6 +1,10 @@
-import { StyleSheet, View } from "react-native";
+import { useRef } from "react";
+import { type GestureResponderEvent, StyleSheet, View } from "react-native";
 
 import type { Rect } from "@/src/components/ui/tour/types";
+
+/** How far a touch may travel and still count as a tap, not a swipe. */
+const TAP_SLOP = 10;
 
 type Props = {
   interactive: boolean;
@@ -27,8 +31,27 @@ export const TourBackdrop = ({
   screenHeight,
   onDismiss,
 }: Props) => {
+  const start = useRef({ x: 0, y: 0 });
+
   const press = dismissible
-    ? { onStartShouldSetResponder: () => true, onResponderRelease: onDismiss }
+    ? {
+        onStartShouldSetResponder: () => true,
+        onResponderGrant: (e: GestureResponderEvent) => {
+          start.current = {
+            x: e.nativeEvent.pageX,
+            y: e.nativeEvent.pageY,
+          };
+        },
+        onResponderRelease: (e: GestureResponderEvent) => {
+          const { pageX, pageY } = e.nativeEvent;
+          if (
+            Math.abs(pageX - start.current.x) <= TAP_SLOP &&
+            Math.abs(pageY - start.current.y) <= TAP_SLOP
+          ) {
+            onDismiss();
+          }
+        },
+      }
     : { onStartShouldSetResponder: () => true };
 
   if (!interactive || !spot) {
