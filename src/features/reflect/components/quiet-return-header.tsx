@@ -13,6 +13,8 @@ import {
   QUIET_RETURN_PROMPTS,
   type QuietReturnTier,
 } from "@/src/features/reflect/quiet-return-copy";
+import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
+import { Tour } from "@/src/components/ui/tour";
 
 type Props = {
   variant: UserVariant;
@@ -108,15 +110,23 @@ export const QuietReturnHeader = ({
         <View className="flex-row justify-end">{eventPill}</View>
       ) : null}
 
-      <AppText
-        className={cn(
-          "font-semibold text-foreground",
-          isLongPrompt ? "text-2xl leading-9" : "text-4xl",
-          (encouragement || showStreakCalendar || showEventPrompt) && "mt-4",
-        )}
+      {/* First step of the reflect tour — the prompt is read before anything
+          is done about it, so it leads. */}
+      <Tour.Step
+        order={0}
+        title={TOUR_STEPS[0].title}
+        description={TOUR_STEPS[0].description}
       >
-        {headline}
-      </AppText>
+        <AppText
+          className={cn(
+            "font-semibold text-foreground",
+            isLongPrompt ? "text-2xl leading-9" : "text-4xl",
+            (encouragement || showStreakCalendar || showEventPrompt) && "mt-4",
+          )}
+        >
+          {headline}
+        </AppText>
+      </Tour.Step>
     </View>
   );
 };

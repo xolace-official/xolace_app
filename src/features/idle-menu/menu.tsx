@@ -4,6 +4,8 @@ import { BlurView } from "expo-blur";
 import { MenuTrigger } from "@/src/features/idle-menu/menu-trigger";
 import { MenuButtonsWrapper } from "@/src/features/idle-menu/menu-buttons-wrapper";
 import { useMenuState } from "@/src/features/idle-menu/hooks/use-menu-state";
+import { Tour } from "@/src/components/ui/tour";
+import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 
 const EASE_INITIAL = { opacity: 0 };
 const EASE_ANIMATE = { opacity: 1 };
@@ -41,7 +43,17 @@ export const IdleMenu = () => {
           isOpenJS={isOpenJS}
           onClose={close}
         />
-        <MenuTrigger isOpen={isOpen} isOpenJS={isOpenJS} onPress={toggle} />
+        {/* Last step of the reflect tour. The trigger is a plain view, unlike
+            the profile and crisis controls in the header, so it can simply be
+            wrapped — see TOUR_STEPS for the ordering. */}
+        <Tour.Step
+          order={5}
+          shape="circle"
+          title={TOUR_STEPS[5].title}
+          description={TOUR_STEPS[5].description}
+        >
+          <MenuTrigger isOpen={isOpen} isOpenJS={isOpenJS} onPress={toggle} />
+        </Tour.Step>
       </View>
     </View>
   );

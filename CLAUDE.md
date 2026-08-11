@@ -127,11 +127,8 @@ minimum-supported UI may still call. Instead mark, don't delete:
 
 ## Good to know
 
-Schema must always match existing data. Convex enforces this constraint. You cannot push a schema to a deployment with existing data that doesn't match it, unless you turn off schema enforcement. In general it safe to:
+Schema must always match existing data. In general it safe to:
 Add new tables to the schema.
-Add an optional field to an existing table's schema, set the field on all documents in the table, and then make the field required.
-Mark an existing field as optional, remove the field from all documents, and then remove the field.
-Mark an existing field as a union of the existing type and a new type, modify the field on all documents to match the new type, and then change the type to the new type.
 Functions should be backwards compatible. Even if your only client is a website, and you deploy it together with your backend, your users might still be running the old version of your website when your backend changes. Therefore you should make your functions backwards compatible until you are OK to break old clients. In general it is safe to:
 Add new functions.
 Add an optional named argument to an existing function.
@@ -244,7 +241,7 @@ const current = sv.get(); // only inside worklets/callbacks, never during render
 ### Styling
 
 - Default to Tailwind `className` props via Uniwind.
-- Use `StyleSheet.create()` for static styles that never change.
+- Use `StyleSheet.create()` only when absolutely necessary.
 - Inline style objects (e.g. `style={{ color: accentColor }}`) are fine when values are dynamic — React Compiler stabilizes them. No need to hoist to module-level constants or wrap in `useMemo`.
 - **Never hardcode hex colors** — always use CSS variables / `useThemeColor()`.
 

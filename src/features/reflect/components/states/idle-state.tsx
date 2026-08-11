@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import {
-  Popover,
   PressableFeedback,
   Separator,
   TagGroup,
@@ -43,8 +41,8 @@ import {
 import { useAppStore } from "@/src/store/store";
 import { posthog } from "@/src/config/posthog";
 import { useReflectTour } from "@/src/features/reflect/hooks/use-reflect-tour";
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
+import { Tour } from "@/src/components/ui/tour";
 
 const QUOTE_ICON_NAME = { ios: "sparkles", android: "auto_awesome" } as const;
 const BUTTON_INITIAL_ANIMATE = { opacity: 0, translateY: 20 } as const;
@@ -65,41 +63,6 @@ const BUTTON_TRANSITION_OUT = {
 };
 const WORDS_FADE_OUT = { type: "timing" as const, duration: 150 };
 const WORDS_FADE_IN = { type: "timing" as const, duration: 200 };
-
-const styles = StyleSheet.create({
-  popoverStep0Trigger: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    right: 56,
-    height: 44,
-  },
-  popoverStep1Trigger: {
-    position: "absolute",
-    right: 8,
-    top: 8,
-  },
-  popoverStep1Anchor: {
-    width: 44,
-    height: 44,
-  },
-  popoverDynamicTriggerBase: {
-    position: "absolute",
-    left: 0,
-  },
-  popoverStep2Trigger: {
-    right: 48,
-    height: 60,
-  },
-  popoverStep3Trigger: {
-    right: 0,
-    height: 40,
-  },
-  skipContainerBase: {
-    position: "absolute",
-    right: 10,
-  },
-});
 
 type Props = {
   variant: UserVariant;
@@ -173,23 +136,17 @@ export const IdleState = ({
   const containerStyle = { paddingTop: headerExtraPadding };
   const wordsFadeAnimate = { opacity: wordsVisible ? 1 : 0 };
 
-  const { tourState, steps, advance, skip } = useReflectTour();
+  const { isActive: tourActive, finish, skip, trackStep } = useReflectTour();
   const setReflectTourSeen = useAppStore((s) => s.setReflectTourSeen);
   const navigation = useNavigation();
 
   // Dismiss tour if user navigates away (e.g. Help button in transparent header)
   useEffect(() => {
     const unsub = navigation.addListener("blur", () => {
-      if (tourState.isActive) skip();
+      if (tourActive) skip();
     });
     return unsub;
-  }, [navigation, tourState.isActive, skip]);
-
-  // Measured y-offsets for steps 2/3 anchors within the tags section.
-  // Stored in state and written from onLayout (an event) so the values can be
-  // read safely during render for the tour popover anchors.
-  const [tagGroupLayoutY, setTagGroupLayoutY] = useState(0);
-  const [textureTabsLayoutY, setTextureTabsLayoutY] = useState(0);
+  }, [navigation, tourActive, skip]);
 
   useEffect(() => {
     if (!hasPlayedEntrance.current) {
@@ -236,299 +193,185 @@ export const IdleState = ({
     setButtonMounted(true);
   }
 
-  const step = tourState.currentStepIndex;
-
-  const step2Top = tagGroupLayoutY;
-  const step3Top = textureTabsLayoutY;
-
-  const step2TriggerStyle = [
-    styles.popoverDynamicTriggerBase,
-    styles.popoverStep2Trigger,
-    { top: step2Top },
-  ];
-
-  const step3TriggerStyle = [
-    styles.popoverDynamicTriggerBase,
-    styles.popoverStep3Trigger,
-    { top: step3Top },
-  ];
-
-  const skipContainerStyle = [styles.skipContainerBase, { top: insets.top }];
-
   return (
-    <View className="flex-1 px-6" style={containerStyle}>
-      <View className="pt-4 pb-4">
-        <QuietReturnHeader
-          variant={variant}
-          isNight={isNight}
-          activeQuietReturn={activeQuietReturn}
-          eventPrompt={activeEventPrompt}
-          eventLabel={activeEventLabel}
-          spaceName={spaceName}
-          className="pt-0 pb-0"
-        />
-      </View>
-
-      {hasQuote && (
-        <PressableFeedback
-          onPress={() => {
-            playSoftPress();
-            router.push("/(protected)/quotes");
-          }}
-          accessibilityLabel="Open today's reflection"
-          hitSlop={8}
-          className="items-center pb-3"
-        >
-          <View className="flex-row items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1.5">
-            <SymbolView
-              name={QUOTE_ICON_NAME}
-              size={11}
-              tintColor={accentColor}
-            />
-            <AppText className="text-xs font-medium text-accent/80">
-              A word for today
-            </AppText>
-          </View>
-        </PressableFeedback>
-      )}
-
-      <Separator className="mb-0" />
-
-      <View className="flex-1 pt-4">
-        <Pressable
-          onPress={handleTap}
-          accessibilityRole="button"
-          accessibilityLabel="Tap to begin writing"
-          accessibilityHint="Opens the editor to start typing"
-          className="flex-1"
-        >
-          <AppText className="text-base text-foreground/30">
-            Tap to begin writing or speaking...
-          </AppText>
-        </Pressable>
-
-        <View className="absolute right-2 top-2">
-          <MicButton size="md" isRecording={isRecording} onPress={onVoiceTap} />
+    <Tour
+      open={tourActive}
+      onFinish={finish}
+      onSkip={skip}
+      onStepChange={trackStep}
+    >
+      <View className="flex-1 px-6" style={containerStyle}>
+        <View className="pt-4 pb-4">
+          <QuietReturnHeader
+            variant={variant}
+            isNight={isNight}
+            activeQuietReturn={activeQuietReturn}
+            eventPrompt={activeEventPrompt}
+            eventLabel={activeEventLabel}
+            spaceName={spaceName}
+            className="pt-0 pb-0"
+          />
         </View>
 
-        {/* Each Popover mounts only for its step so measure() fires with isOpen=true */}
-        {tourState.isActive && step === 0 && (
-          <Popover
-            isOpen={true}
-            onOpenChange={() => {}}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="box-none"
-          >
-            <Popover.Trigger style={styles.popoverStep0Trigger}>
-              <View />
-            </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Content presentation="popover" placement="bottom">
-                <Popover.Arrow />
-                <Popover.Title>{steps[0]?.title}</Popover.Title>
-                <Popover.Description>
-                  {steps[0]?.description}
-                </Popover.Description>
-              </Popover.Content>
-            </Popover.Portal>
-          </Popover>
-        )}
-
-        {tourState.isActive && step === 1 && (
-          <Popover
-            isOpen={true}
-            onOpenChange={() => {}}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="box-none"
-          >
-            <Popover.Trigger style={styles.popoverStep1Trigger}>
-              <View style={styles.popoverStep1Anchor} />
-            </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Content presentation="popover" placement="bottom">
-                <Popover.Arrow />
-                <Popover.Title>{steps[1]?.title}</Popover.Title>
-                <Popover.Description>
-                  {steps[1]?.description}
-                </Popover.Description>
-              </Popover.Content>
-            </Popover.Portal>
-          </Popover>
-        )}
-      </View>
-
-      <View className="border-t border-foreground/5 pt-6 pb-8">
-        <AppText className="mb-3 text-xs text-foreground/30">
-          Or just tap what feels close:
-        </AppText>
-
-        {!isNight && (
-          <View
-            onLayout={(e) => {
-              setTextureTabsLayoutY(e.nativeEvent.layout.y);
-            }}
-          >
-            <TextureSetTabs
-              activeSet={resolvedSetId}
-              onSelect={handleSetChange}
-              disabled={!wordsVisible}
-            />
-          </View>
-        )}
-
-        <View
-          onLayout={(e) => {
-            setTagGroupLayoutY(e.nativeEvent.layout.y);
-          }}
-        >
-          <EaseView
-            animate={wordsFadeAnimate}
-            transition={wordsVisible ? WORDS_FADE_IN : WORDS_FADE_OUT}
-            onTransitionEnd={({ finished }) => {
-              if (finished && !wordsVisible) {
-                setResolvedSetId(pendingSetId);
-                setWordsVisible(true);
-              }
-            }}
-          >
-            <TagGroup
-              key={resolvedSetId}
-              selectionMode="multiple"
-              size="sm"
-              variant="surface"
-              selectedKeys={selectedTextureKeys}
-              onSelectionChange={handleSelectionChange}
-              animation="disable-all"
-            >
-              <TagGroup.List className="flex-row flex-wrap gap-2 pr-14">
-                {TEXTURE_WORDS.map((word) => (
-                  <TagGroup.Item
-                    key={word}
-                    id={word}
-                    className="min-w-18 justify-center"
-                  >
-                    {({ isSelected }) => (
-                      <TagGroup.ItemLabel
-                        className={
-                          isSelected ? "text-accent" : "text-foreground/80"
-                        }
-                      >
-                        {word}
-                      </TagGroup.ItemLabel>
-                    )}
-                  </TagGroup.Item>
-                ))}
-              </TagGroup.List>
-            </TagGroup>
-          </EaseView>
-        </View>
-
-        {tourState.isActive && step === 2 && (
-          <Popover
-            isOpen={true}
-            onOpenChange={() => {}}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="box-none"
-          >
-            <Popover.Trigger style={step2TriggerStyle}>
-              <View />
-            </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Content presentation="popover" placement="top">
-                <Popover.Arrow />
-                <Popover.Title>{steps[2]?.title}</Popover.Title>
-                <Popover.Description>
-                  {steps[2]?.description}
-                </Popover.Description>
-              </Popover.Content>
-            </Popover.Portal>
-          </Popover>
-        )}
-
-        {!isNight && tourState.isActive && step === 3 && (
-          <Popover
-            isOpen={true}
-            onOpenChange={() => {}}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="box-none"
-          >
-            <Popover.Trigger style={step3TriggerStyle}>
-              <View />
-            </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Content presentation="popover" placement="top">
-                <Popover.Arrow />
-                <Popover.Title>{steps[3]?.title}</Popover.Title>
-                <Popover.Description>
-                  {steps[3]?.description}
-                </Popover.Description>
-              </Popover.Content>
-            </Popover.Portal>
-          </Popover>
-        )}
-
-        {buttonMounted && (
-          <EaseView
-            initialAnimate={BUTTON_INITIAL_ANIMATE}
-            animate={
-              hasSelections ? BUTTON_VISIBLE_ANIMATE : BUTTON_HIDDEN_ANIMATE
-            }
-            transition={
-              hasSelections ? BUTTON_TRANSITION_IN : BUTTON_TRANSITION_OUT
-            }
-            onTransitionEnd={({ finished }) => {
-              if (finished && !hasSelections) setButtonMounted(false);
-            }}
-            className="mt-5"
-          >
-            <PillButton label="Let it out" onPress={onScaffoldSubmit} />
-          </EaseView>
-        )}
-      </View>
-
-      {/* IdleMenu before overlay so overlay is on top (higher Z) */}
-      <IdleMenu />
-
-      {tourState.isActive && (
-        <AnimatedPressable
-          entering={FadeIn.delay(300)}
-          exiting={FadeOut}
-          style={StyleSheet.absoluteFill}
-          onPress={advance}
-          className="bg-black/25"
-          accessibilityLabel="Tour guide, tap to continue"
-        />
-      )}
-
-      {/* Skip rendered separately so it sits above the dim layer */}
-      {tourState.isActive && (
-        <Animated.View
-          entering={FadeIn.delay(300)}
-          exiting={FadeOut}
-          style={skipContainerStyle}
-          pointerEvents="box-none"
-        >
+        {hasQuote && (
           <PressableFeedback
-            onPress={skip}
-            accessibilityLabel="Skip tour"
+            onPress={() => {
+              playSoftPress();
+              router.push("/(protected)/quotes");
+            }}
+            accessibilityLabel="Open today's reflection"
             hitSlop={8}
-            className="p-3"
+            className="items-center pb-3"
           >
-            <AppText className="text-foreground/65 text-sm">Skip</AppText>
+            <View className="flex-row items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1.5">
+              <SymbolView
+                name={QUOTE_ICON_NAME}
+                size={11}
+                tintColor={accentColor}
+              />
+              <AppText className="text-xs font-medium text-accent/80">
+                A word for today
+              </AppText>
+            </View>
           </PressableFeedback>
-        </Animated.View>
-      )}
+        )}
 
-      {/* DEV ONLY — tap to restart tour for testing */}
-      {__DEV__ && !tourState.isActive && (
-        <PressableFeedback
-          onPress={() => setReflectTourSeen(false)}
-          className="absolute bottom-5 right-4 p-3"
-          hitSlop={8}
-        >
-          <AppText className="text-xs text-foreground/25">↺ tour</AppText>
-        </PressableFeedback>
-      )}
-    </View>
+        <Separator className="mb-0" />
+
+        <View className="flex-1 pt-4">
+          <Pressable
+            onPress={handleTap}
+            accessibilityRole="button"
+            accessibilityLabel="Tap to begin writing"
+            accessibilityHint="Opens the editor to start typing"
+            className="flex-1"
+          >
+            <Tour.Step
+              order={1}
+              title={TOUR_STEPS[1].title}
+              description={TOUR_STEPS[1].description}
+              className="self-start"
+            >
+              <AppText className="text-base text-foreground/30">
+                Tap to begin writing or speaking...
+              </AppText>
+            </Tour.Step>
+          </Pressable>
+
+          <View className="absolute right-2 top-2">
+            <Tour.Step
+              order={2}
+              title={TOUR_STEPS[2].title}
+              description={TOUR_STEPS[2].description}
+              shape="circle"
+            >
+              <MicButton
+                size="md"
+                isRecording={isRecording}
+                onPress={onVoiceTap}
+              />
+            </Tour.Step>
+          </View>
+        </View>
+
+        <View className="border-t border-foreground/5 pt-6 pb-8">
+          <AppText className="mb-3 text-xs text-foreground/30">
+            Or just tap what feels close:
+          </AppText>
+
+          {!isNight && (
+            <Tour.Step
+              order={4}
+              title={TOUR_STEPS[4].title}
+              description={TOUR_STEPS[4].description}
+            >
+              <TextureSetTabs
+                activeSet={resolvedSetId}
+                onSelect={handleSetChange}
+                disabled={!wordsVisible}
+              />
+            </Tour.Step>
+          )}
+
+          <Tour.Step
+            order={3}
+            title={TOUR_STEPS[3].title}
+            description={TOUR_STEPS[3].description}
+          >
+            <EaseView
+              animate={wordsFadeAnimate}
+              transition={wordsVisible ? WORDS_FADE_IN : WORDS_FADE_OUT}
+              onTransitionEnd={({ finished }) => {
+                if (finished && !wordsVisible) {
+                  setResolvedSetId(pendingSetId);
+                  setWordsVisible(true);
+                }
+              }}
+            >
+              <TagGroup
+                key={resolvedSetId}
+                selectionMode="multiple"
+                size="sm"
+                variant="surface"
+                selectedKeys={selectedTextureKeys}
+                onSelectionChange={handleSelectionChange}
+                animation="disable-all"
+              >
+                <TagGroup.List className="flex-row flex-wrap gap-2 pr-14">
+                  {TEXTURE_WORDS.map((word) => (
+                    <TagGroup.Item
+                      key={word}
+                      id={word}
+                      className="min-w-18 justify-center"
+                    >
+                      {({ isSelected }) => (
+                        <TagGroup.ItemLabel
+                          className={
+                            isSelected ? "text-accent" : "text-foreground/80"
+                          }
+                        >
+                          {word}
+                        </TagGroup.ItemLabel>
+                      )}
+                    </TagGroup.Item>
+                  ))}
+                </TagGroup.List>
+              </TagGroup>
+            </EaseView>
+          </Tour.Step>
+
+          {buttonMounted && (
+            <EaseView
+              initialAnimate={BUTTON_INITIAL_ANIMATE}
+              animate={
+                hasSelections ? BUTTON_VISIBLE_ANIMATE : BUTTON_HIDDEN_ANIMATE
+              }
+              transition={
+                hasSelections ? BUTTON_TRANSITION_IN : BUTTON_TRANSITION_OUT
+              }
+              onTransitionEnd={({ finished }) => {
+                if (finished && !hasSelections) setButtonMounted(false);
+              }}
+              className="mt-5"
+            >
+              <PillButton label="Let it out" onPress={onScaffoldSubmit} />
+            </EaseView>
+          )}
+        </View>
+
+        <IdleMenu />
+
+        {/* DEV ONLY — tap to restart tour for testing */}
+        {__DEV__ && !tourActive && (
+          <PressableFeedback
+            onPress={() => setReflectTourSeen(false)}
+            className="absolute bottom-5 right-4 p-3"
+            hitSlop={8}
+          >
+            <AppText className="text-xs text-foreground/25">↺ tour</AppText>
+          </PressableFeedback>
+        )}
+      </View>
+    </Tour>
   );
 };

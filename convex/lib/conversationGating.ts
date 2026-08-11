@@ -93,14 +93,15 @@ export const REQUEST_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
  *
  * Declining frees the pending-request slot immediately, so without this the
  * same person can re-request in a loop — and every loop now reaches the
- * xolacer's lock screen. The window is the life of an unanswered request:
- * long enough that a decline can't be pushed through in an afternoon, short
- * enough that a genuine second attempt weeks later still works.
+ * xolacer's lock screen. A day is long enough that a decline can't be pushed
+ * through in an afternoon, short enough that someone who genuinely needs to
+ * talk isn't held off a whole week by one person's no.
  *
- * Derived rather than written out again, so that reasoning stays true. The two
- * are the same span by argument, not by coincidence — a cooldown outliving the
- * request lifetime it was justified by is exactly the drift a second literal
- * would let through silently.
+ * A literal, and deliberately no longer derived from `REQUEST_EXPIRY_MS`. The
+ * two answered to the same argument while a request lived a week, but they
+ * measure different things — how long silence stays worth waiting on, versus
+ * how long a refusal stays binding — and the second is the shorter of the two
+ * once the first is measured in hours.
  *
  * Per pair, and for a decline only. A seeker turned down by several xolacers
  * hits nothing broader — someone reaching out repeatedly is who this app is
@@ -108,7 +109,7 @@ export const REQUEST_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
  * An expiry carries no cooldown at all: silence is not a refusal, and treating
  * it as one penalises the seeker for their xolacer going quiet.
  */
-export const DECLINE_COOLDOWN_MS = REQUEST_EXPIRY_MS;
+export const DECLINE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 type CooldownInputs = Pick<
   Conversation,

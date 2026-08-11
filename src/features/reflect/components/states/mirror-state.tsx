@@ -90,7 +90,7 @@ export const MirrorState = ({
   onNotQuite,
   onSayMore,
 }: Props) => {
-  const { isReady, isPlaying, toggle, stop } = useMirrorAudio(sessionId);
+  const { isReady, isPlaying, toggle } = useMirrorAudio(sessionId);
   const accent = useThemeColor("accent");
   const showToneBadge = toneUsed != null && toneUsed !== "adaptive";
   const toneLabel = toneUsed ? toneUsed.charAt(0).toUpperCase() + toneUsed.slice(1) : "";
@@ -110,12 +110,12 @@ export const MirrorState = ({
     border: "border-foreground/20",
   };
 
+  // No audio cleanup here: useAudioPlayer releases the native player on unmount,
+  // which stops playback. Pausing it ourselves races that release and crashes
+  // (see ba00535 "fix timeline crash").
   useEffect(() => {
     playMirrorArrival();
-    return () => {
-      stop();
-    };
-  }, [stop]);
+  }, []);
 
   const showTextures =
     selectedTextures.length > 0 &&

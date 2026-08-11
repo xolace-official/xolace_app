@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/src/components/shared/app-text";
-import { BreathingOrb } from "@/src/features/reflect/components/breathing-orb";
+import { ThinkingOrb } from "@/src/components/ui/thinking-orb";
 import Shimmer from "@/src/components/shared/shimmer";
 import { SparkleStars } from "@/src/components/shared/sparkle-stars";
 import { playProcessingBreath } from "@/src/lib/haptics";
@@ -85,7 +85,7 @@ export const ProcessingState = () => {
 
   return (
     <View className="flex-1 items-center justify-center gap-8">
-      <BreathingOrb />
+      <ThinkingOrb state="composing" size={210} color={accentColor} />
       <View className="items-center">
         <Shimmer style={SHIMMER_CONTAINER_STYLE}>
           <Shimmer.Overlay

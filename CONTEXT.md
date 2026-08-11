@@ -3,6 +3,61 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Presence (2026-08-11)
+
+**Present** means one thing only: this person has Xolace in the foreground
+*now*. It is a claim about the current moment, never about a habit. Rendered to
+users as **"Here now"**.
+
+There is exactly **one presence room**, app-wide, and one heartbeat per client
+(30s; the component's session timeout is `interval × 2.5`, so a drop is visible
+within 75s). Every presence signal in the product — roster ordering, the
+counterpart on a pending request, a future ambient count — is a distinct
+server-side query over that one room, not a room of its own.
+
+**The privacy boundary is the query, not the room.** Membership of the presence
+room must never reach a client: our `list` endpoint returns an empty array, and
+each narrow query returns only its own derived answer. "Is this person in the
+app" is not a globally readable fact.
+
+A xolacer heartbeats only while `xolacer_profiles.active` is true — the
+existing "You're listed" switch already means "I'm open to being reached", so
+presence needs no consent surface of its own.
+
+**Presence never overrides relevance.** In `sessionSuggestion` it is a sort term
+inside `rankSuggestionCandidates`, never a filter. A xolacer who does not match
+what someone is carrying is not suggested because they happen to be online.
+
+Two sources, split by a hard boundary — **Stream owns the inside of an open
+thread; Convex owns everywhere else.**
+
+Stream, inside the thread only: it is the socket already held, so it costs no
+second heartbeat, it fires `user.presence.changed` instantly rather than on
+Convex's 75s floor, and it carries `last_active` ("here 20 minutes ago") which
+Convex Presence cannot supply. Liveness matters most inside a live conversation,
+so the more precise signal goes there.
+
+Convex, everywhere else — roster, pending request, chats list, future ambient
+count. These are the surfaces Stream structurally cannot reach: no channel
+exists while a conversation is `requested`, and none exists for the roster.
+
+The boundary is not negotiable per-component: `conversation-row.tsx` is outside
+the thread and therefore reads Convex, even though a Stream answer is available.
+Every surface reads presence through one accessor (`useIsPresent`) so the source
+behind it stays swappable.
+
+The two definitions differ — Stream means "socket connected", Convex means "app
+foregrounded" — and will occasionally disagree. That is accepted: in practice
+both track foreground, and where they diverge the thread header is the more
+accurate of the two.
+
+Typing indicators are a separate, stronger signal and outrank presence wherever
+both could show.
+
+**Responsiveness** — how quickly a xolacer *historically* answers — is a
+different concept and deliberately unbuilt. At 13 accepts across 10 xolacers
+there is no per-xolacer median to compute. Do not conflate it with presence.
+
 ## Poolability (2026-07-21)
 
 `convex/lib/poolability.ts` `isPoolable(session)` is the single owner of "may
