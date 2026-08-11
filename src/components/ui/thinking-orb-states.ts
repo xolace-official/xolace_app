@@ -436,7 +436,8 @@ function drawShaping(out: string[], size: number, t: number, p: Profile): void {
   }
 
   const n = p.density;
-  const r = Math.max(0.35, 0.021 * 1.35 * spread * size * p.radius * 0.4);
+  const rs = radiusScale(size) * p.radius;
+  const r = Math.max(0.35, 2.95 * spread * rs);
   const pulse = 1 + 0.02 * Math.sin(local * 3.1);
   let index = 0;
   let walked = 0;

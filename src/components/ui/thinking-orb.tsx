@@ -89,7 +89,7 @@ const PROFILES: Record<ThinkingOrbState, { md: Profile; sm: Profile }> = {
   },
   shaping: {
     md: { speed: 2.4, rows: 1, density: 26, radius: 1 },
-    sm: { speed: 2.1, rows: 1, density: 14, radius: 2.2 },
+    sm: { speed: 2.1, rows: 1, density: 14, radius: 1.05 },
   },
 };
 
