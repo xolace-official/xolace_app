@@ -7,7 +7,7 @@ import {
   getGrantedPushToken,
   getPushPermissionState,
   requestPushToken,
-} from "@/src/lib/use-notifications";
+} from "@/src/lib/push-token";
 import {
   chatChoice,
   gentleChoice,

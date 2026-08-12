@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useClerk, useUser } from "@clerk/expo";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
-import { getGrantedPushToken } from "@/src/lib/use-notifications";
+import { getGrantedPushToken } from "@/src/lib/push-token";
 import { usePreferenceMutation } from "./use-preference-mutation";
 
 /** How long sign-out will wait on the push-token detach before going ahead. */
