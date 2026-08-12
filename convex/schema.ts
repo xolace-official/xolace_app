@@ -1155,6 +1155,14 @@ export default defineSchema({
     emotionalProfileId: v.id("emotional_profiles"),
     expoPushToken: v.string(),
     lastRegisteredAt: v.number(),
+    // Last time this device's component notification history was seen in a
+    // prunable shape, and what that shape was. The component stores no
+    // per-state timestamp, so an unchanged fingerprint across the settle window
+    // is the only evidence that nothing is still writing to those rows — see
+    // `decidePushHistoryPrune`.
+    historyWatch: v.optional(
+      v.object({ since: v.number(), fingerprint: v.string() }),
+    ),
   })
     // Fan-out: every device for a profile, most recently registered
     // first. The ordering matters because token rotation leaves orphan rows

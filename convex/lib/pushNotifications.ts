@@ -3,8 +3,8 @@ import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
-  canPrunePushHistory,
   classifyPushDevice,
+  decidePushHistoryPrune,
   type PushDeviceVerdict,
   type PushHistoryRow,
 } from "./pushDevices";
@@ -67,7 +67,7 @@ async function pushDeviceHistory(
  * matters most on ownership transfer, where the incoming profile registers the
  * same token and would otherwise be handed the previous owner's history.
  *
- * The clear runs through the same `canPrunePushHistory` veto as registration,
+ * The clear runs through the same `decidePushHistoryPrune` veto as registration,
  * for the same reason: the component's delete takes in-flight rows with it, and
  * a sender that comes back to a missing document throws, rolling back the state
  * patches for up to 99 other users batched with it. Vetoing here does strand
@@ -99,17 +99,30 @@ export async function deletePushDevice(
  * alive and its failure history stops meaning anything, the same moment the
  * delivery verdict wants reset. A device that never registers again is cleaned
  * up by `deletePushDevice`, which routes through here for the veto.
+ *
+ * The device row carries the watch between calls, so the first registration
+ * after a send stamps and the next one clears.
  */
 export async function prunePushDeviceHistory(
   ctx: MutationCtx,
   deviceId: Id<"push_devices">,
 ): Promise<void> {
-  const history = await pushDeviceHistory(ctx, deviceId);
-  if (!canPrunePushHistory(history, Date.now())) return;
+  const device = await ctx.db.get(deviceId);
+  if (!device) return;
 
-  await pushNotifications.deleteNotificationsForUser(ctx, {
-    userId: deviceId,
+  const { prune, watch } = decidePushHistoryPrune({
+    rows: await pushDeviceHistory(ctx, deviceId),
+    watch: device.historyWatch,
+    now: Date.now(),
   });
+
+  if (prune) {
+    await pushNotifications.deleteNotificationsForUser(ctx, {
+      userId: deviceId,
+    });
+  }
+  // Cleared on a prune: the history it described is gone.
+  await ctx.db.patch(deviceId, { historyWatch: prune ? undefined : watch });
 }
 
 /** Every device for a profile, most recently registered first. */

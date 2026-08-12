@@ -133,13 +133,13 @@ export type PushHistoryRow = {
 };
 
 /**
- * Whether one stored notification is past everything that might still write to
- * it.
+ * How long a history in a given state has to sit *unchanged* before it is safe
+ * to delete. A state absent from here can still be written by something we do
+ * not control and is never prunable at any age.
  *
  * Only references that escape the transaction system can be hurt by a delete:
  * a scheduled *action* holding notification ids in its args. That is
- * `in_progress` (a sender is running right now) and `maybe_delivered` (the
- * watchdog gave up but the action can still report). Everything the coordinator
+ * `in_progress` (a sender is running right now). Everything the coordinator
  * mutation touches — `awaiting_delivery`, `needs_retry` — is safe from that
  * angle, because Convex serializes it against our delete either way.
  *
@@ -148,48 +148,82 @@ export type PushHistoryRow = {
  * user's queued notifications. `failed` never persists (it is the argument
  * written as `needs_retry`) and is refused so a component version that does
  * store it cannot quietly become prunable.
- *
- * ponytail: `_creationTime` is when the row was queued, not when it entered its
- * current state, so a long queue wait makes both windows read early. Same
- * approximation as before; the component exposes no state timestamp.
  */
-function isSettledPushRow(row: PushHistoryRow, now: number): boolean {
-  const age = now - row._creationTime;
-  switch (row.state) {
-    case "maybe_delivered":
-      return age >= PUSH_HISTORY_PRUNE_GRACE_MS;
-    case "delivered":
-    case "unable_to_deliver":
-      return age >= PUSH_SEND_SETTLE_MS;
-    default:
-      return false;
-  }
+const PUSH_STATE_QUIET_MS: Partial<Record<PushNotificationState, number>> = {
+  maybe_delivered: PUSH_HISTORY_PRUNE_GRACE_MS,
+  delivered: PUSH_SEND_SETTLE_MS,
+  // Written by the coordinator mutation, but a watchdog from the batch that
+  // failed it can still be pending and patch it back to `maybe_delivered`.
+  unable_to_deliver: PUSH_SEND_SETTLE_MS,
+};
+
+/**
+ * What we remember about a device's history between registrations: when we last
+ * saw it in a shape that could be pruned, and what that shape was.
+ */
+export type PushHistoryWatch = {
+  since: number;
+  fingerprint: string;
+};
+
+export type PushHistoryPruneDecision = {
+  prune: boolean;
+  /** Watch to store back on the device row; `undefined` clears it. */
+  watch: PushHistoryWatch | undefined;
+};
+
+/** Identity of a history read: any write by anyone changes this. */
+function fingerprintPushHistory(rows: PushHistoryRow[]): string {
+  return rows.map((row) => `${row._creationTime}:${row.state}`).join("|");
 }
 
 /**
- * Whether a device's stored notifications can be deleted.
+ * Whether a device's stored notifications can be deleted, and what to remember
+ * for next time.
  *
- * The component's delete is all-or-nothing for the device, so one unsettled row
- * anywhere in the window vetoes it: deleting a row a sender still holds makes
- * its state patch hit a missing document and throw, taking the bookkeeping for
- * up to 99 other users in the same batch down with it. On registration refusing
- * costs nothing — the next one tries again. On device removal it strands that
- * device's bodies permanently, and that is still the better trade.
+ * The component's delete is all-or-nothing for the device, so one unfinished row
+ * anywhere in the window vetoes it: deleting a row a sender or the 10-second
+ * watchdog still holds makes its state patch hit a missing document and throw,
+ * taking the bookkeeping for up to 99 other users in the same batch down with
+ * it. On registration refusing costs nothing — the next one tries again. On
+ * device removal it strands that device's bodies permanently, and that is still
+ * the better trade.
  *
- * Judged per row rather than by the newest one's age, because the hazard is
- * per row. A blanket age gate on the head vetoed the single most common
- * registration there is — tapping a notification cold-starts the app, so the
- * newest row is a `delivered` one seconds old — and that device never got
- * pruned at the moment it proved it was alive.
+ * The quiet window is measured from *our previous observation*, not from
+ * `_creationTime`. `_creationTime` is when a row was queued, and the write we
+ * are racing is scheduled off the send: a row that waited behind a backlog, or
+ * came back through `needs_retry`, enters `delivered` already older than the
+ * settle window, so an age gate on it lets the delete through while that send's
+ * watchdog is still pending. An unchanged fingerprint across the window is the
+ * only evidence available here that nothing is still writing — the component
+ * stores no per-state timestamp.
  *
- * ponytail: an unsettled row older than the read window is invisible here. It
+ * The cost is that pruning takes two registrations: the first stamps, the second
+ * clears. App launches supply those, and a device that never launches again is
+ * a device whose history nobody is reading.
+ *
+ * ponytail: an unfinished row older than the read window is invisible here. It
  * would have to sit behind a full window of newer notifications, and the
  * component retries `needs_retry` continuously, so that means genuinely stuck.
  */
-export function canPrunePushHistory(
-  rows: PushHistoryRow[],
-  now: number,
-): boolean {
-  if (rows.length === 0) return false;
-  return rows.every((row) => isSettledPushRow(row, now));
+export function decidePushHistoryPrune(args: {
+  rows: PushHistoryRow[];
+  watch: PushHistoryWatch | undefined;
+  now: number;
+}): PushHistoryPruneDecision {
+  const { rows, watch, now } = args;
+  if (rows.length === 0) return { prune: false, watch: undefined };
+
+  let quietFor = 0;
+  for (const row of rows) {
+    const required = PUSH_STATE_QUIET_MS[row.state];
+    if (required === undefined) return { prune: false, watch: undefined };
+    quietFor = Math.max(quietFor, required);
+  }
+
+  const fingerprint = fingerprintPushHistory(rows);
+  if (watch?.fingerprint !== fingerprint) {
+    return { prune: false, watch: { since: now, fingerprint } };
+  }
+  return { prune: now - watch.since >= quietFor, watch };
 }
