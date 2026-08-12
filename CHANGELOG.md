@@ -4,6 +4,15 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.8.0] - OTA Update (2026-08-12)
+
+### Fixed
+
+- **Notifications stop being sent to devices that no longer exist** — an uninstall raises no event, so nothing ever removed a device from the registry, and the per-device fix shipped a day earlier made that worse: a reinstall created a new row while the old one survived, so rows accumulated instead of being overwritten. Two things reap them now, both inside the send that was already reading the list — no new scheduled job. A device the push service has rejected five consecutive times is removed on the spot; a device that has not checked in for 180 days is removed on the clock, which is what catches an installation abandoned by a token change and never sent to at all. A device that is merely dormant is never touched: not opening the app for a while is precisely who the return nudge is built to reach, and mid-retry, ambiguous, and delivered states all count as alive. A device removed in error costs nothing permanent — it re-registers the next time that person opens the app, and reaping never touches notification preferences, so the master switch keeps meaning what it says.
+- **Notification text is no longer kept forever** — the push component stores each notification's title and body and never prunes them, so every nudge and conversation alert Xolace had ever sent was still sitting there. A device clears its own stored history each time it registers, which is the moment it proves it is alive and its delivery record stops meaning anything, and removing a device now takes that device's stored notification text with it — including on account deletion and when a reinstalled device changes hands. Clearing is skipped while any recent notification is still in flight, and retried on the next launch, so bookkeeping for other people's notifications in the same batch can't be disrupted.
+
+---
+
 ## [1.8.0] - OTA Update (2026-08-11)
 
 ### Fixed

@@ -6,6 +6,7 @@ import {
   deletePushDevice,
   MAX_DEVICES_PER_PROFILE,
   profilePushDevices,
+  prunePushDeviceHistory,
   pushNotifications,
   sendPushToProfile,
 } from "./lib/pushNotifications";
@@ -94,7 +95,7 @@ export const schedule = internalMutation({
       ...(args.generatedBy && { generatedBy: args.generatedBy }),
     });
 
-    // Dispatch to every installation this profile has registered. One log row
+    // Dispatch to every device this profile has registered. One log row
     // above, one rate-limit event above, one call here — the device count
     // changes none of that.
     await sendPushToProfile(ctx, {
@@ -116,7 +117,7 @@ export const schedule = internalMutation({
 });
 
 /**
- * Register an Expo push token for the authenticated installation.
+ * Register an Expo push token for the authenticated device.
  *
  * An upsert into the app-owned device registry rather than a single write to
  * the component: the component stores one token per recipient key, so keying
@@ -165,6 +166,12 @@ export const registerToken = mutation({
       pushToken: args.pushToken,
     });
 
+    // This device just proved it is alive, so its stored notification history
+    // has nothing left to say — and the component never prunes that history on
+    // its own, so every title and body we have ever sent is sitting in it.
+    // Clearing it here also resets the delivery verdict the reaper reads.
+    await prunePushDeviceHistory(ctx, deviceId);
+
     // Retire any pre-migration profile-keyed recipient, which would otherwise
     // duplicate every notification to this same device. Idempotent, and the
     // only available move — the component never exposes the token it stored,
@@ -202,7 +209,7 @@ export const registerToken = mutation({
 /**
  * Unregister a push token for the authenticated user.
  *
- * Scoped to the calling installation: disabling notifications on a phone must
+ * Scoped to the calling device: disabling notifications on a phone must
  * not silence a tablet. The account-wide "off" is the preference, which both
  * dispatch paths gate on, not the token.
  */

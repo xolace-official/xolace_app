@@ -274,6 +274,15 @@ export const purgeUser = internalMutation({
     if (semanticVersions.length === BATCH_SIZE) hasMore = true;
     for (const version of semanticVersions) await ctx.db.delete(version._id);
 
+    // ── Push devices, one per pass ───────────────────────────────
+    // Drained here rather than below because the work is not bounded like the
+    // rest of the final batch: `deletePushDevice` also clears the component's
+    // stored notification bodies for that device, up to 1000 row deletes on
+    // its own. One device per pass keeps that inside one transaction.
+    const devices = await profilePushDevices(ctx, profileId);
+    if (devices.length > 1) hasMore = true;
+    if (devices[0]) await deletePushDevice(ctx, devices[0]._id);
+
     // ── More to drain? Come back before touching profile/user ────
     if (hasMore) {
       await ctx.scheduler.runAfter(
@@ -313,12 +322,9 @@ export const purgeUser = internalMutation({
       profileId: profileId,
     });
 
-    // Push tokens live in the component, keyed by device row id — deleting the
-    // profile row does not reach them. Every installation has to go, plus the
-    // pre-migration profile-keyed recipient for anyone who never re-registered.
-    for (const device of await profilePushDevices(ctx, profileId)) {
-      await deletePushDevice(ctx, device._id);
-    }
+    // Every device is gone by now (drained above, one per pass). What is
+    // left is the pre-migration profile-keyed recipient, for anyone who never
+    // re-registered — deleting the profile row does not reach it.
     await pushNotifications.removeToken(ctx, { userId: profileId });
 
     // Must run before the row is gone — the aggregate needs the doc to locate

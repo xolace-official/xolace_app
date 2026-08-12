@@ -1,13 +1,19 @@
 import { PushNotifications } from "@convex-dev/expo-push-notifications";
 import { components } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import {
+  canPrunePushHistory,
+  classifyPushDevice,
+  type PushDeviceVerdict,
+  type PushHistoryRow,
+} from "./pushDevices";
 
 /**
  * Shared push notification component instance.
  *
- * Recipients are `push_devices` document ids — one per installation — so a
- * second device does not replace the first. Typed as `string` rather than
+ * Recipients are `push_devices` document ids — one per device — so a second
+ * device does not replace the first. Typed as `string` rather than
  * `Id<"push_devices">` because pre-migration recipients are keyed by profile
  * id and stay valid until every client has re-registered; `string` is what the
  * component validates on the wire either way.
@@ -22,9 +28,9 @@ type Notification = Parameters<
 
 /**
  * Bound on every per-profile device read. Nobody has more than a handful of
- * installations; the cap exists to keep the read bounded, and reads take the
- * most recently registered first so rotation orphans can never crowd out the
- * live device.
+ * devices; the cap exists to keep the read bounded, and reads take the most
+ * recently registered first so rotation orphans can never crowd out the live
+ * device.
  *
  * ponytail: a profile that somehow exceeds this keeps a few inert component
  * recipients after deletion — nothing addresses them once the device rows are
@@ -33,20 +39,78 @@ type Notification = Parameters<
 export const MAX_DEVICES_PER_PROFILE = 50;
 
 /**
- * Drop one installation: its component recipient first, then the registry row.
+ * Only the newest row decides whether a device is dead, but the whole window
+ * has to be clear before its history can be pruned, and one read serves both.
+ */
+const PUSH_HISTORY_READ_LIMIT = 10;
+
+/** A device's component notification history, newest first. */
+async function pushDeviceHistory(
+  ctx: MutationCtx,
+  deviceId: Id<"push_devices">,
+): Promise<PushHistoryRow[]> {
+  const rows = await pushNotifications.getNotificationsForUser(ctx, {
+    userId: deviceId,
+    limit: PUSH_HISTORY_READ_LIMIT,
+  });
+  return rows.map(({ state, _creationTime }) => ({ state, _creationTime }));
+}
+
+/**
+ * Drop one device: its stored notifications, then its component recipient, then
+ * the registry row. Shared by registration, reaping, removal, and account
+ * deletion — the three have to move together, and four copies is how one of
+ * them gets forgotten.
  *
- * Shared by registration, removal, and account deletion — the pair has to move
- * together, and three copies is how one of them gets forgotten.
+ * Notifications go first because the component resolves them through the token
+ * row, so removing the token would strand the stored titles and bodies. That
+ * matters most on ownership transfer, where the incoming profile registers the
+ * same token and would otherwise be handed the previous owner's history.
+ *
+ * Unguarded, unlike `prunePushDeviceHistory`: a device being removed has no next
+ * launch to retry on, so skipping an in-flight row would keep the bodies
+ * forever, and by then delivery has happened either way.
+ *
+ * ponytail: the component clears 1000 notifications per call and reschedules
+ * for the rest, but that continuation resolves through the token row removed
+ * here, so a device holding more leaves the remainder orphaned. Registration
+ * pruning keeps histories far below 1000; drain in a loop if it ever doesn't.
  */
 export async function deletePushDevice(
   ctx: MutationCtx,
   deviceId: Id<"push_devices">,
 ): Promise<void> {
+  await pushNotifications.deleteNotificationsForUser(ctx, {
+    userId: deviceId,
+  });
   await pushNotifications.removeToken(ctx, { userId: deviceId });
-  await ctx.db.delete(deviceId);
+  // Logout, account deletion, and ownership transfer all remove devices, and
+  // `db.delete` throws on an id that is already gone.
+  if (await ctx.db.get(deviceId)) {
+    await ctx.db.delete(deviceId);
+  }
 }
 
-/** Every installation for a profile, most recently registered first. */
+/**
+ * Clear a device's stored notification bodies, which the component otherwise
+ * keeps forever. Called at registration: that is when a device proves it is
+ * alive and its failure history stops meaning anything, the same moment the
+ * delivery verdict wants reset. A device that never registers again is cleaned
+ * up by `deletePushDevice` instead.
+ */
+export async function prunePushDeviceHistory(
+  ctx: MutationCtx,
+  deviceId: Id<"push_devices">,
+): Promise<void> {
+  const history = await pushDeviceHistory(ctx, deviceId);
+  if (!canPrunePushHistory(history, Date.now())) return;
+
+  await pushNotifications.deleteNotificationsForUser(ctx, {
+    userId: deviceId,
+  });
+}
+
+/** Every device for a profile, most recently registered first. */
 export async function profilePushDevices(
   ctx: MutationCtx,
   emotionalProfileId: Id<"emotional_profiles">,
@@ -61,7 +125,60 @@ export async function profilePushDevices(
 }
 
 /**
- * Send one logical notification to every installation a profile has registered.
+ * How many devices one send may delete. `deletePushDevice` clears the device's
+ * stored notifications too — up to 1000 row deletes — in this send's own
+ * transaction. Reaping is hygiene and the send is the point, so the send never
+ * gets to fail over it; the backlog goes with the next one, which is soon,
+ * because reaping only happens where we are already sending.
+ */
+const MAX_REAPS_PER_SEND = 1;
+
+/**
+ * Split a profile's devices into the ones still worth sending to and the ones
+ * that are gone, deleting a bounded number of the latter.
+ *
+ * Nothing tells us an app was uninstalled, so reaping rides along with sending:
+ * the fan-out already reads every device row, work stays proportional to actual
+ * sends, and a profile we never send to costs nothing to leave stale. No cron,
+ * no scan, no cursor.
+ *
+ * Skipping and deleting are separate decisions — every dead device drops out of
+ * this send whatever the delete budget is.
+ */
+async function reapDeadDevices(
+  ctx: MutationCtx,
+  devices: Doc<"push_devices">[],
+): Promise<Doc<"push_devices">[]> {
+  const now = Date.now();
+  const live: Doc<"push_devices">[] = [];
+  const gone: {
+    device: Doc<"push_devices">;
+    verdict: Exclude<PushDeviceVerdict, "keep">;
+  }[] = [];
+
+  for (const device of devices) {
+    const history = await pushDeviceHistory(ctx, device._id);
+    const verdict = classifyPushDevice({
+      latestStates: history.map((row) => row.state),
+      lastRegisteredAt: device.lastRegisteredAt,
+      now,
+    });
+
+    if (verdict === "keep") live.push(device);
+    else gone.push({ device, verdict });
+  }
+
+  for (const { device, verdict } of gone.slice(0, MAX_REAPS_PER_SEND)) {
+    // Device id and verdict only: never the token, never what was sent.
+    console.log(`[push] reaping device ${device._id} (${verdict})`);
+    await deletePushDevice(ctx, device._id);
+  }
+
+  return live;
+}
+
+/**
+ * Send one logical notification to every device a profile has registered.
  *
  * Target resolution only — rate limiting and `notification_log` stay per
  * logical notification and happen before this is called, so one nudge remains
@@ -81,6 +198,10 @@ export async function sendPushToProfile(
   // profile-keyed recipient, and the nudge meant to bring them back is exactly
   // the one that must still reach them. Any registration retires that
   // recipient, so remove this once the supported version floor has passed.
+  //
+  // Decided on the pre-reap list deliberately. Reap first and a profile whose
+  // last row just died would fall through to a profile-keyed recipient that
+  // registration retired long ago.
   if (devices.length === 0) {
     await pushNotifications.sendPushNotification(ctx, {
       userId: args.emotionalProfileId,
@@ -92,8 +213,15 @@ export async function sendPushToProfile(
     return;
   }
 
+  const live = await reapDeadDevices(ctx, devices);
+
+  // Everything this profile had is gone. Stop here rather than falling back:
+  // these devices were registered, so the profile-keyed recipient above was
+  // retired at that registration and there is nothing left to reach.
+  if (live.length === 0) return;
+
   await pushNotifications.sendPushNotificationBatch(ctx, {
-    notifications: devices.map((device) => ({
+    notifications: live.map((device) => ({
       userId: device._id,
       notification: args.notification,
     })),

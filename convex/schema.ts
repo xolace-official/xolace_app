@@ -1127,14 +1127,14 @@ export default defineSchema({
   // 10b. PUSH DEVICES
   // ===========================================================
   //
-  // One row per installation holding a live Expo token for a profile.
+  // One row per device holding a live Expo token for a profile.
   //
   // The push component stores exactly one token per recipient key, so keying
   // it by profile id made the last device to register replace every other. The
-  // registry exists so each installation gets its own recipient key (this
+  // registry exists so each device gets its own recipient key (this
   // row's id) and dispatch can fan out to all of them.
   //
-  // The Expo token is the device key — it is already stable per installation,
+  // The Expo token is the device key — it is already stable per device,
   // so no generated device id is stored. `by_token` is what enforces single
   // ownership: registering a token held by another profile evicts the prior
   // holder, so a reinstalled or handed-down device cannot inherit someone
@@ -1144,12 +1144,19 @@ export default defineSchema({
   // and both are always sent) and no `timezone` field (quiet windows are
   // evaluated at the trigger, profile-globally, never per device).
   //
+  // Rows die two ways, both in `convex/lib/pushDevices.ts`: the component
+  // reports `unable_to_deliver` for the recipient (five consecutive Expo
+  // rejections — Expo's receipts are unreachable behind the component, see
+  // docs/adr/0001-no-expo-receipts.md), or `lastRegisteredAt` passes 180 days.
+  // The clock is what reaps a rotation orphan, which is never sent to
+  // successfully but is never sent to at all either.
+  //
   push_devices: defineTable({
     emotionalProfileId: v.id("emotional_profiles"),
     expoPushToken: v.string(),
     lastRegisteredAt: v.number(),
   })
-    // Fan-out: every installation for a profile, most recently registered
+    // Fan-out: every device for a profile, most recently registered
     // first. The ordering matters because token rotation leaves orphan rows
     // behind (see above) — read descending and the bounded read can never
     // return only orphans while the live device sits outside the window.

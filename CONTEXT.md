@@ -3,6 +3,30 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Push devices (2026-08-12)
+
+A **device** is one installation of Xolace, identified by the Expo push token it
+holds. Not a phone and not a person: reinstalling produces a new device, and one
+person can hold several at once. Say *device*, not *installation* or *client*.
+
+A device is **dead** when Expo will no longer deliver to its token — uninstalled,
+or the token rotated and the row was left behind. A device is **dormant** when
+the token is fine and the person simply has not opened the app. The two look
+identical from the registry, and conflating them is the mistake this concept
+exists to prevent: dormant is the exact state the return nudge is built to reach,
+so only dead devices may be reaped for being unreachable. Absence is not death.
+
+Dormancy is bounded elsewhere — both nudge families ignore anyone inactive for
+more than 30 days — so a device left alone costs nothing. Reaping one wrongly
+costs a person their notifications until they next open the app.
+
+**Deadness is inferred, never reported.** Expo's receipts are unreachable behind
+the push component, so death is read off five consecutive delivery failures. See
+[ADR 0001](./docs/adr/0001-no-expo-receipts.md).
+
+**Recipient** is the component's word, not ours. Every recipient is a device;
+the term only appears where the two registries have to be kept in step.
+
 ## Presence (2026-08-11)
 
 **Present** means one thing only: this person has Xolace in the foreground
