@@ -4,6 +4,7 @@ import {
   classifyPushDevice,
   PUSH_DEVICE_MAX_AGE_MS,
   PUSH_HISTORY_PRUNE_GRACE_MS,
+  PUSH_SEND_SETTLE_MS,
   reconcilePushDevice,
 } from "./pushDevices";
 
@@ -147,7 +148,7 @@ describe("canPrunePushHistory", () => {
     expect(canPrunePushHistory([], NOW)).toBe(false);
   });
 
-  it("prunes a settled history of terminal rows", () => {
+  it("prunes a settled history of finished rows", () => {
     expect(
       canPrunePushHistory(
         [
@@ -163,7 +164,9 @@ describe("canPrunePushHistory", () => {
   // The blast radius this guard exists for: deleting a row the sender still
   // holds makes its `markNotificationState` patch a missing document, which
   // throws and takes the state update for the other 99 users in that batch
-  // down with it.
+  // down with it. `awaiting_delivery` and `needs_retry` are safe from that
+  // angle — only the coordinator mutation reads them — and are refused because
+  // they are pushes the user has not received yet.
   it.each([
     "awaiting_delivery",
     "in_progress",
@@ -173,6 +176,17 @@ describe("canPrunePushHistory", () => {
     expect(canPrunePushHistory([{ state, _creationTime: settled }], NOW)).toBe(
       false,
     );
+  });
+
+  // Age never rescues an unfinished row: `in_progress` means an action holds
+  // this id right now, whenever the row happened to be queued.
+  it("refuses an in-flight row however old it is", () => {
+    expect(
+      canPrunePushHistory(
+        [{ state: "in_progress", _creationTime: NOW - 30 * DAY }],
+        NOW,
+      ),
+    ).toBe(false);
   });
 
   // An older in-flight row hides behind a newer delivered one, so the newest
@@ -189,15 +203,43 @@ describe("canPrunePushHistory", () => {
     ).toBe(false);
   });
 
-  // Cold-starting from a notification tap runs registration seconds after the
-  // send, and `maybe_delivered` is where the 10s watchdog parks a slow sender
-  // that can still report back — so terminal-looking is not yet settled.
-  it("refuses inside the grace period", () => {
+  // The watchdog parks a slow sender here and the action can still report back
+  // afterwards, from outside any transaction — the one case that needs the long
+  // grace rather than the short settle.
+  it("refuses a maybe_delivered row inside the grace period", () => {
+    expect(
+      canPrunePushHistory(
+        [
+          {
+            state: "maybe_delivered",
+            _creationTime: NOW - PUSH_HISTORY_PRUNE_GRACE_MS + 1000,
+          },
+        ],
+        NOW,
+      ),
+    ).toBe(false);
+  });
+
+  // A watchdog mutation already in flight can still target a just-delivered
+  // row, because cancelling a job that has started is a no-op.
+  it("refuses a delivered row that has not settled", () => {
     expect(
       canPrunePushHistory(
         [{ state: "delivered", _creationTime: NOW - 1000 }],
         NOW,
       ),
     ).toBe(false);
+  });
+
+  // The regression this shape exists for: opening the app from a notification
+  // tap used to leave the history unprunable at the exact moment the device
+  // proved it was alive, because the newest row was minutes old.
+  it("prunes a delivered history a minute after the send", () => {
+    expect(
+      canPrunePushHistory(
+        [{ state: "delivered", _creationTime: NOW - PUSH_SEND_SETTLE_MS }],
+        NOW,
+      ),
+    ).toBe(true);
   });
 });

@@ -107,28 +107,25 @@ export function classifyPushDevice(args: {
 }
 
 /**
- * States the component will not queue further work for. Anything else has a
- * `markNotificationState` patch still coming.
+ * Grace period before a `maybe_delivered` row counts as settled.
  *
- * `failed` never actually persists — it is the argument that gets written as
- * `needs_retry` — and is listed anyway so a component version that does store
- * it cannot quietly become prunable.
- */
-const TERMINAL_PUSH_STATES = new Set<PushNotificationState>([
-  "delivered",
-  "maybe_delivered",
-  "unable_to_deliver",
-]);
-
-/**
- * Grace period before a terminal-looking history counts as settled.
- *
- * `maybe_delivered` is where the component's 10-second watchdog parks a send
- * whose action has not reported back yet, and that action *can* still report
- * back afterwards. Registration frequently runs seconds after a send — tapping
- * a notification cold-starts the app — so terminal state alone is not enough.
+ * That state is where the component's 10-second watchdog parks a send whose
+ * action has not reported back yet, and the action *can* still come back
+ * afterwards and patch the row — from a scheduled action, so no transaction
+ * covers the gap. Sized to outlast an action rather than a mutation.
  */
 export const PUSH_HISTORY_PRUNE_GRACE_MS = 15 * 60 * 1000;
+
+/**
+ * How long a genuinely finished row has to sit before it is safe to delete.
+ *
+ * `markNotificationState` cancels the watchdog in the same transaction that
+ * writes the final state, but cancelling a job that already started is a no-op
+ * — so a just-delivered row can still be the target of a watchdog mutation
+ * already in flight. That job is scheduled 10s after the send; a minute clears
+ * it with room to spare.
+ */
+export const PUSH_SEND_SETTLE_MS = 60 * 1000;
 
 export type PushHistoryRow = {
   state: PushNotificationState;
@@ -136,16 +133,56 @@ export type PushHistoryRow = {
 };
 
 /**
+ * Whether one stored notification is past everything that might still write to
+ * it.
+ *
+ * Only references that escape the transaction system can be hurt by a delete:
+ * a scheduled *action* holding notification ids in its args. That is
+ * `in_progress` (a sender is running right now) and `maybe_delivered` (the
+ * watchdog gave up but the action can still report). Everything the coordinator
+ * mutation touches — `awaiting_delivery`, `needs_retry` — is safe from that
+ * angle, because Convex serializes it against our delete either way.
+ *
+ * They are refused anyway, for the other reason: they are pushes that have not
+ * been delivered yet, and pruning at registration must not silently drop the
+ * user's queued notifications. `failed` never persists (it is the argument
+ * written as `needs_retry`) and is refused so a component version that does
+ * store it cannot quietly become prunable.
+ *
+ * ponytail: `_creationTime` is when the row was queued, not when it entered its
+ * current state, so a long queue wait makes both windows read early. Same
+ * approximation as before; the component exposes no state timestamp.
+ */
+function isSettledPushRow(row: PushHistoryRow, now: number): boolean {
+  const age = now - row._creationTime;
+  switch (row.state) {
+    case "maybe_delivered":
+      return age >= PUSH_HISTORY_PRUNE_GRACE_MS;
+    case "delivered":
+    case "unable_to_deliver":
+      return age >= PUSH_SEND_SETTLE_MS;
+    default:
+      return false;
+  }
+}
+
+/**
  * Whether a device's stored notifications can be deleted.
  *
- * The component's delete is all-or-nothing for the device, so one in-flight row
- * anywhere in the window vetoes it: deleting a row the sender still holds makes
+ * The component's delete is all-or-nothing for the device, so one unsettled row
+ * anywhere in the window vetoes it: deleting a row a sender still holds makes
  * its state patch hit a missing document and throw, taking the bookkeeping for
  * up to 99 other users in the same batch down with it. On registration refusing
  * costs nothing — the next one tries again. On device removal it strands that
  * device's bodies permanently, and that is still the better trade.
  *
- * ponytail: an in-flight row older than the read window is invisible here. It
+ * Judged per row rather than by the newest one's age, because the hazard is
+ * per row. A blanket age gate on the head vetoed the single most common
+ * registration there is — tapping a notification cold-starts the app, so the
+ * newest row is a `delivered` one seconds old — and that device never got
+ * pruned at the moment it proved it was alive.
+ *
+ * ponytail: an unsettled row older than the read window is invisible here. It
  * would have to sit behind a full window of newer notifications, and the
  * component retries `needs_retry` continuously, so that means genuinely stuck.
  */
@@ -154,6 +191,5 @@ export function canPrunePushHistory(
   now: number,
 ): boolean {
   if (rows.length === 0) return false;
-  if (now - rows[0]._creationTime < PUSH_HISTORY_PRUNE_GRACE_MS) return false;
-  return rows.every((row) => TERMINAL_PUSH_STATES.has(row.state));
+  return rows.every((row) => isSettledPushRow(row, now));
 }
