@@ -141,8 +141,9 @@ export type PushHistoryRow = {
  * The component's delete is all-or-nothing for the device, so one in-flight row
  * anywhere in the window vetoes it: deleting a row the sender still holds makes
  * its state patch hit a missing document and throw, taking the bookkeeping for
- * up to 99 other users in the same batch down with it. Refusing costs nothing —
- * the next registration tries again.
+ * up to 99 other users in the same batch down with it. On registration refusing
+ * costs nothing — the next one tries again. On device removal it strands that
+ * device's bodies permanently, and that is still the better trade.
  *
  * ponytail: an in-flight row older than the read window is invisible here. It
  * would have to sit behind a full window of newer notifications, and the

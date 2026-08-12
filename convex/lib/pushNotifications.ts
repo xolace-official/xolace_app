@@ -67,9 +67,13 @@ async function pushDeviceHistory(
  * matters most on ownership transfer, where the incoming profile registers the
  * same token and would otherwise be handed the previous owner's history.
  *
- * Unguarded, unlike `prunePushDeviceHistory`: a device being removed has no next
- * launch to retry on, so skipping an in-flight row would keep the bodies
- * forever, and by then delivery has happened either way.
+ * The clear runs through the same `canPrunePushHistory` veto as registration,
+ * for the same reason: the component's delete takes in-flight rows with it, and
+ * a sender that comes back to a missing document throws, rolling back the state
+ * patches for up to 99 other users batched with it. Vetoing here does strand
+ * this device's bodies for good — there is no next launch to retry on — but a
+ * handful of orphaned rows in the rare in-flight case beats breaking somebody
+ * else's batch.
  *
  * ponytail: the component clears 1000 notifications per call and reschedules
  * for the rest, but that continuation resolves through the token row removed
@@ -80,9 +84,7 @@ export async function deletePushDevice(
   ctx: MutationCtx,
   deviceId: Id<"push_devices">,
 ): Promise<void> {
-  await pushNotifications.deleteNotificationsForUser(ctx, {
-    userId: deviceId,
-  });
+  await prunePushDeviceHistory(ctx, deviceId);
   await pushNotifications.removeToken(ctx, { userId: deviceId });
   // Logout, account deletion, and ownership transfer all remove devices, and
   // `db.delete` throws on an id that is already gone.
@@ -96,7 +98,7 @@ export async function deletePushDevice(
  * keeps forever. Called at registration: that is when a device proves it is
  * alive and its failure history stops meaning anything, the same moment the
  * delivery verdict wants reset. A device that never registers again is cleaned
- * up by `deletePushDevice` instead.
+ * up by `deletePushDevice`, which routes through here for the veto.
  */
 export async function prunePushDeviceHistory(
   ctx: MutationCtx,
