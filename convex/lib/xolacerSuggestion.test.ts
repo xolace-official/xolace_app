@@ -326,12 +326,17 @@ describe("meetsRatingFloor", () => {
 });
 
 describe("rankSuggestionCandidates", () => {
-  const load = (xolacerProfileId: string, openCount: number) => ({
+  const load = (
+    xolacerProfileId: string,
+    openCount: number,
+    present = false,
+  ) => ({
     xolacerProfileId,
     openCount,
+    present,
   });
 
-  it("orders by fewest open conversations", () => {
+  it("orders by fewest open conversations when presence ties", () => {
     const ranked = rankSuggestionCandidates(
       [load("a", 3), load("b", 0), load("c", 1)],
       "session1",
@@ -367,7 +372,7 @@ describe("rankSuggestionCandidates", () => {
     expect(winners.size).toBeGreaterThan(1);
   });
 
-  it("never lets the tie-break outrank load", () => {
+  it("never lets the tie-break outrank load, when presence ties", () => {
     const ranked = rankSuggestionCandidates(
       [load("a", 0), load("b", 1)],
       "session-that-favours-b",
@@ -377,6 +382,50 @@ describe("rankSuggestionCandidates", () => {
 
   it("returns empty for no candidates", () => {
     expect(rankSuggestionCandidates([], "session1")).toEqual([]);
+  });
+
+  // Presence is the sort's first key: a present candidate outranks an absent
+  // one even carrying more open conversations — reaching someone now is the
+  // point of the feature, and MAX_OPEN_CONVERSATIONS is what still caps them.
+  it("ranks a present candidate with more open conversations above an idle absent one", () => {
+    const ranked = rankSuggestionCandidates(
+      [load("absent", 0, false), load("present", 3, true)],
+      "session1",
+    );
+    expect(ranked.map((c) => c.xolacerProfileId)).toEqual(["present", "absent"]);
+  });
+
+  it("falls back to open count among present candidates", () => {
+    const ranked = rankSuggestionCandidates(
+      [load("a", 3, true), load("b", 0, true), load("c", 1, true)],
+      "session1",
+    );
+    expect(ranked.map((c) => c.xolacerProfileId)).toEqual(["b", "c", "a"]);
+  });
+
+  it("falls back to open count among absent candidates", () => {
+    const ranked = rankSuggestionCandidates(
+      [load("a", 3, false), load("b", 0, false), load("c", 1, false)],
+      "session1",
+    );
+    expect(ranked.map((c) => c.xolacerProfileId)).toEqual(["b", "c", "a"]);
+  });
+
+  it("keeps the hash tie-break stable for a repeated session id, with presence mixed", () => {
+    const candidates = [
+      load("a", 0, true),
+      load("b", 0, false),
+      load("c", 0, true),
+      load("d", 0, false),
+    ];
+    const first = rankSuggestionCandidates(candidates, "session-mixed");
+    const second = rankSuggestionCandidates(
+      [...candidates].reverse(),
+      "session-mixed",
+    );
+    expect(second.map((c) => c.xolacerProfileId)).toEqual(
+      first.map((c) => c.xolacerProfileId),
+    );
   });
 });
 

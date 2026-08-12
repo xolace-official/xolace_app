@@ -636,6 +636,9 @@ export const sessionSuggestion = query({
       if (declaring.length >= MAX_SUGGESTION_CANDIDATES) break;
     }
 
+    // One room read for the whole candidate set — see presentProfileIds.
+    const present = await presentProfileIds(ctx);
+
     const candidates = [];
     for (const xolacer of declaring) {
       // Exact pair lookup, not a scan of this user's rows: a past decline or
@@ -655,6 +658,7 @@ export const sessionSuggestion = query({
       candidates.push({
         xolacerProfileId: xolacer.emotionalProfileId,
         openCount,
+        present: present.has(xolacer.emotionalProfileId),
         xolacer,
       });
     }

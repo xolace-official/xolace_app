@@ -185,11 +185,19 @@ function hash32(input: string): number {
 }
 
 /**
- * Fewest open conversations first. Explicitly *not* by rating: with the display
- * threshold at five most of the roster has no visible rating, so rating rank is
- * ranking by nothing — and it deadlocks. The top-rated xolacer would absorb
- * every suggestion until they hit the cap, and a new xolacer could never
- * accumulate the ratings needed to be ranked at all.
+ * Present first, then fewest open conversations, then the hash tie-break.
+ * Explicitly *not* by rating: with the display threshold at five most of the
+ * roster has no visible rating, so rating rank is ranking by nothing — and it
+ * deadlocks. The top-rated xolacer would absorb every suggestion until they
+ * hit the cap, and a new xolacer could never accumulate the ratings needed to
+ * be ranked at all.
+ *
+ * Presence sorts ahead of open count on purpose: a present xolacer with
+ * several open conversations outranks an idle absent one, because the
+ * feature exists to reach someone now, and MAX_OPEN_CONVERSATIONS is still
+ * what caps overload. Presence is only ever a sort term here — candidates
+ * arrive already filtered to one specialty, so it can never promote someone
+ * unmatched across that boundary.
  *
  * Ties are the normal case (at current roster size everyone has zero open
  * conversations), so the tie-break carries the real weight. Sorting by profile
@@ -198,10 +206,11 @@ function hash32(input: string): number {
  * session is re-read, so the suggested name doesn't flicker.
  */
 export function rankSuggestionCandidates<
-  T extends { xolacerProfileId: string; openCount: number },
+  T extends { xolacerProfileId: string; openCount: number; present: boolean },
 >(candidates: T[], sessionId: string): T[] {
   return [...candidates].sort(
     (a, b) =>
+      Number(b.present) - Number(a.present) ||
       a.openCount - b.openCount ||
       hash32(sessionId + a.xolacerProfileId) -
         hash32(sessionId + b.xolacerProfileId),
