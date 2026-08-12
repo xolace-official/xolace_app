@@ -86,6 +86,20 @@ export function isPairBlocked(
 }
 
 /**
+ * May this row tell one participant whether the other is in the app right now?
+ *
+ * Only while there is something to act on: a request awaiting an answer, or an
+ * open thread. Presence is what turns "I'll get to this later" into "answer
+ * this now, they're still here", and on a resting or closed row there is no
+ * such move to make — all it would report is that someone who is no longer
+ * talking to you has a mental health app open, which is never a fact this
+ * product hands out for free.
+ */
+export function presenceDisclosed(status: Conversation["status"]): boolean {
+  return status === "requested" || status === "open";
+}
+
+/**
  * How long a request waits for an answer before the sweep closes it.
  *
  * Two days, not a week: the median accept lands inside four hours and the 90th

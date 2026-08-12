@@ -9,10 +9,24 @@ import {
   isBlocked,
   isPairBlocked,
   planBlock,
+  presenceDisclosed,
   REQUEST_EXPIRY_MS,
 } from "./conversationGating";
 
 type Reason = "declined" | "expired" | "blocked" | "xolacer_left";
+
+describe("presenceDisclosed", () => {
+  it("tells a live conversation who is here", () => {
+    expect(presenceDisclosed("requested")).toBe(true);
+    expect(presenceDisclosed("open")).toBe(true);
+  });
+
+  // The privacy half: nothing to act on means nothing to report.
+  it("says nothing once the conversation is over", () => {
+    expect(presenceDisclosed("resting")).toBe(false);
+    expect(presenceDisclosed("closed")).toBe(false);
+  });
+});
 
 describe("hasRequestExpired", () => {
   const HOUR = 60 * 60 * 1000;

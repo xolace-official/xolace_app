@@ -8,6 +8,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
 import { XolacerAvatar } from '@/src/features/xolacer-chat/components/xolacer-avatar';
+import { PresenceDot } from '@/src/features/xolacer-chat/components/presence-dot';
 import {
   NewXolacerChip,
   RatingStars,
@@ -174,11 +175,8 @@ export function XolacerRoster({
                   muted={xolacer.atCapacity}
                 />
                 {/* Live, unlike the ordering: someone arriving lights up where
-                    they already are rather than jumping the list. The ring
-                    keeps it legible against a photo of any colour. */}
-                {xolacer.present && (
-                  <View className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface bg-success" />
-                )}
+                    they already are rather than jumping the list. */}
+                {xolacer.present && <PresenceDot />}
               </View>
               <View className="flex-1 min-w-0 gap-1">
                 <View className="flex-row items-center gap-1.5">

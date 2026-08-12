@@ -46,6 +46,7 @@ import {
   isBlocked,
   isPairBlocked,
   planBlock,
+  presenceDisclosed,
 } from "./lib/conversationGating";
 import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 
@@ -83,6 +84,17 @@ const conversationRowValidator = v.object({
   counterpartProfileId: v.id("emotional_profiles"),
   counterpartName: v.string(),
   counterpartPhotoUrl: v.optional(v.string()),
+  /**
+   * The other party is in the app right now. Convex, never Stream — Stream
+   * owns presence inside an open thread and nowhere else, and this list is
+   * outside every thread. The two definitions ("socket connected" vs "app
+   * foregrounded") will occasionally disagree, and the thread header being the
+   * more accurate of the two is the correct direction for that error to point.
+   *
+   * False on any row `presenceDisclosed` closes, so a resting or closed
+   * conversation reports nothing about the person on the other side of it.
+   */
+  counterpartPresent: v.boolean(),
   // Xolacer-side only — the seeker never learns how their own request was
   // stamped. Absent on rows predating the feature, which read as direct.
   origin: originValidator,
@@ -455,6 +467,8 @@ export const xolacerProfile = query({
       ratingCount: v.number(),
       xolacerSince: v.number(),
       available: v.boolean(),
+      /** In the app right now — the same signal the roster's dot reads. */
+      present: v.boolean(),
       /** Viewing your own profile — the request CTA is replaced, not disabled. */
       isSelf: v.boolean(),
       conversation: v.union(
@@ -495,6 +509,26 @@ export const xolacerProfile = query({
         q.eq("userProfileId", profile._id).eq("xolacerProfileId", args.xolacerProfileId),
       )
       .unique();
+    const isSelf = profile._id === args.xolacerProfileId;
+    // Through the accessor, like every other surface — this screen never reads
+    // the presence component itself.
+    //
+    // `active` is the gate, not `presenceDisclosed`: this is a public directory
+    // profile, so "here now" is the same fact the roster already shows to
+    // anyone — but only for someone the roster would show at all. `directory`
+    // filters on the complete-and-active index, and without the same check
+    // here a xolacer who switched "You're listed" off precisely to stop being
+    // reachable is still watchable, live, by any seeker holding a deep link or
+    // a cached row. The heartbeat is deliberately not gated on `active`
+    // (see convex/presence.ts), so the visibility gate has to be here.
+    //
+    // And never about yourself: `present` is trivially true when you are the
+    // one looking, and a dot on the screen a xolacer uses to check how they
+    // appear to seekers reads as a bug.
+    const present =
+      xolacer.active && !isSelf
+        ? (await presentProfileIds(ctx)).has(args.xolacerProfileId)
+        : false;
 
     return {
       xolacerProfileId: args.xolacerProfileId,
@@ -504,8 +538,9 @@ export const xolacerProfile = query({
       specialties: xolacer.specialties ?? [],
       ...publicRating(xolacer),
       xolacerSince: xolacer.createdAt,
+      present,
       available: xolacerAvailable(xolacer, openCount),
-      isSelf: profile._id === args.xolacerProfileId,
+      isSelf,
       conversation: conversation
         ? {
             id: conversation._id,
@@ -657,6 +692,26 @@ export const myConversations = query({
           .take(100)
       : [];
 
+    // One room read for both lists — the whole point of the accessor being a
+    // room read rather than a per-user one.
+    //
+    // Skipped entirely when no row could show presence anyway. The read puts
+    // the whole online index range in this query's read set, and this query is
+    // subscribed for as long as the Connect tab is mounted, which is the app's
+    // lifetime: without the guard, a user whose conversations are all resting
+    // or closed re-runs their entire list — `catalogAvatar` per row included —
+    // every time anyone, anywhere, opens or closes the app.
+    const anyDisclosed = [...asUser, ...asXolacer].some((conversation) =>
+      presenceDisclosed(conversation.status),
+    );
+    const present = anyDisclosed ? await presentProfileIds(ctx) : null;
+    const counterpartPresent = (
+      conversation: Doc<"xolacer_conversations">,
+      counterpartProfileId: Id<"emotional_profiles">,
+    ) =>
+      presenceDisclosed(conversation.status) &&
+      (present?.has(counterpartProfileId) ?? false);
+
     // Blocked rows leave both lists, not just the blocker's — a permanent
     // "stepped back" row the blocked party can keep tapping is more pointed
     // than the conversation simply no longer appearing. Nothing is deleted:
@@ -680,6 +735,10 @@ export const myConversations = query({
         counterpartProfileId: conversation.xolacerProfileId,
         counterpartName: xolacer?.displayName ?? "Xolacer",
         counterpartPhotoUrl: xolacer?.photoUrl,
+        counterpartPresent: counterpartPresent(
+          conversation,
+          conversation.xolacerProfileId,
+        ),
       });
     }
     for (const conversation of asXolacer) {
@@ -696,6 +755,10 @@ export const myConversations = query({
         counterpartProfileId: conversation.userProfileId,
         counterpartName: pseudonym(conversation.userProfileId),
         counterpartPhotoUrl: await catalogAvatar(ctx, conversation.userProfileId),
+        counterpartPresent: counterpartPresent(
+          conversation,
+          conversation.userProfileId,
+        ),
         origin: conversation.origin,
       });
     }
@@ -728,6 +791,13 @@ export const getConversation = query({
       counterpartProfileId: v.id("emotional_profiles"),
       counterpartName: v.string(),
       counterpartPhotoUrl: v.optional(v.string()),
+      /**
+       * Same field, same source, same rule as the list — so a thread seeded
+       * from a conversation row and one loaded cold agree. Read only by the
+       * status bar, which is the pending-request surface: once a channel
+       * exists the header is an open thread, and Stream owns presence there.
+       */
+      counterpartPresent: v.boolean(),
       myStreamUserId: v.id("emotional_profiles"),
       origin: originValidator,
     }),
@@ -751,6 +821,29 @@ export const getConversation = query({
     const existingRating =
       role === "user" ? await findRating(ctx, conversation._id) : null;
 
+    const counterpartProfileId =
+      role === "user" ? conversation.xolacerProfileId : conversation.userProfileId;
+    // Narrower than `presenceDisclosed`, and deliberately so: a request is the
+    // only state this query's presence is ever rendered in. `ThreadStatusBar`
+    // is the sole consumer, and once the row is `open` the screen shows a
+    // composer instead of the bar — so paying for presence there would put the
+    // whole online index range into the read set of the feature's hottest
+    // query, re-running it (with `catalogAvatar`, `findRating`, `countOpen`)
+    // for every client sitting in a live thread each time anyone anywhere
+    // opens or closes the app, to compute a value nothing renders.
+    //
+    // That makes this field disagree with the identically-named one on
+    // `myConversations`, which does answer for `open` rows because the chats
+    // list draws a dot on them. `useThreadConversation` seeds from that list,
+    // so an open thread can hold `true` for one frame and then read `false` —
+    // invisible, because neither value is rendered in that state, and the
+    // privacy rule (`presenceDisclosed`) is the same on both sides. If the
+    // thread ever grows an open-state presence indicator, this reverts to
+    // `presenceDisclosed` and the read-set cost comes with it.
+    const counterpartPresent =
+      conversation.status === "requested" &&
+      (await presentProfileIds(ctx)).has(counterpartProfileId);
+
     return {
       id: conversation._id,
       role,
@@ -762,10 +855,8 @@ export const getConversation = query({
       resumable,
       canRate: canRate(conversation, role),
       myRating: existingRating?.rating,
-      counterpartProfileId:
-        role === "user"
-          ? conversation.xolacerProfileId
-          : conversation.userProfileId,
+      counterpartProfileId,
+      counterpartPresent,
       counterpartName:
         role === "user"
           ? (xolacer?.displayName ?? "Xolacer")
