@@ -55,7 +55,15 @@ export const heartbeat = mutation({
       PRESENCE_ROOM,
       profile._id,
       args.sessionId,
-      args.interval,
+      // Nor can it choose how long it stays present. The component sets the
+      // session deadline to `interval * 2.5`, so an unclamped arg is a
+      // client-controlled expiry: `interval: 3_600_000` keeps a green dot on
+      // the roster for 2.5 hours after the app is gone, which is exactly the
+      // failure this feature exists to prevent — a seeker reaching for
+      // someone who isn't there. Clamped rather than replaced so a client
+      // beating *faster* than us still gets a deadline that matches its own
+      // cadence instead of one 2.5 intervals too generous.
+      Math.min(args.interval, HEARTBEAT_INTERVAL_MS),
     );
   },
 });
@@ -101,10 +109,20 @@ const PRESENCE_ROOM_LIMIT = 512;
 export async function presentProfileIds(
   ctx: QueryCtx,
 ): Promise<Set<Id<"emotional_profiles">>> {
-  // ponytail: caps at PRESENCE_ROOM_LIMIT concurrent users; beyond that some
-  // present users read as absent. Absent is the safe direction to fail, and
-  // we are far below it. If concurrency approaches this, switch to a
-  // per-candidate `presence.listUser` read or shard the room.
+  // ponytail: the ceiling is PRESENCE_ROOM_LIMIT concurrent *app users*, not
+  // xolacers — the room is app-wide and mostly seekers, so it arrives sooner
+  // than a xolacer headcount suggests.
+  //
+  // Past it the truncation is not random: `room_order` is
+  // [roomId, online, lastDisconnected], and every online row carries
+  // lastDisconnected 0, so ties resolve by _creationTime and the oldest
+  // presence rows always win. A xolacer whose row was created later would
+  // read as absent permanently rather than intermittently.
+  //
+  // Absent is still the safe direction to fail, and at current scale (single-
+  // digit xolacers) we are nowhere near. The upgrade is a per-candidate
+  // `presence.listUser` read, which also narrows this query's read set — see
+  // the note in xolacerChat.directory.
   const online = await presence.listRoom(
     ctx,
     PRESENCE_ROOM,

@@ -397,6 +397,15 @@ export const directory = query({
 
     // One room read for the whole query — cheaper than the per-xolacer open
     // count below, which this loop already pays per row.
+    //
+    // ponytail: the cost is in the read set, not the read. This puts the whole
+    // online index range in scope, so *any* user going online or offline —
+    // overwhelmingly seekers, who can never change this query's output —
+    // re-runs the entire directory for every subscribed client, at ~50
+    // xolacers x (loadPairBlocked + countOpen). That is O(N^2) recomputation
+    // in concurrent users. Fine at single-digit xolacers; if it bites, swap
+    // presentProfileIds for a per-candidate presence.listUser read, which
+    // narrows the read set to the xolacers actually rendered.
     const present = await presentProfileIds(ctx);
 
     const xolacers = await ctx.db

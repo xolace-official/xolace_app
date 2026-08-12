@@ -23,8 +23,18 @@ const HEARTBEAT_INTERVAL_MS = 30_000;
  * server derives identity through `requireAuth`. An unauthenticated beat
  * rejects, and a rejected mutation is an unhandled promise rejection rather
  * than a render error — so `AccountBootstrapBoundary`, which only catches the
- * latter, would never see it. Gating keeps the sign-in window quiet instead of
- * emitting a rejection every interval until auth settles.
+ * latter, would never see it. The gate stops the signed-out case dead.
+ *
+ * It does not close the window entirely. `isAuthenticated` is already true
+ * during the two bootstrap races that boundary documents — sign-in before
+ * `getOrCreate` lands, and deletion patching `accountStatus` before `signOut`
+ * — where `requireAuth` throws `user_not_found` / `account_inactive`. A beat
+ * landing in there still rejects unhandled, because the rejection happens
+ * inside the library hook's own `void sendHeartbeat()` where we have nothing
+ * to catch it with. It is bounded rather than eliminated: at most a beat or
+ * two per sign-in, and it self-heals the moment the row lands, or the
+ * boundary unmounts this subtree and clears the interval outright. Worth
+ * revisiting only if it shows up as Sentry noise.
  */
 export function AppPresence() {
   const { isAuthenticated } = useConvexAuth();
