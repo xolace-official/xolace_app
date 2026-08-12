@@ -61,7 +61,7 @@ export function useChatWarmup(
       .queryChannels(
         { id: { $in: channelIds.split(',') }, members: { $in: [client.userID as string] } },
         { last_message_at: -1 },
-        { watch: true, limit: MAX_PREFETCH },
+        { watch: true, presence: true, limit: MAX_PREFETCH },
       )
       .then(() => client.dispatchEvent({ type: 'channels.queried' }))
       .catch((error) => console.error('[xolacer-chat] channel prefetch failed', error));

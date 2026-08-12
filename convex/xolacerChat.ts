@@ -365,6 +365,10 @@ export const status = query({
       isXolacer: v.boolean(),
       xolacerProfileComplete: v.boolean(),
       xolacerActive: v.boolean(),
+      // Same value Stream connects as (see getConversation's myStreamUserId).
+      // Additive: lets a caller match this profile against a Stream-sourced
+      // roster without a second round trip.
+      myProfileId: v.id("emotional_profiles"),
     }),
   ),
   handler: async (ctx) => {
@@ -378,6 +382,7 @@ export const status = query({
       isXolacer: Boolean(user.isXolacer),
       xolacerProfileComplete: Boolean(xolacerProfile?.complete),
       xolacerActive: Boolean(xolacerProfile?.active),
+      myProfileId: profile._id,
     };
   },
 });
@@ -631,6 +636,9 @@ export const sessionSuggestion = query({
       if (declaring.length >= MAX_SUGGESTION_CANDIDATES) break;
     }
 
+    // One room read for the whole candidate set — see presentProfileIds.
+    const present = await presentProfileIds(ctx);
+
     const candidates = [];
     for (const xolacer of declaring) {
       // Exact pair lookup, not a scan of this user's rows: a past decline or
@@ -650,6 +658,7 @@ export const sessionSuggestion = query({
       candidates.push({
         xolacerProfileId: xolacer.emotionalProfileId,
         openCount,
+        present: present.has(xolacer.emotionalProfileId),
         xolacer,
       });
     }
@@ -1100,6 +1109,36 @@ export const getForAccept = internalQuery({
   },
 });
 
+/**
+ * Latency plus whether the xolacer — the request's recipient, now accepting
+ * it — was present in-app at accept time. Both notifications and presence
+ * ship in this same release, so this is the only way to separate their
+ * effects afterwards: an absent accepter was reached by the push, a present
+ * one already had the app open regardless of it.
+ */
+async function captureRequestAccepted(
+  ctx: MutationCtx,
+  conversation: Doc<"xolacer_conversations">,
+) {
+  // Swallowed on purpose, same as captureRequestSent: this runs inside the
+  // accept transaction, so a throw here must not roll back the accept.
+  try {
+    const recipientPresent = (await presentProfileIds(ctx)).has(
+      conversation.xolacerProfileId,
+    );
+    await posthog.capture(ctx, {
+      distinctId: conversation.xolacerProfileId,
+      event: "xolacer_request_accepted",
+      properties: {
+        latencyMs: Date.now() - conversation.requestedAt,
+        recipientPresent,
+      },
+    });
+  } catch (error) {
+    console.error("xolacer_request_accepted capture failed", error);
+  }
+}
+
 export const markAccepted = internalMutation({
   args: {
     conversationId: v.id("xolacer_conversations"),
@@ -1122,6 +1161,7 @@ export const markAccepted = internalMutation({
       acceptedAt: Date.now(),
       lastMessageAt: Date.now(),
     });
+    await captureRequestAccepted(ctx, conversation);
     // Here rather than in the surrounding action, so the seeker is only told
     // the conversation is open once the cap re-check above has let it open.
     //
