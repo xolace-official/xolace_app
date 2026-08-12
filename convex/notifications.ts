@@ -180,7 +180,8 @@ export const registerToken = mutation({
 
     // Auto-enable notification preferences on first token registration
     // so cron jobs include this user. If the user later disables via
-    // Settings, removeToken is called and preferences are set to false.
+    // Settings, the client writes the preferences off itself and calls
+    // removeToken only to detach this device's token.
     const preferences = await ctx.db
       .query("preferences")
       .withIndex("by_profile", (q) =>

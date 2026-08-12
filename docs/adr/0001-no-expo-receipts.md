@@ -46,8 +46,12 @@ and a second reap path forever.
 `preferences.notifications.enabled` still being true when the client next runs
 `registerToken` (`src/lib/use-notifications.ts:75` returns early otherwise). The
 reaper goes through `deletePushDevice`, which drops the component recipient and
-the registry row and nothing else. `notifications.removeToken` — the Settings
-path — *does* flip preferences off, so the reaper must not reuse it.
+the registry row and nothing else — it leaves preferences alone, so a reaped
+device comes back on the next cold start. It cannot reuse
+`notifications.removeToken`: that is a public mutation behind `requireAuth`, and
+the reaper runs from a cron with no identity. `removeToken` also retires the
+legacy profile-keyed recipient once the last device goes, which is a
+user-initiated opt-out, not something a delivery failure should trigger.
 
 **Age is the second reaper, at 180 days on `lastRegisteredAt`.** The verdict only
 fires for devices we actually send to; a rotation orphan that never receives
