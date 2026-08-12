@@ -106,10 +106,12 @@ export const NUDGE_NOTIFICATION_SOUND: NotificationSound = {
  * Which sound a conversation event gets.
  *
  * Request and accepted are the reach-out events — someone is waiting on you —
- * and take the weightier sound. Message and declined take the lighter one.
+ * and take the weightier sound. Message, declined, and expired take the
+ * lighter one.
  *
- * Declined rides the lighter sound deliberately: it is the quietest of the four
- * events, and a conversation that didn't open should not announce itself.
+ * Declined and expired ride the lighter sound deliberately: they are the
+ * quietest of the events, and a conversation that didn't open should not
+ * announce itself.
  */
 export function chatNotificationSound(
   type: ChatNotificationType,
@@ -120,6 +122,7 @@ export function chatNotificationSound(
       return { sound: REACH_SOUND, channelId: REACH_CHANNEL_ID };
     case "chat_message":
     case "chat_declined":
+    case "chat_expired":
       return { sound: MESSAGE_SOUND, channelId: MESSAGE_CHANNEL_ID };
   }
 }

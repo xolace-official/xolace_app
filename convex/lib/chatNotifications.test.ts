@@ -56,6 +56,26 @@ describe("chatNotificationContent", () => {
     );
   });
 
+  // Nobody refused anything here — the request simply ran out of time. The
+  // copy has to blame neither side and end on the roster, and like a decline it
+  // never names the xolacer who went quiet.
+  it("keeps Xolace as the title for an expiry and names nobody", () => {
+    const content = chatNotificationContent("chat_expired");
+    expect(content.title).toBe("Xolace");
+    expect(chatNotificationContent("chat_expired", "River")).toEqual(content);
+  });
+
+  it("points an expiry at other xolacers", () => {
+    expect(chatNotificationContent("chat_expired").body).toContain("xolacers");
+  });
+
+  // Two different events must not read as the same one on a lock screen.
+  it("words an expiry differently from a decline", () => {
+    expect(chatNotificationContent("chat_expired").body).not.toBe(
+      chatNotificationContent("chat_declined").body,
+    );
+  });
+
   it("titles a message with the sender's name and says only that one arrived", () => {
     const content = chatNotificationContent("chat_message", "Camper 4F2A");
     expect(content.title).toBe("Camper 4F2A");
@@ -119,6 +139,22 @@ describe("chatNotificationRoute", () => {
     expect(JSON.stringify(route)).not.toContain(conversationId);
   });
 
+  // Same reason as a decline: the seeker owns the expired row, so /connect
+  // would auto-select Chats and drop them back on the conversation that just
+  // closed instead of the roster the copy just pointed them at.
+  it("routes an expiry to the roster, not the dead conversation", () => {
+    const route = chatNotificationRoute(
+      "chat_expired",
+      conversationId,
+      tappedAt,
+    );
+    expect(route).toEqual({
+      pathname: "/connect",
+      params: { view: "xolacers", t: String(tappedAt) },
+    });
+    expect(JSON.stringify(route)).not.toContain(conversationId);
+  });
+
   // Two taps must be two arrivals: the Connect tab stays mounted and compares
   // params, so identical ones read as no navigation.
   it("distinguishes a second tap from the first", () => {
@@ -133,6 +169,7 @@ describe("isChatNotificationType", () => {
     expect(isChatNotificationType("chat_request")).toBe(true);
     expect(isChatNotificationType("chat_accepted")).toBe(true);
     expect(isChatNotificationType("chat_declined")).toBe(true);
+    expect(isChatNotificationType("chat_expired")).toBe(true);
     expect(isChatNotificationType("chat_message")).toBe(true);
   });
 

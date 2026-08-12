@@ -40,11 +40,11 @@ import {
   canRate,
   declineCooldownUntil,
   hasRealExchange,
+  hasRequestExpired,
   isAtOpenCap,
   isBlocked,
   isPairBlocked,
   planBlock,
-  REQUEST_EXPIRY_MS,
 } from "./lib/conversationGating";
 import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 
@@ -796,14 +796,15 @@ async function captureRequestSent(
  *
  * Scheduled, not called: a push failure must not roll back the lifecycle change
  * that earned it. Fires only where the row actually moved — never on the
- * idempotent request early-return, and never on expiry, block, resume, or a
- * xolacer leaving, which are closures to find in the app rather than push at
- * someone.
+ * idempotent request early-return, and never on block, resume, or a xolacer
+ * leaving, which are closures to find in the app rather than push at someone.
+ * Expiry is the exception among closures: nobody acted, so without a push the
+ * seeker is left waiting on an answer that already stopped coming.
  *
  * `counterpartName` is whatever the recipient already calls that person on
  * every other surface — a pseudonym looking at a seeker, the public display
- * name looking at a xolacer. It is omitted for a decline: that notification
- * names nobody, so nobody's name is sent.
+ * name looking at a xolacer. It is omitted for a decline and an expiry: those
+ * notifications name nobody, so nobody's name is sent.
  */
 async function notifyConversation(
   ctx: MutationCtx,
@@ -1665,7 +1666,12 @@ export const sweep = internalMutation({
       await ctx.db.patch(conversation._id, { status: "resting" });
     }
 
-    // Requested but unanswered for 7 days → closed/expired.
+    // Requested but unanswered for 48 hours → closed/expired, and the seeker
+    // is told. Closing the row is what frees their pending-request slot, so a
+    // request nobody picked up can never hold one of the three against them.
+    // No cooldown is written: silence is not a refusal, and the same xolacer
+    // may be asked again immediately.
+    //
     // Requested rows are few (single-digit xolacers), so a bounded take +
     // in-memory age check is fine. ponytail: index on requestedAt if this grows.
     const requested = await ctx.db
@@ -1673,11 +1679,17 @@ export const sweep = internalMutation({
       .withIndex("by_status_and_lastMessageAt", (q) => q.eq("status", "requested"))
       .take(100);
     for (const conversation of requested) {
-      if (conversation.requestedAt < now - REQUEST_EXPIRY_MS) {
+      if (hasRequestExpired(conversation.requestedAt, now)) {
         await ctx.db.patch(conversation._id, {
           status: "closed",
           closedReason: "expired",
         });
+        await notifyConversation(
+          ctx,
+          "chat_expired",
+          conversation._id,
+          conversation.userProfileId,
+        );
       }
     }
   },

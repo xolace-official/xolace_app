@@ -4,13 +4,72 @@ import {
   canRate,
   DECLINE_COOLDOWN_MS,
   declineCooldownUntil,
+  hasRequestExpired,
   isAtOpenCap,
   isBlocked,
   isPairBlocked,
   planBlock,
+  REQUEST_EXPIRY_MS,
 } from "./conversationGating";
 
 type Reason = "declined" | "expired" | "blocked" | "xolacer_left";
+
+describe("hasRequestExpired", () => {
+  const HOUR = 60 * 60 * 1000;
+  const REQUESTED = 1_000_000;
+
+  // requestedAt + elapsed → has the sweep's span run out?
+  const cases: Array<{ elapsed: number; expected: boolean; label: string }> = [
+    { elapsed: 0, expected: false, label: "just sent" },
+    // The window the median accept (4h) and the 90th percentile (32h) live in.
+    { elapsed: 4 * HOUR, expected: false, label: "the median accept" },
+    { elapsed: 32 * HOUR, expected: false, label: "the 90th percentile" },
+    { elapsed: REQUEST_EXPIRY_MS - 1, expected: false, label: "one tick early" },
+    { elapsed: REQUEST_EXPIRY_MS, expected: true, label: "exactly at the span" },
+    { elapsed: REQUEST_EXPIRY_MS + 1, expected: true, label: "one tick late" },
+    // The request that sat pending for four days in production.
+    { elapsed: 106 * HOUR, expected: true, label: "four days and change" },
+  ];
+
+  for (const c of cases) {
+    it(`${c.label} → ${c.expected}`, () => {
+      expect(hasRequestExpired(REQUESTED, REQUESTED + c.elapsed)).toBe(
+        c.expected,
+      );
+    });
+  }
+
+  // The span itself, so shortening it from a week is a deliberate edit rather
+  // than something a refactor can slide back. Written as hours because that is
+  // the unit the decision was made in.
+  it("waits two days, not a week", () => {
+    expect(REQUEST_EXPIRY_MS).toBe(48 * HOUR);
+  });
+
+  // Clock skew between the sweep's `now` and a row's stamp must not expire a
+  // request that has not happened yet.
+  it("never expires a request stamped in the future", () => {
+    expect(hasRequestExpired(REQUESTED, REQUESTED - HOUR)).toBe(false);
+  });
+});
+
+// Expiry writes no `declinedAt`, so the cooldown gate has nothing to read and
+// the seeker may ask the same xolacer again the moment the sweep closes the
+// row. Asserted here as the seeker-facing rule, not as a relationship between
+// the two constants — they are independent by decision.
+describe("an expired request carries no cooldown", () => {
+  const REQUESTED = 1_000_000;
+  const now = REQUESTED + REQUEST_EXPIRY_MS;
+
+  it("reopens the door the instant the sweep closes the row", () => {
+    expect(
+      declineCooldownUntil(
+        { status: "closed", closedReason: "expired", declinedAt: undefined },
+        now,
+      ),
+    ).toBeUndefined();
+  });
+});
 
 describe("declineCooldownUntil", () => {
   const DECLINED = 1_000_000;

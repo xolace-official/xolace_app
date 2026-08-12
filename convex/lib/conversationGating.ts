@@ -85,8 +85,23 @@ export function isPairBlocked(
   return isBlocked(forward?.closedReason) || isBlocked(reverse?.closedReason);
 }
 
-/** How long a request waits for an answer before the sweep closes it. */
-export const REQUEST_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+/**
+ * How long a request waits for an answer before the sweep closes it.
+ *
+ * Two days, not a week: the median accept lands inside four hours and the 90th
+ * percentile inside 32, so a request still unanswered after two days is not
+ * going to be answered — it is only holding one of the seeker's pending slots
+ * against something that will never happen.
+ */
+export const REQUEST_EXPIRY_MS = 48 * 60 * 60 * 1000;
+
+/**
+ * Has this request waited past the span? The sweep's whole age decision, out
+ * here where it can be tested against the constant rather than a literal.
+ */
+export function hasRequestExpired(requestedAt: number, now: number): boolean {
+  return now - requestedAt >= REQUEST_EXPIRY_MS;
+}
 
 /**
  * How long a declined pair waits before the seeker may ask that xolacer again.
