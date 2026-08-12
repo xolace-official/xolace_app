@@ -28,6 +28,7 @@ import {
   SUGGESTION_ORIGIN_WINDOW_MS,
 } from "./lib/xolacerSuggestion";
 import { posthog } from "./posthog";
+import { presentProfileIds } from "./presence";
 import {
   createXolacerChannel,
   deleteStreamUser,
@@ -386,11 +387,17 @@ export const directory = query({
       ratingCount: v.number(),
       atCapacity: v.boolean(),
       xolacerSince: v.number(),
+      /** In the app right now. The roster sorts on it; it never filters. */
+      present: v.boolean(),
     }),
   ),
   handler: async (ctx) => {
     if (!chatEnabled()) return [];
     const { profile } = await requireAuth(ctx);
+
+    // One room read for the whole query — cheaper than the per-xolacer open
+    // count below, which this loop already pays per row.
+    const present = await presentProfileIds(ctx);
 
     const xolacers = await ctx.db
       .query("xolacer_profiles")
@@ -417,6 +424,7 @@ export const directory = query({
         ...publicRating(xolacer),
         atCapacity: isAtOpenCap(openCount, MAX_OPEN_CONVERSATIONS),
         xolacerSince: xolacer.createdAt,
+        present: present.has(xolacer.emotionalProfileId),
       });
     }
     return rows;

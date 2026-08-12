@@ -4,6 +4,7 @@ import {
   declineCooldownActive,
   hasSpoken,
   resolveMessageIdentity,
+  sortByPresence,
   unreadBadge,
   type ConversationStatus,
 } from '@/src/features/xolacer-chat/utils';
@@ -272,4 +273,82 @@ describe('resolveMessageIdentity', () => {
       );
     });
   }
+});
+
+describe('sortByPresence', () => {
+  const row = (name: string, present: boolean, atCapacity = false) => ({
+    displayName: name,
+    present,
+    atCapacity,
+  });
+
+  it('lifts present xolacers above absent ones', () => {
+    const sorted = sortByPresence([
+      row('Absent', false),
+      row('Present', true),
+    ]);
+    expect(sorted.map((x) => x.displayName)).toEqual(['Present', 'Absent']);
+  });
+
+  it('leaves the input array untouched', () => {
+    const input = [row('Absent', false), row('Present', true)];
+    sortByPresence(input);
+    expect(input.map((x) => x.displayName)).toEqual(['Absent', 'Present']);
+  });
+
+  // The server's order is the tie-break, so two xolacers on the same side of
+  // the presence line keep the ranking the directory already gave them.
+  it('is stable within each group', () => {
+    const sorted = sortByPresence([
+      row('A-absent', false),
+      row('B-present', true),
+      row('C-absent', false),
+      row('D-present', true),
+    ]);
+    expect(sorted.map((x) => x.displayName)).toEqual([
+      'B-present',
+      'D-present',
+      'A-absent',
+      'C-absent',
+    ]);
+  });
+
+  // The AC: presence orders *within* the filtered list. The component filters
+  // by specialty first, so the sort only ever sees matches — presence can
+  // never lift someone who doesn't relate to what the seeker is carrying.
+  it('orders within a specialty-filtered list', () => {
+    const all = [
+      { ...row('Anxiety-absent', false), specialties: ['anxiety'] },
+      { ...row('Grief-present', true), specialties: ['grief'] },
+      { ...row('Anxiety-present', true), specialties: ['anxiety'] },
+    ];
+    const filtered = all.filter((x) => x.specialties.includes('anxiety'));
+    expect(sortByPresence(filtered).map((x) => x.displayName)).toEqual([
+      'Anxiety-present',
+      'Anxiety-absent',
+    ]);
+  });
+
+  // A capped xolacer stays visible but dimmed, and capacity is not a presence
+  // signal — it must not shuffle anyone. A present-but-full xolacer still
+  // outranks an absent one with space.
+  it('does not move a capped xolacer', () => {
+    const sorted = sortByPresence([
+      row('Absent-free', false, false),
+      row('Present-full', true, true),
+      row('Absent-full', false, true),
+      row('Present-free', true, false),
+    ]);
+    expect(sorted.map((x) => x.displayName)).toEqual([
+      'Present-full',
+      'Present-free',
+      'Absent-free',
+      'Absent-full',
+    ]);
+  });
+
+  it('is a no-op when nobody is present', () => {
+    const sorted = sortByPresence([row('A', false), row('B', false)]);
+    expect(sorted.map((x) => x.displayName)).toEqual(['A', 'B']);
+  });
 });

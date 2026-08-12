@@ -1,5 +1,6 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { PressableFeedback } from 'heroui-native';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -15,9 +16,59 @@ import {
   SpecialtyChips,
   SpecialtyFilter,
 } from '@/src/features/xolacer-chat/components/specialty-chips';
+import { sortByPresence } from '@/src/features/xolacer-chat/utils';
 import type { ConversationList } from '@/src/features/xolacer-chat/components/chats-list';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
+
+type DirectoryRow = { xolacerProfileId: string; present: boolean };
+
+/**
+ * Presence ordering, but frozen while the seeker is actually looking at the
+ * list.
+ *
+ * `directory` is reactive, so a xolacer opening or backgrounding the app
+ * re-runs it and would re-sort the roster live. On a list whose whole purpose
+ * is being tapped, that is not a cosmetic problem: a row can slide out from
+ * under a finger mid-tap and route someone to a xolacer they didn't choose.
+ *
+ * So the presence *ranking* is snapshotted and the rows hold position; only
+ * the ordering is frozen, never the data — a row still re-renders in place
+ * with whatever the server currently says. The snapshot is retaken when the
+ * screen regains focus, which is the moment nobody is mid-reach, so a seeker
+ * returning to Connect always gets a current ranking.
+ *
+ * Returns the id set to rank by, or null before the first load, when there is
+ * no order yet to disturb.
+ */
+function usePresenceSnapshot(directory: readonly DirectoryRow[] | undefined) {
+  const [snapshot, setSnapshot] = useState<Set<string> | null>(null);
+
+  // Read inside callbacks only, so taking a snapshot never itself depends on
+  // the directory identity — a dependency there would re-fire on every
+  // presence change and defeat the freeze.
+  const latest = useRef(directory);
+  useEffect(() => {
+    latest.current = directory;
+  }, [directory]);
+
+  const take = useCallback(() => {
+    const rows = latest.current;
+    if (!rows) return;
+    setSnapshot(new Set(rows.filter((r) => r.present).map((r) => r.xolacerProfileId)));
+  }, []);
+
+  // First load: there is no established order to protect yet, so adopt the
+  // server's answer as soon as it arrives rather than waiting for a refocus.
+  const loaded = directory !== undefined;
+  useEffect(() => {
+    if (loaded && snapshot === null) take();
+  }, [loaded, snapshot, take]);
+
+  useFocusEffect(take);
+
+  return snapshot;
+}
 
 /**
  * The roster: every published, active xolacer. A capped xolacer stays
@@ -37,6 +88,7 @@ export function XolacerRoster({
 }) {
   const router = useRouter();
   const directory = useQuery(api.xolacerChat.directory);
+  const presentSnapshot = usePresenceSnapshot(directory);
 
   if (directory !== undefined && directory.length === 0) {
     return (
@@ -69,6 +121,19 @@ export function XolacerRoster({
       )
     : xolacers;
 
+  // Specialty first, presence only as the tie-break *within* it: the filter is
+  // applied above, so this can never lift someone who doesn't relate to what
+  // the seeker is carrying. Ranked on the snapshot, not on the live flag, so
+  // rows hold their position — the badge below still reads live.
+  const ranked = presentSnapshot
+    ? sortByPresence(
+        visible.map((xolacer) => ({
+          xolacer,
+          present: presentSnapshot.has(xolacer.xolacerProfileId),
+        })),
+      ).map((entry) => entry.xolacer)
+    : visible;
+
   return (
     <View className="gap-2.5">
       {/* An active filter is always offered, even if nobody declares it right
@@ -80,7 +145,7 @@ export function XolacerRoster({
         onSelect={onFilterChange}
       />
 
-      {visible.map((xolacer) => {
+      {ranked.map((xolacer) => {
         const talking = openWith.has(xolacer.xolacerProfileId);
         return (
           <PressableFeedback
@@ -93,17 +158,28 @@ export function XolacerRoster({
               });
             }}
             accessibilityRole="button"
-            accessibilityLabel={`View ${xolacer.displayName}'s profile`}
+            // The dot is the only carrier of presence, so it has to be said.
+            accessibilityLabel={`View ${xolacer.displayName}'s profile${
+              xolacer.present ? ', here now' : ''
+            }`}
           >
             <View
               className="flex-row items-start gap-3 rounded-3xl bg-surface border border-border/40 p-3.5"
               style={styles.borderCurve}
             >
-              <XolacerAvatar
-                name={xolacer.displayName}
-                photoUrl={xolacer.photoUrl}
-                muted={xolacer.atCapacity}
-              />
+              <View>
+                <XolacerAvatar
+                  name={xolacer.displayName}
+                  photoUrl={xolacer.photoUrl}
+                  muted={xolacer.atCapacity}
+                />
+                {/* Live, unlike the ordering: someone arriving lights up where
+                    they already are rather than jumping the list. The ring
+                    keeps it legible against a photo of any colour. */}
+                {xolacer.present && (
+                  <View className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface bg-success" />
+                )}
+              </View>
               <View className="flex-1 min-w-0 gap-1">
                 <View className="flex-row items-center gap-1.5">
                   <AppText
