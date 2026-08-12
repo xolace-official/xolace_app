@@ -17,12 +17,14 @@ export type ChatNotificationType =
   | "chat_request"
   | "chat_accepted"
   | "chat_declined"
+  | "chat_expired"
   | "chat_message";
 
 const TYPES: ChatNotificationType[] = [
   "chat_request",
   "chat_accepted",
   "chat_declined",
+  "chat_expired",
   "chat_message",
 ];
 
@@ -49,8 +51,8 @@ export const CHAT_REQUEST_SUBTITLE = "Wants to talk, accept when you have space"
  * Where tapping lands.
  *
  * An accept lands in the thread itself, so the seeker can start writing
- * without hunting for the row. The other two land on the Connect tab, and both
- * name their segment rather than relying on its auto-select: that tab stays
+ * without hunting for the row. The others land on the Connect tab, and each
+ * names its segment rather than relying on its auto-select: that tab stays
  * mounted for the life of the app and remembers the last segment the user
  * touched, so a xolacer browsing the roster would otherwise never see the
  * request they just tapped, and a seeker would be dropped back on the
@@ -77,6 +79,7 @@ export function chatNotificationRoute(
         params: { conversationId },
       } as const;
     case "chat_declined":
+    case "chat_expired":
       return {
         pathname: "/connect",
         params: { view: "xolacers", t: String(tappedAt) },
@@ -95,9 +98,11 @@ export function chatNotificationRoute(
  * The request body is the exact wording the chats list already shows for this
  * event, so the notification reads as the same event rather than a second one.
  *
- * Declined is the one exception to pseudonym-as-title: naming the person who
- * turned you down in bold on a lock screen is where that rule works against
- * the user. Its body ends on an option rather than on the rejection.
+ * Declined and expired are the exceptions to pseudonym-as-title: naming the
+ * person who turned you down — or who never answered — in bold on a lock
+ * screen is where that rule works against the user. Both bodies end on an
+ * option rather than on the refusal. Expiry especially: nobody refused
+ * anything, so its wording blames neither side and points at the roster.
  */
 export function chatNotificationContent(
   type: ChatNotificationType,
@@ -115,6 +120,11 @@ export function chatNotificationContent(
       return {
         title: "Xolace",
         body: "That conversation didn't open. Other xolacers are available.",
+      };
+    case "chat_expired":
+      return {
+        title: "Xolace",
+        body: "That request timed out without an answer. Other xolacers are here.",
       };
     case "chat_message":
       return { title: counterpartName, body: "Sent you a message" };

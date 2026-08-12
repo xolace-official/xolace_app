@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { AppPresence } from "@/src/providers/app-presence";
 import { useNotifications } from "@/src/lib/use-notifications";
 import { usePostHogIdentity } from "@/src/lib/use-posthog-identity";
 import {
@@ -40,6 +41,9 @@ export default function ProtectedLayout() {
     // whole window, header included — see StreamOverlayProvider.
     <StreamOverlayProvider>
       <StreamChatProvider>
+        {/* Renders nothing — it is here, above the Stack, so presence keeps
+            reporting whichever screen the user is on. */}
+        <AppPresence />
         <Stack screenOptions={SCREEN_OPTIONS}>
           <Stack.Screen name="index" />
           <Stack.Screen name="(tabs)" options={NO_GESTURE} />

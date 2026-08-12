@@ -14,11 +14,12 @@ import {
   chatLimitError,
   declineCooldownActive,
   declineCooldownNote,
-  formatMonthYear,
   hasSpoken,
 } from '@/src/features/xolacer-chat/utils';
+import { formatMonthYear } from '@/src/features/xolacer-chat/format-time';
 import { XolacerMenu } from './xolacer-menu';
 import { XolacerAvatar } from './xolacer-avatar';
+import { PresenceDot } from './presence-dot';
 import { NewXolacerChip, RatingStars } from './rating-stars';
 import { SpecialtyChips } from './specialty-chips';
 
@@ -120,19 +121,35 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
         showsVerticalScrollIndicator={false}
       >
         <View className="items-center gap-3">
-          <XolacerAvatar
-            name={profile.displayName}
-            photoUrl={profile.photoUrl}
-            size="lg"
-            muted={!profile.available}
-          />
+          <View>
+            <XolacerAvatar
+              name={profile.displayName}
+              photoUrl={profile.photoUrl}
+              size="lg"
+              muted={!profile.available}
+            />
+            {profile.present && <PresenceDot large />}
+          </View>
           <View className="items-center gap-1.5">
-            <AppText className="text-[26px] font-semibold leading-8 text-foreground">
+            <AppText
+              className="text-[26px] font-semibold leading-8 text-foreground"
+              // The dot carries presence visually and announces nothing, so the
+              // name is where a screen reader has to hear it.
+              accessibilityLabel={
+                profile.present
+                  ? `${profile.displayName}, here now`
+                  : profile.displayName
+              }
+            >
               {profile.displayName}
             </AppText>
             <ProfileRating profile={profile} />
+            {/* Presence replaces the response norm rather than sitting beside
+                it: "here now · replies within a day" answers the question the
+                seeker is asking and then immediately hedges it. */}
             <AppText className="text-xs text-muted">
-              Xolacer since {formatMonthYear(profile.xolacerSince)} · replies within a day
+              Xolacer since {formatMonthYear(profile.xolacerSince)} ·{' '}
+              {profile.present ? 'here now' : 'replies within a day'}
             </AppText>
           </View>
         </View>

@@ -85,8 +85,37 @@ export function isPairBlocked(
   return isBlocked(forward?.closedReason) || isBlocked(reverse?.closedReason);
 }
 
-/** How long a request waits for an answer before the sweep closes it. */
-export const REQUEST_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+/**
+ * May this row tell one participant whether the other is in the app right now?
+ *
+ * Only while there is something to act on: a request awaiting an answer, or an
+ * open thread. Presence is what turns "I'll get to this later" into "answer
+ * this now, they're still here", and on a resting or closed row there is no
+ * such move to make — all it would report is that someone who is no longer
+ * talking to you has a mental health app open, which is never a fact this
+ * product hands out for free.
+ */
+export function presenceDisclosed(status: Conversation["status"]): boolean {
+  return status === "requested" || status === "open";
+}
+
+/**
+ * How long a request waits for an answer before the sweep closes it.
+ *
+ * Two days, not a week: the median accept lands inside four hours and the 90th
+ * percentile inside 32, so a request still unanswered after two days is not
+ * going to be answered — it is only holding one of the seeker's pending slots
+ * against something that will never happen.
+ */
+export const REQUEST_EXPIRY_MS = 48 * 60 * 60 * 1000;
+
+/**
+ * Has this request waited past the span? The sweep's whole age decision, out
+ * here where it can be tested against the constant rather than a literal.
+ */
+export function hasRequestExpired(requestedAt: number, now: number): boolean {
+  return now - requestedAt >= REQUEST_EXPIRY_MS;
+}
 
 /**
  * How long a declined pair waits before the seeker may ask that xolacer again.

@@ -10,7 +10,13 @@ describe('suppressedInForeground', () => {
   it('suppresses every conversation type for the active thread', () => {
     setActiveNotificationConversation('c1');
 
-    for (const type of ['chat_request', 'chat_accepted', 'chat_declined', 'chat_message']) {
+    for (const type of [
+      'chat_request',
+      'chat_accepted',
+      'chat_declined',
+      'chat_expired',
+      'chat_message',
+    ]) {
       expect(suppressedInForeground({ type, conversationId: 'c1' })).toBe(true);
     }
 

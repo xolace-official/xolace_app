@@ -7,6 +7,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
 import { XolacerAvatar } from '@/src/features/xolacer-chat/components/xolacer-avatar';
+import { PresenceDot } from '@/src/features/xolacer-chat/components/presence-dot';
 import {
   NewXolacerChip,
   RatingStars,
@@ -15,6 +16,8 @@ import {
   SpecialtyChips,
   SpecialtyFilter,
 } from '@/src/features/xolacer-chat/components/specialty-chips';
+import { sortByPresence } from '@/src/features/xolacer-chat/presence-ordering';
+import { usePresenceSnapshot } from '@/src/features/xolacer-chat/components/use-presence-snapshot';
 import type { ConversationList } from '@/src/features/xolacer-chat/components/chats-list';
 
 const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
@@ -37,6 +40,7 @@ export function XolacerRoster({
 }) {
   const router = useRouter();
   const directory = useQuery(api.xolacerChat.directory);
+  const presentSnapshot = usePresenceSnapshot(directory);
 
   if (directory !== undefined && directory.length === 0) {
     return (
@@ -69,6 +73,19 @@ export function XolacerRoster({
       )
     : xolacers;
 
+  // Specialty first, presence only as the tie-break *within* it: the filter is
+  // applied above, so this can never lift someone who doesn't relate to what
+  // the seeker is carrying. Ranked on the snapshot, not on the live flag, so
+  // rows hold their position — the badge below still reads live.
+  const ranked = presentSnapshot
+    ? sortByPresence(
+        visible.map((xolacer) => ({
+          xolacer,
+          present: presentSnapshot.has(xolacer.xolacerProfileId),
+        })),
+      ).map((entry) => entry.xolacer)
+    : visible;
+
   return (
     <View className="gap-2.5">
       {/* An active filter is always offered, even if nobody declares it right
@@ -80,7 +97,7 @@ export function XolacerRoster({
         onSelect={onFilterChange}
       />
 
-      {visible.map((xolacer) => {
+      {ranked.map((xolacer) => {
         const talking = openWith.has(xolacer.xolacerProfileId);
         return (
           <PressableFeedback
@@ -93,17 +110,25 @@ export function XolacerRoster({
               });
             }}
             accessibilityRole="button"
-            accessibilityLabel={`View ${xolacer.displayName}'s profile`}
+            // The dot is the only carrier of presence, so it has to be said.
+            accessibilityLabel={`View ${xolacer.displayName}'s profile${
+              xolacer.present ? ', here now' : ''
+            }`}
           >
             <View
               className="flex-row items-start gap-3 rounded-3xl bg-surface border border-border/40 p-3.5"
               style={styles.borderCurve}
             >
-              <XolacerAvatar
-                name={xolacer.displayName}
-                photoUrl={xolacer.photoUrl}
-                muted={xolacer.atCapacity}
-              />
+              <View>
+                <XolacerAvatar
+                  name={xolacer.displayName}
+                  photoUrl={xolacer.photoUrl}
+                  muted={xolacer.atCapacity}
+                />
+                {/* Live, unlike the ordering: someone arriving lights up where
+                    they already are rather than jumping the list. */}
+                {xolacer.present && <PresenceDot />}
+              </View>
               <View className="flex-1 min-w-0 gap-1">
                 <View className="flex-row items-center gap-1.5">
                   <AppText

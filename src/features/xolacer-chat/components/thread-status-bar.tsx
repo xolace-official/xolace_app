@@ -70,8 +70,15 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
         {conversation.role === 'xolacer' ? (
           <>
             <Copy>
-              <Bold>{conversation.counterpartName}</Bold> asked to talk. Accepting opens a
-              conversation only the two of you can see.
+              <Bold>{conversation.counterpartName}</Bold> asked to talk.{' '}
+              {conversation.counterpartPresent ? (
+                <>
+                  <Bold>They&apos;re still in the app right now</Bold> — accepting opens a
+                  conversation only the two of you can see.
+                </>
+              ) : (
+                <>Accepting opens a conversation only the two of you can see.</>
+              )}
             </Copy>
             <View className="flex-row gap-2">
               <Button className="flex-1" onPress={handleAccept}>
@@ -83,9 +90,23 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
             </View>
           </>
         ) : (
+          // A wait with no shape is the thing this feature exists to fix. Present
+          // says the answer could come in the next minute; away says why it
+          // won't, and that the request will still reach them — otherwise
+          // "stepped away" reads as the request having landed nowhere.
           <Copy>
-            Request sent. <Bold>{conversation.counterpartName}</Bold> will see it and can
-            accept when they have space — usually within a day.
+            {conversation.counterpartPresent ? (
+              <>
+                Request sent. <Bold>{conversation.counterpartName} is here right now</Bold>{' '}
+                — they can accept it whenever they see it.
+              </>
+            ) : (
+              <>
+                Request sent.{' '}
+                <Bold>{conversation.counterpartName} has stepped away for now</Bold> — a
+                notification will reach them, and they can accept when they have space.
+              </>
+            )}
           </Copy>
         )}
       </Bar>

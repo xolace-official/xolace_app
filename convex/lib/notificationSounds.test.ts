@@ -28,12 +28,16 @@ describe("chatNotificationSound", () => {
 
   // Declined rides the lighter sound on purpose. A conversation that didn't
   // open is the quietest of the four events and should not announce itself.
-  it("gives the lighter sound to a message and a decline", () => {
+  it("gives the lighter sound to a message, a decline, and an expiry", () => {
     expect(chatNotificationSound("chat_message")).toEqual({
       sound: MESSAGE_SOUND,
       channelId: MESSAGE_CHANNEL_ID,
     });
     expect(chatNotificationSound("chat_declined")).toEqual({
+      sound: MESSAGE_SOUND,
+      channelId: MESSAGE_CHANNEL_ID,
+    });
+    expect(chatNotificationSound("chat_expired")).toEqual({
       sound: MESSAGE_SOUND,
       channelId: MESSAGE_CHANNEL_ID,
     });
@@ -53,6 +57,7 @@ describe("chatNotificationSound", () => {
       "chat_request",
       "chat_accepted",
       "chat_declined",
+      "chat_expired",
       "chat_message",
     ] as const) {
       expect(chatNotificationSound(type).channelId).not.toBe("default");

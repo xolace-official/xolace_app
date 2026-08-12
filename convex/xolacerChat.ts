@@ -28,6 +28,7 @@ import {
   SUGGESTION_ORIGIN_WINDOW_MS,
 } from "./lib/xolacerSuggestion";
 import { posthog } from "./posthog";
+import { presentProfileIds } from "./presence";
 import {
   createXolacerChannel,
   deleteStreamUser,
@@ -40,11 +41,12 @@ import {
   canRate,
   declineCooldownUntil,
   hasRealExchange,
+  hasRequestExpired,
   isAtOpenCap,
   isBlocked,
   isPairBlocked,
   planBlock,
-  REQUEST_EXPIRY_MS,
+  presenceDisclosed,
 } from "./lib/conversationGating";
 import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 
@@ -82,6 +84,17 @@ const conversationRowValidator = v.object({
   counterpartProfileId: v.id("emotional_profiles"),
   counterpartName: v.string(),
   counterpartPhotoUrl: v.optional(v.string()),
+  /**
+   * The other party is in the app right now. Convex, never Stream — Stream
+   * owns presence inside an open thread and nowhere else, and this list is
+   * outside every thread. The two definitions ("socket connected" vs "app
+   * foregrounded") will occasionally disagree, and the thread header being the
+   * more accurate of the two is the correct direction for that error to point.
+   *
+   * False on any row `presenceDisclosed` closes, so a resting or closed
+   * conversation reports nothing about the person on the other side of it.
+   */
+  counterpartPresent: v.boolean(),
   // Xolacer-side only — the seeker never learns how their own request was
   // stamped. Absent on rows predating the feature, which read as direct.
   origin: originValidator,
@@ -386,11 +399,26 @@ export const directory = query({
       ratingCount: v.number(),
       atCapacity: v.boolean(),
       xolacerSince: v.number(),
+      /** In the app right now. The roster sorts on it; it never filters. */
+      present: v.boolean(),
     }),
   ),
   handler: async (ctx) => {
     if (!chatEnabled()) return [];
     const { profile } = await requireAuth(ctx);
+
+    // One room read for the whole query — cheaper than the per-xolacer open
+    // count below, which this loop already pays per row.
+    //
+    // ponytail: the cost is in the read set, not the read. This puts the whole
+    // online index range in scope, so *any* user going online or offline —
+    // overwhelmingly seekers, who can never change this query's output —
+    // re-runs the entire directory for every subscribed client, at ~50
+    // xolacers x (loadPairBlocked + countOpen). That is O(N^2) recomputation
+    // in concurrent users. Fine at single-digit xolacers; if it bites, swap
+    // presentProfileIds for a per-candidate presence.listUser read, which
+    // narrows the read set to the xolacers actually rendered.
+    const present = await presentProfileIds(ctx);
 
     const xolacers = await ctx.db
       .query("xolacer_profiles")
@@ -417,6 +445,7 @@ export const directory = query({
         ...publicRating(xolacer),
         atCapacity: isAtOpenCap(openCount, MAX_OPEN_CONVERSATIONS),
         xolacerSince: xolacer.createdAt,
+        present: present.has(xolacer.emotionalProfileId),
       });
     }
     return rows;
@@ -438,6 +467,8 @@ export const xolacerProfile = query({
       ratingCount: v.number(),
       xolacerSince: v.number(),
       available: v.boolean(),
+      /** In the app right now — the same signal the roster's dot reads. */
+      present: v.boolean(),
       /** Viewing your own profile — the request CTA is replaced, not disabled. */
       isSelf: v.boolean(),
       conversation: v.union(
@@ -478,6 +509,26 @@ export const xolacerProfile = query({
         q.eq("userProfileId", profile._id).eq("xolacerProfileId", args.xolacerProfileId),
       )
       .unique();
+    const isSelf = profile._id === args.xolacerProfileId;
+    // Through the accessor, like every other surface — this screen never reads
+    // the presence component itself.
+    //
+    // `active` is the gate, not `presenceDisclosed`: this is a public directory
+    // profile, so "here now" is the same fact the roster already shows to
+    // anyone — but only for someone the roster would show at all. `directory`
+    // filters on the complete-and-active index, and without the same check
+    // here a xolacer who switched "You're listed" off precisely to stop being
+    // reachable is still watchable, live, by any seeker holding a deep link or
+    // a cached row. The heartbeat is deliberately not gated on `active`
+    // (see convex/presence.ts), so the visibility gate has to be here.
+    //
+    // And never about yourself: `present` is trivially true when you are the
+    // one looking, and a dot on the screen a xolacer uses to check how they
+    // appear to seekers reads as a bug.
+    const present =
+      xolacer.active && !isSelf
+        ? (await presentProfileIds(ctx)).has(args.xolacerProfileId)
+        : false;
 
     return {
       xolacerProfileId: args.xolacerProfileId,
@@ -487,8 +538,9 @@ export const xolacerProfile = query({
       specialties: xolacer.specialties ?? [],
       ...publicRating(xolacer),
       xolacerSince: xolacer.createdAt,
+      present,
       available: xolacerAvailable(xolacer, openCount),
-      isSelf: profile._id === args.xolacerProfileId,
+      isSelf,
       conversation: conversation
         ? {
             id: conversation._id,
@@ -640,6 +692,26 @@ export const myConversations = query({
           .take(100)
       : [];
 
+    // One room read for both lists — the whole point of the accessor being a
+    // room read rather than a per-user one.
+    //
+    // Skipped entirely when no row could show presence anyway. The read puts
+    // the whole online index range in this query's read set, and this query is
+    // subscribed for as long as the Connect tab is mounted, which is the app's
+    // lifetime: without the guard, a user whose conversations are all resting
+    // or closed re-runs their entire list — `catalogAvatar` per row included —
+    // every time anyone, anywhere, opens or closes the app.
+    const anyDisclosed = [...asUser, ...asXolacer].some((conversation) =>
+      presenceDisclosed(conversation.status),
+    );
+    const present = anyDisclosed ? await presentProfileIds(ctx) : null;
+    const counterpartPresent = (
+      conversation: Doc<"xolacer_conversations">,
+      counterpartProfileId: Id<"emotional_profiles">,
+    ) =>
+      presenceDisclosed(conversation.status) &&
+      (present?.has(counterpartProfileId) ?? false);
+
     // Blocked rows leave both lists, not just the blocker's — a permanent
     // "stepped back" row the blocked party can keep tapping is more pointed
     // than the conversation simply no longer appearing. Nothing is deleted:
@@ -663,6 +735,10 @@ export const myConversations = query({
         counterpartProfileId: conversation.xolacerProfileId,
         counterpartName: xolacer?.displayName ?? "Xolacer",
         counterpartPhotoUrl: xolacer?.photoUrl,
+        counterpartPresent: counterpartPresent(
+          conversation,
+          conversation.xolacerProfileId,
+        ),
       });
     }
     for (const conversation of asXolacer) {
@@ -679,6 +755,10 @@ export const myConversations = query({
         counterpartProfileId: conversation.userProfileId,
         counterpartName: pseudonym(conversation.userProfileId),
         counterpartPhotoUrl: await catalogAvatar(ctx, conversation.userProfileId),
+        counterpartPresent: counterpartPresent(
+          conversation,
+          conversation.userProfileId,
+        ),
         origin: conversation.origin,
       });
     }
@@ -711,6 +791,13 @@ export const getConversation = query({
       counterpartProfileId: v.id("emotional_profiles"),
       counterpartName: v.string(),
       counterpartPhotoUrl: v.optional(v.string()),
+      /**
+       * Same field, same source, same rule as the list — so a thread seeded
+       * from a conversation row and one loaded cold agree. Read only by the
+       * status bar, which is the pending-request surface: once a channel
+       * exists the header is an open thread, and Stream owns presence there.
+       */
+      counterpartPresent: v.boolean(),
       myStreamUserId: v.id("emotional_profiles"),
       origin: originValidator,
     }),
@@ -734,6 +821,29 @@ export const getConversation = query({
     const existingRating =
       role === "user" ? await findRating(ctx, conversation._id) : null;
 
+    const counterpartProfileId =
+      role === "user" ? conversation.xolacerProfileId : conversation.userProfileId;
+    // Narrower than `presenceDisclosed`, and deliberately so: a request is the
+    // only state this query's presence is ever rendered in. `ThreadStatusBar`
+    // is the sole consumer, and once the row is `open` the screen shows a
+    // composer instead of the bar — so paying for presence there would put the
+    // whole online index range into the read set of the feature's hottest
+    // query, re-running it (with `catalogAvatar`, `findRating`, `countOpen`)
+    // for every client sitting in a live thread each time anyone anywhere
+    // opens or closes the app, to compute a value nothing renders.
+    //
+    // That makes this field disagree with the identically-named one on
+    // `myConversations`, which does answer for `open` rows because the chats
+    // list draws a dot on them. `useThreadConversation` seeds from that list,
+    // so an open thread can hold `true` for one frame and then read `false` —
+    // invisible, because neither value is rendered in that state, and the
+    // privacy rule (`presenceDisclosed`) is the same on both sides. If the
+    // thread ever grows an open-state presence indicator, this reverts to
+    // `presenceDisclosed` and the read-set cost comes with it.
+    const counterpartPresent =
+      conversation.status === "requested" &&
+      (await presentProfileIds(ctx)).has(counterpartProfileId);
+
     return {
       id: conversation._id,
       role,
@@ -745,10 +855,8 @@ export const getConversation = query({
       resumable,
       canRate: canRate(conversation, role),
       myRating: existingRating?.rating,
-      counterpartProfileId:
-        role === "user"
-          ? conversation.xolacerProfileId
-          : conversation.userProfileId,
+      counterpartProfileId,
+      counterpartPresent,
       counterpartName:
         role === "user"
           ? (xolacer?.displayName ?? "Xolacer")
@@ -796,14 +904,15 @@ async function captureRequestSent(
  *
  * Scheduled, not called: a push failure must not roll back the lifecycle change
  * that earned it. Fires only where the row actually moved — never on the
- * idempotent request early-return, and never on expiry, block, resume, or a
- * xolacer leaving, which are closures to find in the app rather than push at
- * someone.
+ * idempotent request early-return, and never on block, resume, or a xolacer
+ * leaving, which are closures to find in the app rather than push at someone.
+ * Expiry is the exception among closures: nobody acted, so without a push the
+ * seeker is left waiting on an answer that already stopped coming.
  *
  * `counterpartName` is whatever the recipient already calls that person on
  * every other surface — a pseudonym looking at a seeker, the public display
- * name looking at a xolacer. It is omitted for a decline: that notification
- * names nobody, so nobody's name is sent.
+ * name looking at a xolacer. It is omitted for a decline and an expiry: those
+ * notifications name nobody, so nobody's name is sent.
  */
 async function notifyConversation(
   ctx: MutationCtx,
@@ -1665,7 +1774,12 @@ export const sweep = internalMutation({
       await ctx.db.patch(conversation._id, { status: "resting" });
     }
 
-    // Requested but unanswered for 7 days → closed/expired.
+    // Requested but unanswered for 48 hours → closed/expired, and the seeker
+    // is told. Closing the row is what frees their pending-request slot, so a
+    // request nobody picked up can never hold one of the three against them.
+    // No cooldown is written: silence is not a refusal, and the same xolacer
+    // may be asked again immediately.
+    //
     // Requested rows are few (single-digit xolacers), so a bounded take +
     // in-memory age check is fine. ponytail: index on requestedAt if this grows.
     const requested = await ctx.db
@@ -1673,11 +1787,17 @@ export const sweep = internalMutation({
       .withIndex("by_status_and_lastMessageAt", (q) => q.eq("status", "requested"))
       .take(100);
     for (const conversation of requested) {
-      if (conversation.requestedAt < now - REQUEST_EXPIRY_MS) {
+      if (hasRequestExpired(conversation.requestedAt, now)) {
         await ctx.db.patch(conversation._id, {
           status: "closed",
           closedReason: "expired",
         });
+        await notifyConversation(
+          ctx,
+          "chat_expired",
+          conversation._id,
+          conversation.userProfileId,
+        );
       }
     }
   },

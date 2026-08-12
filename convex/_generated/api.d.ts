@@ -102,6 +102,7 @@ import type * as notifications from "../notifications.js";
 import type * as posthog from "../posthog.js";
 import type * as preferences from "../preferences.js";
 import type * as premium from "../premium.js";
+import type * as presence from "../presence.js";
 import type * as productFeedback from "../productFeedback.js";
 import type * as profile from "../profile.js";
 import type * as quotes from "../quotes.js";
@@ -220,6 +221,7 @@ declare const fullApi: ApiFromModules<{
   posthog: typeof posthog;
   preferences: typeof preferences;
   premium: typeof premium;
+  presence: typeof presence;
   productFeedback: typeof productFeedback;
   profile: typeof profile;
   quotes: typeof quotes;
@@ -272,6 +274,7 @@ export declare const components: {
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   rag: import("@convex-dev/rag/_generated/component.js").ComponentApi<"rag">;
   revenuecat: import("convex-revenuecat/_generated/component.js").ComponentApi<"revenuecat">;
+  presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
   reflectionRank: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"reflectionRank">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
 };

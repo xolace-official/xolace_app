@@ -10,11 +10,12 @@ import {
   acceptFailureLabel,
   canHoldUnread,
   chatLimitError,
-  formatCompactTime,
   unreadBadge,
 } from '@/src/features/xolacer-chat/utils';
+import { formatCompactTime } from '@/src/features/xolacer-chat/format-time';
 import { useConversationUnreadCount } from '@/src/features/xolacer-chat/use-conversation-unread-count';
 import { XolacerAvatar } from './xolacer-avatar';
+import { PresenceDot } from './presence-dot';
 import { chipFor, originLabel, subtitleFor } from './conversation-row-labels';
 import type { ConversationList } from './chats-list';
 
@@ -77,19 +78,22 @@ export function ConversationRow({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Conversation with ${conversation.counterpartName}${
-        badge ? `, ${badge.a11y}` : ''
-      }`}
+        conversation.counterpartPresent ? ', here right now' : ''
+      }${badge ? `, ${badge.a11y}` : ''}`}
     >
       <View
         className="rounded-3xl bg-surface border border-border/40 p-3.5 gap-3"
         style={styles.borderCurve}
       >
         <View className="flex-row items-center gap-3">
-          <XolacerAvatar
-            name={conversation.counterpartName}
-            photoUrl={conversation.counterpartPhotoUrl}
-            muted={dim}
-          />
+          <View>
+            <XolacerAvatar
+              name={conversation.counterpartName}
+              photoUrl={conversation.counterpartPhotoUrl}
+              muted={dim}
+            />
+            {conversation.counterpartPresent && <PresenceDot />}
+          </View>
           <View className="flex-1 min-w-0">
             <View className="flex-row items-baseline gap-1.5">
               <AppText

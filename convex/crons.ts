@@ -54,11 +54,16 @@ crons.interval(
   {}
 );
 
-// Xolacer conversation lifecycle: open-but-quiet → resting (14d),
-// requested-but-unanswered → expired (7d). Silent by design — no notification.
+// Xolacer conversation lifecycle: open-but-quiet → resting (14d, silent),
+// requested-but-unanswered → expired (48h, and the seeker is told).
+//
+// Six-hourly rather than daily: the sweep's interval is the error bar on the
+// expiry span, and a daily pass would let a 48-hour request live 72 hours —
+// giving back most of what shortening the span from a week bought. Two bounded
+// queries over single-digit rows, so the extra passes cost nothing.
 crons.interval(
   "sweep xolacer conversations",
-  isProd ? { hours: 24 } : { hours: 72 },
+  isProd ? { hours: 6 } : { hours: 72 },
   internal.xolacerChat.sweep,
   {}
 );
