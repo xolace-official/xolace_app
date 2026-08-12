@@ -10,9 +10,9 @@ import {
   acceptFailureLabel,
   canHoldUnread,
   chatLimitError,
-  formatCompactTime,
   unreadBadge,
 } from '@/src/features/xolacer-chat/utils';
+import { formatCompactTime } from '@/src/features/xolacer-chat/format-time';
 import { useConversationUnreadCount } from '@/src/features/xolacer-chat/use-conversation-unread-count';
 import { XolacerAvatar } from './xolacer-avatar';
 import { PresenceDot } from './presence-dot';

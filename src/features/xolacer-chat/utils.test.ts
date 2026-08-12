@@ -4,10 +4,10 @@ import {
   declineCooldownActive,
   hasSpoken,
   resolveMessageIdentity,
-  sortByPresence,
   unreadBadge,
   type ConversationStatus,
 } from '@/src/features/xolacer-chat/utils';
+import { sortByPresence } from '@/src/features/xolacer-chat/presence-ordering';
 
 describe('declineCooldownActive', () => {
   const DAY = 86400000;

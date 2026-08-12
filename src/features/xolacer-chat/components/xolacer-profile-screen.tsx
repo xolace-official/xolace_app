@@ -14,9 +14,9 @@ import {
   chatLimitError,
   declineCooldownActive,
   declineCooldownNote,
-  formatMonthYear,
   hasSpoken,
 } from '@/src/features/xolacer-chat/utils';
+import { formatMonthYear } from '@/src/features/xolacer-chat/format-time';
 import { XolacerMenu } from './xolacer-menu';
 import { XolacerAvatar } from './xolacer-avatar';
 import { PresenceDot } from './presence-dot';
