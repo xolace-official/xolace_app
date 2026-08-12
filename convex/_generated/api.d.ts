@@ -64,6 +64,8 @@ import type * as followUps from "../followUps.js";
 import type * as http from "../http.js";
 import type * as integrations_stream from "../integrations/stream.js";
 import type * as jobs_accountDeletion from "../jobs/accountDeletion.js";
+import type * as jobs_accountDeletionFinalize from "../jobs/accountDeletionFinalize.js";
+import type * as jobs_accountDeletionSteps from "../jobs/accountDeletionSteps.js";
 import type * as jobs_dataRetention from "../jobs/dataRetention.js";
 import type * as jobs_dataWipe from "../jobs/dataWipe.js";
 import type * as jobs_notificationTriggers from "../jobs/notificationTriggers.js";
@@ -180,6 +182,8 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "integrations/stream": typeof integrations_stream;
   "jobs/accountDeletion": typeof jobs_accountDeletion;
+  "jobs/accountDeletionFinalize": typeof jobs_accountDeletionFinalize;
+  "jobs/accountDeletionSteps": typeof jobs_accountDeletionSteps;
   "jobs/dataRetention": typeof jobs_dataRetention;
   "jobs/dataWipe": typeof jobs_dataWipe;
   "jobs/notificationTriggers": typeof jobs_notificationTriggers;

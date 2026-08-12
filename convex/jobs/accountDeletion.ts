@@ -1,16 +1,28 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { purgeSessions } from "../lib/sessionCascade";
 import {
-  deletePushDevice,
-  profilePushDevices,
-  pushNotifications,
-} from "../lib/pushNotifications";
-import { rankDelete } from "../lib/aggregates";
+  drainConsentRecords,
+  drainEscalations,
+  drainFeedback,
+  drainNotifications,
+  drainProductFeedback,
+  drainQuotes,
+  drainReports,
+  drainResonances,
+  drainSessions,
+  drainWaitlist,
+} from "./accountDeletionSteps";
+import {
+  drainConversations,
+  drainPushDevices,
+  drainRatingsGiven,
+  drainRatingsReceived,
+  drainSemanticVersions,
+  finalizePurge,
+} from "./accountDeletionFinalize";
 
 const USER_BATCH_SIZE = 10;
-const BATCH_SIZE = 100;
 
 /**
  * Sweep entry point: find accounts marked "deleted" and hand each one to
@@ -72,218 +84,34 @@ export const purgeUser = internalMutation({
       return;
 
     const profileId = user.emotionalProfileId;
+
+    // Each step drains one bounded batch and reports whether it was full.
+    // `purgeSessions` also carries follow_up_cards / session_turns /
+    // emotional_metadata / episodic entries with it (see sessionCascade.ts).
+    const steps = [
+      drainSessions,
+      drainEscalations,
+      drainConsentRecords,
+      drainNotifications,
+      drainResonances,
+      drainReports,
+      drainFeedback,
+      drainProductFeedback,
+      drainQuotes,
+      drainWaitlist,
+      drainConversations,
+      drainRatingsGiven,
+      drainRatingsReceived,
+      drainSemanticVersions,
+      drainPushDevices,
+    ];
+
     let hasMore = false;
-
-    // ── Sessions + everything hanging off them ───────────────────
-    const sessions = await ctx.db
-      .query("sessions")
-      .withIndex("by_profile_time", (q) =>
-        q.eq("emotionalProfileId", profileId)
-      )
-      .take(BATCH_SIZE);
-
-    if (sessions.length === BATCH_SIZE) hasMore = true;
-
-    await purgeSessions(ctx, profileId, sessions);
-
-    // ── Anonymize escalation events (preserve for safety audit) ──
-    const escalations = await ctx.db
-      .query("escalation_events")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
-      .take(BATCH_SIZE);
-
-    if (escalations.length === BATCH_SIZE) hasMore = true;
-    for (const event of escalations) {
-      await ctx.db.patch(event._id, { emotionalProfileId: undefined });
+    for (const step of steps) {
+      if (await step(ctx, profileId)) hasMore = true;
     }
 
-    // ── Consent records ──────────────────────────────────────────
-    const consentRecords = await ctx.db
-      .query("consent_records")
-      .withIndex("by_profile_type", (q) =>
-        q.eq("emotionalProfileId", profileId)
-      )
-      .take(BATCH_SIZE);
-
-    if (consentRecords.length === BATCH_SIZE) hasMore = true;
-    for (const record of consentRecords) await ctx.db.delete(record._id);
-
-    // ── Notification log ─────────────────────────────────────────
-    const notifications = await ctx.db
-      .query("notification_log")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
-      .take(BATCH_SIZE);
-
-    if (notifications.length === BATCH_SIZE) hasMore = true;
-    for (const notif of notifications) await ctx.db.delete(notif._id);
-
-    // ── Reflection resonances ────────────────────────────────────
-    const resonances = await ctx.db
-      .query("reflection_resonances")
-      .withIndex("by_profile_reflection", (q) =>
-        q.eq("emotionalProfileId", profileId)
-      )
-      .take(BATCH_SIZE);
-
-    if (resonances.length === BATCH_SIZE) hasMore = true;
-    for (const resonance of resonances) await ctx.db.delete(resonance._id);
-
-    // ── Reports this user filed on others' reflections ───────────
-    const reports = await ctx.db
-      .query("reflection_reports")
-      .withIndex("by_profile_reflection", (q) =>
-        q.eq("reporterProfileId", profileId)
-      )
-      .take(BATCH_SIZE);
-
-    if (reports.length === BATCH_SIZE) hasMore = true;
-    for (const report of reports) await ctx.db.delete(report._id);
-
-    // ── Anonymize emotional feedback (mirror_miss / gave_up / mood) ──
-    // Retained for product signal, stripped of both the owner link and the
-    // user's own words. What survives is structural only: type,
-    // selectedOption, turnIndex, createdAt. Clearing emotionalProfileId also
-    // drops the row out of the by_profile range this query scans, so the
-    // batch loop still makes progress (same mechanism as escalation_events).
-    const feedbackRecords = await ctx.db
-      .query("feedback")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
-      .take(BATCH_SIZE);
-
-    if (feedbackRecords.length === BATCH_SIZE) hasMore = true;
-    for (const record of feedbackRecords) {
-      await ctx.db.patch(record._id, {
-        emotionalProfileId: undefined,
-        text: undefined,
-      });
-    }
-
-    // ── Anonymize product feedback (bug / idea) ──────────────────
-    // Deliberate exception: `text` is RETAINED, because the prose is the
-    // entire value of the row — strip it and only a kind+appVersion husk is
-    // left. Recorded decision, see CONTEXT.md "Feedback retention". The
-    // tradeoff is that a bug report naming a person or place outlives the
-    // account, so this text must never surface anywhere user-facing.
-    const productFeedback = await ctx.db
-      .query("product_feedback")
-      .withIndex("by_profile_and_created", (q) =>
-        q.eq("emotionalProfileId", profileId)
-      )
-      .take(BATCH_SIZE);
-
-    if (productFeedback.length === BATCH_SIZE) hasMore = true;
-    for (const record of productFeedback) {
-      await ctx.db.patch(record._id, { emotionalProfileId: undefined });
-    }
-
-    // ── Daily quotes (session-derived quotes carry their words) ──
-    const quotes = await ctx.db
-      .query("daily_quotes")
-      .withIndex("by_profile_date", (q) =>
-        q.eq("emotionalProfileId", profileId)
-      )
-      .take(BATCH_SIZE);
-
-    if (quotes.length === BATCH_SIZE) hasMore = true;
-    for (const quote of quotes) await ctx.db.delete(quote._id);
-
-    // ── Insight waitlist intents ─────────────────────────────────
-    const waitlistRows = await ctx.db
-      .query("insight_waitlist")
-      .withIndex("by_profile_feature", (q) =>
-        q.eq("emotionalProfileId", profileId)
-      )
-      .take(BATCH_SIZE);
-
-    if (waitlistRows.length === BATCH_SIZE) hasMore = true;
-    for (const row of waitlistRows) await ctx.db.delete(row._id);
-
-    // ── Xolacer conversations (both sides of every pair) ────────
-    // Rows where this user was the requester, and rows where they were
-    // the xolacer. Stream-side message content is removed by the
-    // purgeStreamUser action scheduled in the final batch.
-    const conversationsAsUser = await ctx.db
-      .query("xolacer_conversations")
-      .withIndex("by_user_and_status", (q) => q.eq("userProfileId", profileId))
-      .take(BATCH_SIZE);
-
-    if (conversationsAsUser.length === BATCH_SIZE) hasMore = true;
-    for (const conversation of conversationsAsUser) {
-      await ctx.db.delete(conversation._id);
-    }
-
-    const conversationsAsXolacer = await ctx.db
-      .query("xolacer_conversations")
-      .withIndex("by_xolacer_and_status", (q) =>
-        q.eq("xolacerProfileId", profileId)
-      )
-      .take(BATCH_SIZE);
-
-    if (conversationsAsXolacer.length === BATCH_SIZE) hasMore = true;
-    for (const conversation of conversationsAsXolacer) {
-      await ctx.db.delete(conversation._id);
-    }
-
-    // ── Conversation ratings this user gave ──────────────────────
-    // The xolacer's denormalized counters have to come down with the
-    // row, or a deleted account keeps voting.
-    const ratingsGiven = await ctx.db
-      .query("conversation_ratings")
-      .withIndex("by_rater", (q) => q.eq("raterProfileId", profileId))
-      .take(BATCH_SIZE);
-
-    if (ratingsGiven.length === BATCH_SIZE) hasMore = true;
-    for (const rating of ratingsGiven) {
-      const rated = await ctx.db
-        .query("xolacer_profiles")
-        .withIndex("by_profile", (q) =>
-          q.eq("emotionalProfileId", rating.xolacerProfileId)
-        )
-        .unique();
-      if (rated) {
-        await ctx.db.patch(rated._id, {
-          ratingSum: Math.max(0, (rated.ratingSum ?? 0) - rating.rating),
-          ratingCount: Math.max(0, (rated.ratingCount ?? 0) - 1),
-          updatedAt: Date.now(),
-        });
-      }
-      await ctx.db.delete(rating._id);
-    }
-
-    // ── Conversation ratings this user received as a xolacer ──────
-    // The xolacer_profiles row (with its counters) is deleted in the final
-    // batch, so nothing reads these again — but they'd outlive the account
-    // still holding its profile id. No counter fixup: the profile they
-    // point at is going away.
-    const ratingsReceived = await ctx.db
-      .query("conversation_ratings")
-      .withIndex("by_xolacer", (q) => q.eq("xolacerProfileId", profileId))
-      .take(BATCH_SIZE);
-
-    if (ratingsReceived.length === BATCH_SIZE) hasMore = true;
-    for (const rating of ratingsReceived) await ctx.db.delete(rating._id);
-
-    // ── Semantic profile versions ────────────────────────────────
-    const semanticVersions = await ctx.db
-      .query("semantic_profiles")
-      .withIndex("by_profile_version", (q) =>
-        q.eq("emotionalProfileId", profileId)
-      )
-      .take(BATCH_SIZE);
-
-    if (semanticVersions.length === BATCH_SIZE) hasMore = true;
-    for (const version of semanticVersions) await ctx.db.delete(version._id);
-
-    // ── Push devices, one per pass ───────────────────────────────
-    // Drained here rather than below because the work is not bounded like the
-    // rest of the final batch: `deletePushDevice` also clears the component's
-    // stored notification bodies for that device, up to 1000 row deletes on
-    // its own. One device per pass keeps that inside one transaction.
-    const devices = await profilePushDevices(ctx, profileId);
-    if (devices.length > 1) hasMore = true;
-    if (devices[0]) await deletePushDevice(ctx, devices[0]._id);
-
-    // ── More to drain? Come back before touching profile/user ────
+    // More to drain? Come back before touching profile/user.
     if (hasMore) {
       await ctx.scheduler.runAfter(
         0,
@@ -293,45 +121,8 @@ export const purgeUser = internalMutation({
       return;
     }
 
-    // ── Final batch: everything below happens exactly once ───────
-
-    // Preferences (1:1 with the profile)
-    const preferences = await ctx.db
-      .query("preferences")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
-      .unique();
-    if (preferences) await ctx.db.delete(preferences._id);
-
-    // A deleted user must never receive a follow-up nudge. Scheduled because
-    // it cancels component workflows and is independently bounded.
-    await ctx.scheduler.runAfter(0, internal.followUps.purgeForProfile, {
-      emotionalProfileId: profileId,
-    });
-
-    // Xolacer profile (1:1 with the profile, if this user was a xolacer)
-    const xolacerProfile = await ctx.db
-      .query("xolacer_profiles")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
-      .unique();
-    if (xolacerProfile) await ctx.db.delete(xolacerProfile._id);
-
-    // Stream-hosted chat content is external — the row deletes above don't
-    // reach it. Fail-open action: logs and continues on Stream outage so a
-    // third party can never block a deletion request.
-    await ctx.scheduler.runAfter(0, internal.xolacerChat.purgeStreamUser, {
-      profileId: profileId,
-    });
-
-    // Every device is gone by now (drained above, one per pass). What is
-    // left is the pre-migration profile-keyed recipient, for anyone who never
-    // re-registered — deleting the profile row does not reach it.
-    await pushNotifications.removeToken(ctx, { userId: profileId });
-
-    // Must run before the row is gone — the aggregate needs the doc to locate
-    // its key. Skipping this leaves a phantom in the percentile denominator.
-    await rankDelete(ctx, profileId);
-
-    await ctx.db.delete(profileId);
-    await ctx.db.delete(user._id);
+    // Everything below happens exactly once, deleting the profile and user
+    // rows last.
+    await finalizePurge(ctx, profileId, user._id);
   },
 });
