@@ -30,6 +30,28 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "1.9.0",
+    label: "Version 1.9.0",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "bell.badge.fill", android: "notifications_active" },
+        title: "Chat notifications",
+        body: "You'll now hear about it when someone sends a request, accepts, declines, or messages you — each with its own sound. And you can mute chat notifications separately from Xolace's own gentle nudges, in Settings.",
+      },
+      {
+        icon: { ios: "circle.fill", android: "circle" },
+        title: "See who's here now",
+        body: "A xolacer's profile, your requests, and your chats list now show a live dot when they're in the app — so waiting doesn't feel like nothing's happening.",
+      },
+      {
+        icon: { ios: "ellipsis.bubble.fill", android: "more_horiz" },
+        title: "Real-time in your conversations",
+        body: "An open chat now shows typing, online, and when they were last active — right in the header.",
+      },
+    ],
+  },
+  {
     id: "2026-08-ota-chat-unread-typing",
     label: "OTA Update",
     date: "August 2026",

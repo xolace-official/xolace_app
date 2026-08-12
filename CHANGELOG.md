@@ -4,6 +4,29 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.9.0] - (2026-08-12)
+
+Requires a native rebuild (per-event notification sounds live on their own Android channels, frozen once created on-device).
+
+### Added
+
+- **Xolacers know when someone wants to talk** — sending a request now pushes to the xolacer immediately, titled with the seeker's pseudonym and the exact wording the chats list already shows for that row, so the two surfaces can't drift apart. Tapping routes straight into the right Connect segment (Requests or Chats) rather than whatever the tab last had open.
+- **Seekers hear back** — accepting a request notifies the seeker with the xolacer's real display name (not a pseudonym — that's what every other surface calls them) and lands them in the thread ready to write. Declining notifies as "Xolace" with no name attached at all, so the title can never regress into naming someone, and the body ends on an option instead of the rejection; tapping lands on the roster with any specialty filter cleared. Expiry, blocking, resume, and a xolacer leaving still send nothing.
+- **A message in an open thread buzzes the other side** — driven by a signed Stream webhook rather than app-side polling. The title is the sender's pseudonym, the body only ever says "Sent you a message" — the content itself never leaves Stream and can't reach a lock screen. A burst inside a 2-minute window collapses to one notification per direction, so a chatty exchange can't spam either phone.
+- **Chat notifications have their own mute switch** — Settings now separates "the AI reaching out" with a gentle nudge from "a person waiting on you" into two independent toggles over one shared OS permission and push token. Either can be muted without silencing the other; chat notifications are on by default once permission is granted, so nobody has to go find the switch first.
+- **Each kind of arrival gets its own sound** — request and accepted share a warmer tone (someone is waiting on you), message and declined a lighter one, the AI's own check-ins a third. Each rides its own Android notification channel, so the two families can be told apart — and silenced independently — at the OS level too.
+- **"Here now" presence** — a live dot now shows when a xolacer is in the app: on the roster, a xolacer's own profile, a pending request, an incoming request, and the chats list. It's backed by a single app-wide Convex Presence room with one heartbeat per client, mounted at the protected-route layout root so someone reflecting on another tab still reads as present. Only a derived "is this person here" boolean ever leaves the server — no room membership, no list of who's online, ever reaches a client. Presence is shown only where there's something to act on: a resting or closed conversation never discloses it, and a xolacer who's toggled themselves out of the directory can't be watched via a deep link. The roster's *ordering* is snapshotted on load (so a xolacer arriving mid-scroll can't reshuffle the list under your finger), but the dot itself always reads live.
+- **Live thread status** — an open Xolacer conversation now shows typing, online, and "active Xm ago" in the header, replacing the old static "usually replies within a day" line.
+- **The end-of-session offer favors someone actually here** — when a session close offers a xolacer, a present, specialty-matched person now outranks an absent one; presence is only ever a tie-break on top of the specialty match, so it can never surface someone who doesn't relate to what was shared.
+
+### Fixed
+
+- **You don't get pinged for a thread you're already looking at** — banner, sound, and tray entry are suppressed for a conversation while that specific thread is open, and more broadly while the app is foregrounded at all; opening a thread also clears anything already sitting in the tray for it. A different thread with someone else waiting on you is left alone.
+- **A decline can't be immediately re-requested** — a declined request now rests for the life of that unanswered request before the same xolacer can be asked again, closing a loop that (since requests started pushing to a lock screen) had no real ceiling besides blocking. An expiry from silence carries no cooldown — going quiet isn't a refusal.
+- **A reply lands as reliably as the message that prompted it** — the 2-minute send window used to be shared by both directions of a thread, so a seeker's message could swallow the xolacer's reply forty-five seconds later. Each direction now keeps its own stamp.
+
+---
+
 ## [1.8.0] - OTA Update (2026-08-12)
 
 ### Fixed
