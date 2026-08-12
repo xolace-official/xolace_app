@@ -141,7 +141,7 @@ function useWatchedChannel(channel: StreamChannel) {
     if (channel.initialized) return;
     let alive = true;
     channel
-      .watch()
+      .watch({ presence: true })
       .then(() => {
         if (alive) setFailedCid(null);
       })

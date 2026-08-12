@@ -1,14 +1,31 @@
 import { View } from 'react-native';
+import { useChatContext } from 'stream-chat-expo';
 import { AppText } from '@/src/components/shared/app-text';
 import { formatLongAgo } from '../format-time';
 import { XolacerAvatar } from '@/src/features/xolacer-chat/components/xolacer-avatar';
+import { useCounterpartActivity, type CounterpartPresence } from './use-counterpart-activity';
 import type { ThreadConversation } from './thread-screen';
 
 /**
- * Header states a response norm ("usually replies within a day") rather than a
- * presence dot — six volunteers can't honour "Active now", and the person most
- * hurt by that broken promise is the one waiting at 2am.
+ * Once a thread is `open` the chat socket is already live, so a real dot
+ * replaces the response-norm copy that used to stand in for it — that norm
+ * was written against a promise six volunteers couldn't honour, and a live
+ * socket signal is a fact, not a promise. Every other status keeps its own
+ * copy; Stream has nothing to say about a request that hasn't been accepted.
  */
+function openSubtitle(role: ThreadConversation['role'], activity: {
+  typing: boolean;
+  presence: CounterpartPresence | null;
+}): string {
+  const who = role === 'user' ? 'Xolacer' : null;
+  if (activity.typing) return who ? `${who} · typing…` : 'typing…';
+  if (!activity.presence) return who ? `${who} · usually replies within a day` : 'Usually replies within a day';
+  if (activity.presence.online) return who ? `${who} · online` : 'Online';
+  const lastActive = activity.presence.lastActive;
+  const suffix = lastActive ? `last here ${formatLongAgo(lastActive)}` : 'offline';
+  return who ? `${who} · ${suffix}` : suffix;
+}
+
 function subtitleFor(conversation: ThreadConversation): string {
   if (conversation.status === 'requested') {
     if (conversation.role !== 'xolacer') return 'Request sent, no reply yet';
@@ -22,24 +39,32 @@ function subtitleFor(conversation: ThreadConversation): string {
       ? `Resting · last spoke ${formatLongAgo(conversation.lastMessageAt)}`
       : 'Resting';
   }
-
-  
   if (conversation.status === 'closed') {
     return conversation.role === 'xolacer'
       ? 'This request is closed'
       : 'Not taking conversations right now';
   }
-  return conversation.role === 'user'
-    ? 'Xolacer · usually replies within a day'
-    : 'Usually replies within a day';
+  return '';
 }
 
 /**
  * Rendered into the native stack header's title slot, so it carries identity
  * only — the back affordance, safe area and background are the platform's.
+ *
+ * Also a sibling of `<Channel>`, not a descendant of it (see thread-screen.tsx)
+ * — `useCounterpartActivity` reads the channel directly rather than through
+ * Channel-scoped context for that reason.
  */
 export function ThreadHeader({ conversation }: { conversation: ThreadConversation }) {
+  const { client } = useChatContext();
+  const activity = useCounterpartActivity(
+    client,
+    conversation.status === 'open' ? conversation.streamChannelId : undefined,
+    conversation.counterpartProfileId,
+  );
   const dim = conversation.status !== 'open';
+  const subtitle =
+    conversation.status === 'open' ? openSubtitle(conversation.role, activity) : subtitleFor(conversation);
 
   return (
     <View className="flex-row items-center gap-2.5">
@@ -54,7 +79,7 @@ export function ThreadHeader({ conversation }: { conversation: ThreadConversatio
           {conversation.counterpartName}
         </AppText>
         <AppText className="text-[11px] text-muted mt-px" numberOfLines={1}>
-          {subtitleFor(conversation)}
+          {subtitle}
         </AppText>
       </View>
     </View>

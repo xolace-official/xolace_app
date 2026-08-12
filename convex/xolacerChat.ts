@@ -365,6 +365,10 @@ export const status = query({
       isXolacer: v.boolean(),
       xolacerProfileComplete: v.boolean(),
       xolacerActive: v.boolean(),
+      // Same value Stream connects as (see getConversation's myStreamUserId).
+      // Additive: lets a caller match this profile against a Stream-sourced
+      // roster without a second round trip.
+      myProfileId: v.id("emotional_profiles"),
     }),
   ),
   handler: async (ctx) => {
@@ -378,6 +382,7 @@ export const status = query({
       isXolacer: Boolean(user.isXolacer),
       xolacerProfileComplete: Boolean(xolacerProfile?.complete),
       xolacerActive: Boolean(xolacerProfile?.active),
+      myProfileId: profile._id,
     };
   },
 });
