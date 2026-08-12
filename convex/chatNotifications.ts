@@ -5,7 +5,7 @@ import {
   chatNotificationsAllowed,
 } from "./lib/chatNotifications";
 import { chatNotificationSound } from "./lib/notificationSounds";
-import { pushNotifications } from "./lib/pushNotifications";
+import { sendPushToProfile } from "./lib/pushNotifications";
 
 /**
  * The transactional dispatch path for conversation notifications, beside the
@@ -62,10 +62,10 @@ export const send = internalMutation({
     // platforms.
     const { sound, channelId } = chatNotificationSound(args.type);
 
-    // allowUnregisteredTokens: the recipient may have preferences on and no
-    // token yet (never opened the app on a physical device).
-    await pushNotifications.sendPushNotification(ctx, {
-      userId: args.emotionalProfileId,
+    // Shared with the nudge path so a multi-device fix can never land on one
+    // of the two dispatch sites and not the other.
+    await sendPushToProfile(ctx, {
+      emotionalProfileId: args.emotionalProfileId,
       notification: {
         title,
         body,
@@ -73,7 +73,6 @@ export const send = internalMutation({
         channelId,
         data: { type: args.type, conversationId: args.conversationId },
       },
-      allowUnregisteredTokens: true,
     });
 
     return null;

@@ -1124,6 +1124,55 @@ export default defineSchema({
     .index("by_profile_and_reach", ["emotionalProfileId", "reachUsed"]),
 
   // ===========================================================
+  // 10b. PUSH DEVICES
+  // ===========================================================
+  //
+  // One row per device holding a live Expo token for a profile.
+  //
+  // The push component stores exactly one token per recipient key, so keying
+  // it by profile id made the last device to register replace every other. The
+  // registry exists so each device gets its own recipient key (this
+  // row's id) and dispatch can fan out to all of them.
+  //
+  // The Expo token is the device key — it is already stable per device,
+  // so no generated device id is stored. `by_token` is what enforces single
+  // ownership: registering a token held by another profile evicts the prior
+  // holder, so a reinstalled or handed-down device cannot inherit someone
+  // else's notifications.
+  //
+  // No `platform` field (sound and channel id are chosen per notification type
+  // and both are always sent) and no `timezone` field (quiet windows are
+  // evaluated at the trigger, profile-globally, never per device).
+  //
+  // Rows die two ways, both in `convex/lib/pushDevices.ts`: the component
+  // reports `unable_to_deliver` for the recipient (five consecutive Expo
+  // rejections — Expo's receipts are unreachable behind the component, see
+  // docs/adr/0001-no-expo-receipts.md), or `lastRegisteredAt` passes 180 days.
+  // The clock is what reaps a rotation orphan, which is never sent to
+  // successfully but is never sent to at all either.
+  //
+  push_devices: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    expoPushToken: v.string(),
+    lastRegisteredAt: v.number(),
+    // Last time this device's component notification history was seen in a
+    // prunable shape, and what that shape was. The component stores no
+    // per-state timestamp, so an unchanged fingerprint across the settle window
+    // is the only evidence that nothing is still writing to those rows — see
+    // `decidePushHistoryPrune`.
+    historyWatch: v.optional(
+      v.object({ since: v.number(), fingerprint: v.string() }),
+    ),
+  })
+    // Fan-out: every device for a profile, most recently registered
+    // first. The ordering matters because token rotation leaves orphan rows
+    // behind (see above) — read descending and the bounded read can never
+    // return only orphans while the live device sits outside the window.
+    .index("by_profile", ["emotionalProfileId", "lastRegisteredAt"])
+    // Single ownership: who currently holds this token.
+    .index("by_token", ["expoPushToken"]),
+
+  // ===========================================================
   // 11. REFLECTION REPORTS
   // ===========================================================
   //

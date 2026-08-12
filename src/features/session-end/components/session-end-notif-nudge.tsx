@@ -8,7 +8,7 @@ import { useMutation } from "convex/react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
-import { requestPushToken } from "@/src/lib/use-notifications";
+import { requestPushToken } from "@/src/lib/push-token";
 import { useAppStore } from "@/src/store/store";
 import { Presets } from "react-native-pulsar";
 
