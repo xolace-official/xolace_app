@@ -114,6 +114,7 @@ import type * as seed from "../seed.js";
 import type * as semanticProfiles from "../semanticProfiles.js";
 import type * as sessionTurns from "../sessionTurns.js";
 import type * as sessions from "../sessions.js";
+import type * as streamGunzip from "../streamGunzip.js";
 import type * as streamWebhook from "../streamWebhook.js";
 import type * as understanding from "../understanding.js";
 import type * as users from "../users.js";
@@ -233,6 +234,7 @@ declare const fullApi: ApiFromModules<{
   semanticProfiles: typeof semanticProfiles;
   sessionTurns: typeof sessionTurns;
   sessions: typeof sessions;
+  streamGunzip: typeof streamGunzip;
   streamWebhook: typeof streamWebhook;
   understanding: typeof understanding;
   users: typeof users;

@@ -21,9 +21,21 @@ import {
  * interesting".
  */
 export const streamEvents = httpAction(async (ctx, request) => {
-  // The raw text, not the parsed object: the HMAC is over the exact bytes
+  // The raw bytes, not the parsed object: the HMAC is over the exact bytes
   // Stream signed, and re-serializing JSON does not reproduce them.
-  const rawBody = await request.text();
+  //
+  // Stream gzips payloads above a size threshold (`enable_hook_payload_compression`,
+  // on by default for apps created after 2026-05-07) and Convex hands the body
+  // over untouched, so `request.text()` would decode gzip bytes as UTF-8 and
+  // sign garbage. Sniffing the magic bytes rather than `content-encoding`
+  // follows Stream's own reference handler and survives a proxy dropping the
+  // header. Small payloads arrive uncompressed even with the flag on — which is
+  // why this only ever bit production.
+  const body = new Uint8Array(await request.arrayBuffer());
+  const rawBody =
+    body[0] === 0x1f && body[1] === 0x8b
+      ? await ctx.runAction(internal.streamGunzip.gunzip, { body: body.buffer })
+      : new TextDecoder().decode(body);
   const signed = await verifyStreamWebhookSignature(
     rawBody,
     request.headers.get("x-signature"),
