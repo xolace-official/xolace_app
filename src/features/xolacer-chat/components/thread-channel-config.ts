@@ -98,34 +98,26 @@ const ALLOWED_ACTIONS = new Set([
 ]);
 
 /**
- * Gives iOS the portal settle window Stream only grants Android.
+ * Edit used to be wrapped here in a two-frame `requestAnimationFrame` delay on
+ * iOS, because Stream's `usePortalSettledCallback` waits two frames on Android
+ * and **zero** on iOS, and Edit is the one action that focuses the composer.
  *
- * Edit is the one action that focuses the composer input, and Stream gates that
- * focus behind `usePortalSettledCallback` — two frames on Android, **zero on
- * iOS**. With no window the focus lands while `PortalWhileClosingView` is still
- * handing the composer's native view back from the overlay's closing portal
- * host, and Stream's own doc comment predicts the result: "Doing this
- * prematurely will result in the keyboard being immediately closed." Observed
- * here as Edit silently doing nothing, and on iOS 26 as a hard abort inside JSI
- * (`Assertion failed: (isObject()), getObject`) when the focus command reached
- * a shadow node mid-reparent.
+ * The symptom that wrapper was written for — Edit silently doing nothing — was
+ * actually the broken clipboard handler in stream-chat-expo < 9.7.3 poisoning
+ * the overlay's action queue (see docs/bug-log.md, 2026-08-17). With that fixed,
+ * Edit was verified working on iOS 26 without the delay: cold, and immediately
+ * after a Copy tap. Stream's own `useAfterKeyboardOpenCallback` already holds
+ * `setEditingState` until the composer's keyboard event lands, which is the
+ * window that actually matters.
  *
- * Two frames reproduces the Android timing: one to let the portal retarget and
- * React commit, one to let the native hierarchy settle in its final host.
- * Remove once stream-chat-react-native ships a non-zero iOS SETTLE_FRAMES.
+ * If Edit ever regresses on iOS — keyboard flashing shut on open, or a JSI
+ * abort (`Assertion failed: (isObject()), getObject`) from a focus command
+ * reaching a shadow node mid-reparent — that delay is the thing to reinstate.
  */
-function afterPortalSettles(action: () => void) {
-  return () => requestAnimationFrame(() => requestAnimationFrame(action));
-}
-
 export function minimalMessageActions(
   params: MessageActionsParams,
 ): MessageActionType[] {
-  return defaultMessageActions(params)
-    .filter((action) => ALLOWED_ACTIONS.has(action.actionType))
-    .map((action) =>
-      process.env.EXPO_OS === 'ios' && action.actionType === 'editMessage'
-        ? { ...action, action: afterPortalSettles(action.action) }
-        : action,
-    );
+  return defaultMessageActions(params).filter((action) =>
+    ALLOWED_ACTIONS.has(action.actionType),
+  );
 }

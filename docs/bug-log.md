@@ -46,6 +46,8 @@ A throw aborts the loop with the dead copy action still at the head and the queu
 **Fix**
 Bumped `stream-chat-expo` 9.7.1 → **9.7.6** (fixed upstream in **9.7.3**: the shim now prefers `setStringAsync` and reports failure through `onSuccess`/`onFailure` callbacks instead of throwing). Also bumped `stream-chat` `^9.50.1` → `^9.51.0` to match what core 9.7.6 requires — without it bun side-installed a nested second copy of `stream-chat` under `stream-chat-react-native-core/node_modules`.
 
+Also removed `afterPortalSettles` from `thread-channel-config.ts` — a two-frame `requestAnimationFrame` delay we had wrapped around Edit on iOS, written for the "Edit does nothing" symptom that this clipboard bug actually caused. With the real cause fixed, Edit was verified on iOS 26 without it: cold (first menu action after a fresh launch) and immediately after a Copy tap, keyboard opening and staying open both times. Stream's own `useAfterKeyboardOpenCallback` already holds `setEditingState` until the composer's keyboard event lands.
+
 Shipped as an **OTA**. Verified OTA-safe by diffing the 9.7.1 and 9.7.6 tarballs: `stream-chat-react-native-core` has no native code at all, and across the whole range `stream-chat-expo` changes exactly one native file — `ios/shared/StreamVideoThumbnailGenerator.swift` (thumbnail `maxDimension` and delivery mode). No new native module, no podspec change, no JS↔native contract change, and the chat surface is text-only with all pickers disabled.
 
 **Prevention / future reference**
