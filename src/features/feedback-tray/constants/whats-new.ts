@@ -30,6 +30,18 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-08-ota-message-actions",
+    label: "OTA Update",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "text.bubble.fill", android: "chat" },
+        title: "Fix a message you've sent",
+        body: "Press and hold any message in a conversation to copy, edit, or delete it. These were quietly doing nothing before — they work now.",
+      },
+    ],
+  },
+  {
     id: "1.9.0",
     label: "Version 1.9.0",
     date: "August 2026",

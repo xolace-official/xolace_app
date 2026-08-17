@@ -4,6 +4,14 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.9.0] - OTA Update (2026-08-17)
+
+### Fixed
+
+- **Copy, Edit, and Delete work again on a chat message** — all three did nothing, and it was one broken action taking the other two down with it. Stream's clipboard bridge called an `expo-clipboard` function that Expo SDK 57 removed, so "Copy Message" was still offered and threw the moment it ran. Menu actions don't run when tapped: they're queued and flushed once the menu's close animation finishes, in a loop that empties the queue only after every action has run. The failing copy aborted that loop and stayed at the head of the queue, re-throwing ahead of everything queued behind it — so a single Copy tap disabled the whole message menu until the app was restarted. Fixed upstream in `stream-chat-expo` 9.7.3; we're on 9.7.6, with `stream-chat` moved to ^9.51.0 to match (otherwise a second copy of the client library gets installed alongside the first). No native change — verified by diffing the packages, the only native delta across the range is iOS video-thumbnail quality, which this text-only surface never touches.
+
+---
+
 ## [1.9.0] - (2026-08-12)
 
 Requires a native rebuild (per-event notification sounds live on their own Android channels, frozen once created on-device).

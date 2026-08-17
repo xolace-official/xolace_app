@@ -15,6 +15,47 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-08-17 — Chat message actions (Copy, Edit, Delete) all silently do nothing
+
+**Symptom**
+Long-pressing a message in a xolacer chat thread opens the action menu normally, but tapping Copy, Edit, or Delete does nothing at all. No error, no toast, no crash — the menu just closes.
+
+**Where it appeared**
+Xolacer chat thread (`src/features/xolacer-chat/`), `stream-chat-expo@9.7.1` with `expo-clipboard@57`. Both platforms.
+
+**Root cause**
+One broken action poisons the queue for every action after it.
+
+`stream-chat-expo@9.7.1`'s clipboard shim (`src/optionalDependencies/setClipboardString.ts`) calls `expo-clipboard`'s `setString`, which SDK 57 removed — only `setStringAsync` remains. The shim resolves to a function regardless, so `isClipboardAvailable()` returns true, Stream offers **Copy Message**, and the handler throws the moment it runs.
+
+That throw is why Edit and Delete died too. Menu actions do **not** run on press — `MessageActionListItem` calls `closeOverlay()` and pushes the action onto a queue, which the overlay store flushes once the close animation finishes:
+
+```js
+// stream-chat-react-native-core/src/state-store/message-overlay-store.ts
+for (const action of actionQueue) { await action(); }
+actionQueue = [];   // only reached if the loop completes
+```
+
+A throw aborts the loop with the dead copy action still at the head and the queue never cleared, so it re-throws ahead of everything queued after it. **One Copy tap disables the whole message menu for the rest of the session.** The rejection is swallowed by the async subscriber, so nothing surfaces.
+
+**How we diagnosed it**
+1. Confirmed the actions were wired, not missing: `minimalMessageActions` in `thread-channel-config.ts` allows `copyMessage`/`editMessage`/`deleteMessage`, filtered subtractively out of Stream's own `messageActions()`.
+2. Followed `copyMessage` → `handleCopyMessage` → `NativeHandlers.setClipboardString` → the expo shim → `Clipboard.setString`, then checked `node_modules/expo-clipboard/build/Clipboard.d.ts`: `setStringAsync` only. Guaranteed TypeError.
+3. That explained Copy but not the other two — until reading `MessageActionListItem.onActionPress`, which defers via `scheduleActionOnClose`, and then the flush loop that clears its queue only after completing. One failure poisons all subsequent actions.
+
+**Fix**
+Bumped `stream-chat-expo` 9.7.1 → **9.7.6** (fixed upstream in **9.7.3**: the shim now prefers `setStringAsync` and reports failure through `onSuccess`/`onFailure` callbacks instead of throwing). Also bumped `stream-chat` `^9.50.1` → `^9.51.0` to match what core 9.7.6 requires — without it bun side-installed a nested second copy of `stream-chat` under `stream-chat-react-native-core/node_modules`.
+
+Shipped as an **OTA**. Verified OTA-safe by diffing the 9.7.1 and 9.7.6 tarballs: `stream-chat-react-native-core` has no native code at all, and across the whole range `stream-chat-expo` changes exactly one native file — `ios/shared/StreamVideoThumbnailGenerator.swift` (thumbnail `maxDimension` and delivery mode). No new native module, no podspec change, no JS↔native contract change, and the chat surface is text-only with all pickers disabled.
+
+**Prevention / future reference**
+- **An SDK menu action that silently does nothing is rarely about that action.** Stream defers menu actions into a shared queue flushed after the close animation; any throw stops the flush and strands everything behind it. Check whether a *different* action is throwing first.
+- Optional-dependency shims fail open: `isClipboardAvailable()` and friends only test that the handler is non-null, never that the underlying API still exists. After an Expo SDK upgrade, spot-check the shims in `stream-chat-expo/src/optionalDependencies/` against the current module exports.
+- Before assuming a dependency bump needs a new build, diff the tarballs (`npm pack <pkg>@<ver>`) for `ios/`, `android/`, and the podspec. JS-only deltas are OTA-safe.
+- When bumping `stream-chat-expo`, bump `stream-chat` to whatever `stream-chat-react-native-core` declares, or bun quietly installs two copies of the client library.
+
+---
+
 ## 2026-07-30 — Delete account and sign-in both red-screen with `Server Error` (requireAuth throws at 15 subscriptions at once)
 
 **Symptom**
