@@ -6,13 +6,14 @@ import type {
 } from 'stream-chat-expo';
 import { ConversationMessageAuthor } from './message-author';
 import { ChannelErrorIndicator } from './offline-strip';
+import { ConversationReply } from './quoted-reply';
 import { ConversationTypingIndicator } from './typing-indicator';
 
 // Everything that configures the Stream `<Channel>` in thread-messages.tsx.
-// The message surface is text only: no thread replies, no quoted replies, no
-// reactions. Stream provides all of them — the constraint is the deliberate
-// "small surface" posture, not a capability gap. The typing indicator is the
-// one live affordance added since.
+// The message surface is text only: no thread replies, no reactions. Stream
+// provides them — the constraint is the deliberate "small surface" posture,
+// not a capability gap. The typing indicator and quoted replies (via the SDK's
+// swipe gesture) are the live affordances added since.
 
 export const NO_REACTIONS: ReactionData[] = [];
 
@@ -73,10 +74,16 @@ export const COMPONENT_OVERRIDES = {
   NetworkDownIndicator: ChannelErrorIndicator,
   MessageAuthor: ConversationMessageAuthor,
   TypingIndicator: ConversationTypingIndicator,
+  Reply: ConversationReply,
 };
 
 /**
- * Everything except threadReply and quotedReply — v1 has no reply surface.
+ * Everything except threadReply and quotedReply.
+ *
+ * Dropping `quotedReply` here does *not* remove quoted replies: the SDK's
+ * swipe-to-reply gesture (`enableSwipeToReply`, on by default) reaches
+ * `handleQuotedReply` without consulting this list, so the surface exists and
+ * ships. Its preview is identity-corrected by `ConversationReply` below.
  *
  * Subtractive on purpose. Building the array by hand skipped Stream's own
  * gating and offered actions that cannot run: Copy with no clipboard handler
