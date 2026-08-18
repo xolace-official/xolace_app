@@ -23,6 +23,18 @@ The existing responses to this gap have structural failures:
 
 ---
 
+## When Xolace Wins
+
+The mental health queue doesn't move faster — it stops filling as fast.
+
+Everyone else treats this as an access problem: not enough therapists, so speed up the queue — more appointments, faster triage, shorter waitlists. But the queue isn't growing because service is slow. It's growing because almost nobody intervenes *before* something compounds into a diagnosable problem. Most people aren't born with a mental health disorder — it's mostly things that piled up unaddressed. Speed up the queue all you want; new people keep entering at the same rate, so it never actually shrinks. That's the throughput trap every competitor is optimizing inside of.
+
+Xolace sits upstream of that queue, at the moment before something has a name — the same gap described above. Catch it there, before it compounds, and a large share of people never generate a queue entry at all.
+
+So winning isn't measured by how fast the system moves people through. It's measured by how many people never needed the system in the first place. Reducing the queue is a byproduct. Cutting off the supply into the queue is the point.
+
+---
+
 ## Mission
 
 > **Help people understand what they are feeling — so they can get the help they actually need, and connect more honestly with others.**
