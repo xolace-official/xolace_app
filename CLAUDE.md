@@ -4,21 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-#### 1. What Xolace Is
+### What Xolace Is
 
 We're building the AI-native mental health app that takes people from 'I don't even know what I'm feeling' to real support; end to end.
 
-
-#### What It Is NOT
+### What It Is NOT
 
 - Not clinical (no diagnoses, no therapeutic terminology)
 - Not an AI companion/relationship (no parasocial attachment by design)
 
-#### Retention & Engagement
+### Retention & Engagement
 
 Retention mechanics are on the table. Gamification is welcome when it serves the user — streaks, milestones, insight unlocks, progress tracking, and consistency acknowledgment are all legitimate tools. We need to build features that enable proactive mental health care and engagement.
 
-#### The Metaphor
+### The Metaphor
 
 A digital campfire. You sit by the fire alone. The flames help you see what you're carrying. Sometimes you hear quiet voices from others in the darkness — strangers who feel what you feel. The fire is the AI. It illuminates and warms but is not a participant. It's infrastructure.
 
@@ -40,7 +39,6 @@ A digital campfire. You sit by the fire alone. The flames help you see what you'
 Before diagnosing a tricky bug from scratch, **check `docs/bug-log.md`**. It's a running record of non-obvious bugs we've already solved (env mismatches, signing-cert issues, build-variant gotchas, etc.) along with the diagnostic chain that found each one. If the current symptom rhymes with a past entry, follow that entry's "Prevention / future reference" steps first — it's almost always faster than rederiving.
 
 When solving a new bug that took more than ~30 min to diagnose, or whose fix touched something outside the codebase (cloud console, certificates, build infra), add a new entry at the top of `docs/bug-log.md` following the existing six-section shape.
-
 
 ## Architecture
 
@@ -129,15 +127,15 @@ minimum-supported UI may still call. Instead mark, don't delete:
 
 ## Good to know
 
-Schema must always match existing data. In general it safe to:
-Add new tables to the schema.
-Functions should be backwards compatible. Even if your only client is a website, and you deploy it together with your backend, your users might still be running the old version of your website when your backend changes. Therefore you should make your functions backwards compatible until you are OK to break old clients. In general it is safe to:
-Add new functions.
-Add an optional named argument to an existing function.
-Mark an existing named argument as optional.
-Mark an existing named argument as a union of the existing type and a new type.
-Change the behavior of the function in such a way that given the arguments from an old client its behavior will still be acceptable to the old client.
-Scheduled functions should be backwards compatible. When you schedule a function to run in the future, you provide the argument values it will receive. Whenever a function runs, it always runs its currently deployed version. If you change the function between the time it was scheduled and the time it runs, you must ensure the new version will behave acceptably given the old arguments.
+Schema must always match existing data — it's always safe to add new tables.
+
+Functions must stay backwards compatible: a client can be running an old version of the app against a new backend (see [Deferred Deprecations](#deferred-deprecations-store-gap-rule) above). Safe changes:
+- Add new functions.
+- Add an optional named argument to an existing function, or mark an existing one optional.
+- Widen an existing argument's type to a union that still accepts the old type.
+- Change behavior only in ways that stay acceptable to a client calling with the old arguments.
+
+Scheduled functions always run their currently-deployed version, not the version live when they were scheduled — a function change must stay acceptable given the arguments a past schedule call provided.
 
 ### Build Variants
 `app.config.ts` reads `APP_VARIANT` (development/preview/production) to set bundle identifiers:
@@ -146,9 +144,6 @@ Scheduled functions should be backwards compatible. When you schedule a function
 
 ### Path Aliases
 `@/src/*` maps to `./src/*` and `@/src/assets/*` maps to `./assets/*` (tsconfig.json).
-
-## Key Hooks
-
 
 ## Key Conventions
 
@@ -245,7 +240,7 @@ const current = sv.get(); // only inside worklets/callbacks, never during render
 - Default to Tailwind `className` props via Uniwind.
 - Use `StyleSheet.create()` only when absolutely necessary.
 - Inline style objects (e.g. `style={{ color: accentColor }}`) are fine when values are dynamic — React Compiler stabilizes them. No need to hoist to module-level constants or wrap in `useMemo`.
-- **Never hardcode hex colors** — always use CSS variables / `useThemeColor()`.
+- Colors still follow the Theme colors convention above — no hex, even inline.
 
 <!-- convex-ai-start -->
 

@@ -23,6 +23,7 @@ export function useXolacerSetup() {
   const generateUploadUrl = useMutation(api.xolacerChat.generatePhotoUploadUrl);
   const setXolacerPhoto = useMutation(api.xolacerChat.setXolacerPhoto);
   const publish = useMutation(api.xolacerChat.publishProfile);
+  const setXolacerActive = useMutation(api.xolacerChat.setXolacerActive);
 
   const [index, setIndex] = useState(0);
   const [resumed, setResumed] = useState(false);
@@ -33,6 +34,7 @@ export function useXolacerSetup() {
   // Server values seed the fields once; after that the local draft owns them.
   const [edits, setEdits] = useState<Partial<TextDraft>>({});
   const [specialtyEdits, setSpecialtyEdits] = useState<string[] | null>(null);
+  const [activeEdit, setActiveEdit] = useState<boolean | null>(null);
   const draft: SetupDraft = {
     photoUrl: saved?.photoUrl,
     displayName: edits.displayName ?? saved?.displayName ?? '',
@@ -110,6 +112,28 @@ export function useXolacerSetup() {
     [toast],
   );
 
+  /**
+   * Written straight through rather than drafted — the edit form's only
+   * immediate control, same as the Connect card it replaced. The thumb moves
+   * on tap and the write follows: a switch that waits on a round trip reads as
+   * dead and invites a second tap that undoes the first. A failed write drops
+   * the local value, so the server's answer is what shows.
+   */
+  const setActive = useCallback(
+    (next: boolean) => {
+      setActiveEdit(next);
+      return setXolacerActive({ active: next }).catch((error) => {
+        console.error('[xolacer-chat] setXolacerActive failed', error);
+        setActiveEdit(null);
+        toast.show({
+          label: next ? "Couldn't list you" : "Couldn't pause you",
+          description: 'Something went wrong. Try again.',
+        });
+      });
+    },
+    [setXolacerActive, toast],
+  );
+
   const pickPhoto = useCallback(async () => {
     // The picker can reject on its own (permission denied, native failure), and
     // PhotoStep calls this fire-and-forget — so it needs the same catch as the
@@ -147,6 +171,10 @@ export function useXolacerSetup() {
     saveText,
     pickPhoto,
     publish,
+    active: activeEdit ?? saved?.active ?? true,
+    setActive,
+    /** Loaded, and there is no xolacer profile on this account. */
+    missing: saved === null,
     loading: saved === undefined,
   };
 }

@@ -90,8 +90,8 @@
         "react-native-view-shot": "5.1.0",
         "react-native-web": "~0.21.0",
         "react-native-worklets": "0.10.2",
-        "stream-chat": "^9.50.1",
-        "stream-chat-expo": "^9.7.1",
+        "stream-chat": "^9.51.0",
+        "stream-chat-expo": "9.7.6",
         "tailwind-merge": "^3.4.0",
         "tailwind-variants": "^3.2.2",
         "tailwindcss": "^4.2.1",
@@ -929,7 +929,7 @@
 
     "await-lock": ["await-lock@2.2.2", "", {}, "sha512-aDczADvlvTGajTDjcjpJMqRkOF6Qdz3YbPZm/PyW6tKPkx2hlYBzxMhEywM/tU72HrVZjgl5VCdRuMlA7pZ8Gw=="],
 
-    "axios": ["axios@1.18.1", "", { "dependencies": { "follow-redirects": "^1.16.0", "form-data": "^4.0.5", "https-proxy-agent": "^5.0.1", "proxy-from-env": "^2.1.0" } }, "sha512-3nTvFlvpn9Zu/RkHUqtc7/+al4UpRW5az71ap5zccp6e8RAYEzhMTecX8Dz1wWDYrPpUoB1HAQEGEAEvUr7S9g=="],
+    "axios": ["axios@1.19.0", "", { "dependencies": { "follow-redirects": "^1.16.0", "form-data": "^4.0.6", "https-proxy-agent": "^5.0.1", "proxy-from-env": "^2.1.0" } }, "sha512-ht/iuYZXEjFxLH/Hkezgd7m6JKlHHXEUSneaDz8uZe1Gj5QZtCnpyDsckvAiEnT89OEbCLmnte4R4sn7P0EKFw=="],
 
     "babel-plugin-polyfill-corejs2": ["babel-plugin-polyfill-corejs2@0.4.17", "", { "dependencies": { "@babel/compat-data": "^7.28.6", "@babel/helper-define-polyfill-provider": "^0.6.8", "semver": "^6.3.1" }, "peerDependencies": { "@babel/core": "^7.4.0 || ^8.0.0-0 <8.0.0" } }, "sha512-aTyf30K/rqAsNwN76zYrdtx8obu0E4KoUME29B1xj+B3WxgvWkp943vYQ+z8Mv3lw9xHXMHpvSPOBxzAkIa94w=="],
 
@@ -2125,11 +2125,11 @@
 
     "stream-chain": ["stream-chain@2.2.5", "", {}, "sha512-1TJmBx6aSWqZ4tx7aTpBDXK0/e2hhcNSTV8+CbFJtDjbb+I1mZ8lHit0Grw9GRT+6JbIrrDd8esncgBi8aBXGA=="],
 
-    "stream-chat": ["stream-chat@9.50.2", "", { "dependencies": { "@types/jsonwebtoken": "^9.0.8", "@types/ws": "^8.18.1", "axios": "^1.16.1", "base64-js": "^1.5.1", "form-data": "^4.0.5", "isomorphic-ws": "^5.0.0", "jsonwebtoken": "^9.0.3", "linkifyjs": "^4.3.3", "ws": "^8.20.1" } }, "sha512-Gbg5Sq6z7nuHgvmz8KksYkkUUH5aC5NW+XdwhpjlGCFRBM+FrgU2jDPHS94AlFwu9HOc4RphYkOHQoWQxOz1hw=="],
+    "stream-chat": ["stream-chat@9.51.0", "", { "dependencies": { "@types/jsonwebtoken": "^9.0.8", "@types/ws": "^8.18.1", "axios": "^1.19.0", "base64-js": "^1.5.1", "form-data": "^4.0.6", "isomorphic-ws": "^5.0.0", "jsonwebtoken": "^9.0.3", "linkifyjs": "^4.3.3", "ws": "^8.20.1" } }, "sha512-hgD5rG4DUwddWSrzb/iHqDI/qdifkT5Hj0GbaUVo4UhQvHRbbUxLJ40fbKb8ZW1phgyVPGvvcPSr1oC8Cv5Udw=="],
 
-    "stream-chat-expo": ["stream-chat-expo@9.7.1", "", { "dependencies": { "mime": "^4.0.7", "stream-chat-react-native-core": "9.7.1" }, "peerDependencies": { "expo": ">=52.0.0", "expo-audio": "*", "expo-av": "*", "expo-clipboard": "*", "expo-document-picker": "*", "expo-file-system": "*", "expo-haptics": "*", "expo-image-manipulator": "*", "expo-image-picker": "*", "expo-media-library": "*", "expo-sharing": "*", "expo-video": "*", "react-native": ">=0.76.0" }, "optionalPeers": ["expo-audio", "expo-av", "expo-clipboard", "expo-document-picker", "expo-file-system", "expo-haptics", "expo-image-manipulator", "expo-image-picker", "expo-media-library", "expo-sharing", "expo-video"] }, "sha512-18unuwjWOh0iMJmOX5VrZ9EyZNu2NrDdEbVPISbBXf986KLs7hh2ndbfFYTouWyI9m9MLejLv6l24FQ8hUWzeQ=="],
+    "stream-chat-expo": ["stream-chat-expo@9.7.6", "", { "dependencies": { "mime": "^4.0.7", "stream-chat-react-native-core": "9.7.6" }, "peerDependencies": { "expo": ">=52.0.0", "expo-audio": "*", "expo-av": "*", "expo-clipboard": "*", "expo-document-picker": "*", "expo-file-system": "*", "expo-haptics": "*", "expo-image-manipulator": "*", "expo-image-picker": "*", "expo-media-library": "*", "expo-sharing": "*", "expo-video": "*", "react-native": ">=0.76.0" }, "optionalPeers": ["expo-audio", "expo-av", "expo-clipboard", "expo-document-picker", "expo-file-system", "expo-haptics", "expo-image-manipulator", "expo-image-picker", "expo-media-library", "expo-sharing", "expo-video"] }, "sha512-Bp+KaAVlXv/LvDvc5o0dp530MH+7q5k6hnXaX70kamZJgPPlF6S/bRxhivqeRBOai3aWkKLi96fKboRboC8vBQ=="],
 
-    "stream-chat-react-native-core": ["stream-chat-react-native-core@9.7.1", "", { "dependencies": { "@gorhom/bottom-sheet": "5.2.9", "@ungap/structured-clone": "^1.3.0", "dayjs": "1.11.13", "emoji-regex": "^10.4.0", "i18next": "^25.2.1", "intl-pluralrules": "^2.0.1", "linkifyjs": "^4.3.2", "lodash-es": "4.18.1", "mime-types": "^2.1.35", "path": "0.12.7", "react-native-markdown-package": "1.8.2", "react-native-url-polyfill": "^2.0.0", "stream-chat": "^9.50.1", "use-sync-external-store": "^1.5.0" }, "peerDependencies": { "@emoji-mart/data": ">=1.1.0", "@op-engineering/op-sqlite": ">=14.0.0", "@react-native-community/netinfo": ">=11.3.1", "@shopify/flash-list": ">=2.1.0", "emoji-mart": ">=5.4.0", "react-native": ">=0.76.0", "react-native-gesture-handler": ">=2.18.0", "react-native-reanimated": ">=3.16.0", "react-native-safe-area-context": ">=5.4.1", "react-native-svg": ">=15.8.0", "react-native-teleport": ">=0.5.4" }, "optionalPeers": ["@emoji-mart/data", "@op-engineering/op-sqlite", "@shopify/flash-list", "emoji-mart"] }, "sha512-4mcDZkbIPPlzVNk2xVpSIyCZblrMDiROfM/s6V1ieyctnhPReMld32H4Dv64JcG78nS6VZxmXT7QUDIpifg9eA=="],
+    "stream-chat-react-native-core": ["stream-chat-react-native-core@9.7.6", "", { "dependencies": { "@gorhom/bottom-sheet": "5.2.9", "@ungap/structured-clone": "^1.3.0", "dayjs": "1.11.13", "emoji-regex": "^10.4.0", "i18next": "^25.2.1", "intl-pluralrules": "^2.0.1", "linkifyjs": "^4.3.2", "lodash-es": "4.18.1", "mime-types": "^2.1.35", "path": "0.12.7", "react-native-markdown-package": "1.8.2", "react-native-url-polyfill": "^2.0.0", "stream-chat": "^9.51.0", "use-sync-external-store": "^1.5.0" }, "peerDependencies": { "@emoji-mart/data": ">=1.1.0", "@op-engineering/op-sqlite": ">=14.0.0", "@react-native-community/netinfo": ">=11.3.1", "@shopify/flash-list": ">=2.1.0", "emoji-mart": ">=5.4.0", "react-native": ">=0.76.0", "react-native-gesture-handler": ">=2.18.0", "react-native-reanimated": ">=3.16.0", "react-native-safe-area-context": ">=5.4.1", "react-native-svg": ">=15.8.0", "react-native-teleport": ">=0.5.4" }, "optionalPeers": ["@emoji-mart/data", "@op-engineering/op-sqlite", "@shopify/flash-list", "emoji-mart"] }, "sha512-lLg1hx9K1nV6kRBpJUsmcM4arkz9zOhTdoZL4EbGCBE3zBdqL/OG8PVX05q9Q2E4w6DmYtLzdWGFuY5tkD85qQ=="],
 
     "stream-json": ["stream-json@1.9.1", "", { "dependencies": { "stream-chain": "^2.2.5" } }, "sha512-uWkjJ+2Nt/LO9Z/JyKZbMusL8Dkh97uUBTv3AJQ74y07lVahLY4eEFsPsE97pxYBwr8nnjMAIch5eqI0gPShyw=="],
 

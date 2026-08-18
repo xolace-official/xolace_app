@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import { useQuery } from 'convex/react';
 import { Skeleton } from 'heroui-native';
 import { api } from '@/convex/_generated/api';
 import { isSpecialty } from '@/convex/lib/specialties';
+import PersonIcon from '@expo/material-symbols/person.xml';
+import BedtimeIcon from '@expo/material-symbols/bedtime.xml';
 import { AppText } from '@/src/components/shared/app-text';
 import { SegmentedControl } from '@/src/components/shared/segmented-control';
 import { cn } from '@/src/lib/utils';
+import { playSoftPress } from '@/src/lib/haptics';
 import { useChatWarmup } from '../use-chat-warmup';
 import { ChatsList } from './chats-list';
 import { XolacerRoster } from './xolacer-roster';
 import { XolacerSetupBanner } from './xolacer-setup-banner';
-import { XolacerStatusCard } from './xolacer-status-card';
 
 type Segment = 'chats' | 'xolacers';
 
@@ -46,6 +49,7 @@ export function ConnectScreen({
   view?: string;
   navToken?: string;
 }) {
+  const router = useRouter();
   const status = useQuery(api.xolacerChat.status);
   const conversations = useQuery(api.xolacerChat.myConversations);
   // A specialty always means the roster; otherwise the segment is whatever the
@@ -98,61 +102,92 @@ export function ConnectScreen({
     );
   }
 
+  // A published xolacer's way to their own profile — the self-preview everyone
+  // else sees, and from there the edit sheet. Before publishing, the setup
+  // banner still owns that job and no button renders.
+  const published =
+    status?.enabled === true && status.isXolacer && status.xolacerProfileComplete;
+  // Paused is a state someone can forget they're in now that the status card
+  // is gone, so the icon itself carries it: a moon instead of a face, on the
+  // one control that leads to the switch.
+  const paused = published && !status.xolacerActive;
+
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="px-4 pb-10 gap-4"
-      showsVerticalScrollIndicator={false}
-    >
-      {loading ? (
-        <View className="gap-3 pt-2">
-          <Skeleton className="h-11 rounded-2xl" />
-          <Skeleton className="h-20 rounded-3xl" />
-          <Skeleton className="h-20 rounded-3xl" />
-          <Skeleton className="h-20 rounded-3xl" />
-        </View>
-      ) : (
-        <>
-          <SegmentedControl
-            value={segment}
-            onValueChange={(value) => setSelected(value as Segment)}
-            className="relative mt-1 rounded-2xl bg-surface-secondary p-1"
-          >
-            <SegmentedControl.Indicator
-              className="top-1 rounded-xl bg-accent"
-              style={styles.borderCurve}
-            />
-            <SegmentedControl.Item value="chats" className="flex-1 items-center py-2.5">
-              <SegmentLabel label="Chats" active={segment === 'chats'} />
-            </SegmentedControl.Item>
-            <SegmentedControl.Item value="xolacers" className="flex-1 items-center py-2.5">
-              <SegmentLabel label="Xolacers" active={segment === 'xolacers'} />
-            </SegmentedControl.Item>
-          </SegmentedControl>
-
-          {status?.enabled &&
-            status.isXolacer &&
-            (status.xolacerProfileComplete ? (
-              <XolacerStatusCard active={status.xolacerActive} />
-            ) : (
-              <XolacerSetupBanner />
-            ))}
-
-          {segment === 'chats' ? (
-            <ChatsList
-              conversations={conversations ?? []}
-              onBrowseXolacers={() => setSelected('xolacers')}
-            />
-          ) : (
-            <XolacerRoster
-              conversations={conversations ?? []}
-              filter={filter}
-              onFilterChange={setFilter}
-            />
-          )}
-        </>
+    <>
+      {published && (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button
+            icon={
+              paused
+                ? process.env.EXPO_OS === 'ios'
+                  ? 'moon.zzz'
+                  : BedtimeIcon
+                : process.env.EXPO_OS === 'ios'
+                  ? 'person.crop.circle'
+                  : PersonIcon
+            }
+            accessibilityLabel={
+              paused ? "Your Xolacer profile — you're paused" : 'Your Xolacer profile'
+            }
+            onPress={() => {
+              playSoftPress();
+              router.push(`/xolacer/${status.myProfileId}`);
+            }}
+          />
+        </Stack.Toolbar>
       )}
-    </ScrollView>
+
+      <ScrollView
+        className="flex-1 bg-background"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="px-4 pb-10 gap-4"
+        showsVerticalScrollIndicator={false}
+      >
+        {loading ? (
+          <View className="gap-3 pt-2">
+            <Skeleton className="h-11 rounded-2xl" />
+            <Skeleton className="h-20 rounded-3xl" />
+            <Skeleton className="h-20 rounded-3xl" />
+            <Skeleton className="h-20 rounded-3xl" />
+          </View>
+        ) : (
+          <>
+            <SegmentedControl
+              value={segment}
+              onValueChange={(value) => setSelected(value as Segment)}
+              className="relative mt-1 rounded-2xl bg-surface-secondary p-1"
+            >
+              <SegmentedControl.Indicator
+                className="top-1 rounded-xl bg-accent"
+                style={styles.borderCurve}
+              />
+              <SegmentedControl.Item value="chats" className="flex-1 items-center py-2.5">
+                <SegmentLabel label="Chats" active={segment === 'chats'} />
+              </SegmentedControl.Item>
+              <SegmentedControl.Item value="xolacers" className="flex-1 items-center py-2.5">
+                <SegmentLabel label="Xolacers" active={segment === 'xolacers'} />
+              </SegmentedControl.Item>
+            </SegmentedControl>
+
+            {status?.enabled && status.isXolacer && !status.xolacerProfileComplete && (
+              <XolacerSetupBanner />
+            )}
+
+            {segment === 'chats' ? (
+              <ChatsList
+                conversations={conversations ?? []}
+                onBrowseXolacers={() => setSelected('xolacers')}
+              />
+            ) : (
+              <XolacerRoster
+                conversations={conversations ?? []}
+                filter={filter}
+                onFilterChange={setFilter}
+              />
+            )}
+          </>
+        )}
+      </ScrollView>
+    </>
   );
 }

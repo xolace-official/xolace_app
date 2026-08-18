@@ -24,6 +24,18 @@ const RATE_OPTIONS = {
   sheetGrabberVisible: true,
 } as const;
 
+/**
+ * Same dismissal feel as the rating sheet, but opened at full height: every
+ * field (photo, name, bio, specialties, listed) is reachable immediately
+ * instead of behind a manual drag, and Cancel/Save live in the native header.
+ */
+const EDIT_PROFILE_OPTIONS = {
+  headerShown: true,
+  presentation: "formSheet" as const,
+  sheetAllowedDetents: [1],
+  sheetCornerRadius: 28,
+};
+
 
 const CHAT_OPTIONS = {
   headerShown: true,
@@ -62,6 +74,7 @@ export default function ProtectedLayout() {
           <Stack.Screen name="chat/[conversationId]" options={CHAT_OPTIONS} />
           <Stack.Screen name="xolacer/[profileId]" />
           <Stack.Screen name="xolacer-setup" />
+          <Stack.Screen name="xolacer-edit" options={EDIT_PROFILE_OPTIONS} />
           <Stack.Screen name="rate/[conversationId]" options={RATE_OPTIONS} />
         </Stack>
       </StreamChatProvider>

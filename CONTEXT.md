@@ -3,6 +3,65 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Today (2026-08-17)
+
+**Today** is the tab: a feed of independent cards for the current UTC day, each
+completable in any order, none blocking another. Not a wizard, not a checklist
+you can fail. It is the second tab, and the renamed idle-menu row is its only
+door from reflect — reflect stays the `/` landing and is untouched by this.
+
+A **day** is a UTC calendar date, the same `YYYY-MM-DD` key `daily_quotes`
+already uses. One clock across the whole feed: the day a mood belongs to, the
+day a quote rotates on, and the day a streak counts are the same day by
+construction, never by coincidence.
+
+Three words for three different self-reports, and they must not be traded for
+one another:
+
+- **Daily Mood** — absolute, no session behind it. Today's Today card.
+- **Shift** — `sessions.postSessionMood` (`lighter/same/heavier/unsure`). A
+  *comparison* against the session just finished, meaningless without it.
+- **Follow-up** — the sheet that surfaces a day or so after a session left
+  something unresolved (`follow_up_cards`). Session-derived, scheduled, and the
+  older owner of the phrase "check-in". Do not call a Today card a check-in.
+
+**Daily Mood is valence, not emotion** — `heavy / low / steady / good / light`,
+ordered, with the emoji as presentation and the word as the accessible name.
+The midpoint is `steady`, meaning *fine*; numbness is `low`, not the middle.
+Conflating "nothing much" with "I feel nothing" is the mistake the naming
+exists to prevent. Emotion *categories* are the classifier's job and live in
+`emotional_metadata.primaryEmotion` — see
+[ADR 0002](./docs/adr/0002-mood-is-valence-not-emotion.md).
+
+**Completion is per-card and per-day, and each card owns a different claim.**
+Mood is complete when a value is set — re-pickable all day, last write wins,
+because a self-report you cannot correct is one people avoid making early. The
+starter prompt is complete **on tap**: it hands reflect a 24h prompt and stops
+caring, deliberately shorter-lived than the 7-day awareness-event prompt it
+borrows the mechanism from. The quote card claims only **`quoteShared`** — a
+destination was picked in the share sheet. The platform gives us no signal that
+anything was actually posted, so the flag is named for the claim it can defend.
+
+**The counter's denominator is what *you* can reach**, never a fixed 3. A card
+gated behind Xolace+, or hidden because its input does not exist yet, leaves
+the denominator rather than sitting permanently incomplete. A total a user
+cannot reach is a guilt mechanic, and this product does not ship those.
+
+**The check-in streak is recorded but not rendered.** Consecutive UTC dates
+with a mood set, broken by any gap — a *date* rule, deliberately not the
+timestamp-based "resets after 48 hours" of `emotional_profiles.currentStreak`,
+which is about to be reworked. There are no stored counters: the day rows are
+the streak, derived on read when a surface finally needs one. Two visible
+streak numbers in one app is a contradiction, so this one stays internal until
+the reflect streak rework decides what a streak means.
+
+**Today owns no gates and no generation rules of its own.** The quote row
+renders whatever `dailyQuotes.getToday` returns for that user — session-derived
+for Xolace+, curated for everyone else — and never re-implements that gate.
+Today does fire `coldStart` on mount, which makes it the second door to quote
+generation; `/quotes` was the only one, and that was a latent oddity, not a
+design.
+
 ## Push devices (2026-08-12)
 
 A **device** is one installation of Xolace, identified by the Expo push token it
