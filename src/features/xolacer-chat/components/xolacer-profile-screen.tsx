@@ -3,6 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import { Button, PressableFeedback, Skeleton, useThemeColor, useToast } from 'heroui-native';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import EditIcon from '@expo/material-symbols/edit.xml';
 import { useMutation, useQuery } from 'convex/react';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
@@ -103,6 +104,22 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
     <View className="flex-1 bg-background">
       <Stack.Screen options={HEADER_OPTIONS} />
 
+
+      {/* Same header slot, mutually exclusive branches: a xolacer is never
+          offered moderation actions against themselves, and a single action
+          doesn't earn an overflow menu. */}
+      {profile.isSelf && (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button
+            icon={process.env.EXPO_OS === 'ios' ? 'pencil' : EditIcon}
+            accessibilityLabel="Edit your profile"
+            onPress={() => {
+              playSoftPress();
+              router.push('/xolacer-edit');
+            }}
+          />
+        </Stack.Toolbar>
+      )}
 
       {!profile.isSelf && (
         <XolacerMenu
