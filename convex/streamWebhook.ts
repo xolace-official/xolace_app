@@ -32,10 +32,21 @@ export const streamEvents = httpAction(async (ctx, request) => {
   // header. Small payloads arrive uncompressed even with the flag on — which is
   // why this only ever bit production.
   const body = new Uint8Array(await request.arrayBuffer());
-  const rawBody =
-    body[0] === 0x1f && body[1] === 0x8b
-      ? await ctx.runAction(internal.streamGunzip.gunzip, { body: body.buffer })
-      : new TextDecoder().decode(body);
+  let rawBody: string;
+  if (body[0] === 0x1f && body[1] === 0x8b) {
+    try {
+      rawBody = await ctx.runAction(internal.streamGunzip.gunzip, {
+        body: body.buffer,
+      });
+    } catch {
+      // Corrupt gzip, or a bomb over the decompression cap. Neither is a real
+      // Stream event and neither gets better on a retry — drop it like any
+      // other uninteresting body rather than inviting the sender to repeat it.
+      return new Response(null, { status: 200 });
+    }
+  } else {
+    rawBody = new TextDecoder().decode(body);
+  }
   const signed = await verifyStreamWebhookSignature(
     rawBody,
     request.headers.get("x-signature"),
