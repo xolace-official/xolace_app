@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Keyboard, ScrollView, StyleSheet, View } from 'react-native';
+import { Keyboard, StyleSheet, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Skeleton, Switch, useThemeColor, useToast } from 'heroui-native';
 import { SymbolView } from 'expo-symbols';
 import CheckIcon from '@expo/material-symbols/check.xml';
@@ -106,13 +107,17 @@ export function XolacerEditScreen() {
       ) : setup.missing ? (
         <Unavailable />
       ) : (
-        <ScrollView
+        <KeyboardAwareScrollView
           className="flex-1 bg-background"
           contentInsetAdjustmentBehavior="automatic"
           contentContainerClassName="px-5 pb-10 gap-2"
           keyboardDismissMode="interactive"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          // Clears the bio's character counter and the line under it, so the
+          // field a xolacer is typing in is never the last thing on screen
+          // with its own feedback hidden behind the keyboard.
+          bottomOffset={140}
         >
           <PhotoStep
             photoUrl={draft.photoUrl}
@@ -135,7 +140,7 @@ export function XolacerEditScreen() {
               Your profile is live — {blocking.missingLabel} before saving.
             </AppText>
           )}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       )}
     </>
   );
