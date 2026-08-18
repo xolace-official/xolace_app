@@ -27,11 +27,13 @@ The existing responses to this gap have structural failures:
 
 The mental health queue doesn't move faster — it stops filling as fast.
 
-Everyone else treats this as an access problem: not enough therapists, so speed up the queue — more appointments, faster triage, shorter waitlists. But the queue isn't growing because service is slow. It's growing because almost nobody intervenes *before* something compounds into a diagnosable problem. Most people aren't born with a mental health disorder — it's mostly things that piled up unaddressed. Speed up the queue all you want; new people keep entering at the same rate, so it never actually shrinks. That's the throughput trap every competitor is optimizing inside of.
+Everyone else treats this as an access problem: not enough therapists, so speed up the queue — more appointments, faster triage, shorter waitlists. Throughput alone doesn't shrink a queue that keeps refilling, and almost nobody is working the inflow side.
 
-Xolace sits upstream of that queue, at the moment before something has a name — the same gap described above. Catch it there, before it compounds, and a large share of people never generate a queue entry at all.
+Our working hypothesis — not an established finding — is that a meaningful share of distress escalates partly because it goes unnamed and unaddressed while it is still small, and that earlier self-understanding can reduce some of that escalation. Mental health conditions are multi-causal (genetic, biological, social, environmental), so this is a bet about one contributing pathway, not a theory of what causes disorders. It needs qualified clinical review and real evidence before we state it as fact — internally or externally.
 
-So winning isn't measured by how fast the system moves people through. It's measured by how many people never needed the system in the first place. Reducing the queue is a byproduct. Cutting off the supply into the queue is the point.
+Xolace sits upstream of that queue, at the moment before something has a name — the same gap described above. The bet is that meeting people there prevents some avoidable escalation.
+
+So winning isn't measured by how fast the system moves people through, and it is emphatically not measured by keeping people out of care. It's measured by two things together: **avoidable escalation prevented**, and **timely access to clinical care preserved** — people who need professional help recognizing it sooner and reaching it faster, with Xolace routing them there rather than substituting for it. A drop in referrals is not a win; a person who needed care and didn't get it is a failure, however good our other numbers look.
 
 ---
 
