@@ -11,6 +11,9 @@ const config = getSentryExpoConfig(__dirname);
 // (dist/browser/*, which pulls in @revenuecat/purchases-js-hybrid-mappings)
 // even on native, where the real native module is always linked. That's
 // ~1MB of dead JS in every native bundle. Redirect it to a tiny stub.
+// Safe unconditionally: this app only ever runs as a dev-client/standalone
+// build (native modules linked), never in Expo Go, which is the one native
+// case that would need the browser fallback.
 const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (
