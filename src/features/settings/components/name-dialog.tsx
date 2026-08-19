@@ -18,6 +18,8 @@ type Props = {
   description: string;
   placeholder: string;
   maxLength: number;
+  /** Label above the input. Defaults to "Name". */
+  fieldLabel?: string;
   validate: (name: string) => Validation;
   currentName?: string;
   autoCapitalize?: 'none' | 'words';
@@ -34,6 +36,7 @@ const NameForm = ({
   description,
   placeholder,
   maxLength,
+  fieldLabel = 'Name',
   validate,
   currentName,
   autoCapitalize = 'none',
@@ -84,7 +87,7 @@ const NameForm = ({
       </View>
 
       <TextField isInvalid={!!displayError} className="mb-5">
-        <Label>Name</Label>
+        <Label>{fieldLabel}</Label>
         <Input
           value={value}
           onChangeText={(t) => { setValue(t); setError(null); }}

@@ -161,6 +161,7 @@ export const AccountScreen = () => {
         title="Username"
         description="What Xolace calls you."
         placeholder="e.g. Wren"
+        fieldLabel="Username"
         maxLength={DISPLAY_NAME_MAX_LENGTH}
         validate={validateDisplayName}
         currentName={displayName}
