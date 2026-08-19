@@ -10,7 +10,9 @@ const PUSH_DETACH_TIMEOUT_MS = 2500;
 
 export const useAccountSettings = () => {
   const preferences = useQuery(api.preferences.get);
+  const profileSummary = useQuery(api.profile.getSummary);
   const updatePreferences = usePreferenceMutation();
+  const updateDisplayName = useMutation(api.profile.updateDisplayName);
   const removeToken = useMutation(api.notifications.removeToken);
   const { signOut } = useClerk();
   const { user } = useUser();
@@ -30,6 +32,15 @@ export const useAccountSettings = () => {
 
   const setSpaceName = async (next: string | null) => {
     await updatePreferences({ spaceName: next });
+  };
+
+  // Read from getSummary, not preferences: it fills in the seeded fallback for
+  // profiles created before displayName existed, so the row and the profile
+  // screen always show the same name.
+  const displayName = profileSummary?.displayName;
+
+  const setDisplayName = async (next: string) => {
+    await updateDisplayName({ displayName: next });
   };
 
   const performLogout = async () => {
@@ -61,6 +72,8 @@ export const useAccountSettings = () => {
     signInMethod,
     spaceName,
     setSpaceName,
+    displayName,
+    setDisplayName,
     performLogout,
   };
 };

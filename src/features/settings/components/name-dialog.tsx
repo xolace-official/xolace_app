@@ -3,7 +3,6 @@ import { View, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { Dialog, TextField, Input, Label, FieldError, Button } from 'heroui-native';
 import { DialogBlurBackdrop } from '@/src/components/dialog-blur-backdrop';
 import { AppText } from '@/src/components/shared/app-text';
-import { SPACE_NAME_MAX_LENGTH, validateSpaceName } from '@/convex/lib/spaceName';
 
 function extractErrorMessage(e: unknown): string {
   if (!(e instanceof Error)) return 'Something went wrong';
@@ -11,28 +10,43 @@ function extractErrorMessage(e: unknown): string {
   return match ? match[1] : e.message;
 }
 
-function clientValidate(name: string): string | null {
-  if (!name.trim()) return null;
-  const result = validateSpaceName(name);
-  return result.ok ? null : result.message;
-}
+type Validation = { ok: true; trimmed: string } | { ok: false; message: string };
 
 type Props = {
   isOpen: boolean;
+  title: string;
+  description: string;
+  placeholder: string;
+  maxLength: number;
+  validate: (name: string) => Validation;
   currentName?: string;
+  autoCapitalize?: 'none' | 'words';
+  /** Omit to hide the "Remove name" affordance — i.e. the name is required. */
+  onClear?: () => Promise<void>;
   onOpenChange: (open: boolean) => void;
   onSave: (name: string) => Promise<void>;
-  onClear: () => Promise<void>;
 };
 
 type FormProps = Omit<Props, 'isOpen'>;
 
-const SpaceNameForm = ({ currentName, onOpenChange, onSave, onClear }: FormProps) => {
+const NameForm = ({
+  title,
+  description,
+  placeholder,
+  maxLength,
+  validate,
+  currentName,
+  autoCapitalize = 'none',
+  onClear,
+  onOpenChange,
+  onSave,
+}: FormProps) => {
   const [value, setValue] = useState(currentName ?? '');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const clientError = value.trim().length > 0 ? clientValidate(value) : null;
+  const validation = value.trim().length > 0 ? validate(value) : null;
+  const clientError = validation && !validation.ok ? validation.message : null;
   const canSave = value.trim().length > 0 && !clientError;
   const displayError = clientError ?? error;
 
@@ -50,6 +64,7 @@ const SpaceNameForm = ({ currentName, onOpenChange, onSave, onClear }: FormProps
   };
 
   const handleClear = async () => {
+    if (!onClear) return;
     setIsSaving(true);
     try {
       await onClear();
@@ -64,10 +79,8 @@ const SpaceNameForm = ({ currentName, onOpenChange, onSave, onClear }: FormProps
   return (
     <Dialog.Content className="mx-auto w-full max-w-sm">
       <View className="mb-4 gap-1">
-        <Dialog.Title>Your space</Dialog.Title>
-        <Dialog.Description>
-          A soft label, just for you.
-        </Dialog.Description>
+        <Dialog.Title>{title}</Dialog.Title>
+        <Dialog.Description>{description}</Dialog.Description>
       </View>
 
       <TextField isInvalid={!!displayError} className="mb-5">
@@ -75,10 +88,10 @@ const SpaceNameForm = ({ currentName, onOpenChange, onSave, onClear }: FormProps
         <Input
           value={value}
           onChangeText={(t) => { setValue(t); setError(null); }}
-          placeholder="e.g. ember, haven, mine"
-          autoCapitalize="none"
+          placeholder={placeholder}
+          autoCapitalize={autoCapitalize}
           autoCorrect={false}
-          maxLength={SPACE_NAME_MAX_LENGTH + 2}
+          maxLength={maxLength + 2}
           returnKeyType="done"
           onSubmitEditing={handleSave}
         />
@@ -86,7 +99,7 @@ const SpaceNameForm = ({ currentName, onOpenChange, onSave, onClear }: FormProps
       </TextField>
 
       <View className="flex-row items-center">
-        {currentName ? (
+        {onClear && currentName ? (
           <Pressable onPress={handleClear} disabled={isSaving} hitSlop={8}>
             <AppText className="text-sm text-foreground/40">
               Remove name
@@ -117,26 +130,13 @@ const SpaceNameForm = ({ currentName, onOpenChange, onSave, onClear }: FormProps
   );
 };
 
-export const SpaceNameDialog = ({
-  isOpen,
-  currentName,
-  onOpenChange,
-  onSave,
-  onClear,
-}: Props) => {
+export const NameDialog = ({ isOpen, ...formProps }: Props) => {
   return (
-    <Dialog isOpen={isOpen} onOpenChange={onOpenChange}>
+    <Dialog isOpen={isOpen} onOpenChange={formProps.onOpenChange}>
       <Dialog.Portal>
         <DialogBlurBackdrop />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          {isOpen && (
-            <SpaceNameForm
-              currentName={currentName}
-              onOpenChange={onOpenChange}
-              onSave={onSave}
-              onClear={onClear}
-            />
-          )}
+          {isOpen && <NameForm {...formProps} />}
         </KeyboardAvoidingView>
       </Dialog.Portal>
     </Dialog>
