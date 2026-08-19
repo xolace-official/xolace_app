@@ -85,17 +85,17 @@ export const AccountScreen = () => {
           </SettingsSection>
         </EaseView>
 
-        {/* ── YOUR NAME ────────────────────────────────────────── */}
+        {/* ── USERNAME ─────────────────────────────────────────── */}
         <EaseView
           initialAnimate={{ opacity: 0, translateY: 16 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", duration: 280, delay: 30, easing: EASE }}
         >
-          <SettingsSection title="Your name">
+          <SettingsSection title="Username">
             <SettingsRow
               variant="value"
               icon={settingIcon(DISPLAY_NAME_ICON)}
-              label="Display name"
+              label="Username"
               value={displayName ?? "—"}
               onPress={() => setDisplayNameOpen(true)}
               isLast
@@ -158,7 +158,7 @@ export const AccountScreen = () => {
 
       <NameDialog
         isOpen={displayNameOpen}
-        title="Display name"
+        title="Username"
         description="What Xolace calls you."
         placeholder="e.g. Wren"
         maxLength={DISPLAY_NAME_MAX_LENGTH}
