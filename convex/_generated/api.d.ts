@@ -76,6 +76,7 @@ import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js
 import type * as jobs_reflectionDistiller from "../jobs/reflectionDistiller.js";
 import type * as lib_aggregates from "../lib/aggregates.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_camperTag from "../lib/camperTag.js";
 import type * as lib_chatNotifications from "../lib/chatNotifications.js";
 import type * as lib_conversationGating from "../lib/conversationGating.js";
 import type * as lib_displayName from "../lib/displayName.js";
@@ -196,6 +197,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/reflectionDistiller": typeof jobs_reflectionDistiller;
   "lib/aggregates": typeof lib_aggregates;
   "lib/auth": typeof lib_auth;
+  "lib/camperTag": typeof lib_camperTag;
   "lib/chatNotifications": typeof lib_chatNotifications;
   "lib/conversationGating": typeof lib_conversationGating;
   "lib/displayName": typeof lib_displayName;

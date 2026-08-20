@@ -72,3 +72,13 @@ export function camperName(tag: string): string {
  * person rather than anything that could correlate one.
  */
 export const GENERIC_CAMPER_NAME = "Camper";
+
+/**
+ * The tag a pair row shows: its stored one, or the legacy fallback it is
+ * displayed under until it heals. Every reader — the name a xolacer sees and
+ * the exclusion list a new draw avoids — goes through here, so a generated
+ * tag can never collide with a legacy name already on screen.
+ */
+export function camperTagOf(row: { _id: string; camperTag?: string }): string {
+  return row.camperTag ?? legacyCamperTag(row._id);
+}

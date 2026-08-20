@@ -13,6 +13,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import {
   camperName,
+  camperTagOf,
   generateCamperTag,
   GENERIC_CAMPER_NAME,
   legacyCamperTag,
@@ -164,7 +165,13 @@ function chatEnabled() {
   return process.env.XOLACER_CHAT_ENABLED === "true";
 }
 
-/** How many of a xolacer's pair rows per status the collision check reads. */
+/**
+ * How many of a xolacer's pair rows per status the collision check reads.
+ * ponytail: a truncated scan can miss a tag and let a duplicate name through.
+ * Open threads are capped at 8, and the busiest xolacer on record holds 3 rows
+ * in any one status, so it does not bind. If closed rows ever approach it,
+ * persist a per-xolacer taken-tag set rather than raising this.
+ */
 const MAX_TAG_SCAN = 200;
 
 /**
@@ -191,7 +198,9 @@ async function takenCamperTags(
       )
       .take(MAX_TAG_SCAN);
     for (const row of rows) {
-      if (row._id !== except && row.camperTag) tags.push(row.camperTag);
+      // Unhealed rows count too: they are displayed under their legacy tag,
+      // so drawing onto one would duplicate a name already in this inbox.
+      if (row._id !== except) tags.push(camperTagOf(row));
     }
   }
   return tags;
@@ -210,7 +219,7 @@ async function takenCamperTags(
  * that predates this change correlatable forever.
  */
 function camperNameOf(conversation: Doc<"xolacer_conversations">) {
-  return camperName(conversation.camperTag ?? legacyCamperTag(conversation._id));
+  return camperName(camperTagOf(conversation));
 }
 
 /** The same name from a mutation, healed onto the row if it was missing. */

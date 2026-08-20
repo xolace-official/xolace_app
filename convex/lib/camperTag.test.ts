@@ -1,5 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { camperName, generateCamperTag, legacyCamperTag } from "./camperTag";
+import {
+  camperName,
+  camperTagOf,
+  generateCamperTag,
+  legacyCamperTag,
+} from "./camperTag";
 
 const SHAPE = /^[A-Z0-9]{4}$/;
 
@@ -46,5 +51,26 @@ describe("legacyCamperTag", () => {
 describe("camperName", () => {
   it("is the word and the tag", () => {
     expect(camperName("4F2A")).toBe("Camper 4F2A");
+  });
+});
+
+describe("camperTagOf", () => {
+  it("prefers the stored tag", () => {
+    expect(camperTagOf({ _id: "kd7abc4f2a", camperTag: "BBBB" })).toBe("BBBB");
+  });
+
+  it("falls back to the legacy tag on an unhealed row", () => {
+    expect(camperTagOf({ _id: "kd7abc4f2a" })).toBe("4F2A");
+  });
+
+  it("keeps a new draw off a legacy row's visible name", () => {
+    // The whole point: an exclusion list built from unhealed rows still
+    // excludes what those rows are displayed as.
+    const rows = [{ _id: "kd7abc4f2a" }, { _id: "kd7abcbbbb", camperTag: "CCCC" }];
+    const taken = rows.map(camperTagOf);
+    expect(taken).toEqual(["4F2A", "CCCC"]);
+    for (let i = 0; i < 200; i++) {
+      expect(taken).not.toContain(generateCamperTag(taken));
+    }
   });
 });
