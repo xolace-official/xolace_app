@@ -242,6 +242,9 @@ describe("meta-narration never reaches mirrorText", () => {
       hasMetaNarration("You keep following his instructions and losing yourself."),
     ).toBe(false);
     expect(
+      hasMetaNarration("You read the instructions twice and still felt stupid."),
+    ).toBe(false);
+    expect(
       hasMetaNarration(
         "That heaviness is sitting right there, but what it's resting on isn't in what you've given me yet.",
       ),

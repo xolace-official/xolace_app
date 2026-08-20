@@ -152,7 +152,12 @@ const META_NARRATION = [
   // False start — the model restarting out loud.
   /^(Wait\b|Let me\b|Actually, )/,
   /\bbanned (construction|phrase|phrasing|word)/i,
-  /\b(the|my|those|these) instructions?\b/i,
+  // "instructions" only counts inside a meta construction -- the model
+  // pointing at its own prompt. A bare "the instructions" belongs to the user
+  // ("you read the instructions twice and still felt stupid").
+  /\bmy instructions?\b/i,
+  /\b(?:following|per|according to|as stated in) the instructions?\b/i,
+  /\bthe instructions? (?:above|below|here|say|says|said|state|require|forbid)\b/i,
 ];
 
 export function hasMetaNarration(mirrorText: string): boolean {
