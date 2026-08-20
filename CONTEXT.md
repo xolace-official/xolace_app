@@ -3,6 +3,27 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## The two Reaches (2026-08-20)
+
+**Reach**, capital R, is the *notification* concept and has been since Phase 2:
+the nudge that goes out to bring someone back, in `warm | direct | quiet`
+variants, recorded as `notification_log.reachUsed`. It is shipped, its values
+are stored, and it keeps the word.
+
+**The reach**, lowercase, is a *mirror* concept from confidence-aware mirroring
+([#170](https://github.com/xolace-official/xolace_app/issues/170)): on a session
+the mirror cannot read clearly, it names only what is genuinely there and names
+the gap explicitly. The two share nothing — different trigger, different
+surface, different lifecycle — but they hang off the same
+`emotionalProfileId` in the same feature area, so a search for `reachUsed`
+lands in the notification log and looks like it is about the mirror.
+
+**Prose may say "reach" for the mirror; code may not.** The mirror's persisted
+per-session flag is `gapNamed`, never `reach*`. Renaming the notification
+concept was rejected — a migration to fix a documentation problem — and so was
+leaving the collision undocumented. The mirror's field was still unbuilt when
+this was decided, which is the only reason the fix was free.
+
 ## Camper pseudonym (2026-08-19)
 
 A **xolacer** volunteering is a named party — `displayName`, consistent and
