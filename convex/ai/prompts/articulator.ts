@@ -23,7 +23,6 @@ interface ArticulatorInput {
   // Refinement context (for clarification turns)
   existingMirror?: string;
   userFeedback?: string;
-  additionalInput?: string;
   // 3am Mode: session started during the night window (10pm to 4am)
   sessionMode?: "day" | "night";
   // User's named space (if set): personalizes identity responses
@@ -52,7 +51,7 @@ interface ArticulatorInput {
  *   - `recentMirrors`: array of recent mirror texts to list (used to avoid reusing metaphors/phrasing).
  *   - `inputDuration` (optional): writing duration in ms used to generate behavioral notes.
  *   - `freezeOccurred` (optional): whether a significant pause/hesitation was detected.
- *   - `existingMirror`, `userFeedback`, `additionalInput` (optional): used to build refinement context when revising a previous mirror.
+ *   - `existingMirror`, `userFeedback` (optional): used to build refinement context when revising a previous mirror. The added words themselves arrive in `rawInput`, turn-marked (see accumulatedInput.ts).
  * @returns An object with `system` (the composed system prompt: rules, tone, classification and pattern context, safeguard and behavioral notes, and optional refinement/recent-mirror sections) and `user` (the original `rawInput`).
  */
 export function buildArticulatorPrompt(
@@ -71,7 +70,6 @@ export function buildArticulatorPrompt(
     freezeOccurred,
     existingMirror,
     userFeedback,
-    additionalInput,
     sessionMode,
     spaceName,
     semanticProfile,
@@ -130,7 +128,7 @@ ${sessionMode === "night" ? getLateNightAddendum() : ""}
 ## Pattern Context (this is the emotional terrain they tend to carry, ${isFaint ? "let it inform your ear only; it may not supply anything tonight's words did not" : "let it actively shape what you notice and how precisely you name it"}; never reference past sessions explicitly)
 ${patternSummary}
 ${buildMemoryContext(semanticProfile, episodicRecall, isFaint)}
-${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput, claimStrength === "holding") : ""}${useAudioTags ? `\n${AUDIO_TAG_INSTRUCTIONS}` : ""}`;
+${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, claimStrength === "holding") : ""}${useAudioTags ? `\n${AUDIO_TAG_INSTRUCTIONS}` : ""}`;
 
   const user = rawInput;
 
@@ -396,20 +394,17 @@ function getBehaviorNotes(
  *
  * When `userFeedback` is "not_quite", instructs the model to try a different angle/metaphor/emotional read.
  * When `userFeedback` is "say_more", instructs the model to incorporate additional context.
- * If `additionalInput` is provided, it is appended as quoted extra user input.
  *
  * @param existingMirror - The previous mirror text to include in the refinement section
  * @param userFeedback - Optional feedback flag affecting refinement instructions; supported values: `"not_quite"` or `"say_more"`
- * @param additionalInput - Optional additional user-provided text to append to the refinement context
  * @param isHolding - Holding path: subtraction 5 (§4.4) replaces the standard
  *   refinement pushes, which otherwise read as permission to invent on a turn
  *   that added no signal.
- * @returns A formatted refinement context string containing the previous mirror and any refinement instructions or additional input
+ * @returns A formatted refinement context string containing the previous mirror and any refinement instructions
  */
 function buildRefinementContext(
   existingMirror: string,
   userFeedback?: string,
-  additionalInput?: string,
   isHolding?: boolean
 ): string {
   let context = `\n\n## Refinement\nYour previous mirror was: "${existingMirror}"`;
@@ -422,10 +417,6 @@ function buildRefinementContext(
     context += isHolding
       ? `\nThe user added more words. They did not add more signal. Use anything genuinely new; do not treat the added length as permission to claim more than before.`
       : `\nThe user wanted to say more: they had additional context to share. Incorporate it.`;
-  }
-
-  if (additionalInput) {
-    context += `\nAdditional input from the user: "${additionalInput}"`;
   }
 
   return context;

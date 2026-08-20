@@ -762,6 +762,12 @@ export default defineSchema({
     // so EPISODIC_CONNECT_FLOOR stays retroactively tunable without a backfill.
     episodicTopScore: v.optional(v.number()),
 
+    // primaryEmotionConfidence from the FIRST classification of this session.
+    // Stamped by the refinement mutation only when absent, so its presence is
+    // itself the record that this session was refined (§5.3) — the row holds
+    // the final read, and this is the only trace of where that read started.
+    initialConfidence: v.optional(v.number()),
+
     // Phase 4, Loop #3 — memory relevance feedback. The running salience
     // weight (0.2–1) for THIS session AS an episodic memory, and the source
     // of truth mirrored into the RAG vector's native `importance`. When a

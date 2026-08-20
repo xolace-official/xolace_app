@@ -8,8 +8,19 @@ import {
   extractTextFromResponse,
   ARTICULATOR_MODEL,
   ARTICULATOR_VERSION,
+  CLASSIFIER_VERSION,
 } from "./providers/anthropic";
+import { classifierCache } from "./cached";
 import { buildArticulatorPrompt } from "./prompts/articulator";
+import { buildClassifierPrompt } from "./prompts/classifier";
+import {
+  buildAccumulatedInput,
+  type RefinementTurn,
+} from "./prompts/accumulatedInput";
+import {
+  searchEpisodicMemory,
+  type EpisodicSearch,
+} from "./helpers/episodicSearch";
 import { applyAudioFence } from "./prompts/mirrorAudioTags";
 import { resolveMirrorTone } from "./mirrorPlan";
 import { scheduleMirrorAudio } from "./tts";
@@ -17,6 +28,7 @@ import { routeClaimStrength } from "./routing";
 import { MAX_TURNS } from "../sessionTurns";
 import {
   buildArticulatorPatternSummary,
+  buildPatternSummary,
   collectRecentMirrors,
 } from "./helpers/patternSummary";
 import { posthog } from "../posthog";
@@ -27,8 +39,19 @@ const FALLBACK_MIRROR =
 /**
  * Handle clarification for refinement turns ("Not quite" / "Say more").
  *
- * Skips moderation + classification — reuses the existing classification
- * from the original session. Only re-articulates the mirror with new context.
+ * A refinement builds on what came before (docs/confidence-aware-mirroring.md
+ * §5): classifier and articulator both read the original input plus every
+ * turn's added words, turn-marked; episodic memory is searched again against
+ * that accumulated input; and the Understanding row is replaced with the
+ * final read.
+ *
+ * KNOWN GAP: moderation and safeguard stay off this path — they ran on the
+ * initial pass only — so text added on a refinement turn now drives the stored
+ * classification while `riskFlag` / `safeguardLevel` keep the verdict derived
+ * from the original words. That is why the metadata write goes through a
+ * mutation that cannot express a safety field rather than through `store`:
+ * clarify has no safety verdict to write. Re-running safeguard on the
+ * accumulated input (and the escalation path that implies) is its own ticket.
  */
 export const handleClarification = internalAction({
   args: {
@@ -66,6 +89,7 @@ export const handleClarification = internalAction({
 
       // 2. Load existing emotional metadata for this session
       type MetadataType = {
+        classifierVersion: string;
         primaryEmotion: string;
         primaryEmotionConfidence: number;
         granularLabel?: string;
@@ -75,6 +99,7 @@ export const handleClarification = internalAction({
         thematicTags: string[];
         userLanguageTags: string[];
         temporalContext?: "past_focused" | "present_focused" | "future_focused";
+        episodicMatchKeys?: string[];
         episodicTopScore?: number;
       } | null;
 
@@ -92,19 +117,94 @@ export const handleClarification = internalAction({
         return;
       }
 
-      // 3. Find the current turn's feedback type
-      const currentTurn = context.turns.find(
-        (t: { turnNumber?: number }) => t.turnNumber === args.turnNumber,
-      ) as { userFeedback?: string } | undefined;
+      // 3. This turn's feedback, and the turn-marked accumulated input both
+      // prompts read (§5.1). The turn rows carry every earlier addition; the
+      // action's own argument is the authority for this turn, since the row
+      // may predate the client that started writing `userInput`.
+      const turns = (context.turns as unknown as RefinementTurn[]).map((t) =>
+        t.turnNumber === args.turnNumber && !t.userInput
+          ? { ...t, userInput: args.additionalRawText }
+          : t,
+      );
+      const currentTurn = turns.find((t) => t.turnNumber === args.turnNumber);
+      const userFeedback = currentTurn?.userFeedback;
+      const addedText = (currentTurn?.userInput ?? "").trim();
 
-      const userFeedback = currentTurn?.userFeedback as string | undefined;
+      const accumulatedInput = buildAccumulatedInput(
+        (session.rawInput as string | undefined) ?? "",
+        turns,
+      );
 
-      // 4. Build articulator prompt with refinement context
       // Real fence: same downgrade guard as the initial mirror (process.ts).
       const mirrorTone = resolveMirrorTone(
         context.preferences?.mirrorTone,
         context.isPremium,
       );
+
+      // 4. Re-classify against the accumulated input, and re-search episodic
+      // memory (§5.2) — the detail that arrives on turn 2 may be exactly what
+      // makes Tuesday relevant, and a frozen turn-1 "didn't connect" would
+      // leave the reach permanently unearned. This does not re-open the reach:
+      // one reach only still holds, via gapNamedThisSession below.
+      //
+      // Zero added text skips the classifier entirely: identical input, same
+      // answer, and re-deriving what the Understanding already knows is not
+      // licensed. `userFeedback` deliberately never reaches the classifier —
+      // telling a precise analytical instrument that its last answer was
+      // rejected invites it off a correct classification to please the user.
+      const classifierPrompt =
+        addedText.length > 0
+          ? buildClassifierPrompt(
+              accumulatedInput,
+              buildPatternSummary({
+                profile: context.profile,
+                recentMetadata: context.recentMetadata,
+                recentSessions: context.recentSessions,
+                isFirstSession: context.isFirstSession,
+                mirrorTone,
+              }),
+              context.isFirstSession,
+              session.entryType ?? "open_prompt",
+              session.timeOfDay as string | undefined,
+            )
+          : null;
+
+      const [reclassified, episodic] = await Promise.all([
+        classifierPrompt
+          ? classifierCache
+              .fetch(ctx, {
+                systemPrompt: classifierPrompt.system,
+                userPrompt: classifierPrompt.user,
+              })
+              // A classifier blip must not cost a mirror that already exists —
+              // fall back to the classification the session already has.
+              .catch(() => null)
+          : Promise.resolve(null),
+        context.isFirstSession
+          ? Promise.resolve({ matches: [] } as EpisodicSearch)
+          : searchEpisodicMemory(
+              ctx,
+              session.emotionalProfileId,
+              args.sessionId,
+              accumulatedInput,
+            ),
+      ]);
+
+      const classification = reclassified ?? {
+        primaryEmotion: metadata.primaryEmotion,
+        primaryEmotionConfidence: metadata.primaryEmotionConfidence,
+        granularLabel: metadata.granularLabel,
+        secondaryEmotion: metadata.secondaryEmotion,
+        intensity: metadata.intensity,
+        specificity: metadata.specificity,
+        thematicTags: metadata.thematicTags,
+        userLanguageTags: metadata.userLanguageTags,
+        temporalContext: metadata.temporalContext,
+        requiresFollowUp: false,
+        followUpReason: undefined,
+      };
+
+      // 5. Build the articulator prompt with refinement context.
       // Clarify only re-articulates, so it uses the slim articulator variant.
       const patternSummary = buildArticulatorPatternSummary({
         recentMetadata: context.recentMetadata,
@@ -118,10 +218,17 @@ export const handleClarification = internalAction({
       // are re-evaluated here rather than assumed: relying on the client not
       // rendering "Say more" on an escalation screen would prop up a
       // server-side safety rule with a client-side fact.
+      // A search that never ran says nothing about whether memory connected,
+      // so the score the mirror was already built on stands — otherwise an
+      // embedding outage would silently turn a connected session into a reach.
+      const episodicTopScore = episodic.failed
+        ? metadata.episodicTopScore
+        : episodic.topScore;
+
       const claimStrength = routeClaimStrength({
-        confidence: metadata.primaryEmotionConfidence,
-        specificity: metadata.specificity,
-        episodicTopScore: metadata.episodicTopScore,
+        confidence: classification.primaryEmotionConfidence,
+        specificity: classification.specificity,
+        episodicTopScore,
         entryType: session.entryType ?? "open_prompt",
         isEscalation: session.escalationTriggered === true,
         profileReachedToday: context.profileReachedToday,
@@ -131,19 +238,11 @@ export const handleClarification = internalAction({
       });
 
       const articulatorPrompt = buildArticulatorPrompt({
-        rawInput: args.additionalRawText ?? "",
+        rawInput: accumulatedInput,
         classification: {
-          primaryEmotion: metadata.primaryEmotion,
-          primaryEmotionConfidence: metadata.primaryEmotionConfidence,
-          granularLabel: metadata.granularLabel,
-          secondaryEmotion: metadata.secondaryEmotion,
-          intensity: metadata.intensity,
-          specificity: metadata.specificity,
-          thematicTags: metadata.thematicTags,
-          userLanguageTags: metadata.userLanguageTags,
-          temporalContext: metadata.temporalContext,
-          // Clarify only re-articulates; the follow-up flag was finalized on
-          // the initial pass and is not an articulation input.
+          ...classification,
+          // The follow-up flag is a scheduling decision, not an articulation
+          // input.
           requiresFollowUp: false,
         },
         patternSummary,
@@ -156,11 +255,11 @@ export const handleClarification = internalAction({
         freezeOccurred: session.freezeOccurred,
         existingMirror: session.mirrorText,
         userFeedback,
-        additionalInput: args.additionalRawText,
         spaceName: context.preferences?.spaceName,
         // Longitudinal Understanding: pass the semantic profile through so the
         // refinement is grounded in who this person is, matching process.ts.
         semanticProfile: context.semanticProfile,
+        episodicRecall: episodic.matches.map((m) => m.text),
         claimStrength,
         useAudioTags: context.isPremium,
       });
@@ -209,13 +308,54 @@ export const handleClarification = internalAction({
         mirrorModelVersion: ARTICULATOR_VERSION,
         toneUsed: mirrorTone,
         ...(claimStrength === "reaching" ? { gapNamed: true } : {}),
+        // Raise-only (§5.3): a re-classification may turn a follow-up on,
+        // never off — a session that already scheduled a workflow must not be
+        // left holding it against a disagreeing flag.
+        ...(reclassified?.requiresFollowUp ? { requiresFollowUp: true } : {}),
       });
+
+      // 7.1. Replace the Understanding with the final read of this moment.
+      // Every downstream consumer runs after the session ends and wants the
+      // last word, not an audit trail.
+      await ctx.runMutation(internal.emotionalMetadata.replaceForRefinement, {
+        sessionId: args.sessionId,
+        classifierVersion: reclassified
+          ? CLASSIFIER_VERSION
+          : metadata.classifierVersion,
+        primaryEmotion: classification.primaryEmotion,
+        primaryEmotionConfidence: classification.primaryEmotionConfidence,
+        granularLabel: classification.granularLabel,
+        secondaryEmotion: classification.secondaryEmotion,
+        intensity: classification.intensity,
+        specificity: classification.specificity,
+        thematicTags: classification.thematicTags,
+        userLanguageTags: classification.userLanguageTags,
+        temporalContext: classification.temporalContext,
+        // Both episodic fields are replaced together, and only when the search
+        // actually ran: an outage returning no matches must not wipe the
+        // provenance Loop #3 reads at confirmation. Inside that, topScore is
+        // spread rather than `?? 0` — a zero would read as a genuine (terrible)
+        // score at calibration.
+        ...(episodic.failed
+          ? {}
+          : {
+              episodicMatchKeys: episodic.matches.map((m) => m.key),
+              ...(episodic.topScore !== undefined
+                ? { episodicTopScore: episodic.topScore }
+                : {}),
+            }),
+        ...(reclassified?.followUpReason
+          ? { followUpReason: reclassified.followUpReason }
+          : {}),
+      });
+
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,
         event: "clarify_delivered",
         properties: {
           turnNumber: args.turnNumber,
-          hadAdditionalText: !!args.additionalRawText,
+          hadAdditionalText: addedText.length > 0,
+          reclassified: reclassified !== null,
           claimStrength,
           usedFallback: revisedMirrorText === FALLBACK_MIRROR,
           userFeedback: userFeedback ?? "not_quite",
