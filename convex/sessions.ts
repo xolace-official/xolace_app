@@ -9,6 +9,7 @@ import { internal } from "./_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
+import { deriveClaimStrength } from "./lib/claimStrength";
 import {
   entryTypeValidator,
   confirmationStateValidator,
@@ -612,6 +613,10 @@ export const getActive = query({
 
 /**
  * Get a single session by ID (with ownership check).
+ *
+ * `claimStrength` is derived here rather than read: it is never persisted
+ * (docs/confidence-aware-mirroring.md §6). The mirror action row needs it to
+ * decide whether "Say more" carries the "Recommended" pill.
  */
 export const getById = query({
   args: {
@@ -619,7 +624,7 @@ export const getById = query({
   },
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
-    return session;
+    return { ...session, claimStrength: await deriveClaimStrength(ctx, session) };
   },
 });
 

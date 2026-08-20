@@ -58,7 +58,7 @@ export interface SessionContext {
  * Falls back to UTC when no timezone was captured (it is only stored once
  * notifications are configured) or the stored string is unusable.
  */
-function localDay(ms: number, timeZone?: string): string {
+export function localDay(ms: number, timeZone?: string): string {
   try {
     return new Intl.DateTimeFormat(
       "en-CA",

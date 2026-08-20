@@ -432,6 +432,7 @@ export function useReflectionMachine() {
     mirrorText,
     escalationResources: session?.escalationResources ?? null,
     toneUsed: session?.toneUsed ?? null,
+    claimStrength: session?.claimStrength ?? null,
     isRecording,
     submitReflection,
     submitScaffold,
