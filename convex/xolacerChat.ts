@@ -12,6 +12,12 @@ import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import {
+  camperName,
+  generateCamperTag,
+  GENERIC_CAMPER_NAME,
+  legacyCamperTag,
+} from "./lib/camperTag";
+import {
   type ChatNotificationType,
   chatNotificationsAllowed,
   conversationIdFromChannelId,
@@ -56,6 +62,9 @@ const statusValidator = v.union(
   v.literal("resting"),
   v.literal("closed"),
 );
+/** Every lifecycle status, for scans that must cover all of them. */
+const STATUSES = ["requested", "open", "resting", "closed"] as const;
+
 const closedReasonValidator = v.optional(
   v.union(
     v.literal("declined"),
@@ -155,13 +164,67 @@ function chatEnabled() {
   return process.env.XOLACER_CHAT_ENABLED === "true";
 }
 
+/** How many of a xolacer's pair rows per status the collision check reads. */
+const MAX_TAG_SCAN = 200;
+
 /**
- * Xolacer-side counterparts are anonymous users — no public identity exists
- * for them by design. A stable pseudonym derived from the profile id keeps
- * multiple conversations distinguishable without leaking anything.
+ * Camper tags this xolacer's other pairs already hold.
+ *
+ * One take per status rather than a single prefix take over the whole
+ * xolacer: `by_xolacer_and_status` orders by status, and "closed" sorts first,
+ * so one capped scan of the prefix would fill with old closed rows and miss
+ * the live ones sitting side by side in the inbox — the only place a
+ * collision is ever visible. Closed rows are read too, since a closed pair
+ * keeps its tag and brings it back if it ever reopens.
  */
-function pseudonym(profileId: string) {
-  return `Camper ${profileId.slice(-4).toUpperCase()}`;
+async function takenCamperTags(
+  ctx: QueryCtx,
+  xolacerProfileId: Id<"emotional_profiles">,
+  except?: Id<"xolacer_conversations">,
+) {
+  const tags: string[] = [];
+  for (const status of STATUSES) {
+    const rows = await ctx.db
+      .query("xolacer_conversations")
+      .withIndex("by_xolacer_and_status", (q) =>
+        q.eq("xolacerProfileId", xolacerProfileId).eq("status", status),
+      )
+      .take(MAX_TAG_SCAN);
+    for (const row of rows) {
+      if (row._id !== except && row.camperTag) tags.push(row.camperTag);
+    }
+  }
+  return tags;
+}
+
+/**
+ * What this pair's xolacer calls this pair's seeker. Read-only: a query cannot
+ * write, so a row predating the field falls back to a value derived from its
+ * own id — per-pair, so it closes the correlation gap the same way a drawn tag
+ * does, and stable, so this and `ensureCamperName` never disagree about the
+ * name while a row waits to heal.
+ *
+ * Pre-existing rows therefore rename once, when this ships: their old name
+ * came off the *seeker's* id, this one off the *pair's*. That rename is the
+ * point — leaving those rows on the old value would leave every conversation
+ * that predates this change correlatable forever.
+ */
+function camperNameOf(conversation: Doc<"xolacer_conversations">) {
+  return camperName(conversation.camperTag ?? legacyCamperTag(conversation._id));
+}
+
+/** The same name from a mutation, healed onto the row if it was missing. */
+async function ensureCamperName(
+  ctx: MutationCtx,
+  conversation: Doc<"xolacer_conversations">,
+) {
+  if (conversation.camperTag) return camperName(conversation.camperTag);
+  const tag = generateCamperTag(
+    await takenCamperTags(ctx, conversation.xolacerProfileId, conversation._id),
+    legacyCamperTag(conversation._id),
+  );
+  await ctx.db.patch(conversation._id, { camperTag: tag });
+  return camperName(tag);
 }
 
 /**
@@ -762,7 +825,7 @@ export const myConversations = query({
         requestedAt: conversation.requestedAt,
         xolacerProfileId: conversation.xolacerProfileId,
         counterpartProfileId: conversation.userProfileId,
-        counterpartName: pseudonym(conversation.userProfileId),
+        counterpartName: camperNameOf(conversation),
         counterpartPhotoUrl: await catalogAvatar(ctx, conversation.userProfileId),
         counterpartPresent: counterpartPresent(
           conversation,
@@ -869,7 +932,7 @@ export const getConversation = query({
       counterpartName:
         role === "user"
           ? (xolacer?.displayName ?? "Xolacer")
-          : pseudonym(conversation.userProfileId),
+          : camperNameOf(conversation),
       counterpartPhotoUrl:
         role === "user"
           ? xolacer?.photoUrl
@@ -1048,7 +1111,7 @@ export const requestConversation = mutation({
         "chat_request",
         existing._id,
         args.xolacerProfileId,
-        pseudonym(profile._id),
+        await ensureCamperName(ctx, existing),
       );
       return existing._id;
     }
@@ -1056,12 +1119,18 @@ export const requestConversation = mutation({
     await requireOpenSlot(ctx, "seeker", profile._id);
     await requirePendingRequestSlot(ctx, profile._id);
     const origin = await deriveOrigin(ctx, profile._id, xolacer);
+    // Drawn once, here, and never again for this pair: this is the name this
+    // one xolacer knows this one seeker by, for as long as the row lives.
+    const camperTag = generateCamperTag(
+      await takenCamperTags(ctx, args.xolacerProfileId),
+    );
     const conversationId = await ctx.db.insert("xolacer_conversations", {
       userProfileId: profile._id,
       xolacerProfileId: args.xolacerProfileId,
       status: "requested",
       requestedAt: Date.now(),
       origin,
+      camperTag,
     });
     await captureRequestSent(ctx, profile._id, origin);
     await notifyConversation(
@@ -1069,7 +1138,7 @@ export const requestConversation = mutation({
       "chat_request",
       conversationId,
       args.xolacerProfileId,
-      pseudonym(profile._id),
+      camperName(camperTag),
     );
     return conversationId;
   },
@@ -1214,12 +1283,12 @@ export const acceptRequest = action({
     await upsertStreamUsers([
       {
         id: info.xolacerProfileId,
-        name: pseudonym(info.xolacerProfileId),
+        name: GENERIC_CAMPER_NAME,
         image: info.xolacerImage,
       },
       {
         id: info.userProfileId,
-        name: pseudonym(info.userProfileId),
+        name: GENERIC_CAMPER_NAME,
         image: info.userImage,
       },
     ]);
@@ -1486,7 +1555,7 @@ export const notifyNewMessage = internalMutation({
       recipientProfileId,
       senderIsXolacer
         ? (xolacer?.displayName ?? "Xolacer")
-        : pseudonym(conversation.userProfileId),
+        : await ensureCamperName(ctx, conversation),
     );
     return null;
   },
@@ -1592,7 +1661,7 @@ export const getStreamIdentity = internalQuery({
     // seeker. See `upsertStreamUsers` — nothing reads it for display.
     return {
       userId: profile._id,
-      name: pseudonym(profile._id),
+      name: GENERIC_CAMPER_NAME,
       image: await catalogAvatar(ctx, profile._id),
     };
   },

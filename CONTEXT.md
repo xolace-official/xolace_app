@@ -3,6 +3,24 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Camper pseudonym (2026-08-19)
+
+A **xolacer** volunteering is a named party — `displayName`, consistent and
+recognizable across every seeker they talk to. That's deliberate: a returning
+seeker should be able to recognize the same volunteer, and there's no
+correlation risk in a xolacer's own identity being stable, since it's public
+by choice.
+
+A **seeker** is the anonymous party in a pairing, shown to the xolacer as
+`Camper XXXX`. Those four characters name a *pairing*, not a *seeker*: they
+are drawn at random when the pair's `xolacer_conversations` row is created and
+stored on it (`convex/lib/camperTag.ts`), so the name is stable only within
+that one xolacer's relationship to that one seeker. The earlier version sliced
+them off the seeker's own `emotional_profiles` id, which made every xolacer
+who ever paired with them see the identical name — two xolacers comparing
+notes could infer they shared a seeker. See
+[ADR 0003](docs/adr/0003-random-per-pair-camper-tag.md).
+
 ## Today (2026-08-17)
 
 **Today** is the tab: a feed of independent cards for the current UTC day, each

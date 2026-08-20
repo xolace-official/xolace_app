@@ -1694,6 +1694,15 @@ export default defineSchema({
       ),
     ),
 
+    // What this xolacer calls this seeker: the 4 characters after "Camper".
+    // Drawn at random when the pair is first created, and stable for the row's
+    // whole life, so the same xolacer keeps recognising a returning seeker
+    // while another xolacer pairing with them sees an unrelated name. Absent
+    // on rows written before the field — those read off their own row id
+    // instead, and heal onto this field the next time a mutation touches them
+    // (see lib/camperTag).
+    camperTag: v.optional(v.string()),
+
     // Stream channel id (not cid). Set on accept; absent while requested.
     streamChannelId: v.optional(v.string()),
 

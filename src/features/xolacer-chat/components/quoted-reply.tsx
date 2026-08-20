@@ -22,8 +22,8 @@ const quotedMessageSelector = (state: MessageComposerState) => ({
  * Reply is reachable even though `minimalMessageActions` drops `quotedReply`:
  * the SDK's swipe-to-reply gesture (`enableSwipeToReply`, on by default) is a
  * second entry point that never passes through the action list. So the seeker
- * swiping on their xolacer's message got the pseudonym Stream holds for
- * everyone — "Reply to Camper KV7C" instead of the name in the header two
+ * swiping on their xolacer's message got the generic placeholder Stream holds
+ * for everyone — "Reply to Camper" instead of the name in the header two
  * inches above it.
  *
  * The quoted message is resolved exactly as the SDK's own `Reply` does — prop
