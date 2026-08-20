@@ -267,20 +267,30 @@ export function useReflectionMachine() {
     if (turnsCount >= MAX_TURNS) {
       dispatch({ type: 'SESSION_RESUMED', screen: 'gave-up' });
     } else {
-      posthog.capture('mirror_not_quite', { turns_count: turnsCount });
+      // sessionId joins the press to its clarify_delivered (§9.4); the
+      // claim strength is what the mirror on screen was carrying.
+      posthog.capture('mirror_not_quite', {
+        turns_count: turnsCount,
+        sessionId,
+        claimStrength: session?.claimStrength ?? null,
+      });
       dispatch({ type: 'NOT_QUITE' });
     }
-  }, [state.screen, turnsCount, posthog]);
+  }, [state.screen, turnsCount, posthog, sessionId, session?.claimStrength]);
 
   const handleSayMore = useCallback(() => {
     if (state.screen !== 'mirror') return;
     if (turnsCount >= MAX_TURNS) {
       dispatch({ type: 'SESSION_RESUMED', screen: 'gave-up' });
     } else {
-      posthog.capture('mirror_say_more', { turns_count: turnsCount });
+      posthog.capture('mirror_say_more', {
+        turns_count: turnsCount,
+        sessionId,
+        claimStrength: session?.claimStrength ?? null,
+      });
       dispatch({ type: 'SAY_MORE' });
     }
-  }, [state.screen, turnsCount, posthog]);
+  }, [state.screen, turnsCount, posthog, sessionId, session?.claimStrength]);
 
   const handleGaveUpPathSelection = useCallback(async () => {
     if (busyRef.current) return;

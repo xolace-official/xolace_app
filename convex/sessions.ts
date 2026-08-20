@@ -10,6 +10,7 @@ import { paginationOptsValidator } from "convex/server";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
 import { deriveClaimStrength } from "./lib/claimStrength";
+import { EPISODIC_CONNECT_FLOOR } from "./ai/routing";
 import {
   entryTypeValidator,
   confirmationStateValidator,
@@ -299,10 +300,27 @@ export const confirmMirror = mutation({
       .unique();
     const matchedKeys = metadata?.episodicMatchKeys ?? [];
     if (matchedKeys.length > 0) {
+      // The demotion's subject is "a reach went out and memory did not carry
+      // it" (doc §8), not a terminal UI state. A capped session now records
+      // `refined` — a no-op for importance — so keying off `confirmationState`
+      // would silently stop the demotion on exactly the sessions where memory
+      // demonstrably failed to connect.
+      //
+      // BOTH halves are required. `gapNamed` is raise-only while
+      // `episodicMatchKeys` is replaced every refinement turn, so a session
+      // that reached on turn 1 and then connected on turn 2 would otherwise
+      // decay the very memories that informed the mirror the user confirmed.
+      const memoryConnected =
+        metadata?.episodicTopScore !== undefined &&
+        metadata.episodicTopScore >= EPISODIC_CONNECT_FLOOR;
+      const feedback =
+        session.gapNamed === true && !memoryConnected
+          ? "gave_up"
+          : args.confirmationState;
       await ctx.scheduler.runAfter(
         0,
         internal.episodicMemory.applyMemoryFeedback,
-        { matchedKeys, feedback: args.confirmationState },
+        { matchedKeys, feedback },
       );
     }
 

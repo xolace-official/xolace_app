@@ -13,10 +13,11 @@ import {
 import { moderationCache, classifierCache } from "./cached";
 import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildClassifierPrompt } from "./prompts/classifier";
-import { buildArticulatorPrompt } from "./prompts/articulator";
+import { buildArticulatorPrompt, hasMetaNarration } from "./prompts/articulator";
 import { applyAudioFence } from "./prompts/mirrorAudioTags";
 import { evaluateSafeguard } from "./safeguard";
 import { decideMirrorOutcome, resolveMirrorTone } from "./mirrorPlan";
+import { EPISODIC_CONNECT_FLOOR } from "./routing";
 import { scheduleMirrorAudio } from "./tts";
 import {
   buildArticulatorPatternSummary,
@@ -230,7 +231,7 @@ export const generateMirror = internalAction({
 
         mirrorText = extractTextFromResponse(mirrorResponse).trim();
 
-        if (!mirrorText) {
+        if (!mirrorText || hasMetaNarration(mirrorText)) {
           mirrorText = FALLBACK_MIRROR;
         }
       } catch {
@@ -264,12 +265,26 @@ export const generateMirror = internalAction({
             }
           : {}),
         ...(plan.requiresFollowUp ? { requiresFollowUp: true } : {}),
-        ...(plan.claimStrength === "reaching" ? { gapNamed: true } : {}),
+        // A fallback mirror names no gap, so it must not burn the profile's
+        // one reach for the day, wear the "Recommended" pill, or hand Loop #3
+        // a demotion — all three key off gapNamed.
+        ...(plan.claimStrength === "reaching" && !isFallback
+          ? { gapNamed: true }
+          : {}),
       });
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,
         event: "mirror_delivered",
         properties: {
+          // §9.4: the gate's own inputs ride every delivery, so "would this
+          // have reached?" is computable at read time on non-reaching sessions
+          // too — that is what makes the pre/post window (§9.3) a control.
+          sessionId: args.sessionId,
+          specificity: classification.specificity,
+          memoryConnected:
+            episodic.topScore !== undefined &&
+            episodic.topScore >= EPISODIC_CONNECT_FLOOR,
+          episodicTopScore: episodic.topScore ?? null,
           entryType: session.entryType ?? "open_prompt",
           toneUsed: plan.tone,
           claimStrength: plan.claimStrength,

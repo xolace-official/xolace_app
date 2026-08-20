@@ -59,6 +59,9 @@ export type CadenceSignals = {
  * - Acute:    safeguard crisis
  * - Elevated: safeguard elevated, OR grief/shame intensity >= 7, OR gave_up
  * - Standard: everything else that earned a follow-up (classifier flag, low intensity)
+ *
+ * @deprecated the `gave_up` clause only (remove-after: app >= 1.10.0) — the
+ * function stays.
  */
 export function followUpTier(signals: CadenceSignals): FollowUpTier {
   if (signals.safeguardLevel === "crisis") return "acute";
@@ -72,6 +75,10 @@ export function followUpTier(signals: CadenceSignals): FollowUpTier {
   if (
     signals.safeguardLevel === "elevated" ||
     (isGriefShame && intensity >= 7) ||
+    // DEPRECATED(remove-after: app >= 1.10.0): only pre-#176 clients write gave_up at
+    // the cap; new clients reach it only on the isMaxRefinementError race path.
+    // No holding/gapNamed equivalent by ruling (doc §8) — a holding session is a
+    // completed one, and terseness is not distress.
     signals.confirmationState === "gave_up"
   ) {
     return "elevated";
@@ -113,6 +120,9 @@ export function shouldSupersede(
  * The final requiresFollowUp value. The stored flag is the preliminary AI +
  * escalation flag from deliverMirror; gave_up is only known after the clarify
  * loop; escalationTriggered is a belt-and-braces redundancy.
+ *
+ * @deprecated the `gave_up` clause only (remove-after: app >= 1.10.0) — the
+ * function stays.
  */
 export function computeRequiresFollowUp(args: {
   storedFlag?: boolean | null;
@@ -121,6 +131,10 @@ export function computeRequiresFollowUp(args: {
 }): boolean {
   return (
     args.storedFlag === true ||
+    // DEPRECATED(remove-after: app >= 1.10.0): only pre-#176 clients write gave_up at
+    // the cap; new clients reach it only on the isMaxRefinementError race path.
+    // No holding/gapNamed equivalent by ruling (doc §8) — a holding session earns a
+    // check-in only through the ordinary signals.
     args.confirmationState === "gave_up" ||
     args.escalationTriggered === true
   );

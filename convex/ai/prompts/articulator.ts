@@ -136,6 +136,34 @@ ${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; i
 }
 
 /**
+ * Meta-narration leak guard (doc §9.5). A rejected prototype arm emitted
+ * "Wait, let me redo that without the banned construction." straight into the
+ * mirror — the model narrating its own instructions instead of following them.
+ * Both ingredients are live in production, so the pipeline falls back rather
+ * than ship one.
+ *
+ * The rule vocabulary is matched only inside its meta construction, never as a
+ * bare word: the mirror is instructed to weave the user's own words back in,
+ * and "I got banned from the group chat" / "I can't follow his instructions"
+ * are ordinary things to bring here. Discarding a real mirror for echoing them
+ * is a worse failure than the leak.
+ */
+const META_NARRATION = [
+  // False start — the model restarting out loud.
+  /^(Wait\b|Let me\b|Actually, )/,
+  /\bbanned (construction|phrase|phrasing|word)/i,
+  /\b(the|my|those|these) instructions?\b/i,
+];
+
+export function hasMetaNarration(mirrorText: string): boolean {
+  // Audio tags ("[thoughtful] ...") are applied before the fence strips them,
+  // and a leading tag would otherwise defeat every anchored pattern — leaving
+  // premium users the one cohort the false-start check does not protect.
+  const text = mirrorText.replace(/\[[^\]\n]{1,40}\]/g, " ").trim();
+  return META_NARRATION.some((pattern) => pattern.test(text));
+}
+
+/**
  * Builds the memory context block: the semantic profile (who this person
  * is emotionally) and episodic recall (past moments similar to this one).
  *

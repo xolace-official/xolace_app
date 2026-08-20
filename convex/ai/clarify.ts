@@ -11,7 +11,7 @@ import {
   CLASSIFIER_VERSION,
 } from "./providers/anthropic";
 import { classifierCache } from "./cached";
-import { buildArticulatorPrompt } from "./prompts/articulator";
+import { buildArticulatorPrompt, hasMetaNarration } from "./prompts/articulator";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import {
   buildAccumulatedInput,
@@ -225,6 +225,23 @@ export const handleClarification = internalAction({
         ? metadata.episodicTopScore
         : episodic.topScore;
 
+      // The claim strength of the mirror the user pressed on (§9.4). Same
+      // inputs `deriveClaimStrength` served to the action row before this
+      // turn, so the property joins to the press event's `claimStrength`
+      // rather than to a second, differently-derived number.
+      const respondingToClaimStrength = routeClaimStrength({
+        confidence: metadata.primaryEmotionConfidence,
+        specificity: metadata.specificity,
+        episodicTopScore: metadata.episodicTopScore,
+        entryType: session.entryType ?? "open_prompt",
+        isEscalation: session.escalationTriggered === true,
+        profileReachedToday: context.profileReachedToday,
+        gapNamedThisSession: session.gapNamed === true,
+        atCap: args.turnNumber - 1 >= MAX_TURNS,
+        userFeedback: turns.find((t) => t.turnNumber === args.turnNumber - 1)
+          ?.userFeedback,
+      });
+
       const claimStrength = routeClaimStrength({
         confidence: classification.primaryEmotionConfidence,
         specificity: classification.specificity,
@@ -277,7 +294,7 @@ export const handleClarification = internalAction({
         });
 
         revisedMirrorText = extractTextFromResponse(response).trim();
-        if (!revisedMirrorText) {
+        if (!revisedMirrorText || hasMetaNarration(revisedMirrorText)) {
           revisedMirrorText = FALLBACK_MIRROR;
         }
       } catch {
@@ -307,7 +324,10 @@ export const handleClarification = internalAction({
         mirrorText: revisedMirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
         toneUsed: mirrorTone,
-        ...(claimStrength === "reaching" ? { gapNamed: true } : {}),
+        // Same fence as the initial mirror: a fallback named no gap.
+        ...(claimStrength === "reaching" && !isFallback
+          ? { gapNamed: true }
+          : {}),
         // Raise-only (§5.3): a re-classification may turn a follow-up on,
         // never off — a session that already scheduled a workflow must not be
         // left holding it against a disagreeing flag.
@@ -353,6 +373,16 @@ export const handleClarification = internalAction({
         distinctId: session.emotionalProfileId,
         event: "clarify_delivered",
         properties: {
+          // §9.4: `sessionId` joins the press to this delivery (the primary
+          // metric); `reachAlreadySent` separates a holding turn from a first
+          // reach; `specificity` is the post-turn read, so the secondary
+          // before/after delta is readable without a second event.
+          sessionId: args.sessionId,
+          entryType: session.entryType ?? "open_prompt",
+          isFirstSession: context.isFirstSession,
+          specificity: classification.specificity,
+          respondingToClaimStrength,
+          reachAlreadySent: session.gapNamed === true,
           turnNumber: args.turnNumber,
           hadAdditionalText: addedText.length > 0,
           reclassified: reclassified !== null,
