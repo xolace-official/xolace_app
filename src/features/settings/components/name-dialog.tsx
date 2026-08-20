@@ -17,7 +17,6 @@ type Props = {
   title: string;
   description: string;
   placeholder: string;
-  maxLength: number;
   /** Label above the input. Defaults to "Name". */
   fieldLabel?: string;
   validate: (name: string) => Validation;
@@ -35,7 +34,6 @@ const NameForm = ({
   title,
   description,
   placeholder,
-  maxLength,
   fieldLabel = 'Name',
   validate,
   currentName,
@@ -94,7 +92,6 @@ const NameForm = ({
           placeholder={placeholder}
           autoCapitalize={autoCapitalize}
           autoCorrect={false}
-          maxLength={maxLength + 2}
           returnKeyType="done"
           onSubmitEditing={handleSave}
         />

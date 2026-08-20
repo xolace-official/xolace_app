@@ -12,8 +12,8 @@ import { useAccountSettings } from "@/src/features/settings/hooks/use-account-se
 import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
 import { AppleIcon } from "@/src/features/auth/components/apple-icon";
 import { GoogleIcon } from "@/src/features/auth/components/google-icon";
-import { validateSpaceName, SPACE_NAME_MAX_LENGTH } from "@/convex/lib/spaceName";
-import { validateDisplayName, DISPLAY_NAME_MAX_LENGTH } from "@/convex/lib/displayName";
+import { validateSpaceName } from "@/convex/lib/spaceName";
+import { validateDisplayName } from "@/convex/lib/displayName";
 import {
   ACCOUNT_ICON,
   DISPLAY_NAME_ICON,
@@ -148,7 +148,6 @@ export const AccountScreen = () => {
         title="Your space"
         description="A soft label, just for you."
         placeholder="e.g. ember, haven, mine"
-        maxLength={SPACE_NAME_MAX_LENGTH}
         validate={validateSpaceName}
         currentName={spaceName}
         onOpenChange={setSpaceNameOpen}
@@ -162,7 +161,6 @@ export const AccountScreen = () => {
         description="What Xolace calls you."
         placeholder="e.g. Wren"
         fieldLabel="Username"
-        maxLength={DISPLAY_NAME_MAX_LENGTH}
         validate={validateDisplayName}
         currentName={displayName}
         autoCapitalize="words"
