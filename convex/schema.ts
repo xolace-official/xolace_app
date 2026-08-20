@@ -567,6 +567,14 @@ export default defineSchema({
     // Uses the component's branded WorkflowId validator, not v.string().
     followUpWorkflowId: v.optional(vWorkflowId),
 
+    // --- Confidence-aware mirroring ---
+    // A reach went out on this session: the mirror said plainly that what the
+    // feeling attaches to was not in the words yet. Session-scoped, and the
+    // source of the per-profile same-day guard (one reach per calendar day).
+    // Named gapNamed, not reach*, so it never collides with the notification
+    // Reach (notification_log.reachUsed) — see CONTEXT.md.
+    gapNamed: v.optional(v.boolean()),
+
     // --- Semantic matching (Xolace+) ---
     // Precomputed peer-reflection ids from RAG vector search, written by
     // computeSemanticMatches for premium users when the peers path is chosen.
@@ -595,7 +603,10 @@ export default defineSchema({
     .index("by_state_and_updatedAt", ["state", "updatedAt"])
 
     // Model quality tracking: compare confirmation rates across versions.
-    .index("by_model_version", ["mirrorModelVersion", "confirmationState"]),
+    .index("by_model_version", ["mirrorModelVersion", "confirmationState"])
+
+    // Same-day reach guard: "has this profile reached today" in one read.
+    .index("by_profile_gapNamed", ["emotionalProfileId", "gapNamed", "createdAt"]),
 
   // ===========================================================
   // 5. SESSION TURNS
@@ -742,6 +753,14 @@ export default defineSchema({
     // mirror. Required by the Phase 4 relevance loop (confirmed mirrors
     // bump these memories' importance; "not quite" decays them).
     episodicMatchKeys: v.optional(v.array(v.string())),
+
+    // Highest episodic search score that informed this mirror, exactly as
+    // returned by @convex-dev/rag (never recomputed or normalised). Absent =
+    // no search ran (cold start) or nothing retrieved — never coalesce it to
+    // zero, which would put a false spike into the calibration distribution.
+    // Read-time input to claim strength; stored as a number, not a verdict,
+    // so EPISODIC_CONNECT_FLOOR stays retroactively tunable without a backfill.
+    episodicTopScore: v.optional(v.number()),
 
     // Phase 4, Loop #3 — memory relevance feedback. The running salience
     // weight (0.2–1) for THIS session AS an episodic memory, and the source

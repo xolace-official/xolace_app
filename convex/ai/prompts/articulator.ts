@@ -261,20 +261,18 @@ function getIntensitySpecificityGuidance(intensity: number, specificity: number)
 /**
  * Uncertainty routing (Phase 4, Loop #2): shape the mirror's CLAIM STRENGTH
  * from how sure the classifier was about tonight's read. Distinct axis from
- * Intensity × Specificity (which governs depth): this governs certainty. Only
- * the confident/tentative poles emit guidance; "measured" is the normal path
- * and says nothing so the base rules stand.
+ * Intensity × Specificity (which governs depth): this governs certainty.
+ * "measured" is the normal path and says nothing so the base rules stand.
+ *
+ * The `reaching` / `holding` blocks and the subtractions they need land with
+ * §4 of docs/confidence-aware-mirroring.md; until then those strengths route
+ * here and fall through to the base rules, same as "measured".
  *
  * Composes with the profile's longitudinal "what lands" calibration: that is
  * the prior about this person, this is the evidence about this moment.
  */
 function getClaimStrengthInstructions(claimStrength?: ClaimStrength): string {
   switch (claimStrength) {
-    case "tentative":
-      return `
-## Claim Strength: Tentative
-The read on this one is genuinely uncertain (the signal is faint and unformed). Offer the mirror as a naming that leaves room to be wrong, not an assertion. Reach toward the feeling rather than pinning it, and make it easy for them to say "not quite" and correct you. Do not hedge into vagueness; be specific, just held loosely.
-`;
     case "confident":
       return `
 ## Claim Strength: Confident

@@ -13,7 +13,8 @@ import { buildArticulatorPrompt } from "./prompts/articulator";
 import { applyAudioFence } from "./prompts/mirrorAudioTags";
 import { resolveMirrorTone } from "./mirrorPlan";
 import { scheduleMirrorAudio } from "./tts";
-import { routeUncertainty } from "./routing";
+import { routeClaimStrength } from "./routing";
+import { MAX_TURNS } from "../sessionTurns";
 import {
   buildArticulatorPatternSummary,
   collectRecentMirrors,
@@ -43,6 +44,8 @@ export const handleClarification = internalAction({
       entryType?: string;
       inputDuration?: number;
       freezeOccurred?: boolean;
+      escalationTriggered?: boolean;
+      gapNamed?: boolean;
       [key: string]: unknown;
     } | undefined;
     try {
@@ -72,6 +75,7 @@ export const handleClarification = internalAction({
         thematicTags: string[];
         userLanguageTags: string[];
         temporalContext?: "past_focused" | "present_focused" | "future_focused";
+        episodicTopScore?: number;
       } | null;
 
       const metadata: MetadataType = await ctx.runQuery(
@@ -109,19 +113,22 @@ export const handleClarification = internalAction({
 
       const recentMirrors = collectRecentMirrors(context.recentSessions);
 
-      // Uncertainty routing (Phase 4, Loop #2) on the refinement pass. Same
-      // deterministic gate as the initial mirror, off the stored confidence ×
-      // specificity. But a "not quite" is empirical proof the read missed, so
-      // never carry a "confident" posture into a rejected turn — floor it to
-      // "measured". "say_more" adds context without rejecting, so it stands.
-      const baseClaimStrength = routeUncertainty({
+      // Claim strength on the refinement pass — the same single gate as the
+      // initial mirror, with the full context it needs. The suppression guards
+      // are re-evaluated here rather than assumed: relying on the client not
+      // rendering "Say more" on an escalation screen would prop up a
+      // server-side safety rule with a client-side fact.
+      const claimStrength = routeClaimStrength({
         confidence: metadata.primaryEmotionConfidence,
         specificity: metadata.specificity,
+        episodicTopScore: metadata.episodicTopScore,
+        entryType: session.entryType ?? "open_prompt",
+        isEscalation: session.escalationTriggered === true,
+        profileReachedToday: context.profileReachedToday,
+        gapNamedThisSession: session.gapNamed === true,
+        atCap: args.turnNumber >= MAX_TURNS,
+        userFeedback,
       });
-      const claimStrength =
-        userFeedback === "not_quite" && baseClaimStrength === "confident"
-          ? "measured"
-          : baseClaimStrength;
 
       const articulatorPrompt = buildArticulatorPrompt({
         rawInput: args.additionalRawText ?? "",
@@ -201,6 +208,7 @@ export const handleClarification = internalAction({
         mirrorText: revisedMirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
         toneUsed: mirrorTone,
+        ...(claimStrength === "reaching" ? { gapNamed: true } : {}),
       });
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,

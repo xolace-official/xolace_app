@@ -6,6 +6,8 @@ import { hasPremium } from "../lib/premium";
 /** Canonical return type of buildSessionContext. */
 export interface SessionContext {
   session: Record<string, unknown>;
+  /** Same-day reach guard: another session by this profile reached today. */
+  profileReachedToday: boolean;
   isFirstSession: boolean;
   profile: {
     sessionCount: number;
@@ -47,6 +49,24 @@ export interface SessionContext {
   // Xolace+ entitlement — the real fence for tone-gated behavior (mirrorTone
   // preference alone isn't trustworthy after a downgrade).
   isPremium: boolean;
+}
+
+/**
+ * "YYYY-MM-DD" in the user's own timezone, so "same calendar day" means their
+ * day and not UTC's — at UTC+8 a UTC boundary would reset the reach guard at
+ * 08:00 local, which is exactly the twice-before-dinner case it exists to stop.
+ * Falls back to UTC when no timezone was captured (it is only stored once
+ * notifications are configured) or the stored string is unusable.
+ */
+function localDay(ms: number, timeZone?: string): string {
+  try {
+    return new Intl.DateTimeFormat(
+      "en-CA",
+      timeZone ? { timeZone } : {},
+    ).format(new Date(ms));
+  } catch {
+    return new Date(ms).toISOString().slice(0, 10);
+  }
 }
 
 /**
@@ -110,8 +130,27 @@ export const buildSessionContext = internalQuery({
       .order("desc")
       .take(10);
 
+    // Same-day reach guard (docs/confidence-aware-mirroring.md §3.7): never
+    // reach twice in one calendar day per profile. No new state — one indexed
+    // read of the session-scoped gapNamed boolean, newest first. Two rows
+    // because the newest may be this session's own reach, which must not
+    // suppress its own later turns (those resolve to holding, not plain).
+    const reachedSessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_profile_gapNamed", (q) =>
+        q.eq("emotionalProfileId", profile._id).eq("gapNamed", true),
+      )
+      .order("desc")
+      .take(2);
+    const today = localDay(Date.now(), preferences?.notifications.timezone);
+
     return {
       session,
+      profileReachedToday: reachedSessions.some(
+        (s) =>
+          s._id !== args.sessionId &&
+          localDay(s.createdAt, preferences?.notifications.timezone) === today,
+      ),
       isFirstSession: profile.sessionCount === 0,
       profile: {
         sessionCount: profile.sessionCount,

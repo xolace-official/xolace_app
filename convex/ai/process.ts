@@ -136,7 +136,7 @@ export const generateMirror = internalAction({
       // from the user's personal namespace, matched raw-to-raw against
       // tonight's input. Best-effort — memory failing must never block
       // the mirror.
-      const [moderationResult, classification, episodicMatches] =
+      const [moderationResult, classification, episodic] =
         await Promise.all([
           moderationCache
             .fetch(ctx, { text: args.rawText })
@@ -146,7 +146,7 @@ export const generateMirror = internalAction({
             userPrompt: classifierPrompt.user,
           }),
           context.isFirstSession
-            ? Promise.resolve([] as EpisodicMatch[])
+            ? Promise.resolve({ matches: [] } as EpisodicSearch)
             : searchEpisodicMemory(
                 ctx,
                 session.emotionalProfileId,
@@ -154,6 +154,7 @@ export const generateMirror = internalAction({
                 args.rawText,
               ),
         ]);
+      const episodicMatches = episodic.matches;
       const episodicRecall = episodicMatches.map((m) => m.text);
 
       // 5. Evaluate safeguard (rule engine, no LLM)
@@ -189,6 +190,8 @@ export const generateMirror = internalAction({
         classification,
         safeguard,
         entryType: session.entryType ?? "open_prompt",
+        episodicTopScore: episodic.topScore,
+        profileReachedToday: context.profileReachedToday,
       });
 
       // 6. Articulate mirror (Sonnet)
@@ -258,6 +261,7 @@ export const generateMirror = internalAction({
             }
           : {}),
         ...(plan.requiresFollowUp ? { requiresFollowUp: true } : {}),
+        ...(plan.claimStrength === "reaching" ? { gapNamed: true } : {}),
       });
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,
@@ -306,6 +310,11 @@ export const generateMirror = internalAction({
           ? { safeguardTrigger: safeguard.triggerType }
           : {}),
         episodicMatchKeys: episodicMatches.map((m) => m.key),
+        // Spread, not `?? 0`: absent means no search ran or nothing came back,
+        // and a zero would read as a genuine (terrible) score at calibration.
+        ...(episodic.topScore !== undefined
+          ? { episodicTopScore: episodic.topScore }
+          : {}),
         ...(context.semanticProfileVersion !== null
           ? { profileVersion: context.semanticProfileVersion }
           : {}),
@@ -417,29 +426,54 @@ export const generateMirror = internalAction({
 type EpisodicMatch = { text: string; key: string };
 
 /**
+ * The matches plus how well the best of them actually matched. `topScore` is
+ * absent — never zero — when no memory was retained, because "didn't connect"
+ * and "scored 0.0" are different facts and only the first is true here.
+ */
+type EpisodicSearch = { matches: EpisodicMatch[]; topScore?: number };
+
+/**
  * Top-K episodic matches for the current input from the user's personal
  * namespace. Returns composite texts, newest-format
  * or metadata-only alike. Best-effort: any failure (no namespace yet,
- * embedding outage) returns [] so memory can never block the mirror.
+ * embedding outage) returns no matches so memory can never block the mirror.
+ *
+ * Deliberately no `vectorScoreThreshold`: vector search returns its nearest
+ * neighbours however far away they are, so the score is the only thing that
+ * says whether memory connected — but below-floor memories must still reach
+ * the articulator, which flags them rather than filtering them out.
  */
 async function searchEpisodicMemory(
   ctx: Parameters<typeof rag.search>[0],
   emotionalProfileId: string,
   currentSessionId: string,
   rawText: string,
-): Promise<EpisodicMatch[]> {
+): Promise<EpisodicSearch> {
   try {
-    const { entries } = await rag.search(ctx, {
+    const { entries, results } = await rag.search(ctx, {
       namespace: emotionalProfileId,
       query: rawText,
       limit: 4,
     });
-    return entries
+    const retained = entries
       .filter((e) => e.key !== undefined && e.key !== currentSessionId)
-      .slice(0, 3)
-      .map((e) => ({ text: e.text, key: e.key as string }));
+      .slice(0, 3);
+    const retainedIds = new Set(retained.map((e) => e.entryId));
+    // Scores live on the sibling `results` array, joined by entryId. Taken as
+    // returned by rag.search — never recomputed or normalised. Scoped to the
+    // retained entries, not all results: the score has to describe the memory
+    // that actually reached the articulator, and this session's own re-ingested
+    // composite would otherwise near-perfectly self-match and read as connected.
+    const scores = results
+      .filter((r) => retainedIds.has(r.entryId))
+      .map((r) => r.score);
+
+    return {
+      matches: retained.map((e) => ({ text: e.text, key: e.key as string })),
+      topScore: scores.length > 0 ? Math.max(...scores) : undefined,
+    };
   } catch {
-    return [];
+    return { matches: [] };
   }
 }
 

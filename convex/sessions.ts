@@ -808,6 +808,9 @@ export const deliverMirror = internalMutation({
     escalationResources: v.optional(v.array(resourceValidator)),
     // Preliminary follow-up flag (AI + escalation). Finalized at completion.
     requiresFollowUp: v.optional(v.boolean()),
+    // A reach went out on this mirror. Raise-only: a later holding turn must
+    // not unset it, since it is what makes the session hold rather than reach.
+    gapNamed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
@@ -831,6 +834,7 @@ export const deliverMirror = internalMutation({
         ? { escalationResources: args.escalationResources }
         : {}),
       ...(args.requiresFollowUp ? { requiresFollowUp: true } : {}),
+      ...(args.gapNamed ? { gapNamed: true } : {}),
       updatedAt: Date.now(),
     });
   },

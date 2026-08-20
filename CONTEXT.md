@@ -24,6 +24,8 @@ concept was rejected — a migration to fix a documentation problem — and so w
 leaving the collision undocumented. The mirror's field was still unbuilt when
 this was decided, which is the only reason the fix was free.
 
+Full spec: [`docs/confidence-aware-mirroring.md`](docs/confidence-aware-mirroring.md).
+
 ## Camper pseudonym (2026-08-19)
 
 A **xolacer** volunteering is a named party — `displayName`, consistent and

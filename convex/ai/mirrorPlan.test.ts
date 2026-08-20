@@ -38,6 +38,7 @@ const decide = (input?: Partial<Parameters<typeof decideMirrorOutcome>[0]>) =>
     classification: classification(),
     safeguard: safeguard(),
     entryType: "open_prompt",
+    profileReachedToday: false,
     ...input,
   });
 
@@ -66,7 +67,7 @@ describe("decideMirrorOutcome", () => {
     );
   });
 
-  it("threads claim strength from routeUncertainty", () => {
+  it("threads claim strength from routeClaimStrength", () => {
     expect(
       decide({
         classification: classification({
@@ -75,6 +76,34 @@ describe("decideMirrorOutcome", () => {
         }),
       }).claimStrength,
     ).toBe("confident");
+  });
+
+  it("reaches on a faint session with no memory connection", () => {
+    expect(
+      decide({ classification: classification({ specificity: 2 }) })
+        .claimStrength,
+    ).toBe("reaching");
+  });
+
+  it("passes the gate's guards through — escalation and the same-day reach", () => {
+    const faint = classification({ specificity: 2 });
+    expect(
+      decide({
+        classification: faint,
+        safeguard: safeguard({
+          level: "crisis",
+          triggerType: "explicit_crisis_language",
+          isEscalation: true,
+        }),
+      }).claimStrength,
+    ).toBe("measured");
+    expect(
+      decide({ classification: faint, profileReachedToday: true })
+        .claimStrength,
+    ).toBe("measured");
+    expect(
+      decide({ classification: faint, episodicTopScore: 0.9 }).claimStrength,
+    ).toBe("measured");
   });
 
   it("mirrors the safeguard consequence flags", () => {

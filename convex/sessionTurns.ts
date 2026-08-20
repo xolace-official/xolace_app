@@ -4,7 +4,8 @@ import { internal } from "./_generated/api";
 import { requireSessionOwnership } from "./lib/auth";
 import { userFeedbackValidator } from "./lib/validators";
 
-const MAX_TURNS = 2;
+/** The refinement cap. Exported so the clarify action agrees on the ceiling. */
+export const MAX_TURNS = 2;
 
 /**
  * Submit refinement feedback ("Not quite" / "Say more").

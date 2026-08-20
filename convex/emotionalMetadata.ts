@@ -104,6 +104,9 @@ export const store = internalMutation({
     safeguardLevel: v.optional(safeguardLevelValidator),
     safeguardTrigger: v.optional(triggerTypeValidator),
     episodicMatchKeys: v.optional(v.array(v.string())),
+    // As returned by rag.search. Omitted (never 0) when no search ran or
+    // nothing was retrieved.
+    episodicTopScore: v.optional(v.number()),
     profileVersion: v.optional(v.number()),
     // Follow-up system: brief internal reason from the classifier. Never
     // shown to the user. Present only when the classifier flagged a follow-up.

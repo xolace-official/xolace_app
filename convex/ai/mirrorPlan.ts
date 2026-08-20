@@ -8,7 +8,7 @@
 
 import type { ClassificationResult } from "./providers/anthropic";
 import type { SafeguardResult } from "./safeguard";
-import { routeUncertainty, type ClaimStrength } from "./routing";
+import { routeClaimStrength, type ClaimStrength } from "./routing";
 import { matchExercise, type ExerciseTitle } from "../exercises/match";
 
 export type MirrorTone =
@@ -49,6 +49,10 @@ export function decideMirrorOutcome(input: {
   classification: ClassificationResult;
   safeguard: SafeguardResult;
   entryType: string;
+  /** Highest rag.search score, absent on cold start / nothing retrieved. */
+  episodicTopScore?: number;
+  /** Another session by this profile already reached today. */
+  profileReachedToday: boolean;
 }): MirrorPlan {
   const { classification, safeguard } = input;
 
@@ -63,9 +67,17 @@ export function decideMirrorOutcome(input: {
 
   return {
     tone: resolveMirrorTone(input.rawMirrorTone, input.isPremium),
-    claimStrength: routeUncertainty({
+    claimStrength: routeClaimStrength({
       confidence: classification.primaryEmotionConfidence,
       specificity: classification.specificity,
+      episodicTopScore: input.episodicTopScore,
+      entryType: input.entryType,
+      isEscalation: safeguard.isEscalation,
+      profileReachedToday: input.profileReachedToday,
+      // The initial mirror is always the session's first turn: no reach has
+      // gone out yet and the cap is two turns away.
+      gapNamedThisSession: false,
+      atCap: false,
     }),
     isEscalation: safeguard.isEscalation,
     requiresFollowUp:
