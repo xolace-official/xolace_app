@@ -148,8 +148,11 @@ export type StreamUser = { id: string; name?: string; image?: string };
  * mutable Stream user per profile id, and the same person is a named xolacer in
  * one conversation and an anonymous seeker in another — so no single record can
  * be right, and a real name written here would render wherever their anonymous
- * side is shown. Every caller passes the pseudonym and the catalog avatar,
- * whether or not the person is a published xolacer. Real identity is resolved
+ * side is shown. Every caller passes the generic "Camper" placeholder and the
+ * catalog avatar, whether or not the person is a published xolacer — a name
+ * that identifies nobody, so a surface that ever escapes the client-side
+ * override fails safe instead of leaking a correlatable one (see
+ * lib/camperTag). Real identity is resolved
  * per-conversation and per-role by `getConversation`, and the client overrides
  * every Stream surface that renders a name or image with it — see
  * COMPONENT_OVERRIDES in `thread-messages.tsx`.

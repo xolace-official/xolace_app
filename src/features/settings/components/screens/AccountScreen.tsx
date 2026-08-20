@@ -5,15 +5,18 @@ import { EaseView } from "react-native-ease/uniwind";
 import { useState } from "react";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
 import { SettingsRow } from "@/src/features/settings/components/settings-row";
-import { SpaceNameDialog } from "@/src/features/settings/components/space-name-dialog";
+import { NameDialog } from "@/src/features/settings/components/name-dialog";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { DevToolsSection } from "@/src/features/settings/components/dev-tools-section";
 import { useAccountSettings } from "@/src/features/settings/hooks/use-account-settings";
 import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
 import { AppleIcon } from "@/src/features/auth/components/apple-icon";
 import { GoogleIcon } from "@/src/features/auth/components/google-icon";
+import { validateSpaceName } from "@/convex/lib/spaceName";
+import { validateDisplayName } from "@/convex/lib/displayName";
 import {
   ACCOUNT_ICON,
+  DISPLAY_NAME_ICON,
   SPACE_NAME_ICON,
   LOG_OUT_ICON,
   EMAIL_ICON,
@@ -27,8 +30,10 @@ const styles = StyleSheet.create({
 
 export const AccountScreen = () => {
   const { toast } = useToast();
-  const { signInMethod, spaceName, setSpaceName, performLogout } = useAccountSettings();
+  const { signInMethod, spaceName, setSpaceName, displayName, setDisplayName, performLogout } =
+    useAccountSettings();
   const [spaceNameOpen, setSpaceNameOpen] = useState(false);
+  const [displayNameOpen, setDisplayNameOpen] = useState(false);
 
   const iconColor = useThemeColor("foreground") as string;
   const mutedColor = useThemeColor("muted") as string;
@@ -80,6 +85,24 @@ export const AccountScreen = () => {
           </SettingsSection>
         </EaseView>
 
+        {/* ── USERNAME ─────────────────────────────────────────── */}
+        <EaseView
+          initialAnimate={{ opacity: 0, translateY: 16 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 280, delay: 30, easing: EASE }}
+        >
+          <SettingsSection title="Username">
+            <SettingsRow
+              variant="value"
+              icon={settingIcon(DISPLAY_NAME_ICON)}
+              label="Username"
+              value={displayName ?? "—"}
+              onPress={() => setDisplayNameOpen(true)}
+              isLast
+            />
+          </SettingsSection>
+        </EaseView>
+
         {/* ── YOUR SPACE ───────────────────────────────────────── */}
         <EaseView
           initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -120,12 +143,29 @@ export const AccountScreen = () => {
         </EaseView>
       </ScrollView>
 
-      <SpaceNameDialog
+      <NameDialog
         isOpen={spaceNameOpen}
+        title="Your space"
+        description="A soft label, just for you."
+        placeholder="e.g. ember, haven, mine"
+        validate={validateSpaceName}
         currentName={spaceName}
         onOpenChange={setSpaceNameOpen}
         onSave={async (name) => { await setSpaceName(name); }}
         onClear={async () => { await setSpaceName(null); }}
+      />
+
+      <NameDialog
+        isOpen={displayNameOpen}
+        title="Username"
+        description="What Xolace calls you."
+        placeholder="e.g. Wren"
+        fieldLabel="Username"
+        validate={validateDisplayName}
+        currentName={displayName}
+        autoCapitalize="words"
+        onOpenChange={setDisplayNameOpen}
+        onSave={setDisplayName}
       />
 
       <ConfirmationDialog

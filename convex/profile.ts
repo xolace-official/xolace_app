@@ -3,7 +3,7 @@ import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
 import { insightFeatureValidator } from "./lib/validators";
-import { generateDisplayName } from "./lib/displayName";
+import { generateDisplayName, validateDisplayName } from "./lib/displayName";
 import { displayStreak } from "./lib/streak";
 import { reflectionRank } from "./lib/aggregates";
 
@@ -319,9 +319,9 @@ export const updateDisplayName = mutation({
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
-    const trimmed = args.displayName.trim();
-    if (trimmed.length === 0) throw new Error("Name cannot be empty");
-    if ([...trimmed].length > 30) throw new Error("Name must be 30 characters or fewer");
+    const validated = validateDisplayName(args.displayName);
+    if (!validated.ok) throw new Error(validated.message);
+    const trimmed = validated.trimmed;
 
     const prefs = await ctx.db
       .query("preferences")

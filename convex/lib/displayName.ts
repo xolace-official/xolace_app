@@ -7,3 +7,19 @@ const NAMES = [
 export function generateDisplayName(): string {
   return NAMES[Math.floor(Math.random() * NAMES.length)];
 }
+
+export const DISPLAY_NAME_MAX_LENGTH = 30;
+
+export type DisplayNameValidation =
+  | { ok: true; trimmed: string }
+  | { ok: false; message: string };
+
+/** Emoji and symbols are allowed — only emptiness and length are policed. */
+export function validateDisplayName(name: string): DisplayNameValidation {
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, message: "Name cannot be empty" };
+  if ([...trimmed].length > DISPLAY_NAME_MAX_LENGTH) {
+    return { ok: false, message: `${DISPLAY_NAME_MAX_LENGTH} characters max` };
+  }
+  return { ok: true, trimmed };
+}

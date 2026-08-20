@@ -114,3 +114,9 @@ export const PLUS_TIER_ICON: CrossPlatformSymbol = {
   android: "auto_awesome",
   web: "auto_awesome",
 };
+
+export const DISPLAY_NAME_ICON: CrossPlatformSymbol = {
+  ios: "textformat",
+  android: "text_fields",
+  web: "text_fields",
+};
