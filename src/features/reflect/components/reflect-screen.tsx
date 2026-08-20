@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useReflectionMachine } from "@/src/features/reflect/hooks/use-reflection-machine";
+import { MAX_TURNS } from "@/src/features/reflect/hooks/reflection-reducer";
 import { useScreenTransition } from "@/src/features/reflect/hooks/use-screen-transition";
 import {
   SCREEN_TRANSITIONS,
@@ -50,6 +51,7 @@ export const ReflectScreen = () => {
     mirrorText,
     escalationResources,
     toneUsed,
+    claimStrength,
     isRecording,
     submitReflection,
     submitScaffold,
@@ -197,6 +199,8 @@ export const ReflectScreen = () => {
             entryType={state.entryType}
             sessionId={sessionId}
             toneUsed={toneUsed}
+            claimStrength={claimStrength}
+            atCap={turnsCount >= MAX_TURNS}
             onThatsIt={handleThatsIt}
             onNotQuite={handleNotQuiteWithFeedback}
             onSayMore={handleSayMore}

@@ -1,61 +1,123 @@
 // =============================================================
-// UNCERTAINTY ROUTING — Cognition Layer Phase 4, Loop #2.
+// CLAIM STRENGTH ROUTING — Cognition Layer Phase 4, Loop #2.
 //
 // System 1 (the hot path) stays deterministic forever (decision-log #8):
-// this is rule-code, never a model call. It reads the classifier's own
-// confidence about tonight's read — primaryEmotionConfidence (how sure it is
-// of the emotion) and specificity (how clearly the feeling has a shape) — and
-// gates the articulator's CLAIM STRENGTH:
+// this is rule-code, never a model call. It decides how strongly the mirror
+// may claim tonight's read — and, when there isn't enough signal to earn a
+// read at all, that it should say so instead of asserting one.
 //
-//   low confidence + low shape   → tentative: offer the mirror as a naming
-//                                  that invites correction, don't assert.
-//   high confidence + high shape → confident: full precision, no hedging.
-//   everything else              → measured: the normal path.
+//   reaching  → the gate fired and no reach has gone out on this session:
+//               name what is present, then say plainly that what it attaches
+//               to is not in the words yet.
+//   holding   → the reach already went out and the signal is still faint, or
+//               the session hit the cap having reached.
+//   measured  → the normal path.
+//   confident → high confidence AND high shape: full precision, no hedging.
 //
-// This is the per-session, in-the-moment counterpart to Loop #1's calibration
-// (the longitudinal "what lands" prior). Both push claim strength: calibration
-// is what this person TENDS to need, routing is what TONIGHT'S read warrants.
-// The articulator holds both and lets them compose.
+// The gate (docs/confidence-aware-mirroring.md §3) is:
 //
-// The doc also frames this as the Plus model-tiering lever ("low/low → a
-// stronger model tier"). That hook is deferred until the Plus tiering infra
-// lands; today the signal only shapes the prompt. Claim strength is a pure
-// function of confidence + specificity — both already live in
-// emotional_metadata — so it is never persisted (nothing to re-derive that
-// the Understanding doesn't already hold); it is recomputed wherever needed.
+//   reach = specificity <= 2 && !memoryConnected && eligibleEntryType
+//        && !isEscalation && !profileAlreadyReachedToday
+//
+// `confidence` is deliberately NOT in the conjunct (§3.2): the classifier's
+// self-reported confidence is a discrete menu, so any threshold there is a
+// tripwire a prompt revision can trip. It is kept only on the `confident`
+// pole, which works.
+//
+// Claim strength is never persisted — it is a pure function of the
+// Understanding plus session state, so it is re-derived wherever needed.
 // =============================================================
 
-export type ClaimStrength = "tentative" | "measured" | "confident";
+export type ClaimStrength = "reaching" | "holding" | "measured" | "confident";
+
+/**
+ * Episodic score at or above which memory counts as having connected.
+ * Provisional (§10) — the raw score is persisted and claim strength derived
+ * at read time, so retuning this is a one-constant edit with no backfill.
+ */
+export const EPISODIC_CONNECT_FLOOR = 0.35;
 
 // primaryEmotionConfidence is 0-1; specificity is the classifier's 0-10 scale.
 // HIGH_SPECIFICITY mirrors the articulator's own highSpecificity cutoff (6).
-const LOW_CONFIDENCE = 0.5;
+// LOW_SPECIFICITY is exclusive — the gate considers sp <= 2 (§3.3).
 const HIGH_CONFIDENCE = 0.75;
-const LOW_SPECIFICITY = 4;
+const LOW_SPECIFICITY = 3;
 const HIGH_SPECIFICITY = 6;
 
-export interface UncertaintySignal {
+/**
+ * Low-bandwidth entry types are excluded on purpose (§3.5): those users chose
+ * to say little, so faintness is the format, not a gap in what they gave.
+ */
+const REACH_ELIGIBLE_ENTRY_TYPES = new Set([
+  "open_prompt",
+  "guided_entry",
+  "voice",
+]);
+
+export interface ClaimStrengthSignal {
   /** primaryEmotionConfidence, 0-1. */
   confidence: number;
   /** classifier specificity, 0-10. */
   specificity: number;
+  /**
+   * Highest episodic search score as returned by rag.search. Absent = no
+   * search ran (cold start) or nothing retrieved — NOT zero (§3.4).
+   */
+  episodicTopScore?: number;
+  entryType: string;
+  /** SafeguardResult.isEscalation — the same flag that replaces the mirror screen. */
+  isEscalation: boolean;
+  /**
+   * Another session by this profile already reached today (indexed read).
+   * Ignored once this session itself has reached — see routeClaimStrength.
+   */
+  profileReachedToday: boolean;
+  /** A reach already went out on THIS session. */
+  gapNamedThisSession: boolean;
+  /** turnsCount >= MAX_TURNS. */
+  atCap: boolean;
+  userFeedback?: string;
 }
 
 /**
- * Deterministically route the mirror's claim strength from how sure the
- * classifier is about tonight's read. Pure — the whole hot path stays
- * rule-code. Low confidence AND low shape → tentative; high AND high →
- * confident; anything mixed or middling → measured (the normal path).
+ * The single gate. Both derivation sites (decideMirrorOutcome and clarify)
+ * route through here with full context — one guard, not one guard per caller.
+ * Resolution order is §3.9 of the doc, in order.
  */
-export function routeUncertainty({
-  confidence,
-  specificity,
-}: UncertaintySignal): ClaimStrength {
-  if (confidence < LOW_CONFIDENCE && specificity < LOW_SPECIFICITY) {
-    return "tentative";
+export function routeClaimStrength(input: ClaimStrengthSignal): ClaimStrength {
+  // 1. Suppressed sessions are plain — never reaching, never holding, on any
+  //    turn including the cap (§3.8).
+  // The same-day guard binds a whole session including its refinement turns:
+  // a session that already reached is not re-suppressed by a SIBLING session
+  // reaching between turns, or turn 2 would go plain where it must hold.
+  const suppressed =
+    !REACH_ELIGIBLE_ENTRY_TYPES.has(input.entryType) ||
+    input.isEscalation ||
+    (input.profileReachedToday && !input.gapNamedThisSession);
+
+  if (!suppressed) {
+    // 2. At the cap, a session that reached stops reaching and holds.
+    if (input.atCap && input.gapNamedThisSession) return "holding";
+
+    // 3. The gate itself.
+    const memoryConnected =
+      input.episodicTopScore !== undefined &&
+      input.episodicTopScore >= EPISODIC_CONNECT_FLOOR;
+    if (input.specificity < LOW_SPECIFICITY && !memoryConnected) {
+      return input.gapNamedThisSession ? "holding" : "reaching";
+    }
   }
-  if (confidence >= HIGH_CONFIDENCE && specificity >= HIGH_SPECIFICITY) {
-    return "confident";
-  }
-  return "measured";
+
+  // 5. The normal poles.
+  const base =
+    input.confidence >= HIGH_CONFIDENCE && input.specificity >= HIGH_SPECIFICITY
+      ? "confident"
+      : "measured";
+
+  // 6. Floor: a "not quite" is empirical proof the read missed, so never carry
+  //    a confident posture into a rejected turn. "say_more" adds context
+  //    without rejecting, so it stands.
+  return input.userFeedback === "not_quite" && base === "confident"
+    ? "measured"
+    : base;
 }

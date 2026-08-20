@@ -9,6 +9,8 @@ import { internal } from "./_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
+import { deriveClaimStrength } from "./lib/claimStrength";
+import { EPISODIC_CONNECT_FLOOR } from "./ai/routing";
 import {
   entryTypeValidator,
   confirmationStateValidator,
@@ -298,10 +300,27 @@ export const confirmMirror = mutation({
       .unique();
     const matchedKeys = metadata?.episodicMatchKeys ?? [];
     if (matchedKeys.length > 0) {
+      // The demotion's subject is "a reach went out and memory did not carry
+      // it" (doc §8), not a terminal UI state. A capped session now records
+      // `refined` — a no-op for importance — so keying off `confirmationState`
+      // would silently stop the demotion on exactly the sessions where memory
+      // demonstrably failed to connect.
+      //
+      // BOTH halves are required. `gapNamed` is raise-only while
+      // `episodicMatchKeys` is replaced every refinement turn, so a session
+      // that reached on turn 1 and then connected on turn 2 would otherwise
+      // decay the very memories that informed the mirror the user confirmed.
+      const memoryConnected =
+        metadata?.episodicTopScore !== undefined &&
+        metadata.episodicTopScore >= EPISODIC_CONNECT_FLOOR;
+      const feedback =
+        session.gapNamed === true && !memoryConnected
+          ? "gave_up"
+          : args.confirmationState;
       await ctx.scheduler.runAfter(
         0,
         internal.episodicMemory.applyMemoryFeedback,
-        { matchedKeys, feedback: args.confirmationState },
+        { matchedKeys, feedback },
       );
     }
 
@@ -612,6 +631,10 @@ export const getActive = query({
 
 /**
  * Get a single session by ID (with ownership check).
+ *
+ * `claimStrength` is derived here rather than read: it is never persisted
+ * (docs/confidence-aware-mirroring.md §6). The mirror action row needs it to
+ * decide whether "Say more" carries the "Recommended" pill.
  */
 export const getById = query({
   args: {
@@ -619,7 +642,7 @@ export const getById = query({
   },
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
-    return session;
+    return { ...session, claimStrength: await deriveClaimStrength(ctx, session) };
   },
 });
 
@@ -808,6 +831,9 @@ export const deliverMirror = internalMutation({
     escalationResources: v.optional(v.array(resourceValidator)),
     // Preliminary follow-up flag (AI + escalation). Finalized at completion.
     requiresFollowUp: v.optional(v.boolean()),
+    // A reach went out on this mirror. Raise-only: a later holding turn must
+    // not unset it, since it is what makes the session hold rather than reach.
+    gapNamed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
@@ -831,6 +857,7 @@ export const deliverMirror = internalMutation({
         ? { escalationResources: args.escalationResources }
         : {}),
       ...(args.requiresFollowUp ? { requiresFollowUp: true } : {}),
+      ...(args.gapNamed ? { gapNamed: true } : {}),
       updatedAt: Date.now(),
     });
   },

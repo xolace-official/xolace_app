@@ -23,7 +23,6 @@ interface ArticulatorInput {
   // Refinement context (for clarification turns)
   existingMirror?: string;
   userFeedback?: string;
-  additionalInput?: string;
   // 3am Mode: session started during the night window (10pm to 4am)
   sessionMode?: "day" | "night";
   // User's named space (if set): personalizes identity responses
@@ -52,7 +51,7 @@ interface ArticulatorInput {
  *   - `recentMirrors`: array of recent mirror texts to list (used to avoid reusing metaphors/phrasing).
  *   - `inputDuration` (optional): writing duration in ms used to generate behavioral notes.
  *   - `freezeOccurred` (optional): whether a significant pause/hesitation was detected.
- *   - `existingMirror`, `userFeedback`, `additionalInput` (optional): used to build refinement context when revising a previous mirror.
+ *   - `existingMirror`, `userFeedback` (optional): used to build refinement context when revising a previous mirror. The added words themselves arrive in `rawInput`, turn-marked (see accumulatedInput.ts).
  * @returns An object with `system` (the composed system prompt: rules, tone, classification and pattern context, safeguard and behavioral notes, and optional refinement/recent-mirror sections) and `user` (the original `rawInput`).
  */
 export function buildArticulatorPrompt(
@@ -71,7 +70,6 @@ export function buildArticulatorPrompt(
     freezeOccurred,
     existingMirror,
     userFeedback,
-    additionalInput,
     sessionMode,
     spaceName,
     semanticProfile,
@@ -79,6 +77,10 @@ export function buildArticulatorPrompt(
     claimStrength,
     useAudioTags,
   } = input;
+
+  // The reach paths (§4.3): the blocks only hold once the standing prompt
+  // stops mandating expansion, shape, and memory-as-explanation.
+  const isFaint = claimStrength === "reaching" || claimStrength === "holding";
 
   const toneInstructions = getToneInstructions(mirrorTone);
   const claimStrengthInstructions = getClaimStrengthInstructions(claimStrength);
@@ -96,7 +98,7 @@ In some rare cases you can give acknowledgement as part of the mirror but only i
 
 ## Core Rules
 - 1-5 sentences ONLY. Most mirrors should be 1-3. Short is not shallow.
-- Weave the user's own emotionally charged words into your mirror, then add a dimension they didn't have words for. Their words anchor recognition; your expansion creates the "yes, exactly" moment.
+- ${isFaint ? `Weave the user's own emotionally charged words into your mirror. Do not add a dimension they did not give you; at this signal strength an expansion is a guess wearing the clothes of insight.` : `Weave the user's own emotionally charged words into your mirror, then add a dimension they didn't have words for. Their words anchor recognition; your expansion creates the "yes, exactly" moment.`}
 - Use second person ("you") naturally.
 - Respond with ONLY the mirror text. No labels, no JSON, no preamble.
 - ALWAYS respond in the same language the user wrote in. If they wrote in French, mirror in French. If they wrote in Spanish, mirror in Spanish. Never switch languages unless the user explicitly asks you to respond in a specific language.
@@ -114,7 +116,7 @@ In some rare cases you can give acknowledgement as part of the mirror but only i
 ${toneInstructions}
 
 ## Intensity × Specificity
-${getIntensitySpecificityGuidance(classification.intensity, classification.specificity)}${claimStrengthInstructions}
+${isFaint ? "The signal is faint. Do not give it a form it has not taken." : getIntensitySpecificityGuidance(classification.intensity, classification.specificity)}${claimStrengthInstructions}
 ${entryTypeInstructions}
 ## Classification Context
 Primary: ${classification.primaryEmotion} (${classification.primaryEmotionConfidence.toFixed(2)})${classification.granularLabel ? ` → ${classification.granularLabel}` : ""}${classification.secondaryEmotion ? `\nUnderneath: ${classification.secondaryEmotion}` : ""}
@@ -123,14 +125,47 @@ ${classification.thematicTags.length > 0 ? `Themes: ${classification.thematicTag
 User's words: ${classification.userLanguageTags.length > 0 ? classification.userLanguageTags.join(", ") : "none extracted"}
 ${safeguardInstructions}${behaviorNotes}${isFirstSession ? "\nFirst session. Be slightly warmer. They don't know what to expect. The mirror should feel like a surprise." : ""}
 ${sessionMode === "night" ? getLateNightAddendum() : ""}
-## Pattern Context (this is the emotional terrain they tend to carry, let it actively shape what you notice and how precisely you name it; never reference past sessions explicitly)
+## Pattern Context (this is the emotional terrain they tend to carry, ${isFaint ? "let it inform your ear only; it may not supply anything tonight's words did not" : "let it actively shape what you notice and how precisely you name it"}; never reference past sessions explicitly)
 ${patternSummary}
-${buildMemoryContext(semanticProfile, episodicRecall)}
-${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, additionalInput) : ""}${useAudioTags ? `\n${AUDIO_TAG_INSTRUCTIONS}` : ""}`;
+${buildMemoryContext(semanticProfile, episodicRecall, isFaint)}
+${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, claimStrength === "holding") : ""}${useAudioTags ? `\n${AUDIO_TAG_INSTRUCTIONS}` : ""}`;
 
   const user = rawInput;
 
   return { system, user };
+}
+
+/**
+ * Meta-narration leak guard (doc §9.5). A rejected prototype arm emitted
+ * "Wait, let me redo that without the banned construction." straight into the
+ * mirror — the model narrating its own instructions instead of following them.
+ * Both ingredients are live in production, so the pipeline falls back rather
+ * than ship one.
+ *
+ * The rule vocabulary is matched only inside its meta construction, never as a
+ * bare word: the mirror is instructed to weave the user's own words back in,
+ * and "I got banned from the group chat" / "I can't follow his instructions"
+ * are ordinary things to bring here. Discarding a real mirror for echoing them
+ * is a worse failure than the leak.
+ */
+const META_NARRATION = [
+  // False start — the model restarting out loud.
+  /^(Wait\b|Let me\b|Actually, )/,
+  /\bbanned (construction|phrase|phrasing|word)/i,
+  // "instructions" only counts inside a meta construction -- the model
+  // pointing at its own prompt. A bare "the instructions" belongs to the user
+  // ("you read the instructions twice and still felt stupid").
+  /\bmy instructions?\b/i,
+  /\b(?:following|per|according to|as stated in) the instructions?\b/i,
+  /\bthe instructions? (?:above|below|here|say|says|said|state|require|forbid)\b/i,
+];
+
+export function hasMetaNarration(mirrorText: string): boolean {
+  // Audio tags ("[thoughtful] ...") are applied before the fence strips them,
+  // and a leading tag would otherwise defeat every anchored pattern — leaving
+  // premium users the one cohort the false-start check does not protect.
+  const text = mirrorText.replace(/\[[^\]\n]{1,40}\]/g, " ").trim();
+  return META_NARRATION.some((pattern) => pattern.test(text));
 }
 
 /**
@@ -141,10 +176,15 @@ ${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; i
  * memory MAY surface continuity ("this specific thing is back"), including
  * the user's own past words verbatim — that specificity is the whole point.
  * The profile stays invisible scaffolding.
+ *
+ * On the reach paths (`isFaint`), subtraction 4 (§4.3) narrows what recognition
+ * may refer to: recognising they are here again is allowed, letting a past
+ * moment explain tonight is not. The profile block is deliberately untouched.
  */
 function buildMemoryContext(
   semanticProfile?: string | null,
-  episodicRecall?: string[]
+  episodicRecall?: string[],
+  isFaint?: boolean
 ): string {
   const parts: string[] = [];
 
@@ -156,7 +196,12 @@ ${semanticProfile}`);
   if (episodicRecall && episodicRecall.length > 0) {
     parts.push(`## Past Moments Like This One (their own earlier words and mirrors, retrieved because they resemble tonight's input)
 ${episodicRecall.map((m, i) => `-- moment ${i + 1} -- \n${m}`).join("\n")}
-Use these for continuity: if the same situation or feeling has clearly returned, you may acknowledge that quietly, and you may reuse the user's own exact words from a past moment when they name it better than anything else could.
+${
+      isFaint
+        ? `You remember this person, and that may show. Recognition and understanding are separate claims and you have earned only the first. You may recognise that they are here again, or the manner in which they arrive, and nothing more. Nothing from a past moment may cross into tonight as explanation.
+- Never use a past moment to say what tonight is about, however well it fits`
+        : `Use these for continuity: if the same situation or feeling has clearly returned, you may acknowledge that quietly, and you may reuse the user's own exact words from a past moment when they name it better than anything else could.`
+    }
 - Never recall something not present in these moments, and never guess at details beyond them
 - Never recite history back ("last time you said...", dates, session counts)
 - Never force a connection; if tonight is unrelated, ignore these entirely
@@ -261,19 +306,38 @@ function getIntensitySpecificityGuidance(intensity: number, specificity: number)
 /**
  * Uncertainty routing (Phase 4, Loop #2): shape the mirror's CLAIM STRENGTH
  * from how sure the classifier was about tonight's read. Distinct axis from
- * Intensity × Specificity (which governs depth): this governs certainty. Only
- * the confident/tentative poles emit guidance; "measured" is the normal path
- * and says nothing so the base rules stand.
+ * Intensity × Specificity (which governs depth): this governs certainty.
+ * "measured" is the normal path and says nothing so the base rules stand.
+ *
+ * The `reaching` / `holding` blocks are verbatim from §4.1/§4.2 of
+ * docs/confidence-aware-mirroring.md and only hold alongside the subtractions
+ * applied in buildArticulatorPrompt — do not ship one without the other.
  *
  * Composes with the profile's longitudinal "what lands" calibration: that is
  * the prior about this person, this is the evidence about this moment.
  */
 function getClaimStrengthInstructions(claimStrength?: ClaimStrength): string {
   switch (claimStrength) {
-    case "tentative":
+    case "reaching":
       return `
-## Claim Strength: Tentative
-The read on this one is genuinely uncertain (the signal is faint and unformed). Offer the mirror as a naming that leaves room to be wrong, not an assertion. Reach toward the feeling rather than pinning it, and make it easy for them to say "not quite" and correct you. Do not hedge into vagueness; be specific, just held loosely.
+## Claim Strength: Reaching
+There is not enough here to build a full mirror. Name only what is genuinely present, then say plainly that what it attaches to is not in what they have given you yet. Locate the shortfall in the words on the page, not in them and not in you.
+- NEVER ask a question. The gap is stated, never posed.
+- NEVER guess at what is missing, and never offer alternatives or an "or".
+- NEVER make a general claim about how this kind of feeling works for people.
+- NEVER imply they are unclear, avoidant, or withholding.
+- NEVER apologise for the gap or explain why it is there.
+`;
+    case "holding":
+      return `
+## Claim Strength: Holding
+The reaching is over. Name what is actually present, flatly, and end on it. The feeling has arrived without anything attached to it, and how it is arriving is itself part of what is true tonight. Name the arriving. Do not characterise what is or is not behind it.
+- NEVER ask a question, and never invite them to add more.
+- NEVER say that something has not come through, is not here yet, or is not in what they have given you. That was the previous mirror's move; saying it twice reads as being stuck.
+- NEVER assert that there is nothing underneath it or no reason for it. You do not know that.
+- NEVER hedge or hold the claim loosely. What you name, you name flatly.
+- NEVER guess at a cause, a source, or a shape the words have not taken.
+- NEVER apologise, and never mark this as partial or incomplete.
 `;
     case "confident":
       return `
@@ -363,28 +427,29 @@ function getBehaviorNotes(
  *
  * When `userFeedback` is "not_quite", instructs the model to try a different angle/metaphor/emotional read.
  * When `userFeedback` is "say_more", instructs the model to incorporate additional context.
- * If `additionalInput` is provided, it is appended as quoted extra user input.
  *
  * @param existingMirror - The previous mirror text to include in the refinement section
  * @param userFeedback - Optional feedback flag affecting refinement instructions; supported values: `"not_quite"` or `"say_more"`
- * @param additionalInput - Optional additional user-provided text to append to the refinement context
- * @returns A formatted refinement context string containing the previous mirror and any refinement instructions or additional input
+ * @param isHolding - Holding path: subtraction 5 (§4.4) replaces the standard
+ *   refinement pushes, which otherwise read as permission to invent on a turn
+ *   that added no signal.
+ * @returns A formatted refinement context string containing the previous mirror and any refinement instructions
  */
 function buildRefinementContext(
   existingMirror: string,
   userFeedback?: string,
-  additionalInput?: string
+  isHolding?: boolean
 ): string {
   let context = `\n\n## Refinement\nYour previous mirror was: "${existingMirror}"`;
 
   if (userFeedback === "not_quite") {
-    context += `\nThe user said "Not quite": your mirror didn't land. Try a different angle, different metaphor, different emotional read.`;
+    context += isHolding
+      ? `\nChange what you name, not how much you claim. A different angle on the same faint signal is still the same faint signal.`
+      : `\nThe user said "Not quite": your mirror didn't land. Try a different angle, different metaphor, different emotional read.`;
   } else if (userFeedback === "say_more") {
-    context += `\nThe user wanted to say more: they had additional context to share. Incorporate it.`;
-  }
-
-  if (additionalInput) {
-    context += `\nAdditional input from the user: "${additionalInput}"`;
+    context += isHolding
+      ? `\nThe user added more words. They did not add more signal. Use anything genuinely new; do not treat the added length as permission to claim more than before.`
+      : `\nThe user wanted to say more: they had additional context to share. Incorporate it.`;
   }
 
   return context;

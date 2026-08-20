@@ -101,12 +101,14 @@ export function parseClassificationResponse(
   raw: string
 ): ClassificationResult {
   console.log("raw ", raw)
-  // Strip markdown code fences if present
-  const cleaned = raw
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
+  // Take the JSON object out of whatever the model wrapped it in. Fences are
+  // the common case; on crisis input Haiku also appends a hotline note AFTER
+  // the closing fence, and stripping fences alone left that prose in the
+  // string — JSON.parse threw and the session failed on exactly the input
+  // that must not fail.
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  const cleaned = start >= 0 && end > start ? raw.slice(start, end + 1) : raw.trim();
 
   const parsed = JSON.parse(cleaned);
 

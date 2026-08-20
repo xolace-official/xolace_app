@@ -1,24 +1,19 @@
 import { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import {
-  Chip,
-  LinkButton,
-  PressableFeedback,
-  useThemeColor,
-} from "heroui-native";
+import { Chip, PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import type { EntryType } from "@/src/features/reflect/types";
 import type { Id } from "@/convex/_generated/dataModel";
-import {
-  playMirrorArrival,
-  playAffirmativePress,
-} from "@/src/lib/haptics";
+import type { ClaimStrength } from "@/convex/ai/routing";
+import { playMirrorArrival } from "@/src/lib/haptics";
 import { useMirrorAudio } from "@/src/features/reflect/hooks/use-mirror-audio";
 import { ToneTipBanner } from "@/src/features/reflect/components/tone-tip-banner";
 import type { MirrorTone } from "@/src/features/settings/components/mirror-tone-picker-dialog";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+import { MirrorActionRow } from "./mirror-action-row";
+import { MirrorToneBadge } from "./mirror-tone-badge";
 
 type Props = {
   mirror: string;
@@ -26,6 +21,10 @@ type Props = {
   entryType: EntryType;
   sessionId: Id<"sessions"> | null;
   toneUsed: MirrorTone | null;
+  /** Derived server-side; "reaching"/"holding" means this mirror named a gap. */
+  claimStrength: ClaimStrength | null;
+  /** Refinement turns are exhausted — the row collapses to "That's it". */
+  atCap: boolean;
   onThatsIt: () => void;
   onNotQuite: () => void;
   onSayMore: () => void;
@@ -34,8 +33,6 @@ type Props = {
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const EASE_INITIAL_FADE = { opacity: 0 };
 const EASE_ANIMATE_FADE = { opacity: 1 };
-const EASE_INITIAL_SLIDE = { opacity: 0, translateY: 20 };
-const EASE_ANIMATE_SLIDE = { opacity: 1, translateY: 0 };
 const EASE_TEXTURE_TRANSITION = {
   type: "timing" as const,
   duration: 400,
@@ -44,24 +41,6 @@ const EASE_TEXTURE_TRANSITION = {
 const EASE_LABEL_TRANSITION = {
   type: "timing" as const,
   duration: 600,
-  easing: EASING,
-};
-const EASE_THATSIT_TRANSITION = {
-  type: "timing" as const,
-  duration: 400,
-  delay: 200,
-  easing: EASING,
-};
-const EASE_NOTQUITE_TRANSITION = {
-  type: "timing" as const,
-  duration: 400,
-  delay: 400,
-  easing: EASING,
-};
-const EASE_SAYMORE_TRANSITION = {
-  type: "timing" as const,
-  duration: 400,
-  delay: 600,
   easing: EASING,
 };
 const AUDIO_ANIMATION = {
@@ -86,29 +65,14 @@ export const MirrorState = ({
   entryType,
   sessionId,
   toneUsed,
+  claimStrength,
+  atCap,
   onThatsIt,
   onNotQuite,
   onSayMore,
 }: Props) => {
   const { isReady, isPlaying, toggle } = useMirrorAudio(sessionId);
   const accent = useThemeColor("accent");
-  const showToneBadge = toneUsed != null && toneUsed !== "adaptive";
-  const toneLabel = toneUsed ? toneUsed.charAt(0).toUpperCase() + toneUsed.slice(1) : "";
-
-  const TONE_BADGE: Partial<Record<string, { text: string; border: string }>> =
-    {
-      poetic: { text: "text-tone-poetic", border: "border-tone-poetic/40" },
-      gentle: { text: "text-tone-gentle", border: "border-tone-gentle/40" },
-      direct: { text: "text-tone-direct", border: "border-tone-direct/40" },
-      witnessed: {
-        text: "text-tone-witnessed",
-        border: "border-tone-witnessed/40",
-      },
-    };
-  const badgeStyle = (toneUsed ? TONE_BADGE[toneUsed] : undefined) ?? {
-    text: "text-foreground/40",
-    border: "border-foreground/20",
-  };
 
   // No audio cleanup here: useAudioPlayer releases the native player on unmount,
   // which stops playback. Pausing it ourselves races that release and crashes
@@ -180,17 +144,7 @@ export const MirrorState = ({
         )}
       </EaseView>
 
-      {showToneBadge && (
-        <View className="mb-3 flex-row">
-          <View
-            className={`rounded-full border px-2.5 py-0.5 ${badgeStyle.border}`}
-          >
-            <AppText className={`text-xs ${badgeStyle.text}`}>
-              {toneLabel}
-            </AppText>
-          </View>
-        </View>
-      )}
+      <MirrorToneBadge toneUsed={toneUsed} />
 
       <ScrollView
         style={styles.mirrorScroll}
@@ -205,58 +159,13 @@ export const MirrorState = ({
         </AppText>
       </ScrollView>
 
-      <View className="mt-14 gap-6">
-        <EaseView
-          initialAnimate={EASE_INITIAL_SLIDE}
-          animate={EASE_ANIMATE_SLIDE}
-          transition={EASE_THATSIT_TRANSITION}
-        >
-          <LinkButton
-            onPress={() => {
-              playAffirmativePress();
-              onThatsIt();
-            }}
-            size="lg"
-            className="self-start"
-          >
-            <LinkButton.Label className="font-semibold text-accent">
-              That&apos;s it
-            </LinkButton.Label>
-          </LinkButton>
-        </EaseView>
-
-        <EaseView
-          initialAnimate={EASE_INITIAL_SLIDE}
-          animate={EASE_ANIMATE_SLIDE}
-          transition={EASE_NOTQUITE_TRANSITION}
-        >
-          <LinkButton
-            onPress={onNotQuite}
-            size="md"
-            className="self-start"
-          >
-            <LinkButton.Label className="text-foreground/55">
-              Not quite
-            </LinkButton.Label>
-          </LinkButton>
-        </EaseView>
-
-        <EaseView
-          initialAnimate={EASE_INITIAL_SLIDE}
-          animate={EASE_ANIMATE_SLIDE}
-          transition={EASE_SAYMORE_TRANSITION}
-        >
-          <LinkButton
-            onPress={onSayMore}
-            size="md"
-            className="self-start"
-          >
-            <LinkButton.Label className="text-foreground/55">
-              Say more
-            </LinkButton.Label>
-          </LinkButton>
-        </EaseView>
-      </View>
+      <MirrorActionRow
+        claimStrength={claimStrength}
+        atCap={atCap}
+        onThatsIt={onThatsIt}
+        onNotQuite={onNotQuite}
+        onSayMore={onSayMore}
+      />
     </View>
   );
 };

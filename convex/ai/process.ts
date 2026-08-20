@@ -13,10 +13,11 @@ import {
 import { moderationCache, classifierCache } from "./cached";
 import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildClassifierPrompt } from "./prompts/classifier";
-import { buildArticulatorPrompt } from "./prompts/articulator";
+import { buildArticulatorPrompt, hasMetaNarration } from "./prompts/articulator";
 import { applyAudioFence } from "./prompts/mirrorAudioTags";
 import { evaluateSafeguard } from "./safeguard";
 import { decideMirrorOutcome, resolveMirrorTone } from "./mirrorPlan";
+import { EPISODIC_CONNECT_FLOOR } from "./routing";
 import { scheduleMirrorAudio } from "./tts";
 import {
   buildArticulatorPatternSummary,
@@ -26,7 +27,10 @@ import {
 
 import { rateLimiter, AI_MIRROR_LIMITS_PLUS } from "../lib/rateLimits";
 import { posthog } from "../posthog";
-import { rag } from "../rag";
+import {
+  searchEpisodicMemory,
+  type EpisodicSearch,
+} from "./helpers/episodicSearch";
 
 import type { SessionContext } from "./context";
 
@@ -136,7 +140,7 @@ export const generateMirror = internalAction({
       // from the user's personal namespace, matched raw-to-raw against
       // tonight's input. Best-effort — memory failing must never block
       // the mirror.
-      const [moderationResult, classification, episodicMatches] =
+      const [moderationResult, classification, episodic] =
         await Promise.all([
           moderationCache
             .fetch(ctx, { text: args.rawText })
@@ -146,7 +150,7 @@ export const generateMirror = internalAction({
             userPrompt: classifierPrompt.user,
           }),
           context.isFirstSession
-            ? Promise.resolve([] as EpisodicMatch[])
+            ? Promise.resolve({ matches: [] } as EpisodicSearch)
             : searchEpisodicMemory(
                 ctx,
                 session.emotionalProfileId,
@@ -154,6 +158,7 @@ export const generateMirror = internalAction({
                 args.rawText,
               ),
         ]);
+      const episodicMatches = episodic.matches;
       const episodicRecall = episodicMatches.map((m) => m.text);
 
       // 5. Evaluate safeguard (rule engine, no LLM)
@@ -189,6 +194,8 @@ export const generateMirror = internalAction({
         classification,
         safeguard,
         entryType: session.entryType ?? "open_prompt",
+        episodicTopScore: episodic.topScore,
+        profileReachedToday: context.profileReachedToday,
       });
 
       // 6. Articulate mirror (Sonnet)
@@ -224,7 +231,7 @@ export const generateMirror = internalAction({
 
         mirrorText = extractTextFromResponse(mirrorResponse).trim();
 
-        if (!mirrorText) {
+        if (!mirrorText || hasMetaNarration(mirrorText)) {
           mirrorText = FALLBACK_MIRROR;
         }
       } catch {
@@ -258,11 +265,26 @@ export const generateMirror = internalAction({
             }
           : {}),
         ...(plan.requiresFollowUp ? { requiresFollowUp: true } : {}),
+        // A fallback mirror names no gap, so it must not burn the profile's
+        // one reach for the day, wear the "Recommended" pill, or hand Loop #3
+        // a demotion — all three key off gapNamed.
+        ...(plan.claimStrength === "reaching" && !isFallback
+          ? { gapNamed: true }
+          : {}),
       });
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,
         event: "mirror_delivered",
         properties: {
+          // §9.4: the gate's own inputs ride every delivery, so "would this
+          // have reached?" is computable at read time on non-reaching sessions
+          // too — that is what makes the pre/post window (§9.3) a control.
+          sessionId: args.sessionId,
+          specificity: classification.specificity,
+          memoryConnected:
+            episodic.topScore !== undefined &&
+            episodic.topScore >= EPISODIC_CONNECT_FLOOR,
+          episodicTopScore: episodic.topScore ?? null,
           entryType: session.entryType ?? "open_prompt",
           toneUsed: plan.tone,
           claimStrength: plan.claimStrength,
@@ -306,6 +328,11 @@ export const generateMirror = internalAction({
           ? { safeguardTrigger: safeguard.triggerType }
           : {}),
         episodicMatchKeys: episodicMatches.map((m) => m.key),
+        // Spread, not `?? 0`: absent means no search ran or nothing came back,
+        // and a zero would read as a genuine (terrible) score at calibration.
+        ...(episodic.topScore !== undefined
+          ? { episodicTopScore: episodic.topScore }
+          : {}),
         ...(context.semanticProfileVersion !== null
           ? { profileVersion: context.semanticProfileVersion }
           : {}),
@@ -409,39 +436,6 @@ export const generateMirror = internalAction({
     }
   },
 });
-
-/**
- * One episodic memory that informed a mirror: composite text for the
- * articulator, RAG key (= sessionId) for Understanding provenance.
- */
-type EpisodicMatch = { text: string; key: string };
-
-/**
- * Top-K episodic matches for the current input from the user's personal
- * namespace. Returns composite texts, newest-format
- * or metadata-only alike. Best-effort: any failure (no namespace yet,
- * embedding outage) returns [] so memory can never block the mirror.
- */
-async function searchEpisodicMemory(
-  ctx: Parameters<typeof rag.search>[0],
-  emotionalProfileId: string,
-  currentSessionId: string,
-  rawText: string,
-): Promise<EpisodicMatch[]> {
-  try {
-    const { entries } = await rag.search(ctx, {
-      namespace: emotionalProfileId,
-      query: rawText,
-      limit: 4,
-    });
-    return entries
-      .filter((e) => e.key !== undefined && e.key !== currentSessionId)
-      .slice(0, 3)
-      .map((e) => ({ text: e.text, key: e.key as string }));
-  } catch {
-    return [];
-  }
-}
 
 function sanitizeAiError(error: Error): string {
   const msg = error.message;

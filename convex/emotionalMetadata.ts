@@ -104,6 +104,9 @@ export const store = internalMutation({
     safeguardLevel: v.optional(safeguardLevelValidator),
     safeguardTrigger: v.optional(triggerTypeValidator),
     episodicMatchKeys: v.optional(v.array(v.string())),
+    // As returned by rag.search. Omitted (never 0) when no search ran or
+    // nothing was retrieved.
+    episodicTopScore: v.optional(v.number()),
     profileVersion: v.optional(v.number()),
     // Follow-up system: brief internal reason from the classifier. Never
     // shown to the user. Present only when the classifier flagged a follow-up.
@@ -153,6 +156,91 @@ export const store = internalMutation({
       ...row,
       createdAt: Date.now(),
     });
+  },
+});
+
+/**
+ * Replace the Understanding of a session after a refinement turn
+ * (docs/confidence-aware-mirroring.md §5.3).
+ *
+ * Replace, not merge: every downstream consumer runs after the session ends
+ * and wants the FINAL read of the moment, so a new null `granularLabel` must
+ * win over the old label rather than losing to it. Each optional field is
+ * therefore passed explicitly — an omitted one patches as `undefined`, which
+ * Convex deletes.
+ *
+ * Narrow on purpose. `store` requires `riskFlag` (safeguard-derived, and
+ * clarify never runs safeguard), and preservation of the safety fields there
+ * is an invisible property of which keys the caller happened to spread. This
+ * validator has no safety fields at all, so wiping one is not expressible.
+ *
+ * `followUpReason` is raise-only — a re-classification may turn a follow-up
+ * on, never off.
+ */
+export const replaceForRefinement = internalMutation({
+  args: {
+    sessionId: v.id("sessions"),
+    classifierVersion: v.string(),
+    primaryEmotion: v.string(),
+    primaryEmotionConfidence: v.number(),
+    granularLabel: v.optional(v.string()),
+    secondaryEmotion: v.optional(v.string()),
+    intensity: v.number(),
+    specificity: v.number(),
+    thematicTags: v.array(v.string()),
+    userLanguageTags: v.array(v.string()),
+    temporalContext: v.optional(
+      v.union(
+        v.literal("past_focused"),
+        v.literal("present_focused"),
+        v.literal("future_focused"),
+      ),
+    ),
+    // Replaced too: Loop #3 fires once at terminal confirmation and reads
+    // whatever the row holds then, so these must credit the memories that
+    // informed the mirror the person actually confirmed. The pair moves
+    // together, and only when `episodicMatchKeys` is passed — omitting it says
+    // the search never ran (outage), which must leave the existing provenance
+    // alone rather than erase it.
+    episodicMatchKeys: v.optional(v.array(v.string())),
+    episodicTopScore: v.optional(v.number()),
+    followUpReason: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("emotional_metadata")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .unique();
+    // No row means the session was never classified — clarify fails the
+    // session before it gets here, so there is nothing to replace.
+    if (!existing) return null;
+
+    await ctx.db.patch(existing._id, {
+      classifierVersion: args.classifierVersion,
+      primaryEmotion: args.primaryEmotion,
+      primaryEmotionConfidence: args.primaryEmotionConfidence,
+      granularLabel: args.granularLabel,
+      secondaryEmotion: args.secondaryEmotion,
+      intensity: args.intensity,
+      specificity: args.specificity,
+      thematicTags: args.thematicTags,
+      userLanguageTags: args.userLanguageTags,
+      temporalContext: args.temporalContext,
+      ...(args.episodicMatchKeys !== undefined
+        ? {
+            episodicMatchKeys: args.episodicMatchKeys,
+            episodicTopScore: args.episodicTopScore,
+          }
+        : {}),
+      // Stamped only when absent: replace otherwise loses the fact that
+      // confidence moved, and the field's presence IS "this session refined".
+      ...(existing.initialConfidence === undefined
+        ? { initialConfidence: existing.primaryEmotionConfidence }
+        : {}),
+      ...(args.followUpReason ? { followUpReason: args.followUpReason } : {}),
+    });
+    return null;
   },
 });
 
