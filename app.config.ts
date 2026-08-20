@@ -56,6 +56,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
     name: getAppName(),
     slug: "xolace",
+    version: "1.9.1",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "xolace",
