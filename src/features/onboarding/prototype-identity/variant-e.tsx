@@ -20,9 +20,9 @@ import { SymbolView } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
 
 import { AppText } from '@/src/components/shared/app-text';
-import { EmberGlow } from './ember-glow';
+import { HearthBackdrop } from './hearth-backdrop';
 import { ProofWell } from './proof-well';
-import { StoryShell } from './story-shell';
+import { StoryShell, type Backdrop } from './story-shell';
 import type { StoryBeat } from './story-slides';
 
 const Beat = ({
@@ -88,17 +88,14 @@ const Beat = ({
   );
 };
 
-const Hearth = () => (
-  <View pointerEvents="none" className="absolute inset-0 items-center justify-end">
-    <View style={{ marginBottom: -420 }}>
-      <EmberGlow size={760} intensity={0.19} token="ember" />
-    </View>
-  </View>
+/** Hoisted so it isn't a fresh component type on every VariantE render. */
+const hearthBackdrop: Backdrop = ({ scrollX, width }) => (
+  <HearthBackdrop scrollX={scrollX} width={width} />
 );
 
 export const VariantE = () => (
   <StoryShell
-    backdrop={<Hearth />}
+    backdrop={hearthBackdrop}
     renderBeat={({ beat, index, width, scrollX }) => (
       <Beat beat={beat} index={index} width={width} scrollX={scrollX} />
     )}

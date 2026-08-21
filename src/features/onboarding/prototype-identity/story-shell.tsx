@@ -47,12 +47,17 @@ export type BeatRenderer = (args: {
   scrollX: SharedValue<number>;
 }) => ReactElement | null;
 
+/** A node, or a render fn when the backdrop needs to react to the scroll. */
+export type Backdrop =
+  | ReactNode
+  | ((args: { scrollX: SharedValue<number>; width: number }) => ReactNode);
+
 export const StoryShell = ({
   renderBeat,
   backdrop,
 }: {
   renderBeat: BeatRenderer;
-  backdrop?: ReactNode;
+  backdrop?: Backdrop;
 }) => {
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
@@ -86,7 +91,7 @@ export const StoryShell = ({
 
   return (
     <View className="flex-1 bg-background" style={{ paddingBottom: insets.bottom + 12 }}>
-      {backdrop}
+      {typeof backdrop === 'function' ? backdrop({ scrollX: c.scrollX, width: c.width }) : backdrop}
 
       {/* Bottom stack — revealed as the deck lifts off it. */}
       <View className="mt-auto">
