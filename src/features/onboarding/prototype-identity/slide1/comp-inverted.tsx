@@ -15,17 +15,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
 import { Hearth } from './hearth';
 import { HearthVideo } from './hearth-video';
+import { HearthShader } from './hearth-shader';
 import { SLIDE1 } from './copy';
 
-export const CompInverted = ({ video = false }: { video?: boolean }) => {
+export const CompInverted = ({ fire = 'skia' }: { fire?: 'skia' | 'video' | 'shader' }) => {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
   return (
     <View className="flex-1 bg-background">
       <View className="absolute inset-0">
-        {video ? (
+        {fire === 'video' ? (
           <HearthVideo width={width} height={height} />
+        ) : fire === 'shader' ? (
+          <HearthShader width={width} height={height} />
         ) : (
           <Hearth width={width} height={height} scale={1.15} cyRatio={1.0} />
         )}
