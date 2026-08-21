@@ -38,6 +38,21 @@ const DUSK_COPY = {
   aside: 'The flames help you see what you’re carrying.',
 };
 
+/**
+ * The old plus-beat copy ("the fire stays lit" / "your patterns, your
+ * mirror's voice, a line each day") was mood with nothing to actually sell —
+ * the last beat before the ask, and it asked for nothing. No hard paywall
+ * (Plus never blocks the free product), but this is the one spot in the tale
+ * built to plant the offer. Made concrete: what Plus is, that it's not a
+ * gate, and the founding-pricing hook while it's live.
+ */
+const PLUS_COPY = {
+  beat: 'The fire\nstays lit for you.',
+  aside:
+    'Full history, your mirror in its own voice, a line that’s really yours each day. Free to start — Xolace+ is there when you want more.',
+  tag: 'Founding pricing · while it lasts',
+};
+
 const Beat = ({
   beat,
   index,
@@ -51,6 +66,7 @@ const Beat = ({
 }) => {
   const ember = useDeckColor('ember');
   const isDusk = beat.id === 'dusk';
+  const isPlus = beat.id === 'plus';
 
   const rStyle = useAnimatedStyle(() => {
     const range = [width * (index - 1), width * index, width * (index + 1)];
@@ -96,7 +112,7 @@ const Beat = ({
         }
         style={{ fontFamily: 'Poppins-Medium' }}
       >
-        {isDusk ? DUSK_COPY.beat : beat.beat}
+        {isDusk ? DUSK_COPY.beat : isPlus ? PLUS_COPY.beat : beat.beat}
       </AppText>
 
       {beat.kind === 'proof' ? (
@@ -106,8 +122,17 @@ const Beat = ({
       ) : null}
 
       <AppText className="text-foreground/42 text-[14px] leading-6 mt-5 pr-4">
-        {isDusk ? DUSK_COPY.aside : beat.aside}
+        {isDusk ? DUSK_COPY.aside : isPlus ? PLUS_COPY.aside : beat.aside}
       </AppText>
+
+      {isPlus ? (
+        <AppText
+          className="text-ember/75 text-[10.5px] uppercase mt-4"
+          style={{ letterSpacing: 2 }}
+        >
+          {PLUS_COPY.tag}
+        </AppText>
+      ) : null}
     </Animated.View>
   );
 };
