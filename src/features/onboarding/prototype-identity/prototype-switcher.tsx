@@ -14,6 +14,7 @@ export const VARIANTS = [
   { key: 'C', name: 'The Journal Page' },
   { key: 'D', name: 'The Tale, on Cards' },
   { key: 'E', name: 'The Tale, in the Dark' },
+  { key: 'F', name: 'The Tale, Centered' },
 ] as const;
 
 export type VariantKey = (typeof VARIANTS)[number]['key'];
