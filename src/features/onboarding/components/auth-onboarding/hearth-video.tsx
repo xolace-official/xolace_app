@@ -1,9 +1,9 @@
 /**
- * PROTOTYPE — throwaway. Ticket #200, slide 1 lab.
+ * The fire behind the whole deck: a graded, seamlessly looping clip.
  *
- * The real thing, in place of the Skia stand-in: a graded, seamlessly looping
- * fire behind the same layout numbers. The clip here is Pexels stock run
- * through `grade-fire.sh` — a DIRECTION TEST, not the shipping asset.
+ * PLACEHOLDER ASSET: `hearth-test.mp4` is Pexels stock run through
+ * `grade-fire.sh`, kept from the #200 direction test. Swap it (and its poster)
+ * for the real graded clip when it lands — nothing else here changes.
  *
  * The load gap: `useVideoPlayer` decodes asynchronously, so for ~200-600ms
  * `VideoView` is a black rectangle. Fix is the oldest one in video: a poster

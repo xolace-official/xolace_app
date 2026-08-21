@@ -1,6 +1,4 @@
 /**
- * PROTOTYPE — throwaway. Ticket #200.
- *
  * The odd-one-out beat. Every other beat is words on the dark; this one holds
  * up a real in-app artifact — the weekly cohort card from Discovery — so the
  * "you are not alone" claim is shown rather than asserted.

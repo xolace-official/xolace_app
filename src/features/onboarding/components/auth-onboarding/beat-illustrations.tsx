@@ -1,17 +1,19 @@
 /**
- * PROTOTYPE — throwaway. Ticket #200.
+ * One small hand-drawn line scene per beat, drawn with `react-native-svg`
+ * rather than a sourced asset. Deliberately NOT the orb/ember mascot; each
+ * scene is specific to what its beat says.
  *
- * Variant G's answer to "try real illustration instead of the glyph": one
- * small hand-drawn line scene per beat, reusing `react-native-svg` (already a
- * dependency) rather than a generated/sourced asset — a cheap concrete thing
- * to react to before committing to a real illustration brief. Deliberately
- * NOT the orb/ember mascot; each scene is specific to what its beat says.
+ * PLACEHOLDER for `vent` / `mirror` / `xolacers` / `plus`: real illustration
+ * assets for those four are tracked in #203. When one lands, drop it in here
+ * (as `dusk` already does with `flux-campfire.png` in the slide) and delete
+ * the matching scene below.
  *
  * `proof` has no entry — that beat already shows a real artifact (ProofWell),
  * so it doesn't need a second illustration competing with it.
  */
+import type { ReactElement } from 'react';
 import Svg, { Circle, Path } from 'react-native-svg';
-import type { StoryBeat } from './story-slides';
+import type { StoryBeat } from '@/src/features/onboarding/story-beats';
 
 type IllustrationProps = { color: string; size: number };
 
@@ -100,7 +102,7 @@ const Plus = ({ color, size }: IllustrationProps) => (
   </Svg>
 );
 
-const BY_BEAT: Partial<Record<string, (p: IllustrationProps) => ReturnType<typeof Svg>>> = {
+const BY_BEAT: Partial<Record<string, (p: IllustrationProps) => ReactElement>> = {
   dusk: Dusk,
   vent: Vent,
   mirror: Mirror,

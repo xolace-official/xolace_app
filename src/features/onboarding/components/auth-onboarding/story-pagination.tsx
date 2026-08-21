@@ -1,13 +1,8 @@
 /**
- * PROTOTYPE — throwaway. Ticket #198, variants D & E.
- *
- * Superlist's pagination behaviour, ported to Xolace tokens: the ACTIVE bar is
- * ~3x the width of the others and fills left-to-right over the beat's
- * duration, then auto-advances. Dragging cancels the fill and restarts it on
- * release. Completing the last beat expands the auth sheet on its own.
- *
- * Kept as its own file so variants A/B/C (which use hairlines / ember dots /
- * page ticks) are untouched.
+ * The pagination row, ported from superlist's behaviour to Xolace tokens: the
+ * ACTIVE bar is ~3x the width of the others and fills left-to-right over the
+ * beat's duration, then auto-advances. Dragging cancels the fill and restarts
+ * it on release. Completing the last beat expands the auth sheet on its own.
  */
 import { useEffect } from 'react';
 import { useWindowDimensions, View } from 'react-native';
@@ -24,7 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { STORY_BEATS } from './story-slides';
+import { STORY_BEATS } from '@/src/features/onboarding/story-beats';
 
 const GAP = 4;
 
@@ -37,6 +32,7 @@ type ItemProps = {
   total: number;
   duration: number;
   isDragging: SharedValue<boolean>;
+  /** Worklet — moves the deck straight from the UI thread. */
   onAdvance: (index: number) => void;
   onFinish: () => void;
 };
@@ -112,7 +108,7 @@ const PaginationItem = ({
         // Tale over — the fire invites you to sit down.
         scheduleOnRN(onFinish);
       } else {
-        scheduleOnRN(onAdvance, currentIndex + 1);
+        onAdvance(currentIndex + 1);
       }
     },
   );

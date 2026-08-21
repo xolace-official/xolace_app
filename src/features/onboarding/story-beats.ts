@@ -1,26 +1,11 @@
 /**
- * PROTOTYPE — throwaway. Ticket #200 (content), on #198's variant-E shell.
- *
- * #198 locked the FORM: a six-beat tale in order, no card, ember-led chapter
- * marks. This file is the CONTENT decision — which features get a beat, what
- * each one says, and what it looks like.
- *
- * Three changes from #198's placeholder beats:
- *
- * 1. `kind: 'proof'` — one beat deliberately breaks the shape. Every other beat
- *    is words on the dark; this one is a real in-app artifact (the weekly
- *    cohort card) held up in a well. It sits at position 4 so the rhythm breaks
- *    after you have learned it, and before the ask.
- * 2. Xolacers now means what it means in-product: a NAMED volunteer listener in
- *    a 1:1 conversation, with you anonymous as `Camper XXXX`. #198's beat
- *    described peer reflections instead. The "you are not the only one" job
- *    moved to the proof beat, which does it with a real number.
- * 3. Quotes lost its standalone beat — see the ticket. Seven beats made the
- *    tale a list; the line you carry away is Xolace+'s aside now.
+ * The six beats of the onboarding tale, in order. Form locked by #198 (a
+ * six-beat tale, no card, ember-led chapter marks), content by #200.
  *
  * Copy rule inherited from the product: NOTHING here may be a number or a
- * quote we cannot defend. The cohort figure is the real shipped mechanic
- * (>= 3 matches or no number at all), never a decorative stat.
+ * quote we cannot defend. The cohort figure on the `proof` beat is the real
+ * shipped mechanic (>= 3 matches or no number at all), never a decorative
+ * stat.
  */
 import type { SymbolViewProps } from 'expo-symbols';
 
@@ -33,20 +18,24 @@ export type StoryBeat = {
   /** What it actually is, once the sentence has landed. */
   aside: string;
   symbol: SymbolViewProps['name'];
-  /** ms this beat holds before auto-advancing (superlist's slide duration). */
+  /** ms this beat holds before auto-advancing. */
   duration: number;
   /**
    * 'tale' (default) = words on the dark, as #198 decided.
    * 'proof'          = the odd one out: a real artifact in a contained well.
    */
   kind?: 'tale' | 'proof';
+  /** Ember-cased footnote under the aside. Only Xolace+ carries one. */
+  tag?: string;
 };
 
 export const STORY_BEATS: StoryBeat[] = [
   {
     id: 'dusk',
-    beat: "It's late,\nand it's still there.",
-    aside: 'The thing you carried all day and never said out loud.',
+    // Paired with `flux-campfire.png` — a figure sitting alone by a lit fire.
+    // The copy is about that stillness, not about carried weight.
+    beat: 'You sit by the fire,\nalone for now.',
+    aside: 'The flames help you see what you’re carrying.',
     symbol: 'moon.stars',
     duration: 3400,
   },
@@ -86,8 +75,13 @@ export const STORY_BEATS: StoryBeat[] = [
   {
     id: 'plus',
     label: 'Xolace+',
-    beat: 'The fire\nstays lit.',
-    aside: 'Your patterns, your mirror’s voice, a line each day that came from you.',
+    // The last beat before the ask, so it is the one spot in the tale built to
+    // plant the offer — concrete about what Plus is, and that it never gates
+    // the free product.
+    beat: 'The fire\nstays lit for you.',
+    aside:
+      'Full history, your mirror in its own voice, a line that’s really yours each day. Free to start — Xolace+ is there when you want more.',
+    tag: 'Founding pricing · while it lasts',
     symbol: 'flame.circle',
     duration: 3400,
   },

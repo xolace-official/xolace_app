@@ -1,12 +1,9 @@
 /**
- * PROTOTYPE — throwaway. Ticket #200.
- *
- * The idea this file exists to test: the fire is not a per-slide illustration,
- * it is ONE continuous thing the deck moves over. Mounted once, behind every
- * beat, and the carousel acts as a camera — the fire drops and dims when the
- * words need the screen, and flares back when the beat is about the fire
- * staying lit. Nothing cuts, so the deck reads as one place rather than six
- * pages about a place.
+ * The fire is not a per-slide illustration, it is ONE continuous thing the
+ * deck moves over. Mounted once, behind every beat, with the carousel acting
+ * as a camera — the fire drops and dims when the words need the screen, and
+ * flares back when the beat is about the fire staying lit. Nothing cuts, so
+ * the deck reads as one place rather than six pages about a place.
  *
  * It is also the cheap version: one decode, one texture, one loop for the
  * whole deck instead of six mounts.
@@ -18,6 +15,9 @@
  *   3 proof     returns to mid; the beat is about other fires out there
  *   4 xolacers  mid, steady
  *   5 plus      flares, brightest — "the fire stays lit"
+ *
+ * The fire composites ONTO the dawn arc behind it (`SkyArc`), so the sky lifts
+ * across the six beats while the fire stays the light source.
  */
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,9 +28,9 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { HearthVideo } from './slide1/hearth-video';
+import { STORY_BEATS } from '@/src/features/onboarding/story-beats';
+import { HearthVideo } from './hearth-video';
 import { SkyArc } from './sky-arc';
-import { STORY_BEATS } from './story-slides';
 
 /** One keyframe per beat. Values are interpolated continuously between them. */
 const SCALE = [1.16, 1.08, 1.0, 1.06, 1.06, 1.22];
@@ -46,13 +46,11 @@ const TOP_SCRIM_AT = [1, 1, 0.9, 0.7, 0.5, 0.28];
 export const HearthBackdrop = ({
   scrollX,
   width,
-  sky = false,
   dawnCeiling = 1,
 }: {
   scrollX: SharedValue<number>;
   width: number;
-  /** Option B. Off = the deck stays night the whole way (option A). */
-  sky?: boolean;
+  /** 1 = full sunrise. Lower holds a dark-theme user at a pre-dawn glow. */
   dawnCeiling?: number;
 }) => {
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
@@ -74,17 +72,17 @@ export const HearthBackdrop = ({
   }));
 
   const rTopScrim = useAnimatedStyle(() => ({
-    opacity: sky ? interpolate(scrollX.get(), stops, topScrim, Extrapolation.CLAMP) : 1,
+    opacity: interpolate(scrollX.get(), stops, topScrim, Extrapolation.CLAMP),
   }));
 
   return (
     <View pointerEvents="none" className="absolute inset-0 overflow-hidden">
-      {sky ? <SkyArc scrollX={scrollX} width={width} dawnCeiling={dawnCeiling} /> : null}
+      <SkyArc scrollX={scrollX} width={width} dawnCeiling={dawnCeiling} />
 
       {/* `screen` drops the clip's black to transparent so the flames composite
           ONTO the sky instead of punching an opaque hole in it. Without it the
           dawn arc is invisible behind the fire — the whole option dies here. */}
-      <View style={[{ flex: 1 }, sky ? BLEND_SCREEN : null]}>
+      <View style={[{ flex: 1 }, BLEND_SCREEN]}>
         <Animated.View style={[{ flex: 1 }, rFire]}>
           <HearthVideo width={screenWidth} height={screenHeight} />
         </Animated.View>
@@ -103,9 +101,9 @@ export const HearthBackdrop = ({
         />
       </Animated.View>
 
-      {/* Variant E bottom-anchors the beat, so the words land ON the brightest
-          part of the fire. This is the legibility floor: enough to hold 4.5:1
-          without reading as a black box over the flames. */}
+      {/* The words land ON the brightest part of the fire. This is the
+          legibility floor: enough to hold 4.5:1 without reading as a black box
+          over the flames. */}
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.62)', 'rgba(0,0,0,0.88)']}
         locations={[0, 0.46, 1]}

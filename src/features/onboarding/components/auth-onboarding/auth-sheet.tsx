@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE — throwaway. Ticket #198, variants D & E. Content decided by #201.
+ * The sign-in half of the screen, revealed as the deck lifts off it.
  *
  * Keeps superlist's morphing bottom pill exactly: ONE button holding two rows
  * behind `overflow-hidden`. Collapsed it reads "Pull up a seat"; as the sheet
@@ -8,26 +8,41 @@
  * auth, so the second row becomes the way BACK to the tale, which keeps the
  * button useful in both states instead of morphing into a dead end.
  *
- * #201: the reassurance paragraph is cut — too much text for a ~250px sheet.
- * Legal surfaces as a permanent, tappable Terms/Privacy row wired to the real
- * LegalBottomSheet, not a paragraph.
+ * #201: no reassurance paragraph — too much text for a ~250px sheet. Legal
+ * surfaces as a permanent, tappable Terms/Privacy row wired to the real
+ * LegalBottomSheet.
  */
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
   Extrapolation,
+  FadeIn,
   interpolate,
+  LinearTransition,
   useAnimatedStyle,
   type SharedValue,
 } from 'react-native-reanimated';
 import { SymbolView } from 'expo-symbols';
-import { useDeckColor } from './deck-color';
+import { Button, Spinner } from 'heroui-native';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { LegalBottomSheet } from '@/src/features/auth/components/legal-bottom-sheet';
-import { PRIVACY_POLICY, TERMS_OF_SERVICE, type LegalDocument } from '@/src/features/auth/components/legal-content';
+import {
+  PRIVACY_POLICY,
+  TERMS_OF_SERVICE,
+  type LegalDocument,
+} from '@/src/features/auth/components/legal-content';
+import { useProviderSignIn } from '@/src/features/auth/use-provider-sign-in';
+import { useDeckColor } from './deck-color';
 
-export const StoryAuthBlock = ({
+const SPINNER_ENTERING = FadeIn.delay(50);
+/** The old AuthScreen's morph: the row springs down to a spinner-sized pill
+ *  rather than swapping its contents in place. */
+const BUTTON_LAYOUT = LinearTransition.springify();
+const BUTTON_CLASS =
+  'flex-row h-12 items-center justify-center gap-3 rounded-full border border-border bg-surface-secondary';
+
+export const AuthSheetBlock = ({
   progress,
   onCollapse,
 }: {
@@ -37,6 +52,7 @@ export const StoryAuthBlock = ({
   const muted = useDeckColor('muted');
   const foreground = useDeckColor('foreground');
   const [activeDocument, setActiveDocument] = useState<LegalDocument | null>(null);
+  const { loadingProvider, signInWithApple, signInWithGoogle } = useProviderSignIn();
 
   const rStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.get(), [0.1, 0.8], [0, 1], Extrapolation.CLAMP),
@@ -45,7 +61,7 @@ export const StoryAuthBlock = ({
 
   return (
     <Animated.View style={rStyle}>
-      <Pressable onPress={onCollapse} className="self-center mb-5 p-1">
+      <Pressable onPress={onCollapse} className="self-center mb-5 p-1" hitSlop={12}>
         <SymbolView name="chevron.down" size={16} tintColor={muted} />
       </Pressable>
 
@@ -57,14 +73,46 @@ export const StoryAuthBlock = ({
       </AppText>
 
       <View className="gap-3 px-6 mb-4">
-        <Pressable className="flex-row h-12 items-center justify-center gap-3 rounded-full border border-border bg-surface-secondary">
-          <SymbolView name="globe" size={17} tintColor={foreground} />
-          <AppText className="text-foreground/90 text-[15px]">Continue with Google</AppText>
-        </Pressable>
-        <Pressable className="flex-row h-12 items-center justify-center gap-3 rounded-full border border-border bg-surface-secondary">
-          <SymbolView name="apple.logo" size={17} tintColor={foreground} />
-          <AppText className="text-foreground/90 text-[15px]">Continue with Apple</AppText>
-        </Pressable>
+        <Button
+          onPress={signInWithGoogle}
+          variant="ghost"
+          size="lg"
+          isDisabled={loadingProvider !== null}
+          isIconOnly={loadingProvider === 'google'}
+          layout={BUTTON_LAYOUT}
+          className={`${BUTTON_CLASS}${loadingProvider === 'google' ? ' self-center' : ''}`}
+        >
+          {loadingProvider === 'google' ? (
+            <Spinner entering={SPINNER_ENTERING} color={foreground} />
+          ) : (
+            <>
+              <SymbolView name="globe" size={17} tintColor={foreground} />
+              <Button.Label className="text-foreground/90 text-[15px]">
+                Continue with Google
+              </Button.Label>
+            </>
+          )}
+        </Button>
+        <Button
+          onPress={signInWithApple}
+          variant="ghost"
+          size="lg"
+          isDisabled={loadingProvider !== null}
+          isIconOnly={loadingProvider === 'apple'}
+          layout={BUTTON_LAYOUT}
+          className={`${BUTTON_CLASS}${loadingProvider === 'apple' ? ' self-center' : ''}`}
+        >
+          {loadingProvider === 'apple' ? (
+            <Spinner entering={SPINNER_ENTERING} color={foreground} />
+          ) : (
+            <>
+              <SymbolView name="apple.logo" size={17} tintColor={foreground} />
+              <Button.Label className="text-foreground/90 text-[15px]">
+                Continue with Apple
+              </Button.Label>
+            </>
+          )}
+        </Button>
       </View>
 
       <View className="flex-row justify-center gap-1">

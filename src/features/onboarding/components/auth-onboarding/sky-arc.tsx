@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE — throwaway. Ticket #200, option B: "the dawn arc".
+ * The dawn arc (#200, option B — shipped).
  *
  * The problem this solves: the deck has to be dark (fire only reads as a light
  * source against dark), but the app defaults to `theme: 'system'`, so most
@@ -28,7 +28,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { STORY_BEATS } from './story-slides';
+import { STORY_BEATS } from '@/src/features/onboarding/story-beats';
 
 /** Cool and nearly black. The base layer — never fades, so nothing shows through. */
 const NIGHT = ['#070912', '#04050A', '#000000'] as const;

@@ -1,35 +1,28 @@
-/* eslint-disable react-hooks/refs -- PROTOTYPE ONLY.
- * Gesture builders and FlatList callbacks are constructed during render while
- * capturing `listRef`-reading helpers, so the compiler's ref pass can't prove
- * they only run on tap/scroll. It fires on the original superlist sample too —
- * inherent to the ported pattern, not this wiring, and harmless at runtime.
- * ponytail: silenced here because these files get deleted; the production port
- * should instead drive scrolling from a shared value the list owner reacts to,
- * keeping the ref out of render-time closures entirely.
- */
 /**
- * PROTOTYPE — throwaway. Ticket #198, variants D & E.
+ * The carousel half of the auth-onboarding screen: horizontal beat paging,
+ * an infinite wrap, and the vertical expand/collapse of the sign-in sheet.
  *
- * Separate from `use-expand-gesture.ts` (which variants A/B/C use and which
- * must not change). This one adds the three things the tale needs: auto-advance
- * with a drag lock, an infinite wrap, and auto-expansion when the last beat
- * finishes.
+ * `progress`: 0 = telling the tale, 1 = sign-in open.
  *
- * progress: 0 = telling the tale, 1 = sign-in open.
+ * Scrolling is driven from the UI thread via `useAnimatedRef` + `scrollTo`,
+ * not by calling `scrollToIndex` on a ref captured in a render-time closure
+ * (which is what the prototype did, and what forced a `react-hooks/refs`
+ * suppression). Everything that moves the list is a worklet, so a tap or an
+ * auto-advance never has to round-trip through the RN runtime.
  */
-import { useCallback, useRef, useState } from 'react';
-import { Platform, useWindowDimensions } from 'react-native';
-import { FlatList } from 'react-native-gesture-handler';
+import { useState } from 'react';
+import { useWindowDimensions } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
-import {
+import Animated, {
+  scrollTo,
+  useAnimatedRef,
   useAnimatedScrollHandler,
   useSharedValue,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
 
-import { STORY_BEATS, type StoryBeat } from './story-slides';
+import { STORY_BEATS, type StoryBeat } from '@/src/features/onboarding/story-beats';
 
 const SWIPE_THRESHOLD = 24;
 const DRAG_DAMPING = 260;
@@ -39,7 +32,7 @@ export const LOOPED_BEATS: StoryBeat[] = [...STORY_BEATS, { ...STORY_BEATS[0], i
 
 export const useStoryCarousel = () => {
   const { width } = useWindowDimensions();
-  const listRef = useRef<FlatList<StoryBeat>>(null);
+  const listRef = useAnimatedRef<Animated.FlatList<StoryBeat>>();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const scrollX = useSharedValue(0);
@@ -48,6 +41,12 @@ export const useStoryCarousel = () => {
   const progress = useSharedValue(0);
   const startProgress = useSharedValue(0);
 
+  /** Worklet — the one way the deck moves. Callable from any UI-thread code. */
+  const scrollToIndex = (index: number) => {
+    'worklet';
+    scrollTo(listRef, index * width, 0, true);
+  };
+
   const scrollHandler = useAnimatedScrollHandler({
     onBeginDrag: () => isDragging.set(true),
     onScroll: (e) => {
@@ -55,22 +54,17 @@ export const useStoryCarousel = () => {
       animatedIndex.set(e.contentOffset.x / width);
     },
     onEndDrag: () => isDragging.set(false),
+    // The list ends on a duplicate of beat 0; once momentum has settled on it,
+    // jump back to the real beat 0 so the tale loops instead of dead-ending.
+    // Waiting for momentum (rather than onEndReached) means the jump never
+    // fights an in-flight scroll — which is what the Android setTimeout in the
+    // prototype was working around.
+    onMomentumEnd: (e) => {
+      if (e.contentOffset.x >= width * STORY_BEATS.length - 1) {
+        scrollTo(listRef, 0, 0, false);
+      }
+    },
   });
-
-  // useCallback here is NOT for memoization (the React Compiler handles that) —
-  // it marks these as event handlers so the compiler's ref-safety pass stops
-  // treating `listRef.current` as a read during render.
-  const scrollToIndex = useCallback((index: number) => {
-    listRef.current?.scrollToIndex({ index, animated: true });
-  }, []);
-
-  /** Snap back to the real beat 0 once the duplicate is on screen. */
-  const wrapToStart = useCallback(() => {
-    const jump = () => listRef.current?.scrollToIndex({ index: 0, animated: false });
-    // Android needs a beat for momentum to settle or the jump fights the scroll.
-    if (Platform.OS === 'android') setTimeout(jump, 100);
-    else jump();
-  }, []);
 
   const expand = () => {
     isDragging.set(true);
@@ -105,7 +99,7 @@ export const useStoryCarousel = () => {
     .maxDuration(250)
     .onStart(() => {
       if (progress.get() > 0) return;
-      scheduleOnRN(scrollToIndex, currentIndex + 1);
+      scrollToIndex(Math.round(animatedIndex.get()) + 1);
       isDragging.set(false);
     });
 
@@ -120,7 +114,6 @@ export const useStoryCarousel = () => {
     progress,
     scrollHandler,
     scrollToIndex,
-    wrapToStart,
     expand,
     collapse,
     gesture: Gesture.Race(panGesture, tapGesture),

@@ -49,11 +49,6 @@ const FOLLOW_UP_ICON: CrossPlatformSymbol = {
   android: "notifications_active",
   web: "notifications_active",
 };
-const PROTOTYPE_ICON: CrossPlatformSymbol = {
-  ios: "theatermasks",
-  android: "science",
-  web: "science",
-};
 const SENTRY_ICON: CrossPlatformSymbol = {
   ios: "ant.circle",
   android: "bug_report",
@@ -190,25 +185,6 @@ export const DevToolsSection = () => {
           onPress={() => seedFollowUp(tier)}
         />
       ))}
-
-      {/* #200 onboarding prototypes. Deep links resolve to the preview build
-          on a physical device, so this is the only reliable way in there. */}
-      <SettingsRow
-        variant="action"
-        icon={icon(PROTOTYPE_ICON)}
-        label="Prototype · slide 1 lab"
-        onPress={() =>
-          router.push({ pathname: "/prototype-slide1", params: { v: "3", fire: "video" } })
-        }
-      />
-      <SettingsRow
-        variant="action"
-        icon={icon(PROTOTYPE_ICON)}
-        label="Prototype · full tale (variant E)"
-        onPress={() =>
-          router.push({ pathname: "/prototype-identity", params: { variant: "E" } })
-        }
-      />
 
       <SettingsRow
         variant="action"
