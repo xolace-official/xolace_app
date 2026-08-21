@@ -2,7 +2,12 @@
  * PROTOTYPE ROUTE — throwaway, ticket #200 (slide 1 only).
  *
  * Three compositions of beat 1, copy held constant so only layout and light
- * vary. Run: xolace://prototype-slide1?v=1|2|3 or tap the dev pill.
+ * vary. Reach it from Settings → Account → Dev tools (deep links resolve to
+ * the preview build on a physical device, so the in-app entry is the only
+ * reliable way in there).
+ *
+ * The dev pill has two halves: left cycles the composition, right cycles the
+ * fire source (stand-in / real video / Skia shader).
  */
 import { Pressable, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -16,16 +21,20 @@ import { CompInverted } from '@/src/features/onboarding/prototype-identity/slide
 
 const COMPS = [
   { v: '1', name: 'Close to the fire' },
-  { v: '2', name: 'The one lit thing' },
+  { v: '2', name: 'One lit thing' },
   { v: '3', name: 'Held at the top' },
 ] as const;
 
+const FIRES = ['video', 'shader', 'skia'] as const;
+type Fire = (typeof FIRES)[number];
+
 export default function PrototypeSlide1Route() {
   const params = useLocalSearchParams<{ v?: string; fire?: string }>();
-  const fire = (params.fire ?? 'skia') as 'skia' | 'video' | 'shader';
-  const v = params.v ?? '1';
+  const v = params.v ?? '3';
+  const fire = (FIRES.includes(params.fire as Fire) ? params.fire : 'video') as Fire;
   const insets = useSafeAreaInsets();
   const i = Math.max(0, COMPS.findIndex((c) => c.v === v));
+  const f = FIRES.indexOf(fire);
 
   return (
     <>
@@ -40,14 +49,31 @@ export default function PrototypeSlide1Route() {
             pointerEvents="box-none"
             style={{ position: 'absolute', top: insets.top + 4, left: 0, right: 0, alignItems: 'center' }}
           >
-            <Pressable
-              onPress={() => router.setParams({ v: COMPS[(i + 1) % COMPS.length].v })}
-              className="rounded-full bg-danger px-4 py-1.5"
-            >
-              <AppText className="text-[11px]" style={{ color: '#ffffff' }}>
-                {COMPS[i].v} — {COMPS[i].name}  ›
-              </AppText>
-            </Pressable>
+            <View className="flex-row items-center rounded-full bg-danger overflow-hidden">
+              <Pressable
+                onPress={() => router.setParams({ v: COMPS[(i + 1) % COMPS.length].v, fire })}
+                className="px-3 py-1.5"
+              >
+                <AppText className="text-[11px]" style={{ color: '#ffffff' }}>
+                  {COMPS[i].v} · {COMPS[i].name}
+                </AppText>
+              </Pressable>
+              <View style={{ width: 1, alignSelf: 'stretch', backgroundColor: '#ffffff55' }} />
+              <Pressable
+                onPress={() => router.setParams({ v, fire: FIRES[(f + 1) % FIRES.length] })}
+                className="px-3 py-1.5"
+              >
+                <AppText className="text-[11px]" style={{ color: '#ffffff' }}>
+                  🔥 {fire}
+                </AppText>
+              </Pressable>
+              <View style={{ width: 1, alignSelf: 'stretch', backgroundColor: '#ffffff55' }} />
+              <Pressable onPress={() => router.back()} className="px-3 py-1.5">
+                <AppText className="text-[11px]" style={{ color: '#ffffff' }}>
+                  ✕
+                </AppText>
+              </Pressable>
+            </View>
           </View>
         ) : null}
       </View>
