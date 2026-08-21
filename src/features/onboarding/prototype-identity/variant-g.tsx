@@ -13,6 +13,7 @@ import Animated, {
   useAnimatedStyle,
   type SharedValue,
 } from 'react-native-reanimated';
+import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
 import { useDeckColor } from './deck-color';
 
@@ -23,6 +24,19 @@ import { ProofWell } from './proof-well';
 import { useAppTheme } from '@/src/context/app-theme-context';
 import { StoryShell, type Backdrop } from './story-shell';
 import type { StoryBeat } from './story-slides';
+
+/**
+ * Real illustration is the picked direction (#200) — line art stays only where
+ * a real asset doesn't exist yet. `dusk` has one (`flux-campfire.png`), a calm
+ * figure sitting alone by a small lit fire — which the shared "it's still
+ * there / carried all day" copy doesn't match (that's about weight, this
+ * image is about stillness). Overridden here, not in `story-slides.ts`, so
+ * Variant E's copy stays exactly as locked.
+ */
+const DUSK_COPY = {
+  beat: 'You sit by the fire,\nalone for now.',
+  aside: 'The flames help you see what you’re carrying.',
+};
 
 const Beat = ({
   beat,
@@ -36,6 +50,7 @@ const Beat = ({
   scrollX: SharedValue<number>;
 }) => {
   const ember = useDeckColor('ember');
+  const isDusk = beat.id === 'dusk';
 
   const rStyle = useAnimatedStyle(() => {
     const range = [width * (index - 1), width * index, width * (index + 1)];
@@ -50,8 +65,16 @@ const Beat = ({
 
   return (
     <Animated.View style={[{ width }, rStyle]} className="flex-1 justify-center px-9 pb-16">
-      <View pointerEvents="none" className="items-center mb-8" style={{ opacity: 0.55 }}>
-        <BeatIllustration beat={beat} color={ember} size={128} />
+      <View pointerEvents="none" className="items-center mb-8" style={{ opacity: isDusk ? 1 : 0.55 }}>
+        {isDusk ? (
+          <Image
+            source={require('@/assets/images/flux/flux-campfire.png')}
+            style={{ width: 176, height: 176 }}
+            contentFit="contain"
+          />
+        ) : (
+          <BeatIllustration beat={beat} color={ember} size={128} />
+        )}
       </View>
 
       <View className="flex-row items-center gap-2.5 h-5 mb-6">
@@ -73,7 +96,7 @@ const Beat = ({
         }
         style={{ fontFamily: 'Poppins-Medium' }}
       >
-        {beat.beat}
+        {isDusk ? DUSK_COPY.beat : beat.beat}
       </AppText>
 
       {beat.kind === 'proof' ? (
@@ -82,7 +105,9 @@ const Beat = ({
         </View>
       ) : null}
 
-      <AppText className="text-foreground/42 text-[14px] leading-6 mt-5 pr-4">{beat.aside}</AppText>
+      <AppText className="text-foreground/42 text-[14px] leading-6 mt-5 pr-4">
+        {isDusk ? DUSK_COPY.aside : beat.aside}
+      </AppText>
     </Animated.View>
   );
 };
