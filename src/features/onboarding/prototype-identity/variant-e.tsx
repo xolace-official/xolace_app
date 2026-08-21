@@ -21,6 +21,7 @@ import { useThemeColor } from 'heroui-native';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { EmberGlow } from './ember-glow';
+import { ProofWell } from './proof-well';
 import { StoryShell } from './story-shell';
 import type { StoryBeat } from './story-slides';
 
@@ -63,12 +64,25 @@ const Beat = ({
         ) : null}
       </View>
 
+      {/* #200: the proof beat states the claim smaller, then shows the evidence
+          under it. Every other beat is the words alone. */}
       <AppText
-        className="text-foreground/95 text-[32px] leading-[45px]"
+        className={
+          beat.kind === 'proof'
+            ? 'text-foreground/95 text-[24px] leading-[34px]'
+            : 'text-foreground/95 text-[32px] leading-[45px]'
+        }
         style={{ fontFamily: 'Poppins-Medium' }}
       >
         {beat.beat}
       </AppText>
+
+      {beat.kind === 'proof' ? (
+        <View className="mt-5">
+          <ProofWell />
+        </View>
+      ) : null}
+
       <AppText className="text-foreground/42 text-[14px] leading-6 mt-5 pr-4">{beat.aside}</AppText>
     </Animated.View>
   );
