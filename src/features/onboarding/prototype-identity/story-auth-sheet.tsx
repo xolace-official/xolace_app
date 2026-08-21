@@ -19,7 +19,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { SymbolView } from 'expo-symbols';
-import { useThemeColor } from 'heroui-native';
+import { useDeckColor } from './deck-color';
 
 import { AppText } from '@/src/components/shared/app-text';
 
@@ -30,8 +30,8 @@ export const StoryAuthBlock = ({
   progress: SharedValue<number>;
   onCollapse: () => void;
 }) => {
-  const muted = useThemeColor('muted') as string;
-  const foreground = useThemeColor('foreground') as string;
+  const muted = useDeckColor('muted');
+  const foreground = useDeckColor('foreground');
 
   const rStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.get(), [0.1, 0.8], [0, 1], Extrapolation.CLAMP),
@@ -82,7 +82,9 @@ export const MorphingSeatButton = ({
   onExpand: () => void;
   onCollapse: () => void;
 }) => {
-  const accent = useThemeColor('accent') as string;
+  // The deck's CTA is the fire, not the app's violet accent — it sits beside a
+  // flame glyph and says "Back to the fire".
+  const ember = useDeckColor('ember');
 
   const rTopRow = useAnimatedStyle(() => ({
     transform: [{ translateY: interpolate(progress.get(), [0, 1], [0, -42], Extrapolation.CLAMP) }],
@@ -103,15 +105,15 @@ export const MorphingSeatButton = ({
     <Pressable
       onPress={handlePress}
       style={{ borderCurve: 'continuous' }}
-      className="h-12 mx-6 mt-4 items-center justify-center rounded-full border border-accent/25 bg-accent/10 overflow-hidden"
+      className="h-12 mx-6 mt-4 items-center justify-center rounded-full border border-ember/25 bg-ember/10 overflow-hidden"
     >
       <Animated.View className="flex-row items-center gap-2" style={rTopRow}>
-        <SymbolView name="person" size={15} tintColor={accent} />
-        <AppText className="text-accent text-[15px]">Pull up a seat</AppText>
+        <SymbolView name="person" size={15} tintColor={ember} />
+        <AppText className="text-ember text-[15px]">Pull up a seat</AppText>
       </Animated.View>
       <Animated.View className="flex-row items-center gap-2 -mt-5" style={rBottomRow}>
-        <SymbolView name="flame" size={15} tintColor={accent} />
-        <AppText className="text-accent text-[15px]">Back to the fire</AppText>
+        <SymbolView name="flame" size={15} tintColor={ember} />
+        <AppText className="text-ember text-[15px]">Back to the fire</AppText>
       </Animated.View>
     </Pressable>
   );

@@ -17,7 +17,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { SymbolView } from 'expo-symbols';
-import { useThemeColor } from 'heroui-native';
+import { useDeckColor } from './deck-color';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { HearthBackdrop } from './hearth-backdrop';
@@ -37,7 +37,7 @@ const Beat = ({
   width: number;
   scrollX: SharedValue<number>;
 }) => {
-  const ember = useThemeColor('ember' as 'accent') as string;
+  const ember = useDeckColor('ember');
 
   // No card to slide, so the words themselves resolve out of the dark.
   const rStyle = useAnimatedStyle(() => {

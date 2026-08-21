@@ -15,12 +15,12 @@
  */
 import { View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
-import { useThemeColor } from 'heroui-native';
+import { useDeckColor } from './deck-color';
 
 import { AppText } from '@/src/components/shared/app-text';
 
 export const ProofWell = () => {
-  const ember = useThemeColor('ember' as 'accent') as string;
+  const ember = useDeckColor('ember');
 
   return (
     <View

@@ -5,7 +5,7 @@
  * caller can position/animate it with a parent transform.
  */
 import { Canvas, Circle, RadialGradient, vec } from '@shopify/react-native-skia';
-import { useThemeColor } from 'heroui-native';
+import { useDeckColor } from './deck-color';
 
 type EmberGlowProps = {
   /** Diameter of the glow in px. */
@@ -23,7 +23,7 @@ const withAlpha = (hex: string, alpha: number) =>
     .padStart(2, '0')}`;
 
 export const EmberGlow = ({ size, intensity = 0.5, token = 'ember' }: EmberGlowProps) => {
-  const color = useThemeColor(token as 'accent') as string;
+  const color = useDeckColor(token);
   const r = size / 2;
 
   return (

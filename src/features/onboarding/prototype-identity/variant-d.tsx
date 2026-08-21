@@ -18,7 +18,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { SymbolView } from 'expo-symbols';
-import { useThemeColor } from 'heroui-native';
+import { useDeckColor } from './deck-color';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { DuskDriftBackdrop } from '@/src/features/onboarding/components/dusk-drift-backdrop';
@@ -36,7 +36,7 @@ const BeatCard = ({
   width: number;
   scrollX: SharedValue<number>;
 }) => {
-  const ember = useThemeColor('ember' as 'accent') as string;
+  const ember = useDeckColor('ember');
 
   const rStyle = useAnimatedStyle(() => {
     const range = [width * (index - 1), width * index, width * (index + 1)];

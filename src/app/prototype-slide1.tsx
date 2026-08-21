@@ -11,6 +11,7 @@
  */
 import { Pressable, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { ScopedTheme } from 'uniwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 
@@ -39,6 +40,9 @@ export default function PrototypeSlide1Route() {
   return (
     <>
       <StatusBar hidden />
+      {/* Same pin as the deck — slide 1 is a night surface regardless of the
+          phone's theme, so it must not read the user's palette. */}
+      <ScopedTheme theme="dark">
       <View className="flex-1 bg-background">
         {v === '1' && <CompClose />}
         {v === '2' && <CompEmber />}
@@ -77,6 +81,7 @@ export default function PrototypeSlide1Route() {
           </View>
         ) : null}
       </View>
+      </ScopedTheme>
     </>
   );
 }
