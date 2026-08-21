@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE — throwaway. Ticket #198, variants D & E.
+ * PROTOTYPE — throwaway. Ticket #198, variants D & E. Content decided by #201.
  *
  * Keeps superlist's morphing bottom pill exactly: ONE button holding two rows
  * behind `overflow-hidden`. Collapsed it reads "Pull up a seat"; as the sheet
@@ -8,9 +8,11 @@
  * auth, so the second row becomes the way BACK to the tale, which keeps the
  * button useful in both states instead of morphing into a dead end.
  *
- * (Open question for #201: whether the second row should instead be a skip, a
- * legal line, or nothing at all.)
+ * #201: the reassurance paragraph is cut — too much text for a ~250px sheet.
+ * Legal surfaces as a permanent, tappable Terms/Privacy row wired to the real
+ * LegalBottomSheet, not a paragraph.
  */
+import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -22,6 +24,8 @@ import { SymbolView } from 'expo-symbols';
 import { useDeckColor } from './deck-color';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { LegalBottomSheet } from '@/src/features/auth/components/legal-bottom-sheet';
+import { PRIVACY_POLICY, TERMS_OF_SERVICE, type LegalDocument } from '@/src/features/auth/components/legal-content';
 
 export const StoryAuthBlock = ({
   progress,
@@ -32,6 +36,7 @@ export const StoryAuthBlock = ({
 }) => {
   const muted = useDeckColor('muted');
   const foreground = useDeckColor('foreground');
+  const [activeDocument, setActiveDocument] = useState<LegalDocument | null>(null);
 
   const rStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.get(), [0.1, 0.8], [0, 1], Extrapolation.CLAMP),
@@ -45,17 +50,13 @@ export const StoryAuthBlock = ({
       </Pressable>
 
       <AppText
-        className="text-foreground/90 text-[24px] text-center"
+        className="text-foreground/90 text-[24px] text-center mb-7"
         style={{ fontFamily: 'Poppins-Medium' }}
       >
         The fire&apos;s already lit.
       </AppText>
-      <AppText className="text-foreground/45 text-[13px] leading-6 text-center mt-3 mb-7 px-4">
-        Sign in so it&apos;s still burning when you come back.{'\n'}
-        Nothing you say here is tied to your name.
-      </AppText>
 
-      <View className="gap-3 px-6">
+      <View className="gap-3 px-6 mb-4">
         <Pressable className="flex-row h-12 items-center justify-center gap-3 rounded-full border border-border bg-surface-secondary">
           <SymbolView name="globe" size={17} tintColor={foreground} />
           <AppText className="text-foreground/90 text-[15px]">Continue with Google</AppText>
@@ -65,6 +66,18 @@ export const StoryAuthBlock = ({
           <AppText className="text-foreground/90 text-[15px]">Continue with Apple</AppText>
         </Pressable>
       </View>
+
+      <View className="flex-row justify-center gap-1">
+        <Pressable onPress={() => setActiveDocument(TERMS_OF_SERVICE)}>
+          <AppText className="text-foreground/40 text-[11px] underline">Terms of Service</AppText>
+        </Pressable>
+        <AppText className="text-foreground/40 text-[11px]"> · </AppText>
+        <Pressable onPress={() => setActiveDocument(PRIVACY_POLICY)}>
+          <AppText className="text-foreground/40 text-[11px] underline">Privacy Policy</AppText>
+        </Pressable>
+      </View>
+
+      <LegalBottomSheet document={activeDocument} onClose={() => setActiveDocument(null)} />
     </Animated.View>
   );
 };
