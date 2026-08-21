@@ -22,6 +22,7 @@ import { useThemeColor } from 'heroui-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { HearthBackdrop } from './hearth-backdrop';
 import { ProofWell } from './proof-well';
+import { useAppTheme } from '@/src/context/app-theme-context';
 import { StoryShell, type Backdrop } from './story-shell';
 import type { StoryBeat } from './story-slides';
 
@@ -88,16 +89,22 @@ const Beat = ({
   );
 };
 
-/** Hoisted so it isn't a fresh component type on every VariantE render. */
-const hearthBackdrop: Backdrop = ({ scrollX, width }) => (
-  <HearthBackdrop scrollX={scrollX} width={width} />
-);
+export const VariantE = ({ sky = false }: { sky?: boolean }) => {
+  // Option B resolves the arc toward where the user is actually headed: a full
+  // sunrise for a light app, a held pre-dawn glow for a dark one. Either way
+  // the deck ends closer to the app than it started.
+  const { isDark } = useAppTheme();
 
-export const VariantE = () => (
+  const backdrop: Backdrop = ({ scrollX, width }) => (
+    <HearthBackdrop scrollX={scrollX} width={width} sky={sky} dawnCeiling={isDark ? 0.4 : 1} />
+  );
+
+  return (
   <StoryShell
-    backdrop={hearthBackdrop}
+    backdrop={backdrop}
     renderBeat={({ beat, index, width, scrollX }) => (
       <Beat beat={beat} index={index} width={width} scrollX={scrollX} />
     )}
   />
-);
+  );
+};

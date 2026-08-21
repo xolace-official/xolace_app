@@ -12,6 +12,9 @@
 import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { router, useLocalSearchParams } from 'expo-router';
+import { PressableFeedback } from 'heroui-native';
+
+import { AppText } from '@/src/components/shared/app-text';
 
 import { useExpandGesture } from '@/src/features/onboarding/prototype-identity/use-expand-gesture';
 import { VariantA } from '@/src/features/onboarding/prototype-identity/variant-a';
@@ -25,8 +28,10 @@ import {
 } from '@/src/features/onboarding/prototype-identity/prototype-switcher';
 
 export default function PrototypeIdentityRoute() {
-  const params = useLocalSearchParams<{ variant?: string }>();
+  const params = useLocalSearchParams<{ variant?: string; sky?: string }>();
   const variant = (params.variant ?? 'A').toUpperCase() as VariantKey;
+  // #200 option B — the dawn arc. Off by default so the pill flips A vs B.
+  const sky = params.sky === '1';
   const controller = useExpandGesture();
 
   return (
@@ -39,11 +44,22 @@ export default function PrototypeIdentityRoute() {
         {/* D & E tell the tale — they own their own carousel + expansion state,
             so they take no `controller` (A/B/C's shared one must not change). */}
         {variant === 'D' && <VariantD />}
-        {variant === 'E' && <VariantE />}
+        {variant === 'E' && <VariantE sky={sky} />}
         <PrototypeSwitcher
           current={variant}
           onChange={(key) => router.setParams({ variant: key })}
         />
+        {variant === 'E' ? (
+          <PressableFeedback
+            onPress={() => router.setParams({ sky: sky ? '0' : '1' })}
+            className="absolute self-center rounded-full px-4 py-1.5 bg-black/55 border border-white/15"
+            style={{ top: 96 }}
+          >
+            <AppText className="text-white/80 text-[11px]">
+              {sky ? 'B · dawn arc' : 'A · night only'}
+            </AppText>
+          </PressableFeedback>
+        ) : null}
       </View>
     </>
   );
