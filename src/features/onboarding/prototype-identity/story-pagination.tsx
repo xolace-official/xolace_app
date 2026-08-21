@@ -1,0 +1,165 @@
+/**
+ * PROTOTYPE — throwaway. Ticket #198, variants D & E.
+ *
+ * Superlist's pagination behaviour, ported to Xolace tokens: the ACTIVE bar is
+ * ~3x the width of the others and fills left-to-right over the beat's
+ * duration, then auto-advances. Dragging cancels the fill and restarts it on
+ * release. Completing the last beat expands the auth sheet on its own.
+ *
+ * Kept as its own file so variants A/B/C (which use hairlines / ember dots /
+ * page ticks) are untouched.
+ */
+import { useEffect } from 'react';
+import { useWindowDimensions, View } from 'react-native';
+import Animated, {
+  cancelAnimation,
+  Extrapolation,
+  interpolate,
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
+
+import { STORY_BEATS } from './story-slides';
+
+const GAP = 4;
+
+type ItemProps = {
+  index: number;
+  currentIndex: number;
+  animatedIndex: SharedValue<number>;
+  inactiveWidth: number;
+  activeWidth: number;
+  total: number;
+  duration: number;
+  isDragging: SharedValue<boolean>;
+  onAdvance: (index: number) => void;
+  onFinish: () => void;
+};
+
+const PaginationItem = ({
+  index,
+  currentIndex,
+  animatedIndex,
+  inactiveWidth,
+  activeWidth,
+  total,
+  duration,
+  isDragging,
+  onAdvance,
+  onFinish,
+}: ItemProps) => {
+  const fill = useSharedValue(0);
+
+  const barWidth = useDerivedValue(() => {
+    const i = animatedIndex.get();
+    let width = interpolate(
+      i,
+      [index - 1, index, index + 1],
+      [inactiveWidth, activeWidth, inactiveWidth],
+      Extrapolation.CLAMP,
+    );
+
+    // Infinite loop: the list duplicates beat 0 at the end, so index `total`
+    // is really beat 0 — the first bar must grow and the last must shrink.
+    if (index === 0) {
+      width = Math.max(
+        width,
+        interpolate(i, [total - 1, total], [inactiveWidth, activeWidth], Extrapolation.CLAMP),
+      );
+    }
+    if (index === total - 1 && i >= total - 1) {
+      width = interpolate(i, [total - 1, total], [activeWidth, inactiveWidth], Extrapolation.CLAMP);
+    }
+    return width;
+  });
+
+  const rBarStyle = useAnimatedStyle(() => ({ width: barWidth.get() }));
+
+  const rFillStyle = useAnimatedStyle(() => {
+    if (isDragging.get()) cancelAnimation(fill);
+    return {
+      width: `${interpolate(fill.get(), [0, 1], [0, 100], Extrapolation.CLAMP)}%`,
+      opacity: interpolate(barWidth.get(), [inactiveWidth, activeWidth], [0, 1], Extrapolation.CLAMP),
+    };
+  });
+
+  useEffect(() => {
+    fill.set(0);
+    if (currentIndex === index) fill.set(withTiming(1, { duration }));
+  }, [currentIndex, index, duration, fill]);
+
+  // Restart the fill once the finger lifts, rather than resuming mid-bar.
+  useAnimatedReaction(
+    () => isDragging.get(),
+    (dragging) => {
+      if (!dragging && currentIndex === index && fill.get() > 0) {
+        fill.set(0);
+        fill.set(withTiming(1, { duration }));
+      }
+    },
+  );
+
+  useAnimatedReaction(
+    () => fill.get(),
+    (value) => {
+      if (value < 1 || isDragging.get()) return;
+      if (currentIndex === total - 1) {
+        // Tale over — the fire invites you to sit down.
+        scheduleOnRN(onFinish);
+      } else {
+        scheduleOnRN(onAdvance, currentIndex + 1);
+      }
+    },
+  );
+
+  return (
+    <Animated.View className="h-[2px] rounded-full bg-foreground/15 overflow-hidden" style={rBarStyle}>
+      <Animated.View className="absolute top-0 bottom-0 left-0 bg-ember" style={rFillStyle} />
+    </Animated.View>
+  );
+};
+
+export const StoryPagination = ({
+  currentIndex,
+  animatedIndex,
+  isDragging,
+  onAdvance,
+  onFinish,
+}: {
+  currentIndex: number;
+  animatedIndex: SharedValue<number>;
+  isDragging: SharedValue<boolean>;
+  onAdvance: (index: number) => void;
+  onFinish: () => void;
+}) => {
+  const { width } = useWindowDimensions();
+  const padding = width * 0.16;
+  const total = STORY_BEATS.length;
+  // Reserve room for the active bar's 3x expansion so the row never overflows.
+  const itemWidth = (width - padding * 2 - (total - 1) * GAP) / (total + 2);
+
+  return (
+    <View className="flex-row items-center justify-center" style={{ gap: GAP, paddingHorizontal: padding }}>
+      {STORY_BEATS.map((beat, index) => (
+        <PaginationItem
+          key={beat.id}
+          index={index}
+          currentIndex={currentIndex}
+          animatedIndex={animatedIndex}
+          inactiveWidth={itemWidth}
+          activeWidth={itemWidth * 3}
+          total={total}
+          duration={beat.duration}
+          isDragging={isDragging}
+          onAdvance={onAdvance}
+          onFinish={onFinish}
+        />
+      ))}
+    </View>
+  );
+};
