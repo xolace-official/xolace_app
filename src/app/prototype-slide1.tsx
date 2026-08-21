@@ -21,7 +21,8 @@ const COMPS = [
 ] as const;
 
 export default function PrototypeSlide1Route() {
-  const params = useLocalSearchParams<{ v?: string }>();
+  const params = useLocalSearchParams<{ v?: string; fire?: string }>();
+  const useVideo = params.fire === 'video';
   const v = params.v ?? '1';
   const insets = useSafeAreaInsets();
   const i = Math.max(0, COMPS.findIndex((c) => c.v === v));
@@ -32,7 +33,7 @@ export default function PrototypeSlide1Route() {
       <View className="flex-1 bg-background">
         {v === '1' && <CompClose />}
         {v === '2' && <CompEmber />}
-        {v === '3' && <CompInverted />}
+        {v === '3' && <CompInverted video={useVideo} />}
 
         {__DEV__ ? (
           <View

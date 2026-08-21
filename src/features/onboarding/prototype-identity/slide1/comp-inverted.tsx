@@ -14,16 +14,21 @@ import { View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
 import { Hearth } from './hearth';
+import { HearthVideo } from './hearth-video';
 import { SLIDE1 } from './copy';
 
-export const CompInverted = () => {
+export const CompInverted = ({ video = false }: { video?: boolean }) => {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
   return (
     <View className="flex-1 bg-background">
       <View className="absolute inset-0">
-        <Hearth width={width} height={height} scale={1.15} cyRatio={1.0} />
+        {video ? (
+          <HearthVideo width={width} height={height} />
+        ) : (
+          <Hearth width={width} height={height} scale={1.15} cyRatio={1.0} />
+        )}
       </View>
 
       <View className="px-9" style={{ paddingTop: insets.top + height * 0.09 }}>
