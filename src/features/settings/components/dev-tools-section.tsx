@@ -6,7 +6,6 @@
 import { useState } from "react";
 
 import { useMutation } from "convex/react";
-import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor, useToast } from "heroui-native";
 import * as Sentry from "@sentry/react-native";

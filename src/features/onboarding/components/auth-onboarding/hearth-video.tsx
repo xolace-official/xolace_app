@@ -9,7 +9,14 @@
  * `VideoView` is a black rectangle. Fix is the oldest one in video: a poster
  * (literally frame 0 of this clip, so the swap is invisible) sits underneath,
  * and the video crossfades in once the player reports `readyToPlay`.
+ *
+ * Backgrounding pauses the player and it does not resume on its own, so an app
+ * that was left in recents comes back to a frozen frame. Hence the AppState
+ * listener.
  */
+import { useEffect } from 'react';
+import { AppState } from 'react-native';
+
 import { useEvent } from 'expo';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -21,6 +28,13 @@ export const HearthVideo = ({ width, height }: { width: number; height: number }
     p.muted = true;
     p.play();
   });
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && !player.playing) player.play();
+    });
+    return () => sub.remove();
+  }, [player]);
 
   const { status } = useEvent(player, 'statusChange', { status: player.status });
   const ready = status === 'readyToPlay';
