@@ -23,6 +23,7 @@ import { VariantC } from '@/src/features/onboarding/prototype-identity/variant-c
 import { VariantD } from '@/src/features/onboarding/prototype-identity/variant-d';
 import { VariantE } from '@/src/features/onboarding/prototype-identity/variant-e';
 import { VariantF } from '@/src/features/onboarding/prototype-identity/variant-f';
+import { VariantG } from '@/src/features/onboarding/prototype-identity/variant-g';
 import {
   PrototypeSwitcher,
   type VariantKey,
@@ -47,11 +48,12 @@ export default function PrototypeIdentityRoute() {
         {variant === 'D' && <VariantD />}
         {variant === 'E' && <VariantE sky={sky} />}
         {variant === 'F' && <VariantF sky={sky} />}
+        {variant === 'G' && <VariantG sky={sky} />}
         <PrototypeSwitcher
           current={variant}
           onChange={(key) => router.setParams({ variant: key })}
         />
-        {variant === 'E' || variant === 'F' ? (
+        {variant === 'E' || variant === 'F' || variant === 'G' ? (
           <PressableFeedback
             onPress={() => router.setParams({ sky: sky ? '0' : '1' })}
             className="absolute self-center rounded-full px-4 py-1.5 bg-black/55 border border-white/15"
