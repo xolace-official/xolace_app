@@ -36,7 +36,7 @@ export const STORY_BEATS: StoryBeat[] = [
     // The copy is about that stillness, not about carried weight.
     beat: 'You sit by the fire,\nalone for now.',
     aside: 'The flames help you see what you’re carrying.',
-    symbol: 'moon.stars',
+    symbol: { ios: 'moon.stars', android: 'nights_stay', web: 'nights_stay' },
     duration: 3400,
   },
   {
@@ -44,7 +44,7 @@ export const STORY_BEATS: StoryBeat[] = [
     label: 'Vent',
     beat: 'So you say it.\nOut loud.',
     aside: 'Your voice, never stored. It goes when you close it.',
-    symbol: 'mic',
+    symbol: { ios: 'mic', android: 'mic', web: 'mic' },
     duration: 3600,
   },
   {
@@ -52,7 +52,7 @@ export const STORY_BEATS: StoryBeat[] = [
     label: 'The Mirror',
     beat: 'And something\nsays it back.',
     aside: 'Not advice. The shape of what you said, held where you can see it.',
-    symbol: 'sparkles',
+    symbol: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' },
     duration: 3800,
   },
   {
@@ -61,7 +61,7 @@ export const STORY_BEATS: StoryBeat[] = [
     kind: 'proof',
     beat: "You're not the\nonly one out here.",
     aside: 'Counted from real sessions this week. Never a number we made up.',
-    symbol: 'flame',
+    symbol: { ios: 'flame', android: 'local_fire_department', web: 'local_fire_department' },
     duration: 4200,
   },
   {
@@ -69,7 +69,7 @@ export const STORY_BEATS: StoryBeat[] = [
     label: 'Xolacers',
     beat: 'And if you want\na person, there\nis a person.',
     aside: 'A real volunteer, by name. You stay anonymous the whole way.',
-    symbol: 'person.2',
+    symbol: { ios: 'person.2', android: 'group', web: 'group' },
     duration: 3800,
   },
   {
@@ -82,7 +82,7 @@ export const STORY_BEATS: StoryBeat[] = [
     aside:
       'Full history, your mirror in its own voice, a line that’s really yours each day. Free to start — Xolace+ is there when you want more.',
     tag: 'Founding pricing · while it lasts',
-    symbol: 'flame.circle',
+    symbol: { ios: 'flame.circle', android: 'local_fire_department', web: 'local_fire_department' },
     duration: 3400,
   },
 ];

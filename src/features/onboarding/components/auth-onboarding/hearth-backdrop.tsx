@@ -19,7 +19,7 @@
  * The fire composites ONTO the dawn arc behind it (`SkyArc`), so the sky lifts
  * across the six beats while the fire stays the light source.
  */
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Extrapolation,
@@ -38,7 +38,18 @@ const SCALE = [1.16, 1.08, 1.0, 1.06, 1.06, 1.22];
 const RISE = [0, 26, 74, 34, 30, -18];
 const BRIGHT = [1, 0.86, 0.6, 0.82, 0.84, 1];
 
-const BLEND_SCREEN = { mixBlendMode: 'screen' } as const;
+/**
+ * ANDROID: expo-video draws into a SurfaceView, which a `mixBlendMode` parent
+ * blanks entirely — as does `overflow: hidden` anywhere above it. Both were
+ * verified in isolation on API 35: the video keeps playing (media3 reports
+ * PLAYING, position advancing) while nothing reaches the screen. So the blend
+ * is iOS-only and this container no longer clips.
+ *
+ * The cost on Android is the dawn arc sitting behind an opaque clip. #203's
+ * real graded fire should carry its own alpha instead of relying on `screen`
+ * to key out the black — that removes the split rather than papering over it.
+ */
+const BLEND_SCREEN = Platform.OS === 'ios' ? ({ mixBlendMode: 'screen' } as const) : undefined;
 
 /** How hard the top scrim presses, per beat. It has to relax as the sky lifts,
  *  or a black bar sits on top of the dawn. */
@@ -85,7 +96,10 @@ export const HearthBackdrop = ({
   }));
 
   return (
-    <View pointerEvents="none" className="absolute inset-0 overflow-hidden">
+    <View
+      pointerEvents="none"
+      className="absolute inset-0"
+    >
       <SkyArc scrollX={scrollX} width={width} dawnCeiling={dawnCeiling} />
 
       {/* `screen` drops the clip's black to transparent so the flames composite

@@ -33,6 +33,8 @@ import {
   TERMS_OF_SERVICE,
   type LegalDocument,
 } from '@/src/features/auth/components/legal-content';
+import { AppleIcon } from '@/src/features/auth/components/apple-icon';
+import { GoogleIcon } from '@/src/features/auth/components/google-icon';
 import { useProviderSignIn } from '@/src/features/auth/use-provider-sign-in';
 import { useDeckColor } from './deck-color';
 
@@ -40,6 +42,11 @@ const SPINNER_ENTERING = FadeIn.delay(50);
 /** The old AuthScreen's morph: the row springs down to a spinner-sized pill
  *  rather than swapping its contents in place. */
 const BUTTON_LAYOUT = LinearTransition.springify();
+/** expo-symbols takes SF Symbol names on iOS and Material names on Android;
+ *  a bare SF name renders nothing at all on Android. */
+const CHEVRON_ICON = { ios: 'chevron.down', android: 'keyboard_arrow_down', web: 'keyboard_arrow_down' } as const;
+const SEAT_ICON = { ios: 'person', android: 'person', web: 'person' } as const;
+const FLAME_ICON = { ios: 'flame', android: 'local_fire_department', web: 'local_fire_department' } as const;
 const BUTTON_CLASS =
   'flex-row h-12 items-center justify-center gap-3 rounded-full border border-border bg-surface-secondary';
 
@@ -63,7 +70,7 @@ export const AuthSheetBlock = ({
   return (
     <Animated.View style={rStyle}>
       <PressableFeedback onPress={onCollapse} className="self-center mb-5 p-1" hitSlop={12}>
-        <SymbolView name="chevron.down" size={16} tintColor={muted} />
+        <SymbolView name={CHEVRON_ICON} size={16} tintColor={muted} />
       </PressableFeedback>
 
       <AppText
@@ -87,7 +94,7 @@ export const AuthSheetBlock = ({
             <Spinner entering={SPINNER_ENTERING} color={foreground} />
           ) : (
             <>
-              <SymbolView name="globe" size={17} tintColor={foreground} />
+              <GoogleIcon size={17} />
               <Button.Label className="text-foreground/90 text-[15px]">
                 Continue with Google
               </Button.Label>
@@ -107,7 +114,7 @@ export const AuthSheetBlock = ({
             <Spinner entering={SPINNER_ENTERING} color={foreground} />
           ) : (
             <>
-              <SymbolView name="apple.logo" size={17} tintColor={foreground} />
+              <AppleIcon size={17} color={foreground} />
               <Button.Label className="text-foreground/90 text-[15px]">
                 Continue with Apple
               </Button.Label>
@@ -171,11 +178,11 @@ export const MorphingSeatButton = ({
       className="h-12 mx-6 mt-4 items-center justify-center rounded-full border border-ember/25 bg-ember/10 overflow-hidden"
     >
       <Animated.View className="flex-row items-center gap-2" style={rTopRow}>
-        <SymbolView name="person" size={15} tintColor={ember} />
+        <SymbolView name={SEAT_ICON} size={15} tintColor={ember} />
         <AppText className="text-ember text-[15px]">Pull up a seat</AppText>
       </Animated.View>
       <Animated.View className="flex-row items-center gap-2 -mt-5" style={rBottomRow}>
-        <SymbolView name="flame" size={15} tintColor={ember} />
+        <SymbolView name={FLAME_ICON} size={15} tintColor={ember} />
         <AppText className="text-ember text-[15px]">Back to the fire</AppText>
       </Animated.View>
     </PressableFeedback>
