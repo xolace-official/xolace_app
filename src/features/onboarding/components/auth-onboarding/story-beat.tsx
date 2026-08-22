@@ -11,6 +11,7 @@ import Animated, {
   Extrapolation,
   interpolate,
   useAnimatedStyle,
+  useReducedMotion,
   type SharedValue,
 } from 'react-native-reanimated';
 import { Image } from 'expo-image';
@@ -37,11 +38,16 @@ export const StoryBeatSlide = ({
   // `dusk` is the one beat with a real illustration asset; the rest still run
   // on the placeholder line art until #203 lands theirs.
   const isDusk = beat.id === 'dusk';
+  // Reduced motion keeps the crossfade (it explains which beat you're on) and
+  // drops the trailing parallax, which is the part that reads as movement.
+  const reduced = useReducedMotion();
 
   const rStyle = useAnimatedStyle(() => {
     const range = [width * (index - 1), width * index, width * (index + 1)];
+    const opacity = interpolate(scrollX.get(), range, [0, 1, 0], Extrapolation.CLAMP);
+    if (reduced) return { opacity, transform: [] };
     return {
-      opacity: interpolate(scrollX.get(), range, [0, 1, 0], Extrapolation.CLAMP),
+      opacity,
       transform: [
         { translateY: interpolate(scrollX.get(), range, [22, 0, 22], Extrapolation.CLAMP) },
         {

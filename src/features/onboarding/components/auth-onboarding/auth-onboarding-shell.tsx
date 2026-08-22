@@ -114,7 +114,7 @@ export const AuthOnboardingShell = () => {
               initialScrollIndex={0}
               getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
               showsHorizontalScrollIndicator={false}
-              scrollEventThrottle={16}
+              scrollEventThrottle={1}
               onScroll={scrollHandler}
               onViewableItemsChanged={onViewableItemsChanged}
               viewabilityConfig={VIEWABILITY_CONFIG}

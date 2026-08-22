@@ -14,18 +14,30 @@ import { useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import Animated, {
+  ReduceMotion,
   scrollTo,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
+import { playSoftPress } from '@/src/lib/haptics';
 import { STORY_BEATS, type StoryBeat } from '@/src/features/onboarding/story-beats';
 
 const SWIPE_THRESHOLD = 24;
 const DRAG_DAMPING = 260;
+/** A flick past this commits the sheet whichever way it was thrown, however
+ *  little ground it covered. Distance alone would eat every fast gesture. */
+const FLICK_VELOCITY = 450;
+/** One spring for every path into the sheet — press, flick, auto-advance — so
+ *  interrupting one mid-flight continues rather than restarts. */
+const SHEET_SPRING = {
+  duration: 340,
+  dampingRatio: 0.82,
+  reduceMotion: ReduceMotion.System,
+} as const;
 
 /** Beat 0 duplicated at the tail so the wrap has somewhere to land. */
 export const LOOPED_BEATS: StoryBeat[] = [...STORY_BEATS, { ...STORY_BEATS[0], id: 'dusk-loop' }];
@@ -68,11 +80,11 @@ export const useStoryCarousel = () => {
 
   const expand = () => {
     isDragging.set(true);
-    progress.set(withTiming(1, { duration: 420 }));
+    progress.set(withSpring(1, SHEET_SPRING));
   };
   const collapse = () => {
     isDragging.set(false);
-    progress.set(withTiming(0, { duration: 380 }));
+    progress.set(withSpring(0, SHEET_SPRING));
   };
 
   const panGesture = Gesture.Pan()
@@ -83,14 +95,30 @@ export const useStoryCarousel = () => {
     .onUpdate((e) => {
       progress.set(Math.min(1, Math.max(0, startProgress.get() - e.translationY / DRAG_DAMPING)));
     })
-    .onEnd(() => {
+    .onEnd((e) => {
       const moved = (progress.get() - startProgress.get()) * DRAG_DAMPING;
+      const from = startProgress.get() > 0.5 ? 1 : 0;
       const target =
-        moved > SWIPE_THRESHOLD ? 1 : moved < -SWIPE_THRESHOLD ? 0 : startProgress.get() > 0.5 ? 1 : 0;
+        Math.abs(e.velocityY) > FLICK_VELOCITY
+          ? e.velocityY < 0
+            ? 1
+            : 0
+          : moved > SWIPE_THRESHOLD
+            ? 1
+            : moved < -SWIPE_THRESHOLD
+              ? 0
+              : from;
+      // The finger's speed carries into the spring, so releasing mid-flick
+      // continues the throw instead of restarting from a standstill.
+      if (target !== from) scheduleOnRN(playSoftPress);
       progress.set(
-        withSpring(target, { damping: 22, stiffness: 140, mass: 0.9 }, (finished) => {
-          if (finished && target === 0) isDragging.set(false);
-        }),
+        withSpring(
+          target,
+          { ...SHEET_SPRING, velocity: -e.velocityY / DRAG_DAMPING },
+          (finished) => {
+            if (finished && target === 0) isDragging.set(false);
+          },
+        ),
       );
     });
 

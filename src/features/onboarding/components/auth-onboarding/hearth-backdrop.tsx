@@ -25,6 +25,7 @@ import Animated, {
   Extrapolation,
   interpolate,
   useAnimatedStyle,
+  useReducedMotion,
   type SharedValue,
 } from 'react-native-reanimated';
 
@@ -63,13 +64,21 @@ export const HearthBackdrop = ({
   const bright = [...BRIGHT, BRIGHT[0]];
   const topScrim = [...TOP_SCRIM_AT, TOP_SCRIM_AT[0]];
 
-  const rFire = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollX.get(), stops, bright, Extrapolation.CLAMP),
-    transform: [
-      { translateY: interpolate(scrollX.get(), stops, rise, Extrapolation.CLAMP) },
-      { scale: interpolate(scrollX.get(), stops, scale, Extrapolation.CLAMP) },
-    ],
-  }));
+  // Reduced motion keeps the fire's brightness arc — it is what the beats are
+  // about — and parks the camera, which is pure parallax.
+  const reduced = useReducedMotion();
+
+  const rFire = useAnimatedStyle(() => {
+    const opacity = interpolate(scrollX.get(), stops, bright, Extrapolation.CLAMP);
+    if (reduced) return { opacity, transform: [] };
+    return {
+      opacity,
+      transform: [
+        { translateY: interpolate(scrollX.get(), stops, rise, Extrapolation.CLAMP) },
+        { scale: interpolate(scrollX.get(), stops, scale, Extrapolation.CLAMP) },
+      ],
+    };
+  });
 
   const rTopScrim = useAnimatedStyle(() => ({
     opacity: interpolate(scrollX.get(), stops, topScrim, Extrapolation.CLAMP),

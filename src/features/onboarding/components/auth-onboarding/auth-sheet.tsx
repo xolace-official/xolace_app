@@ -23,9 +23,10 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { SymbolView } from 'expo-symbols';
-import { Button, Spinner } from 'heroui-native';
+import { Button, PressableFeedback, Spinner } from 'heroui-native';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { playSoftPress } from '@/src/lib/haptics';
 import { LegalBottomSheet } from '@/src/features/auth/components/legal-bottom-sheet';
 import {
   PRIVACY_POLICY,
@@ -61,9 +62,9 @@ export const AuthSheetBlock = ({
 
   return (
     <Animated.View style={rStyle}>
-      <Pressable onPress={onCollapse} className="self-center mb-5 p-1" hitSlop={12}>
+      <PressableFeedback onPress={onCollapse} className="self-center mb-5 p-1" hitSlop={12}>
         <SymbolView name="chevron.down" size={16} tintColor={muted} />
-      </Pressable>
+      </PressableFeedback>
 
       <AppText
         className="text-foreground/90 text-[24px] text-center mb-7"
@@ -158,12 +159,13 @@ export const MorphingSeatButton = ({
   }));
 
   const handlePress = () => {
+    playSoftPress();
     if (progress.get() > 0.5) onCollapse();
     else onExpand();
   };
 
   return (
-    <Pressable
+    <PressableFeedback
       onPress={handlePress}
       style={{ borderCurve: 'continuous' }}
       className="h-12 mx-6 mt-4 items-center justify-center rounded-full border border-ember/25 bg-ember/10 overflow-hidden"
@@ -176,6 +178,6 @@ export const MorphingSeatButton = ({
         <SymbolView name="flame" size={15} tintColor={ember} />
         <AppText className="text-ember text-[15px]">Back to the fire</AppText>
       </Animated.View>
-    </Pressable>
+    </PressableFeedback>
   );
 };

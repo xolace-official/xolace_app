@@ -76,34 +76,41 @@ const PaginationItem = ({
 
   const rBarStyle = useAnimatedStyle(() => ({ width: barWidth.get() }));
 
-  const rFillStyle = useAnimatedStyle(() => {
-    if (isDragging.get()) cancelAnimation(fill);
-    return {
-      width: `${interpolate(fill.get(), [0, 1], [0, 100], Extrapolation.CLAMP)}%`,
-      opacity: interpolate(barWidth.get(), [inactiveWidth, activeWidth], [0, 1], Extrapolation.CLAMP),
-    };
-  });
+  // Width-in-percent is a layout property, but the fill is absolute and
+  // childless, so nothing else re-lays-out behind it.
+  const rFillStyle = useAnimatedStyle(() => ({
+    width: `${interpolate(fill.get(), [0, 1], [0, 100], Extrapolation.CLAMP)}%`,
+    opacity: interpolate(barWidth.get(), [inactiveWidth, activeWidth], [0, 1], Extrapolation.CLAMP),
+  }));
 
   useEffect(() => {
     fill.set(0);
     if (currentIndex === index) fill.set(withTiming(1, { duration }));
   }, [currentIndex, index, duration, fill]);
 
-  // Restart the fill once the finger lifts, rather than resuming mid-bar.
+  // Cancel on touch, restart once the finger lifts — rather than resuming
+  // mid-bar. Cancelling belongs here and not in the style worklet: a style is
+  // evaluated every frame and must not have side effects.
   useAnimatedReaction(
     () => isDragging.get(),
     (dragging) => {
-      if (!dragging && currentIndex === index && fill.get() > 0) {
+      if (dragging) {
+        cancelAnimation(fill);
+        return;
+      }
+      if (currentIndex === index && fill.get() > 0) {
         fill.set(0);
         fill.set(withTiming(1, { duration }));
       }
     },
   );
 
+  // Keyed on the threshold, not on `fill` itself: reacting to the raw value
+  // would wake this worklet on every frame of the fill, six bars over.
   useAnimatedReaction(
-    () => fill.get(),
-    (value) => {
-      if (value < 1 || isDragging.get()) return;
+    () => fill.get() >= 1,
+    (done, wasDone) => {
+      if (!done || wasDone || isDragging.get()) return;
       if (currentIndex === total - 1) {
         // Tale over — the fire invites you to sit down.
         scheduleOnRN(onFinish);
