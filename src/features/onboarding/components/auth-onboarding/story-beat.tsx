@@ -6,6 +6,7 @@
  * The slide's own translate is deliberately slower than the list's (0.8x), so
  * the copy trails the swipe rather than moving locked to the finger.
  */
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -20,8 +21,19 @@ import { AppText } from '@/src/components/shared/app-text';
 import type { StoryBeat } from '@/src/features/onboarding/story-beats';
 import { BeatIllustration } from './beat-illustrations';
 import { CoverBeat } from './cover-beat';
+import { MirrorBeat } from './mirror-beat';
+import { VentBeat } from './vent-beat';
+import { XolacersBeat } from './xolacers-beat';
 import { ProofWell } from './proof-well';
 import { useDeckColor } from './deck-color';
+
+/** Beats that lay themselves out. Anything absent here uses the stack below. */
+const BESPOKE: Partial<Record<string, (p: { beat: StoryBeat }) => ReactElement>> = {
+  cover: CoverBeat,
+  mirror: MirrorBeat,
+  vent: VentBeat,
+  xolacers: XolacersBeat,
+};
 
 export const StoryBeatSlide = ({
   beat,
@@ -59,13 +71,13 @@ export const StoryBeatSlide = ({
     };
   });
 
-  // The cover owns its own composition (wordmark, horizon rule, figure on the
-  // floor) but still rides the deck's shared parallax, so the swipe feels the
-  // same leaving it as it does on every other beat.
-  if (beat.kind === 'cover') {
+  // Beats that own their own composition still ride the deck's shared
+  // parallax, so the swipe feels the same leaving them as on every other beat.
+  const Bespoke = BESPOKE[beat.kind ?? 'tale'];
+  if (Bespoke) {
     return (
       <Animated.View style={[{ width }, rStyle]} className="flex-1">
-        <CoverBeat beat={beat} />
+        <Bespoke beat={beat} />
       </Animated.View>
     );
   }

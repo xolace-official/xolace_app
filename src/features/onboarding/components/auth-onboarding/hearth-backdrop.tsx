@@ -10,8 +10,10 @@
  *
  * FRAMING, keyed to `STORY_BEATS` order:
  *   0 dusk      close and large — the fire is the subject
- *   1 vent      settles, holds
- *   2 mirror    lowest + dimmest — the words own the screen
+ *   1 mirror    lowest + dimmest — the beat is about reading words back, so
+ *               the words own the screen
+ *   2 vent      settles and holds, still lit — you are speaking INTO the fire,
+ *               so it has to be present rather than dimmed away
  *   3 proof     returns to mid; the beat is about other fires out there
  *   4 xolacers  mid, steady
  *   5 plus      flares, brightest — "the fire stays lit"
@@ -34,9 +36,9 @@ import { HearthVideo } from './hearth-video';
 import { SkyArc } from './sky-arc';
 
 /** One keyframe per beat. Values are interpolated continuously between them. */
-const SCALE = [1.16, 1.08, 1.0, 1.06, 1.06, 1.22];
-const RISE = [0, 26, 74, 34, 30, -18];
-const BRIGHT = [1, 0.86, 0.6, 0.82, 0.84, 1];
+const SCALE = [1.16, 1.0, 1.08, 1.06, 1.06, 1.22];
+const RISE = [0, 74, 26, 34, 30, -18];
+const BRIGHT = [1, 0.6, 0.86, 0.82, 0.84, 1];
 
 /**
  * Verified on both platforms. An earlier pass made this iOS-only, believing a
