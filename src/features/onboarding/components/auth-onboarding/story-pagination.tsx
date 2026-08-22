@@ -98,7 +98,10 @@ const PaginationItem = ({
         cancelAnimation(fill);
         return;
       }
-      if (currentIndex === index && fill.get() > 0) {
+      // No `fill > 0` guard: a hold that begins the instant a beat starts
+      // leaves the fill at exactly 0, and skipping the restart there would
+      // stall the tale on that beat forever.
+      if (currentIndex === index) {
         fill.set(0);
         fill.set(withTiming(1, { duration }));
       }

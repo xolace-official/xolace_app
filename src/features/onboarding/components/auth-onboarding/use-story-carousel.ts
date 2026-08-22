@@ -10,8 +10,8 @@
  * suppression). Everything that moves the list is a worklet, so a tap or an
  * auto-advance never has to round-trip through the RN runtime.
  */
-import { useState } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AppState, useWindowDimensions } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import Animated, {
   ReduceMotion,
@@ -77,6 +77,20 @@ export const useStoryCarousel = () => {
       }
     },
   });
+
+  // A backgrounded app leaves the beat timer running on wall-clock time, so
+  // reopening it fast-forwards the tale — three beats in the time it takes the
+  // screen to come back. `isDragging` is already the "hold the tale" signal
+  // every bar listens to, so background borrows it and the fill restarts on
+  // the beat you left. Skipped while the sheet is open: there the hold is the
+  // sheet's, and clearing it would start the tale running underneath.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') isDragging.set(true);
+      else if (progress.get() === 0) isDragging.set(false);
+    });
+    return () => sub.remove();
+  }, [isDragging, progress]);
 
   const expand = () => {
     isDragging.set(true);
