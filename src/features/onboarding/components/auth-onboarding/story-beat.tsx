@@ -14,12 +14,12 @@ import Animated, {
   useReducedMotion,
   type SharedValue,
 } from 'react-native-reanimated';
-import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
 
 import { AppText } from '@/src/components/shared/app-text';
 import type { StoryBeat } from '@/src/features/onboarding/story-beats';
 import { BeatIllustration } from './beat-illustrations';
+import { CoverBeat } from './cover-beat';
 import { ProofWell } from './proof-well';
 import { useDeckColor } from './deck-color';
 
@@ -35,9 +35,6 @@ export const StoryBeatSlide = ({
   scrollX: SharedValue<number>;
 }) => {
   const ember = useDeckColor('ember');
-  // `dusk` is the one beat with a real illustration asset; the rest still run
-  // on the placeholder line art until #203 lands theirs.
-  const isDusk = beat.id === 'dusk';
   // Reduced motion keeps the crossfade (it explains which beat you're on) and
   // drops the trailing parallax, which is the part that reads as movement.
   const reduced = useReducedMotion();
@@ -62,18 +59,21 @@ export const StoryBeatSlide = ({
     };
   });
 
+  // The cover owns its own composition (wordmark, horizon rule, figure on the
+  // floor) but still rides the deck's shared parallax, so the swipe feels the
+  // same leaving it as it does on every other beat.
+  if (beat.kind === 'cover') {
+    return (
+      <Animated.View style={[{ width }, rStyle]} className="flex-1">
+        <CoverBeat beat={beat} />
+      </Animated.View>
+    );
+  }
+
   return (
     <Animated.View style={[{ width }, rStyle]} className="flex-1 justify-center px-9 pb-16">
-      <View pointerEvents="none" className="items-center mb-8" style={{ opacity: isDusk ? 1 : 0.55 }}>
-        {isDusk ? (
-          <Image
-            source={require('@/assets/images/flux/flux-campfire.png')}
-            style={{ width: 176, height: 176 }}
-            contentFit="contain"
-          />
-        ) : (
-          <BeatIllustration beat={beat} color={ember} size={128} />
-        )}
+      <View pointerEvents="none" className="items-center mb-8" style={{ opacity: 0.55 }}>
+        <BeatIllustration beat={beat} color={ember} size={128} />
       </View>
 
       <View className="flex-row items-center gap-2.5 h-5 mb-6">

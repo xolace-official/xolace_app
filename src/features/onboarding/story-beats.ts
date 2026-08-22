@@ -23,8 +23,11 @@ export type StoryBeat = {
   /**
    * 'tale' (default) = words on the dark, as #198 decided.
    * 'proof'          = the odd one out: a real artifact in a contained well.
+   * 'cover'          = the opening title card. Not a slide in the deck's
+   *                    rhythm — the front of the book, so it breaks the grid
+   *                    on purpose (see `cover-beat.tsx`).
    */
-  kind?: 'tale' | 'proof';
+  kind?: 'tale' | 'proof' | 'cover';
   /** Ember-cased footnote under the aside. Only Xolace+ carries one. */
   tag?: string;
 };
@@ -32,11 +35,14 @@ export type StoryBeat = {
 export const STORY_BEATS: StoryBeat[] = [
   {
     id: 'dusk',
-    // Paired with `flux-campfire.png` — a figure sitting alone by a lit fire.
-    // The copy is about that stillness, not about carried weight.
-    beat: 'You sit by the fire,\nalone for now.',
-    aside: 'The flames help you see what you’re carrying.',
-    symbol: { ios: 'moon.stars', android: 'nights_stay', web: 'nights_stay' },
+    kind: 'cover',
+    // The gateway into the brand, so it is the one beat that must NAME the
+    // thing: the wordmark, the word "campfire", and in plain language what
+    // actually happens here. Every later beat may lean on the metaphor
+    // because this one paid for it. Nothing poetic gets to go first.
+    beat: 'A campfire for\nwhat you can’t\nsay out loud.',
+    aside: 'Low light, not a spotlight. Voices before faces. A fire nobody owns.',
+    symbol: { ios: 'flame', android: 'local_fire_department', web: 'local_fire_department' },
     duration: 3400,
   },
   {
