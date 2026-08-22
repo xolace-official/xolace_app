@@ -16,6 +16,7 @@ import { Gesture } from 'react-native-gesture-handler';
 import Animated, {
   ReduceMotion,
   scrollTo,
+  useAnimatedReaction,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useSharedValue,
@@ -47,11 +48,32 @@ export const useStoryCarousel = () => {
   const listRef = useAnimatedRef<Animated.FlatList<StoryBeat>>();
   const [currentIndex, setCurrentIndex] = useState(0);
 
+
   const scrollX = useSharedValue(0);
   const animatedIndex = useSharedValue(0);
   const isDragging = useSharedValue(false);
   const progress = useSharedValue(0);
   const startProgress = useSharedValue(0);
+
+  /**
+   * Which beat we are on, derived from the offset we already track.
+   *
+   * This replaces FlatList's `onViewableItemsChanged`, which silently stalled
+   * the tale on Android: the deck's slide width is fractional (411.43px on a
+   * Pixel 7 Pro), so a paged offset lands on a sub-pixel boundary and the slide
+   * measures ~99.9% visible — never the 100% the viewability config demanded.
+   * The beat scrolled into view, `currentIndex` never followed, and the bar for
+   * that beat was therefore never started, so the tale sat there forever while
+   * swiping still worked. Rounding the offset has no threshold to miss.
+   */
+  useAnimatedReaction(
+    () => Math.round(animatedIndex.get()),
+    (index, previous) => {
+      if (index === previous) return;
+      // The tail duplicate sits at index === length; the real beat is 0.
+      scheduleOnRN(setCurrentIndex, index >= STORY_BEATS.length ? 0 : index);
+    },
+  );
 
   /** Worklet — the one way the deck moves. Callable from any UI-thread code. */
   const scrollToIndex = (index: number) => {

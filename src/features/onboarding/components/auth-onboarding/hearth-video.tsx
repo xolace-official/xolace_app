@@ -58,6 +58,11 @@ export const HearthVideo = ({ width, height }: { width: number; height: number }
           contentFit="cover"
           nativeControls={false}
           pointerEvents="none"
+          // Leave `surfaceType` at its default `surfaceView`. `textureView`
+          // looks like the fix for a video under an animated, blended parent,
+          // but on the API 35 emulator it renders NOTHING at all — verified by
+          // toggling it alone against a healthy player. SurfaceView composites
+          // this deck's opacity, transform and `screen` blend correctly.
         />
       </Animated.View>
     </>

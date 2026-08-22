@@ -17,6 +17,10 @@ import { useDeckColor } from './deck-color';
 
 import { AppText } from '@/src/components/shared/app-text';
 
+/** expo-symbols needs a Material name on Android; a bare SF name renders
+ *  nothing there at all. */
+const FLAME_ICON = { ios: 'flame', android: 'local_fire_department', web: 'local_fire_department' } as const;
+
 export const ProofWell = () => {
   const ember = useDeckColor('ember');
 
@@ -26,7 +30,7 @@ export const ProofWell = () => {
       style={{ borderColor: `${ember}33`, backgroundColor: `${ember}0d` }}
     >
       <View className="flex-row items-center gap-2">
-        <SymbolView name="flame" size={13} tintColor={ember} type="hierarchical" />
+        <SymbolView name={FLAME_ICON} size={13} tintColor={ember} type="hierarchical" />
         <AppText className="text-ember/70 text-[10px] uppercase" style={{ letterSpacing: 2 }}>
           By the fire this week
         </AppText>

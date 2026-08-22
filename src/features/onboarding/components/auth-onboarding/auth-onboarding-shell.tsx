@@ -4,15 +4,14 @@
  * absolutely positioned ON TOP of them, sliding up out of the way as the
  * sheet opens.
  */
-import { useCallback } from 'react';
-import { useWindowDimensions, View, type ViewToken } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { FlatList, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScopedTheme } from 'uniwind';
 
 import { useAppTheme } from '@/src/context/app-theme-context';
-import { STORY_BEATS, type StoryBeat } from '@/src/features/onboarding/story-beats';
+import { type StoryBeat } from '@/src/features/onboarding/story-beats';
 import { AuthSheetBlock, MorphingSeatButton } from './auth-sheet';
 import { HearthBackdrop } from './hearth-backdrop';
 import { StoryBeatSlide } from './story-beat';
@@ -22,8 +21,6 @@ import { LOOPED_BEATS, useStoryCarousel } from './use-story-carousel';
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<StoryBeat>);
 /** How far the deck lifts to make room for the sign-in block. */
 const LIFT = 250;
-/** Module-level: FlatList keeps the first config it is handed. */
-const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 100, minimumViewTime: 0 };
 
 export const AuthOnboardingShell = () => {
   const insets = useSafeAreaInsets();
@@ -40,7 +37,6 @@ export const AuthOnboardingShell = () => {
     listRef,
     width,
     currentIndex,
-    setCurrentIndex,
     scrollX,
     animatedIndex,
     isDragging,
@@ -52,16 +48,6 @@ export const AuthOnboardingShell = () => {
     gesture,
   } = useStoryCarousel();
 
-
-  const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      const first = viewableItems[0];
-      if (first?.index == null) return;
-      // The tail duplicate reports index === length; the real beat is 0.
-      setCurrentIndex(first.index >= STORY_BEATS.length ? 0 : first.index);
-    },
-    [setCurrentIndex],
-  );
 
   const rDeckStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: interpolate(progress.get(), [0, 1], [0, -LIFT], Extrapolation.CLAMP) }],
@@ -116,8 +102,6 @@ export const AuthOnboardingShell = () => {
               showsHorizontalScrollIndicator={false}
               scrollEventThrottle={1}
               onScroll={scrollHandler}
-              onViewableItemsChanged={onViewableItemsChanged}
-              viewabilityConfig={VIEWABILITY_CONFIG}
             />
 
             <Animated.View style={rPaginationStyle} className="pt-5">

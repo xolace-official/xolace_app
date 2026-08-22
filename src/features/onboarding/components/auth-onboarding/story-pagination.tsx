@@ -83,9 +83,34 @@ const PaginationItem = ({
     opacity: interpolate(barWidth.get(), [inactiveWidth, activeWidth], [0, 1], Extrapolation.CLAMP),
   }));
 
+  // The beat ends when the fill's own animation ends. This has to be the
+  // timing callback and not a reaction on `fill >= 1`: a reaction re-registers
+  // whenever this component re-renders, and re-registration both resets its
+  // "previous" to null and runs the body immediately — so a bar sitting at
+  // fill 1, waiting for the reset, fired a SECOND advance. That put
+  // `currentIndex` ahead of the list, leaving the visible beat with a bar that
+  // never moves while the deck still swiped fine. A callback fires once, only
+  // when the animation truly finishes, and `finished` is false when cancelled.
+  const startFill = () => {
+    'worklet';
+    fill.set(0);
+    fill.set(
+      withTiming(1, { duration }, (finished) => {
+        if (!finished) return;
+        // Keyed off this bar's OWN index, never the rendered `currentIndex` —
+        // only the active bar is ever filling, and `index` cannot go stale.
+        if (index === total - 1) scheduleOnRN(onFinish);
+        else onAdvance(index + 1);
+      }),
+    );
+  };
+
   useEffect(() => {
     fill.set(0);
-    if (currentIndex === index) fill.set(withTiming(1, { duration }));
+    if (currentIndex === index) startFill();
+    // `startFill` is recreated every render by design — the effect must run on
+    // beat changes only, or every unrelated render restarts the bar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, index, duration, fill]);
 
   // Cancel on touch, restart once the finger lifts — rather than resuming
@@ -93,33 +118,18 @@ const PaginationItem = ({
   // evaluated every frame and must not have side effects.
   useAnimatedReaction(
     () => isDragging.get(),
-    (dragging) => {
+    (dragging, wasDragging) => {
       if (dragging) {
         cancelAnimation(fill);
         return;
       }
-      // No `fill > 0` guard: a hold that begins the instant a beat starts
-      // leaves the fill at exactly 0, and skipping the restart there would
-      // stall the tale on that beat forever.
-      if (currentIndex === index) {
-        fill.set(0);
-        fill.set(withTiming(1, { duration }));
-      }
-    },
-  );
-
-  // Keyed on the threshold, not on `fill` itself: reacting to the raw value
-  // would wake this worklet on every frame of the fill, six bars over.
-  useAnimatedReaction(
-    () => fill.get() >= 1,
-    (done, wasDone) => {
-      if (!done || wasDone || isDragging.get()) return;
-      if (currentIndex === total - 1) {
-        // Tale over — the fire invites you to sit down.
-        scheduleOnRN(onFinish);
-      } else {
-        onAdvance(currentIndex + 1);
-      }
+      // `wasDragging === true` and not just "not dragging": this reaction
+      // re-registers on every render with a null previous, and an unguarded
+      // restart there meant any re-render sent the active bar back to 0.
+      // No `fill > 0` guard either — a hold that begins the instant a beat
+      // starts leaves the fill at exactly 0, and skipping the restart there
+      // would stall the tale on that beat forever.
+      if (wasDragging === true && currentIndex === index) startFill();
     },
   );
 

@@ -19,7 +19,7 @@
  * The fire composites ONTO the dawn arc behind it (`SkyArc`), so the sky lifts
  * across the six beats while the fire stays the light source.
  */
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Extrapolation,
@@ -39,17 +39,13 @@ const RISE = [0, 26, 74, 34, 30, -18];
 const BRIGHT = [1, 0.86, 0.6, 0.82, 0.84, 1];
 
 /**
- * ANDROID: expo-video draws into a SurfaceView, which a `mixBlendMode` parent
- * blanks entirely — as does `overflow: hidden` anywhere above it. Both were
- * verified in isolation on API 35: the video keeps playing (media3 reports
- * PLAYING, position advancing) while nothing reaches the screen. So the blend
- * is iOS-only and this container no longer clips.
- *
- * The cost on Android is the dawn arc sitting behind an opaque clip. #203's
- * real graded fire should carry its own alpha instead of relying on `screen`
- * to key out the black — that removes the split rather than papering over it.
+ * Verified on both platforms. An earlier pass made this iOS-only, believing a
+ * `mixBlendMode` parent blanked expo-video's SurfaceView on Android — it does
+ * not. The video was failing for an unrelated reason (see docs/bug-log.md: in a
+ * dev build the clip is streamed from Metro over the network, and that link was
+ * dropping), so toggling the blend appeared to fix it. Both platforms blend.
  */
-const BLEND_SCREEN = Platform.OS === 'ios' ? ({ mixBlendMode: 'screen' } as const) : undefined;
+const BLEND_SCREEN = { mixBlendMode: 'screen' } as const;
 
 /** How hard the top scrim presses, per beat. It has to relax as the sky lifts,
  *  or a black bar sits on top of the dawn. */
