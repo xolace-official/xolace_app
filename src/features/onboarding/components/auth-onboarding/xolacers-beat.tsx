@@ -40,7 +40,7 @@ import { useDeckColor } from './deck-color';
 import { EmberGlow } from './ember-glow';
 import { deckFigureHeight, XOLACERS_SCALE } from './figure-metrics';
 
-const FIGURE = require('@/assets/images/flux/erasebg-transformed.png');
+const FIGURE = require('@/assets/images/flux/flux-sad.png');
 
 const SRC_W = 635;
 const SRC_H = 1054;
@@ -149,7 +149,7 @@ export const XolacersBeat = ({ beat }: { beat: StoryBeat }) => {
         <View style={{ width: figW, height: figH }}>
           <Image source={FIGURE} style={{ width: figW, height: figH }} contentFit="contain" />
 
-          {/* The character arrives COLD. `erasebg-transformed.png` is the only
+          {/* The character arrives COLD. `flux-sad.png` is the only
               pose in the deck rendered in grey stone rather than the mascot's
               peach — which would read as a different character entirely if it
               just sat there. Warmed on cue instead, the grey becomes the point:

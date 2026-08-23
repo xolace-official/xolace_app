@@ -56,7 +56,7 @@ export const deckFigureHeight = (screenHeight: number) =>
  * person, and a bigger character is how that lands before a word is read.
  *
  * The 0.95 inside it is the same framing correction VENT_SCALE_MATCH applies —
- * `erasebg-transformed.png` is drawn 0.602 wide-for-tall against the mirror's
+ * `flux-sad.png` is drawn 0.602 wide-for-tall against the mirror's
  * 0.535, so at equal heights it would look wider than the same character on the
  * two beats either side of it.
  */
