@@ -5,7 +5,7 @@
  *     ⌁ VENT
  *     the line
  *     the aside
- *     EITHER ONE · ANY NIGHT
+ *     EITHER ONE · ANY TIME
  *            ˙ ·  ˙        ← the breath, rising and gone
  *          ·
  *     [figure]             ← pushed LEFT of the text axis

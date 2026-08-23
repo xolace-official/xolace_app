@@ -59,12 +59,16 @@ export const STORY_BEATS: StoryBeat[] = [
     duration: 3400,
   },
   // Mirror and Vent are a MATCHED PAIR, not two steps of one flow. They are
-  // alternatives — different reasons to open the app on a given night — so the
-  // two beats are written in identical grammatical shape ("Some nights… /
-  // Other nights…"). Same form reads as a choice; different form would read as
+  // alternatives — different reasons to open the app on a given day — so the
+  // two beats are written in identical grammatical shape ("Some days… /
+  // Other days…"). Same form reads as a choice; different form would read as
   // a sequence, which is the thing we must not imply. Neither beat may open
   // with a joining word ("So…", "And…"), and neither may reference the other
   // as a next step. The `tag` on the second closes the pair.
+  //
+  // Deliberately "days", not "nights" — the fire/campfire metaphor is a
+  // visual register (dusk lighting, embers), not a claim that Xolace is only
+  // for nighttime use. Copy that names a time of day must stay time-neutral.
   //
   // Mirror leads because the cover already sold the act of saying it out loud;
   // opening the deck proper with Vent would restate the cover instead of
@@ -73,7 +77,7 @@ export const STORY_BEATS: StoryBeat[] = [
     id: 'mirror',
     kind: 'mirror',
     label: 'The Mirror',
-    beat: "Some nights you\nneed to know what\nyou're feeling.",
+    beat: "Some days you\nneed to know what\nyou're feeling.",
     aside:
       'Type it or say it. The Mirror reads it back — the feeling, named, in your own words. Not advice, not a diagnosis.',
     symbol: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' },
@@ -83,10 +87,10 @@ export const STORY_BEATS: StoryBeat[] = [
     id: 'vent',
     kind: 'vent',
     label: 'Vent',
-    beat: 'Other nights you\njust need to\nget it out.',
+    beat: 'Other days you\njust need to\nget it out.',
     aside:
       'Sit with the fire alone and say it. Nothing is stored, nothing answers back. It goes when you close it.',
-    tag: 'Either one · any night',
+    tag: 'Either one · any time',
     symbol: { ios: 'mic', android: 'mic', web: 'mic' },
     duration: 3600,
   },
