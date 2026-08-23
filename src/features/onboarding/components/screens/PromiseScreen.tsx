@@ -46,7 +46,7 @@ export const PromiseScreen = () => {
 
   const handlePress = () => {
     playGentlePresence();
-    router.push('/frame');
+    router.push('/auth-onboarding');
   };
 
   const rootStyle = { paddingBottom: insets.bottom };

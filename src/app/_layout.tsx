@@ -101,11 +101,7 @@ const AppContent = () => {
   // while Convex never authenticated (desync) — the two have different fixes.
   useEffect(() => {
     Sentry.setUser(userId ? { id: userId } : null);
-    const group = !introSeen
-      ? "(onboarding)"
-      : !isAuthenticated
-        ? "(auth)"
-        : "(protected)";
+    const group = !isAuthenticated ? "(onboarding)" : "(protected)";
     Sentry.addBreadcrumb({
       category: "auth.guard",
       level: isClerkLoaded && isSignedIn && !isAuthenticated ? "warning" : "info",
@@ -143,13 +139,12 @@ const AppContent = () => {
   if (isAuthLoading) return <FullRippleLoader />;
   return (
         <Stack screenOptions={NO_HEADER}>
-      <Stack.Protected guard={!introSeen}>
+      {/* Two groups, not three (#199): the onboarding stack now owns sign-in
+          too, so `introSeen` is its internal concern rather than a root guard. */}
+      <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="(onboarding)" options={NO_HEADER} />
       </Stack.Protected>
-      <Stack.Protected guard={introSeen && !isAuthenticated}>
-        <Stack.Screen name="(auth)" options={NO_HEADER} />
-      </Stack.Protected>
-      <Stack.Protected guard={introSeen && isAuthenticated}>
+      <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(protected)" options={NO_HEADER} />
         <Stack.Screen
           name="(paywall)"

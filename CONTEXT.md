@@ -26,6 +26,27 @@ this was decided, which is the only reason the fix was free.
 
 Full spec: [`docs/confidence-aware-mirroring.md`](docs/confidence-aware-mirroring.md).
 
+## Campers, the cohort card (2026-08-20)
+
+**Campers**, lowercase, is the general term for Xolace users — anyone who's
+used the app, no other membership implied. It's the umbrella term the
+by-the-fire metaphor names people by. `Camper XXXX`, capitalized with a
+4-digit tag, is a narrower, already-shipped instance: the anonymous pairing
+pseudonym in a xolacer's 1:1 conversation view (see "Camper pseudonym" below)
+— a display name for one seeker within one pairing, not a claim about who
+counts as a camper generally. The two don't conflict; the tagged form is just
+the identity-hiding presentation of the broader term inside one specific
+surface.
+
+The **weekly cohort card** (Discovery screen) is the first feature to use
+"campers" in its general sense: "22 campers sat with sadness by the fire this
+week. You are not alone." It reports how many OTHER users (excluding the
+viewer, excluding crisis sessions) had a session this calendar week whose
+`primaryEmotion` or `secondaryEmotion` matched the viewer's own most recent
+session's `primaryEmotion`. Below a floor of 3 matches, no number is shown —
+a warm reassurance line runs without one, never a fabricated count. See
+[ADR 0004](docs/adr/0004-weekly-cohort-card-materialized-aggregate.md).
+
 ## Camper pseudonym (2026-08-19)
 
 A **xolacer** volunteering is a named party — `displayName`, consistent and
