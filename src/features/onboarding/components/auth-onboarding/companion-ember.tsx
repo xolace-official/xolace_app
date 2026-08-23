@@ -44,6 +44,8 @@ export const CompanionEmber = ({
   const pulse = useSharedValue(reduced ? 1 : DIM);
 
   useEffect(() => {
+    // Also cancels a running pulse when `reduced` flips on mid-life.
+    pulse.set(reduced ? 1 : DIM);
     if (reduced) return;
     pulse.set(
       withRepeat(

@@ -124,11 +124,19 @@ export const AuthSheetBlock = ({
       </View>
 
       <View className="flex-row justify-center gap-1">
-        <Pressable onPress={() => setActiveDocument(TERMS_OF_SERVICE)}>
+        <Pressable
+          onPress={() => setActiveDocument(TERMS_OF_SERVICE)}
+          hitSlop={12}
+          accessibilityRole="link"
+        >
           <AppText className="text-foreground/40 text-[11px] underline">Terms of Service</AppText>
         </Pressable>
         <AppText className="text-foreground/40 text-[11px]"> · </AppText>
-        <Pressable onPress={() => setActiveDocument(PRIVACY_POLICY)}>
+        <Pressable
+          onPress={() => setActiveDocument(PRIVACY_POLICY)}
+          hitSlop={12}
+          accessibilityRole="link"
+        >
           <AppText className="text-foreground/40 text-[11px] underline">Privacy Policy</AppText>
         </Pressable>
       </View>
