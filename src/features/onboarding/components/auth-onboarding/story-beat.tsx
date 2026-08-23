@@ -1,7 +1,9 @@
 /**
  * One beat of the tale: illustration, chapter mark, the line, and the aside.
- * Cardless by #198 — words on the dark, with the fire behind them — except
- * the `proof` beat, which holds up a real artifact instead (`ProofWell`).
+ * Cardless by #198 — words on the dark, with the fire behind them.
+ *
+ * Every beat currently shipping owns its own composition, so the stack below is
+ * the fallback for a plain `tale` beat and nothing routes to it today.
  *
  * The slide's own translate is deliberately slower than the list's (0.8x), so
  * the copy trails the swipe rather than moving locked to the finger.
@@ -25,13 +27,14 @@ import { MirrorBeat } from './mirror-beat';
 import { VentBeat } from './vent-beat';
 import { XolacersBeat } from './xolacers-beat';
 import { PlusBeat } from './plus-beat';
-import { ProofWell } from './proof-well';
+import { ProofBeat } from './proof-beat';
 import { useDeckColor } from './deck-color';
 
 /** Beats that lay themselves out. Anything absent here uses the stack below. */
 const BESPOKE: Partial<Record<string, (p: { beat: StoryBeat }) => ReactElement>> = {
   cover: CoverBeat,
   mirror: MirrorBeat,
+  proof: ProofBeat,
   vent: VentBeat,
   xolacers: XolacersBeat,
   plus: PlusBeat,
@@ -112,21 +115,11 @@ export const StoryBeatSlide = ({
       </View>
 
       <AppText
-        className={
-          beat.kind === 'proof'
-            ? 'text-foreground/95 text-[24px] leading-[34px]'
-            : 'text-foreground/95 text-[32px] leading-[45px]'
-        }
+        className="text-foreground/95 text-[32px] leading-[45px]"
         style={{ fontFamily: 'Poppins-Medium' }}
       >
         {beat.beat}
       </AppText>
-
-      {beat.kind === 'proof' ? (
-        <View className="mt-5">
-          <ProofWell />
-        </View>
-      ) : null}
 
       <AppText className="text-foreground/42 text-[14px] leading-6 mt-5 pr-4">{beat.aside}</AppText>
 

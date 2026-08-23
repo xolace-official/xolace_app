@@ -16,8 +16,8 @@
  * `dusk` below is already unreachable — the cover has owned its own composition
  * since #198 — and is kept only until #203 closes this file out entirely.
  *
- * `proof` has no entry — that beat already shows a real artifact (ProofWell),
- * so it doesn't need a second illustration competing with it.
+ * `proof` has no entry — that beat draws its own field of embers, so it doesn't
+ * need a second illustration competing with it.
  */
 import type { ReactElement } from 'react';
 import Svg, { Circle, Path } from 'react-native-svg';

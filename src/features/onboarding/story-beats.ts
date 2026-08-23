@@ -22,7 +22,9 @@ export type StoryBeat = {
   duration: number;
   /**
    * 'tale' (default) = words on the dark, as #198 decided.
-   * 'proof'          = the odd one out: a real artifact in a contained well.
+   * 'proof'          = the count drawn rather than stated: one ember per
+   *                    person, with one of them carrying a real review
+   *                    (see `proof-beat.tsx`).
    * 'cover'          = the opening title card. Not a slide in the deck's
    *                    rhythm — the front of the book, so it breaks the grid
    *                    on purpose (see `cover-beat.tsx`).
@@ -93,9 +95,18 @@ export const STORY_BEATS: StoryBeat[] = [
     label: 'This week',
     kind: 'proof',
     beat: "You're not the\nonly one out here.",
-    aside: 'Counted from real sessions this week. Never a number we made up.',
+    // "Real sessions" was ours, not theirs — nobody outside the codebase knows
+    // what a session is, and a caption whose whole point is that the number is
+    // checkable cannot be the line that needs decoding. One light on the slide
+    // per person, said plainly.
+    aside: 'One light for each of them. A real count — never a number we made up.',
     symbol: { ios: 'flame', android: 'local_fire_department', web: 'local_fire_department' },
-    duration: 4200,
+    // Far and away the longest beat to read — a whole three-sentence review on
+    // top of the field and the caption — and the choreography alone runs past
+    // 2.4s before a word can be read. Read time, not taste. Auto-advancing off
+    // someone's review mid-sentence is the one place in the deck where the
+    // timer would actively undercut what the slide is saying.
+    duration: 8000,
   },
   {
     id: 'xolacers',
