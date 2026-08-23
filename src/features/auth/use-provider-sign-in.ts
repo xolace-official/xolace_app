@@ -21,14 +21,23 @@ import { playSoftPress } from '@/src/lib/haptics';
 
 export type AuthProvider = 'apple' | 'google';
 
-/** Everything we can get out of an unknown throw, for the exception capture. */
+/**
+ * What we can safely say about an unknown throw, for the exception capture.
+ * Only these fields — a thrown SDK error can carry the whole response body,
+ * the request payload, or a token, and this string ships to PostHog.
+ */
+const SAFE_ERROR_KEYS = ['name', 'message', 'code', 'status', 'statusText'] as const;
+
 const describeError = (error: unknown) => {
   if (error instanceof Error) return `${error.name}: ${error.message}`;
   if (typeof error === 'object' && error !== null) {
-    const keys = Object.getOwnPropertyNames(error);
-    return keys.length > 0
-      ? keys.map((k) => `${k}: ${JSON.stringify((error as Record<string, unknown>)[k])}`).join('\n')
-      : `Empty object. Proto: ${Object.getPrototypeOf(error)?.constructor?.name ?? 'none'}`;
+    const record = error as Record<string, unknown>;
+    const described = SAFE_ERROR_KEYS.filter((k) => record[k] !== undefined).map(
+      (k) => `${k}: ${String(record[k])}`,
+    );
+    return described.length > 0
+      ? described.join('\n')
+      : `Unrecognized error object. Proto: ${Object.getPrototypeOf(error)?.constructor?.name ?? 'none'}`;
   }
   return String(error);
 };
