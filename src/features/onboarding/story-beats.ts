@@ -34,8 +34,11 @@ export type StoryBeat = {
    * 'xolacers'       = the only beat with someone else in it: figure on the
    *                    axis, another person's ember across the dark
    *                    (see `xolacers-beat.tsx`).
+   * 'plus'           = the offer, shown rather than argued: the free window
+   *                    lit and the past relighting behind it
+   *                    (see `plus-beat.tsx`).
    */
-  kind?: 'tale' | 'proof' | 'cover' | 'mirror' | 'vent' | 'xolacers';
+  kind?: 'tale' | 'proof' | 'cover' | 'mirror' | 'vent' | 'xolacers' | 'plus';
   /** Ember-cased footnote under the aside. Only Xolace+ carries one. */
   tag?: string;
 };
@@ -116,14 +119,25 @@ export const STORY_BEATS: StoryBeat[] = [
   },
   {
     id: 'plus',
+    kind: 'plus',
     label: 'Xolace+',
-    // The last beat before the ask, so it is the one spot in the tale built to
-    // plant the offer — concrete about what Plus is, and that it never gates
-    // the free product.
-    beat: 'The fire\nstays lit for you.',
+    // The last beat before the ask, and the only one with a commercial job.
+    // Since the product refuses to put a paywall in front of anything, this is
+    // the ONE place the shape of the offer gets shown — so nothing here is
+    // allowed to be atmospheric. Every clause is a fact a user could later
+    // hold us to: 30 days is FREE_TIMELINE_WINDOW_DAYS in convex/sessions.ts,
+    // the seven days is the annual plan's trial in paywall-period-picker.
+    //
+    // "The fire is free" leads because the fear this beat has to clear is not
+    // price, it is "so this is a trial". Answer that first and the rest reads
+    // as an offer instead of a countdown.
+    beat: 'The fire is free.\nXolace+ keeps\nevery night of it.',
     aside:
-      'Full history, your mirror in its own voice, a line that’s really yours each day. Free to start — Xolace+ is there when you want more.',
-    tag: 'Founding pricing · while it lasts',
+      'Your last 30 days stay free, always. Xolace+ keeps everything before them — and opens the rest.',
+    // Names the trial rather than a vanishing discount: an expiry we control
+    // is pressure, a trial is an invitation, and only one of them survives the
+    // user finding out we set the clock.
+    tag: 'Yearly starts with 7 days free',
     symbol: { ios: 'flame.circle', android: 'local_fire_department', web: 'local_fire_department' },
     duration: 3400,
   },

@@ -6,15 +6,17 @@
  * The slide's own translate is deliberately slower than the list's (0.8x), so
  * the copy trails the swipe rather than moving locked to the finger.
  */
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
+  useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
   type SharedValue,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { SymbolView } from 'expo-symbols';
 
 import { AppText } from '@/src/components/shared/app-text';
@@ -24,6 +26,7 @@ import { CoverBeat } from './cover-beat';
 import { MirrorBeat } from './mirror-beat';
 import { VentBeat } from './vent-beat';
 import { XolacersBeat } from './xolacers-beat';
+import { PlusBeat } from './plus-beat';
 import { ProofWell } from './proof-well';
 import { useDeckColor } from './deck-color';
 
@@ -33,6 +36,7 @@ const BESPOKE: Partial<Record<string, (p: { beat: StoryBeat }) => ReactElement>>
   mirror: MirrorBeat,
   vent: VentBeat,
   xolacers: XolacersBeat,
+  plus: PlusBeat,
 };
 
 export const StoryBeatSlide = ({
@@ -70,6 +74,30 @@ export const StoryBeatSlide = ({
       ],
     };
   });
+
+  // A beat's body is mounted only while it is the current slide or the one
+  // being swiped toward.
+  //
+  // This is not a virtualisation tweak — it is what makes the entrances exist
+  // at all. Reanimated's `entering` fires on MOUNT, and a six-item FlatList
+  // mounts every slide at once, so without this gate every beat plays its
+  // whole choreography during the cover and each one is then reached already
+  // finished. The Xolace+ ledger made that visible (its relight sweep IS the
+  // pitch and had always already happened), but it was true of the Mirror's
+  // reflection and Vent's breath too.
+  //
+  // Deliberately not latched: leaving unmounts, returning replays. The window
+  // is a full screen wide, so the mount always lands while the slide is still
+  // at opacity 0 and the user only ever sees the animation from its start.
+  const [near, setNear] = useState(index === 0);
+  useAnimatedReaction(
+    () => Math.abs(scrollX.get() - width * index) < width,
+    (isNear, was) => {
+      if (isNear !== was) scheduleOnRN(setNear, isNear);
+    },
+  );
+
+  if (!near) return <Animated.View style={[{ width }, rStyle]} className="flex-1" />;
 
   // Beats that own their own composition still ride the deck's shared
   // parallax, so the swipe feels the same leaving them as on every other beat.
