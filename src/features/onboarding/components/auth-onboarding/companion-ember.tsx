@@ -68,7 +68,7 @@ export const CompanionEmber = ({
         <EmberGlow id="xolacer-companion" size={size} color={color} opacity={0.42} />
       </View>
       <View
-        className="rounded-full w-[5px] h-[5px]"
+        className="rounded-full w-1.25 h-1.25"
         style={{ backgroundColor: color }}
       />
     </Animated.View>

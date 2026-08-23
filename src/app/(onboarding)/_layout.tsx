@@ -1,16 +1,10 @@
 import { Stack } from 'expo-router';
 
 /**
- * Onboarding stack: the promise, then the carousel-to-auth screen.
- *
- * Since #199 collapsed the root guards to two groups, this stack owns the
- * whole signed-out experience — and `introSeen` lives here rather than at the
- * root. A returning signed-out user has already watched the intro; `index`
- * redirects straight to `auth-onboarding` (the sign-in surface) instead of
- * replaying the promise — see `(onboarding)/index.tsx`. (Expo Router's own
- * initial-route resolution for a group doesn't honor a runtime-computed
- * `<Stack initialRouteName>` / `unstable_settings`, so a redirect from the
- * screen itself is the reliable way to skip it.)
+ * The promise screen — a signed-out user's very first mount, before
+ * `introSeen` is set. Root-guarded (see `src/app/_layout.tsx`): once the
+ * promise's CTA sets `introSeen`, this group's guard goes false and
+ * Stack.Protected swaps straight to `(auth)` on its own.
  */
 const SCREEN_OPTIONS = {
   headerShown: false,
@@ -22,7 +16,6 @@ export default function OnboardingLayout() {
   return (
     <Stack screenOptions={SCREEN_OPTIONS}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="auth-onboarding" />
     </Stack>
   );
 }
