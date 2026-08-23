@@ -34,7 +34,7 @@
  *
  * The fire, sky and scrims belong to `HearthBackdrop` and are untouched here.
  */
-import { useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -62,6 +62,15 @@ const DUR = 520;
 /** The Mirror's own beat: how far behind the figure its reflection lands. */
 const CATCH_UP = 380;
 
+const styles = StyleSheet.create({
+  flexFull: { flex: 1 },
+});
+
+/** Fully static — hoisted so it isn't rebuilt as a fresh element every render. */
+const REFLECT_MASK = (
+  <LinearGradient colors={['rgba(0,0,0,1)', 'rgba(0,0,0,0)']} style={styles.flexFull} />
+);
+
 export const MirrorBeat = ({ beat }: { beat: StoryBeat }) => {
   const ember = useDeckColor('ember');
   const reduced = useReducedMotion();
@@ -83,16 +92,13 @@ export const MirrorBeat = ({ beat }: { beat: StoryBeat }) => {
     <View className="flex-1 px-9 pt-6">
       <Animated.View entering={enter(0)} className="flex-row items-center gap-2.5 mb-6">
         <SymbolView name={beat.symbol} size={15} tintColor={ember} type="hierarchical" />
-        <AppText className="text-ember/75 text-[10.5px] uppercase" style={{ letterSpacing: 2.2 }}>
+        <AppText className="text-ember/75 text-[10.5px] uppercase tracking-[2.2px]">
           {beat.label}
         </AppText>
       </Animated.View>
 
       <Animated.View entering={enter(1)}>
-        <AppText
-          className="text-foreground/95 text-[32px] leading-[45px]"
-          style={{ fontFamily: 'Poppins-Medium' }}
-        >
+        <AppText className="text-foreground/95 text-[32px] leading-11.25 font-poppins-medium">
           {beat.beat}
         </AppText>
       </Animated.View>
@@ -131,12 +137,7 @@ export const MirrorBeat = ({ beat }: { beat: StoryBeat }) => {
         >
           <MaskedView
             style={{ width: figW, height: reflectH }}
-            maskElement={
-              <LinearGradient
-                colors={['rgba(0,0,0,1)', 'rgba(0,0,0,0)']}
-                style={{ flex: 1 }}
-              />
-            }
+            maskElement={REFLECT_MASK}
           >
             <Image
               source={FIGURE}

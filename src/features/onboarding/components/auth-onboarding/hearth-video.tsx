@@ -15,7 +15,7 @@
  * listener.
  */
 import { useEffect } from 'react';
-import { AppState } from 'react-native';
+import { AppState, StyleSheet } from 'react-native';
 
 import { useEvent } from 'expo';
 import { Image } from 'expo-image';
@@ -51,7 +51,7 @@ export const HearthVideo = ({ width, height }: { width: number; height: number }
         contentFit="cover"
         pointerEvents="none"
       />
-      <Animated.View style={[{ position: 'absolute', width, height }, fade]}>
+      <Animated.View style={[styles.overlay, { width, height }, fade]}>
         <VideoView
           player={player}
           style={{ width, height }}
@@ -68,3 +68,7 @@ export const HearthVideo = ({ width, height }: { width: number; height: number }
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  overlay: { position: 'absolute' },
+});

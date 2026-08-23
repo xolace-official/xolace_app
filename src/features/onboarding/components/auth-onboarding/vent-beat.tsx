@@ -95,16 +95,13 @@ export const VentBeat = ({ beat }: { beat: StoryBeat }) => {
     <View className="flex-1 px-9 pt-6">
       <Animated.View entering={enter(0)} className="flex-row items-center gap-2.5 mb-6">
         <SymbolView name={beat.symbol} size={15} tintColor={ember} type="hierarchical" />
-        <AppText className="text-ember/75 text-[10.5px] uppercase" style={{ letterSpacing: 2.2 }}>
+        <AppText className="text-ember/75 text-[10.5px] uppercase tracking-[2.2px]">
           {beat.label}
         </AppText>
       </Animated.View>
 
       <Animated.View entering={enter(1)}>
-        <AppText
-          className="text-foreground/95 text-[32px] leading-[45px]"
-          style={{ fontFamily: 'Poppins-Medium' }}
-        >
+        <AppText className="text-foreground/95 text-[32px] leading-[45px] font-poppins-medium">
           {beat.beat}
         </AppText>
       </Animated.View>
@@ -117,10 +114,7 @@ export const VentBeat = ({ beat }: { beat: StoryBeat }) => {
 
       {beat.tag ? (
         <Animated.View entering={enter(3)}>
-          <AppText
-            className="text-ember/75 text-[10.5px] uppercase mt-4"
-            style={{ letterSpacing: 2 }}
-          >
+          <AppText className="text-ember/75 text-[10.5px] uppercase mt-4 tracking-[2px]">
             {beat.tag}
           </AppText>
         </Animated.View>

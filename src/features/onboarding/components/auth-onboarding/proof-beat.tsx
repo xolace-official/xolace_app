@@ -124,16 +124,13 @@ export const ProofBeat = ({ beat }: { beat: StoryBeat }) => {
     <View className="flex-1 justify-center px-9 pb-10">
       <Animated.View entering={enter(0)} className="flex-row items-center gap-2.5 mb-6">
         <SymbolView name={beat.symbol} size={15} tintColor={ember} type="hierarchical" />
-        <AppText className="text-ember/75 text-[10.5px] uppercase" style={{ letterSpacing: 2.2 }}>
+        <AppText className="text-ember/75 text-[10.5px] uppercase tracking-[2.2px]">
           {beat.label}
         </AppText>
       </Animated.View>
 
       <Animated.View entering={enter(1)}>
-        <AppText
-          className="text-foreground/95 text-[32px] leading-[45px]"
-          style={{ fontFamily: 'Poppins-Medium' }}
-        >
+        <AppText className="text-foreground/95 text-[32px] leading-[45px] font-poppins-medium">
           {beat.beat}
         </AppText>
       </Animated.View>
@@ -151,11 +148,10 @@ export const ProofBeat = ({ beat }: { beat: StoryBeat }) => {
         <Animated.View
           entering={reduced ? undefined : FadeInDown.delay(1600).duration(700)}
           pointerEvents="none"
-          className="absolute w-px rounded-full"
+          className="absolute w-px rounded-full bottom-0"
           style={{
             left: voicedX,
             top: voicedY,
-            bottom: 0,
             backgroundColor: `${ember}4d`,
           }}
         />
@@ -169,10 +165,7 @@ export const ProofBeat = ({ beat }: { beat: StoryBeat }) => {
               this slide where someone says what Xolace became for them, and it
               is three words long — quoting it costs a line and buys the whole
               payoff the chosen sentence deliberately leaves out. */}
-          <AppText
-            className="text-foreground/90 text-[14px] leading-5"
-            style={{ fontFamily: 'Poppins-Medium' }}
-          >
+          <AppText className="text-foreground/90 text-[14px] leading-5 font-poppins-medium">
             {REVIEW.title}
           </AppText>
 
@@ -200,7 +193,7 @@ export const ProofBeat = ({ beat }: { beat: StoryBeat }) => {
               and a stranger could read it as 22 fires, 22 visits, or 22
               anything. The picture supplies the metaphor; the sentence has the
               one job of saying plainly what the lights are. */}
-          <AppText style={{ fontFamily: 'Poppins-Medium', color: ember }}>{`${COUNT} people`}</AppText>
+          <AppText className="font-poppins-medium" style={{ color: ember }}>{`${COUNT} people`}</AppText>
           {/* Closes the headline rather than restating it. The field already
               shows people sitting apart; the sentence is what turns that
               picture from a lonely one into the beat's actual claim. */}

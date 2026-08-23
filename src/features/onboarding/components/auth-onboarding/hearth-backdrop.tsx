@@ -103,8 +103,8 @@ export const HearthBackdrop = ({
       {/* `screen` drops the clip's black to transparent so the flames composite
           ONTO the sky instead of punching an opaque hole in it. Without it the
           dawn arc is invisible behind the fire — the whole option dies here. */}
-      <View style={[{ flex: 1 }, BLEND_SCREEN]}>
-        <Animated.View style={[{ flex: 1 }, rFire]}>
+      <View style={[styles.flexFull, BLEND_SCREEN]}>
+        <Animated.View style={[styles.flexFull, rFire]}>
           <HearthVideo width={screenWidth} height={screenHeight} />
         </Animated.View>
       </View>
@@ -112,9 +112,7 @@ export const HearthBackdrop = ({
       {/* Reads the top third back to true black so type never sits on texture.
           Without it the fire's own haze lifts the background and the words go
           soft — the single biggest legibility problem with real footage. */}
-      <Animated.View
-        style={[{ position: 'absolute', left: 0, right: 0, top: 0, height: '55%' }, rTopScrim]}
-      >
+      <Animated.View style={[styles.topScrim, rTopScrim]}>
         <LinearGradient
           colors={['rgba(0,0,0,0.88)', 'rgba(0,0,0,0.30)', 'transparent']}
           locations={[0, 0.42, 1]}
@@ -128,8 +126,14 @@ export const HearthBackdrop = ({
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.62)', 'rgba(0,0,0,0.88)']}
         locations={[0, 0.46, 1]}
-        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '52%' }}
+        style={styles.bottomScrim}
       />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  flexFull: { flex: 1 },
+  topScrim: { position: 'absolute', left: 0, right: 0, top: 0, height: '55%' },
+  bottomScrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '52%' },
+});

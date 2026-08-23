@@ -45,10 +45,12 @@
 } */
 
 @theme static {
-    --color-resonance: oklch(0.796 0.0347 167.72 / 15%); 
+    --color-resonance: oklch(0.796 0.0347 167.72 / 15%);
     --resonance-foreground: oklch(0.796 0.0347 167.72);
 
     --color-ember: oklch(78% 0.13 75);
+
+    --font-poppins-medium: "Poppins-Medium";
 }
 
 @layer theme {

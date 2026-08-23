@@ -77,16 +77,13 @@ export const PlusBeat = ({ beat }: { beat: StoryBeat }) => {
     <View className="flex-1 justify-center px-9 pb-10">
       <Animated.View entering={enter(0)} className="flex-row items-center gap-2.5 mb-6">
         <SymbolView name={beat.symbol} size={15} tintColor={ember} type="hierarchical" />
-        <AppText className="text-ember/75 text-[10.5px] uppercase" style={{ letterSpacing: 2.2 }}>
+        <AppText className="text-ember/75 text-[10.5px] uppercase tracking-[2.2px]">
           {beat.label}
         </AppText>
       </Animated.View>
 
       <Animated.View entering={enter(1)}>
-        <AppText
-          className="text-foreground/95 text-[32px] leading-[45px]"
-          style={{ fontFamily: 'Poppins-Medium' }}
-        >
+        <AppText className="text-foreground/95 text-[32px] leading-[45px] font-poppins-medium">
           {beat.beat}
         </AppText>
       </Animated.View>
@@ -102,7 +99,7 @@ export const PlusBeat = ({ beat }: { beat: StoryBeat }) => {
       </Animated.View>
 
       <Animated.View entering={enter(4)} className="mt-2">
-        <AppText className="text-foreground/30 text-[9.5px] uppercase mb-2.5" style={{ letterSpacing: 1.8 }}>
+        <AppText className="text-foreground/30 text-[9.5px] uppercase mb-2.5 tracking-[1.8px]">
           Also with Plus
         </AppText>
         <View className="flex-row flex-wrap gap-2">

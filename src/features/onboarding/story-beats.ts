@@ -21,7 +21,7 @@ export type StoryBeat = {
   /** ms this beat holds before auto-advancing. */
   duration: number;
   /**
-   * 'tale' (default) = words on the dark, as #198 decided.
+   * Every beat owns a bespoke composition — there is no generic fallback kind.
    * 'proof'          = the count drawn rather than stated: one ember per
    *                    person, with one of them carrying a real review
    *                    (see `proof-beat.tsx`).
@@ -40,7 +40,7 @@ export type StoryBeat = {
    *                    lit and the past relighting behind it
    *                    (see `plus-beat.tsx`).
    */
-  kind?: 'tale' | 'proof' | 'cover' | 'mirror' | 'vent' | 'xolacers' | 'plus';
+  kind: 'proof' | 'cover' | 'mirror' | 'vent' | 'xolacers' | 'plus';
   /** Ember-cased footnote under the aside. Only Xolace+ carries one. */
   tag?: string;
 };

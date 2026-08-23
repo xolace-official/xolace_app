@@ -66,6 +66,7 @@ export function CarouselPaginator({
       <Animated.View style={[styles.dotsContainer, containerAnimatedStyle]}>
         {dots.map((_, index) => (
           <AnimatedDot
+            // eslint-disable-next-line react/no-array-index-key -- dots are pure page positions, no other identity exists
             key={index}
             index={index}
             visibleDotsIndices={visibleDotsIndices}

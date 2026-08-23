@@ -168,7 +168,7 @@ export const EmberField = ({
         <View className="absolute inset-0">
           <EmberGlow id="proof-voiced" size={halo} color={color} opacity={0.4} />
         </View>
-        <View className="rounded-full" style={{ width: 6, height: 6, backgroundColor: color }} />
+        <View className="rounded-full w-[6px] h-[6px]" style={{ backgroundColor: color }} />
       </Animated.View>
     </View>
   );

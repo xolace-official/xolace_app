@@ -76,6 +76,7 @@ export const StackedCarousel = <T,>({
     <View style={[styles.container, { height: carouselHeight }]}>
       {data.map((item, index) => (
         <AnimatedCarouselCard
+          // eslint-disable-next-line react/no-array-index-key -- generic T carries no id; card position is the identity
           key={index}
           index={index}
           scrollX={scrollX}
@@ -107,12 +108,10 @@ export const StackedCarousel = <T,>({
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         decelerationRate="fast"
-        style={{
-          position: "absolute",
-          width: screenWidth,
-          height: cardHeight + STACK_OFFSET * 6,
-          zIndex: 1000,
-        }}
+        style={[
+          styles.scrollDriver,
+          { width: screenWidth, height: cardHeight + STACK_OFFSET * 6 },
+        ]}
         contentContainerStyle={{
           // Symmetric padding — without a matching paddingRight, the content
           // ends flush with the last card and scroll runs out `paddingLeft`
@@ -124,12 +123,7 @@ export const StackedCarousel = <T,>({
       />
 
       <View
-        style={{
-          width: screenWidth,
-          position: "absolute",
-          top: cardHeight,
-          bottom: 0,
-        }}
+        style={[styles.paginatorWrap, { width: screenWidth, top: cardHeight }]}
       >
         <CarouselPaginator
           pagesAmount={data.length}
@@ -157,5 +151,13 @@ const styles = StyleSheet.create({
     // the paginator math assumes.
     justifyContent: "flex-start",
     overflow: "hidden",
+  },
+  scrollDriver: {
+    position: "absolute",
+    zIndex: 1000,
+  },
+  paginatorWrap: {
+    position: "absolute",
+    bottom: 0,
   },
 });

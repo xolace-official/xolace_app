@@ -21,7 +21,7 @@
  * This slide owns only its own composition. The fire, sky and scrims belong to
  * `HearthBackdrop` and are untouched here.
  */
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
@@ -47,19 +47,13 @@ export const CoverBeat = ({ beat }: { beat: StoryBeat }) => {
       {/* Wordmark. The gateway slide is the only one that carries it. */}
       <Animated.View entering={enter(0)} className="flex-row items-center gap-2 mb-9">
         <SymbolView name={beat.symbol} size={16} tintColor={ember} type="hierarchical" />
-        <AppText
-          className="text-ember text-[11px] uppercase"
-          style={{ letterSpacing: 3.4, fontFamily: 'Poppins-Medium' }}
-        >
+        <AppText className="text-ember text-[11px] uppercase tracking-[3.4px] font-poppins-medium">
           Xolace
         </AppText>
       </Animated.View>
 
       <Animated.View entering={enter(1)}>
-        <AppText
-          className="text-foreground text-[34px] leading-[46px]"
-          style={{ fontFamily: 'Poppins-Medium' }}
-        >
+        <AppText className="text-foreground text-[34px] leading-[46px] font-poppins-medium">
           {beat.beat}
         </AppText>
       </Animated.View>
@@ -91,10 +85,14 @@ export const CoverBeat = ({ beat }: { beat: StoryBeat }) => {
             floating in the dark gap above it. */}
         <Image
           source={require('@/assets/images/flux/flux-campfire.png')}
-          style={{ width: 186, height: 248 }}
+          style={styles.figure}
           contentFit="contain"
         />
       </Animated.View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  figure: { width: 186, height: 248 },
+});

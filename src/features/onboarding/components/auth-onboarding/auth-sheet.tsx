@@ -13,7 +13,7 @@
  * LegalBottomSheet.
  */
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Extrapolation,
   FadeIn,
@@ -73,10 +73,7 @@ export const AuthSheetBlock = ({
         <SymbolView name={CHEVRON_ICON} size={16} tintColor={muted} />
       </PressableFeedback>
 
-      <AppText
-        className="text-foreground/90 text-[24px] text-center mb-7"
-        style={{ fontFamily: 'Poppins-Medium' }}
-      >
+      <AppText className="text-foreground/90 text-[24px] text-center mb-7 font-poppins-medium">
         The fire&apos;s already lit.
       </AppText>
 
@@ -182,7 +179,7 @@ export const MorphingSeatButton = ({
   return (
     <PressableFeedback
       onPress={handlePress}
-      style={{ borderCurve: 'continuous' }}
+      style={styles.continuousCurve}
       className="h-12 mx-6 mt-4 items-center justify-center rounded-full border border-ember/25 bg-ember/10 overflow-hidden"
     >
       <Animated.View className="flex-row items-center gap-2" style={rTopRow}>
@@ -196,3 +193,7 @@ export const MorphingSeatButton = ({
     </PressableFeedback>
   );
 };
+
+const styles = StyleSheet.create({
+  continuousCurve: { borderCurve: 'continuous' },
+});
