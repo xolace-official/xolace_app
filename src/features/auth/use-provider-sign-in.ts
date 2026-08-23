@@ -13,6 +13,7 @@ import { useAuth } from '@clerk/expo';
 import { useSignInWithGoogle } from '@clerk/expo/google';
 import { useSignInWithApple } from '@clerk/expo/apple';
 import { useMutation } from 'convex/react';
+import { useToast } from 'heroui-native';
 import { usePostHog } from 'posthog-react-native';
 
 import { api } from '@/convex/_generated/api';
@@ -58,6 +59,7 @@ export const useProviderSignIn = () => {
   const getOrCreate = useMutation(api.users.getOrCreate);
   const [loadingProvider, setLoadingProvider] = useState<AuthProvider | null>(null);
   const posthog = usePostHog();
+  const { toast } = useToast();
 
   const signInWithApple = useCallback(async () => {
     playSoftPress();
@@ -99,10 +101,15 @@ export const useProviderSignIn = () => {
         $exception_list: [{ type: 'AppleAuthError', value: msg }],
         auth_provider: 'apple',
       });
+      toast.show({
+        label: "Couldn't sign in with Apple",
+        description: 'Something went wrong. Try again.',
+        variant: 'default',
+      });
     } finally {
       setLoadingProvider(null);
     }
-  }, [startAppleAuthenticationFlow, getOrCreate, posthog, isSignedIn, signOut]);
+  }, [startAppleAuthenticationFlow, getOrCreate, posthog, isSignedIn, signOut, toast]);
 
   const signInWithGoogle = useCallback(async () => {
     playSoftPress();
@@ -144,10 +151,15 @@ export const useProviderSignIn = () => {
         $exception_list: [{ type: 'GoogleAuthError', value: msg }],
         auth_provider: 'google',
       });
+      toast.show({
+        label: "Couldn't sign in with Google",
+        description: 'Something went wrong. Try again.',
+        variant: 'default',
+      });
     } finally {
       setLoadingProvider(null);
     }
-  }, [startGoogleAuthenticationFlow, getOrCreate, posthog, isSignedIn, signOut]);
+  }, [startGoogleAuthenticationFlow, getOrCreate, posthog, isSignedIn, signOut, toast]);
 
   return { loadingProvider, signInWithApple, signInWithGoogle };
 };

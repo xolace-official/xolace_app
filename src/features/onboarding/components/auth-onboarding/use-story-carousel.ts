@@ -124,6 +124,10 @@ export const useStoryCarousel = () => {
   };
 
   const panGesture = Gesture.Pan()
+    // Vertical only — the same detector wraps the paging list, so an
+    // unconstrained pan would swallow horizontal swipes.
+    .activeOffsetY([-10, 10])
+    .failOffsetX([-10, 10])
     .onBegin(() => {
       startProgress.set(progress.get());
       isDragging.set(true);
