@@ -122,22 +122,31 @@ export const STORY_BEATS: StoryBeat[] = [
     kind: 'plus',
     label: 'Xolace+',
     // The last beat before the ask, and the only one with a commercial job.
-    // Since the product refuses to put a paywall in front of anything, this is
-    // the ONE place the shape of the offer gets shown — so nothing here is
-    // allowed to be atmospheric. Every clause is a fact a user could later
-    // hold us to: 30 days is FREE_TIMELINE_WINDOW_DAYS in convex/sessions.ts,
-    // the seven days is the annual plan's trial in paywall-period-picker.
     //
-    // "The fire is free" leads because the fear this beat has to clear is not
-    // price, it is "so this is a trial". Answer that first and the rest reads
-    // as an offer instead of a countdown.
-    beat: 'The fire is free.\nXolace+ keeps\nevery night of it.',
+    // It sells ONE idea. Plus contains a longer history, themes, avatars and
+    // more drafts, and every one of those is an add-on that belongs in a pill
+    // — not because they are worthless but because none of them answers "why
+    // would this help me". The insight does, and it is the only part of the
+    // product a person genuinely cannot do for themselves.
+    //
+    // The headline is a fact about being a person, not a fact about us: true
+    // before Xolace existed, true for a reader who never pays. That is what
+    // makes the feature read as an answer rather than an ask. Deliberately no
+    // "unlock", no "upgrade", no "premium", and no time-of-day word — people
+    // do not only carry things after dark.
+    beat: "You can't see\nyour own pattern\nfrom inside it.",
     aside:
-      'Your last 30 days stay free, always. Xolace+ keeps everything before them — and opens the rest.',
-    // Names the trial rather than a vanishing discount: an expiry we control
-    // is pressure, a trial is an invitation, and only one of them survives the
-    // user finding out we set the clock.
-    tag: 'Yearly starts with 7 days free',
+      // Sized to the measure, not just to taste: at this width the aside sets
+      // ~43 characters a line, so anything over ~129 spills a single word onto
+      // a fourth line and the block ends on an orphan.
+      'Xolace+ reads across everything you’ve written — the words you keep leaning on, what keeps circling back, what’s easing.',
+    // The `tag` slot, spent on the positioning instead of a price. No hard
+    // paywall is the most valuable true thing we can say here, and it is only
+    // sayable because of where the real gates are: the Mirror and Vent are
+    // free, a bridge draft a day is free, and what Plus gates is the looking
+    // back (see `use-insight-gate.ts`). The reason travels with the promise —
+    // a policy without its why reads as a boast.
+    tag: 'Saying it stays free. Nobody should meet a paywall on a bad day — what Xolace+ buys you is the looking back across it.',
     symbol: { ios: 'flame.circle', android: 'local_fire_department', web: 'local_fire_department' },
     duration: 3400,
   },

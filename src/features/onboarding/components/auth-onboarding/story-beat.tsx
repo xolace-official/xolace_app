@@ -6,17 +6,15 @@
  * The slide's own translate is deliberately slower than the list's (0.8x), so
  * the copy trails the swipe rather than moving locked to the finger.
  */
-import { useState, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
-  useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
   type SharedValue,
 } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
 import { SymbolView } from 'expo-symbols';
 
 import { AppText } from '@/src/components/shared/app-text';
@@ -75,29 +73,15 @@ export const StoryBeatSlide = ({
     };
   });
 
-  // A beat's body is mounted only while it is the current slide or the one
-  // being swiped toward.
-  //
-  // This is not a virtualisation tweak — it is what makes the entrances exist
-  // at all. Reanimated's `entering` fires on MOUNT, and a six-item FlatList
-  // mounts every slide at once, so without this gate every beat plays its
-  // whole choreography during the cover and each one is then reached already
-  // finished. The Xolace+ ledger made that visible (its relight sweep IS the
-  // pitch and had always already happened), but it was true of the Mirror's
-  // reflection and Vent's breath too.
-  //
-  // Deliberately not latched: leaving unmounts, returning replays. The window
-  // is a full screen wide, so the mount always lands while the slide is still
-  // at opacity 0 and the user only ever sees the animation from its start.
-  const [near, setNear] = useState(index === 0);
-  useAnimatedReaction(
-    () => Math.abs(scrollX.get() - width * index) < width,
-    (isNear, was) => {
-      if (isNear !== was) scheduleOnRN(setNear, isNear);
-    },
-  );
-
-  if (!near) return <Animated.View style={[{ width }, rStyle]} className="flex-1" />;
+  // KNOWN, ACCEPTED: every beat's `entering` fires at deck MOUNT, because the
+  // six-item FlatList mounts all slides at once — so a beat reached 19s later
+  // is reached with its choreography already finished. Gating the mount on
+  // scroll position fixes that and was tried; it also leaves the whole deck
+  // blank whenever `scrollX` and the list's real offset disagree (a Fast
+  // Refresh with the deck parked off index 0 reproduces it every time). A
+  // blank deck in the sign-up funnel is not a trade worth an unseen fade, and
+  // every beat's FINAL state is complete on its own. Fix it by driving the
+  // reveals off `scrollX` instead of `entering` — never by unmounting slides.
 
   // Beats that own their own composition still ride the deck's shared
   // parallax, so the swipe feels the same leaving them as on every other beat.
