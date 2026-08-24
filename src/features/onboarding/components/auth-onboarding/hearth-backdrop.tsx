@@ -40,13 +40,7 @@ const SCALE = [1.16, 1.0, 1.08, 1.06, 1.06, 1.22];
 const RISE = [0, 74, 26, 34, 30, -18];
 const BRIGHT = [1, 0.6, 0.86, 0.82, 0.84, 1];
 
-/**
- * Verified on both platforms. An earlier pass made this iOS-only, believing a
- * `mixBlendMode` parent blanked expo-video's SurfaceView on Android — it does
- * not. The video was failing for an unrelated reason (see docs/bug-log.md: in a
- * dev build the clip is streamed from Metro over the network, and that link was
- * dropping), so toggling the blend appeared to fix it. Both platforms blend.
- */
+
 const BLEND_SCREEN = { mixBlendMode: 'screen' } as const;
 
 /** How hard the top scrim presses, per beat. It has to relax as the sky lifts,
@@ -100,9 +94,7 @@ export const HearthBackdrop = ({
     >
       <SkyArc scrollX={scrollX} width={width} dawnCeiling={dawnCeiling} />
 
-      {/* `screen` drops the clip's black to transparent so the flames composite
-          ONTO the sky instead of punching an opaque hole in it. Without it the
-          dawn arc is invisible behind the fire — the whole option dies here. */}
+
       <View style={[styles.flexFull, BLEND_SCREEN]}>
         <Animated.View style={[styles.flexFull, rFire]}>
           <HearthVideo width={screenWidth} height={screenHeight} />

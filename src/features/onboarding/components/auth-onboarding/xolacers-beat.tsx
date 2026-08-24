@@ -113,7 +113,7 @@ export const XolacersBeat = ({ beat }: { beat: StoryBeat }) => {
       </Animated.View>
 
       <Animated.View entering={enter(1)}>
-        <AppText className="text-foreground/95 text-[32px] leading-[45px] font-poppins-medium">
+        <AppText className="text-foreground/95 text-[32px] `leading-11.25 font-poppins-medium">
           {beat.beat}
         </AppText>
       </Animated.View>
@@ -142,19 +142,6 @@ export const XolacersBeat = ({ beat }: { beat: StoryBeat }) => {
       >
         <View style={{ width: figW, height: figH }}>
           <Image source={FIGURE} style={{ width: figW, height: figH }} contentFit="contain" />
-
-          {/* The character arrives COLD. `flux-sad.png` is the only
-              pose in the deck rendered in grey stone rather than the mascot's
-              peach — which would read as a different character entirely if it
-              just sat there. Warmed on cue instead, the grey becomes the point:
-              the colour comes back when somebody else shows up, and it lands on
-              the same beat as their ember. Constraint spent, not apologised for.
-
-              A tinted copy of the source rather than a masked gradient: tint
-              takes the asset's own alpha, so registration is exact and there is
-              no mask compositing to go wrong on Android — the platform this
-              deck has already had to be rescued on twice (#204). Kept well
-              under half opacity so the sculpt still reads through the wash. */}
           <Animated.View
             entering={
               reduced ? undefined : FadeIn.delay(4 * STEP + ARRIVE + WARMTH).duration(1000)
@@ -162,11 +149,6 @@ export const XolacersBeat = ({ beat }: { beat: StoryBeat }) => {
             pointerEvents="none"
             className="absolute"
           >
-            {/* The wash's alpha lives on the image, NOT on the animated view.
-                `FadeIn` animates that view's own opacity to 1 and overwrites
-                anything static set alongside it — which renders the tint at
-                full strength and turns the character into a solid ember
-                silhouette. Two different opacities, so two different views. */}
             <Image
               source={FIGURE}
               tintColor={ember}

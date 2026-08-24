@@ -134,7 +134,7 @@ const PaginationItem = ({
   );
 
   return (
-    <Animated.View className="h-[2px] rounded-full bg-foreground/15 overflow-hidden" style={rBarStyle}>
+    <Animated.View className="h-0.5 rounded-full bg-foreground/15 overflow-hidden" style={rBarStyle}>
       <Animated.View className="absolute top-0 bottom-0 left-0 bg-ember" style={rFillStyle} />
     </Animated.View>
   );

@@ -2,22 +2,6 @@
  * The opening title card — the one beat that is not a page of the tale but the
  * front of the book, so it deliberately breaks the deck's grid.
  *
- * Every other beat stacks illustration ON TOP of copy, centred. That reads as a
- * slide with a picture. This one inverts it to read as a PLACE:
- *
- *     wordmark      ← the brand, named, before anything is claimed
- *     the line      ← what this is, in words a stranger understands
- *     ── rule       ← the horizon; ties the axis together
- *     the aside     ← what actually happens, and what never does
- *     (space)
- *     the figure    ← bottom-anchored, sitting AT the fire behind it
- *
- * Why the figure moved to the floor: `flux-campfire.png` is a flame-character
- * sitting at its own small drawn fire, and the deck already burns a real fire
- * behind it. Centred, they were two competing fires in two visual languages.
- * Dropped to the bottom edge the drawn fire lands on the real one and they
- * become a single scene — figure between the words and the flames.
- *
  * This slide owns only its own composition. The fire, sky and scrims belong to
  * `HearthBackdrop` and are untouched here.
  */

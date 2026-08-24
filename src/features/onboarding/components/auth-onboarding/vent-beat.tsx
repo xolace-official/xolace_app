@@ -1,35 +1,3 @@
-/**
- * The Vent beat — the second half of the Mirror/Vent pair, and built as its
- * deliberate inversion.
- *
- *     ⌁ VENT
- *     the line
- *     the aside
- *     EITHER ONE · ANY TIME
- *            ˙ ·  ˙        ← the breath, rising and gone
- *          ·
- *     [figure]             ← pushed LEFT of the text axis
- *
- * What makes the pair say "alternatives, not steps":
- *
- * 1. MIRRORED MASS. The Mirror's figure sits right of the text axis; this one
- *    sits left. Swiping between them flips the character across the axis
- *    instead of marching it forward.
- *
- * 2. REVERSED EMISSION. The Mirror sends the character DOWN into a reflection.
- *    Vent sends it UP into air. Same character, opposite direction — which is
- *    the difference between the two features stated as motion.
- *
- * 3. NO WATERLINE. The Mirror needs a surface, because a surface is what gives
- *    something back. Vent has none on purpose: there is nothing here to catch
- *    what you let go of, and the missing rule is that promise drawn. The sparks
- *    dissolve into the gap rather than landing anywhere. See `vent-sparks.tsx`.
- *
- * The plume drifts right rather than straight up so it fills the empty quadrant
- * the left-anchored figure opens, and so it never climbs through the copy.
- *
- * The fire, sky and scrims belong to `HearthBackdrop` and are untouched here.
- */
 import { useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { Image } from 'expo-image';
@@ -101,7 +69,7 @@ export const VentBeat = ({ beat }: { beat: StoryBeat }) => {
       </Animated.View>
 
       <Animated.View entering={enter(1)}>
-        <AppText className="text-foreground/95 text-[32px] leading-[45px] font-poppins-medium">
+        <AppText className="text-foreground/95 text-[32px] `leading-11.25 font-poppins-medium">
           {beat.beat}
         </AppText>
       </Animated.View>

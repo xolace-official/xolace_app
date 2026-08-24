@@ -17,12 +17,7 @@
  */
 const SLIDE_FRACTION = 0.764;
 
-/**
- * Chapter mark + a three-line beat + a three-line aside, measured on an
- * iPhone 17 Pro. Kept slightly generous: on a narrow phone the aside wraps to a
- * fourth line, and over-estimating here only shrinks the figure, while
- * under-estimating pushes the reflection into the pagination.
- */
+
 const TEXT_BLOCK = 270;
 
 /** Held back so the figure never crowds the aside above it. */
@@ -48,12 +43,6 @@ export const deckFigureHeight = (screenHeight: number) =>
 
 /**
  * The Xolacers beat's figure, as a multiple of the pair's.
- *
- * That slide is NOT in the Mirror/Vent pair, so it is not bound to their size —
- * and it has no reflection to pay for, which frees the whole REFLECT_RATIO
- * share (1.42x) minus roughly a line for its tag. Deliberately spent on scale
- * rather than banked as whitespace: it is the one beat about being with another
- * person, and a bigger character is how that lands before a word is read.
  *
  * The 0.95 inside it is the same framing correction VENT_SCALE_MATCH applies —
  * `flux-sad.png` is drawn 0.602 wide-for-tall against the mirror's

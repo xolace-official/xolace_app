@@ -1,14 +1,6 @@
 /**
  * A soft radial ember, drawn with `react-native-svg`.
  *
- * React Native has no radial gradient of its own and `expo-linear-gradient` is
- * linear by definition, so the deck's two round light sources — the companion's
- * ember and the warmth it puts on the character's face — come from here.
- *
- * `id` is required rather than generated. Gradient defs live in one document
- * namespace, so two instances that both call themselves `grad` will resolve to
- * whichever mounted last and the other goes flat. Naming them at the call site
- * makes the collision impossible to introduce by accident.
  */
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 

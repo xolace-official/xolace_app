@@ -34,19 +34,6 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { EmberGlow } from './ember-glow';
 
-/**
- * Positions are normalised 0..1 and the SVG viewbox is the field's real pixel
- * box, so the scale stays uniform on both axes. The deck's other diagram
- * (`PatternLine`) stretches a 100x40 viewbox with `preserveAspectRatio="none"`,
- * which is fine for a polyline and wrong here: a non-uniform scale turns every
- * `Circle` into an ellipse, and a field of ovals reads as spilled beans rather
- * than as light. Radii are therefore in points, not viewbox units.
- */
-
-/**
- * The one that speaks, normalised. Low and left: the quote hangs beneath it,
- * and anything further right would drop its tether through the scatter.
- */
 export const VOICED = { x: 0.08, y: 0.78 };
 /** Points cleared around it, so the speaking ember never sits in a crowd. */
 const CLEARANCE = 52;
@@ -116,8 +103,6 @@ export const EmberField = ({
   height: number;
 }) => {
   const reduced = useReducedMotion();
-  // The speaking ember is one of the count, not an extra on top of it — the
-  // person who left the review was also here this week.
   const points = scatter(Math.max(0, count - 1), width, height);
 
   // The halo is drawn in points, not viewbox units, so it stays a light source
@@ -168,7 +153,7 @@ export const EmberField = ({
         <View className="absolute inset-0">
           <EmberGlow id="proof-voiced" size={halo} color={color} opacity={0.4} />
         </View>
-        <View className="rounded-full w-[6px] h-[6px]" style={{ backgroundColor: color }} />
+        <View className="rounded-full w-1.5 h-1.5" style={{ backgroundColor: color }} />
       </Animated.View>
     </View>
   );
