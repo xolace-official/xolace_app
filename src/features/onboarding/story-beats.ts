@@ -79,7 +79,7 @@ export const STORY_BEATS: StoryBeat[] = [
     label: 'The Mirror',
     beat: "Some days you\nneed to know what\nyou're feeling.",
     aside:
-      'Type it or say it. The Mirror reads it back — the feeling, named, in your own words. Not advice, not a diagnosis.',
+      'Type it or say it. The Mirror reads it back - the feeling, named, in your own words. Not advice, not a diagnosis.',
     symbol: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' },
     duration: 3800,
   },
@@ -103,7 +103,7 @@ export const STORY_BEATS: StoryBeat[] = [
     // what a session is, and a caption whose whole point is that the number is
     // checkable cannot be the line that needs decoding. One light on the slide
     // per person, said plainly.
-    aside: 'One light for each of them. A real count — never a number we made up.',
+    aside: 'One light for each of them. A real count - never a number we made up.',
     symbol: { ios: 'flame', android: 'local_fire_department', web: 'local_fire_department' },
     // Far and away the longest beat to read — a whole three-sentence review on
     // top of the field and the caption — and the choreography alone runs past
@@ -154,14 +154,14 @@ export const STORY_BEATS: StoryBeat[] = [
       // Sized to the measure, not just to taste: at this width the aside sets
       // ~43 characters a line, so anything over ~129 spills a single word onto
       // a fourth line and the block ends on an orphan.
-      'Xolace+ reads across everything you’ve written — the words you keep leaning on, what keeps circling back, what’s easing.',
+      'Xolace+ reads across everything you’ve written - the words you keep leaning on, what keeps circling back, what’s easing.',
     // The `tag` slot, spent on the positioning instead of a price. No hard
     // paywall is the most valuable true thing we can say here, and it is only
     // sayable because of where the real gates are: the Mirror and Vent are
     // free, a bridge draft a day is free, and what Plus gates is the looking
     // back (see `use-insight-gate.ts`). The reason travels with the promise —
     // a policy without its why reads as a boast.
-    tag: 'Saying it stays free. Nobody should meet a paywall on a bad day — what Xolace+ buys you is the looking back across it.',
+    tag: 'Saying it stays free. Nobody should meet a paywall on a bad day; what Xolace+ buys you is the looking back across it.',
     symbol: { ios: 'flame.circle', android: 'local_fire_department', web: 'local_fire_department' },
     duration: 3400,
   },
