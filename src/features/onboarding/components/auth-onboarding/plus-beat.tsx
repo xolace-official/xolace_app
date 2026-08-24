@@ -76,7 +76,7 @@ export const PlusBeat = ({ beat }: { beat: StoryBeat }) => {
       {beat.tag ? (
         <Animated.View entering={enter(5)} className="mt-6 flex-row gap-3">
           <View className="w-0.5 rounded-full" style={{ backgroundColor: `${ember}59` }} />
-          <AppText className="flex-1 text-foreground/6 text-[12.5px] leading-5">{beat.tag}</AppText>
+          <AppText className="flex-1 text-foreground/65 text-[12.5px] leading-5">{beat.tag}</AppText>
         </Animated.View>
       ) : null}
     </View>
