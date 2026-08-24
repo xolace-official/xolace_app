@@ -37,7 +37,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
       {
         icon: { ios: "sparkles", android: "auto_awesome" },
         title: "A new welcome",
-        body: "First time here? You'll meet the fire one beat at a time before you sign in. Coming back? You'll land straight on the sign-in screen.",
+        body: "First time here? You'll meet the fire one beat at a time before you sign in. Coming back? You'll see the carousel deck, then the sign-in sheet.",
       },
       {
         icon: { ios: "person.crop.circle.fill", android: "account_circle" },

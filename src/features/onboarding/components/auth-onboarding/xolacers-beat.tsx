@@ -113,7 +113,7 @@ export const XolacersBeat = ({ beat }: { beat: StoryBeat }) => {
       </Animated.View>
 
       <Animated.View entering={enter(1)}>
-        <AppText className="text-foreground/95 text-[32px] `leading-11.25 font-poppins-medium">
+        <AppText className="text-foreground/95 text-[32px] leading-11.25 font-poppins-medium">
           {beat.beat}
         </AppText>
       </Animated.View>

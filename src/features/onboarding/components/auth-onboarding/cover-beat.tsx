@@ -51,7 +51,7 @@ export const CoverBeat = ({ beat }: { beat: StoryBeat }) => {
       />
 
       <Animated.View entering={enter(3)}>
-        <AppText className="text-foreground/55 text-[14.5px] `leading-5.75 pr-2">
+        <AppText className="text-foreground/55 text-[14.5px] leading-5.75 pr-2">
           {beat.aside}
         </AppText>
       </Animated.View>
