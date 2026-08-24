@@ -4,6 +4,16 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.9.1] - (2026-08-23)
+
+### Added
+
+- **A new onboarding** — the old two-screen intro/auth flow is retired. First-time signed-out users now land on a single promise screen; returning signed-out users go straight to a carousel deck (Mirror, Vent, this week's proof, Xolace+) that ends on the sign-in sheet. The root guard now routes purely on `introSeen`, and the sign-in buttons share one `use-provider-sign-in` hook so both providers get the same cancel-handling and loading state.
+- **Change your username** — Settings now lets you edit the display name shown across the app (labeled "Username" in the UI), alongside stable conversation tags.
+- **Edit a published Xolacer profile** — a xolacer can now go back and change their photo, name, bio, specialties, and listed/paused state from a single sheet, reached via a pencil icon on their own profile. Previously the setup wizard only ran once, with no way back in.
+
+---
+
 ## [1.9.0] - OTA Update (2026-08-17)
 
 ### Fixed

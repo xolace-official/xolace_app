@@ -62,11 +62,7 @@ export const AuthOnboardingShell = () => {
     opacity: interpolate(progress.get(), [0, 1], [0, 0.72], Extrapolation.CLAMP),
   }));
 
-  // #200: the deck is a fixed night surface — fire only reads as a light source
-  // against dark, and this runs before the account (so before a theme) exists.
-  // Without pinning, `foreground` resolves to the LIGHT theme's dark ink and the
-  // copy renders near-black ON the fire, and the auth scrim comes up grey.
-  // ScopedTheme keeps every token class intact rather than hard-coding colors.
+  
   return (
     <ScopedTheme theme="dark">
       <View className="flex-1 bg-background" style={{ paddingBottom: insets.bottom + 12 }}>

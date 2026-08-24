@@ -2,26 +2,10 @@
  * The opening title card — the one beat that is not a page of the tale but the
  * front of the book, so it deliberately breaks the deck's grid.
  *
- * Every other beat stacks illustration ON TOP of copy, centred. That reads as a
- * slide with a picture. This one inverts it to read as a PLACE:
- *
- *     wordmark      ← the brand, named, before anything is claimed
- *     the line      ← what this is, in words a stranger understands
- *     ── rule       ← the horizon; ties the axis together
- *     the aside     ← what actually happens, and what never does
- *     (space)
- *     the figure    ← bottom-anchored, sitting AT the fire behind it
- *
- * Why the figure moved to the floor: `flux-campfire.png` is a flame-character
- * sitting at its own small drawn fire, and the deck already burns a real fire
- * behind it. Centred, they were two competing fires in two visual languages.
- * Dropped to the bottom edge the drawn fire lands on the real one and they
- * become a single scene — figure between the words and the flames.
- *
  * This slide owns only its own composition. The fire, sky and scrims belong to
  * `HearthBackdrop` and are untouched here.
  */
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
@@ -47,19 +31,13 @@ export const CoverBeat = ({ beat }: { beat: StoryBeat }) => {
       {/* Wordmark. The gateway slide is the only one that carries it. */}
       <Animated.View entering={enter(0)} className="flex-row items-center gap-2 mb-9">
         <SymbolView name={beat.symbol} size={16} tintColor={ember} type="hierarchical" />
-        <AppText
-          className="text-ember text-[11px] uppercase"
-          style={{ letterSpacing: 3.4, fontFamily: 'Poppins-Medium' }}
-        >
+        <AppText className="text-ember text-[11px] uppercase tracking-[3.4px] font-poppins-medium">
           Xolace
         </AppText>
       </Animated.View>
 
       <Animated.View entering={enter(1)}>
-        <AppText
-          className="text-foreground text-[34px] leading-[46px]"
-          style={{ fontFamily: 'Poppins-Medium' }}
-        >
+        <AppText className="text-foreground text-[34px] leading-11.5 font-poppins-medium">
           {beat.beat}
         </AppText>
       </Animated.View>
@@ -73,7 +51,7 @@ export const CoverBeat = ({ beat }: { beat: StoryBeat }) => {
       />
 
       <Animated.View entering={enter(3)}>
-        <AppText className="text-foreground/55 text-[14.5px] leading-[23px] pr-2">
+        <AppText className="text-foreground/55 text-[14.5px] leading-5.75 pr-2">
           {beat.aside}
         </AppText>
       </Animated.View>
@@ -91,10 +69,14 @@ export const CoverBeat = ({ beat }: { beat: StoryBeat }) => {
             floating in the dark gap above it. */}
         <Image
           source={require('@/assets/images/flux/flux-campfire.png')}
-          style={{ width: 186, height: 248 }}
+          style={styles.figure}
           contentFit="contain"
         />
       </Animated.View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  figure: { width: 186, height: 248 },
+});

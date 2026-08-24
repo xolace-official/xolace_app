@@ -64,45 +64,42 @@ export const TourBackdrop = ({
   return (
     <>
       <View
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          right: 0,
-          height: Math.max(0, spot.y),
-        }}
+        style={[styles.top, { height: Math.max(0, spot.y) }]}
         {...press}
       />
       <View
-        style={{
-          position: "absolute",
-          left: 0,
-          top: bottom,
-          right: 0,
-          height: Math.max(0, screenHeight - bottom),
-        }}
+        style={[
+          styles.bottom,
+          { top: bottom, height: Math.max(0, screenHeight - bottom) },
+        ]}
         {...press}
       />
       <View
-        style={{
-          position: "absolute",
-          left: 0,
-          top: spot.y,
-          width: Math.max(0, spot.x),
-          height: spot.height,
-        }}
+        style={[
+          styles.left,
+          { top: spot.y, width: Math.max(0, spot.x), height: spot.height },
+        ]}
         {...press}
       />
       <View
-        style={{
-          position: "absolute",
-          left: right,
-          top: spot.y,
-          width: Math.max(0, screenWidth - right),
-          height: spot.height,
-        }}
+        style={[
+          styles.right,
+          {
+            left: right,
+            top: spot.y,
+            width: Math.max(0, screenWidth - right),
+            height: spot.height,
+          },
+        ]}
         {...press}
       />
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  top: { position: "absolute", left: 0, top: 0, right: 0 },
+  bottom: { position: "absolute", left: 0, right: 0 },
+  left: { position: "absolute", left: 0 },
+  right: { position: "absolute" },
+});

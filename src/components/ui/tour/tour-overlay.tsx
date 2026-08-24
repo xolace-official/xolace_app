@@ -158,12 +158,10 @@ export const TourOverlay = ({
       <Animated.View
         key={active?.order ?? "none"}
         entering={reducedMotion ? undefined : FadeIn.duration(200)}
-        style={{
-          position: "absolute",
-          left: card.left,
-          top: card.top,
-          width: card.width,
-        }}
+        style={[
+          styles.cardPosition,
+          { left: card.left, top: card.top, width: card.width },
+        ]}
       >
         <TourCard
           active={active}
@@ -186,3 +184,7 @@ export const TourOverlay = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  cardPosition: { position: "absolute" },
+});

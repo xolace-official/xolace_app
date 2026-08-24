@@ -86,7 +86,6 @@ export function AnimatedCarouselCard({
       style={[
         styles.cardContainer,
         {
-          pointerEvents: "none",
           width: cardWidth,
           height: cardHeight,
           zIndex: totalCards * 1000 - index,
@@ -94,7 +93,7 @@ export function AnimatedCarouselCard({
         animatedStyle,
       ]}
     >
-      <Animated.View style={[{ flex: 1 }, rRotateStyle]}>
+      <Animated.View style={[styles.flexFull, rRotateStyle]}>
         <View
           style={[
             styles.cardShadow,
@@ -112,6 +111,10 @@ export function AnimatedCarouselCard({
 const styles = StyleSheet.create({
   cardContainer: {
     position: "absolute",
+    pointerEvents: "none",
+  },
+  flexFull: {
+    flex: 1,
   },
   cardShadow: {
     borderCurve: "continuous",

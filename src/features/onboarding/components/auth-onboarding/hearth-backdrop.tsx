@@ -40,13 +40,7 @@ const SCALE = [1.16, 1.0, 1.08, 1.06, 1.06, 1.22];
 const RISE = [0, 74, 26, 34, 30, -18];
 const BRIGHT = [1, 0.6, 0.86, 0.82, 0.84, 1];
 
-/**
- * Verified on both platforms. An earlier pass made this iOS-only, believing a
- * `mixBlendMode` parent blanked expo-video's SurfaceView on Android — it does
- * not. The video was failing for an unrelated reason (see docs/bug-log.md: in a
- * dev build the clip is streamed from Metro over the network, and that link was
- * dropping), so toggling the blend appeared to fix it. Both platforms blend.
- */
+
 const BLEND_SCREEN = { mixBlendMode: 'screen' } as const;
 
 /** How hard the top scrim presses, per beat. It has to relax as the sky lifts,
@@ -100,11 +94,9 @@ export const HearthBackdrop = ({
     >
       <SkyArc scrollX={scrollX} width={width} dawnCeiling={dawnCeiling} />
 
-      {/* `screen` drops the clip's black to transparent so the flames composite
-          ONTO the sky instead of punching an opaque hole in it. Without it the
-          dawn arc is invisible behind the fire — the whole option dies here. */}
-      <View style={[{ flex: 1 }, BLEND_SCREEN]}>
-        <Animated.View style={[{ flex: 1 }, rFire]}>
+
+      <View style={[styles.flexFull, BLEND_SCREEN]}>
+        <Animated.View style={[styles.flexFull, rFire]}>
           <HearthVideo width={screenWidth} height={screenHeight} />
         </Animated.View>
       </View>
@@ -112,9 +104,7 @@ export const HearthBackdrop = ({
       {/* Reads the top third back to true black so type never sits on texture.
           Without it the fire's own haze lifts the background and the words go
           soft — the single biggest legibility problem with real footage. */}
-      <Animated.View
-        style={[{ position: 'absolute', left: 0, right: 0, top: 0, height: '55%' }, rTopScrim]}
-      >
+      <Animated.View style={[styles.topScrim, rTopScrim]}>
         <LinearGradient
           colors={['rgba(0,0,0,0.88)', 'rgba(0,0,0,0.30)', 'transparent']}
           locations={[0, 0.42, 1]}
@@ -128,8 +118,14 @@ export const HearthBackdrop = ({
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.62)', 'rgba(0,0,0,0.88)']}
         locations={[0, 0.46, 1]}
-        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '52%' }}
+        style={styles.bottomScrim}
       />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  flexFull: { flex: 1 },
+  topScrim: { position: 'absolute', left: 0, right: 0, top: 0, height: '55%' },
+  bottomScrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '52%' },
+});

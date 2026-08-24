@@ -2,18 +2,6 @@
  * The other person on the Xolacers beat: one small ember across the dark, at
  * the character's eye height.
  *
- * WHY NOT A SECOND FIGURE. The beat's promise is asymmetric — they have a name,
- * you don't — so drawing the Xolacer as a second character would have to choose
- * between two wrong pictures: a faceless silhouette (contradicts "a name and a
- * face") or a made-up face (a person we invented, on a screen that sells real
- * ones). An ember is the honest third option. Someone is there, they are lit,
- * and the slide never claims to know who.
- *
- * IT BREATHES. A static dot at this size reads as a dead pixel or a stray
- * spark. The slow pulse is the only thing separating "someone is sitting there"
- * from "there is a mark on the screen", so it is not decoration — drop it and
- * the element stops meaning anything. Under reduced motion it holds at full
- * brightness instead, which keeps it legible without the movement.
  */
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -68,8 +56,8 @@ export const CompanionEmber = ({
         <EmberGlow id="xolacer-companion" size={size} color={color} opacity={0.42} />
       </View>
       <View
-        className="rounded-full"
-        style={{ width: 5, height: 5, backgroundColor: color }}
+        className="rounded-full w-1.25 h-1.25"
+        style={{ backgroundColor: color }}
       />
     </Animated.View>
   );

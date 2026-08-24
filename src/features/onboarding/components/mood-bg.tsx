@@ -26,7 +26,7 @@ const MoodBgComponent = ({ mood }: Props) => {
         end={END_BOTTOM_RIGHT}
         style={StyleSheet.absoluteFill}
       />
-      <View style={StyleSheet.absoluteFill} className="bg-background/60" />
+      <View style={StyleSheet.absoluteFill} className="bg-background/65" />
     </View>
   );
 };

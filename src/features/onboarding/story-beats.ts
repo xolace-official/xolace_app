@@ -21,7 +21,7 @@ export type StoryBeat = {
   /** ms this beat holds before auto-advancing. */
   duration: number;
   /**
-   * 'tale' (default) = words on the dark, as #198 decided.
+   * Every beat owns a bespoke composition — there is no generic fallback kind.
    * 'proof'          = the count drawn rather than stated: one ember per
    *                    person, with one of them carrying a real review
    *                    (see `proof-beat.tsx`).
@@ -40,7 +40,7 @@ export type StoryBeat = {
    *                    lit and the past relighting behind it
    *                    (see `plus-beat.tsx`).
    */
-  kind?: 'tale' | 'proof' | 'cover' | 'mirror' | 'vent' | 'xolacers' | 'plus';
+  kind: 'proof' | 'cover' | 'mirror' | 'vent' | 'xolacers' | 'plus';
   /** Ember-cased footnote under the aside. Only Xolace+ carries one. */
   tag?: string;
 };
@@ -59,12 +59,16 @@ export const STORY_BEATS: StoryBeat[] = [
     duration: 3400,
   },
   // Mirror and Vent are a MATCHED PAIR, not two steps of one flow. They are
-  // alternatives — different reasons to open the app on a given night — so the
-  // two beats are written in identical grammatical shape ("Some nights… /
-  // Other nights…"). Same form reads as a choice; different form would read as
+  // alternatives — different reasons to open the app on a given day — so the
+  // two beats are written in identical grammatical shape ("Some days… /
+  // Other days…"). Same form reads as a choice; different form would read as
   // a sequence, which is the thing we must not imply. Neither beat may open
   // with a joining word ("So…", "And…"), and neither may reference the other
   // as a next step. The `tag` on the second closes the pair.
+  //
+  // Deliberately "days", not "nights" — the fire/campfire metaphor is a
+  // visual register (dusk lighting, embers), not a claim that Xolace is only
+  // for nighttime use. Copy that names a time of day must stay time-neutral.
   //
   // Mirror leads because the cover already sold the act of saying it out loud;
   // opening the deck proper with Vent would restate the cover instead of
@@ -73,9 +77,9 @@ export const STORY_BEATS: StoryBeat[] = [
     id: 'mirror',
     kind: 'mirror',
     label: 'The Mirror',
-    beat: "Some nights you\nneed to know what\nyou're feeling.",
+    beat: "Some days you\nneed to know what\nyou're feeling.",
     aside:
-      'Type it or say it. The Mirror reads it back — the feeling, named, in your own words. Not advice, not a diagnosis.',
+      'Type it or say it. The Mirror reads it back - the feeling, named, in your own words. Not advice, not a diagnosis.',
     symbol: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' },
     duration: 3800,
   },
@@ -83,10 +87,10 @@ export const STORY_BEATS: StoryBeat[] = [
     id: 'vent',
     kind: 'vent',
     label: 'Vent',
-    beat: 'Other nights you\njust need to\nget it out.',
+    beat: 'Other days you\njust need to\nget it out.',
     aside:
       'Sit with the fire alone and say it. Nothing is stored, nothing answers back. It goes when you close it.',
-    tag: 'Either one · any night',
+    tag: 'Either one · any time',
     symbol: { ios: 'mic', android: 'mic', web: 'mic' },
     duration: 3600,
   },
@@ -99,7 +103,7 @@ export const STORY_BEATS: StoryBeat[] = [
     // what a session is, and a caption whose whole point is that the number is
     // checkable cannot be the line that needs decoding. One light on the slide
     // per person, said plainly.
-    aside: 'One light for each of them. A real count — never a number we made up.',
+    aside: 'One light for each of them. A real count - never a number we made up.',
     symbol: { ios: 'flame', android: 'local_fire_department', web: 'local_fire_department' },
     // Far and away the longest beat to read — a whole three-sentence review on
     // top of the field and the caption — and the choreography alone runs past
@@ -150,14 +154,14 @@ export const STORY_BEATS: StoryBeat[] = [
       // Sized to the measure, not just to taste: at this width the aside sets
       // ~43 characters a line, so anything over ~129 spills a single word onto
       // a fourth line and the block ends on an orphan.
-      'Xolace+ reads across everything you’ve written — the words you keep leaning on, what keeps circling back, what’s easing.',
+      'Xolace+ reads across everything you’ve written - the words you keep leaning on, what keeps circling back, what’s easing.',
     // The `tag` slot, spent on the positioning instead of a price. No hard
     // paywall is the most valuable true thing we can say here, and it is only
     // sayable because of where the real gates are: the Mirror and Vent are
     // free, a bridge draft a day is free, and what Plus gates is the looking
     // back (see `use-insight-gate.ts`). The reason travels with the promise —
     // a policy without its why reads as a boast.
-    tag: 'Saying it stays free. Nobody should meet a paywall on a bad day — what Xolace+ buys you is the looking back across it.',
+    tag: 'Saying it stays free. Nobody should meet a paywall on a bad day; what Xolace+ buys you is the looking back across it.',
     symbol: { ios: 'flame.circle', android: 'local_fire_department', web: 'local_fire_department' },
     duration: 3400,
   },

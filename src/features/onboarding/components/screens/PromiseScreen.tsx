@@ -3,14 +3,15 @@ import { StyleSheet, View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSharedValue } from 'react-native-reanimated';
 import { EaseView } from 'react-native-ease/uniwind';
-import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { usePostHog } from 'posthog-react-native';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { playGentlePresence, playOnboardingEntrance } from '@/src/lib/haptics';
 import { MoodMarquee } from '@/src/features/onboarding/components/mood-marquee';
 import { DuskDriftBackdrop } from '@/src/features/onboarding/components/dusk-drift-backdrop';
 import { MOODS } from '@/src/features/onboarding/moods';
+import { useAppStore } from '@/src/store/store';
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const EASE_INITIAL_SLIDE = { opacity: 0, translateY: 20 };
@@ -33,7 +34,8 @@ const getCtaStyle = ({ pressed }: { pressed: boolean }) => ({
 
 export const PromiseScreen = () => {
   const hasPlayedEntrance = useRef(false);
-  const router = useRouter();
+  const setIntroSeen = useAppStore((s) => s.setIntroSeen);
+  const posthog = usePostHog();
   const insets = useSafeAreaInsets();
   const scrollOffsetX = useSharedValue(0);
 
@@ -46,7 +48,11 @@ export const PromiseScreen = () => {
 
   const handlePress = () => {
     playGentlePresence();
-    router.push('/auth-onboarding');
+    // Flips the root `(onboarding)` / `(auth)` guard — Stack.Protected swaps
+    // the active group on its own, so no explicit navigation call is needed
+    // (and none would be reliable: `(auth)` isn't mounted until this flips).
+    posthog?.capture('onboarding_completed');
+    setIntroSeen(true);
   };
 
   const rootStyle = { paddingBottom: insets.bottom };
@@ -81,7 +87,7 @@ export const PromiseScreen = () => {
             This is a space{'\n'}to be honest.
           </AppText>
           <AppText
-            className="text-foreground/50 text-[15px] leading-7 mb-2"
+            className="text-foreground/55 text-[15px] leading-7 mb-2"
             style={styles.fontLight}
           >
             What you share here is private.{'\n'}

@@ -1,19 +1,9 @@
 /**
  * The sign-in half of the screen, revealed as the deck lifts off it.
  *
- * Keeps superlist's morphing bottom pill exactly: ONE button holding two rows
- * behind `overflow-hidden`. Collapsed it reads "Pull up a seat"; as the sheet
- * expands, that row slides up and out while the second row slides in from
- * below. Superlist's second row is "Continue with email" — we have no email
- * auth, so the second row becomes the way BACK to the tale, which keeps the
- * button useful in both states instead of morphing into a dead end.
- *
- * #201: no reassurance paragraph — too much text for a ~250px sheet. Legal
- * surfaces as a permanent, tappable Terms/Privacy row wired to the real
- * LegalBottomSheet.
  */
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Extrapolation,
   FadeIn,
@@ -39,11 +29,7 @@ import { useProviderSignIn } from '@/src/features/auth/use-provider-sign-in';
 import { useDeckColor } from './deck-color';
 
 const SPINNER_ENTERING = FadeIn.delay(50);
-/** The old AuthScreen's morph: the row springs down to a spinner-sized pill
- *  rather than swapping its contents in place. */
 const BUTTON_LAYOUT = LinearTransition.springify();
-/** expo-symbols takes SF Symbol names on iOS and Material names on Android;
- *  a bare SF name renders nothing at all on Android. */
 const CHEVRON_ICON = { ios: 'chevron.down', android: 'keyboard_arrow_down', web: 'keyboard_arrow_down' } as const;
 const SEAT_ICON = { ios: 'person', android: 'person', web: 'person' } as const;
 const FLAME_ICON = { ios: 'flame', android: 'local_fire_department', web: 'local_fire_department' } as const;
@@ -73,10 +59,7 @@ export const AuthSheetBlock = ({
         <SymbolView name={CHEVRON_ICON} size={16} tintColor={muted} />
       </PressableFeedback>
 
-      <AppText
-        className="text-foreground/90 text-[24px] text-center mb-7"
-        style={{ fontFamily: 'Poppins-Medium' }}
-      >
+      <AppText className="text-foreground/90 text-[24px] text-center mb-7 font-poppins-medium">
         The fire&apos;s already lit.
       </AppText>
 
@@ -147,7 +130,7 @@ export const AuthSheetBlock = ({
 };
 
 /**
- * Superlist's two-row morph. Row one exits upward, row two enters from below,
+ * two-row morph. Row one exits upward, row two enters from below,
  * both driven off the same expansion progress.
  */
 export const MorphingSeatButton = ({
@@ -159,8 +142,7 @@ export const MorphingSeatButton = ({
   onExpand: () => void;
   onCollapse: () => void;
 }) => {
-  // The deck's CTA is the fire, not the app's violet accent — it sits beside a
-  // flame glyph and says "Back to the fire".
+
   const ember = useDeckColor('ember');
 
   const rTopRow = useAnimatedStyle(() => ({
@@ -182,7 +164,7 @@ export const MorphingSeatButton = ({
   return (
     <PressableFeedback
       onPress={handlePress}
-      style={{ borderCurve: 'continuous' }}
+      style={styles.continuousCurve}
       className="h-12 mx-6 mt-4 items-center justify-center rounded-full border border-ember/25 bg-ember/10 overflow-hidden"
     >
       <Animated.View className="flex-row items-center gap-2" style={rTopRow}>
@@ -196,3 +178,7 @@ export const MorphingSeatButton = ({
     </PressableFeedback>
   );
 };
+
+const styles = StyleSheet.create({
+  continuousCurve: { borderCurve: 'continuous' },
+});

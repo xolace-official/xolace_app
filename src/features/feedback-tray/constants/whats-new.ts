@@ -30,6 +30,28 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "1.9.1",
+    label: "Version 1.9.1",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "sparkles", android: "auto_awesome" },
+        title: "A new welcome",
+        body: "First time here? You'll meet the fire one beat at a time before you sign in. Coming back? You'll see the carousel deck, then the sign-in sheet.",
+      },
+      {
+        icon: { ios: "person.crop.circle.fill", android: "account_circle" },
+        title: "Change your username",
+        body: "Pick a new display name anytime from Settings.",
+      },
+      {
+        icon: { ios: "pencil", android: "edit" },
+        title: "Edit your Xolacer profile",
+        body: "Already listed as a Xolacer? You can now go back and update your photo, bio, and specialties — no need to start over.",
+      },
+    ],
+  },
+  {
     id: "2026-08-ota-message-actions",
     label: "OTA Update",
     date: "August 2026",

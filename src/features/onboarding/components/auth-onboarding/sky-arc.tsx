@@ -1,24 +1,3 @@
-/**
- * The dawn arc (#200, option B — shipped).
- *
- * The problem this solves: the deck has to be dark (fire only reads as a light
- * source against dark), but the app defaults to `theme: 'system'`, so most
- * first-timers land in a LIGHT app the moment the sheet opens. A black deck
- * cutting to a white app is a jolt, and it hits the common case, not an edge.
- *
- * So rather than fight it: the sky lifts across the six beats. Night at dusk,
- * indigo by the middle, dawn by Xolace+ — and the hand-off into a light app
- * stops being a seam and becomes the point of the story. You arrived at night
- * carrying something; you leave lighter.
- *
- * Dark-mode users don't get the full sunrise — `dawnCeiling` holds them at a
- * faint pre-dawn glow, so their hand-off is equally seamless in the other
- * direction. The arc still happens; it just resolves where THEY are going.
- *
- * Built as three fixed gradients cross-faded on scroll rather than one gradient
- * with animated colors: `LinearGradient`'s `colors` prop is not animatable, and
- * cross-fading opacity is both cheaper and smoother than re-rendering stops.
- */
 import { StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {

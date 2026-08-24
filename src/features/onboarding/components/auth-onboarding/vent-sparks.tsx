@@ -19,7 +19,7 @@
  * read during render would reshuffle the plume on every re-render.
  */
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   interpolate,
@@ -115,8 +115,8 @@ const Spark = ({
   return (
     <Animated.View
       style={[
+        styles.spark,
         {
-          position: 'absolute',
           left: spec.dx,
           bottom: spec.dy,
           width: spec.size,
@@ -150,10 +150,15 @@ export const VentSparks = ({
 }) => (
   <View
     pointerEvents="none"
-    style={{ position: 'absolute', left: originX, bottom: originBottom }}
+    style={[styles.origin, { left: originX, bottom: originBottom }]}
   >
-    {PLUME.map((spec, index) => (
-      <Spark key={index} spec={spec} color={color} reduced={reduced} />
+    {PLUME.map((spec) => (
+      <Spark key={spec.delay} spec={spec} color={color} reduced={reduced} />
     ))}
   </View>
 );
+
+const styles = StyleSheet.create({
+  spark: { position: 'absolute' },
+  origin: { position: 'absolute' },
+});
