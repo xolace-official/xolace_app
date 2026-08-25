@@ -36,38 +36,30 @@ export const COHORT_FLOOR = 3;
 
 type CohortMatchInputs = Pick<
   Doc<"emotional_metadata">,
-  "safeguardLevel" | "primaryEmotion" | "secondaryEmotion"
+  "primaryEmotion" | "secondaryEmotion"
 >;
 
 /**
- * Does this session count toward a weekly cohort for `targetEmotion`? The
- * single owner of the cohort eligibility rule, the same way `isPoolable` owns
- * peer-pool eligibility — so the crisis boundary can't drift between the
+ * Does this session count toward a weekly cohort for `targetEmotion`? Matches
+ * on primary OR secondary — the fuller shape of what was carried, not just the
+ * dominant label. The single owner of that rule, so it can't drift between the
  * aggregation cron and the read-time self-exclusion, which both call this.
  *
- * - safeguardLevel !== "crisis"  — deliberately not `riskFlag`, which is also
- *                                  true for `elevated` and would over-exclude
- * - primary OR secondary matches — the fuller shape of what was carried
+ * Note there is NO safeguard filter here, unlike `isPoolable`. That's
+ * deliberate and it is the one place this differs from peer-pool eligibility —
+ * see ADR 0004. `isPoolable` gates content: someone's actual words land on a
+ * stranger's screen, so a crisis session must never qualify. This gates an
+ * integer. Nothing about any session is surfaced, so there is no boundary for
+ * a crisis row to cross by being one of the 22.
  *
- * Deliberately says nothing about the viewer: the per-emotion count is one row
- * shared by everyone carrying that emotion, so "not me" can't be a predicate
- * here. It's a subtraction at read time instead — see cohort.ts.
+ * Deliberately says nothing about the viewer either: the per-emotion count is
+ * one row shared by everyone carrying that emotion, so "not me" can't be a
+ * predicate here. It's a subtraction at read time instead — see cohort.ts.
  */
 export function isCohortMatch(
   s: CohortMatchInputs,
   targetEmotion: string,
 ): boolean {
-  // Crisis is excluded for meaning, not for safety — the card emits one
-  // integer, so nothing about anyone is surfaced either way. It's that "sat
-  // with sadness by the fire this week" doesn't honestly describe a session
-  // that was in crisis.
-  //
-  // Which is why a MISSING level still counts. Rows written before the
-  // safeguard verdict moved onto this table (nothing after 2026-06-28) have no
-  // level, and crisis runs ~1% of all sessions — dropping them all to avoid
-  // miscounting the odd one would undercount by far more than it corrects, on
-  // a card whose entire job is telling someone they aren't alone.
-  if (s.safeguardLevel === "crisis") return false;
   return s.primaryEmotion === targetEmotion || s.secondaryEmotion === targetEmotion;
 }
 

@@ -9,23 +9,19 @@ import {
 describe("isCohortMatch", () => {
   const cases: Array<{
     name: string;
-    safeguard?: "none" | "gentle" | "elevated" | "crisis";
     primary: string;
     secondary?: string;
     target: string;
     expected: boolean;
   }> = [
-    // emotion-matching rows: safeguard held at "none" so only the match varies
     {
       name: "match on primary",
-      safeguard: "none",
       primary: "sadness",
       target: "sadness",
       expected: true,
     },
     {
       name: "match on secondary",
-      safeguard: "none",
       primary: "anger",
       secondary: "sadness",
       target: "sadness",
@@ -33,7 +29,6 @@ describe("isCohortMatch", () => {
     },
     {
       name: "match on neither",
-      safeguard: "none",
       primary: "anger",
       secondary: "fear",
       target: "sadness",
@@ -41,48 +36,7 @@ describe("isCohortMatch", () => {
     },
     {
       name: "no secondary, primary misses",
-      safeguard: "none",
       primary: "joy",
-      target: "sadness",
-      expected: false,
-    },
-    // safety rows: crisis only, not elevated
-    {
-      name: "crisis excluded",
-      safeguard: "crisis",
-      primary: "sadness",
-      target: "sadness",
-      expected: false,
-    },
-    {
-      name: "elevated still counts",
-      safeguard: "elevated",
-      primary: "sadness",
-      target: "sadness",
-      expected: true,
-    },
-    {
-      name: "gentle still counts",
-      safeguard: "gentle",
-      primary: "sadness",
-      target: "sadness",
-      expected: true,
-    },
-    {
-      // Legacy rows predate the safeguard verdict landing on this table.
-      // They count: crisis is ~1% of sessions, so excluding every unverdicted
-      // row would undercount far more than it would correct.
-      name: "no safeguard level recorded still counts",
-      safeguard: undefined,
-      primary: "sadness",
-      target: "sadness",
-      expected: true,
-    },
-    {
-      name: "crisis on a secondary match is still excluded",
-      safeguard: "crisis",
-      primary: "anger",
-      secondary: "sadness",
       target: "sadness",
       expected: false,
     },
@@ -92,16 +46,25 @@ describe("isCohortMatch", () => {
     it(c.name, () => {
       expect(
         isCohortMatch(
-          {
-            safeguardLevel: c.safeguard,
-            primaryEmotion: c.primary,
-            secondaryEmotion: c.secondary,
-          },
+          { primaryEmotion: c.primary, secondaryEmotion: c.secondary },
           c.target,
         ),
       ).toBe(c.expected);
     });
   }
+
+  // Guards the deliberate divergence from `isPoolable` (ADR 0004): this gates a
+  // count, not content, so no safeguard verdict — crisis included — changes the
+  // answer. If someone reintroduces a safeguard filter here, this fails.
+  it("ignores safeguardLevel entirely", () => {
+    const match = { primaryEmotion: "sadness", secondaryEmotion: undefined };
+    for (const level of ["none", "gentle", "elevated", "crisis", undefined]) {
+      // via a variable: `isCohortMatch` no longer declares the field, and a
+      // fresh literal at the call site would fail the excess-property check
+      const row = { ...match, safeguardLevel: level };
+      expect(isCohortMatch(row, "sadness")).toBe(true);
+    }
+  });
 });
 
 describe("deriveCohortCardState", () => {
