@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useMutation } from 'convex/react';
@@ -7,6 +7,7 @@ import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
+import { setTabBarHidden } from '@/src/lib/tab-bar';
 import { ConversationRow } from './conversation-row';
 
 export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConversations>;
@@ -40,6 +41,14 @@ export function ChatsList({
   // The long-pressed row, which is also what the action sheet is: the bottom
   // toolbar only exists while something is selected.
   const [sheetFor, setSheetFor] = useState<ConversationList[number] | null>(null);
+
+  // The sheet and the floating tab bar are the same strip of screen: left up,
+  // the tab pill sits between Cancel and Archive and swallows the taps under
+  // it. The cleanup also covers navigating away with the sheet still open.
+  useEffect(() => {
+    setTabBarHidden(sheetFor !== null);
+    return () => setTabBarHidden(false);
+  }, [sheetFor]);
 
   const toggleArchive = (conversation: ConversationList[number]) => {
     setSheetFor(null);
