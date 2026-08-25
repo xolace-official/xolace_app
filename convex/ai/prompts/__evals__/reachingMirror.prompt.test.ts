@@ -51,6 +51,9 @@ const build = (
     userFeedback?: string;
     intensity?: number;
     specificity?: number;
+    /** Cold start passes `null` / `[]`: the memory headings then never render. */
+    semanticProfile?: string | null;
+    episodicRecall?: string[];
   } = {},
 ) =>
   buildArticulatorPrompt({
@@ -66,18 +69,34 @@ const build = (
     claimStrength,
     isFirstSession: false,
     recentMirrors: [],
-    semanticProfile: "They tend to arrive without words for it.",
-    episodicRecall: ["they wrote about work"],
+    semanticProfile:
+      overrides.semanticProfile === undefined
+        ? "They tend to arrive without words for it."
+        : overrides.semanticProfile,
+    episodicRecall: overrides.episodicRecall ?? ["they wrote about work"],
     existingMirror: overrides.userFeedback ? "a previous mirror" : undefined,
     userFeedback: overrides.userFeedback,
   }).system;
 
 // --- Presence: full text (doc §4.1, §4.2, §4.3) -----------------------
 
+/**
+ * #216's load-bearing sentence, pulled out because the cold-start fixture
+ * asserts it on its own. Interpolated into the block below rather than typed
+ * twice: two copies of a text this long drift, and the drift would pass.
+ */
+const CLOSING_QUESTION_INSTRUCTION = `The closing question is the only place you may reach past tonight's words, and the only thing it may reach into is a section titled "What You Know About This Person". If that section is in your context, the question names one specific thing drawn from it and asks whether that is what tonight is about. If that section is not in your context, the question proposes nothing at all: it asks what the feeling is attached to and leaves the answer wide open.`;
+
 const REACHING_BLOCK = `## Claim Strength: Reaching
-There is not enough here to build a full mirror. Name only what is genuinely present, then say plainly that what it attaches to is not in what they have given you yet. Locate the shortfall in the words on the page, not in them and not in you.
-- NEVER ask a question. The gap is stated, never posed.
-- NEVER guess at what is missing, and never offer alternatives or an "or".
+There is not enough here to build a full mirror. Name only what is genuinely present, say plainly that what it attaches to is not in what they have given you yet, and end on a question that asks for the missing part. Locate the shortfall in the words on the page, not in them and not in you.
+- The last character of the mirror is a question mark. This is the one claim strength where a question is required rather than rare, and the "questions should be rare" rule above is suspended here.
+- The question sits in the same paragraph as the rest, immediately after the shortfall. NEVER put it on its own line, and NEVER use a line break anywhere in the mirror.
+- ${CLOSING_QUESTION_INSTRUCTION}
+- NEVER found the question on a past moment. Retrieved moments stay recognition only and may not supply anything the question proposes.
+- NEVER let anything but the question reach past tonight's words. What you name, and the shortfall you state, come from tonight's words alone.
+- NEVER drop the shortfall. The question follows it; it does not replace it.
+- NEVER guess at what is missing anywhere but in the question, and never offer alternatives or an "or" anywhere, the question included.
+- NEVER ask more than one question.
 - NEVER make a general claim about how this kind of feeling works for people.
 - NEVER imply they are unclear, avoidant, or withholding.
 - NEVER apologise for the gap or explain why it is there.`;
@@ -113,6 +132,8 @@ const IS_BRANCHES = [
 const PATTERN_MANDATE = "let it actively shape what you notice";
 const EPISODIC_MANDATE = "you may acknowledge that quietly";
 const DELETED_BLOCK = "## Claim Strength: Tentative";
+/** #216: the reach now closes on a question; the old ban must be gone. */
+const OLD_QUESTION_BAN = "The gap is stated, never posed.";
 const REFINEMENT_PUSH =
   "Try a different angle, different metaphor, different emotional read.";
 
@@ -132,6 +153,25 @@ describe("reaching path", () => {
 
   it("keeps the semantic-profile block (deliberately not subtracted)", () => {
     expect(system).toContain("## What You Know About This Person");
+  });
+
+  /**
+   * #216. The reach reverses "declarative, never interrogative" (doc §1, §4.1)
+   * for this block alone. The instruction text is identical either way — the
+   * model conditions on whether the profile section is in its own context, so
+   * both fixtures must carry it — while the cold-start assertion is what makes
+   * "absent, not present-but-empty" a checked fact rather than an assumption.
+   */
+  it("closes on a question, cold start and memory-present alike", () => {
+    const coldStart = build("reaching", {
+      semanticProfile: null,
+      episodicRecall: [],
+    });
+    for (const prompt of [system, coldStart]) {
+      expect(prompt).toContain(CLOSING_QUESTION_INSTRUCTION);
+      expect(prompt).not.toContain(OLD_QUESTION_BAN);
+    }
+    expect(coldStart).not.toContain("## What You Know About This Person");
   });
 
   it("has none of the three standing instructions that fill the gap", () => {

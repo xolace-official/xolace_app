@@ -3,6 +3,52 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## The reach becomes interrogative (2026-08-25)
+
+Reverses the confidence-aware-mirroring standing constraint that the reach is
+"declarative, never interrogative — the button is the question"
+([`docs/confidence-aware-mirroring.md`](docs/confidence-aware-mirroring.md)
+§1, §4.1). The `reaching` claim strength (first faint-signal mirror only —
+`holding`, the second/final try, is untouched) now closes on an explicit
+follow-up question instead of a flat statement, still delivered as one
+smooth, continuous utterance: name what's present, acknowledge the gap,
+then ask.
+
+**One prose block, one conditional instruction — no new `claimStrength`
+value, no new field threaded through `routeClaimStrength` /
+`decideMirrorOutcome`.** The articulator already receives the semantic
+profile block; the question clause is a scoped exception to subtraction 1
+("do not add a dimension they didn't give you"), which still binds the
+reflection clause.
+
+**Question specificity branches on what Xolace already knows:**
+- No semantic profile (cold start) → the question stays unspecific, points
+  at the shape of the gap, never proposes content.
+- A semantic profile exists → the question may name a specific guess drawn
+  *only* from that profile, never fabricated. Off-track episodic memory
+  (below the connect floor) stays exactly as restricted today — recognition
+  only, never a basis for a guess. The two sources are not interchangeable:
+  the profile is a built trajectory: legitimate signal, and per-session RAG
+  noise below the floor is not.
+
+**"Say more" is the answer path, unchanged.** Same button, same generic
+label and "Recommended" pill — no new capture UI for the question's answer.
+
+**Validation:** the additive/interrogative framing was prototyped and
+rejected 5 rounds running against the real articulator in ticket #171 (the
+same finding this reverses), so the wording was not edited in directly — it
+was re-prototyped over 6 further rounds in #216 and only then shipped. What
+those rounds moved is recorded in
+[`docs/confidence-aware-mirroring.md`](docs/confidence-aware-mirroring.md)
+§4.1; the short version is that the question survives only when the base
+"questions should be rare" rule is suspended by name, and the profile is
+safe only when it is confined to the question and barred from the reflection.
+
+Worth an ADR now that wording has landed — hard to reverse, surprising without this
+history, and a real resolved trade-off. Not yet written; this entry is the
+interim record. `docs/confidence-aware-mirroring.md`'s "specified, unbuilt"
+status line is also stale — the mechanism it describes already shipped.
+
 ## Conversation delete (2026-08-24)
 
 **Delete** is scoped to `xolacer_conversations` rows the requester never got

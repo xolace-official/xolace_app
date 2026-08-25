@@ -26,8 +26,12 @@ These bound every decision in this document. They are the reason several obvious
 implementations were rejected.
 
 - **The fire is not a participant.** The mirror illuminates; it does not converse.
-  This is why the reach is **declarative, never interrogative** — the button is the
-  question.
+  This is why the reach was **declarative, never interrogative** — the button was the
+  question. **Superseded for `reaching` only by
+  [#216](https://github.com/xolace-official/xolace_app/issues/216)** (see §4.1): that
+  first mirror now closes on a question. The constraint still holds everywhere else,
+  `holding` included — one question, on one turn, answered through the same *Say more*
+  button. Nothing became a conversation.
 - **Continuity is not understanding.** The mirror may show it remembers, but if
   continuity is all it has, it must still name the gap. Recognition and
   understanding are separate claims and the mirror may assert only the one it has
@@ -61,6 +65,14 @@ filling the gap:
 
 Any change touching prompt behaviour on faint signal should assume additive NEVERs
 will fail and reach for subtraction first.
+
+**#216 is the one qualified exception, and it does not soften the rule.** The
+interrogative reach (§4.1) did add NEVERs, and the rounds that worked were still
+the ones that *removed* a standing instruction's grip: the question only survived
+once the base `questions should be rare` rule was suspended by name. The NEVERs
+around it fence a permission that was granted, they do not argue a standing
+instruction down. Adding NEVERs to out-argue an instruction that is still on will
+fail here exactly as it did in #171.
 
 ---
 
@@ -324,18 +336,62 @@ per caller.
 ### 4.1 The `Reaching` block
 
 Replaces the deleted `tentative` case in `getClaimStrengthInstructions`
-(`convex/ai/prompts/articulator.ts`). Verbatim from
-[#171](https://github.com/xolace-official/xolace_app/issues/171):
+(`convex/ai/prompts/articulator.ts`). Established in
+[#171](https://github.com/xolace-official/xolace_app/issues/171); the closing move
+reversed from statement to question in
+[#216](https://github.com/xolace-official/xolace_app/issues/216) after five further
+prototyping rounds against the real articulator:
 
 ```
 ## Claim Strength: Reaching
-There is not enough here to build a full mirror. Name only what is genuinely present, then say plainly that what it attaches to is not in what they have given you yet. Locate the shortfall in the words on the page, not in them and not in you.
-- NEVER ask a question. The gap is stated, never posed.
-- NEVER guess at what is missing, and never offer alternatives or an "or".
+There is not enough here to build a full mirror. Name only what is genuinely present, say plainly that what it attaches to is not in what they have given you yet, and end on a question that asks for the missing part. Locate the shortfall in the words on the page, not in them and not in you.
+- The last character of the mirror is a question mark. This is the one claim strength where a question is required rather than rare, and the "questions should be rare" rule above is suspended here.
+- The question sits in the same paragraph as the rest, immediately after the shortfall. NEVER put it on its own line, and NEVER use a line break anywhere in the mirror.
+- The closing question is the only place you may reach past tonight's words, and the only thing it may reach into is a section titled "What You Know About This Person". If that section is in your context, the question names one specific thing drawn from it and asks whether that is what tonight is about. If that section is not in your context, the question proposes nothing at all: it asks what the feeling is attached to and leaves the answer wide open.
+- NEVER found the question on a past moment. Retrieved moments stay recognition only and may not supply anything the question proposes.
+- NEVER let anything but the question reach past tonight's words. What you name, and the shortfall you state, come from tonight's words alone.
+- NEVER drop the shortfall. The question follows it; it does not replace it.
+- NEVER guess at what is missing anywhere but in the question, and never offer alternatives or an "or" anywhere, the question included.
+- NEVER ask more than one question.
 - NEVER make a general claim about how this kind of feeling works for people.
 - NEVER imply they are unclear, avoidant, or withholding.
 - NEVER apologise for the gap or explain why it is there.
 ```
+
+**The guess/no-guess split is prompt structure, not code.** `buildMemoryContext`
+renders `## What You Know About This Person` only when `semanticProfile` is truthy,
+so on a cold start the heading is *absent* from the prompt rather than empty. The
+instruction points at that section by name and the model conditions on whether it
+can see it — no boolean is computed, passed, or routed. `routeClaimStrength` and
+`decideMirrorOutcome` are untouched: this changes only what the prose says once the
+gate has already fired.
+
+**Only the semantic profile may found a guess.** Off-track episodic memory — the
+condition co-occurring with every reach, since the gate requires `!memoryConnected`
+— stays restricted to recognition by subtraction 4. A built trajectory and
+per-session RAG noise below the connect floor are not interchangeable sources.
+
+**What six rounds moved.** Round 1 fought the base `questions should be rare`
+rule and dropped the question outright on a third of samples; suspending that rule
+by name fixed it. The profile arm stayed generic until the instruction said the
+question *names* one thing from the section and asks whether it is what tonight is
+about. Constraining the profile to the question alone is what kept round 1's
+failure — the profile spent as a *claim* in the reflection, memory-as-understanding
+by another door — from coming back. The residual leaks at round 5 were a stray
+paragraph break and an occasional "or", both already banned in text and both
+low-frequency.
+
+Round 6 closed the one hole a spec review found in round 5's text: the licence
+read *the closing question is the only place you may reach past their words* —
+unconditional — and was bounded by a bullet naming "that section", which on a
+cold start refers to a heading that is not there. Since the gate requires
+`!memoryConnected`, the *episodic* block usually **is** there on these prompts,
+so the unbounded half of the licence pointed straight at off-track memory.
+Round 6 moves the bound into the licence itself (*the only thing it may reach
+into is a section titled…*) and bars past moments from founding the question
+outright. Across 14 samples it ends on a question every time, keeps one
+paragraph, drops the "or", and on cold-start-with-off-track-episodic proposes
+nothing — the wedding in the retrieved moment never reached the question.
 
 ### 4.2 The `Holding` block
 
@@ -802,7 +858,8 @@ Accepted cost: an innocuous reword of a subtraction fails the test. That is corr
 
 | block | must contain (full text) | must NOT contain (shortest fragment) |
 |---|---|---|
-| `reaching` | the `## Claim Strength: Reaching` block; subtractions 1–4, incl. subtraction 4's trailing `- Never use a past moment…` (needs a memory-present fixture or the site is not exercised) | `add a dimension they didn't have words for`; **all four** I×S branch strings (`meet them at full depth`, `Give the vague enormity a form`, `Match their measured tone`, `light and curious`); `let it actively shape what you notice`; `you may acknowledge that quietly`; `## Claim Strength: Tentative` |
+| `reaching` | the `## Claim Strength: Reaching` block; subtractions 1–4, incl. subtraction 4's trailing `- Never use a past moment…` (needs a memory-present fixture or the site is not exercised); **#216:** the closing-question instruction, from a memory-present **and** a cold-start fixture | `add a dimension they didn't have words for`; **all four** I×S branch strings (`meet them at full depth`, `Give the vague enormity a form`, `Match their measured tone`, `light and curious`); `let it actively shape what you notice`; `you may acknowledge that quietly`; `## Claim Strength: Tentative`; **#216:** `The gap is stated, never posed.` — the old question ban |
+| `reaching`, **cold start** (`semanticProfile: null`, `episodicRecall: []`) | the closing-question instruction, unchanged from the memory-present fixture — the split is resolved by the model reading its own context, not by two texts | `## What You Know About This Person` — the heading must be **absent**, not present-but-empty, or the cold-start half of #216 is untested |
 | `holding` | the `holding` block incl. `never assert there is nothing underneath it`; subtractions 1–4 unchanged | `Try a different angle, different metaphor, different emotional read.`; the `## Claim Strength: Reaching` block |
 | `measured` / `confident` **(control)** | the standing instructions **are** present — `add a dimension they didn't have words for`, the matching I×S branch, `let it actively shape what you notice`, `you may acknowledge that quietly` | — |
 
