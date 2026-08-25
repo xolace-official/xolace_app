@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { MutationCtx } from "../_generated/server";
 import { internalMutation } from "../_generated/server";
 import {
   COHORT_EMOTIONS,
@@ -28,6 +29,72 @@ import {
 // week's sessions ever approach this.
 const SCAN_CAP = 8000;
 
+export async function computeCohortCounts(
+  ctx: MutationCtx,
+  args: { weekOf?: number },
+) {
+  const weekStart =
+    args.weekOf !== undefined
+      ? weekStartUtc(args.weekOf)
+      : weekStartUtc(Date.now()) - WEEK_MS;
+  const weekEnd = weekStart + WEEK_MS;
+
+  const rows = await ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_createdAt", (q) =>
+      q.gte("createdAt", weekStart).lt("createdAt", weekEnd),
+    )
+    // One over the cap so saturation is detectable before anything is written.
+    .take(SCAN_CAP + 1);
+
+  if (rows.length > SCAN_CAP) {
+    console.error(
+      "[cohortCounts] week scan hit SCAN_CAP — no row written. " +
+        "Rewrite as a batched fold before trusting these numbers.",
+      { weekStart, cap: SCAN_CAP },
+    );
+    // A partial count would be indistinguishable from a quiet week on the
+    // card, so leave last week's row (or no row) alone.
+    return { weekStart, scanned: rows.length, saturated: true, counts: {} };
+  }
+
+  // emotion → distinct emotionalProfileIds carrying it that week.
+  const campers = new Map<string, Set<string>>(
+    COHORT_EMOTIONS.map((e) => [e, new Set<string>()]),
+  );
+
+  for (const row of rows) {
+    for (const emotion of COHORT_EMOTIONS) {
+      if (isCohortMatch(row, emotion)) {
+        campers.get(emotion)!.add(row.emotionalProfileId);
+      }
+    }
+  }
+
+  const counts: Record<string, number> = {};
+  for (const [emotion, set] of campers) counts[emotion] = set.size;
+
+  const existing = await ctx.db
+    .query("cohort_weekly_counts")
+    .withIndex("by_weekStart", (q) => q.eq("weekStart", weekStart))
+    .unique();
+
+  const doc = { weekStart, weekEnd, counts, computedAt: Date.now() };
+  if (existing) {
+    await ctx.db.replace(existing._id, doc);
+  } else {
+    await ctx.db.insert("cohort_weekly_counts", doc);
+  }
+
+  console.log("[cohortCounts] week counted.", {
+    weekStart,
+    scanned: rows.length,
+    counts,
+  });
+
+  return { weekStart, scanned: rows.length, saturated: false, counts };
+}
+
 export const compute = internalMutation({
   args: {
     // Any timestamp inside the week to count. Omitted by the cron, which
@@ -40,63 +107,5 @@ export const compute = internalMutation({
     saturated: v.boolean(),
     counts: v.record(v.string(), v.number()),
   }),
-  handler: async (ctx, args) => {
-    const weekStart =
-      args.weekOf !== undefined
-        ? weekStartUtc(args.weekOf)
-        : weekStartUtc(Date.now()) - WEEK_MS;
-    const weekEnd = weekStart + WEEK_MS;
-
-    const rows = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_createdAt", (q) =>
-        q.gte("createdAt", weekStart).lt("createdAt", weekEnd),
-      )
-      .take(SCAN_CAP);
-
-    const saturated = rows.length === SCAN_CAP;
-    if (saturated) {
-      console.error(
-        "[cohortCounts] week scan hit SCAN_CAP — counts are an undercount. " +
-          "Rewrite as a batched fold before trusting these numbers.",
-        { weekStart, cap: SCAN_CAP },
-      );
-    }
-
-    // emotion → distinct emotionalProfileIds carrying it that week.
-    const campers = new Map<string, Set<string>>(
-      COHORT_EMOTIONS.map((e) => [e, new Set<string>()]),
-    );
-
-    for (const row of rows) {
-      for (const emotion of COHORT_EMOTIONS) {
-        if (isCohortMatch(row, emotion)) {
-          campers.get(emotion)!.add(row.emotionalProfileId);
-        }
-      }
-    }
-
-    const counts: Record<string, number> = {};
-    for (const [emotion, set] of campers) counts[emotion] = set.size;
-
-    const existing = await ctx.db
-      .query("cohort_weekly_counts")
-      .withIndex("by_weekStart", (q) => q.eq("weekStart", weekStart))
-      .unique();
-
-    const doc = { weekStart, weekEnd, counts, computedAt: Date.now() };
-    if (existing) {
-      await ctx.db.replace(existing._id, doc);
-    } else {
-      await ctx.db.insert("cohort_weekly_counts", doc);
-    }
-
-    console.log("[cohortCounts] week counted.", {
-      weekStart,
-      scanned: rows.length,
-      counts,
-    });
-
-    return { weekStart, scanned: rows.length, saturated, counts };
-  },
+  handler: computeCohortCounts,
 });

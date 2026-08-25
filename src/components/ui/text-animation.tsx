@@ -278,7 +278,7 @@ function TextAnimationTyping({
     // Still: nothing to schedule — the render below shows the finished string.
     if (still) return;
 
-    const timers: ReturnType<typeof setTimeout>[] = [];
+    let pending: ReturnType<typeof setTimeout> | undefined;
     let cancelled = false;
 
     const run = (index: number) => {
@@ -291,7 +291,7 @@ function TextAnimationTyping({
         setShown(value.slice(0, at));
         if (at < value.length) {
           at += 1;
-          timers.push(setTimeout(type, step));
+          pending = setTimeout(type, step);
           return;
         }
         setTyping(false);
@@ -300,7 +300,7 @@ function TextAnimationTyping({
           done.current?.();
           return;
         }
-        timers.push(setTimeout(() => erase(value, index), hold));
+        pending = setTimeout(() => erase(value, index), hold);
       };
 
       type();
@@ -316,7 +316,7 @@ function TextAnimationTyping({
         setShown(value.slice(0, at));
         if (at > 0) {
           at -= 1;
-          timers.push(setTimeout(back, step));
+          pending = setTimeout(back, step);
           return;
         }
         setTyping(false);
@@ -326,11 +326,11 @@ function TextAnimationTyping({
       back();
     };
 
-    timers.push(setTimeout(() => run(0), wait));
+    pending = setTimeout(() => run(0), wait);
 
     return () => {
       cancelled = true;
-      timers.forEach(clearTimeout);
+      clearTimeout(pending);
     };
   }, [hold, repeat, step, still, strings, wait]);
 
