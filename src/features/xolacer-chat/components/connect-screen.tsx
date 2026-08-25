@@ -193,6 +193,7 @@ export function ConnectScreen({
                 onToggleArchived={() => setShowArchived((shown) => !shown)}
                 onBrowseXolacers={() => setSelected('xolacers')}
                 onLongPress={setSheetFor}
+                onOpen={() => setSheetFor(null)}
                 onUnarchive={toggleArchive}
               />
             ) : (

@@ -28,6 +28,7 @@ export function ChatsList({
   onToggleArchived,
   onBrowseXolacers,
   onLongPress,
+  onOpen,
   onUnarchive,
 }: {
   conversations: ConversationList;
@@ -36,6 +37,7 @@ export function ChatsList({
   onToggleArchived: () => void;
   onBrowseXolacers: () => void;
   onLongPress: (conversation: ConversationList[number]) => void;
+  onOpen: () => void;
   onUnarchive: (conversation: ConversationList[number]) => void;
 }) {
   const router = useRouter();
@@ -110,6 +112,10 @@ export function ChatsList({
           conversation={conversation}
           onPress={() => {
             playSoftPress();
+            // Opening a thread leaves this screen mounted, so a sheet raised on
+            // another row would still be waiting — over the wrong row, with the
+            // tab bar still hidden — when you come back.
+            onOpen();
             router.push({
               pathname: '/chat/[conversationId]',
               params: { conversationId: conversation.id },
