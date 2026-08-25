@@ -34,12 +34,23 @@ const FADE_MS = 90;
 const BUBBLE_MS = 420;
 /** Lead-in before he starts talking, and the pause between the two beats. */
 const OPENING_MS = BUBBLE_MS - 100;
-const BEAT_MS = 620;
+/**
+ * The pause between the two beats. The whole card is this pause — said in one
+ * breath, "campers sat with this" and "you are not alone" is a statistic.
+ */
+const BEAT_MS = 900;
 /**
  * A bubble lands with a bounce — it was thrown from his mouth, not faded up.
  * 0.55 is the overshoot that reads as spoken; anything past ~0.8 arrives dead.
  */
 const BUBBLE_SPRING = { duration: BUBBLE_MS, dampingRatio: 0.55 } as const;
+/**
+ * The closer is the one people watch, because the pause told them to. It gets
+ * a slower spring, a looser one, and further to travel — an overshoot is only
+ * visible in proportion to the distance it overshoots.
+ */
+const CLOSER_SPRING = { duration: 560, dampingRatio: 0.45 } as const;
+const CLOSER_TRAVEL = 22;
 
 const styles = StyleSheet.create({
   bubble: { borderCurve: 'continuous' },
@@ -110,19 +121,30 @@ function SpokenWord({ clock, at, children }: { clock: SharedValue<number>; at: n
 }
 
 /** Bubbles arrive from the tail, not by fading in place. */
-function useBubbleIn(delay: number, reduced: boolean) {
+function useBubbleIn(
+  delay: number,
+  reduced: boolean,
+  spring: { duration: number; dampingRatio: number } = BUBBLE_SPRING,
+  travel = 10
+) {
   const p = useSharedValue(reduced ? 1 : 0);
   useEffect(() => {
     if (reduced) {
       p.set(1);
       return;
     }
-    p.set(withDelay(delay, withSpring(1, BUBBLE_SPRING)));
-  }, [delay, reduced, p]);
+    p.set(withDelay(delay, withSpring(1, spring)));
+  }, [delay, reduced, p, spring]);
 
   return useAnimatedStyle(() => ({
-    opacity: p.get(),
-    transform: [{ scale: 0.9 + p.get() * 0.1 }, { translateX: (1 - p.get()) * -10 }],
+    // Opacity is clamped and the transforms are not: the bubble must not flash
+    // brighter than solid on the overshoot, but it should visibly travel past
+    // where it lands and come back. That overshoot is the whole spring.
+    opacity: Math.min(p.get(), 1),
+    transform: [
+      { translateX: (1 - p.get()) * -travel },
+      { scale: 0.86 + p.get() * 0.14 },
+    ],
   }));
 }
 
@@ -170,7 +192,7 @@ function CohortSpeech({ card, reduced }: { card: Exclude<Card, { status: 'hidden
   const offsets = wordOffsets(words);
   const said = spokenMs(fact);
   const bubble1 = useBubbleIn(0, reduced);
-  const bubble2 = useBubbleIn(OPENING_MS + said + BEAT_MS, reduced);
+  const bubble2 = useBubbleIn(OPENING_MS + said + BEAT_MS, reduced, CLOSER_SPRING, CLOSER_TRAVEL);
   const clock = useSpokenClock(said, reduced);
 
   return (
