@@ -77,6 +77,15 @@ crons.cron(
   {}
 );
 
+// Weekly cohort counts for the Discovery card (Mon 04:00 UTC, right after the
+// week it counts has closed). See convex/jobs/cohortCounts.ts and ADR 0004.
+crons.cron(
+  "count weekly emotion cohorts",
+  "0 4 * * 1",
+  internal.jobs.cohortCounts.compute,
+  {}
+);
+
 // Nightly daily quotes generation (midnight UTC)
 crons.cron(
   "nightly daily quotes",

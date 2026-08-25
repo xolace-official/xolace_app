@@ -826,7 +826,11 @@ export default defineSchema({
     .index("by_risk", ["riskFlag", "createdAt"])
 
     // Lookup by session (1:1).
-    .index("by_session", ["sessionId"]),
+    .index("by_session", ["sessionId"])
+
+    // Cross-user week window scan for the weekly cohort aggregate
+    // (jobs/cohortCounts.ts). The only index here not scoped to one profile.
+    .index("by_createdAt", ["createdAt"]),
 
   // ===========================================================
   // 7. REFLECTIONS
@@ -1821,4 +1825,27 @@ export default defineSchema({
     .index("by_rater", ["raterProfileId"])
     // Account deletion sweeps the rows a xolacer received.
     .index("by_xolacer", ["xolacerProfileId"]),
+
+  // ===========================================================
+  // WEEKLY COHORT COUNTS
+  // ===========================================================
+  //
+  // One row per completed calendar week: how many DISTINCT campers carried
+  // each of the 13 classifier emotions that week. Written once by the Monday
+  // cron (jobs/cohortCounts.ts), read O(1) by the Discovery cohort card.
+  //
+  // Materialized rather than counted live because Convex has no `.count()` and
+  // the existing TableAggregate can't group by a dynamic value — see ADR 0004.
+  //
+  cohort_weekly_counts: defineTable({
+    // Monday 00:00 UTC of the week counted. Also the row's identity.
+    weekStart: v.number(),
+    // Exclusive end — the following Monday 00:00 UTC.
+    weekEnd: v.number(),
+    // emotion → distinct camper count. Absent key means zero.
+    counts: v.record(v.string(), v.number()),
+    computedAt: v.number(),
+  })
+    // "the most recent week we have" — and the cron's own idempotency lookup.
+    .index("by_weekStart", ["weekStart"]),
 });

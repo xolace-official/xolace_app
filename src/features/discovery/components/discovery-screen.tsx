@@ -1,5 +1,6 @@
 import { ScrollView, View } from 'react-native';
 
+import { CohortCard } from './cohort-card';
 import { DiscoveryHeader } from './discovery-header';
 import { DailyQuotesCard } from './daily-quotes-card';
 import { DiscoveryTimelineSection } from './discovery-timeline-section';
@@ -22,6 +23,7 @@ export function DiscoveryScreen() {
         <DiscoveryHeader />
 
         <View className="gap-3 px-4 pt-10">
+          <CohortCard />
           <DailyQuotesCard />
         </View>
 
