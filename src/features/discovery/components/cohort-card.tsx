@@ -1,15 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useQuery } from 'convex/react';
+import type { FunctionReturnType } from 'convex/server';
 import Animated, {
+  Easing,
+  interpolate,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { TextAnimation } from '@/src/components/ui/text-animation';
 import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import { FluxStage, MOUTH_Y } from './flux-stage';
 
@@ -22,9 +28,18 @@ const TAIL = 12;
 const WORD_MS = 62;
 /** Held after a comma or full stop. Without it, 62ms/word reads as a ticker. */
 const BREATH_MS = 200;
+/** How long a word takes to come up once it's his turn to say it. */
+const FADE_MS = 90;
+/** How long a bubble takes to arrive. Words wait for it to land. */
+const BUBBLE_MS = 420;
 /** Lead-in before he starts talking, and the pause between the two beats. */
-const OPENING_MS = 260;
+const OPENING_MS = BUBBLE_MS - 100;
 const BEAT_MS = 620;
+/**
+ * A bubble lands with a bounce — it was thrown from his mouth, not faded up.
+ * 0.55 is the overshoot that reads as spoken; anything past ~0.8 arrives dead.
+ */
+const BUBBLE_SPRING = { duration: BUBBLE_MS, dampingRatio: 0.55 } as const;
 
 const styles = StyleSheet.create({
   bubble: { borderCurve: 'continuous' },
@@ -59,34 +74,39 @@ const spokenMs = (text: string) => {
   return o[o.length - 1] + WORD_MS;
 };
 
-/** Reveals a sentence word by word — Flux is speaking it, not printing it. */
-function useSpokenWords(text: string, delay: number, reduced: boolean) {
-  const words = text.split(' ');
-  const [shown, setShown] = useState(0);
+/**
+ * Reveals a sentence word by word — Flux is speaking it, not printing it.
+ *
+ * Every word is laid out from the first frame and only its opacity moves, off
+ * one shared clock on the UI thread. The obvious version — slicing the string
+ * as a counter goes up — is a React render *and* a fresh text measurement per
+ * word, and on a cold start the JS thread is contended enough that those land
+ * late and clumped, which is the stutter this replaces. It also means the
+ * bubble is its final size immediately instead of growing a line at a time.
+ */
+function useSpokenClock(total: number, reduced: boolean) {
+  const clock = useSharedValue(reduced ? total : 0);
 
   useEffect(() => {
-    if (reduced) return;
-    const timers = wordOffsets(words).map((at, i) =>
-      setTimeout(() => setShown(i + 1), delay + at),
+    if (reduced) {
+      clock.set(total);
+      return;
+    }
+    clock.set(0);
+    clock.set(
+      withDelay(OPENING_MS, withTiming(total, { duration: total, easing: Easing.linear }))
     );
-    return () => timers.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, delay, reduced]);
+  }, [clock, reduced, total]);
 
-  return { words, shown: reduced ? words.length : shown };
+  return clock;
 }
 
-/** The count ticks up as he says it, so the number feels arrived-at. */
-function useCountUp(target: number, delay: number, reduced: boolean) {
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    if (reduced) return;
-    const timers = Array.from({ length: target }, (_, i) =>
-      setTimeout(() => setN(i + 1), delay + i * 55),
-    );
-    return () => timers.forEach(clearTimeout);
-  }, [target, delay, reduced]);
-  return reduced ? target : n;
+/** One word, lit when the clock reaches the moment he says it. */
+function SpokenWord({ clock, at, children }: { clock: SharedValue<number>; at: number; children: string }) {
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(clock.get(), [at, at + FADE_MS], [0, 1], 'clamp'),
+  }));
+  return <Animated.Text style={style}>{children}</Animated.Text>;
 }
 
 /** Bubbles arrive from the tail, not by fading in place. */
@@ -97,7 +117,7 @@ function useBubbleIn(delay: number, reduced: boolean) {
       p.set(1);
       return;
     }
-    p.set(withDelay(delay, withSpring(1, { damping: 14, stiffness: 160 })));
+    p.set(withDelay(delay, withSpring(1, BUBBLE_SPRING)));
   }, [delay, reduced, p]);
 
   return useAnimatedStyle(() => ({
@@ -125,28 +145,39 @@ export function CohortCard() {
   const card = useQuery(api.cohort.getWeeklyCohortCard);
   const reduced = useEffectiveReducedMotion();
 
-  const isCount = card?.status === 'count';
+  if (!card || card.status === 'hidden') return null;
+
+  /*
+   * The speech is a separate component so every timer and spring in it starts
+   * when the card actually appears. Run in here, they start at mount — which on
+   * a cold start is while the query is still in flight, so both bubbles finish
+   * springing in unseen and snap into place fully formed the instant the data
+   * lands, with the words only then beginning to arrive behind them.
+   */
+  return <CohortSpeech card={card} reduced={reduced} />;
+}
+
+type Card = FunctionReturnType<typeof api.cohort.getWeeklyCohortCard>;
+
+function CohortSpeech({ card, reduced }: { card: Exclude<Card, { status: 'hidden' }>; reduced: boolean }) {
   const fact =
-    !card || card.status === 'hidden'
-      ? ''
-      : card.status === 'count'
-        ? `campers sat with ${card.emotion} by the fire this week.`
-        : `Others have sat with ${card.emotion} by this fire too.`;
+    card.status === 'count'
+      ? `campers sat with ${card.emotion} by the fire this week.`
+      : `Others have sat with ${card.emotion} by this fire too.`;
   const closer = 'You are not alone.';
 
-  const secondDelay = OPENING_MS + spokenMs(fact) + BEAT_MS;
+  const words = fact.split(' ');
+  const offsets = wordOffsets(words);
+  const said = spokenMs(fact);
   const bubble1 = useBubbleIn(0, reduced);
-  const bubble2 = useBubbleIn(secondDelay, reduced);
-  const { words, shown } = useSpokenWords(fact, OPENING_MS, reduced);
-  const n = useCountUp(card?.status === 'count' ? card.count : 0, OPENING_MS - 60, reduced);
-
-  if (!card || card.status === 'hidden') return null;
+  const bubble2 = useBubbleIn(OPENING_MS + said + BEAT_MS, reduced);
+  const clock = useSpokenClock(said, reduced);
 
   return (
     <View
       className="flex-row gap-1"
       accessibilityRole="text"
-      accessibilityLabel={`${isCount ? `${card.count} ` : ''}${fact} ${closer}`}
+      accessibilityLabel={`${card.status === 'count' ? `${card.count} ` : ''}${fact} ${closer}`}
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
@@ -156,11 +187,32 @@ export function CohortCard() {
 
       <View className="flex-1 gap-2">
         <Animated.View style={bubble1}>
-          <View className="rounded-3xl border border-border/60 bg-surface" style={styles.bubble}>
-            <View className="border-b border-l border-border/60 bg-surface" style={styles.tail} />
+          <View className="rounded-3xl border border-border/65 bg-surface" style={styles.bubble}>
+            <View className="border-b border-l border-border/65 bg-surface" style={styles.tail} />
             <AppText className="px-4 py-4 text-[15px] leading-6 text-foreground">
-              {isCount && <AppText className="font-semibold text-ember">{n} </AppText>}
-              {words.slice(0, shown).join(' ')}
+              {/* The count lands with the last word of the sentence he says it
+               * in — a number still ticking under the next bubble reads as two
+               * things happening rather than one thing being said. */}
+              {card.status === 'count' && (
+                <>
+                  <TextAnimation.Counting
+                    value={card.count}
+                    duration={said}
+                    delay={OPENING_MS}
+                    enabled={!reduced}
+                    weight="semibold"
+                    className="text-[15px] leading-6 text-ember"
+                  />
+                  <AppText> </AppText>
+                </>
+              )}
+              {/* Keyed by the moment it's spoken: offsets strictly increase,
+                * so it identifies a position in a sentence that repeats words. */}
+              {words.map((word, i) => (
+                <SpokenWord key={offsets[i]} clock={clock} at={offsets[i]}>
+                  {i === words.length - 1 ? word : `${word} `}
+                </SpokenWord>
+              ))}
             </AppText>
           </View>
         </Animated.View>

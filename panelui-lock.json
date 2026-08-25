@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "files": {
+    "src/components/ui/text-animation.tsx": {
+      "item": "text-animation",
+      "digest": "sha256:e4ca19721a63c88951c0622f64af9d84a7cb5889fc6ce0f8d0c25018831db610"
+    },
+    "src/lib/cn.ts": {
+      "item": "cn",
+      "digest": "sha256:9304a861c8673bee09e0f12de31773abbde503b02e59dfd74763ddec2e37cf05"
+    },
+    "src/components/ui/text.tsx": {
+      "item": "text",
+      "digest": "sha256:10e2511fa714fa6e708f495d6a2f8e563054d06b92b07d8df3b4748ddbb17fa7"
+    },
+    "src/helpers/hooks/use-direction.ts": {
+      "item": "use-direction",
+      "digest": "sha256:9202d8550abaed8720af42d0320acf51e227fbf23f649b5636fd26475b849867"
+    }
+  },
+  "roots": {
+    "text-animation": [
+      "text-animation",
+      "cn",
+      "text",
+      "use-direction"
+    ]
+  },
+  "legacyFiles": [],
+  "registry": "https://panelui.dev/r"
+}
