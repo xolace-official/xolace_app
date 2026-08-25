@@ -474,8 +474,8 @@ function TextAnimationRotating({
       {/* The sizer. No height, so it contributes nothing but width, and
           invisible, so what it contributes is only a measurement. */}
       <View style={{ height: 0 }} pointerEvents="none" accessibilityElementsHidden>
-        {phrases.map((phrase) => (
-          <Text key={phrase} {...props} className="opacity-0">
+        {phrases.map((phrase, at) => (
+          <Text key={at} {...props} className="opacity-0">
             {phrase}
           </Text>
         ))}
@@ -483,7 +483,7 @@ function TextAnimationRotating({
 
       {phrases.map((phrase, at) => (
         <RotatingPhrase
-          key={phrase}
+          key={at}
           phrase={phrase}
           // The first is laid out in flow and gives the box its height; the
           // rest are stacked over it, so one line is the height whichever
@@ -953,11 +953,17 @@ function TextAnimationScrolling({
   // The window shows `around` either side of the resting value, so the run
   // starts that many steps below zero and ends that many above the target.
   const values = useMemo(() => {
-    const out: number[] = [];
-    for (let i = -around; value + around * step >= i * step; i += 1) {
-      out.push(i * step);
-      if (out.length > 400) break;
+    // A zero or negative step would never terminate the walk below.
+    const size = Math.abs(step) || 1;
+    const floor = -around * size;
+    // Walk down from `value` so the run always contains it exactly, whatever
+    // `value` is relative to `step`, then `around` more above it.
+    const out: number[] = [value];
+    for (let v = value - size; v >= floor && out.length < 400; v -= size) {
+      out.push(v);
     }
+    out.reverse();
+    for (let i = 1; i <= around; i += 1) out.push(value + i * size);
     return out;
   }, [around, step, value]);
 

@@ -96,18 +96,19 @@ const spokenMs = (text: string) => {
  * bubble is its final size immediately instead of growing a line at a time.
  */
 function useSpokenClock(total: number, reduced: boolean) {
-  const clock = useSharedValue(reduced ? total : 0);
+  // The last word starts at total - WORD_MS and fades for FADE_MS, which
+  // outruns a clock that stops at total — it would land short of full opacity.
+  const end = total + FADE_MS;
+  const clock = useSharedValue(reduced ? end : 0);
 
   useEffect(() => {
     if (reduced) {
-      clock.set(total);
+      clock.set(end);
       return;
     }
     clock.set(0);
-    clock.set(
-      withDelay(OPENING_MS, withTiming(total, { duration: total, easing: Easing.linear }))
-    );
-  }, [clock, reduced, total]);
+    clock.set(withDelay(OPENING_MS, withTiming(end, { duration: end, easing: Easing.linear })));
+  }, [clock, reduced, end]);
 
   return clock;
 }
@@ -200,8 +201,7 @@ function CohortSpeech({ card, reduced }: { card: Exclude<Card, { status: 'hidden
       className="flex-row gap-1"
       accessibilityRole="text"
       accessibilityLabel={`${card.status === 'count' ? `${card.count} ` : ''}${fact} ${closer}`}
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
+      accessible
     >
       <View style={styles.flux}>
         <FluxStage w={FLUX_W} h={FLUX_H} reduced={reduced} />

@@ -1,5 +1,6 @@
 import { Children, forwardRef, type ReactElement, type ReactNode } from 'react';
-import { Text as RNText, type Text as RNTextType, type TextProps as RNTextProps } from 'react-native';
+import { type Text as RNTextType, type TextProps as RNTextProps } from 'react-native';
+import { AppText } from '@/src/components/shared/app-text';
 import { tv, type VariantProps } from 'tailwind-variants';
 import { useDirection } from '@/src/helpers/hooks/use-direction';
 
@@ -52,7 +53,7 @@ export const Text = forwardRef<RNTextType, TextProps>(
     const direction = useDirection();
 
     return (
-      <RNText
+      <AppText
         ref={ref}
         className={textVariants({ size, weight, muted, className })}
         style={[{ writingDirection: direction }, style]}
