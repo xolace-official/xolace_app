@@ -12,6 +12,8 @@ import { SegmentedControl } from '@/src/components/shared/segmented-control';
 import { cn } from '@/src/lib/utils';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useChatWarmup } from '../use-chat-warmup';
+import { useConversationRowActions } from '../use-conversation-row-actions';
+import { ChatActionSheet } from './chat-action-sheet';
 import { ChatsList } from './chats-list';
 import { XolacerRoster } from './xolacer-roster';
 import { XolacerSetupBanner } from './xolacer-setup-banner';
@@ -66,6 +68,7 @@ export function ConnectScreen({
   // The Archived view is a filter over the same list, not a route — so it
   // costs nothing to leave and nothing to come back to.
   const [showArchived, setShowArchived] = useState(false);
+  const { sheetFor, setSheetFor, toggleArchive, close } = useConversationRowActions();
 
   // Arriving with a specialty (from a profile's "others listen to this too")
   // snaps to the roster filtered to it; arriving from a notification snaps to
@@ -185,6 +188,8 @@ export function ConnectScreen({
                 archivedCount={archivedChats.length}
                 onToggleArchived={() => setShowArchived((shown) => !shown)}
                 onBrowseXolacers={() => setSelected('xolacers')}
+                onLongPress={setSheetFor}
+                onUnarchive={toggleArchive}
               />
             ) : (
               <XolacerRoster
@@ -196,6 +201,23 @@ export function ConnectScreen({
           </>
         )}
       </ScrollView>
+
+      {/*
+        The action sheet only exists while a row is long-pressed, and it sits
+        out here rather than in the list because Android bottom-aligns it to
+        its parent — inside the scroll view that lands it over the middle of
+        the screen. Close is the xolacer wrapping an open conversation up
+        early, the same `resting` the quiet sweep would reach in 14 days, so it
+        runs on the tap with no confirmation and nothing is lost either way.
+      */}
+      {sheetFor && (
+        <ChatActionSheet
+          conversation={sheetFor}
+          onDismiss={() => setSheetFor(null)}
+          onArchive={() => toggleArchive(sheetFor)}
+          onClose={() => close(sheetFor)}
+        />
+      )}
     </>
   );
 }

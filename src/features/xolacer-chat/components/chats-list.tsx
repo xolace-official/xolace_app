@@ -1,14 +1,10 @@
-import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useMutation } from 'convex/react';
-import { PressableFeedback, useToast } from 'heroui-native';
+import { PressableFeedback } from 'heroui-native';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
-import { playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
-import { setTabBarHidden } from '@/src/lib/tab-bar';
-import { ChatActionSheet } from './chat-action-sheet';
+import { playSoftPress } from '@/src/lib/haptics';
 import { ConversationRow } from './conversation-row';
 
 export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConversations>;
@@ -21,6 +17,9 @@ export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConve
  * Archive is the one thing that does hide a row, and it renders through this
  * same component: `archived` swaps which half of the list it was handed, not
  * which screen you're on.
+ *
+ * The long-press action sheet is deliberately not rendered here — see
+ * `useConversationRowActions` for where it has to live instead.
  */
 export function ChatsList({
   conversations,
@@ -28,56 +27,18 @@ export function ChatsList({
   archivedCount,
   onToggleArchived,
   onBrowseXolacers,
+  onLongPress,
+  onUnarchive,
 }: {
   conversations: ConversationList;
   archived: boolean;
   archivedCount: number;
   onToggleArchived: () => void;
   onBrowseXolacers: () => void;
+  onLongPress: (conversation: ConversationList[number]) => void;
+  onUnarchive: (conversation: ConversationList[number]) => void;
 }) {
   const router = useRouter();
-  const { toast } = useToast();
-  const archiveConversation = useMutation(api.xolacerChat.archiveConversation);
-  const unarchiveConversation = useMutation(api.xolacerChat.unarchiveConversation);
-  const restConversation = useMutation(api.xolacerChat.restConversation);
-  // The long-pressed row, which is also what the action sheet is: the bottom
-  // toolbar only exists while something is selected.
-  const [sheetFor, setSheetFor] = useState<ConversationList[number] | null>(null);
-
-  // The sheet and the floating tab bar are the same strip of screen: left up,
-  // the tab pill sits between Cancel and Archive and swallows the taps under
-  // it. The cleanup also covers navigating away with the sheet still open.
-  useEffect(() => {
-    setTabBarHidden(sheetFor !== null);
-    return () => setTabBarHidden(false);
-  }, [sheetFor]);
-
-  const toggleArchive = (conversation: ConversationList[number]) => {
-    setSheetFor(null);
-    playAffirmativePress();
-    const call = conversation.archived ? unarchiveConversation : archiveConversation;
-    call({ conversationId: conversation.id }).catch((err: unknown) => {
-      console.error('[xolacer-chat] archive toggle failed', err);
-      toast.show({
-        label: conversation.archived ? "Couldn't unarchive" : "Couldn't archive",
-        description: 'Something went wrong. Try again.',
-        variant: 'default',
-      });
-    });
-  };
-
-  const close = (conversation: ConversationList[number]) => {
-    setSheetFor(null);
-    playAffirmativePress();
-    restConversation({ conversationId: conversation.id }).catch((err: unknown) => {
-      console.error('[xolacer-chat] close failed', err);
-      toast.show({
-        label: "Couldn't close",
-        description: 'Something went wrong. Try again.',
-        variant: 'default',
-      });
-    });
-  };
 
   const header = archived ? (
     <PressableFeedback
@@ -156,27 +117,11 @@ export function ChatsList({
           }}
           onLongPress={() => {
             playSoftPress();
-            setSheetFor(conversation);
+            onLongPress(conversation);
           }}
-          onUnarchive={archived ? () => toggleArchive(conversation) : undefined}
+          onUnarchive={archived ? () => onUnarchive(conversation) : undefined}
         />
       ))}
-
-      {/*
-        The action sheet only exists while a row is selected; it renders per
-        platform (toolbar on iOS, bottom sheet on Android). Close is the
-        xolacer wrapping an open conversation up early — the same `resting`
-        the quiet sweep would reach in 14 days, so it runs on the tap with no
-        confirmation and nothing is lost either way.
-      */}
-      {sheetFor && (
-        <ChatActionSheet
-          conversation={sheetFor}
-          onDismiss={() => setSheetFor(null)}
-          onArchive={() => toggleArchive(sheetFor)}
-          onClose={() => close(sheetFor)}
-        />
-      )}
     </View>
   );
 }
