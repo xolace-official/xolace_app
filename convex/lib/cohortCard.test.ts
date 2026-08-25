@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import type { CohortEmotion } from "./cohortCard";
 import {
   COHORT_FLOOR,
   deriveCohortCardState,
@@ -11,7 +12,7 @@ describe("isCohortMatch", () => {
     name: string;
     primary: string;
     secondary?: string;
-    target: string;
+    target: CohortEmotion;
     expected: boolean;
   }> = [
     {

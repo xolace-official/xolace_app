@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import {
+  cohortEmotionValidator,
   deriveCohortCardState,
   isCohortEmotion,
   isCohortMatch,
@@ -35,10 +36,10 @@ export const getWeeklyCohortCard = query({
   args: {},
   returns: v.union(
     v.object({ status: v.literal("hidden") }),
-    v.object({ status: v.literal("warming"), emotion: v.string() }),
+    v.object({ status: v.literal("warming"), emotion: cohortEmotionValidator }),
     v.object({
       status: v.literal("count"),
-      emotion: v.string(),
+      emotion: cohortEmotionValidator,
       count: v.number(),
       weekStart: v.number(),
     }),

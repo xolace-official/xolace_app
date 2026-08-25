@@ -1,3 +1,4 @@
+import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 
 /**
@@ -26,6 +27,16 @@ export type CohortEmotion = (typeof COHORT_EMOTIONS)[number];
 export function isCohortEmotion(e: string): e is CohortEmotion {
   return (COHORT_EMOTIONS as readonly string[]).includes(e);
 }
+
+/**
+ * Returns-validator form of the taxonomy. Derived from the same array so a new
+ * label can't reach the client through a stale `v.string()` — the schema's
+ * record keys can't be narrowed this way (Convex record keys take no literal
+ * union), but every function boundary can.
+ */
+export const cohortEmotionValidator = v.union(
+  ...COHORT_EMOTIONS.map((e) => v.literal(e)),
+);
 
 /**
  * Below this many other campers, no number is shown. Small enough that the
@@ -58,7 +69,7 @@ type CohortMatchInputs = Pick<
  */
 export function isCohortMatch(
   s: CohortMatchInputs,
-  targetEmotion: string,
+  targetEmotion: CohortEmotion,
 ): boolean {
   return s.primaryEmotion === targetEmotion || s.secondaryEmotion === targetEmotion;
 }
