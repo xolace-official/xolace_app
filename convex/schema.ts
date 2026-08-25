@@ -606,7 +606,11 @@ export default defineSchema({
     .index("by_model_version", ["mirrorModelVersion", "confirmationState"])
 
     // Same-day reach guard: "has this profile reached today" in one read.
-    .index("by_profile_gapNamed", ["emotionalProfileId", "gapNamed", "createdAt"]),
+    .index("by_profile_gapNamed", [
+      "emotionalProfileId",
+      "gapNamed",
+      "createdAt",
+    ]),
 
   // ===========================================================
   // 5. SESSION TURNS
@@ -1759,6 +1763,27 @@ export default defineSchema({
     // the feature — those read as direct, and are not backfilled. Carries
     // origin only: never the theme, never anything the user hasn't said yet.
     origin: v.optional(v.union(v.literal("suggestion"), v.literal("direct"))),
+
+    // Per-side "hide this from my list" stamps. Not `status` — archiving is
+    // one party's view of the row and never changes what the other sees.
+    // Read through `isArchivedFor`, which treats any activity landing after
+    // the stamp as un-archiving it: a live conversation silently buried
+    // behind an archive tap is the wrong failure mode for a support app.
+    archivedByUserAt: v.optional(v.number()),
+    archivedByXolacerAt: v.optional(v.number()),
+
+    // Which path put this row into `resting`: the xolacer wrapping it up
+    // early ("manual") or the 14-day quiet sweep ("quiet"). Same state either
+    // way — this only distinguishes them for copy and analytics.
+    restingReason: v.optional(v.union(v.literal("manual"), v.literal("quiet"))),
+
+    // Per-side delete flags, only ever set on a row that closed as `declined`
+    // or `expired` (see `canDelete`). Two flags and not a hard delete so one
+    // side can never destroy the other's copy; once both are set the row is
+    // purged inline. Unlike archive, these do not reverse — a terminal
+    // request row has no activity left to reverse them.
+    deletedByUser: v.optional(v.boolean()),
+    deletedByXolacer: v.optional(v.boolean()),
   })
     // Seeker-side inbox (prefix scan) and pending-request cap counting.
     .index("by_user_and_status", ["userProfileId", "status"])
