@@ -5,6 +5,7 @@ import { useMutation } from 'convex/react';
 import { PressableFeedback, useToast } from 'heroui-native';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
+import { canManualRest } from '@/convex/lib/conversationGating';
 import { AppText } from '@/src/components/shared/app-text';
 import { playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
 import { setTabBarHidden } from '@/src/lib/tab-bar';
@@ -38,6 +39,7 @@ export function ChatsList({
   const { toast } = useToast();
   const archiveConversation = useMutation(api.xolacerChat.archiveConversation);
   const unarchiveConversation = useMutation(api.xolacerChat.unarchiveConversation);
+  const restConversation = useMutation(api.xolacerChat.restConversation);
   // The long-pressed row, which is also what the action sheet is: the bottom
   // toolbar only exists while something is selected.
   const [sheetFor, setSheetFor] = useState<ConversationList[number] | null>(null);
@@ -58,6 +60,19 @@ export function ChatsList({
       console.error('[xolacer-chat] archive toggle failed', err);
       toast.show({
         label: conversation.archived ? "Couldn't unarchive" : "Couldn't archive",
+        description: 'Something went wrong. Try again.',
+        variant: 'default',
+      });
+    });
+  };
+
+  const close = (conversation: ConversationList[number]) => {
+    setSheetFor(null);
+    playAffirmativePress();
+    restConversation({ conversationId: conversation.id }).catch((err: unknown) => {
+      console.error('[xolacer-chat] close failed', err);
+      toast.show({
+        label: "Couldn't close",
         description: 'Something went wrong. Try again.',
         variant: 'default',
       });
@@ -149,8 +164,9 @@ export function ChatsList({
 
       {/*
         The action sheet: a bottom toolbar that only exists while a row is
-        selected. One action today — later tickets (Close, Delete) add their
-        entries here rather than inventing a second menu.
+        selected. Close is the xolacer wrapping an open conversation up early
+        — the same `resting` the quiet sweep would reach in 14 days, so it
+        runs on the tap with no confirmation and nothing is lost either way.
       */}
       {sheetFor && (
         <Stack.Toolbar placement="bottom">
@@ -158,6 +174,11 @@ export function ChatsList({
             Cancel
           </Stack.Toolbar.Button>
           <Stack.Toolbar.Spacer />
+          {canManualRest(sheetFor, sheetFor.role) && (
+            <Stack.Toolbar.Button onPress={() => close(sheetFor)}>
+              Close
+            </Stack.Toolbar.Button>
+          )}
           <Stack.Toolbar.Button onPress={() => toggleArchive(sheetFor)}>
             {sheetFor.archived ? 'Unarchive' : 'Archive'}
           </Stack.Toolbar.Button>

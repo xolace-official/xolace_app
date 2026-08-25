@@ -114,11 +114,34 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
   }
 
   if (conversation.status === 'resting' && conversation.resumable) {
+    // Wrapped up on purpose reads differently from drifted quiet — the door is
+    // equally open either way, but "gone quiet" would misdescribe a deliberate
+    // ending, and on the xolacer's own side it would misdescribe their own tap.
+    const manual = conversation.restingReason === 'manual';
     return (
       <Bar padBottom={padBottom}>
         <Copy>
-          This one&apos;s gone quiet. <Bold>{conversation.counterpartName} is still here</Bold>{' '}
-          — picking it up doesn&apos;t need a new request.
+          {manual ? (
+            conversation.role === 'xolacer' ? (
+              <>
+                You wrapped this one up.{' '}
+                <Bold>Nothing was deleted</Bold> — picking it back up doesn&apos;t need
+                a new request.
+              </>
+            ) : (
+              <>
+                <Bold>{conversation.counterpartName} wrapped this one up</Bold> — nothing
+                to do with you. Everything you wrote is still here, and picking it back
+                up doesn&apos;t need a new request.
+              </>
+            )
+          ) : (
+            <>
+              This one&apos;s gone quiet.{' '}
+              <Bold>{conversation.counterpartName} is still here</Bold> — picking it up
+              doesn&apos;t need a new request.
+            </>
+          )}
         </Copy>
         <Button onPress={handleResume}>Pick this back up</Button>
         <RatePrompt conversation={conversation} />

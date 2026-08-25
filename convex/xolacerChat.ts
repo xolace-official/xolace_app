@@ -45,6 +45,7 @@ import {
   upsertStreamUsers,
 } from "./integrations/stream";
 import {
+  canManualRest,
   canRate,
   declineCooldownUntil,
   hasRealExchange,
@@ -78,6 +79,13 @@ const closedReasonValidator = v.optional(
 const originValidator = v.optional(
   v.union(v.literal("suggestion"), v.literal("direct")),
 );
+/**
+ * Why a `resting` row is resting. Absent on rows that rested before the field
+ * existed, which read the same as `"quiet"` — the sweep is what put them there.
+ */
+const restingReasonValidator = v.optional(
+  v.union(v.literal("manual"), v.literal("quiet")),
+);
 const conversationRowValidator = v.object({
   id: v.id("xolacer_conversations"),
   role: v.union(v.literal("user"), v.literal("xolacer")),
@@ -95,6 +103,7 @@ const conversationRowValidator = v.object({
   counterpartProfileId: v.id("emotional_profiles"),
   counterpartName: v.string(),
   counterpartPhotoUrl: v.optional(v.string()),
+  restingReason: restingReasonValidator,
   /**
    * The other party is in the app right now. Convex, never Stream — Stream
    * owns presence inside an open thread and nowhere else, and this list is
@@ -828,6 +837,7 @@ export const myConversations = query({
           conversation,
           conversation.xolacerProfileId,
         ),
+        restingReason: conversation.restingReason,
         archived: isArchivedFor(conversation, "user"),
       });
     }
@@ -850,6 +860,7 @@ export const myConversations = query({
           conversation.userProfileId,
         ),
         origin: conversation.origin,
+        restingReason: conversation.restingReason,
         archived: isArchivedFor(conversation, "xolacer"),
       });
     }
@@ -877,6 +888,7 @@ export const getConversation = query({
       lastMessageAt: v.optional(v.number()),
       requestedAt: v.number(),
       resumable: v.boolean(),
+      restingReason: restingReasonValidator,
       canRate: v.boolean(),
       myRating: v.optional(v.number()),
       counterpartProfileId: v.id("emotional_profiles"),
@@ -944,6 +956,7 @@ export const getConversation = query({
       lastMessageAt: conversation.lastMessageAt,
       requestedAt: conversation.requestedAt,
       resumable,
+      restingReason: conversation.restingReason,
       canRate: canRate(conversation, role),
       myRating: existingRating?.rating,
       counterpartProfileId,
@@ -1095,7 +1108,10 @@ export const requestConversation = mutation({
         // Profile CTA says "Open chat" here; a request is just a resume — and
         // a resume takes an open slot, so it answers to the same cap.
         await requireOpenSlot(ctx, "seeker", profile._id);
-        await ctx.db.patch(existing._id, { status: "open" });
+        await ctx.db.patch(existing._id, {
+          status: "open",
+          restingReason: undefined,
+        });
         return existing._id;
       }
       // Closed: declined/expired may re-request; xolacer_left may not.
@@ -1352,6 +1368,35 @@ export const declineRequest = mutation({
 });
 
 /**
+ * Wrap an open conversation up early — the same `resting` transition the quiet
+ * sweep reaches on its own, taken deliberately. Nothing new is locked down:
+ * the seeker can still read and send exactly as on a swept row, and either
+ * side can pick it back up through `resumeConversation`.
+ *
+ * `restingReason` is the only difference, and it exists for copy: an
+ * intentional wrap-up shouldn't read as someone having gone quiet on you.
+ */
+export const restConversation = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { conversation, role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    if (!canManualRest(conversation, role)) {
+      throw new Error("This conversation can't be closed");
+    }
+    await ctx.db.patch(args.conversationId, {
+      status: "resting",
+      restingReason: "manual",
+    });
+    return null;
+  },
+});
+
+/**
  * Hide this row from my own list. Either role, any status: archive is a
  * viewer-side preference, not a lifecycle transition, so there is nothing
  * about the conversation itself for it to be gated on.
@@ -1525,6 +1570,9 @@ export const resumeConversation = mutation({
     await ctx.db.patch(args.conversationId, {
       status: "open",
       lastMessageAt: Date.now(),
+      // Cleared with the state it describes: leaving "manual" behind on an
+      // open row would put wrap-up copy on the next quiet sweep.
+      restingReason: undefined,
     });
     return { resumed: true };
   },
@@ -1946,7 +1994,10 @@ export const sweep = internalMutation({
       )
       .take(100);
     for (const conversation of quiet) {
-      await ctx.db.patch(conversation._id, { status: "resting" });
+      await ctx.db.patch(conversation._id, {
+        status: "resting",
+        restingReason: "quiet",
+      });
     }
 
     // Requested but unanswered for 48 hours → closed/expired, and the seeker
