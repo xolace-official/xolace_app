@@ -45,9 +45,8 @@ type CohortMatchInputs = Pick<
  * peer-pool eligibility — so the crisis boundary can't drift between the
  * aggregation cron and the read-time self-exclusion, which both call this.
  *
- * - a recorded, non-crisis safeguardLevel — deliberately not `riskFlag`, which
- *                                  is also true for `elevated` and would
- *                                  over-exclude
+ * - safeguardLevel !== "crisis"  — deliberately not `riskFlag`, which is also
+ *                                  true for `elevated` and would over-exclude
  * - primary OR secondary matches — the fuller shape of what was carried
  *
  * Deliberately says nothing about the viewer: the per-emotion count is one row
@@ -58,18 +57,17 @@ export function isCohortMatch(
   s: CohortMatchInputs,
   targetEmotion: string,
 ): boolean {
-  // An unrecorded verdict is not a safe one. Sessions classified before the
-  // safeguard verdict moved onto this row (nothing after 2026-06-28) have no
-  // level here, and the parent session usually doesn't either — of the legacy
-  // rows on dev, 167/183 sessions were also blank, and 2 of the 3 that weren't
-  // were crisis. Unknowable, so not counted.
+  // Crisis is excluded for meaning, not for safety — the card emits one
+  // integer, so nothing about anyone is surfaced either way. It's that "sat
+  // with sadness by the fire this week" doesn't honestly describe a session
+  // that was in crisis.
   //
-  // Costs nothing live: the cron counts the week that just closed, always well
-  // after that cutover. Only a hand-run `weekOf` backfill of a pre-July-2026
-  // week reaches these rows, and there this is the only honest answer.
-  if (s.safeguardLevel === undefined || s.safeguardLevel === "crisis") {
-    return false;
-  }
+  // Which is why a MISSING level still counts. Rows written before the
+  // safeguard verdict moved onto this table (nothing after 2026-06-28) have no
+  // level, and crisis runs ~1% of all sessions — dropping them all to avoid
+  // miscounting the odd one would undercount by far more than it corrects, on
+  // a card whose entire job is telling someone they aren't alone.
+  if (s.safeguardLevel === "crisis") return false;
   return s.primaryEmotion === targetEmotion || s.secondaryEmotion === targetEmotion;
 }
 

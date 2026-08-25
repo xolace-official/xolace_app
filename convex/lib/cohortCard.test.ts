@@ -69,13 +69,14 @@ describe("isCohortMatch", () => {
       expected: true,
     },
     {
-      // Legacy rows predate the safeguard verdict landing on this table, and
-      // their sessions mostly don't carry it either — unknown is not safe.
-      name: "no safeguard level recorded is excluded",
+      // Legacy rows predate the safeguard verdict landing on this table.
+      // They count: crisis is ~1% of sessions, so excluding every unverdicted
+      // row would undercount far more than it would correct.
+      name: "no safeguard level recorded still counts",
       safeguard: undefined,
       primary: "sadness",
       target: "sadness",
-      expected: false,
+      expected: true,
     },
     {
       name: "crisis on a secondary match is still excluded",
