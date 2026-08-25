@@ -97,7 +97,7 @@ export const getWeeklyCohortCard = query({
           .lt("createdAt", weekStart + WEEK_MS),
       )
       .order("desc")) {
-      if (isCohortMatch(row, undefined, emotion)) {
+      if (isCohortMatch(row, emotion)) {
         countedSelf = true;
         break;
       }

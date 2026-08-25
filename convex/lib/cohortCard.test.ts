@@ -6,14 +6,9 @@ import {
   weekStartUtc,
 } from "./cohortCard";
 
-const VIEWER = "session_viewer" as const;
-const OTHER = "session_other" as const;
-
 describe("isCohortMatch", () => {
   const cases: Array<{
     name: string;
-    sessionId: string;
-    viewerSessionId?: string;
     safeguard?: "none" | "gentle" | "elevated" | "crisis";
     primary: string;
     secondary?: string;
@@ -22,14 +17,12 @@ describe("isCohortMatch", () => {
   }> = [
     {
       name: "match on primary",
-      sessionId: OTHER,
       primary: "sadness",
       target: "sadness",
       expected: true,
     },
     {
       name: "match on secondary",
-      sessionId: OTHER,
       primary: "anger",
       secondary: "sadness",
       target: "sadness",
@@ -37,7 +30,6 @@ describe("isCohortMatch", () => {
     },
     {
       name: "match on neither",
-      sessionId: OTHER,
       primary: "anger",
       secondary: "fear",
       target: "sadness",
@@ -45,32 +37,13 @@ describe("isCohortMatch", () => {
     },
     {
       name: "no secondary, primary misses",
-      sessionId: OTHER,
       primary: "joy",
       target: "sadness",
       expected: false,
     },
-    // viewer exclusion: your own session is never evidence you aren't alone
-    {
-      name: "viewer's own session, otherwise matching",
-      sessionId: VIEWER,
-      viewerSessionId: VIEWER,
-      primary: "sadness",
-      target: "sadness",
-      expected: false,
-    },
-    {
-      name: "no viewer given (aggregation time) counts everything",
-      sessionId: VIEWER,
-      viewerSessionId: undefined,
-      primary: "sadness",
-      target: "sadness",
-      expected: true,
-    },
     // safety rows: crisis only, not elevated
     {
       name: "crisis excluded",
-      sessionId: OTHER,
       safeguard: "crisis",
       primary: "sadness",
       target: "sadness",
@@ -78,7 +51,6 @@ describe("isCohortMatch", () => {
     },
     {
       name: "elevated still counts",
-      sessionId: OTHER,
       safeguard: "elevated",
       primary: "sadness",
       target: "sadness",
@@ -86,7 +58,6 @@ describe("isCohortMatch", () => {
     },
     {
       name: "gentle still counts",
-      sessionId: OTHER,
       safeguard: "gentle",
       primary: "sadness",
       target: "sadness",
@@ -94,7 +65,6 @@ describe("isCohortMatch", () => {
     },
     {
       name: "no safeguard level recorded still counts",
-      sessionId: OTHER,
       safeguard: undefined,
       primary: "sadness",
       target: "sadness",
@@ -102,7 +72,6 @@ describe("isCohortMatch", () => {
     },
     {
       name: "crisis on a secondary match is still excluded",
-      sessionId: OTHER,
       safeguard: "crisis",
       primary: "anger",
       secondary: "sadness",
@@ -116,12 +85,10 @@ describe("isCohortMatch", () => {
       expect(
         isCohortMatch(
           {
-            sessionId: c.sessionId as never,
             safeguardLevel: c.safeguard,
             primaryEmotion: c.primary,
             secondaryEmotion: c.secondary,
           },
-          c.viewerSessionId,
           c.target,
         ),
       ).toBe(c.expected);

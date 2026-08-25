@@ -36,29 +36,27 @@ export const COHORT_FLOOR = 3;
 
 type CohortMatchInputs = Pick<
   Doc<"emotional_metadata">,
-  "sessionId" | "safeguardLevel" | "primaryEmotion" | "secondaryEmotion"
+  "safeguardLevel" | "primaryEmotion" | "secondaryEmotion"
 >;
 
 /**
- * Does this session count toward another camper's weekly cohort for
- * `targetEmotion`? The single owner of the cohort eligibility rule, the same
- * way `isPoolable` owns peer-pool eligibility — so the crisis boundary can't
- * drift between the aggregation cron and the read-time self-exclusion.
+ * Does this session count toward a weekly cohort for `targetEmotion`? The
+ * single owner of the cohort eligibility rule, the same way `isPoolable` owns
+ * peer-pool eligibility — so the crisis boundary can't drift between the
+ * aggregation cron and the read-time self-exclusion, which both call this.
  *
- * - not the viewer's own session   — "you are not alone" can't count you
- * - safeguardLevel !== "crisis"    — deliberately not `riskFlag`, which is also
- *                                    true for `elevated` and would over-exclude
- * - primary OR secondary matches   — the fuller shape of what was carried
+ * - safeguardLevel !== "crisis"  — deliberately not `riskFlag`, which is also
+ *                                  true for `elevated` and would over-exclude
+ * - primary OR secondary matches — the fuller shape of what was carried
  *
- * `viewerSessionId` is undefined at aggregation time (the per-emotion count is
- * shared across every viewer); the viewer is excluded at read time instead.
+ * Deliberately says nothing about the viewer: the per-emotion count is one row
+ * shared by everyone carrying that emotion, so "not me" can't be a predicate
+ * here. It's a subtraction at read time instead — see cohort.ts.
  */
 export function isCohortMatch(
   s: CohortMatchInputs,
-  viewerSessionId: string | undefined,
   targetEmotion: string,
 ): boolean {
-  if (viewerSessionId !== undefined && s.sessionId === viewerSessionId) return false;
   if (s.safeguardLevel === "crisis") return false;
   return s.primaryEmotion === targetEmotion || s.secondaryEmotion === targetEmotion;
 }
@@ -72,11 +70,10 @@ export type CohortCardState =
  * than fabricate or shrink it. Below the floor the card still runs, just
  * without a count.
  */
-export function deriveCohortCardState(
-  count: number,
-  floor: number = COHORT_FLOOR,
-): CohortCardState {
-  return count >= floor ? { type: "count", value: count } : { type: "warming" };
+export function deriveCohortCardState(count: number): CohortCardState {
+  return count >= COHORT_FLOOR
+    ? { type: "count", value: count }
+    : { type: "warming" };
 }
 
 const DAY_MS = 86_400_000;

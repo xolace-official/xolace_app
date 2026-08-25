@@ -70,7 +70,7 @@ export const compute = internalMutation({
 
     for (const row of rows) {
       for (const emotion of COHORT_EMOTIONS) {
-        if (isCohortMatch(row, undefined, emotion)) {
+        if (isCohortMatch(row, emotion)) {
           campers.get(emotion)!.add(row.emotionalProfileId);
         }
       }
