@@ -45,10 +45,10 @@ import {
   type ReactNode,
 } from 'react';
 import { Text as RNText, View, type ViewProps } from 'react-native';
+import { scheduleOnRN } from 'react-native-worklets';
 import Animated, {
   Easing,
   cancelAnimation,
-  runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
@@ -264,20 +264,19 @@ function TextAnimationTyping({
   const still = useStill(useShared('enabled', enabled, true));
 
   const strings = useMemo(() => (typeof text === 'string' ? [text] : text), [text]);
-  const [shown, setShown] = useState(() => (still ? (strings[0] ?? '') : ''));
+  const [shown, setShown] = useState('');
   const [typing, setTyping] = useState(false);
 
   // Held in a ref so the effect below does not restart the whole run every
   // time the caller passes a new inline arrow function.
   const done = useRef(onDone);
-  done.current = onDone;
+  useEffect(() => {
+    done.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
-    if (still) {
-      setShown(strings[0] ?? '');
-      setTyping(false);
-      return;
-    }
+    // Still: nothing to schedule — the render below shows the finished string.
+    if (still) return;
 
     const timers: ReturnType<typeof setTimeout>[] = [];
     let cancelled = false;
@@ -345,8 +344,10 @@ function TextAnimationTyping({
      * wherever typing has got to, on whichever line that is.
      */
     <Text className={className} {...props}>
-      {shown}
-      {caret ? <TypingCaret blinking={!typing} still={still} className={caretClassName} /> : null}
+      {still ? (strings[0] ?? '') : shown}
+      {caret ? (
+        <TypingCaret blinking={still || !typing} still={still} className={caretClassName} />
+      ) : null}
     </Text>
   );
 }
@@ -619,13 +620,12 @@ function TextAnimationCounting({
 
   const format = useFormatter(decimals, formatOptions);
   const progress = useSharedValue(still ? value : from);
-  const [shown, setShown] = useState(() => (still ? value : from));
+  const [shown, setShown] = useState(from);
 
   useEffect(() => {
     if (still) {
       cancelAnimation(progress);
       progress.value = value;
-      setShown(value);
       return;
     }
     progress.value = from;
@@ -649,7 +649,7 @@ function TextAnimationCounting({
   useAnimatedReaction(
     () => Math.round(progress.value * factor) / factor,
     (current, previous) => {
-      if (current !== previous) runOnJS(setShown)(current);
+      if (current !== previous) scheduleOnRN(setShown, current);
     },
     [factor]
   );
@@ -662,7 +662,7 @@ function TextAnimationCounting({
       className={cn('tabular-nums', className)}
       {...props}
     >
-      {format(shown)}
+      {format(still ? value : shown)}
     </Text>
   );
 }

@@ -5,7 +5,7 @@ import { gzipSync } from "node:zlib";
 import { decompressWebhookBody, MAX_UNCOMPRESSED_BYTES } from "./streamGunzip";
 
 const toArrayBuffer = (buf: Buffer): ArrayBuffer =>
-  buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  new Uint8Array(buf).buffer;
 
 describe("decompressWebhookBody", () => {
   it("round-trips a real webhook payload", () => {
