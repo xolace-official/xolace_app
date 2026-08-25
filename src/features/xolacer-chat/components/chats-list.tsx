@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useMutation } from 'convex/react';
 import { PressableFeedback, useToast } from 'heroui-native';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
-import { canManualRest } from '@/convex/lib/conversationGating';
 import { AppText } from '@/src/components/shared/app-text';
 import { playAffirmativePress, playSoftPress } from '@/src/lib/haptics';
 import { setTabBarHidden } from '@/src/lib/tab-bar';
+import { ChatActionSheet } from './chat-action-sheet';
 import { ConversationRow } from './conversation-row';
 
 export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConversations>;
@@ -163,26 +163,19 @@ export function ChatsList({
       ))}
 
       {/*
-        The action sheet: a bottom toolbar that only exists while a row is
-        selected. Close is the xolacer wrapping an open conversation up early
-        — the same `resting` the quiet sweep would reach in 14 days, so it
-        runs on the tap with no confirmation and nothing is lost either way.
+        The action sheet only exists while a row is selected; it renders per
+        platform (toolbar on iOS, bottom sheet on Android). Close is the
+        xolacer wrapping an open conversation up early — the same `resting`
+        the quiet sweep would reach in 14 days, so it runs on the tap with no
+        confirmation and nothing is lost either way.
       */}
       {sheetFor && (
-        <Stack.Toolbar placement="bottom">
-          <Stack.Toolbar.Button onPress={() => setSheetFor(null)}>
-            Cancel
-          </Stack.Toolbar.Button>
-          <Stack.Toolbar.Spacer />
-          {canManualRest(sheetFor, sheetFor.role) && (
-            <Stack.Toolbar.Button onPress={() => close(sheetFor)}>
-              Close
-            </Stack.Toolbar.Button>
-          )}
-          <Stack.Toolbar.Button onPress={() => toggleArchive(sheetFor)}>
-            {sheetFor.archived ? 'Unarchive' : 'Archive'}
-          </Stack.Toolbar.Button>
-        </Stack.Toolbar>
+        <ChatActionSheet
+          conversation={sheetFor}
+          onDismiss={() => setSheetFor(null)}
+          onArchive={() => toggleArchive(sheetFor)}
+          onClose={() => close(sheetFor)}
+        />
       )}
     </View>
   );
