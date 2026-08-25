@@ -4,6 +4,19 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.9.1] - OTA Update (2026-08-25)
+
+### Added
+
+- **Long-press a conversation for quick actions** — Close, Archive, and Delete now live in one bottom action sheet on any Connect row, matched on iOS and Android (Android renders its own Material icons instead of the text labels the toolbar drops there).
+- **Archive a conversation** — hide a row from your main list without touching the other side's copy or the conversation itself; find it again under the new Archived view. Archiving is read-time, not a stored decision: any new activity on the row un-archives it the moment it happens, so nothing can go stale behind an archive you forgot about.
+- **A xolacer can close a conversation on their own terms** — rather than waiting on the 14-day quiet sweep, a xolacer can wrap one up manually from the action sheet. It's the same resting state either way, but the row's chip, subtitle, and the thread's own status bar now say which kind it was — a courtesy sign-off reads differently from a conversation that just went quiet.
+- **Delete a declined or expired request from your own list** — offered only on the two request outcomes that never became a conversation, since a declined or expired row has no channel, message, or rating hanging off it. Deleting is per-side: it clears your copy without touching theirs, and once both sides have deleted, the row is purged outright. Sending a fresh request afterward reopens the same row instead of creating a new one.
+
+### Fixed
+
+- **Status bar style no longer leaks across tabs** — Discovery's header forced light/dark status bar text unconditionally, and since Expo's native tabs keep every tab mounted, that override kept winning even after switching away from Discovery. It's now scoped to whether the tab is actually focused.
+
 ## [1.9.1] - (2026-08-23)
 
 ### Added
