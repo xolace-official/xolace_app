@@ -1,10 +1,14 @@
 import { describe, expect, it } from "bun:test";
 import {
   type BlockPlanRow,
+  bothPartiesDeleted,
+  canDelete,
+  canManualRest,
   canRate,
   DECLINE_COOLDOWN_MS,
   declineCooldownUntil,
   hasRequestExpired,
+  isArchivedFor,
   isAtOpenCap,
   isBlocked,
   isPairBlocked,
@@ -38,8 +42,16 @@ describe("hasRequestExpired", () => {
     // The window the median accept (4h) and the 90th percentile (32h) live in.
     { elapsed: 4 * HOUR, expected: false, label: "the median accept" },
     { elapsed: 32 * HOUR, expected: false, label: "the 90th percentile" },
-    { elapsed: REQUEST_EXPIRY_MS - 1, expected: false, label: "one tick early" },
-    { elapsed: REQUEST_EXPIRY_MS, expected: true, label: "exactly at the span" },
+    {
+      elapsed: REQUEST_EXPIRY_MS - 1,
+      expected: false,
+      label: "one tick early",
+    },
+    {
+      elapsed: REQUEST_EXPIRY_MS,
+      expected: true,
+      label: "exactly at the span",
+    },
     { elapsed: REQUEST_EXPIRY_MS + 1, expected: true, label: "one tick late" },
     // The request that sat pending for four days in production.
     { elapsed: 106 * HOUR, expected: true, label: "four days and change" },
@@ -170,7 +182,12 @@ describe("declineCooldownUntil", () => {
       label: "re-requested, stamp still on the row",
     },
     { status: "open", declinedAt: DECLINED, now: DECLINED + 1, label: "open" },
-    { status: "resting", declinedAt: DECLINED, now: DECLINED + 1, label: "resting" },
+    {
+      status: "resting",
+      declinedAt: DECLINED,
+      now: DECLINED + 1,
+      label: "resting",
+    },
     { now: DECLINED, label: "no row at all" },
   ];
 
@@ -232,8 +249,12 @@ describe("isPairBlocked", () => {
     it(`${c.label}: forward=${c.forward} reverse=${c.reverse} → ${c.expected}`, () => {
       expect(
         isPairBlocked(
-          c.forward === undefined ? undefined : { closedReason: c.forward ?? undefined },
-          c.reverse === undefined ? undefined : { closedReason: c.reverse ?? undefined },
+          c.forward === undefined
+            ? undefined
+            : { closedReason: c.forward ?? undefined },
+          c.reverse === undefined
+            ? undefined
+            : { closedReason: c.reverse ?? undefined },
         ),
       ).toBe(c.expected);
     });
@@ -321,7 +342,13 @@ describe("planBlock", () => {
       close: ["f"],
       label: "only one row present",
     },
-    { forward: { id: "f" }, noop: false, freeze: [], close: ["f"], label: "only one row, requested" },
+    {
+      forward: { id: "f" },
+      noop: false,
+      freeze: [],
+      close: ["f"],
+      label: "only one row, requested",
+    },
     // Retry after a network failure, or a double-tap — no error, no Stream call.
     {
       forward: { id: "f", reason: "blocked", channel: "ch_f" },
@@ -343,7 +370,10 @@ describe("planBlock", () => {
 
   for (const c of cases) {
     it(`${c.label} → noop=${c.noop} freeze=[${c.freeze}] close=[${c.close}]`, () => {
-      const plan = planBlock({ forward: row(c.forward), reverse: row(c.reverse) });
+      const plan = planBlock({
+        forward: row(c.forward),
+        reverse: row(c.reverse),
+      });
       expect(plan.noop).toBe(c.noop);
       expect(plan.channelsToFreeze).toEqual(c.freeze);
       expect(plan.rowsToClose).toEqual(c.close as never[]);
@@ -446,4 +476,123 @@ describe("canRate", () => {
       ).toBe(c.expected);
     });
   }
+});
+
+describe("isArchivedFor", () => {
+  const REQUESTED = 1_000_000;
+  const ARCHIVED = REQUESTED + 1000;
+
+  it("hides the row for the side that archived it, and only that side", () => {
+    const row = { requestedAt: REQUESTED, archivedByUserAt: ARCHIVED };
+    expect(isArchivedFor(row, "user", ARCHIVED + 1)).toBe(true);
+    expect(isArchivedFor(row, "xolacer", ARCHIVED + 1)).toBe(false);
+  });
+
+  it("reads as not archived when nobody archived it", () => {
+    const row = { requestedAt: REQUESTED };
+    expect(isArchivedFor(row, "user", ARCHIVED)).toBe(false);
+    expect(isArchivedFor(row, "xolacer", ARCHIVED)).toBe(false);
+  });
+
+  // The whole point of computing this at read time: activity un-archives.
+  const activity = [
+    { field: "lastMessageAt", label: "a new message" },
+    { field: "acceptedAt", label: "an accept" },
+    { field: "declinedAt", label: "a decline" },
+  ] as const;
+
+  for (const { field, label } of activity) {
+    it(`${label} after the stamp brings the row back`, () => {
+      expect(
+        isArchivedFor(
+          {
+            requestedAt: REQUESTED,
+            archivedByUserAt: ARCHIVED,
+            [field]: ARCHIVED + 1,
+          },
+          "user",
+          ARCHIVED + 2,
+        ),
+      ).toBe(false);
+    });
+
+    it(`${label} before the stamp leaves it archived`, () => {
+      expect(
+        isArchivedFor(
+          {
+            requestedAt: REQUESTED,
+            archivedByUserAt: ARCHIVED,
+            [field]: ARCHIVED - 1,
+          },
+          "user",
+          ARCHIVED + 2,
+        ),
+      ).toBe(true);
+    });
+  }
+
+  // A re-request rewrites `requestedAt`, which is a status change like any other.
+  it("brings the row back when it is re-requested after the stamp", () => {
+    expect(
+      isArchivedFor(
+        { requestedAt: ARCHIVED + 1, archivedByUserAt: ARCHIVED },
+        "user",
+        ARCHIVED + 2,
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("canManualRest", () => {
+  const statuses = ["requested", "open", "resting", "closed"] as const;
+
+  for (const status of statuses) {
+    it(`xolacer, status=${status} → ${status === "open"}`, () => {
+      expect(canManualRest({ status }, "xolacer")).toBe(status === "open");
+    });
+
+    // Seekers have archive; there is no seeker-facing close.
+    it(`seeker, status=${status} → false`, () => {
+      expect(canManualRest({ status }, "user")).toBe(false);
+    });
+  }
+});
+
+describe("canDelete", () => {
+  const statuses = ["requested", "open", "resting", "closed"] as const;
+  const reasons = [
+    undefined,
+    "declined",
+    "expired",
+    "blocked",
+    "xolacer_left",
+  ] as const;
+
+  for (const status of statuses) {
+    for (const closedReason of reasons) {
+      const expected =
+        status === "closed" &&
+        (closedReason === "declined" || closedReason === "expired");
+      it(`status=${status} closedReason=${closedReason} → ${expected}`, () => {
+        expect(canDelete({ status, closedReason })).toBe(expected);
+      });
+    }
+  }
+});
+
+describe("bothPartiesDeleted", () => {
+  it("purges only once both sides are done", () => {
+    expect(
+      bothPartiesDeleted({ deletedByUser: true, deletedByXolacer: true }),
+    ).toBe(true);
+  });
+
+  it("keeps the row while either side still holds a copy", () => {
+    expect(bothPartiesDeleted({ deletedByUser: true })).toBe(false);
+    expect(bothPartiesDeleted({ deletedByXolacer: true })).toBe(false);
+    expect(bothPartiesDeleted({})).toBe(false);
+    expect(
+      bothPartiesDeleted({ deletedByUser: true, deletedByXolacer: false }),
+    ).toBe(false);
+  });
 });

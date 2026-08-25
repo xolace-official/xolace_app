@@ -9,7 +9,14 @@ export function chipFor(
   if (conversation.status === 'requested') {
     return { label: conversation.role === 'xolacer' ? 'New request' : 'Waiting', tone: 'warn' };
   }
-  if (conversation.status === 'resting') return { label: 'Resting', tone: 'muted' };
+  if (conversation.status === 'resting') {
+    // Same state, different story: one was wrapped up on purpose, the other
+    // just went quiet. Absent reason predates the field and reads as quiet.
+    return {
+      label: conversation.restingReason === 'manual' ? 'Wrapped up' : 'Resting',
+      tone: 'muted',
+    };
+  }
   if (conversation.status === 'closed') return { label: 'Closed', tone: 'muted' };
   return null;
 }
@@ -33,7 +40,14 @@ export function subtitleFor(conversation: Conversation): string {
       : `Request sent, ${conversation.counterpartName} will reply when they can`;
   }
   if (conversation.status === 'open') return 'Tap to open your conversation';
-  if (conversation.status === 'resting') return 'Gone quiet, pick it back up anytime';
+  if (conversation.status === 'resting') {
+    if (conversation.restingReason === 'manual') {
+      return conversation.role === 'xolacer'
+        ? 'You wrapped this up, it can still be picked back up'
+        : `${conversation.counterpartName} wrapped this up, pick it back up anytime`;
+    }
+    return 'Gone quiet, pick it back up anytime';
+  }
 
   if (conversation.closedReason === 'declined') {
     return conversation.role === 'xolacer'

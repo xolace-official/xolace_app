@@ -45,10 +45,14 @@ import {
   upsertStreamUsers,
 } from "./integrations/stream";
 import {
+  bothPartiesDeleted,
+  canDelete,
+  canManualRest,
   canRate,
   declineCooldownUntil,
   hasRealExchange,
   hasRequestExpired,
+  isArchivedFor,
   isAtOpenCap,
   isBlocked,
   isPairBlocked,
@@ -77,6 +81,13 @@ const closedReasonValidator = v.optional(
 const originValidator = v.optional(
   v.union(v.literal("suggestion"), v.literal("direct")),
 );
+/**
+ * Why a `resting` row is resting. Absent on rows that rested before the field
+ * existed, which read the same as `"quiet"` — the sweep is what put them there.
+ */
+const restingReasonValidator = v.optional(
+  v.union(v.literal("manual"), v.literal("quiet")),
+);
 const conversationRowValidator = v.object({
   id: v.id("xolacer_conversations"),
   role: v.union(v.literal("user"), v.literal("xolacer")),
@@ -94,6 +105,7 @@ const conversationRowValidator = v.object({
   counterpartProfileId: v.id("emotional_profiles"),
   counterpartName: v.string(),
   counterpartPhotoUrl: v.optional(v.string()),
+  restingReason: restingReasonValidator,
   /**
    * The other party is in the app right now. Convex, never Stream — Stream
    * owns presence inside an open thread and nowhere else, and this list is
@@ -108,6 +120,13 @@ const conversationRowValidator = v.object({
   // Xolacer-side only — the seeker never learns how their own request was
   // stamped. Absent on rows predating the feature, which read as direct.
   origin: originValidator,
+  /**
+   * Hidden from this viewer's default list right now. Carried on the row
+   * rather than filtered out server-side so the default list and the Archived
+   * view are two filters over one subscription — a second query would mean a
+   * second read set for a list that is mounted for the app's lifetime.
+   */
+  archived: v.boolean(),
 });
 
 // Volume cap counts OPEN conversations only — resting/closed free the slot.
@@ -800,6 +819,9 @@ export const myConversations = query({
     const rows = [];
     for (const conversation of asUser) {
       if (isBlocked(conversation.closedReason)) continue;
+      // Deleted by this viewer: gone from every view, Archived included, no
+      // matter what the other party has done with their copy.
+      if (conversation.deletedByUser) continue;
       const xolacer = await getXolacerProfileByProfileId(
         ctx,
         conversation.xolacerProfileId,
@@ -820,10 +842,13 @@ export const myConversations = query({
           conversation,
           conversation.xolacerProfileId,
         ),
+        restingReason: conversation.restingReason,
+        archived: isArchivedFor(conversation, "user"),
       });
     }
     for (const conversation of asXolacer) {
       if (isBlocked(conversation.closedReason)) continue;
+      if (conversation.deletedByXolacer) continue;
       rows.push({
         id: conversation._id,
         role: "xolacer" as const,
@@ -841,6 +866,8 @@ export const myConversations = query({
           conversation.userProfileId,
         ),
         origin: conversation.origin,
+        restingReason: conversation.restingReason,
+        archived: isArchivedFor(conversation, "xolacer"),
       });
     }
 
@@ -867,6 +894,7 @@ export const getConversation = query({
       lastMessageAt: v.optional(v.number()),
       requestedAt: v.number(),
       resumable: v.boolean(),
+      restingReason: restingReasonValidator,
       canRate: v.boolean(),
       myRating: v.optional(v.number()),
       counterpartProfileId: v.id("emotional_profiles"),
@@ -934,6 +962,7 @@ export const getConversation = query({
       lastMessageAt: conversation.lastMessageAt,
       requestedAt: conversation.requestedAt,
       resumable,
+      restingReason: conversation.restingReason,
       canRate: canRate(conversation, role),
       myRating: existingRating?.rating,
       counterpartProfileId,
@@ -1085,7 +1114,10 @@ export const requestConversation = mutation({
         // Profile CTA says "Open chat" here; a request is just a resume — and
         // a resume takes an open slot, so it answers to the same cap.
         await requireOpenSlot(ctx, "seeker", profile._id);
-        await ctx.db.patch(existing._id, { status: "open" });
+        await ctx.db.patch(existing._id, {
+          status: "open",
+          restingReason: undefined,
+        });
         return existing._id;
       }
       // Closed: declined/expired may re-request; xolacer_left may not.
@@ -1113,6 +1145,11 @@ export const requestConversation = mutation({
         closedReason: undefined,
         requestedAt: Date.now(),
         origin,
+        // One side may have deleted their copy of the declined row. A
+        // re-request is a live request again, and a xolacer who never sees it
+        // because they cleared the last one is the worst version of this.
+        deletedByUser: undefined,
+        deletedByXolacer: undefined,
       });
       await captureRequestSent(ctx, profile._id, origin);
       await notifyConversation(
@@ -1342,6 +1379,114 @@ export const declineRequest = mutation({
 });
 
 /**
+ * Wrap an open conversation up early — the same `resting` transition the quiet
+ * sweep reaches on its own, taken deliberately. Nothing new is locked down:
+ * the seeker can still read and send exactly as on a swept row, and either
+ * side can pick it back up through `resumeConversation`.
+ *
+ * `restingReason` is the only difference, and it exists for copy: an
+ * intentional wrap-up shouldn't read as someone having gone quiet on you.
+ */
+export const restConversation = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { conversation, role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    if (!canManualRest(conversation, role)) {
+      throw new Error("This conversation can't be closed");
+    }
+    await ctx.db.patch(args.conversationId, {
+      status: "resting",
+      restingReason: "manual",
+    });
+    return null;
+  },
+});
+
+/**
+ * Hide this row from my own list. Either role, any status: archive is a
+ * viewer-side preference, not a lifecycle transition, so there is nothing
+ * about the conversation itself for it to be gated on.
+ *
+ * Stamping a time rather than setting a flag is what lets `isArchivedFor`
+ * un-hide the row when anything happens on it afterwards — nobody has to
+ * remember to clear this.
+ */
+export const archiveConversation = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    const now = Date.now();
+    await ctx.db.patch(
+      args.conversationId,
+      role === "user" ? { archivedByUserAt: now } : { archivedByXolacerAt: now },
+    );
+    return null;
+  },
+});
+
+/** The undo, from the Archived view. Clears only this viewer's stamp. */
+export const unarchiveConversation = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    await ctx.db.patch(
+      args.conversationId,
+      role === "user"
+        ? { archivedByUserAt: undefined }
+        : { archivedByXolacerAt: undefined },
+    );
+    return null;
+  },
+});
+
+/**
+ * Remove this row from my own list for good — the one action archive isn't,
+ * and only ever on a request that was declined or expired (`canDelete`).
+ *
+ * Per-side, like archive: setting my flag never touches what the other party
+ * sees. Once both flags are set nobody is left who could read the row, so it
+ * is purged here rather than by a sweep — a row that can only be reached by
+ * two people, both of whom said "gone", has nothing to wait for.
+ */
+export const deleteConversation = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { conversation, role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    if (!canDelete(conversation)) {
+      throw new Error("This conversation can't be deleted");
+    }
+    const mine =
+      role === "user" ? { deletedByUser: true } : { deletedByXolacer: true };
+    if (bothPartiesDeleted({ ...conversation, ...mine })) {
+      await ctx.db.delete(args.conversationId);
+      return null;
+    }
+    await ctx.db.patch(args.conversationId, mine);
+    return null;
+  },
+});
+
+/**
  * Participant guard + block plan in query ctx, so the action stays thin.
  * Deliberately no role check: both roles may block. A xolacer's only exit
  * today (`declineRequest`) stops working the moment they accept.
@@ -1468,6 +1613,9 @@ export const resumeConversation = mutation({
     await ctx.db.patch(args.conversationId, {
       status: "open",
       lastMessageAt: Date.now(),
+      // Cleared with the state it describes: leaving "manual" behind on an
+      // open row would put wrap-up copy on the next quiet sweep.
+      restingReason: undefined,
     });
     return { resumed: true };
   },
@@ -1889,7 +2037,10 @@ export const sweep = internalMutation({
       )
       .take(100);
     for (const conversation of quiet) {
-      await ctx.db.patch(conversation._id, { status: "resting" });
+      await ctx.db.patch(conversation._id, {
+        status: "resting",
+        restingReason: "quiet",
+      });
     }
 
     // Requested but unanswered for 48 hours → closed/expired, and the seeker

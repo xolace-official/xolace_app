@@ -189,8 +189,8 @@ export function isAtOpenCap(openCount: number, cap: number): boolean {
 export function hasRealExchange(conversation: RatingInputs): boolean {
   return Boolean(
     conversation.acceptedAt &&
-      conversation.lastMessageAt &&
-      conversation.lastMessageAt > conversation.acceptedAt,
+    conversation.lastMessageAt &&
+    conversation.lastMessageAt > conversation.acceptedAt,
   );
 }
 
@@ -208,4 +208,91 @@ export function canRate(
     !isBlocked(conversation.closedReason) &&
     hasRealExchange(conversation)
   );
+}
+
+type ArchiveInputs = Pick<
+  Conversation,
+  | "archivedByUserAt"
+  | "archivedByXolacerAt"
+  | "requestedAt"
+  | "acceptedAt"
+  | "declinedAt"
+  | "lastMessageAt"
+>;
+
+/**
+ * Is this row hidden from this party's list right now?
+ *
+ * Archive is per-side and computed at read time, the same shape as
+ * `declineCooldownUntil`: the stamp records when they hid it, and anything
+ * that happened after the stamp un-hides it. Activity is every timestamp the
+ * row carries — a message, and the status-change stamps (`requestedAt` is
+ * rewritten on every transition back into `requested`). Deliberately not a
+ * stored boolean the writer has to remember to clear: a new message landing
+ * on an archived conversation must bring it back on its own.
+ */
+export function isArchivedFor(
+  conversation: ArchiveInputs,
+  role: "user" | "xolacer",
+  // Accepted so call sites read like the other read-time gates; archive-ness
+  // is a comparison between stamps, so there is nothing for it to decide.
+  _now?: number,
+): boolean {
+  const archivedAt =
+    role === "user"
+      ? conversation.archivedByUserAt
+      : conversation.archivedByXolacerAt;
+  if (!archivedAt) return false;
+  const activity = Math.max(
+    conversation.requestedAt,
+    conversation.acceptedAt ?? 0,
+    conversation.declinedAt ?? 0,
+    conversation.lastMessageAt ?? 0,
+  );
+  return activity <= archivedAt;
+}
+
+/**
+ * May this party wrap this conversation up early?
+ *
+ * Close is not a new state — it is the xolacer triggering the `resting`
+ * transition the quiet sweep would reach on its own, so it only applies to an
+ * `open` row and only for the xolacer, whose capacity slot `resting` exists to
+ * free. A seeker wanting a row off their list has archive.
+ */
+export function canManualRest(
+  conversation: Pick<Conversation, "status">,
+  role: "user" | "xolacer",
+): boolean {
+  return role === "xolacer" && conversation.status === "open";
+}
+
+/**
+ * May this row be deleted at all?
+ *
+ * Only the two request-stage outcomes that never reached `acceptRequest`:
+ * neither has a Stream channel, message, or rating hanging off it, so
+ * removing one destroys nothing the other party put into it. `resting` and
+ * `open` rows carry a real exchange, and `blocked` is a safety record —
+ * deleting any of those waits on a retention policy that does not exist.
+ */
+export function canDelete(
+  conversation: Pick<Conversation, "status" | "closedReason">,
+): boolean {
+  return (
+    conversation.status === "closed" &&
+    (conversation.closedReason === "declined" ||
+      conversation.closedReason === "expired")
+  );
+}
+
+/**
+ * Is nobody left who can still see this row? The purge condition: delete is a
+ * per-side flag, and only once both sides have set theirs is the row itself
+ * safe to remove.
+ */
+export function bothPartiesDeleted(
+  conversation: Pick<Conversation, "deletedByUser" | "deletedByXolacer">,
+): boolean {
+  return Boolean(conversation.deletedByUser && conversation.deletedByXolacer);
 }

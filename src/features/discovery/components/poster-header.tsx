@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
+import { useIsFocused } from 'expo-router/react-navigation';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppTheme } from '@/src/context/app-theme-context';
@@ -46,12 +47,15 @@ export function PosterHeader() {
   // preferences, not the Clerk account name.
   const summary = useProfileSummary();
   const { isDark } = useAppTheme();
+  // NativeTabs keeps every tab mounted, so an unconditional override here
+  // would keep winning even after the user switches away from Discovery.
+  const isFocused = useIsFocused();
 
   return (
     <View className="overflow-hidden bg-accent" style={styles.field}>
       {/* --accent is dark in light theme and light in dark theme, so the status
           bar content inverts against the app theme on this screen only. */}
-      <StatusBar style={isDark ? 'dark' : 'light'} />
+      {isFocused && <StatusBar style={isDark ? 'dark' : 'light'} />}
 
       <View className="px-6 pb-7" style={{ paddingTop: insets.top + 12 }}>
         <AppText

@@ -30,6 +30,28 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-08-ota-chat-archive-close",
+    label: "OTA Update",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "archivebox.fill", android: "archive" },
+        title: "Archive a conversation",
+        body: "Long-press any conversation in Connect to archive it — it moves out of your list without touching the other side's, and comes back on its own the moment there's new activity.",
+      },
+      {
+        icon: { ios: "moon.fill", android: "bedtime" },
+        title: "Xolacers can close a conversation early",
+        body: "A xolacer can now wrap up a conversation on their own terms, right from the same long-press menu, instead of waiting on it to go quiet.",
+      },
+      {
+        icon: { ios: "trash.fill", android: "delete" },
+        title: "Clear out old requests",
+        body: "A declined or expired request can now be removed from your list — it's gone from your side without affecting theirs.",
+      },
+    ],
+  },
+  {
     id: "1.9.1",
     label: "Version 1.9.1",
     date: "August 2026",
