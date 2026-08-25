@@ -98,6 +98,10 @@ export function ConnectScreen({
   const activeChats = (conversations ?? []).filter((c) => !c.archived);
   const segment: Segment =
     selected ?? (activeChats.length > 0 ? 'chats' : 'xolacers');
+  // The sheet outlives the list it was raised from now that it renders out
+  // here, so leaving Chats — by the segment control or by a notification —
+  // would strand it over the roster with the tab bar still hidden.
+  if (segment !== 'chats' && sheetFor) setSheetFor(null);
 
   if (status && !status.enabled) {
     return (
