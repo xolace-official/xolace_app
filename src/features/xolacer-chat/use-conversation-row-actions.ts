@@ -21,9 +21,14 @@ export function useConversationRowActions() {
   const archiveConversation = useMutation(api.xolacerChat.archiveConversation);
   const unarchiveConversation = useMutation(api.xolacerChat.unarchiveConversation);
   const restConversation = useMutation(api.xolacerChat.restConversation);
+  const deleteConversation = useMutation(api.xolacerChat.deleteConversation);
   // The long-pressed row, which is also what the action sheet is: the bottom
   // toolbar only exists while something is selected.
   const [sheetFor, setSheetFor] = useState<ConversationList[number] | null>(null);
+  // The row Delete was tapped on — and, the same way, what the confirmation
+  // dialog is. Delete is the only one of these that can't be undone, so it is
+  // the only one that asks first.
+  const [deleteFor, setDeleteFor] = useState<ConversationList[number] | null>(null);
 
   // The sheet and the floating tab bar are the same strip of screen: left up,
   // the tab pill sits between Cancel and Archive and swallows the taps under
@@ -60,5 +65,28 @@ export function useConversationRowActions() {
     });
   };
 
-  return { sheetFor, setSheetFor, toggleArchive, close };
+  const confirmDelete = () => {
+    const conversation = deleteFor;
+    if (!conversation) return;
+    setDeleteFor(null);
+    playAffirmativePress();
+    deleteConversation({ conversationId: conversation.id }).catch((err: unknown) => {
+      console.error('[xolacer-chat] delete failed', err);
+      toast.show({
+        label: "Couldn't delete",
+        description: 'Something went wrong. Try again.',
+        variant: 'default',
+      });
+    });
+  };
+
+  return {
+    sheetFor,
+    setSheetFor,
+    toggleArchive,
+    close,
+    deleteFor,
+    setDeleteFor,
+    confirmDelete,
+  };
 }

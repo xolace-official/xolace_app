@@ -8,6 +8,7 @@ import { isSpecialty } from '@/convex/lib/specialties';
 import PersonIcon from '@expo/material-symbols/person.xml';
 import BedtimeIcon from '@expo/material-symbols/bedtime.xml';
 import { AppText } from '@/src/components/shared/app-text';
+import { ConfirmationDialog } from '@/src/components/shared/confirmation-dialog';
 import { SegmentedControl } from '@/src/components/shared/segmented-control';
 import { cn } from '@/src/lib/utils';
 import { playSoftPress } from '@/src/lib/haptics';
@@ -68,7 +69,8 @@ export function ConnectScreen({
   // The Archived view is a filter over the same list, not a route — so it
   // costs nothing to leave and nothing to come back to.
   const [showArchived, setShowArchived] = useState(false);
-  const { sheetFor, setSheetFor, toggleArchive, close } = useConversationRowActions();
+  const { sheetFor, setSheetFor, toggleArchive, close, deleteFor, setDeleteFor, confirmDelete } =
+    useConversationRowActions();
 
   // Arriving with a specialty (from a profile's "others listen to this too")
   // snaps to the roster filtered to it; arriving from a notification snaps to
@@ -221,8 +223,22 @@ export function ConnectScreen({
           onDismiss={() => setSheetFor(null)}
           onArchive={() => toggleArchive(sheetFor)}
           onClose={() => close(sheetFor)}
+          onDelete={() => {
+            setSheetFor(null);
+            setDeleteFor(sheetFor);
+          }}
         />
       )}
+
+      <ConfirmationDialog
+        isOpen={deleteFor !== null}
+        onOpenChange={(open) => !open && setDeleteFor(null)}
+        title="Delete this request?"
+        description="It disappears from your list for good. Their copy stays until they delete it too."
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        isDestructive
+      />
     </>
   );
 }

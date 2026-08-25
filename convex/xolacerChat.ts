@@ -45,6 +45,8 @@ import {
   upsertStreamUsers,
 } from "./integrations/stream";
 import {
+  bothPartiesDeleted,
+  canDelete,
   canManualRest,
   canRate,
   declineCooldownUntil,
@@ -817,6 +819,9 @@ export const myConversations = query({
     const rows = [];
     for (const conversation of asUser) {
       if (isBlocked(conversation.closedReason)) continue;
+      // Deleted by this viewer: gone from every view, Archived included, no
+      // matter what the other party has done with their copy.
+      if (conversation.deletedByUser) continue;
       const xolacer = await getXolacerProfileByProfileId(
         ctx,
         conversation.xolacerProfileId,
@@ -843,6 +848,7 @@ export const myConversations = query({
     }
     for (const conversation of asXolacer) {
       if (isBlocked(conversation.closedReason)) continue;
+      if (conversation.deletedByXolacer) continue;
       rows.push({
         id: conversation._id,
         role: "xolacer" as const,
@@ -1139,6 +1145,11 @@ export const requestConversation = mutation({
         closedReason: undefined,
         requestedAt: Date.now(),
         origin,
+        // One side may have deleted their copy of the declined row. A
+        // re-request is a live request again, and a xolacer who never sees it
+        // because they cleared the last one is the worst version of this.
+        deletedByUser: undefined,
+        deletedByXolacer: undefined,
       });
       await captureRequestSent(ctx, profile._id, origin);
       await notifyConversation(
@@ -1439,6 +1450,38 @@ export const unarchiveConversation = mutation({
         ? { archivedByUserAt: undefined }
         : { archivedByXolacerAt: undefined },
     );
+    return null;
+  },
+});
+
+/**
+ * Remove this row from my own list for good — the one action archive isn't,
+ * and only ever on a request that was declined or expired (`canDelete`).
+ *
+ * Per-side, like archive: setting my flag never touches what the other party
+ * sees. Once both flags are set nobody is left who could read the row, so it
+ * is purged here rather than by a sweep — a row that can only be reached by
+ * two people, both of whom said "gone", has nothing to wait for.
+ */
+export const deleteConversation = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { conversation, role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    if (!canDelete(conversation)) {
+      throw new Error("This conversation can't be deleted");
+    }
+    const mine =
+      role === "user" ? { deletedByUser: true } : { deletedByXolacer: true };
+    if (bothPartiesDeleted({ ...conversation, ...mine })) {
+      await ctx.db.delete(args.conversationId);
+      return null;
+    }
+    await ctx.db.patch(args.conversationId, mine);
     return null;
   },
 });
