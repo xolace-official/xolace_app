@@ -63,6 +63,9 @@ export function ConnectScreen({
   const [filter, setFilter] = useState<string | null>(
     isSpecialty(specialty) ? specialty : null,
   );
+  // The Archived view is a filter over the same list, not a route — so it
+  // costs nothing to leave and nothing to come back to.
+  const [showArchived, setShowArchived] = useState(false);
 
   // Arriving with a specialty (from a profile's "others listen to this too")
   // snaps to the roster filtered to it; arriving from a notification snaps to
@@ -88,8 +91,10 @@ export function ConnectScreen({
   useChatWarmup(conversations, status?.enabled ?? false);
 
   const loading = status === undefined || conversations === undefined;
+  const archivedChats = (conversations ?? []).filter((c) => c.archived);
+  const activeChats = (conversations ?? []).filter((c) => !c.archived);
   const segment: Segment =
-    selected ?? (conversations && conversations.length > 0 ? 'chats' : 'xolacers');
+    selected ?? (activeChats.length > 0 ? 'chats' : 'xolacers');
 
   if (status && !status.enabled) {
     return (
@@ -175,7 +180,10 @@ export function ConnectScreen({
 
             {segment === 'chats' ? (
               <ChatsList
-                conversations={conversations ?? []}
+                conversations={showArchived ? archivedChats : activeChats}
+                archived={showArchived}
+                archivedCount={archivedChats.length}
+                onToggleArchived={() => setShowArchived((shown) => !shown)}
                 onBrowseXolacers={() => setSelected('xolacers')}
               />
             ) : (

@@ -26,9 +26,14 @@ const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } })
 export function ConversationRow({
   conversation,
   onPress,
+  onLongPress,
+  onUnarchive,
 }: {
   conversation: Conversation;
   onPress: () => void;
+  onLongPress?: () => void;
+  /** Present only in the Archived view — the inline way back out of it. */
+  onUnarchive?: () => void;
 }) {
   const acceptRequest = useAction(api.xolacerChat.acceptRequest);
   const declineRequest = useMutation(api.xolacerChat.declineRequest);
@@ -76,6 +81,7 @@ export function ConversationRow({
   return (
     <PressableFeedback
       onPress={onPress}
+      onLongPress={onLongPress}
       accessibilityRole="button"
       accessibilityLabel={`Conversation with ${conversation.counterpartName}${
         conversation.counterpartPresent ? ', here right now' : ''
@@ -168,6 +174,12 @@ export function ConversationRow({
               Decline
             </Button>
           </View>
+        )}
+
+        {onUnarchive && (
+          <Button size="sm" variant="secondary" onPress={onUnarchive}>
+            Unarchive
+          </Button>
         )}
       </View>
     </PressableFeedback>

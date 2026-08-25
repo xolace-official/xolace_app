@@ -49,6 +49,7 @@ import {
   declineCooldownUntil,
   hasRealExchange,
   hasRequestExpired,
+  isArchivedFor,
   isAtOpenCap,
   isBlocked,
   isPairBlocked,
@@ -108,6 +109,13 @@ const conversationRowValidator = v.object({
   // Xolacer-side only — the seeker never learns how their own request was
   // stamped. Absent on rows predating the feature, which read as direct.
   origin: originValidator,
+  /**
+   * Hidden from this viewer's default list right now. Carried on the row
+   * rather than filtered out server-side so the default list and the Archived
+   * view are two filters over one subscription — a second query would mean a
+   * second read set for a list that is mounted for the app's lifetime.
+   */
+  archived: v.boolean(),
 });
 
 // Volume cap counts OPEN conversations only — resting/closed free the slot.
@@ -820,6 +828,7 @@ export const myConversations = query({
           conversation,
           conversation.xolacerProfileId,
         ),
+        archived: isArchivedFor(conversation, "user"),
       });
     }
     for (const conversation of asXolacer) {
@@ -841,6 +850,7 @@ export const myConversations = query({
           conversation.userProfileId,
         ),
         origin: conversation.origin,
+        archived: isArchivedFor(conversation, "xolacer"),
       });
     }
 
@@ -1336,6 +1346,53 @@ export const declineRequest = mutation({
       "chat_declined",
       args.conversationId,
       conversation.userProfileId,
+    );
+    return null;
+  },
+});
+
+/**
+ * Hide this row from my own list. Either role, any status: archive is a
+ * viewer-side preference, not a lifecycle transition, so there is nothing
+ * about the conversation itself for it to be gated on.
+ *
+ * Stamping a time rather than setting a flag is what lets `isArchivedFor`
+ * un-hide the row when anything happens on it afterwards — nobody has to
+ * remember to clear this.
+ */
+export const archiveConversation = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    const now = Date.now();
+    await ctx.db.patch(
+      args.conversationId,
+      role === "user" ? { archivedByUserAt: now } : { archivedByXolacerAt: now },
+    );
+    return null;
+  },
+});
+
+/** The undo, from the Archived view. Clears only this viewer's stamp. */
+export const unarchiveConversation = mutation({
+  args: { conversationId: v.id("xolacer_conversations") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    if (!chatEnabled()) throw new Error("Xolacer chat is not available");
+    const { role } = await requireConversationParticipant(
+      ctx,
+      args.conversationId,
+    );
+    await ctx.db.patch(
+      args.conversationId,
+      role === "user"
+        ? { archivedByUserAt: undefined }
+        : { archivedByXolacerAt: undefined },
     );
     return null;
   },
