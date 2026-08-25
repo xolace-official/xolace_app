@@ -3,6 +3,71 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Conversation delete (2026-08-24)
+
+**Delete** is scoped to `xolacer_conversations` rows the requester never got
+to open — `status: "closed"` with `closedReason` of `"declined"` or
+`"expired"` only. Both close reasons are request-stage outcomes that never
+reach `acceptRequest`, so no Stream channel, message, or rating exists on
+them yet — deleting one destroys nothing the other party has invested in.
+Deleting an `open`, `resting`, or `blocked`/`xolacer_left` row is explicitly
+out of scope until a retention policy for those exists; **archive** (above)
+is the only per-user hide available on a live conversation today.
+
+Delete is a **per-user flag** (`deletedByUser` / `deletedByXolacer`), the
+same shape as archive's per-side visibility, not a row-level hard delete —
+one side deleting a shared request row can never unilaterally destroy the
+other side's copy of it. Unlike archive, delete does **not** reverse on new
+activity — there is none to reverse, since these rows are already terminal.
+Once **both** sides' flags are set, the row is hard-purged from the DB
+inline in the delete mutation itself — no cron, no age-based sweep. This
+mirrors the "nothing references it, so remove it the moment both parties are
+done" instinct behind `sessionCascade`, scoped down to a single row instead
+of a batch job.
+
+## Manual close = early resting (2026-08-24)
+
+**Close**, as a user-facing action, is not a new terminal state. It is the
+**xolacer manually triggering the existing `resting` transition** on an
+`open` conversation before the automatic 14-day-quiet sweep would do it —
+same state, same effect (frees the xolacer's capacity slot), earlier. It is
+**xolacer-only**: `resting` exists to manage the xolacer's own active-load
+cap, and a seeker wanting a conversation off their own list already has
+**archive** for that; there is no seeker-facing "close."
+
+Manually resting a conversation does **not** make it read-only — `resting`
+already lets both sides keep messaging today, and this feature does not
+change that. A genuinely message-blocking close is a different, unbuilt
+feature; do not conflate the two if it's proposed later.
+
+`resting` rows now carry `restingReason: "manual" | "quiet"` so a
+xolacer-initiated wrap-up is distinguishable from the silent 14-day timeout
+in copy and analytics — added now while it's a single free enum value,
+before any `resting` rows exist that would need backfilling.
+
+**Known adjacent risk, explicitly out of scope**: whether a `resting`
+conversation still counts against the xolacer's open-slot cap while
+messaging continues in it — i.e. whether resting-then-messaging lets a
+xolacer exceed their cap — is unconfirmed and not part of this feature.
+Flagged for separate investigation, not blocking here.
+
+## Conversation archive (2026-08-24)
+
+**Archive** is a per-user, per-side visibility flag on `xolacer_conversations` —
+distinct from `status`, which is shared state both parties see identically.
+Archiving hides a row from the archiver's own chats list only; it never
+affects what the other party sees, and there is no "both sides archived"
+merge the way delete has one.
+
+Any status is archivable — `requested`, `open`, `resting`, or `closed` — the
+action means "hide this row from my list," nothing narrower. An archived row
+**un-archives itself** the moment new activity lands on it (a new message, a
+status change) for the party who archived it — it reappears in their active
+list without them having to remember to check an archive tab. This is
+deliberate: this is a support app, and a live conversation silently buried
+behind an archive action is the wrong failure mode. Contrast with **delete**
+(below), which does not reverse on new activity.
+
 ## The two Reaches (2026-08-20)
 
 **Reach**, capital R, is the *notification* concept and has been since Phase 2:
