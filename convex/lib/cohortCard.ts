@@ -45,8 +45,9 @@ type CohortMatchInputs = Pick<
  * peer-pool eligibility — so the crisis boundary can't drift between the
  * aggregation cron and the read-time self-exclusion, which both call this.
  *
- * - safeguardLevel !== "crisis"  — deliberately not `riskFlag`, which is also
- *                                  true for `elevated` and would over-exclude
+ * - a recorded, non-crisis safeguardLevel — deliberately not `riskFlag`, which
+ *                                  is also true for `elevated` and would
+ *                                  over-exclude
  * - primary OR secondary matches — the fuller shape of what was carried
  *
  * Deliberately says nothing about the viewer: the per-emotion count is one row
@@ -57,7 +58,18 @@ export function isCohortMatch(
   s: CohortMatchInputs,
   targetEmotion: string,
 ): boolean {
-  if (s.safeguardLevel === "crisis") return false;
+  // An unrecorded verdict is not a safe one. Sessions classified before the
+  // safeguard verdict moved onto this row (nothing after 2026-06-28) have no
+  // level here, and the parent session usually doesn't either — of the legacy
+  // rows on dev, 167/183 sessions were also blank, and 2 of the 3 that weren't
+  // were crisis. Unknowable, so not counted.
+  //
+  // Costs nothing live: the cron counts the week that just closed, always well
+  // after that cutover. Only a hand-run `weekOf` backfill of a pre-July-2026
+  // week reaches these rows, and there this is the only honest answer.
+  if (s.safeguardLevel === undefined || s.safeguardLevel === "crisis") {
+    return false;
+  }
   return s.primaryEmotion === targetEmotion || s.secondaryEmotion === targetEmotion;
 }
 

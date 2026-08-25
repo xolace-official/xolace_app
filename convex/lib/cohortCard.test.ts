@@ -15,14 +15,17 @@ describe("isCohortMatch", () => {
     target: string;
     expected: boolean;
   }> = [
+    // emotion-matching rows: safeguard held at "none" so only the match varies
     {
       name: "match on primary",
+      safeguard: "none",
       primary: "sadness",
       target: "sadness",
       expected: true,
     },
     {
       name: "match on secondary",
+      safeguard: "none",
       primary: "anger",
       secondary: "sadness",
       target: "sadness",
@@ -30,6 +33,7 @@ describe("isCohortMatch", () => {
     },
     {
       name: "match on neither",
+      safeguard: "none",
       primary: "anger",
       secondary: "fear",
       target: "sadness",
@@ -37,6 +41,7 @@ describe("isCohortMatch", () => {
     },
     {
       name: "no secondary, primary misses",
+      safeguard: "none",
       primary: "joy",
       target: "sadness",
       expected: false,
@@ -64,11 +69,13 @@ describe("isCohortMatch", () => {
       expected: true,
     },
     {
-      name: "no safeguard level recorded still counts",
+      // Legacy rows predate the safeguard verdict landing on this table, and
+      // their sessions mostly don't carry it either — unknown is not safe.
+      name: "no safeguard level recorded is excluded",
       safeguard: undefined,
       primary: "sadness",
       target: "sadness",
-      expected: true,
+      expected: false,
     },
     {
       name: "crisis on a secondary match is still excluded",
