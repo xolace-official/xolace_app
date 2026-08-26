@@ -30,6 +30,30 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-08-ota-mirror-closing-question",
+    label: "OTA Update",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "questionmark.bubble.fill", android: "help" },
+        title: "The mirror asks, instead of just stopping",
+        body: "When Xolace can't quite reach what you mean, it used to just leave it there. Now it ends with a question — sometimes naming something it remembers about you, to check if that's what tonight is about.",
+      },
+    ],
+  },
+  {
+    id: "2026-08-ota-weekly-cohort-card",
+    label: "OTA Update",
+    date: "August 2026",
+    highlights: [
+      {
+        icon: { ios: "flame.fill", android: "local_fire_department" },
+        title: "You are not alone",
+        body: "Once a week, Discovery shows you how many other campers sat with the same feeling you did — a quiet reminder that whatever you're carrying, someone else set it down by this fire too.",
+      },
+    ],
+  },
+  {
     id: "2026-08-ota-chat-archive-close",
     label: "OTA Update",
     date: "August 2026",
