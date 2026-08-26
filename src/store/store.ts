@@ -9,6 +9,11 @@ import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import { zustandJSONStorage } from '@/src/lib/storage/unified-storage';
 import type { Id } from '@/convex/_generated/dataModel';
 import type { TextureSetId } from '@/src/features/reflect/texture-sets';
+import {
+  PLUS_OFFER_DISMISSAL_LIMIT,
+  PLUS_OFFER_FULL_STOP_MS,
+  type PlusOfferMoment,
+} from '@/src/features/purchases/plus-offer-policy';
 
 type ThemeSlice = {
   theme: 'system' | 'light' | 'dark';
@@ -83,6 +88,18 @@ type TogglesSlice = {
   setPendingEventPrompt: (
     prompt: { text: string; label?: string; expiresAt: number } | null,
   ) => void;
+  /**
+   * Proactive Plus offer cadence state — inputs to `choosePlusOffer`. Device-local
+   * like every other frequency cap in this app (resets on reinstall; accepted).
+   * Per-moment last-dismissed epoch ms, keyed by moment id.
+   */
+  plusOfferLastDismissedAt: Partial<Record<PlusOfferMoment, number>>;
+  /** Lifetime dismissals across all proactive surfaces. */
+  plusOfferDismissalCount: number;
+  /** When the 3-strike, 30-day full stop began. */
+  plusOfferFullStopAt: number | null;
+  /** Records a dismissal against one moment and rolls the full stop if it's the third. */
+  recordPlusOfferDismissal: (moment: PlusOfferMoment) => void;
 };
 
 type PreferencesSlice = {
@@ -185,6 +202,33 @@ export const useAppStore = create<AppState>()(
         pendingEventPrompt: null,
         setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
 
+        plusOfferLastDismissedAt: {},
+        plusOfferDismissalCount: 0,
+        plusOfferFullStopAt: null,
+        recordPlusOfferDismissal: (moment) =>
+          set((s) => {
+            const now = Date.now();
+            // A full stop that has run its course clears the slate — otherwise
+            // the very next dismissal would re-trigger it off a stale count.
+            const lapsed =
+              s.plusOfferFullStopAt !== null &&
+              now - s.plusOfferFullStopAt >= PLUS_OFFER_FULL_STOP_MS;
+            const count = (lapsed ? 0 : s.plusOfferDismissalCount) + 1;
+            return {
+              plusOfferLastDismissedAt: {
+                ...s.plusOfferLastDismissedAt,
+                [moment]: now,
+              },
+              plusOfferDismissalCount: count,
+              plusOfferFullStopAt:
+                count >= PLUS_OFFER_DISMISSAL_LIMIT
+                  ? now
+                  : lapsed
+                    ? null
+                    : s.plusOfferFullStopAt,
+            };
+          }),
+
         textureSetId: 'flat',
         setTextureSetId: (id) => set({ textureSetId: id }),
 
@@ -221,6 +265,9 @@ export const useAppStore = create<AppState>()(
           textureSetId: s.textureSetId,
           seenEventIds: s.seenEventIds,
           pendingEventPrompt: s.pendingEventPrompt,
+          plusOfferLastDismissedAt: s.plusOfferLastDismissedAt,
+          plusOfferDismissalCount: s.plusOfferDismissalCount,
+          plusOfferFullStopAt: s.plusOfferFullStopAt,
         }),
       }
     )

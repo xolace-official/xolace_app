@@ -135,6 +135,10 @@ export const update = mutation({
     )),
     notificationTimezone: v.optional(v.string()),
     mirrorTone: v.optional(mirrorToneValidator),
+    // Set-only-true. Sent by a client that saw the user reach for a tone they
+    // don't have — the mutation can't infer that one, since it throws before
+    // the write. A changed `mirrorTone` sets the same flag below.
+    registerComplaint: v.optional(v.boolean()),
     contributeByDefault: v.optional(v.boolean()),
     // Personal memory (Cognition Layer §1.1b). Off = new sessions embed
     // metadata-only into episodic memory.
@@ -198,6 +202,15 @@ export const update = mutation({
     }
 
     if (args.mirrorTone !== undefined) patch.mirrorTone = args.mirrorTone;
+
+    // Changing how the mirror speaks is the register complaint — it's the act,
+    // there is no separate "I don't like the tone" surface. Set-only-true, so
+    // a later switch back doesn't erase the signal.
+    const changedTone =
+      args.mirrorTone !== undefined && args.mirrorTone !== preferences.mirrorTone;
+    if (!preferences.registerComplaint && (changedTone || args.registerComplaint)) {
+      patch.registerComplaint = true;
+    }
     if (args.contributeByDefault !== undefined)
       patch.contributeByDefault = args.contributeByDefault;
     if (args.personalMemoryEnabled !== undefined)
