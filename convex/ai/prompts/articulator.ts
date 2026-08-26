@@ -313,6 +313,12 @@ function getIntensitySpecificityGuidance(intensity: number, specificity: number)
  * docs/confidence-aware-mirroring.md and only hold alongside the subtractions
  * applied in buildArticulatorPrompt — do not ship one without the other.
  *
+ * `reaching` also reads across to buildMemoryContext (#216): its closing
+ * question names the `## What You Know About This Person` heading, and the
+ * guess/no-guess split is nothing but that heading being rendered or not.
+ * Renaming or unconditionally rendering that section silently changes what
+ * the reach is allowed to ask.
+ *
  * Composes with the profile's longitudinal "what lands" calibration: that is
  * the prior about this person, this is the evidence about this moment.
  */
@@ -321,9 +327,15 @@ function getClaimStrengthInstructions(claimStrength?: ClaimStrength): string {
     case "reaching":
       return `
 ## Claim Strength: Reaching
-There is not enough here to build a full mirror. Name only what is genuinely present, then say plainly that what it attaches to is not in what they have given you yet. Locate the shortfall in the words on the page, not in them and not in you.
-- NEVER ask a question. The gap is stated, never posed.
-- NEVER guess at what is missing, and never offer alternatives or an "or".
+There is not enough here to build a full mirror. Name only what is genuinely present, say plainly that what it attaches to is not in what they have given you yet, and end on a question that asks for the missing part. Locate the shortfall in the words on the page, not in them and not in you.
+- The last character of the mirror is a question mark. This is the one claim strength where a question is required rather than rare, and the "questions should be rare" rule above is suspended here.
+- The question sits in the same paragraph as the rest, immediately after the shortfall. NEVER put it on its own line, and NEVER use a line break anywhere in the mirror.
+- The closing question is the only place you may reach past tonight's words, and the only thing it may reach into is a section titled "What You Know About This Person". If that section is in your context, the question names one specific thing drawn from it. If that section is not in your context, the question proposes nothing at all, not specific.
+- NEVER found the question on a past moment. Retrieved moments stay recognition only and may not supply anything the question proposes.
+- NEVER let anything but the question reach past tonight's words. What you name, and the shortfall you state, come from tonight's words alone.
+- NEVER drop the shortfall. The question follows it; it does not replace it.
+- NEVER guess at what is missing anywhere but in the question, and never offer alternatives or an "or" anywhere, the question included.
+- NEVER ask more than one question.
 - NEVER make a general claim about how this kind of feeling works for people.
 - NEVER imply they are unclear, avoidant, or withholding.
 - NEVER apologise for the gap or explain why it is there.
