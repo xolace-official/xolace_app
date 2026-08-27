@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, ViewProps } from "react-native";
 import { Canvas, DashPathEffect, Path, Skia } from "@shopify/react-native-skia";
+import { useThemeColor } from "heroui-native";
 import {
   Easing,
   withRepeat,
@@ -28,13 +29,15 @@ export const AnimatedDashedBorder: React.FC<Props> = ({
   // Anim speed in ms. Lower = faster dash travel. 1500ms chosen to feel calm but noticeable.
   animationSpeed = 1500,
   borderRadius = 8,
-  strokeColor = "#fff",
+  strokeColor,
   direction = "clockwise",
   children,
   style,
   ...props
 }) => {
   const [size, setSize] = useState({ w: 0, h: 0 });
+  const borderColor = useThemeColor("border") as string;
+  const resolvedStrokeColor = strokeColor ?? borderColor;
 
   // Reanimated phase (pixels). Skia's DashPathEffect expects phase in device px along the path.
   // We drive this with a linear, infinite timing to create continuous motion.
@@ -138,7 +141,7 @@ export const AnimatedDashedBorder: React.FC<Props> = ({
           <Path
             path={path}
             style="stroke"
-            color={strokeColor}
+            color={resolvedStrokeColor}
             strokeWidth={strokeWidth}
             // Round joins/caps keep dash ends visually soft at corners.
             strokeJoin="round"
