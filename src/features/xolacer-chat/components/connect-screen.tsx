@@ -21,7 +21,10 @@ import { XolacerSetupBanner } from './xolacer-setup-banner';
 
 type Segment = 'chats' | 'xolacers';
 
-const styles = StyleSheet.create({ borderCurve: { borderCurve: 'continuous' } });
+const styles = StyleSheet.create({
+  borderCurve: { borderCurve: 'continuous' },
+  hidden: { display: 'none' },
+});
 
 
 function SegmentLabel({ label, active }: { label: string; active: boolean }) {
@@ -187,7 +190,15 @@ export function ConnectScreen({
               <XolacerSetupBanner />
             )}
 
-            {segment === 'chats' ? (
+            {/*
+              Both segments stay mounted and the inactive one is hidden rather
+              than unmounted. Unmounting the roster drops its `directory`
+              subscription, so coming back re-subscribes from `undefined` and
+              the list rebuilds itself in front of you. Hidden, both queries
+              stay live — the roster's presence and the chats' unread badges
+              keep updating in the background instead of going stale.
+            */}
+            <View style={segment === 'chats' ? undefined : styles.hidden}>
               <ChatsList
                 conversations={showArchived ? archivedChats : activeChats}
                 archived={showArchived}
@@ -198,13 +209,14 @@ export function ConnectScreen({
                 onOpen={() => setSheetFor(null)}
                 onUnarchive={toggleArchive}
               />
-            ) : (
+            </View>
+            <View style={segment === 'xolacers' ? undefined : styles.hidden}>
               <XolacerRoster
                 conversations={conversations ?? []}
                 filter={filter}
                 onFilterChange={setFilter}
               />
-            )}
+            </View>
           </>
         )}
       </ScrollView>
