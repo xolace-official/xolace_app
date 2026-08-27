@@ -9,9 +9,10 @@ import {
   plusOfferCopy,
   PLUS_OFFER_DECLINE_LABEL,
 } from "@/src/features/purchases/plus-offer-copy";
-import type {
-  PlusOfferMoment,
-  PlusOfferVariant,
+import {
+  plusOfferSurfaceForMoment,
+  type PlusOfferMoment,
+  type PlusOfferVariant,
 } from "@/src/features/purchases/plus-offer-policy";
 import { playSoftPress } from "@/src/lib/haptics";
 import { useAppStore } from "@/src/store/store";
@@ -99,7 +100,7 @@ export const PlusOfferCard = ({
     playSoftPress();
     setDeclined(true);
     posthog.capture("plus_offer_dismissed", { moment, variant });
-    recordDismissal(moment);
+    recordDismissal(plusOfferSurfaceForMoment(moment));
     onDismiss?.();
   };
 

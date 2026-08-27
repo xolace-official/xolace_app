@@ -58,6 +58,7 @@ export function usePlusOffer(
   const decision =
     context && enabled
       ? choosePlusOffer({
+          surface,
           candidates: plusOfferCandidates(surface, {
             1: context.firstSession,
             // Moment 2's condition is the tap the caller just handled, which

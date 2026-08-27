@@ -27,9 +27,9 @@ const WORDS = [
   "seven", "eight", "nine", "ten", "eleven", "twelve",
 ];
 
-/** Copy rule 6 bans numerals in a moment card; spell what we can. */
+/** Copy rule 6 bans numerals in a moment card — never fall back to a digit. */
 function numberWord(n: number): string {
-  return WORDS[n] ?? String(n);
+  return WORDS[n] ?? "many";
 }
 
 /**

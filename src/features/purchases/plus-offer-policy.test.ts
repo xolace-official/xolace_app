@@ -11,6 +11,7 @@ const NOW = 1_700_000_000_000;
 
 const base = (over: Partial<PlusOfferInput> = {}): PlusOfferInput => ({
   candidates: [1],
+  surface: "session_close",
   safeguardActive: false,
   now: NOW,
   ...over,
@@ -62,21 +63,41 @@ describe("choosePlusOffer", () => {
   });
 
   it("holds a dismissed surface for seven days, then offers it again", () => {
-    const dismissed = { lastDismissedAt: { 1: NOW - PLUS_OFFER_COOLDOWN_MS + 1 } };
+    const dismissed = {
+      lastDismissedAt: { session_close: NOW - PLUS_OFFER_COOLDOWN_MS + 1 },
+    };
     expect(choosePlusOffer(base(dismissed))).toEqual({
       show: false,
       reason: "cooldown",
     });
     expect(
-      choosePlusOffer(base({ lastDismissedAt: { 1: NOW - PLUS_OFFER_COOLDOWN_MS } })),
+      choosePlusOffer(
+        base({ lastDismissedAt: { session_close: NOW - PLUS_OFFER_COOLDOWN_MS } }),
+      ),
     ).toEqual({ show: true, moment: 1, variant: "default" });
   });
 
-  // Per-surface, not global: a week of silence on moment 1 says nothing about
-  // moment 3.
-  it("still offers another moment while one surface is cooling down", () => {
+  // The cooldown belongs to the slot, not the moment that happened to win it.
+  // Rotating to the next-ranked moment in the same place is the same ask again.
+  it("silences every moment at a dismissed surface, not just the one dismissed", () => {
     expect(
-      choosePlusOffer(base({ candidates: [1, 3], lastDismissedAt: { 1: NOW } })),
+      choosePlusOffer(
+        base({ candidates: [1, 4, 5], lastDismissedAt: { session_close: NOW } }),
+      ),
+    ).toEqual({ show: false, reason: "cooldown" });
+  });
+
+  // Per-surface, not global: a week of silence on the close slot says nothing
+  // about the profile.
+  it("still offers at another surface while one is cooling down", () => {
+    expect(
+      choosePlusOffer(
+        base({
+          surface: "profile_insight",
+          candidates: [3],
+          lastDismissedAt: { session_close: NOW },
+        }),
+      ),
     ).toEqual({ show: true, moment: 3, variant: "default" });
   });
 
@@ -125,7 +146,7 @@ describe("choosePlusOffer", () => {
           shownLastSession: true,
           dismissalCount: 9,
           fullStopSince: NOW,
-          lastDismissedAt: { 1: NOW },
+          lastDismissedAt: { session_close: NOW },
         }),
       ),
     ).toEqual({ show: true, moment: null, variant: "default" });

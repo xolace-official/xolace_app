@@ -50,7 +50,7 @@ describe("store partialize", () => {
 });
 
 describe("recordPlusOfferDismissal", () => {
-  it("stamps the moment and opens the full stop on the third dismissal", () => {
+  it("stamps the surface and opens the full stop on the third dismissal", () => {
     useAppStore.setState({
       plusOfferLastDismissedAt: {},
       plusOfferDismissalCount: 0,
@@ -58,12 +58,14 @@ describe("recordPlusOfferDismissal", () => {
     });
     const { recordPlusOfferDismissal } = useAppStore.getState();
 
-    recordPlusOfferDismissal(1);
-    expect(useAppStore.getState().plusOfferLastDismissedAt[1]).toBeNumber();
+    recordPlusOfferDismissal("session_close");
+    expect(
+      useAppStore.getState().plusOfferLastDismissedAt.session_close,
+    ).toBeNumber();
     expect(useAppStore.getState().plusOfferFullStopAt).toBeNull();
 
-    recordPlusOfferDismissal(2);
-    recordPlusOfferDismissal(3);
+    recordPlusOfferDismissal("mirror_landed");
+    recordPlusOfferDismissal("profile_insight");
     expect(useAppStore.getState().plusOfferDismissalCount).toBe(3);
     expect(useAppStore.getState().plusOfferFullStopAt).toBeNumber();
   });
@@ -74,7 +76,7 @@ describe("recordPlusOfferDismissal", () => {
       plusOfferDismissalCount: 3,
       plusOfferFullStopAt: Date.now() - 31 * 24 * 60 * 60 * 1000,
     });
-    useAppStore.getState().recordPlusOfferDismissal(1);
+    useAppStore.getState().recordPlusOfferDismissal("session_close");
     expect(useAppStore.getState().plusOfferDismissalCount).toBe(1);
     expect(useAppStore.getState().plusOfferFullStopAt).toBeNull();
   });

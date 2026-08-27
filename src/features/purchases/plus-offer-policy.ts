@@ -11,6 +11,13 @@
 /** The five ranked proactive moments (#220 §5). */
 export type PlusOfferMoment = 1 | 2 | 3 | 4 | 5;
 
+
+/** The three physical places the app may speak first. */
+export type PlusOfferSurface =
+  | "session_close"
+  | "mirror_landed"
+  | "profile_insight";
+
 /** Which pitch the card speaks. `register` is a copy swap, never a trigger. */
 export type PlusOfferVariant = "default" | "register";
 
@@ -41,8 +48,10 @@ export type PlusOfferInput = {
   safeguardActive: boolean;
   /** They tapped the locked thing themselves — never rate-limited (#220 rule 5). */
   userInitiated?: boolean;
-  /** Per-moment last-dismissed epoch ms. */
-  lastDismissedAt?: Partial<Record<PlusOfferMoment, number>>;
+  /** The surface asking. Cooldown is keyed by it, not by moment. */
+  surface: PlusOfferSurface;
+  /** Per-surface last-dismissed epoch ms. */
+  lastDismissedAt?: Partial<Record<PlusOfferSurface, number>>;
   /** Lifetime proactive dismissals across all surfaces. */
   dismissalCount?: number;
   /** When the 30-day full stop started. */
@@ -56,6 +65,7 @@ export type PlusOfferInput = {
 
 export function choosePlusOffer({
   candidates = [],
+  surface,
   safeguardActive,
   userInitiated = false,
   lastDismissedAt = {},
@@ -85,22 +95,18 @@ export function choosePlusOffer({
   if (shownThisSession) return { show: false, reason: "session_cap" };
   if (shownLastSession) return { show: false, reason: "back_to_back" };
 
-  const moment = candidates.find((m) => {
-    const at = lastDismissedAt[m];
-    return at === undefined || now - at >= PLUS_OFFER_COOLDOWN_MS;
-  });
-  if (moment === undefined) {
-    return { show: false, reason: candidates.length ? "cooldown" : "no_candidate" };
+  if (candidates.length === 0) return { show: false, reason: "no_candidate" };
+
+  // Keyed by surface, not by moment: a "no" here is a no to this place, and
+  // rotating to the next-ranked moment in the same slot would be the same ask
+  // wearing a different hat.
+  const dismissedAt = lastDismissedAt[surface];
+  if (dismissedAt !== undefined && now - dismissedAt < PLUS_OFFER_COOLDOWN_MS) {
+    return { show: false, reason: "cooldown" };
   }
 
-  return { show: true, moment, variant };
+  return { show: true, moment: candidates[0], variant };
 }
-
-/** The three physical places the app may speak first. */
-export type PlusOfferSurface =
-  | "session_close"
-  | "mirror_landed"
-  | "profile_insight";
 
 /**
  * Which moments can even be raised at a given surface, in rank order.
@@ -127,4 +133,17 @@ export function plusOfferCandidates(
   conditionMet: Partial<Record<PlusOfferMoment, boolean>>,
 ): PlusOfferMoment[] {
   return SURFACE_MOMENTS[surface].filter((m) => conditionMet[m] === true);
+}
+
+/**
+ * The surface a moment belongs to. Every moment lives at exactly one surface,
+ * so the card can name its own cooldown bucket without every call site
+ * threading a surface prop that the table above already knows.
+ */
+export function plusOfferSurfaceForMoment(
+  moment: PlusOfferMoment,
+): PlusOfferSurface {
+  return (Object.keys(SURFACE_MOMENTS) as PlusOfferSurface[]).find((s) =>
+    SURFACE_MOMENTS[s].includes(moment),
+  )!;
 }

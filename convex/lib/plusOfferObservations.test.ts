@@ -20,6 +20,10 @@ describe("gapObservation", () => {
   it("switches to months once weeks stop being legible", () => {
     expect(gapObservation(62 * DAY)).toBe("Two months since the last one.");
   });
+
+  it("never prints a numeral past the spelled range", () => {
+    expect(gapObservation(500 * DAY)).toBe("Many months since the last one.");
+  });
 });
 
 describe("milestoneObservation", () => {
