@@ -1,13 +1,23 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useRouter } from 'expo-router';
 import { AppText } from '@/src/components/shared/app-text';
+import { PlusOfferCard } from '@/src/features/purchases/components/plus-offer-card';
+import { usePlusOffer } from '@/src/features/purchases/use-plus-offer';
+import { usePaywall } from '@/src/features/purchases/use-paywall';
 import { playPathChoice } from '@/src/lib/haptics';
 
 type Props = {
   mirror: string;
   sessionId: string | null;
+  /**
+   * The mirror this was affirmed on actually named something. False when it
+   * only reached for what the words did not hold, or when the turn cap
+   * collapsed the row so "That's it" was the only thing left to press —
+   * neither is a landing, and moment 2 is only for a landing.
+   */
+  mirrorLanded: boolean;
   onSelectSolo: () => Promise<void>;
   onSelectPeers: () => Promise<void>;
   onSelectExit: () => Promise<void>;
@@ -24,12 +34,23 @@ const SCROLL_STYLE = { flexGrow: 0, maxHeight: '40%' as const };
 export const PathSelectionState = ({
   mirror,
   sessionId,
+  mirrorLanded,
   onSelectSolo,
   onSelectPeers,
   onSelectExit,
 }: Props) => {
   const router = useRouter();
   const busyRef = useRef(false);
+  const openPaywall = usePaywall((s) => s.open);
+  // Moment 2 (#221 §4). This screen IS the beat — the user has just said the
+  // mirror landed. It runs on its own call site rather than waiting for
+  // session end, and spends the same one-offer-per-session budget, so a
+  // session that offers here offers nothing at its close.
+  const [declined, setDeclined] = useState(false);
+  const plusOffer = usePlusOffer('mirror_landed', {
+    enabled: mirrorLanded,
+    sessionId,
+  });
 
   const handleSolo = async () => {
     if (busyRef.current) return;
@@ -99,14 +120,28 @@ export const PathSelectionState = ({
 
   return (
     <View className="flex-1 justify-center px-6">
-      <ScrollView
-        style={SCROLL_STYLE}
-        showsVerticalScrollIndicator={false}
-      >
-        <AppText className="text-base italic leading-7 text-foreground/30">
-          {mirror}
-        </AppText>
-      </ScrollView>
+      {/* The card stands where the faded recap does rather than above it: the
+          path choice below must stay on screen, and stacking a card onto a
+          full-height layout is what pushes it off. */}
+      {plusOffer && !declined ? (
+        <PlusOfferCard
+          moment={plusOffer.moment}
+          variant={plusOffer.variant}
+          observation={plusOffer.observation}
+          sessionId={plusOffer.sessionId}
+          onOpen={() => openPaywall('mirror_landed')}
+          onDismiss={() => setDeclined(true)}
+        />
+      ) : (
+        <ScrollView
+          style={SCROLL_STYLE}
+          showsVerticalScrollIndicator={false}
+        >
+          <AppText className="text-base italic leading-7 text-foreground/30">
+            {mirror}
+          </AppText>
+        </ScrollView>
+      )}
 
       <AppText className="mb-2 mt-10 text-lg text-foreground">
         Where would you like to go from here?

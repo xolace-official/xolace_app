@@ -308,6 +308,13 @@ export default defineSchema({
     // Prevents re-prompting; settings entry is the only other path.
     spaceNamePromptDismissed: v.optional(v.boolean()),
 
+    // Set-once signal that this user cares about register: they changed how the
+    // mirror speaks, or reached for a tone they don't have. Read only at
+    // pitch-selection time — it swaps a proactive Plus offer's copy variant and
+    // never triggers one (#220 rule 6). Never cleared: later picking the
+    // default back doesn't unlearn that they noticed.
+    registerComplaint: v.optional(v.boolean()),
+
     // Daily Quotes feature preferences.
     // Undefined until the user first visits the quotes screen.
     // Nightly cron only processes users where this is defined OR

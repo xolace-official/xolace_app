@@ -9,6 +9,11 @@ import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import { zustandJSONStorage } from '@/src/lib/storage/unified-storage';
 import type { Id } from '@/convex/_generated/dataModel';
 import type { TextureSetId } from '@/src/features/reflect/texture-sets';
+import {
+  createPlusOfferSlice,
+  plusOfferPersistedKeys,
+  type PlusOfferSlice,
+} from './plus-offer-slice';
 
 type ThemeSlice = {
   theme: 'system' | 'light' | 'dark';
@@ -105,7 +110,7 @@ type LastNotificationSlice = {
   clearLastNotification: () => void;
 };
 
-export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & PreferencesSlice & UpdateCheckSlice & LastNotificationSlice;
+export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & PlusOfferSlice & PreferencesSlice & UpdateCheckSlice & LastNotificationSlice;
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -185,6 +190,8 @@ export const useAppStore = create<AppState>()(
         pendingEventPrompt: null,
         setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
 
+        ...createPlusOfferSlice(set),
+
         textureSetId: 'flat',
         setTextureSetId: (id) => set({ textureSetId: id }),
 
@@ -221,6 +228,7 @@ export const useAppStore = create<AppState>()(
           textureSetId: s.textureSetId,
           seenEventIds: s.seenEventIds,
           pendingEventPrompt: s.pendingEventPrompt,
+          ...plusOfferPersistedKeys(s),
         }),
       }
     )

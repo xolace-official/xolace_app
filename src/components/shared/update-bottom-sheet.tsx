@@ -1,5 +1,4 @@
 import * as Linking from 'expo-linking';
-import * as Updates from 'expo-updates';
 import { BottomSheet, Button } from 'heroui-native';
 import type { FC } from 'react';
 import { Platform, View } from 'react-native';
@@ -22,8 +21,8 @@ const CONTENT: Record<UpdateBottomSheetMode, { title: string; description: strin
   },
   'ota-update': {
     title: 'Update Ready',
-    description: 'New updates are ready. The app needs a quick refresh to apply them (no download required).',
-    primaryLabel: 'Refresh Now',
+    description: "New updates are ready. They'll apply automatically the next time you open the app.",
+    primaryLabel: 'Got it',
   },
 };
 
@@ -34,9 +33,13 @@ export const UpdateBottomSheet: FC<Props> = ({ isOpen, onOpenChange, mode }) => 
     if (mode === 'new-version') {
       const storeLink = Platform.select({ ios: APP_STORE_URL, android: PLAY_MARKET_URL });
       if (storeLink) Linking.openURL(storeLink);
-    } else {
-      Updates.reloadAsync();
+      return;
     }
+    // No Updates.reloadAsync() here: the relaunch destroys the JS runtime while pending
+    // JSI promises are still in flight on expo's async-function queue, and their
+    // JavaScriptPromise destructors then deref the dead runtime (EXC_BAD_ACCESS on iOS).
+    // The already-fetched update applies on the next cold start instead.
+    onOpenChange(false);
   };
 
   return (
@@ -55,9 +58,11 @@ export const UpdateBottomSheet: FC<Props> = ({ isOpen, onOpenChange, mode }) => 
             <Button size="lg" onPress={handlePrimaryPress} className="w-full">
               {primaryLabel}
             </Button>
-            <Button variant="tertiary" size="lg" onPress={() => onOpenChange(false)} className="w-full">
-              Later
-            </Button>
+            {mode === 'new-version' && (
+              <Button variant="tertiary" size="lg" onPress={() => onOpenChange(false)} className="w-full">
+                Later
+              </Button>
+            )}
           </View>
         </BottomSheet.Content>
       </BottomSheet.Portal>

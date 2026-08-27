@@ -55,6 +55,12 @@ export const usePreferenceMutation = () =>
       ...(args.spaceName !== undefined && { spaceName: args.spaceName ?? undefined }),
       ...(args.voice !== undefined && { voice: args.voice ?? undefined }),
       ...(args.spaceNamePromptDismissed !== undefined && { spaceNamePromptDismissed: args.spaceNamePromptDismissed }),
+      // Mirrors the server's set-only-true rule, including the tone-change
+      // inference — the flag is never turned back off.
+      ...((args.registerComplaint ||
+        (args.mirrorTone !== undefined && args.mirrorTone !== current.mirrorTone)) && {
+        registerComplaint: true,
+      }),
       ...(mergedNotifications !== undefined && { notifications: mergedNotifications }),
     });
   });

@@ -41,5 +41,5 @@ export function useInsightGate(sessionCount: number) {
     openPaywall(SURFACE[feature]);
   };
 
-  return { isPlus, trackView, open };
+  return { isPlus, isLoading, trackView, open };
 }

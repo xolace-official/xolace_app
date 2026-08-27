@@ -16,6 +16,7 @@ import { PaywallFeatureSection } from "./paywall-feature-section";
 import { PaywallFeatureItem } from "./paywall-feature-item";
 import { PaywallPeriodPicker, type PlanId } from "./paywall-period-picker";
 import { PaywallCta } from "./paywall-cta";
+import { hasFreeTrial, paywallCtaLabel } from "./paywall-cta-label";
 import { PaywallPlansUnavailable } from "./paywall-plans-unavailable";
 import { PaywallCloseButton, PaywallRestoreButton } from "./paywall-header-actions";
 import { ProgressiveBlurView } from "./progressive-blur-view";
@@ -111,7 +112,8 @@ export function PaywallScreen({ surface }: Props) {
       .finally(() => setBusy(false));
   };
 
-  const ctaLabel = selected === "annual" ? "Start with 7 days free" : "Continue";
+  const trialAvailable = hasFreeTrial(selectedPkg);
+  const ctaLabel = paywallCtaLabel(selected, selectedPkg);
 
   return (
     <>
@@ -140,31 +142,31 @@ export function PaywallScreen({ surface }: Props) {
         >
           <PaywallHero />
 
-          <PaywallFeatureSection title="New Level Unlocked">
+          <PaywallFeatureSection title="What starts showing up">
             <PaywallFeatureItem
               id="insights"
               icon={INSIGHTS_ICON}
               title="Pattern & language insights"
-              description="See how your words and intensity shift over time"
+              description="The thing that keeps coming back, the third time instead of the thirtieth"
               isHighlighted={highlightedFeature === "insights"}
             />
             <PaywallFeatureItem
               id="mirror_tone"
               icon={MIRROR_TONE_ICON}
               title="Mirror voice & tone"
-              description="Choose how your reflections are spoken back to you"
+              description="Pick how it says things back — and it stays that way"
               isHighlighted={highlightedFeature === "mirror_tone"}
             />
             <PaywallFeatureItem
               id="quotes"
               icon={QUOTES_ICON}
               title="Personalized quotes"
-              description="Daily language drawn from your own reflections"
+              description="Your own words, handed back on a day you need them"
               isHighlighted={highlightedFeature === "quotes"}
             />
           </PaywallFeatureSection>
 
-          <PaywallFeatureSection title="Make It Yours">
+          <PaywallFeatureSection title="Make it yours">
             <PaywallFeatureItem
               id="themes"
               icon={THEMES_ICON}
@@ -176,13 +178,14 @@ export function PaywallScreen({ surface }: Props) {
               id="avatars"
               icon={AVATARS_ICON}
               title="Custom avatars"
+              description="A face for the fire that isn't the default one"
               isHighlighted={highlightedFeature === "avatars"}
             />
             <PaywallFeatureItem
               id="timeline"
               icon={TIMELINE_ICON}
               title="Extended timeline"
-              description="Your whole history, not just the recent window"
+              description="Every day, not just the recent ones"
               isHighlighted={highlightedFeature === "timeline"}
             />
             <PaywallFeatureItem
@@ -214,6 +217,7 @@ export function PaywallScreen({ surface }: Props) {
                 annual={priceOf(annualPkg, "annual")}
                 monthly={priceOf(monthlyPkg, "monthly")}
                 discountPercent={discountPercent}
+                hasFreeTrial={trialAvailable}
                 selected={selected}
                 onSelect={setSelected}
               />

@@ -16,6 +16,8 @@ import { WeekIntensityCard } from "@/src/features/profile/components/week-intens
 import { WordsTeaserCard } from "@/src/features/profile/components/words-teaser-card";
 import { WordsTeaserEmpty } from "@/src/features/profile/components/words-teaser-empty";
 import { FollowUpsSection } from "@/src/features/profile/components/follow-ups-section";
+import { PlusRow } from "@/src/features/profile/components/plus-row";
+import { PlusInsightOffer } from "@/src/features/profile/components/plus-insight-offer";
 import { AvatarPickerSheet } from "@/src/features/profile/components/avatar-picker-sheet";
 import { useProfileSummary } from "@/src/features/profile/hooks/use-profile-summary";
 import { useMoodDelta } from "@/src/features/profile/hooks/use-mood-delta";
@@ -115,6 +117,11 @@ export function ProfileScreen() {
           />
         )}
 
+        {/* A standing door, never rate-limited — but pointless once they're in.
+            `isPlus` is false while entitlement resolves, so waiting on the read
+            keeps a subscriber from watching an upsell mount and disappear. */}
+        {!gate.isLoading && !gate.isPlus && <PlusRow staggerDelay={160} />}
+
         {hasEnoughForChips && summary && (
           <EmotionChips tags={summary.dominantEmotionTags} staggerDelay={180} />
         )}
@@ -189,7 +196,10 @@ export function ProfileScreen() {
           </View>
         )}
 
+        <PlusInsightOffer />
+
         <FollowUpsSection staggerDelay={480} />
+
       </ScrollView>
 
       <AvatarPickerSheet

@@ -31,4 +31,53 @@ describe("store partialize", () => {
     );
     expect(persisted).toContain("ventIntroSeen");
   });
+
+  // The whole point of the cooldown is that a "no" survives a relaunch.
+  it("plus offer cadence state is persisted", () => {
+    const state = useAppStore.getState();
+    const persisted = Object.keys(
+      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
+        .persist.getOptions()
+        .partialize(state),
+    );
+    expect(persisted).toContain("plusOfferLastDismissedAt");
+    expect(persisted).toContain("plusOfferDismissalCount");
+    expect(persisted).toContain("plusOfferFullStopAt");
+    // "Never two sessions in a row" is only enforceable if the id survives a
+    // relaunch — the app is routinely closed between one session and the next.
+    expect(persisted).toContain("plusOfferShownSessionId");
+  });
+});
+
+describe("recordPlusOfferDismissal", () => {
+  it("stamps the surface and opens the full stop on the third dismissal", () => {
+    useAppStore.setState({
+      plusOfferLastDismissedAt: {},
+      plusOfferDismissalCount: 0,
+      plusOfferFullStopAt: null,
+    });
+    const { recordPlusOfferDismissal } = useAppStore.getState();
+
+    recordPlusOfferDismissal("session_close");
+    expect(
+      useAppStore.getState().plusOfferLastDismissedAt.session_close,
+    ).toBeNumber();
+    expect(useAppStore.getState().plusOfferFullStopAt).toBeNull();
+
+    recordPlusOfferDismissal("mirror_landed");
+    recordPlusOfferDismissal("profile_insight");
+    expect(useAppStore.getState().plusOfferDismissalCount).toBe(3);
+    expect(useAppStore.getState().plusOfferFullStopAt).toBeNumber();
+  });
+
+  it("starts the count over once a full stop has run its course", () => {
+    useAppStore.setState({
+      plusOfferLastDismissedAt: {},
+      plusOfferDismissalCount: 3,
+      plusOfferFullStopAt: Date.now() - 31 * 24 * 60 * 60 * 1000,
+    });
+    useAppStore.getState().recordPlusOfferDismissal("session_close");
+    expect(useAppStore.getState().plusOfferDismissalCount).toBe(1);
+    expect(useAppStore.getState().plusOfferFullStopAt).toBeNull();
+  });
 });

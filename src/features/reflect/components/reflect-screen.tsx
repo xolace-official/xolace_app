@@ -241,6 +241,11 @@ export const ReflectScreen = () => {
           <PathSelectionState
             mirror={mirrorText ?? ""}
             sessionId={sessionId}
+            mirrorLanded={
+              claimStrength !== "reaching" &&
+              claimStrength !== "holding" &&
+              turnsCount < MAX_TURNS
+            }
             onSelectSolo={handleSelectSolo}
             onSelectPeers={handleSelectPeers}
             onSelectExit={handleSelectExit}

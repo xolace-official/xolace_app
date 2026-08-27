@@ -132,15 +132,16 @@ export function XolacerRoster({
               <View className="flex-1 min-w-0 gap-1">
                 <View className="flex-row items-center gap-1.5">
                   <AppText
+                    numberOfLines={1}
                     className={cn(
-                      'text-sm font-semibold',
+                      'shrink text-sm font-semibold',
                       xolacer.atCapacity ? 'text-muted' : 'text-foreground',
                     )}
                   >
                     {xolacer.displayName}
                   </AppText>
                   {talking && (
-                    <View className="rounded-full bg-success/15 px-2 py-0.5">
+                    <View className="shrink-0 rounded-full bg-success/15 px-2 py-0.5">
                       <AppText className="text-[10px] font-semibold uppercase tracking-wide text-success">
                         Talking
                       </AppText>
@@ -148,7 +149,7 @@ export function XolacerRoster({
                   )}
                   {/* Scores share one right-hand column so the eye reads down
                       it instead of hunting; capacity outranks the score. */}
-                  <View className="ml-auto pl-2">
+                  <View className="ml-auto shrink-0 pl-2">
                     {xolacer.atCapacity ? (
                       <View className="rounded-full bg-surface-tertiary px-2 py-0.5">
                         <AppText className="text-[10px] font-semibold uppercase tracking-wide text-muted">

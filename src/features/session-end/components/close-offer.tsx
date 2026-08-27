@@ -10,6 +10,9 @@ import { AppText } from "@/src/components/shared/app-text";
 import { BridgeCard } from "@/src/features/session-end/components/bridge-card";
 import { SuggestionCard } from "@/src/features/session-end/components/suggestion-card";
 import { chooseCloseOffer } from "@/src/features/session-end/close-offer-rule";
+import { PlusOfferCard } from "@/src/features/purchases/components/plus-offer-card";
+import { usePlusOffer } from "@/src/features/purchases/use-plus-offer";
+import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { playSoftPress } from "@/src/lib/haptics";
 import { useAppStore } from "@/src/store/store";
 
@@ -60,6 +63,10 @@ export const CloseOffer = ({
     sessionId ? { sessionId } : "skip",
   );
   const shownRef = useRef(false);
+  const openPaywall = usePaywall((s) => s.open);
+  // Moments 1, 4 and 5 all land here; which one (if any) is the policy
+  // module's call, not this component's.
+  const plusOffer = usePlusOffer("session_close", { sessionId });
 
   useEffect(() => {
     if (!suggestion || shownRef.current) return;
@@ -83,6 +90,7 @@ export const CloseOffer = ({
     hasSession: sessionId !== undefined,
     suggestion,
     waitedOut,
+    plusOffer: plusOffer !== null,
     bridgeEnabled,
     hasMirrorText: mirrorText != null,
   });
@@ -120,6 +128,25 @@ export const CloseOffer = ({
               },
             });
           }}
+        />
+      </EaseView>
+    );
+  }
+
+  if (offer === "plus" && plusOffer) {
+    return (
+      <EaseView
+        initialAnimate={CARD_HIDDEN}
+        animate={CARD_SHOWN}
+        transition={CARD_ARRIVAL}
+        className="w-full"
+      >
+        <PlusOfferCard
+          moment={plusOffer.moment}
+          variant={plusOffer.variant}
+          observation={plusOffer.observation}
+          sessionId={plusOffer.sessionId}
+          onOpen={() => openPaywall("session_close")}
         />
       </EaseView>
     );

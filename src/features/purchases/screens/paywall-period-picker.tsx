@@ -13,6 +13,12 @@ type Props = {
   monthly: PlanPrice;
   /** Whole-number percent saved by choosing annual over monthly, e.g. 58. */
   discountPercent: number | null;
+  /**
+   * Whether the *selected* package actually carries a free week. Same gate as
+   * the CTA label — the badge is a trial claim too, and an ungated one would
+   * promise a free week the CTA underneath it refuses to.
+   */
+  hasFreeTrial: boolean;
   selected: PlanId;
   onSelect: (plan: PlanId) => void;
 };
@@ -23,7 +29,14 @@ type Props = {
  * grid — there's only one product tier, so the segment itself carries the
  * period choice instead of duplicating it across cards.
  */
-export function PaywallPeriodPicker({ annual, monthly, discountPercent, selected, onSelect }: Props) {
+export function PaywallPeriodPicker({
+  annual,
+  monthly,
+  discountPercent,
+  hasFreeTrial,
+  selected,
+  onSelect,
+}: Props) {
   const accentForeground = useThemeColor("accent-foreground") as string;
   const current = selected === "annual" ? annual : monthly;
 
@@ -85,7 +98,7 @@ export function PaywallPeriodPicker({ annual, monthly, discountPercent, selected
           <AppText className="text-[15px] font-semibold text-foreground">{current.price}</AppText>
           <AppText className="text-[12px] text-muted mt-0.5">{current.detail}</AppText>
         </View>
-        {selected === "annual" && (
+        {selected === "annual" && hasFreeTrial && (
           <View className="rounded-full bg-accent/12 px-2.5 py-1" style={styles.borderCurve}>
             <AppText className="text-[11px] font-medium text-accent">7-day free trial</AppText>
           </View>

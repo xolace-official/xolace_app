@@ -16,7 +16,13 @@ export type PaywallSurface =
   | "mirror_tone"
   | "mirror_voice"
   | "daily_quote"
-  | "bridge_draft";
+  | "bridge_draft"
+  // The three proactive moments (#220 §5). Distinct from the reactive surfaces
+  // above so the funnel can tell an offer the app made from a door the user
+  // opened; the `moment` id rides on the card's own events.
+  | "session_close"
+  | "mirror_landed"
+  | "profile_insight";
 
 type PaywallState = {
   open: (surface: PaywallSurface) => void;

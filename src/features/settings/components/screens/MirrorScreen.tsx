@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
 });
 
 export const MirrorScreen = () => {
-  const { mirrorTone, setMirrorTone } = useMirrorSettings();
+  const { mirrorTone, setMirrorTone, flagRegisterComplaint } = useMirrorSettings();
   const { isPlus, isLoading: isPlusLoading } = usePlusEntitlement();
   const openPaywall = usePaywall((s) => s.open);
   const muted = useThemeColor("muted");
@@ -69,6 +69,7 @@ export const MirrorScreen = () => {
   const handleValueChange = (value: string) => {
     const opt = TONE_OPTIONS.find((o) => o.value === value);
     if (opt?.premium && !isPlus && !isPlusLoading) {
+      flagRegisterComplaint();
       openPaywall("mirror_tone");
       return;
     }

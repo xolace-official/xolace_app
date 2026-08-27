@@ -18,5 +18,11 @@ export const useMirrorSettings = () => {
     updatePreferences({ mirrorTone: tone });
   };
 
-  return { mirrorTone, mirrorToneDisplay, setMirrorTone };
+  /**
+   * They reached for a tone they don't have. The mutation can't infer this one
+   * — it throws before the write — so the register signal is sent explicitly.
+   */
+  const flagRegisterComplaint = () => updatePreferences({ registerComplaint: true });
+
+  return { mirrorTone, mirrorToneDisplay, setMirrorTone, flagRegisterComplaint };
 };
