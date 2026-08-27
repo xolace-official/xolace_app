@@ -20,12 +20,17 @@ export function useOtaUpdate({
 }: UseOtaUpdateOptions) {
   const { isUpdateAvailable } = Updates.useUpdates();
   const appState = useRef(AppState.currentState);
+  // isUpdateAvailable stays true once an update is downloaded, and nothing relaunches
+  // the app to clear it, so without this the sheet reopens on every foreground.
+  const hasNotified = useRef(false);
 
   const handleUpdate = useCallback(async () => {
     if (!isUpdateAvailable || !isVersionChecked || isNewVersionAvailable) return;
+    if (hasNotified.current) return;
 
     try {
       await Updates.fetchUpdateAsync();
+      hasNotified.current = true;
       onUpdateReady();
     } catch (error) {
       console.log('[useOtaUpdate] Failed to fetch update:', error);
