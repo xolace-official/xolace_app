@@ -28,12 +28,20 @@ const RATE_OPTIONS = {
  * Same dismissal feel as the rating sheet, but opened at full height: every
  * field (photo, name, bio, specialties, listed) is reachable immediately
  * instead of behind a manual drag, and Cancel/Save live in the native header.
+ *
+ * Android gets a plain pushed screen: a formSheet there is a Material bottom
+ * sheet, which renders no native header — so the title and the Cancel/Save
+ * toolbar had nowhere to go and simply vanished.
  */
 const EDIT_PROFILE_OPTIONS = {
   headerShown: true,
-  presentation: "formSheet" as const,
-  sheetAllowedDetents: [1],
-  sheetCornerRadius: 28,
+  ...(process.env.EXPO_OS === "ios"
+    ? {
+        presentation: "formSheet" as const,
+        sheetAllowedDetents: [1],
+        sheetCornerRadius: 28,
+      }
+    : null),
 };
 
 
