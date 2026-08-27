@@ -31,4 +31,9 @@ export const PAYWALL_SURFACE_FEATURE: Record<PaywallSurface, PaywallFeatureId | 
   bridge_draft: "caps",
   settings_row: null,
   profile_row: null,
+  // Every proactive moment sells the same capability — the thing that keeps
+  // coming back, shown early — so they all highlight the insights row.
+  session_close: "insights",
+  mirror_landed: "insights",
+  profile_insight: "insights",
 };

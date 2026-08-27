@@ -6,12 +6,13 @@
  * not creep back in — the Bridge gate passes on nearly every session, so
  * preferring it would mean the suggestion never appears for anyone.
  */
-export type CloseOffer = "pending" | "suggestion" | "bridge" | "none";
+export type CloseOffer = "pending" | "suggestion" | "plus" | "bridge" | "none";
 
 export function chooseCloseOffer({
   hasSession,
   suggestion,
   waitedOut,
+  plusOffer = false,
   bridgeEnabled,
   hasMirrorText,
 }: {
@@ -24,6 +25,12 @@ export function chooseCloseOffer({
    * back to the Bridge card instead of showing nothing at all.
    */
   waitedOut?: boolean;
+  /**
+   * A proactive Plus moment (1, 4 or 5) has cleared the policy module for this
+   * close. Competes in this slot rather than adding a card — the invariant is
+   * one offer, and a sell stacked on top of an offer is two.
+   */
+  plusOffer?: boolean;
   bridgeEnabled: boolean;
   hasMirrorText: boolean;
 }): CloseOffer {
@@ -32,6 +39,10 @@ export function chooseCloseOffer({
   // problem, only sequenced.
   if (hasSession && suggestion === undefined && !waitedOut) return "pending";
   if (suggestion) return "suggestion";
+  // Plus outranks Bridge and loses to a suggestion (#220 §6): a stranger who
+  // might help beats a purchase, and a purchase beats a card the user sees at
+  // the close of nearly every session anyway.
+  if (plusOffer) return "plus";
   if (bridgeEnabled && hasMirrorText) return "bridge";
   return "none";
 }

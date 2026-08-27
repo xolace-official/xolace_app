@@ -95,3 +95,36 @@ export function choosePlusOffer({
 
   return { show: true, moment, variant };
 }
+
+/** The three physical places the app may speak first. */
+export type PlusOfferSurface =
+  | "session_close"
+  | "mirror_landed"
+  | "profile_insight";
+
+/**
+ * Which moments can even be raised at a given surface, in rank order.
+ *
+ * Moments 1/4/5 all land in the session-end slot, so they compete there and
+ * nowhere else; 2 fires mid-session and 3 on the profile. Kept here rather
+ * than at the call sites so "which moment belongs where" is one table instead
+ * of three conditionals that can drift apart.
+ */
+const SURFACE_MOMENTS: Record<PlusOfferSurface, PlusOfferMoment[]> = {
+  session_close: [1, 4, 5],
+  mirror_landed: [2],
+  profile_insight: [3],
+};
+
+/**
+ * Narrows a surface's moments to the ones whose data condition actually holds,
+ * preserving the #220 §5 ranking. Separate from `choosePlusOffer` because this
+ * answers "what is true right now" and that answers "may we speak" — the
+ * cadence rules must not be re-derivable from a call site's own conditions.
+ */
+export function plusOfferCandidates(
+  surface: PlusOfferSurface,
+  conditionMet: Partial<Record<PlusOfferMoment, boolean>>,
+): PlusOfferMoment[] {
+  return SURFACE_MOMENTS[surface].filter((m) => conditionMet[m] === true);
+}

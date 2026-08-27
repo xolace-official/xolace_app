@@ -3,6 +3,7 @@ import {
   choosePlusOffer,
   PLUS_OFFER_COOLDOWN_MS,
   PLUS_OFFER_FULL_STOP_MS,
+  plusOfferCandidates,
   type PlusOfferInput,
 } from "./plus-offer-policy";
 
@@ -145,5 +146,25 @@ describe("choosePlusOffer", () => {
     expect(
       choosePlusOffer(base({ registerComplaint: true, shownThisSession: true })),
     ).toEqual({ show: false, reason: "session_cap" });
+  });
+});
+
+describe("plusOfferCandidates", () => {
+  it("keeps the session-end slot's moments in rank order", () => {
+    expect(
+      plusOfferCandidates("session_close", { 1: true, 4: true, 5: true }),
+    ).toEqual([1, 4, 5]);
+  });
+
+  it("drops moments whose data condition does not hold", () => {
+    expect(plusOfferCandidates("session_close", { 5: true })).toEqual([5]);
+  });
+
+  // A moment can only be raised where it belongs — moment 3 is a profile
+  // moment, and passing it to the close slot must not smuggle it in.
+  it("never raises a moment at a surface it does not belong to", () => {
+    expect(plusOfferCandidates("session_close", { 3: true })).toEqual([]);
+    expect(plusOfferCandidates("mirror_landed", { 2: true })).toEqual([2]);
+    expect(plusOfferCandidates("profile_insight", { 3: true })).toEqual([3]);
   });
 });

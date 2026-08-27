@@ -100,6 +100,14 @@ type TogglesSlice = {
   plusOfferFullStopAt: number | null;
   /** Records a dismissal against one moment and rolls the full stop if it's the third. */
   recordPlusOfferDismissal: (moment: PlusOfferMoment) => void;
+  /**
+   * The session an offer was last shown in. The whole of "max one offer per
+   * session" and "never two sessions in a row" rides on this one id: all three
+   * trigger points write it and all three read it, so a moment that already
+   * fired mid-session cannot also take the close-of-session slot.
+   */
+  plusOfferShownSessionId: string | null;
+  recordPlusOfferShown: (sessionId: string | null) => void;
 };
 
 type PreferencesSlice = {
@@ -203,6 +211,9 @@ export const useAppStore = create<AppState>()(
         setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
 
         plusOfferLastDismissedAt: {},
+        plusOfferShownSessionId: null,
+        recordPlusOfferShown: (sessionId) =>
+          set({ plusOfferShownSessionId: sessionId }),
         plusOfferDismissalCount: 0,
         plusOfferFullStopAt: null,
         recordPlusOfferDismissal: (moment) =>
@@ -266,6 +277,7 @@ export const useAppStore = create<AppState>()(
           seenEventIds: s.seenEventIds,
           pendingEventPrompt: s.pendingEventPrompt,
           plusOfferLastDismissedAt: s.plusOfferLastDismissedAt,
+          plusOfferShownSessionId: s.plusOfferShownSessionId,
           plusOfferDismissalCount: s.plusOfferDismissalCount,
           plusOfferFullStopAt: s.plusOfferFullStopAt,
         }),

@@ -17,6 +17,7 @@ import { WordsTeaserCard } from "@/src/features/profile/components/words-teaser-
 import { WordsTeaserEmpty } from "@/src/features/profile/components/words-teaser-empty";
 import { FollowUpsSection } from "@/src/features/profile/components/follow-ups-section";
 import { PlusRow } from "@/src/features/profile/components/plus-row";
+import { PlusInsightOffer } from "@/src/features/profile/components/plus-insight-offer";
 import { AvatarPickerSheet } from "@/src/features/profile/components/avatar-picker-sheet";
 import { useProfileSummary } from "@/src/features/profile/hooks/use-profile-summary";
 import { useMoodDelta } from "@/src/features/profile/hooks/use-mood-delta";
@@ -189,6 +190,8 @@ export function ProfileScreen() {
             <WordsTeaserEmpty staggerDelay={420} />
           </View>
         )}
+
+        <PlusInsightOffer />
 
         <FollowUpsSection staggerDelay={480} />
 

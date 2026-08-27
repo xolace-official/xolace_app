@@ -43,6 +43,9 @@ describe("store partialize", () => {
     expect(persisted).toContain("plusOfferLastDismissedAt");
     expect(persisted).toContain("plusOfferDismissalCount");
     expect(persisted).toContain("plusOfferFullStopAt");
+    // "Never two sessions in a row" is only enforceable if the id survives a
+    // relaunch — the app is routinely closed between one session and the next.
+    expect(persisted).toContain("plusOfferShownSessionId");
   });
 });
 

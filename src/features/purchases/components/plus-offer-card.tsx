@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
@@ -24,6 +24,11 @@ type Props = {
    * thing this card must never print.
    */
   observation?: string;
+  /**
+   * The session this offer belongs to. Recorded on mount so the one-per-session
+   * cap is spent by an appearance, not by a decision.
+   */
+  sessionId?: string | null;
   onOpen: () => void;
   onDismiss?: () => void;
 };
@@ -45,27 +50,37 @@ export const PlusOfferCard = ({
   moment,
   variant = "default",
   observation,
+  sessionId = null,
   onOpen,
   onDismiss,
 }: Props) => {
   const posthog = usePostHog();
   const accentColor = useThemeColor("accent") as string;
   const recordDismissal = useAppStore((s) => s.recordPlusOfferDismissal);
+  const recordShown = useAppStore((s) => s.recordPlusOfferShown);
   const copy = plusOfferCopy(moment, variant);
   const shownRef = useRef(false);
+  // The card takes itself off screen. A decline that leaves the ask sitting
+  // there is a second ask, and every call site forgetting to hide it is the
+  // same bug three times.
+  const [declined, setDeclined] = useState(false);
 
   useEffect(() => {
     if (shownRef.current) return;
     shownRef.current = true;
     posthog.capture("plus_offer_shown", { moment, variant });
-  }, [posthog, moment, variant]);
+    recordShown(sessionId);
+  }, [posthog, moment, variant, recordShown, sessionId]);
 
   const handleDismiss = () => {
     playSoftPress();
+    setDeclined(true);
     posthog.capture("plus_offer_dismissed", { moment, variant });
     recordDismissal(moment);
     onDismiss?.();
   };
+
+  if (declined) return null;
 
   return (
     <View className="w-full overflow-hidden rounded-3xl border border-accent/25 bg-accent/[0.05] p-5">

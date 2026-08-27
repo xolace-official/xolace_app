@@ -120,3 +120,55 @@ describe("chooseCloseOffer", () => {
     ).toBe("suggestion");
   });
 });
+
+describe("chooseCloseOffer — the Plus moment", () => {
+  it("takes the slot from the Bridge card", () => {
+    expect(
+      chooseCloseOffer({
+        hasSession: true,
+        suggestion: null,
+        plusOffer: true,
+        bridgeEnabled: true,
+        hasMirrorText: true,
+      }),
+    ).toBe("plus");
+  });
+
+  // The rarer offer still wins: a suggestion has survived a theme match, an
+  // intensity floor, a safeguard gate and a weekly cooldown to get here.
+  it("yields to a suggestion", () => {
+    expect(
+      chooseCloseOffer({
+        hasSession: true,
+        suggestion: person,
+        plusOffer: true,
+        bridgeEnabled: true,
+        hasMirrorText: true,
+      }),
+    ).toBe("suggestion");
+  });
+
+  it("still waits for a suggestion that may yet arrive", () => {
+    expect(
+      chooseCloseOffer({
+        hasSession: true,
+        suggestion: undefined,
+        plusOffer: true,
+        bridgeEnabled: true,
+        hasMirrorText: true,
+      }),
+    ).toBe("pending");
+  });
+
+  it("is the only offer when Bridge has nothing to show either", () => {
+    expect(
+      chooseCloseOffer({
+        hasSession: true,
+        suggestion: null,
+        plusOffer: true,
+        bridgeEnabled: false,
+        hasMirrorText: false,
+      }),
+    ).toBe("plus");
+  });
+});
