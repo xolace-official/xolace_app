@@ -117,6 +117,11 @@ export function ProfileScreen() {
           />
         )}
 
+        {/* A standing door, never rate-limited — but pointless once they're in.
+            `isPlus` is false while entitlement resolves, so waiting on the read
+            keeps a subscriber from watching an upsell mount and disappear. */}
+        {!gate.isLoading && !gate.isPlus && <PlusRow staggerDelay={160} />}
+
         {hasEnoughForChips && summary && (
           <EmotionChips tags={summary.dominantEmotionTags} staggerDelay={180} />
         )}
@@ -195,10 +200,6 @@ export function ProfileScreen() {
 
         <FollowUpsSection staggerDelay={480} />
 
-        {/* A standing door, never rate-limited — but pointless once they're in.
-            `isPlus` is false while entitlement resolves, so waiting on the read
-            keeps a subscriber from watching an upsell mount and disappear. */}
-        {!gate.isLoading && !gate.isPlus && <PlusRow staggerDelay={540} />}
       </ScrollView>
 
       <AvatarPickerSheet

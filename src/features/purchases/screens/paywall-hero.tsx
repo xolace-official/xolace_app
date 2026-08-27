@@ -14,7 +14,7 @@ export function PaywallHero() {
         gradientProps={{ colors: [`${accentColor}80`, accentColor, `${accentColor}80`] }}
       />
       <AppText className="text-sm font-light text-muted text-center leading-6 px-4">
-        {"The fire keeps the nights. Plus is where the small thing that keeps coming back shows up early — the third time, not the thirtieth."}
+        {"The fire keeps them all. Plus is where the small thing that keeps coming back shows up early — the third time, not the thirtieth."}
       </AppText>
     </View>
   );

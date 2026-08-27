@@ -185,7 +185,7 @@ export function PaywallScreen({ surface }: Props) {
               id="timeline"
               icon={TIMELINE_ICON}
               title="Extended timeline"
-              description="Every night, not just the recent ones"
+              description="Every day, not just the recent ones"
               isHighlighted={highlightedFeature === "timeline"}
             />
             <PaywallFeatureItem

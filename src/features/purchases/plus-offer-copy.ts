@@ -6,18 +6,16 @@ import type {
 /**
  * Copy for the five proactive Plus moments (#221 §4).
  *
- * Zone is a property of the moment, not of the call site: `raw` moments carry
- * no humor and no fire imagery — there the campfire shows up as specificity,
- * a true line about the user's own week, which is what keeps the metaphor
- * reading as deliberate rather than sprayed.
+ * A lead plus one value sentence per moment. The card is a night-scene
+ * postcard and this copy rides a scrim pinned to its bottom edge — the scrim
+ * grows upward, so a longer line costs mascot, not card height. Past roughly
+ * three rendered lines it starts climbing over his head. The moment sells one
+ * capability: no price, no term, no trial, no number lives here (#221 rule 6).
  *
- * No price, no term, no trial, no number lives here (#221 rule 6) — the moment
- * sells one capability, the paywall screen owns the rest.
+ * Every line spells the product "Xolace+", identically, because the card
+ * highlights that token in accent. A line that says "Plus" renders flat.
  */
-export type OfferZone = "raw" | "warm";
-
 export type PlusOfferCopy = {
-  zone: OfferZone;
   /** Static opener. Distinct from the observation line, which is data-derived. */
   lead?: string;
   /** The one capability this moment earned. One sentence. */
@@ -30,35 +28,32 @@ export const PLUS_OFFER_DECLINE_LABEL = "I'm good";
 
 const MOMENTS: Record<PlusOfferMoment, PlusOfferCopy> = {
   1: {
-    zone: "raw",
-    lead: "That's one night kept.",
+    lead: "That's one day kept.",
     value:
       "Xolace+ is where the thing that keeps coming back shows up early — the third time, not the thirtieth.",
     cta: "See what carries over",
   },
   2: {
-    zone: "raw",
     lead: "Glad that one landed.",
     value:
-      "Plus keeps the ones that land — so when the same thing comes back, you'll know it's the same thing.",
+      "Xolace+ keeps the ones that land — so when the same thing comes back, you'll know it's the same thing.",
     cta: "See what comes back",
   },
   3: {
-    zone: "warm",
     value:
-      "That's the kind of thing that's invisible from the inside. Plus is what keeps it visible — the third time, not the thirtieth.",
+      "That's the kind of thing that's invisible from the inside. Xolace+ is what keeps it visible — the third time, not the thirtieth.",
     cta: "See the whole run",
   },
   4: {
-    zone: "raw",
     value:
-      "Nothing you said here got lost. Plus is what makes the time in between legible instead of a blank — so coming back doesn't mean starting over.",
+      "Nothing you said here got lost. Xolace+ is what makes the time in between legible instead of a blank — so coming back doesn't mean starting over.",
     cta: "See what carried over",
   },
   5: {
-    zone: "warm",
+    // Not "where compounding starts" — the user is already showing up. Plus is
+    // what makes what they've built out of it visible to them.
     value:
-      "Most people never say any of it once. Plus is the part where all that showing up starts compounding instead of just accumulating.",
+      "Most people never say any of it once. Xolace+ shows you what all that showing up has been building up.",
     cta: "See what it adds up to",
   },
 };
@@ -72,7 +67,7 @@ const MOMENTS: Record<PlusOfferMoment, PlusOfferCopy> = {
  * cold on a sell.
  */
 const REGISTER = {
-  value: "Plus is where you pick how it says things back — and it stays that way.",
+  value: "Xolace+ is where you pick how it says things back — and it stays that way.",
   cta: "Pick how it sounds",
 };
 

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { PressableFeedback, useThemeColor } from "heroui-native";
-import { SymbolView } from "expo-symbols";
 import { usePostHog } from "posthog-react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import {
@@ -14,6 +15,11 @@ import type {
 } from "@/src/features/purchases/plus-offer-policy";
 import { playSoftPress } from "@/src/lib/haptics";
 import { useAppStore } from "@/src/store/store";
+
+const BG = require("@/assets/images/flux/plus-postcard-bg.png");
+const ABS_FILL = { position: "absolute" as const, top: 0, left: 0, right: 0, bottom: 0 };
+/** The scene's own night, not a theme color — the art is dark in every theme. */
+const NIGHT = "#0b0716";
 
 type Props = {
   moment: PlusOfferMoment;
@@ -34,15 +40,32 @@ type Props = {
 };
 
 /**
- * The one card every proactive Plus moment renders: `[observation?] [value]
- * [CTA] [I'm good]`.
+ * Value line with "Xolace+" in accent. Text is explicitly `text-white` — the
+ * card art is always dark, so it must not follow the theme foreground, which is
+ * what makes it vanish in light mode. AppText defaults to `text-foreground`, so
+ * any bare nested <AppText> would re-inherit it; keep this flat.
+ */
+const PlusValue = ({ text, accent }: { text: string; accent: string }) => {
+  const [before, after] = text.split("Xolace+");
+  return (
+    <AppText className="text-[13px] font-light leading-5 text-white">
+      {before}
+      <AppText className="font-semibold" style={{ color: accent }}>
+        Xolace+
+      </AppText>
+      {after ?? ""}
+    </AppText>
+  );
+};
+
+/**
+ * The one card every proactive Plus moment renders: a fixed 16:10 night-scene
+ * postcard with the copy on a scrim pinned to the bottom, over the mascot's
+ * lower body — sky, head and telescope stay in the clear upper zone.
  *
  * Shared rather than per-moment so the two things that are not a call site's
  * business stay uniform — the decline is always present, always literally
- * "I'm good," always the same visual weight as the CTA, and dismissing always
- * spends the 7-day cooldown. Zone comes from the moment: `raw` moments get no
- * fire imagery, because there the campfire is supposed to show up as
- * specificity instead.
+ * "I'm good," and dismissing always spends the 7-day cooldown.
  *
  * This is the product's voice standing next to the fire, never the mirror's.
  */
@@ -83,58 +106,80 @@ export const PlusOfferCard = ({
   if (declined) return null;
 
   return (
-    <View className="w-full overflow-hidden rounded-3xl border border-accent/25 bg-accent/[0.05] p-5">
-      {/* One image, warm zone only (#221 rule 4). */}
-      {copy.zone === "warm" && (
-        <View className="size-9 items-center justify-center rounded-xl bg-accent/12 mb-4">
-          <SymbolView
-            name={{ ios: "flame.fill", android: "local_fire_department", web: "local_fire_department" }}
-            size={16}
-            tintColor={accentColor}
-          />
-        </View>
-      )}
-
-      {observation ? (
-        <AppText className="font-serif text-lg italic text-foreground/70 leading-6 mb-2">
-          {observation}
-        </AppText>
-      ) : null}
-
-      {copy.lead ? (
-        <AppText className="font-serif text-xl text-foreground leading-7 mb-1.5">
-          {copy.lead}
-        </AppText>
-      ) : null}
-
-      <AppText className="text-sm font-light text-foreground/60 leading-5">
-        {copy.value}
-      </AppText>
-
-      {/* Equal weight, side by side: saying no is as easy as saying yes. */}
-      <View className="flex-row items-center gap-2 mt-5">
-        <PressableFeedback
-          onPress={() => {
-            playSoftPress();
-            onOpen();
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={copy.cta}
-          className="flex-1 items-center justify-center rounded-full border border-accent/40 bg-accent/10 px-4 py-3"
-        >
-          <AppText className="text-sm font-medium text-accent">{copy.cta}</AppText>
-        </PressableFeedback>
-        <PressableFeedback
-          onPress={handleDismiss}
-          accessibilityRole="button"
-          accessibilityLabel={PLUS_OFFER_DECLINE_LABEL}
-          className="flex-1 items-center justify-center rounded-full border border-foreground/15 px-4 py-3"
-        >
-          <AppText className="text-sm font-medium text-foreground/70">
-            {PLUS_OFFER_DECLINE_LABEL}
+    <View
+      className="w-full overflow-hidden rounded-3xl"
+      style={{
+        aspectRatio: 16 / 10,
+        shadowColor: "#000",
+        shadowOpacity: 0.25,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 8 },
+      }}
+    >
+      <Image source={BG} style={ABS_FILL} contentFit="cover" contentPosition="left" />
+      {/* Positioned in `style`, not `className`: uniwind's `bottom-0` on a
+          LinearGradient leaves the scrim stuck at the top. */}
+      <LinearGradient
+        colors={[`${NIGHT}00`, `${NIGHT}e0`, NIGHT]}
+        locations={[0, 0.4, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          paddingHorizontal: 18,
+          paddingTop: 30,
+          paddingBottom: 16,
+        }}
+      >
+        {observation ? (
+          // Capped: the scrim grows upward, and an unbounded observation would
+          // climb over the mascot's head.
+          <AppText
+            numberOfLines={2}
+            className="mb-1.5 font-serif text-[15px] italic leading-5 text-white/70"
+          >
+            {observation}
           </AppText>
-        </PressableFeedback>
-      </View>
+        ) : null}
+
+        {copy.lead ? (
+          <AppText className="mb-1.5 font-serif text-[17px] leading-6 text-white">
+            {copy.lead}
+          </AppText>
+        ) : null}
+
+        <PlusValue text={copy.value} accent={accentColor} />
+
+        <View className="mt-4 flex-row items-center gap-4">
+          <PressableFeedback
+            onPress={() => {
+              playSoftPress();
+              onOpen();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={copy.cta}
+            className="rounded-full px-4 py-2.5"
+            style={{ backgroundColor: accentColor }}
+          >
+            <AppText className="text-[13px] font-semibold text-background">
+              {copy.cta}
+            </AppText>
+          </PressableFeedback>
+          <PressableFeedback
+            onPress={handleDismiss}
+            accessibilityRole="button"
+            accessibilityLabel={PLUS_OFFER_DECLINE_LABEL}
+            hitSlop={8}
+          >
+            <AppText className="text-[13px] text-white/55">
+              {PLUS_OFFER_DECLINE_LABEL}
+            </AppText>
+          </PressableFeedback>
+        </View>
+      </LinearGradient>
     </View>
   );
 };
