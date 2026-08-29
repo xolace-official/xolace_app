@@ -53,7 +53,10 @@ tap is not one. The floor expires after the first session; from S2 on
 `followUpTier()` governs on real session signals alone.
 
 Full spec: [#234](https://github.com/xolace-official/xolace_app/issues/234),
-under map [#229](https://github.com/xolace-official/xolace_app/issues/229).
+under map [#229](https://github.com/xolace-official/xolace_app/issues/229) —
+**map complete (2026-08-29): R1, R2, T1–T7 all resolved, spec fully locked.**
+Funnel instrumentation spec is
+[`docs/notes/t7-intake-instrumentation.md`](https://github.com/xolace-official/xolace_app/blob/research/t7-intake-instrumentation/docs/notes/t7-intake-instrumentation.md).
 
 ## The reach becomes interrogative (2026-08-25)
 
