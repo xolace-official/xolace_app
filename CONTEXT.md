@@ -3,6 +3,58 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Intake, and the two onboardings (2026-08-28)
+
+Two flows in this repo both want the word "onboarding". They share nothing —
+different gate, different side of auth, different storage — so they get
+different words.
+
+- **Intro** — the pre-auth flow (promise, frame). Route group
+  `(onboarding)`, gated by the **client-side** Zustand `introSeen` flag plus
+  `!isAuthenticated` (`src/app/_layout.tsx`). Unchanged; it keeps the group
+  name.
+- **Intake** — the post-signup flow: founder message → segmentation
+  questionnaire → Xolace+ paywall. Gated **server-side** by
+  `emotional_profiles.onboardingComplete`. Route group `(intake)`, table
+  `intake_responses`, capture stamp `intakeVersion`.
+
+`onboardingComplete` **keeps its name** — renaming a live field read by
+`convex/ai/context.ts` to fix a documentation problem is the migration the
+"two Reaches" entry below already rejected. It was a dead flag until intake
+shipped: written `false` at user creation and never set true by anything,
+which is why every pre-intake user is correctly ungated with no backfill.
+
+**Intake data is not session data, and does not age like it.**
+`preferences.dataRetentionPreference` (`6_months` / `1_year`) auto-purges the
+record of what someone said in *sessions*. It does **not** touch
+`intake_responses` — those are stable profile facts whose consumers
+(mirror-tone default, follow-up cadence, cohort segmentation) are permanent,
+and a user silently losing their disclosure-style default six months in would
+present as "the app got worse and nobody knows why." This is a deliberate
+exception to how everything else on the pseudonymous side ages. Both
+`dataWipe` and `accountDeletion` **do** purge the row — it is per-profile data
+about a feeling human. Consequence: a wiped user keeps
+`onboardingComplete = true` and is not re-interrogated; the flag and the
+answers have different lifetimes on purpose.
+
+**Clinical-scope override.** `CLAUDE.md`'s "not clinical — no diagnoses, no
+therapeutic terminology" principle is deliberately relaxed **for intake
+questions only**, by founder ruling: intake may explore anything that
+genuinely improves the value Xolace delivers. This does not loosen the
+principle anywhere else — the mirror, the reflection agent, and all
+user-facing session copy remain bound by it.
+
+**Heavy-answer follow-up floor.** Two intake answers soften the first
+session's follow-up cadence, derived at read time, never stored:
+`copingStyle` contains `outside_things` **or** `weighingOn` contains `a_loss`
+→ floor the first session's follow-up tier at `elevated`. Never `acute` —
+that is reserved for a live safeguard crisis signal, and a multiple-choice
+tap is not one. The floor expires after the first session; from S2 on
+`followUpTier()` governs on real session signals alone.
+
+Full spec: [#234](https://github.com/xolace-official/xolace_app/issues/234),
+under map [#229](https://github.com/xolace-official/xolace_app/issues/229).
+
 ## The reach becomes interrogative (2026-08-25)
 
 Reverses the confidence-aware-mirroring standing constraint that the reach is
