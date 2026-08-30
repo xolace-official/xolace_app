@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { useAppStore } from "./store";
 
 describe("store partialize", () => {
@@ -61,13 +61,13 @@ describe("recordPlusOfferDismissal", () => {
     recordPlusOfferDismissal("session_close");
     expect(
       useAppStore.getState().plusOfferLastDismissedAt.session_close,
-    ).toBeNumber();
+    ).toBeTypeOf('number');
     expect(useAppStore.getState().plusOfferFullStopAt).toBeNull();
 
     recordPlusOfferDismissal("mirror_landed");
     recordPlusOfferDismissal("profile_insight");
     expect(useAppStore.getState().plusOfferDismissalCount).toBe(3);
-    expect(useAppStore.getState().plusOfferFullStopAt).toBeNumber();
+    expect(useAppStore.getState().plusOfferFullStopAt).toBeTypeOf('number');
   });
 
   it("starts the count over once a full stop has run its course", () => {

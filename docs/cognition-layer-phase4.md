@@ -117,7 +117,7 @@ comparison across prompt iterations" and been read by nothing until now.
 
 **The bundler gotcha (worth remembering):** Convex esbuild-bundles *every*
 single-dot `convex/*.ts` as a deployable function module; a plain `harness.ts`
-under `__evals__/` gets bundled and fails `codegen` on its `bun:test` import.
+under `__evals__/` gets bundled and fails `codegen` on its `vitest` import.
 The skip rule is a **2+-dot basename** (the same mechanism behind `*.test.ts`),
 *not* the tsconfig `exclude` (which only governs `tsc`). Hence `harness.eval.ts`.
 
@@ -188,7 +188,7 @@ users return, which is exactly what Loop #4 exists to detect.
 ## Verification (no deploy)
 1. **Static (all loops):** `bunx convex codegen`, `bunx tsc -p convex --noEmit`,
    and `bun expo lint` clean. Loop unit tests green:
-   `bun test convex/ai/evalMetrics.test.ts convex/ai/routing.test.ts
+   `bun run test convex/ai/evalMetrics.test.ts convex/ai/routing.test.ts
    convex/episodicImportance.test.ts convex/ai/reflectionAgent/calibration.test.ts`.
    The live `__evals__` suite skips cleanly without `ANTHROPIC_API_KEY`.
 2. **Loop #2 (routing):** complete a session with a faint/unformed entry →

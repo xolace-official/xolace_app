@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { chipFor, subtitleFor } from './conversation-row-labels';
 import type { ConversationList } from './chats-list';
 

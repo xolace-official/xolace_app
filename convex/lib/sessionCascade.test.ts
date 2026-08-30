@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import schema from "../schema";
 import { SESSION_CASCADE_TABLES, SESSION_ID_EXEMPT } from "./sessionCascade";
 

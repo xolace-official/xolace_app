@@ -15,7 +15,7 @@ type NotificationData = Record<string, unknown> | undefined | null;
 /**
  * Shape of a delivered notification, narrowed to what the tray sweep reads —
  * which is also what keeps this module free of `expo-notifications`, and so
- * runnable under `bun test`.
+ * runnable under Vitest.
  */
 type PresentedNotification = {
   request: { identifier: string; content: { data?: NotificationData } };

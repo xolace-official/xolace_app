@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { getInitialThemeCarouselIndex } from "./get-initial-theme-carousel-index";
 import type { ThemeEntry } from "@/src/lib/themes";
 

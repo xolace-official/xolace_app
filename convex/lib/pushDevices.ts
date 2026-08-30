@@ -11,7 +11,7 @@
  * failure, because nothing is ever successfully sent to it. See
  * docs/adr/0001-no-expo-receipts.md.
  *
- * Kept free of Convex imports so it can be covered by `bun test`, which is how
+ * Kept free of Convex imports so it can be covered by Vitest, which is how
  * every other piece of notification logic in this repo is tested.
  */
 

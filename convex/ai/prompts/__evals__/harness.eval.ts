@@ -13,7 +13,7 @@
  *   - Non-anchor cases feed an aggregate accuracy that must clear `threshold`;
  *     a couple of borderline misses are acceptable signal, not a failure.
  */
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 
 /** A live eval requires the key; without it every case is a clean no-op. */
 export const hasApiKey = (): boolean => !!process.env.ANTHROPIC_API_KEY;
@@ -33,7 +33,7 @@ export interface EvalOptions {
 }
 
 /**
- * Register a labeled live-model eval as a bun:test suite. Each case becomes an
+ * Register a labeled live-model eval as a Vitest suite. Each case becomes an
  * `it`; a final `it` asserts aggregate accuracy across the set. `run` maps a
  * case to the model's actual answer; equality is strict `===` (works for the
  * boolean/string/enum outputs these evals produce).
@@ -51,8 +51,9 @@ export function runLabeledEval<E, C extends LabeledCase<E>>(
 
     for (const c of cases) {
       const label = `${c.anchor ? "[anchor] " : ""}${c.note}`;
-      it(label, async () => {
-        if (!hasApiKey()) return;
+      // skipIf, not an early return: a keyless run must report skips, not
+      // greens — a silently-passing eval is indistinguishable from a real one.
+      it.skipIf(!hasApiKey())(label, async () => {
         const got = await run(c);
         if (got === c.expected) correct++;
         // Anchors must be exactly right; non-anchors feed the aggregate.
@@ -60,9 +61,11 @@ export function runLabeledEval<E, C extends LabeledCase<E>>(
       });
     }
 
-    it(`aggregate accuracy across the labeled set is >= ${threshold}`, () => {
-      if (!hasApiKey()) return;
-      expect(correct / cases.length).toBeGreaterThanOrEqual(threshold);
-    });
+    it.skipIf(!hasApiKey())(
+      `aggregate accuracy across the labeled set is >= ${threshold}`,
+      () => {
+        expect(correct / cases.length).toBeGreaterThanOrEqual(threshold);
+      },
+    );
   });
 }

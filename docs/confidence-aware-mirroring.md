@@ -752,7 +752,7 @@ days means the reach fires 6–10×/month, against the ~130–370 per arm a two-
 test would need — 13 months to 5+ years. Unfalsifiable by arithmetic, not by lack of
 will.
 
-So the kill lever is **`reach.eval.ts`** (§9.4), available before a single user sees
+So the kill lever is **`reach.eval.test.ts`** (§9.4), available before a single user sees
 the reach.
 
 ### 9.2 "That's it" rate is a guardrail, not the test
@@ -820,7 +820,7 @@ No `clarify_abandoned` event — subtraction answers the primary metric.
 Two files, written by the same build session
 ([#179](https://github.com/xolace-official/xolace_app/issues/179)).
 
-**`convex/ai/prompts/__evals__/reach.eval.ts`** — the gate eval, the kill lever.
+**`convex/ai/prompts/__evals__/reach.eval.test.ts`** — the gate eval, the kill lever.
 ~40 inputs labelled should-reach / should-not in the existing `runLabeledEval`
 harness. Strict `===` on a boolean.
 
@@ -985,7 +985,7 @@ Steps 1–2 are what everything else waits on.
    both prompts, narrow replace mutation, `initialConfidence`, episodic re-search,
    raise-only follow-up write-through.
 6. **The action row** (§6) — variant F; needs `claimStrength` on the wire from step 2.
-7. **Tests** (§9.5) — `reach.eval.ts` and `reachingMirror.prompt.test.ts`, written
+7. **Tests** (§9.5) — `reach.eval.test.ts` and `reachingMirror.prompt.test.ts`, written
    together.
 8. **Deprecations** (§8) — the two `gave_up` cadence markers and the ledger line.
    Zero behaviour change.

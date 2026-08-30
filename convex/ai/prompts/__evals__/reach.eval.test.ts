@@ -1,7 +1,7 @@
 /**
  * The reach gate eval — the kill lever (doc §9.1).
  *
- * Run: `bun test --timeout 30000 ./convex/ai/prompts/__evals__/reach.eval.ts`
+ * Run: `bun run test:evals`
  * (two live API calls per case — the default 5s per-test timeout flakes.)
  * Requires ANTHROPIC_API_KEY (bun auto-loads .env.local); skips cleanly
  * without it. OPENAI_API_KEY is also wanted: the escalation guard's own

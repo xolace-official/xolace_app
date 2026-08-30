@@ -2,7 +2,7 @@
  * Pure follow-up tiering + gating helpers.
  *
  * No Convex imports — every function here is a deterministic pure function so
- * it can be unit-tested with `bun:test` and (critically for the durable
+ * it can be unit-tested with Vitest and (critically for the durable
  * Workflow) replayed without side effects. The cadence durations are passed to
  * `workflow.start` as args, never read as in-body constants, so cadence tuning
  * never reshapes the workflow function (deterministic journal replay).
