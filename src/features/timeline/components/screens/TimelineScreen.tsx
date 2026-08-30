@@ -25,9 +25,6 @@ const renderItem = ({
 
 const keyExtractor = (item: TimelineFlatItem) => item.id;
 
-const getEstimatedItemSize = (item: TimelineFlatItem) =>
-  item.type === "section" ? 44 : 120;
-
 const styles = StyleSheet.create({
   listContent: { paddingBottom: 40 },
   listContentWithNudge: { paddingBottom: 100 },
@@ -77,7 +74,6 @@ export const TimelineScreen = () => {
         data={sections}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        getEstimatedItemSize={getEstimatedItemSize}
         estimatedItemSize={100}
         recycleItems
         getItemType={(item) => item.type}
