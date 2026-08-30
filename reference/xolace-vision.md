@@ -8,6 +8,10 @@
 
 "We're building the AI-native mental health app that takes people from 'I don't even know what I'm feeling' to real support — end to end.
 
+or
+
+Xolace is an AI-native mental health app. It helps people reflect on what they're feeling in the moment to get clarity, understand what's underneath it, and catch what's compounding before it grows, so real support works when they reach for it.
+
 ## The Problem Worth Solving
 
 Most people are not fine. They carry weight they cannot name — heavy, anxious, numb, confused — but are not "bad enough" for therapy. They exist in a gap that nearly every existing tool ignores: between social performance ("everything is fine") and clinical intervention ("I need help").
