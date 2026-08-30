@@ -35,8 +35,6 @@
 @import "./themes/xolace-plus/velvet.css";
 @import "./themes/xolace-plus/noir.css";
 
-@source '../node_modules/heroui-native/lib';
-
 /* @theme {
   --font-sans: 'SpaceGrotesk-Regular';
   --font-sans-medium: 'SpaceGrotesk-Medium';
