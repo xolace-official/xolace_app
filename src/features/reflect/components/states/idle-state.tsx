@@ -17,6 +17,8 @@ import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/shared/pill-button";
 import { IdleMenu } from "@/src/features/idle-menu/menu";
+// PROTOTYPE(#246): remove with src/features/reflect/prototype.
+import { ProtoEntry } from "@/src/features/reflect/prototype/proto-entry";
 import { MicButton } from "@/src/features/reflect/components/mic-button";
 import { QuietReturnHeader } from "@/src/features/reflect/components/quiet-return-header";
 import { TextureSetTabs } from "@/src/features/reflect/components/texture-set-tabs";
@@ -360,6 +362,7 @@ export const IdleState = ({
         </View>
 
         <IdleMenu />
+        <ProtoEntry />
 
         {/* DEV ONLY — tap to restart tour for testing */}
         {__DEV__ && !tourActive && (
