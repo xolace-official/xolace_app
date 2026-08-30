@@ -3,7 +3,10 @@
 // src/features/reflect/prototype/ when the real screen lands.
 import { useState } from "react";
 import { Keyboard, Pressable, StyleSheet, Text, View } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { useHeaderHeight } from "expo-router/react-navigation";
+import AccountCircle from "@expo/material-symbols/account_circle.xml";
+import CrisisAlert from "@expo/material-symbols/crisis_alert.xml";
 import {
   ReduceMotion,
   useReducedMotion,
@@ -12,9 +15,13 @@ import {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { useAppTheme } from "@/src/context/app-theme-context";
 import { MorphCard } from "@/src/features/reflect/prototype/morph-card";
+import { ProtoPicker } from "@/src/features/reflect/prototype/proto-picker";
+import { TOP_VARIANTS } from "@/src/features/reflect/prototype/top-strip";
 import { SkiaWash, UniwindWash } from "@/src/features/reflect/prototype/wash";
 import { playTypingBegin } from "@/src/lib/haptics";
 
@@ -44,9 +51,29 @@ const themeName = (palette: string, dark: boolean) =>
 export default function Prototype246() {
   const [expanded, setExpanded] = useState(false);
   const [skiaWash, setSkiaWash] = useState(false);
+  // The real idle screen ships a transparent native header with two toolbar
+  // buttons. It eats the top ~44pt, so every "dead air above the card" call
+  // has to be made with it on.
+  const [header, setHeader] = useState(true);
   const [themeIndex, setThemeIndex] = useState(0);
+  const [topIndex, setTopIndex] = useState(0);
+  // Bumped to force-remount the strip so its entrance replays.
+  const [replayKey, setReplayKey] = useState(0);
+  const insets = useSafeAreaInsets();
+  const rawHeaderHeight = useHeaderHeight();
+  // Hiding the header on expand drops useHeaderHeight to 0, which would yank
+  // the strip up ~44pt mid-morph and drop it back on close. Freeze the last
+  // non-zero height, the same trick idle-state uses across its transitions.
+  const [headerHeight, setHeaderHeight] = useState(0);
+  if (rawHeaderHeight > 0 && rawHeaderHeight !== headerHeight) {
+    setHeaderHeight(rawHeaderHeight);
+  }
+  const router = useRouter();
+  const crisisTint = useThemeColor("warning") as string;
   const { setTheme, toggleTheme, isDark } = useAppTheme();
   const reduceMotion = useReducedMotion();
+
+  const TopStrip = TOP_VARIANTS[topIndex].Component;
 
   const progress = useSharedValue(0);
   const fade = useSharedValue(1);
@@ -93,9 +120,48 @@ export default function Prototype246() {
 
   return (
     <View className="flex-1 bg-background">
-      <Stack.Screen options={{ headerShown: false }} />
+      <Stack.Screen
+        options={{
+          // The real screen ties this to `isIdle`; expanded is the analog here.
+          headerShown: header && !expanded,
+          headerTransparent: true,
+          headerTitle: "",
+          headerShadowVisible: false,
+          headerBackVisible: false,
+        }}
+      />
+      {header && !expanded && (
+        <>
+          <Stack.Toolbar placement="left">
+            <Stack.Toolbar.Button
+              icon={
+                process.env.EXPO_OS === "ios" ? "person.circle" : AccountCircle
+              }
+              onPress={() => router.push("/(protected)/profile")}
+            />
+          </Stack.Toolbar>
+          <Stack.Toolbar placement="right">
+            <Stack.Toolbar.Button
+              icon={
+                process.env.EXPO_OS === "ios" ? "lifepreserver" : CrisisAlert
+              }
+              tintColor={crisisTint}
+              onPress={() => router.push("/crisis-resources?from=idle_button")}
+            />
+          </Stack.Toolbar>
+        </>
+      )}
 
       {skiaWash ? <SkiaWash /> : <UniwindWash />}
+
+      <View
+        key={replayKey}
+        style={{
+          paddingTop: (header ? Math.max(headerHeight, insets.top) : insets.top) + 8,
+        }}
+      >
+        <TopStrip />
+      </View>
 
       <MorphCard
         progress={progress}
@@ -104,12 +170,22 @@ export default function Prototype246() {
         expanded={expanded}
         onOpen={open}
         onClose={close}
+        fluxOffset={TOP_VARIANTS[topIndex].flux}
       />
 
       <View className="absolute bottom-24 left-0 right-0 items-center">
         <AppText className="text-xs text-foreground/30">
           {expanded ? "tap ✕ to reverse" : "tap the card"}
         </AppText>
+      </View>
+
+      <View style={styles.pickerRow}>
+        <ProtoPicker
+          items={TOP_VARIANTS.map((v) => v.name)}
+          index={topIndex}
+          onChange={setTopIndex}
+          onReplay={() => setReplayKey((k) => k + 1)}
+        />
       </View>
 
       <View style={styles.toggleRow}>
@@ -130,6 +206,9 @@ export default function Prototype246() {
             {themeName(PALETTES[themeIndex], isDark)}
           </Text>
         </Pressable>
+        <Pressable style={styles.toggle} onPress={() => setHeader((v) => !v)}>
+          <Text style={styles.toggleLabel}>header: {header ? "on" : "off"}</Text>
+        </Pressable>
         <Pressable style={styles.toggle} onPress={toggleTheme}>
           <Text style={styles.toggleLabel}>{isDark ? "dark" : "light"}</Text>
         </Pressable>
@@ -140,9 +219,15 @@ export default function Prototype246() {
 
 // Harness chrome, deliberately unthemed.
 const styles = StyleSheet.create({
-  toggleRow: {
+  pickerRow: {
     position: "absolute",
     bottom: 24,
+    left: 0,
+    right: 0,
+  },
+  toggleRow: {
+    position: "absolute",
+    bottom: 72,
     left: 0,
     right: 0,
     flexDirection: "row",

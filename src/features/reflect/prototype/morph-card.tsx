@@ -17,6 +17,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import type { FluxOffset } from "@/src/features/reflect/prototype/top-strip";
 
 const FLUX = require("@/assets/images/flux/flux-whisper.png");
 const PROMPT = "What's sitting with you right now?";
@@ -30,6 +31,8 @@ type Props = {
   expanded: boolean;
   onOpen: () => void;
   onClose: () => void;
+  /** Where the active top-strip variant wants Flux to stand at rest. */
+  fluxOffset: FluxOffset;
 };
 
 export const MorphCard = ({
@@ -39,6 +42,7 @@ export const MorphCard = ({
   expanded,
   onOpen,
   onClose,
+  fluxOffset,
 }: Props) => {
   const { width: W, height: H } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -100,16 +104,29 @@ export const MorphCard = ({
       opacity: interpolate(p, [0, 0.55], [1, 0]),
       transform: [
         {
-          translateX: interpolate(p, [0, 1], [0, expLeft + 20 - restLeft + 8]),
+          translateX: interpolate(
+            p,
+            [0, 1],
+            [fluxOffset.dx, expLeft + 20 - (restLeft + 8) - fluxOffset.dx],
+          ),
         },
         {
           translateY: interpolate(
             p,
             [0, 1],
-            [0, expTop + 26 - (restTop - FLUX_SIZE - 12)],
+            [
+              fluxOffset.dy,
+              expTop + 26 - (restTop - FLUX_SIZE - 12) - fluxOffset.dy,
+            ],
           ),
         },
-        { scale: interpolate(p, [0, 1], [1 + b * 0.02, DOT / FLUX_SIZE]) },
+        {
+          scale: interpolate(
+            p,
+            [0, 1],
+            [fluxOffset.scale * (1 + b * 0.02), DOT / FLUX_SIZE],
+          ),
+        },
         { translateY: b * -3 },
       ],
     };
