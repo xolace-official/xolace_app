@@ -33,6 +33,8 @@ type Props = {
   onClose: () => void;
   /** Where the active top-strip variant wants Flux to stand at rest. */
   fluxOffset: FluxOffset;
+  /** Card's resting top edge as a fraction of screen height. */
+  restTopFactor: number;
 };
 
 export const MorphCard = ({
@@ -43,6 +45,7 @@ export const MorphCard = ({
   onOpen,
   onClose,
   fluxOffset,
+  restTopFactor,
 }: Props) => {
   const { width: W, height: H } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -53,7 +56,7 @@ export const MorphCard = ({
   const restH = H / 2.8;
   const restW = restH * 0.75;
   const restLeft = (W - restW) / 2;
-  const restTop = H * 0.32;
+  const restTop = H * restTopFactor;
   const expLeft = 16;
   const expTop = insets.top + 8;
 

@@ -45,6 +45,8 @@ const PALETTES = [
   "noir",
 ] as const;
 
+const REST_TOPS = [0.32, 0.29, 0.26, 0.35] as const;
+
 const themeName = (palette: string, dark: boolean) =>
   (palette ? `${palette}-` : "") + (dark ? "dark" : "light");
 
@@ -57,6 +59,9 @@ export default function Prototype246() {
   const [header, setHeader] = useState(true);
   const [themeIndex, setThemeIndex] = useState(0);
   const [topIndex, setTopIndex] = useState(0);
+  // Card's resting top edge. 0.32 is where the morph was tuned; the lower
+  // values pull the whole composition up under the Ledger band.
+  const [restIndex, setRestIndex] = useState(0);
   // Bumped to force-remount the strip so its entrance replays.
   const [replayKey, setReplayKey] = useState(0);
   const insets = useSafeAreaInsets();
@@ -171,6 +176,7 @@ export default function Prototype246() {
         onOpen={open}
         onClose={close}
         fluxOffset={TOP_VARIANTS[topIndex].flux}
+        restTopFactor={REST_TOPS[restIndex]}
       />
 
       <View className="absolute bottom-24 left-0 right-0 items-center">
@@ -206,6 +212,12 @@ export default function Prototype246() {
             {themeName(PALETTES[themeIndex], isDark)}
           </Text>
         </Pressable>
+        <Pressable
+          style={styles.toggle}
+          onPress={() => setRestIndex((i) => (i + 1) % REST_TOPS.length)}
+        >
+          <Text style={styles.toggleLabel}>top: {REST_TOPS[restIndex]}</Text>
+        </Pressable>
         <Pressable style={styles.toggle} onPress={() => setHeader((v) => !v)}>
           <Text style={styles.toggleLabel}>header: {header ? "on" : "off"}</Text>
         </Pressable>
@@ -232,6 +244,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     justifyContent: "center",
+    flexWrap: "wrap",
     gap: 8,
   },
   toggle: {
