@@ -13,6 +13,13 @@
  *    `authProviderAccountId = identity.subject` write that is the point of the
  *    fixture.
  *
+ * **The `.helpers.ts` suffix is load-bearing.** Convex's bundler skips any file
+ * in `convex/` whose basename holds more than one dot — the same rule that
+ * keeps `*.test.ts` out of a deploy. A single-dot `harness.ts` gets pushed as a
+ * function module and breaks `convex codegen`/`deploy` on the Vite-only
+ * `import.meta.glob` below. Any new test-support file in here needs a second
+ * dot too.
+ *
  * Files importing this must carry `// @vitest-environment edge-runtime` as
  * line 1, and must `vi.mock("../lib/aggregates")` — `getOrCreate` calls
  * `rankInsert`, and the `@convex-dev/aggregate` component is not registered in

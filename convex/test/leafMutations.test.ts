@@ -18,9 +18,9 @@ import {
   seedConversation,
   seedMetadata,
   seedSession,
-} from "./fixtures";
-import { asNewUser, type SeededUser } from "./harness";
-import { aggregatesMock } from "./mocks";
+} from "./fixtures.helpers";
+import { asNewUser, type SeededUser } from "./harness.helpers";
+import { aggregatesMock } from "./mocks.helpers";
 
 // `users.getOrCreate` (via `asNewUser`) calls `rankInsert`; the
 // @convex-dev/aggregate component is not registered in the test backend.

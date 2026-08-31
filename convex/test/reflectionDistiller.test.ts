@@ -14,9 +14,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
-import { seedSession } from "./fixtures";
-import { asNewUser, type SeededUser } from "./harness";
-import { actionCacheMock, aggregatesMock, revenuecatMock } from "./mocks";
+import { seedSession } from "./fixtures.helpers";
+import { asNewUser, type SeededUser } from "./harness.helpers";
+import { actionCacheMock, aggregatesMock, revenuecatMock } from "./mocks.helpers";
 
 const RAW_TEXT = "another week of shipping and nobody said anything";
 const MIRROR = "The deadline is not the weight. Being unseen while carrying it is.";

@@ -12,9 +12,9 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
-import { expectCode, seedSession } from "./fixtures";
-import { asNewUser, asUnauthed, asUserWithStatus, makeIdentity } from "./harness";
-import { aggregatesMock } from "./mocks";
+import { expectCode, seedSession } from "./fixtures.helpers";
+import { asNewUser, asUnauthed, asUserWithStatus, makeIdentity } from "./harness.helpers";
+import { aggregatesMock } from "./mocks.helpers";
 
 // `users.getOrCreate` calls `rankInsert`; the @convex-dev/aggregate component
 // is not registered in the test backend.

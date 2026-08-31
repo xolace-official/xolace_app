@@ -31,8 +31,8 @@ import {
   scheduledCalls,
   seedMetadata,
   seedSession,
-} from "./fixtures";
-import { asNewUser, type SeededUser } from "./harness";
+} from "./fixtures.helpers";
+import { asNewUser, type SeededUser } from "./harness.helpers";
 import {
   actionCacheMock,
   aggregatesMock,
@@ -42,7 +42,7 @@ import {
   rateLimiterMock,
   ragMock,
   revenuecatMock,
-} from "./mocks";
+} from "./mocks.helpers";
 
 const MIRROR = "The deadline is not the weight. Being unseen while carrying it is.";
 const FALLBACK_MIRROR = "I hear you, and what you're feeling matters.";
