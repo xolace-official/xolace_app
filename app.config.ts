@@ -208,6 +208,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ],
       "expo-sqlite",
       "@clerk/expo",
+      "@clerk/expo-google-signin",
       "expo-secure-store",
       "expo-apple-authentication",
       [

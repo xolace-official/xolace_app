@@ -39,8 +39,9 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "3.0.80",
-    "@anthropic-ai/sdk": "^0.80.0",
-    "@clerk/expo": "3.6.3",
+    "@anthropic-ai/sdk": "^0.122.0",
+    "@clerk/expo": "^4.6.1",
+    "@clerk/expo-google-signin": "^1.0.2",
     "@convex-dev/action-cache": "^0.3.1",
     "@convex-dev/aggregate": "^0.3.0",
     "@convex-dev/expo-push-notifications": "^0.3.1",
