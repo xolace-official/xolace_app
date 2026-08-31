@@ -24,6 +24,15 @@ export default defineConfig({
       provider: 'v8',
       include: ['convex/**'],
       reporter: ['text'],
+      // Floor set just under the observed baseline at #252 (statements 24.55,
+      // branches 23.68, functions 26.92, lines 25.18). Ratchet these up as
+      // coverage grows; they exist to catch a drop, not to be aspirational.
+      thresholds: {
+        statements: 24,
+        branches: 23,
+        functions: 26,
+        lines: 24,
+      },
     },
   },
 });
