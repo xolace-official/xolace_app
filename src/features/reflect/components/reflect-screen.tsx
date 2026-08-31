@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, type ViewStyle, View } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { Stack, useRouter } from "expo-router";
 import AccountCircle from "@expo/material-symbols/account_circle.xml";
 import CrisisAlert from "@expo/material-symbols/crisis_alert.xml";
@@ -30,6 +31,7 @@ import { GaveUpState } from "@/src/features/reflect/components/states/gave-up-st
 import { PathSelectionState } from "@/src/features/reflect/components/states/path-selection-state";
 import { EscalationState } from "@/src/features/reflect/components/states/escalation-state";
 import { ErrorState } from "@/src/features/reflect/components/states/error-state";
+import { ReflectWash } from "@/src/features/reflect/components/reflect-wash";
 import { SpaceNamePromptDialog } from "@/src/features/reflect/components/space-name-prompt-dialog";
 import { ClarifyFeedbackSheet } from "@/src/features/reflect/components/states/clarify-feedback-sheet";
 import { useFeedbackShake } from "@/src/features/feedback-tray/feedback-tray-provider";
@@ -40,6 +42,13 @@ import { useFeedbackShake } from "@/src/features/feedback-tray/feedback-tray-pro
 // onOutgoingComplete never fires, leaving it mounted forever.
 const EASE_ANIMATE_OUT_INITIAL = { opacity: 1 };
 const EASE_ANIMATE_OUT = { opacity: 0 };
+
+const WASH_FADE_IN = FadeIn.duration(300);
+const WASH_FADE_OUT = FadeOut.duration(300);
+
+const WASH_SCREENS: ReflectionStateName[] = ["idle", "typing", "typing-nudge"];
+const isWashScreen = (screen: ReflectionStateName) =>
+  WASH_SCREENS.includes(screen);
 
 export const ReflectScreen = () => {
   const router = useRouter();
@@ -277,6 +286,11 @@ export const ReflectScreen = () => {
   };
 
   const isIdle = current === "idle";
+  // The wash belongs to the idle/typing canvas. It stays mounted while an
+  // outgoing idle/typing screen is still fading, so it leaves with that screen
+  // rather than popping out from under the one replacing it.
+  const showWash =
+    isWashScreen(current) || (previous !== null && isWashScreen(previous));
   const stackScreenOptions = {
     headerShown: isIdle,
     headerTransparent: true,
@@ -299,6 +313,19 @@ export const ReflectScreen = () => {
   return (
     <View className="flex-1 bg-background" style={safeAreaStyle}>
       <Stack.Screen options={stackScreenOptions} />
+      {showWash && (
+        <Animated.View
+          entering={WASH_FADE_IN}
+          exiting={WASH_FADE_OUT}
+          pointerEvents="none"
+          // Absolute children lay out against the border box, so this ignores
+          // the host's safe-area padding and the wash runs edge to edge —
+          // under the status bar and the home indicator.
+          style={StyleSheet.absoluteFill}
+        >
+          <ReflectWash />
+        </Animated.View>
+      )}
       {/* Mounted only while idle. A `hidden` toolbar button still leaves its
           transparent host view laid out across the top of the screen on
           Android, where (unlike UIKit) an invisible view still consumes
