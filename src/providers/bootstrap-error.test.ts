@@ -29,7 +29,7 @@ describe('isBootstrapError', () => {
     // retry here would mask a broken session behind a loader.
     expect(isBootstrapError({ data: { code: 'not_authenticated' } })).toBe(false);
     expect(isBootstrapError({ data: { code: 'max_refinement_turns' } })).toBe(false);
-    expect(isBootstrapError(new Error('Emotional profile not found'))).toBe(false);
+    expect(isBootstrapError({ data: { code: 'profile_not_found' } })).toBe(false);
     expect(isBootstrapError(new Error('Server Error'))).toBe(false);
     expect(isBootstrapError(null)).toBe(false);
     expect(isBootstrapError(undefined)).toBe(false);

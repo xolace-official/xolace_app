@@ -6,10 +6,10 @@ import { QueryCtx, MutationCtx } from "../_generated/server";
  * Ensure the request is authenticated and return the authenticated user, their emotional profile, and the identity.
  *
  * @returns An object containing `user` (the user document), `profile` (the user's emotional profile document), and `identity` (the authentication identity)
- * @throws Error when the request has no authenticated identity ("Not authenticated")
- * @throws Error when no user matches the identity ("User not found. Call getOrCreate first.")
- * @throws Error when the user's account status is not `"active"` ("Account is not active")
- * @throws Error when the user's emotional profile cannot be found ("Emotional profile not found")
+ * @throws ConvexError `not_authenticated` when the request has no authenticated identity
+ * @throws ConvexError `user_not_found` when no user matches the identity
+ * @throws ConvexError `account_inactive` when the user's account status is not `"active"`
+ * @throws ConvexError `profile_not_found` when the user's emotional profile cannot be found
  */
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
@@ -47,7 +47,10 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
 
   const profile = await ctx.db.get(user.emotionalProfileId);
   if (!profile) {
-    throw new Error("Emotional profile not found");
+    throw new ConvexError({
+      code: "profile_not_found",
+      message: "Emotional profile not found",
+    });
   }
 
   return { user, profile, identity };
@@ -58,8 +61,8 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
  *
  * @param sessionId - The id of the session in the `sessions` collection to verify ownership for
  * @returns An object containing `user`, `profile`, `session`, and `identity`
- * @throws Error with message "Session not found" if no session exists for `sessionId`
- * @throws Error with message "Session does not belong to this user" if the session's emotionalProfileId does not match the authenticated profile
+ * @throws ConvexError `session_not_found` if no session exists for `sessionId`
+ * @throws ConvexError `session_forbidden` if the session's emotionalProfileId does not match the authenticated profile
  */
 export async function requireSessionOwnership(
   ctx: QueryCtx | MutationCtx,
@@ -69,11 +72,17 @@ export async function requireSessionOwnership(
 
   const session = await ctx.db.get(sessionId);
   if (!session) {
-    throw new Error("Session not found");
+    throw new ConvexError({
+      code: "session_not_found",
+      message: "Session not found",
+    });
   }
 
   if (session.emotionalProfileId !== profile._id) {
-    throw new Error("Session does not belong to this user");
+    throw new ConvexError({
+      code: "session_forbidden",
+      message: "Session does not belong to this user",
+    });
   }
 
   return { user, profile, session, identity };
