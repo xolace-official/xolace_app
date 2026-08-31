@@ -29,16 +29,25 @@ export const aggregatesMock = () => ({
 });
 
 /**
+ * A fixed value, or a getter read at call time. `vi.mock` factories are
+ * hoisted above every `it`, so a file whose branches need different values
+ * passes a getter over a `vi.hoisted` holder and sets it per test.
+ */
+export type Lazy<T> = T | (() => T);
+const unwrap = <T>(v: Lazy<T>): T =>
+  typeof v === "function" ? (v as () => T)() : v;
+
+/**
  * The `rateLimiter` half of `convex/lib/rateLimits` — allow by default. Pass
  * `{ ok: false, retryAfter }` to exercise a rate-limited branch. Spread over
  * the real module so the limit constants stay real.
  */
 export const rateLimiterMock = (
-  limit: { ok: boolean; retryAfter?: number } = { ok: true },
+  limit: Lazy<{ ok: boolean; retryAfter?: number }> = { ok: true },
 ) => ({
   rateLimiter: {
-    limit: async () => limit,
-    check: async () => limit,
+    limit: async () => unwrap(limit),
+    check: async () => unwrap(limit),
     reset: async () => {},
   },
 });
@@ -48,6 +57,81 @@ export const posthogMock = () => ({
   posthog: { capture: async () => {} },
 });
 
-// The `ai/cached`, `rag` and workflow factories land with the AI-pipeline
-// tests that first reach them — their return shapes are only knowable against
-// a real call site, and a guessed one stubs out the thing under test.
+/** `convex/revenuecat` — entitlement state. `hasPremium` stays real. */
+export const revenuecatMock = (hasEntitlement: Lazy<boolean> = false) => ({
+  revenuecat: { hasEntitlement: async () => unwrap(hasEntitlement) },
+});
+
+/**
+ * `convex/rag` — the search half of the shared RAG instance. Defaults to a
+ * cold namespace (nothing retrieved), which is what a first-session profile
+ * genuinely looks like. `searchEpisodicMemory` itself stays real.
+ */
+export const ragMock = (
+  result: {
+    entries?: { entryId: string; key?: string; text: string }[];
+    results?: { entryId: string; score: number }[];
+  } = {},
+) => ({
+  REFLECTION_POOL_NAMESPACE: "reflection-pool",
+  NO_GRANULAR_LABEL: "",
+  EPISODIC_STATUS: "n/a",
+  rag: {
+    search: async () => ({
+      entries: result.entries ?? [],
+      results: result.results ?? [],
+    }),
+    add: async () => {},
+  },
+});
+
+/**
+ * `convex/ai/cached` — the three `@convex-dev/action-cache` wrappers. This is
+ * the provider seam for the pipeline: each `fetch` resolves to whatever the
+ * test hands it, so a branch is steered by the value the model "returned"
+ * rather than by a wire stub. Pass a thrown value to exercise a provider
+ * outage.
+ */
+export const actionCacheMock = (
+  results: Lazy<{
+    moderation?: unknown;
+    classification?: unknown;
+    distilled?: unknown;
+  }>,
+) => {
+  const fetcher = (pick: (r: Record<string, unknown>) => unknown) => ({
+    fetch: async () => {
+      const value = pick(unwrap(results) as Record<string, unknown>);
+      if (value instanceof Error) throw value;
+      return value;
+    },
+  });
+  return {
+    moderationCache: fetcher((r) => r.moderation),
+    classifierCache: fetcher((r) => r.classification),
+    distillerCache: fetcher((r) => r.distilled),
+  };
+};
+
+/**
+ * `convex/ai/providers/anthropic` — the articulator boundary only. Spread over
+ * the real module so model ids, versions, `extractTextFromResponse` and
+ * `parseClassificationResponse` stay real; only the network client is faked.
+ * A getter returning an `Error` makes `messages.create` reject, which is the
+ * fallback-mirror branch.
+ */
+export const anthropicMock = (reply: Lazy<string | Error>) => ({
+  getAnthropicClient: () => ({
+    messages: {
+      create: async () => {
+        const value = unwrap(reply);
+        if (value instanceof Error) throw value;
+        return { content: [{ type: "text", text: value }] };
+      },
+    },
+  }),
+});
+
+// The workflow factory lands with the test that first reaches it — its return
+// shape is only knowable against a real call site, and a guessed one stubs out
+// the thing under test.

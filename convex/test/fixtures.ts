@@ -13,6 +13,11 @@
 import type { TestConvex } from "convex-test";
 import { expect } from "vitest";
 import type { Doc, Id } from "../_generated/dataModel";
+import type { ClassificationResult } from "../ai/providers/anthropic";
+import {
+  EMPTY_CATEGORIES,
+  type ModerationResult,
+} from "../ai/providers/moderation";
 import type schema from "../schema";
 
 type Root = TestConvex<typeof schema>;
@@ -30,6 +35,69 @@ type StoredMetadata = Omit<
  */
 export async function expectCode(run: () => Promise<unknown>, code: string) {
   await expect(run()).rejects.toMatchObject({ data: { code } });
+}
+
+/**
+ * Everything currently on the scheduler, as `{ name, args }` — `name` is the
+ * module path plus function name, e.g. `"jobs/reflectionDistiller.js:distill"`.
+ *
+ * The pipeline tests assert scheduled work at the enqueue boundary rather than
+ * running the downstream job: what was enqueued with which arguments is the
+ * contract `generateMirror` owns; what the job then does is the job's own test.
+ */
+export async function scheduledCalls(
+  root: Root,
+): Promise<{ name: string; args: Record<string, unknown> }[]> {
+  const jobs = await root.run((ctx) =>
+    ctx.db.system.query("_scheduled_functions").collect(),
+  );
+  return jobs.map((j) => ({
+    // convex-test reports "ai/tts:generateMirrorAudio"; a real deployment
+    // reports "ai/tts.js:generateMirrorAudio". Normalise so an assertion
+    // reads the same either way.
+    name: j.name.replace(".js:", ":"),
+    args: (j.args[0] ?? {}) as Record<string, unknown>,
+  }));
+}
+
+/** The one scheduled call whose name ends in `suffix`, or undefined. */
+export const scheduled = (
+  calls: { name: string; args: Record<string, unknown> }[],
+  suffix: string,
+) => calls.find((c) => c.name.endsWith(suffix));
+
+/** A `ClassificationResult` as the classifier would have returned it. The
+ * default is unremarkable — low intensity, no distress emotion — so a test
+ * that expects a safeguard level has to say which field produced it. */
+export function classificationResult(
+  overrides: Partial<ClassificationResult> = {},
+): ClassificationResult {
+  return {
+    primaryEmotion: "anxiety",
+    primaryEmotionConfidence: 0.8,
+    intensity: 5,
+    specificity: 7,
+    thematicTags: ["work"],
+    userLanguageTags: ["stretched thin"],
+    requiresFollowUp: false,
+    ...overrides,
+  };
+}
+
+/** A `ModerationResult`. Defaults to the clean verdict; pass `categories` /
+ * `categoryScores` overrides to steer the safeguard engine. */
+export function moderationResult(
+  overrides: {
+    flagged?: boolean;
+    categories?: Partial<ModerationResult["categories"]>;
+    categoryScores?: Record<string, number>;
+  } = {},
+): ModerationResult {
+  return {
+    flagged: overrides.flagged ?? false,
+    categories: { ...EMPTY_CATEGORIES, ...overrides.categories },
+    categoryScores: overrides.categoryScores ?? {},
+  };
 }
 
 /** A session owned by `profileId`. Defaults to the state the AI pipeline
