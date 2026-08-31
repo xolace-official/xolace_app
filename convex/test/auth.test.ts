@@ -12,38 +12,13 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import { expectCode, seedSession } from "./fixtures";
 import { asNewUser, asUnauthed, asUserWithStatus, makeIdentity } from "./harness";
+import { aggregatesMock } from "./mocks";
 
 // `users.getOrCreate` calls `rankInsert`; the @convex-dev/aggregate component
 // is not registered in the test backend.
-vi.mock("../lib/aggregates", () => ({
-  reflectionRank: {},
-  rankInsert: async () => {},
-  rankReplace: async () => {},
-  rankDelete: async () => {},
-}));
-
-/** Assert the thrown ConvexError's `data.code`. Never matches on messages. */
-async function expectCode(run: () => Promise<unknown>, code: string) {
-  await expect(run()).rejects.toMatchObject({ data: { code } });
-}
-
-async function seedSession(
-  { root, profileId }: { root: ReturnType<typeof asUnauthed>; profileId: Id<"emotional_profiles"> },
-) {
-  const now = Date.now();
-  return await root.run((ctx) =>
-    ctx.db.insert("sessions", {
-      emotionalProfileId: profileId,
-      state: "initiated" as const,
-      entryType: "open_prompt" as const,
-      kept: true,
-      createdAt: now,
-      updatedAt: now,
-    }),
-  );
-}
+vi.mock("../lib/aggregates", () => aggregatesMock());
 
 describe("requireAuth", () => {
   it("throws not_authenticated with no identity", async () => {
@@ -79,7 +54,9 @@ describe("requireAuth", () => {
 describe("requireSessionOwnership", () => {
   it("throws session_not_found for a deleted session id", async () => {
     const seeded = await asNewUser();
-    const sessionId = await seedSession(seeded);
+    const sessionId = await seedSession(seeded.root, seeded.profileId, {
+      state: "initiated",
+    });
     await seeded.root.run((ctx) => ctx.db.delete("sessions", sessionId));
 
     await expectCode(
@@ -91,7 +68,9 @@ describe("requireSessionOwnership", () => {
   it("throws session_forbidden when the session belongs to another user", async () => {
     const userA = await asNewUser();
     const userB = await asNewUser(2, userA.root);
-    const sessionId = await seedSession(userA);
+    const sessionId = await seedSession(userA.root, userA.profileId, {
+      state: "initiated",
+    });
 
     await expectCode(
       () => userB.t.query(api.sessions.getById, { sessionId }),
