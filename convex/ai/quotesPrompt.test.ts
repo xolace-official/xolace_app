@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { buildQuotePrompt, parseQuoteResponse, type QuoteSession } from "./quotesPrompt";
 
 const now = new Date("2026-07-07T00:00:00Z").getTime();

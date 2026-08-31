@@ -18,7 +18,7 @@ export async function loadSemanticMatches(
 ): Promise<Doc<"reflections">[]> {
   if (!session.semanticMatchIds?.length) return [];
   const docs = await Promise.all(
-    session.semanticMatchIds.map((id) => ctx.db.get(id)),
+    session.semanticMatchIds.map((id) => ctx.db.get("reflections", id)),
   );
   return docs.filter(
     (r): r is Doc<"reflections"> => r !== null && r.status === "active",

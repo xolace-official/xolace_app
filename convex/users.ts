@@ -52,7 +52,7 @@ export const getOrCreate = mutation({
         existingUser.accountStatus === "deleted" ||
         existingUser.accountStatus === "purging"
       ) {
-        await ctx.db.patch(existingUser._id, {
+        await ctx.db.patch("users", existingUser._id, {
           accountStatus: "active",
           deletionRequestedAt: undefined,
           updatedAt: Date.now(),
@@ -197,7 +197,7 @@ export const requestDeletion = mutation({
   handler: async (ctx) => {
     const { user } = await requireAuth(ctx);
 
-    await ctx.db.patch(user._id, {
+    await ctx.db.patch("users", user._id, {
       accountStatus: "deleted",
       deletionRequestedAt: Date.now(),
       updatedAt: Date.now(),
@@ -230,7 +230,7 @@ export const requestDataWipe = mutation({
       throw new Error("Data wipe can only be requested once every 7 days");
     }
 
-    await ctx.db.patch(profile._id, { dataWipeInProgress: true });
+    await ctx.db.patch("emotional_profiles", profile._id, { dataWipeInProgress: true });
 
     await ctx.scheduler.runAfter(0, internal.jobs.dataWipe.wipe, {
       emotionalProfileId: profile._id,

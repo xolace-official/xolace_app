@@ -329,7 +329,7 @@ export const updateDisplayName = mutation({
       .unique();
     if (!prefs) throw new Error("Preferences not found");
 
-    await ctx.db.patch(prefs._id, { displayName: trimmed });
+    await ctx.db.patch("preferences", prefs._id, { displayName: trimmed });
     return null;
   },
 });

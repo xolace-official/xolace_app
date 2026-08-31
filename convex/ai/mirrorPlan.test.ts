@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { decideMirrorOutcome, resolveMirrorTone } from "./mirrorPlan";
 import type { SafeguardResult } from "./safeguard";
 import type { ClassificationResult } from "./providers/anthropic";

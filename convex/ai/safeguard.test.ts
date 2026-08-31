@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { evaluateSafeguard } from "./safeguard";
 import type { ClassificationResult } from "./providers/anthropic";
 import {

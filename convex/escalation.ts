@@ -33,7 +33,7 @@ export const create = internalMutation({
     });
 
     // Mark the session as having triggered escalation
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       escalationTriggered: true,
       updatedAt: Date.now(),
     });
@@ -68,7 +68,7 @@ export const recordUserResponse = mutation({
       throw new Error("No escalation event found for this session");
     }
 
-    await ctx.db.patch(event._id, {
+    await ctx.db.patch("escalation_events", event._id, {
       userResponse: args.userResponse,
     });
 

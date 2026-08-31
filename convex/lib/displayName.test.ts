@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { validateDisplayName, DISPLAY_NAME_MAX_LENGTH } from "./displayName";
 
 describe("validateDisplayName", () => {

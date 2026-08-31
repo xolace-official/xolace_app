@@ -81,7 +81,7 @@ export async function computeCohortCounts(
 
   const doc = { weekStart, weekEnd, counts, computedAt: Date.now() };
   if (existing) {
-    await ctx.db.replace(existing._id, doc);
+    await ctx.db.replace("cohort_weekly_counts", existing._id, doc);
   } else {
     await ctx.db.insert("cohort_weekly_counts", doc);
   }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { buildVentAcknowledgePrompt } from "./ventAcknowledge";
 
 const TRANSCRIPT = "I don't even know where to start today, it's just been a lot.";

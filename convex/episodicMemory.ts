@@ -73,7 +73,7 @@ function buildComposite(source: EpisodicSource): string {
 export const getSessionForEpisodic = internalQuery({
   args: { sessionId: v.id("sessions") },
   handler: async (ctx, args): Promise<EpisodicSource | null> => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return null;
 
     // Burned / ephemeral sessions never enter memory.

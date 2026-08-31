@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   type BlockPlanRow,
   bothPartiesDeleted,
@@ -37,7 +37,7 @@ describe("hasRequestExpired", () => {
   const REQUESTED = 1_000_000;
 
   // requestedAt + elapsed → has the sweep's span run out?
-  const cases: Array<{ elapsed: number; expected: boolean; label: string }> = [
+  const cases: { elapsed: number; expected: boolean; label: string }[] = [
     { elapsed: 0, expected: false, label: "just sent" },
     // The window the median accept (4h) and the 90th percentile (32h) live in.
     { elapsed: 4 * HOUR, expected: false, label: "the median accept" },
@@ -102,14 +102,14 @@ describe("declineCooldownUntil", () => {
   const OPEN_AGAIN = DECLINED + DECLINE_COOLDOWN_MS;
 
   // row state | now → when the pair may ask again, or undefined for "now"
-  const cases: Array<{
+  const cases: {
     status?: "requested" | "open" | "resting" | "closed";
     reason?: Reason;
     declinedAt?: number;
     now: number;
     expected?: number;
     label: string;
-  }> = [
+  }[] = [
     // The loop this exists to break: declined, asked again the same hour.
     {
       status: "closed",
@@ -211,12 +211,12 @@ describe("declineCooldownUntil", () => {
 
 describe("isPairBlocked", () => {
   // forward row | reverse row → is the pair closed?
-  const cases: Array<{
+  const cases: {
     forward?: Reason | null;
     reverse?: Reason | null;
     expected: boolean;
     label: string;
-  }> = [
+  }[] = [
     { expected: false, label: "neither direction was ever opened" },
     {
       forward: "blocked",
@@ -266,7 +266,7 @@ describe("isAtOpenCap", () => {
   const SEEKER_CAP = 3;
 
   // openCount | cap → is this party full?
-  const cases: Array<{ open: number; cap: number; expected: boolean }> = [
+  const cases: { open: number; cap: number; expected: boolean }[] = [
     { open: 0, cap: SEEKER_CAP, expected: false },
     { open: 2, cap: SEEKER_CAP, expected: false },
     { open: 3, cap: SEEKER_CAP, expected: true },
@@ -297,14 +297,14 @@ describe("planBlock", () => {
         };
 
   // forward row | reverse row → noop, channels to freeze, rows to close
-  const cases: Array<{
+  const cases: {
     forward?: Row;
     reverse?: Row;
     noop: boolean;
     freeze: string[];
     close: string[];
     label: string;
-  }> = [
+  }[] = [
     // The regression this ticket exists for: a pair holding two open rows must
     // lose both, or they keep messaging through the sibling.
     {
@@ -382,10 +382,10 @@ describe("planBlock", () => {
 });
 
 describe("isBlocked", () => {
-  const cases: Array<{
+  const cases: {
     reason?: "declined" | "expired" | "blocked" | "xolacer_left";
     expected: boolean;
-  }> = [
+  }[] = [
     { reason: "blocked", expected: true },
     { reason: "declined", expected: false },
     { reason: "expired", expected: false },
@@ -405,14 +405,14 @@ describe("canRate", () => {
   const AFTER = 2_000;
 
   // role | closedReason | exchange → rateable
-  const cases: Array<{
+  const cases: {
     role: "user" | "xolacer";
     reason?: "declined" | "expired" | "blocked" | "xolacer_left";
     acceptedAt?: number;
     lastMessageAt?: number;
     expected: boolean;
     label?: string;
-  }> = [
+  }[] = [
     {
       role: "user",
       acceptedAt: ACCEPTED,

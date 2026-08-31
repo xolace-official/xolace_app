@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import type { CohortEmotion } from "./cohortCard";
 import {
   COHORT_FLOOR,
@@ -8,13 +8,13 @@ import {
 } from "./cohortCard";
 
 describe("isCohortMatch", () => {
-  const cases: Array<{
+  const cases: {
     name: string;
     primary: string;
     secondary?: string;
     target: CohortEmotion;
     expected: boolean;
-  }> = [
+  }[] = [
     {
       name: "match on primary",
       primary: "sadness",
@@ -69,7 +69,7 @@ describe("isCohortMatch", () => {
 });
 
 describe("deriveCohortCardState", () => {
-  const cases: Array<{ count: number; expected: ReturnType<typeof deriveCohortCardState> }> = [
+  const cases: { count: number; expected: ReturnType<typeof deriveCohortCardState> }[] = [
     { count: 0, expected: { type: "warming" } },
     { count: 1, expected: { type: "warming" } },
     // the floor boundary, both sides

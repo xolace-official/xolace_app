@@ -1,17 +1,18 @@
 /**
- * Preloaded by `bun test` (see bunfig.toml).
+ * Loaded by every test file (see vitest.config.ts).
  *
- * Bun cannot parse react-native's Flow-typed entry point, so any unit test that
- * reaches it transitively (e.g. store.ts -> unified-storage.ts) fails to import.
- * Stub the few native modules our pure-logic tests touch.
+ * react-native's entry point is Flow-typed and unparseable outside Metro, so
+ * any unit test that reaches it transitively (e.g. store.ts ->
+ * unified-storage.ts) fails to import. Stub the few native modules our
+ * pure-logic tests touch.
  */
-import { mock } from 'bun:test';
+import { vi } from 'vitest';
 
-mock.module('react-native', () => ({
+vi.mock('react-native', () => ({
   Platform: { OS: 'ios', select: (spec: Record<string, unknown>) => spec.ios ?? spec.default },
 }));
 
-mock.module('expo-sqlite/kv-store', () => {
+vi.mock('expo-sqlite/kv-store', () => {
   const store = new Map<string, string>();
   return {
     default: {

@@ -202,9 +202,9 @@ export const markConsolidated = internalMutation({
   args: { emotionalProfileId: v.id("emotional_profiles") },
   handler: async (ctx, args) => {
     // Skip if a wipe swept the profile mid-flight (mirrors the write guard).
-    const profile = await ctx.db.get(args.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
     if (!profile || profile.dataWipeInProgress === true) return null;
-    await ctx.db.patch(args.emotionalProfileId, {
+    await ctx.db.patch("emotional_profiles", args.emotionalProfileId, {
       lastConsolidationAt: Date.now(),
     });
     await posthog.capture(ctx, {

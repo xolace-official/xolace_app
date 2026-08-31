@@ -27,7 +27,7 @@ export const loadSessionForAnonymize = internalQuery({
     v.object({ session: sessionDoc, metadata: v.union(metadataDoc, v.null()) }),
   ),
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return null;
 
     const metadata = await ctx.db

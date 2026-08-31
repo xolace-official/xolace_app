@@ -118,7 +118,7 @@ export const storeCuratedAndMarkShown = internalMutation({
 
     if (prefs?.quotes) {
       const updated = [...(prefs.quotes.shownQuoteIds ?? []), args.quoteId].slice(-500);
-      await ctx.db.patch(prefs._id, { quotes: { ...prefs.quotes, shownQuoteIds: updated } });
+      await ctx.db.patch("preferences", prefs._id, { quotes: { ...prefs.quotes, shownQuoteIds: updated } });
     }
   },
 });

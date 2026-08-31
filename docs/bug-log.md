@@ -15,6 +15,34 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-08-31 — Clerk⇄Convex desync with a valid session hangs forever (the "keep the session" branch did nothing)
+
+**Symptom**
+Rare, but terminal: Clerk reports `isSignedIn: true`, Convex reports unauthenticated, and the app sits there indefinitely. No Sentry event, no sign-out, no recovery. Only killing the app clears it.
+
+**Where it appeared**
+`src/providers/auth-sync-guard.tsx`, both platforms, `@clerk/expo` 4.6.1 / `convex` 1.45.0. Only after the grace window on a session whose token still mints — i.e. the branch the guard was written to protect.
+
+**Root cause**
+`AuthSyncGuard`'s "token is mintable → keep the session and let Convex re-authenticate" branch assumed Convex would retry. It never does.
+
+`ConvexProviderWithAuth` calls `client.setAuth` from an effect keyed on `[authProviderAuthenticated, fetchAccessToken, authProviderLoading, client, …]` (`convex/dist/cjs/react/ConvexAuthState.js:132-139`), and `ConvexProviderWithClerk` rebuilds `fetchAccessToken` only when `[orgId, orgRole, sessionId]` change (`ConvexProviderWithClerk.js:76`). Meanwhile `authentication_manager.js:213-247` has already run `refetchToken → clearAuth → setAndReportAuthFailed` and latched `noAuth` — terminal, no retry. Nothing in that dep list changes on its own, so `setAuth` is never re-run: the guard returned without acting, `recoveredRef` latched so it never looked again, and nothing was logged.
+
+**How we diagnosed it**
+1. Read the guard against the Convex client rather than in isolation — the branch has no side effect, so its correctness depends entirely on Convex retrying.
+2. Traced `authentication_manager.refetchToken`: a falsy token ends in `setAndReportAuthFailed`, with no rearm path.
+3. Traced back up to what *does* re-run `setAuth` — `fetchAccessToken` identity — and found its dep list is `[orgId, orgRole, sessionId]`, none of which move during a desync.
+
+**Fix**
+Gave the branch teeth. `use-resilient-clerk-auth.ts` now owns a module-level re-auth epoch (`requestConvexReauth()`, `useSyncExternalStore`) and reports `sessionId` as `` `${sessionId}#${epoch}` `` once bumped. Changing `sessionId` is the supported way to rebuild `fetchAccessToken`, which re-runs `setAuth`. `AuthSyncGuard` calls it instead of returning, re-arms its grace timer, and after `MAX_REAUTH_ATTEMPTS` (2) forced re-auths signs out rather than hanging. Policy extracted as the pure `desyncRecovery()` and covered by `src/providers/auth-sync-guard.test.ts`.
+
+**Prevention / future reference**
+- **A recovery branch that only decides not to act is not a recovery branch.** If the plan is "let library X retry", find the code in X that does the retrying before shipping it.
+- The only lever on Convex's auth state from outside is `fetchAccessToken` identity, and the only lever on *that* through `ConvexProviderWithClerk` is `orgId`/`orgRole`/`sessionId`. Note it explicitly excludes `getToken` ("Clerk's Expo useAuth hook is not memoized") — stabilising `getToken` does not trigger re-auth.
+- Every recovery path needs a Sentry breadcrumb, including the happy one. This bug's whole signature in prod was silence.
+
+---
+
 ## 2026-08-17 — Chat message actions (Copy, Edit, Delete) all silently do nothing
 
 **Symptom**

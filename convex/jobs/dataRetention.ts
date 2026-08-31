@@ -64,7 +64,7 @@ export const enforce = internalMutation({
       // Sweep old semantic profile VERSIONS past the cutoff. The current
       // version is always kept — retention shortens history, it doesn't
       // lobotomize the live profile. Full deletion happens in dataWipe.
-      const profileRow = await ctx.db.get(pref.emotionalProfileId);
+      const profileRow = await ctx.db.get("emotional_profiles", pref.emotionalProfileId);
       const oldProfileVersions = await ctx.db
         .query("semantic_profiles")
         .withIndex("by_profile_version", (q) =>
@@ -76,7 +76,7 @@ export const enforce = internalMutation({
           version.createdAt < cutoff &&
           version._id !== profileRow?.currentSemanticProfileId
         ) {
-          await ctx.db.delete(version._id);
+          await ctx.db.delete("semantic_profiles", version._id);
         }
       }
 
@@ -88,7 +88,7 @@ export const enforce = internalMutation({
         )
         .take(BATCH_SIZE);
       for (const record of feedbackRecords) {
-        await ctx.db.delete(record._id);
+        await ctx.db.delete("feedback", record._id);
       }
     }
 

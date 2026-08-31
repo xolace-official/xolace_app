@@ -77,13 +77,13 @@ export const react = mutation({
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
-    const quote = await ctx.db.get(args.quoteId);
+    const quote = await ctx.db.get("daily_quotes", args.quoteId);
     if (!quote) throw new Error("Quote not found");
     if (quote.emotionalProfileId !== profile._id) {
       throw new Error("Not your quote");
     }
 
-    await ctx.db.patch(args.quoteId, { reaction: args.reaction });
+    await ctx.db.patch("daily_quotes", args.quoteId, { reaction: args.reaction });
     return null;
   },
 });
@@ -96,13 +96,13 @@ export const clearReaction = mutation({
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
-    const quote = await ctx.db.get(args.quoteId);
+    const quote = await ctx.db.get("daily_quotes", args.quoteId);
     if (!quote) throw new Error("Quote not found");
     if (quote.emotionalProfileId !== profile._id) {
       throw new Error("Not your quote");
     }
 
-    await ctx.db.patch(args.quoteId, { reaction: undefined });
+    await ctx.db.patch("daily_quotes", args.quoteId, { reaction: undefined });
     return null;
   },
 });
@@ -190,7 +190,7 @@ export const getMyProfile = internalQuery({
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
     if (!user || user.accountStatus !== "active") return null;
-    const profile = await ctx.db.get(user.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", user.emotionalProfileId);
     return profile ? { _id: profile._id } : null;
   },
 });

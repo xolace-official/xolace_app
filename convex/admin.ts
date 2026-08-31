@@ -48,11 +48,11 @@ export const promoteXolacer = internalMutation({
     }
 
     const isXolacer = args.isXolacer ?? true;
-    await ctx.db.patch(user._id, { isXolacer, updatedAt: Date.now() });
+    await ctx.db.patch("users", user._id, { isXolacer, updatedAt: Date.now() });
 
     // Echoing the profile name back is the confirmation that you promoted the
     // account you meant to — a Clerk id is not something you can eyeball.
-    const profile = await ctx.db.get(user.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", user.emotionalProfileId);
     const xolacerProfile = profile
       ? await ctx.db
           .query("xolacer_profiles")

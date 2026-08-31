@@ -113,11 +113,11 @@ export const getConfirmationStats = internalQuery({
 export const readSemanticProfile = internalQuery({
   args: { emotionalProfileId: v.id("emotional_profiles") },
   handler: async (ctx, args) => {
-    const profile = await ctx.db.get(args.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
     if (!profile?.currentSemanticProfileId) {
       return { version: null as number | null, rendered: null as string | null };
     }
-    const doc = await ctx.db.get(profile.currentSemanticProfileId);
+    const doc = await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId);
     if (!doc) {
       return { version: null as number | null, rendered: null as string | null };
     }

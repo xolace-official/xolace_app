@@ -3,6 +3,10 @@ import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 import { reflectionRank } from "./lib/aggregates";
 
+// Run both in sequence (renameRawInput first, then renameUserInput):
+//   bunx convex run migrations:runAll
+import { internal } from "./_generated/api";
+
 export const migrations = new Migrations<DataModel>(components.migrations);
 
 // General-purpose runner — invoke via CLI:
@@ -47,10 +51,6 @@ export const backfillReflectionRank = migrations.define({
     await reflectionRank.insertIfDoesNotExist(ctx, doc);
   },
 });
-
-// Run both in sequence (renameRawInput first, then renameUserInput):
-//   bunx convex run migrations:runAll
-import { internal } from "./_generated/api";
 export const runAll = migrations.runner([
   internal.migrations.renameRawInput,
   internal.migrations.renameUserInput,

@@ -144,7 +144,7 @@ type StartContext = {
 export const getStartContext = internalQuery({
   args: { sessionId: v.id("sessions") },
   handler: async (ctx, args): Promise<StartContext | null> => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return null;
     if (session.followUpWorkflowId) return null; // already started (idempotent)
     if (session.requiresFollowUp !== true) return null;
@@ -282,7 +282,7 @@ export const createAndStart = internalMutation({
   },
   handler: async (ctx, args) => {
     // Idempotency: session may already have a workflow (double completion).
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session || session.followUpWorkflowId) return null;
 
     const cadence = followUpCadence(args.signals);
@@ -297,7 +297,7 @@ export const createAndStart = internalMutation({
       }
       // Equal-or-higher weight — cancel the old workflow and mark superseded.
       await workflow.cancel(ctx, active.workflowId);
-      await ctx.db.patch(active._id, { status: "superseded" });
+      await ctx.db.patch("follow_up_cards", active._id, { status: "superseded" });
     }
 
     const workflowId = await workflow.start(
@@ -324,7 +324,7 @@ export const createAndStart = internalMutation({
       createdAt: Date.now(),
     });
 
-    await ctx.db.patch(args.sessionId, { followUpWorkflowId: workflowId });
+    await ctx.db.patch("sessions", args.sessionId, { followUpWorkflowId: workflowId });
     return null;
   },
 });
@@ -339,7 +339,7 @@ export const markCardExpired = internalMutation({
     const card = await getCardByWorkflow(ctx, args.workflowId);
     // A ready card is NEVER downgraded to expired by the timer.
     if (!card || card.status !== "pending") return null;
-    await ctx.db.patch(card._id, { status: "expired" });
+    await ctx.db.patch("follow_up_cards", card._id, { status: "expired" });
     return null;
   },
 });
@@ -425,7 +425,7 @@ export const markReturn = mutation({
         minGapMs: minReturnGapForTier(card.tier),
       })
     ) {
-      await ctx.db.patch(card._id, { status: "ready" });
+      await ctx.db.patch("follow_up_cards", card._id, { status: "ready" });
       // Stop the nudge/expiry cadence — the user is back.
       try {
         await workflow.cancel(ctx, card.workflowId);
@@ -490,10 +490,10 @@ export const markShown = mutation({
   args: { cardId: v.id("follow_up_cards") },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
-    const card = await ctx.db.get(args.cardId);
+    const card = await ctx.db.get("follow_up_cards", args.cardId);
     if (!card || card.emotionalProfileId !== profile._id) return null;
     if (card.status !== "ready" && card.status !== "shown") return null;
-    await ctx.db.patch(args.cardId, { status: "shown", shownAt: Date.now() });
+    await ctx.db.patch("follow_up_cards", args.cardId, { status: "shown", shownAt: Date.now() });
     return null;
   },
 });
@@ -503,10 +503,10 @@ export const resolveCard = mutation({
   args: { cardId: v.id("follow_up_cards"), response: userResponseValidator },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
-    const card = await ctx.db.get(args.cardId);
+    const card = await ctx.db.get("follow_up_cards", args.cardId);
     if (!card || card.emotionalProfileId !== profile._id) return null;
     if (card.status === "resolved") return null; // idempotent
-    await ctx.db.patch(args.cardId, {
+    await ctx.db.patch("follow_up_cards", args.cardId, {
       status: "resolved",
       userResponse: args.response,
       resolvedAt: Date.now(),
@@ -567,7 +567,7 @@ export const purgeForProfile = internalMutation({
         // Cancel the live workflow so it stops nudging a deleted user.
         await cancelFollowUpWorkflow(ctx, card.workflowId);
       }
-      await ctx.db.delete(card._id);
+      await ctx.db.delete("follow_up_cards", card._id);
     }
 
     // A profile accrues one card per session, so it can hold more than a

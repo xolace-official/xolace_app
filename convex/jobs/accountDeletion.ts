@@ -49,7 +49,7 @@ export const purge = internalMutation({
     if (deletedUsers.length === 0) return;
 
     for (const user of deletedUsers) {
-      await ctx.db.patch(user._id, { accountStatus: "purging" });
+      await ctx.db.patch("users", user._id, { accountStatus: "purging" });
       await ctx.scheduler.runAfter(
         0,
         internal.jobs.accountDeletion.purgeUser,
@@ -72,7 +72,7 @@ export const purgeUser = internalMutation({
   args: { userId: v.id("users") },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
+    const user = await ctx.db.get("users", args.userId);
     if (!user) return;
 
     // Proceed only while this user is pending deletion. "purging" is the

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect } from 'vitest';
 import { COUNTRY_RESOURCES, LAST_UPDATED } from '@/src/features/crisis-resources/data';
 import type { CountryCode, Resource } from '@/src/features/crisis-resources/types';
 

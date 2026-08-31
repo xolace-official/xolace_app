@@ -53,9 +53,9 @@ export const getLightPassContext = internalQuery({
       .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
       .unique();
 
-    const profile = await ctx.db.get(args.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
     const currentDoc = profile?.currentSemanticProfileId
-      ? await ctx.db.get(profile.currentSemanticProfileId)
+      ? await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId)
       : null;
 
     const recent = await ctx.db
@@ -86,7 +86,7 @@ export const getLightPassContext = internalQuery({
 export const getConsolidationGate = internalQuery({
   args: { emotionalProfileId: v.id("emotional_profiles") },
   handler: async (ctx, args): Promise<{ due: boolean }> => {
-    const profile = await ctx.db.get(args.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
     if (!profile) return { due: false };
 
     const anchor =

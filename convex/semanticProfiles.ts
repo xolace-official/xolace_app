@@ -35,9 +35,9 @@ export function renderSemanticProfile(
 export const getCurrent = internalQuery({
   args: { emotionalProfileId: v.id("emotional_profiles") },
   handler: async (ctx, args) => {
-    const profile = await ctx.db.get(args.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
     if (!profile?.currentSemanticProfileId) return null;
-    return await ctx.db.get(profile.currentSemanticProfileId);
+    return await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId);
   },
 });
 
@@ -77,7 +77,7 @@ async function createVersionInternal(
     writerVersion: string;
   },
 ): Promise<Id<"semantic_profiles"> | null> {
-  const profile = await ctx.db.get(args.emotionalProfileId);
+  const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
   if (!profile) throw new Error("Profile not found");
 
   // Privacy guard: a mid-wipe consolidation must not re-materialize derived
@@ -85,7 +85,7 @@ async function createVersionInternal(
   if (profile.dataWipeInProgress === true) return null;
 
   const current = profile.currentSemanticProfileId
-    ? await ctx.db.get(profile.currentSemanticProfileId)
+    ? await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId)
     : null;
 
   const newId = await ctx.db.insert("semantic_profiles", {
@@ -100,7 +100,7 @@ async function createVersionInternal(
     createdAt: Date.now(),
   });
 
-  await ctx.db.patch(args.emotionalProfileId, {
+  await ctx.db.patch("emotional_profiles", args.emotionalProfileId, {
     currentSemanticProfileId: newId,
     updatedAt: Date.now(),
   });
@@ -123,7 +123,7 @@ export const updateTrajectory = internalMutation({
     writerVersion: v.string(),
   },
   handler: async (ctx, args): Promise<Id<"semantic_profiles"> | null> => {
-    const profile = await ctx.db.get(args.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
     if (!profile) throw new Error("Profile not found");
     if (profile.dataWipeInProgress === true) return null;
 
@@ -136,10 +136,10 @@ export const updateTrajectory = internalMutation({
       });
     }
 
-    await ctx.db.patch(profile.currentSemanticProfileId, {
+    await ctx.db.patch("semantic_profiles", profile.currentSemanticProfileId, {
       trajectory: args.trajectory,
     });
-    await ctx.db.patch(args.emotionalProfileId, { updatedAt: Date.now() });
+    await ctx.db.patch("emotional_profiles", args.emotionalProfileId, { updatedAt: Date.now() });
     return profile.currentSemanticProfileId;
   },
 });
@@ -164,7 +164,7 @@ export async function writeCalibrationInternal(
     writerVersion: string;
   },
 ): Promise<Id<"semantic_profiles"> | null> {
-  const profile = await ctx.db.get(args.emotionalProfileId);
+  const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
   if (!profile) throw new Error("Profile not found");
   if (profile.dataWipeInProgress === true) return null;
 
@@ -177,10 +177,10 @@ export async function writeCalibrationInternal(
     });
   }
 
-  await ctx.db.patch(profile.currentSemanticProfileId, {
+  await ctx.db.patch("semantic_profiles", profile.currentSemanticProfileId, {
     calibration: args.calibration,
   });
-  await ctx.db.patch(args.emotionalProfileId, { updatedAt: Date.now() });
+  await ctx.db.patch("emotional_profiles", args.emotionalProfileId, { updatedAt: Date.now() });
   return profile.currentSemanticProfileId;
 }
 
@@ -205,7 +205,7 @@ export const revertToVersion = internalMutation({
       .unique();
     if (!target) throw new Error("Version not found");
 
-    await ctx.db.patch(args.emotionalProfileId, {
+    await ctx.db.patch("emotional_profiles", args.emotionalProfileId, {
       currentSemanticProfileId: target._id,
       updatedAt: Date.now(),
     });

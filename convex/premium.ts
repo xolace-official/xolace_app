@@ -60,7 +60,7 @@ export const getEntitlement = query({
 export const checkPremiumForProfile = internalQuery({
   args: { emotionalProfileId: v.id("emotional_profiles") },
   handler: async (ctx, args) => {
-    const profile = await ctx.db.get(args.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
     if (!profile) return false;
     return await hasPremium(ctx, profile);
   },

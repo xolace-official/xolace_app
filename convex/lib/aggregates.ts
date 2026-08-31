@@ -37,7 +37,7 @@ export const reflectionRank = new TableAggregate<{
 
 /** Call immediately after inserting a new emotional_profiles row. */
 export async function rankInsert(ctx: MutationCtx, profileId: Id<"emotional_profiles">) {
-  const doc = await ctx.db.get(profileId);
+  const doc = await ctx.db.get("emotional_profiles", profileId);
   if (doc) await reflectionRank.insertIfDoesNotExist(ctx, doc);
 }
 
@@ -46,12 +46,12 @@ export async function rankInsert(ctx: MutationCtx, profileId: Id<"emotional_prof
  * *before* the patch. Re-reads the fresh doc itself.
  */
 export async function rankReplace(ctx: MutationCtx, oldDoc: Doc<"emotional_profiles">) {
-  const newDoc = await ctx.db.get(oldDoc._id);
+  const newDoc = await ctx.db.get("emotional_profiles", oldDoc._id);
   if (newDoc) await reflectionRank.replaceOrInsert(ctx, oldDoc, newDoc);
 }
 
 /** Call *before* deleting the profile row — the doc must still exist. */
 export async function rankDelete(ctx: MutationCtx, profileId: Id<"emotional_profiles">) {
-  const doc = await ctx.db.get(profileId);
+  const doc = await ctx.db.get("emotional_profiles", profileId);
   if (doc) await reflectionRank.deleteIfExists(ctx, doc);
 }

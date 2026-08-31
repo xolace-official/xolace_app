@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { chooseCloseOffer } from "./close-offer-rule";
 
 const person = { displayName: "Maya" };

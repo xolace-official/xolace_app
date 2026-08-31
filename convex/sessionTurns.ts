@@ -55,7 +55,7 @@ export const submitFeedback = mutation({
     });
 
     // Transition session back to processing
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       state: "processing",
       updatedAt: now,
     });
@@ -82,7 +82,7 @@ export const deliverRevisedMirror = internalMutation({
     modelVersion: v.string(),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) {
       throw new Error("Session not found");
     }
@@ -99,7 +99,7 @@ export const deliverRevisedMirror = internalMutation({
       throw new Error("Turn not found");
     }
 
-    await ctx.db.patch(turn._id, {
+    await ctx.db.patch("session_turns", turn._id, {
       revisedMirrorText: args.revisedMirrorText,
       modelVersion: args.modelVersion,
     });

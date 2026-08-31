@@ -56,7 +56,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
     name: getAppName(),
     slug: "xolace",
-    version: "1.9.1",
+    version: "1.10.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "xolace",
@@ -208,6 +208,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ],
       "expo-sqlite",
       "@clerk/expo",
+      "@clerk/expo-google-signin",
       "expo-secure-store",
       "expo-apple-authentication",
       [

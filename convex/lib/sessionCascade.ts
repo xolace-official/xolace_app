@@ -61,7 +61,7 @@ export async function purgeSessions(
       .query("emotional_metadata")
       .withIndex("by_session", (q) => q.eq("sessionId", session._id))
       .unique();
-    if (metadata) await ctx.db.delete(metadata._id);
+    if (metadata) await ctx.db.delete("emotional_metadata", metadata._id);
 
     // Server-capped at MAX_TURNS (sessionTurns.ts), but drain in batches
     // anyway so a cap change can't silently strand rows.
@@ -71,7 +71,7 @@ export async function purgeSessions(
         .query("session_turns")
         .withIndex("by_session", (q) => q.eq("sessionId", session._id))
         .take(10);
-      for (const turn of turns) await ctx.db.delete(turn._id);
+      for (const turn of turns) await ctx.db.delete("session_turns", turn._id);
     } while (turns.length === 10);
 
     // One card per session at most, but query by index rather than assume.
@@ -83,9 +83,9 @@ export async function purgeSessions(
       if (ACTIVE_STATUSES.has(card.status)) {
         await cancelFollowUpWorkflow(ctx, card.workflowId);
       }
-      await ctx.db.delete(card._id);
+      await ctx.db.delete("follow_up_cards", card._id);
     }
 
-    await ctx.db.delete(session._id);
+    await ctx.db.delete("sessions", session._id);
   }
 }

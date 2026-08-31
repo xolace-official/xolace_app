@@ -1,8 +1,8 @@
 /**
  * Live-Haiku eval for the classifier's `requiresFollowUp` flag.
  *
- * Run: `bun test convex/ai/prompts/__evals__/requiresFollowUp.eval.ts`
- * Requires ANTHROPIC_API_KEY (bun auto-loads .env.local). Skips cleanly when
+ * Run: `bun run test:evals`
+ * Requires ANTHROPIC_API_KEY (vitest.config.ts loads .env.local). Skips cleanly when
  * the key is absent so CI without secrets stays green.
  *
  * This is a calibration eval, not a unit test — it calls the real model. A

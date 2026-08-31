@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   chatNotificationSound,
   DEFAULT_CHANNEL_ID,

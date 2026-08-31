@@ -32,6 +32,9 @@ export function ConvexClientProvider({
     <ClerkProvider
       publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
       tokenCache={instrumentedTokenCache}
+      // No Clerk native UI in this app (hooks only), so native<->JS client
+      // sync buys nothing and is the subsystem behind the random logouts.
+      __experimental_disableNativeClientSync
     >
       <ConvexProviderWithClerk client={convex} useAuth={useResilientClerkAuth}>
         <AuthSyncGuard />

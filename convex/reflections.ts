@@ -57,7 +57,7 @@ export const toggleResonance = mutation({
       return { resonated: false, rateLimited: true };
     }
 
-    const reflection = await ctx.db.get(args.reflectionId);
+    const reflection = await ctx.db.get("reflections", args.reflectionId);
     if (!reflection) {
       throw new Error("Reflection not found");
     }
@@ -73,8 +73,8 @@ export const toggleResonance = mutation({
 
     if (existing) {
       // Un-resonate
-      await ctx.db.delete(existing._id);
-      await ctx.db.patch(args.reflectionId, {
+      await ctx.db.delete("reflection_resonances", existing._id);
+      await ctx.db.patch("reflections", args.reflectionId, {
         resonanceCount: Math.max(0, reflection.resonanceCount - 1),
       });
       return { resonated: false };
@@ -86,7 +86,7 @@ export const toggleResonance = mutation({
       reflectionId: args.reflectionId,
       createdAt: Date.now(),
     });
-    await ctx.db.patch(args.reflectionId, {
+    await ctx.db.patch("reflections", args.reflectionId, {
       resonanceCount: reflection.resonanceCount + 1,
     });
     return { resonated: true };
@@ -163,7 +163,7 @@ export const reportReflection = mutation({
       return { rateLimited: true };
     }
 
-    const reflection = await ctx.db.get(args.reflectionId);
+    const reflection = await ctx.db.get("reflections", args.reflectionId);
     if (!reflection) {
       throw new Error("Reflection not found");
     }
@@ -193,7 +193,7 @@ export const reportReflection = mutation({
       .take(3);
 
     if (reports.length >= 3 && reflection.status === "active") {
-      await ctx.db.patch(args.reflectionId, { status: "flagged" });
+      await ctx.db.patch("reflections", args.reflectionId, { status: "flagged" });
       // Re-run ingest so the now-flagged entry is purged from the RAG pool.
       await ctx.scheduler.runAfter(0, internal.reflectionsRag.ingestReflection, {
         reflectionId: args.reflectionId,

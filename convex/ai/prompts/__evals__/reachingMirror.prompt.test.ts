@@ -1,6 +1,6 @@
 /**
- * Prompt test for the reach paths — NOT an eval. Plain bun:test, no key gate,
- * no model call, milliseconds. Run: `bun test convex/ai/prompts/__evals__`.
+ * Prompt test for the reach paths — NOT an eval. Plain Vitest, no key gate,
+ * no model call, milliseconds. Run: `bun run test convex/ai/prompts/__evals__`.
  *
  * The failure defended against (doc §9.5) is SUBTRACTION REVERSION: one of
  * §4.3's subtractions gets edited back at its site and the mirror silently
@@ -23,7 +23,7 @@
  * Accepted limit: a string test cannot catch the model ceasing to obey text
  * that is still present. §9.3's fixed-n review is the instrument for that.
  */
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { buildArticulatorPrompt, hasMetaNarration } from "../articulator";
 import type { ClaimStrength } from "../../routing";
 import type { ClassificationResult } from "../../providers/anthropic";
@@ -85,7 +85,7 @@ const build = (
  * asserts it on its own. Interpolated into the block below rather than typed
  * twice: two copies of a text this long drift, and the drift would pass.
  */
-const CLOSING_QUESTION_INSTRUCTION = `The closing question is the only place you may reach past tonight's words, and the only thing it may reach into is a section titled "What You Know About This Person". If that section is in your context, the question names one specific thing drawn from it and asks whether that is what tonight is about. If that section is not in your context, the question proposes nothing at all: it asks what the feeling is attached to and leaves the answer wide open.`;
+const CLOSING_QUESTION_INSTRUCTION = `The closing question is the only place you may reach past tonight's words, and the only thing it may reach into is a section titled "What You Know About This Person". If that section is in your context, the question names one specific thing drawn from it. If that section is not in your context, the question proposes nothing at all, not specific.`;
 
 const REACHING_BLOCK = `## Claim Strength: Reaching
 There is not enough here to build a full mirror. Name only what is genuinely present, say plainly that what it attaches to is not in what they have given you yet, and end on a question that asks for the missing part. Locate the shortfall in the words on the page, not in them and not in you.

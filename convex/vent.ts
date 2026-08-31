@@ -88,7 +88,7 @@ export const checkAndIncrementCap = internalMutation({
       return { allowed: false as const };
     }
 
-    await ctx.db.patch(profile._id, {
+    await ctx.db.patch("emotional_profiles", profile._id, {
       ventDailyMinutesUsed: currentUsed + minutes,
       ventDailyResetAt: needsReset ? todayStart : profile.ventDailyResetAt,
       updatedAt: Date.now(),
