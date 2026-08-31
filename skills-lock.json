@@ -444,6 +444,12 @@
       "skillPath": "skills/prototype/SKILL.md",
       "computedHash": "f246d1f47566481d9207e1aa574bdee5454257d862919a6591283e9af2f57eab"
     },
+    "pulsar-haptics": {
+      "source": "software-mansion-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/pulsar-haptics/SKILL.md",
+      "computedHash": "7ee8f5f6be3ce2ea0a1dc2fdc01b3eb3d1ae95e114240b136d9481f55547784b"
+    },
     "qa": {
       "source": "mattpocock/skills",
       "sourceType": "github",

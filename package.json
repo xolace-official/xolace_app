@@ -3,6 +3,12 @@
   "main": "expo-router/entry",
   "version": "1.8.0",
   "expo": {
+    "install": {
+      "// exclude": "@shopify/react-native-skia held at 2.11.x (SDK 57 bundles 2.6.2). 2.11.1 is same major, bug-fix + additive only, Skia m152; all peers satisfied (react 19.2, RN 0.86, reanimated 4.5, worklets 0.10). Remove when SDK bump catches up.",
+      "exclude": [
+        "@shopify/react-native-skia"
+      ]
+    },
     "autolinking": {
       "// buildFromSource": "expo-image-manipulator@57.0.6's prebuilt xcframework was compiled against an older ExpoModulesCore ABI (AnyModule._decorateModule(object:in:), 2-arg) and dyld-crashes at launch against core 57.0.3 (3-arg, +appContext). Build it from source until the upstream prebuilt is rebuilt.",
       "buildFromSource": [
@@ -52,7 +58,7 @@
     "@react-native-community/netinfo": "12.0.1",
     "@react-native-masked-view/masked-view": "0.3.2",
     "@sentry/react-native": "~7.11.0",
-    "@shopify/react-native-skia": "2.6.2",
+    "@shopify/react-native-skia": "2.11.1",
     "@tanstack/react-query": "^5.90.21",
     "clsx": "^2.1.1",
     "convex": "1.45.0",
@@ -102,10 +108,10 @@
     "react-dom": "19.2.3",
     "react-error-boundary": "^5",
     "react-native": "0.86.3",
-    "react-native-ease": "^0.7.2",
+    "react-native-ease": "^0.8.0",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-keyboard-controller": "1.21.9",
-    "react-native-pulsar": "^1.5.0",
+    "react-native-pulsar": "^1.7.0",
     "react-native-purchases": "^10.4.0",
     "react-native-purchases-ui": "^10.4.0",
     "react-native-reanimated": "4.5.1",
