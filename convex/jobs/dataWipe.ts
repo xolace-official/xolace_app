@@ -47,7 +47,7 @@ export const wipe = internalMutation({
       .take(BATCH_SIZE);
 
     if (resonances.length === BATCH_SIZE) hasMore = true;
-    for (const r of resonances) await ctx.db.delete(r._id);
+    for (const r of resonances) await ctx.db.delete("reflection_resonances", r._id);
 
     // ── Delete notification log ──────────────────────────────────
     const notifications = await ctx.db
@@ -58,7 +58,7 @@ export const wipe = internalMutation({
       .take(BATCH_SIZE);
 
     if (notifications.length === BATCH_SIZE) hasMore = true;
-    for (const n of notifications) await ctx.db.delete(n._id);
+    for (const n of notifications) await ctx.db.delete("notification_log", n._id);
 
     // ── Delete daily quotes ──────────────────────────────────────
     // Session-derived quotes are distilled from the words being wiped.
@@ -70,7 +70,7 @@ export const wipe = internalMutation({
       .take(BATCH_SIZE);
 
     if (quotes.length === BATCH_SIZE) hasMore = true;
-    for (const q of quotes) await ctx.db.delete(q._id);
+    for (const q of quotes) await ctx.db.delete("daily_quotes", q._id);
 
     // ── Anonymize escalation events ──────────────────────────────
     const escalations = await ctx.db
@@ -82,7 +82,7 @@ export const wipe = internalMutation({
 
     if (escalations.length === BATCH_SIZE) hasMore = true;
     for (const e of escalations) {
-      await ctx.db.patch(e._id, { emotionalProfileId: undefined });
+      await ctx.db.patch("escalation_events", e._id, { emotionalProfileId: undefined });
     }
 
     // ── Cancel + purge follow-up cards (and their live workflows) ─
@@ -102,15 +102,15 @@ export const wipe = internalMutation({
       )
       .take(BATCH_SIZE);
     if (semanticVersions.length === BATCH_SIZE) hasMore = true;
-    for (const version of semanticVersions) await ctx.db.delete(version._id);
+    for (const version of semanticVersions) await ctx.db.delete("semantic_profiles", version._id);
 
     // ── Reset emotional profile counters ─────────────────────────
     // Only reset on the final batch (no more sessions to delete)
     if (!hasMore) {
       // Read before the patch — the percentile aggregate needs the old
       // sessionCount to find and move this profile's key.
-      const profileBeforeReset = await ctx.db.get(emotionalProfileId);
-      await ctx.db.patch(emotionalProfileId, {
+      const profileBeforeReset = await ctx.db.get("emotional_profiles", emotionalProfileId);
+      await ctx.db.patch("emotional_profiles", emotionalProfileId, {
         sessionCount: 0,
         currentStreak: 0,
         dominantEmotionTags: [],

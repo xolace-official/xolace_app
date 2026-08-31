@@ -10,6 +10,15 @@ export default defineConfig([
   {
     ignores: ['dist/*'],
   },
+  // Type-aware linting for convex/** only — @convex-dev/eslint-plugin's
+  // explicit-table-ids rule needs the checker to infer the table from Id<"...">
+  // (and to autofix). Scoped narrowly so the rest of the repo lints untyped/fast.
+  {
+    files: ['convex/**/*.ts'],
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+  },
   {
     rules: {
       'react/display-name': 'off',

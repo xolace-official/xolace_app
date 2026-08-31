@@ -88,8 +88,8 @@ export async function deletePushDevice(
   await pushNotifications.removeToken(ctx, { userId: deviceId });
   // Logout, account deletion, and ownership transfer all remove devices, and
   // `db.delete` throws on an id that is already gone.
-  if (await ctx.db.get(deviceId)) {
-    await ctx.db.delete(deviceId);
+  if (await ctx.db.get("push_devices", deviceId)) {
+    await ctx.db.delete("push_devices", deviceId);
   }
 }
 
@@ -107,7 +107,7 @@ export async function prunePushDeviceHistory(
   ctx: MutationCtx,
   deviceId: Id<"push_devices">,
 ): Promise<void> {
-  const device = await ctx.db.get(deviceId);
+  const device = await ctx.db.get("push_devices", deviceId);
   if (!device) return;
 
   const { prune, watch } = decidePushHistoryPrune({
@@ -122,7 +122,7 @@ export async function prunePushDeviceHistory(
     });
   }
   // Cleared on a prune: the history it described is gone.
-  await ctx.db.patch(deviceId, { historyWatch: prune ? undefined : watch });
+  await ctx.db.patch("push_devices", deviceId, { historyWatch: prune ? undefined : watch });
 }
 
 /** Every device for a profile, most recently registered first. */

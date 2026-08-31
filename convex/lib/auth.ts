@@ -45,7 +45,7 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
     });
   }
 
-  const profile = await ctx.db.get(user.emotionalProfileId);
+  const profile = await ctx.db.get("emotional_profiles", user.emotionalProfileId);
   if (!profile) {
     throw new ConvexError({
       code: "profile_not_found",
@@ -70,7 +70,7 @@ export async function requireSessionOwnership(
 ) {
   const { user, profile, identity } = await requireAuth(ctx);
 
-  const session = await ctx.db.get(sessionId);
+  const session = await ctx.db.get("sessions", sessionId);
   if (!session) {
     throw new ConvexError({
       code: "session_not_found",

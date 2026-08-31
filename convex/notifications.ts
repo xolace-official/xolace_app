@@ -152,7 +152,7 @@ export const registerToken = mutation({
     const now = Date.now();
     let deviceId = keepId;
     if (deviceId) {
-      await ctx.db.patch(deviceId, { lastRegisteredAt: now });
+      await ctx.db.patch("push_devices", deviceId, { lastRegisteredAt: now });
     } else {
       deviceId = await ctx.db.insert("push_devices", {
         emotionalProfileId: profile._id,
@@ -259,13 +259,13 @@ export const markResultedInSession = mutation({
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
-    const log = await ctx.db.get(args.logId);
+    const log = await ctx.db.get("notification_log", args.logId);
     if (!log) return null;
 
     // Ownership check — only the profile that received it can mark it
     if (log.emotionalProfileId !== profile._id) return null;
 
-    await ctx.db.patch(args.logId, { resultedInSession: true });
+    await ctx.db.patch("notification_log", args.logId, { resultedInSession: true });
     return null;
   },
 });
@@ -278,7 +278,7 @@ export const markDelivered = internalMutation({
     notificationId: v.id("notification_log"),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.notificationId, {
+    await ctx.db.patch("notification_log", args.notificationId, {
       delivered: true,
       sentAt: Date.now(),
     });
@@ -301,9 +301,9 @@ export const recordLandedPublic = mutation({
   },
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
-    const log = await ctx.db.get(args.notificationId);
+    const log = await ctx.db.get("notification_log", args.notificationId);
     if (!log || log.emotionalProfileId !== profile._id) return null;
-    await ctx.db.patch(args.notificationId, { landed: args.landed });
+    await ctx.db.patch("notification_log", args.notificationId, { landed: args.landed });
     return null;
   },
 });
@@ -317,7 +317,7 @@ export const loadGenerationContext = internalQuery({
     emotionalProfileId: v.id("emotional_profiles"),
   },
   handler: async (ctx, args) => {
-    const profile = await ctx.db.get(args.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
     if (!profile) return null;
 
     const preferences = await ctx.db

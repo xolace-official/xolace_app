@@ -109,7 +109,7 @@ export const getForSession = query({
       return { exercise: fallback, slots: {} as Record<string, string> };
     }
 
-    const exercise = await ctx.db.get(exerciseId);
+    const exercise = await ctx.db.get("exercises", exerciseId);
     if (!exercise) return null;
 
     return {
@@ -186,7 +186,7 @@ export const getById = query({
   args: { exerciseId: v.id("exercises") },
   handler: async (ctx, args) => {
     await requireAuth(ctx);
-    return await ctx.db.get(args.exerciseId);
+    return await ctx.db.get("exercises", args.exerciseId);
   },
 });
 
@@ -213,7 +213,7 @@ export const recordSwap = mutation({
     }
 
     const updatedSwaps = [...currentSwaps, args.newExerciseId];
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       swappedExerciseIds: updatedSwaps,
     });
     return { swapsUsed: updatedSwaps.length };
@@ -242,9 +242,9 @@ export const setMatched = internalMutation({
     matchedExerciseId: v.id("exercises"),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return;
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       matchedExerciseId: args.matchedExerciseId,
     });
   },
@@ -282,7 +282,7 @@ export const seed = internalMutation({
         .withIndex("by_title", (q) => q.eq("title", exercise.title))
         .unique();
       if (existing) {
-        await ctx.db.patch(existing._id, { ...exercise, updatedAt: now });
+        await ctx.db.patch("exercises", existing._id, { ...exercise, updatedAt: now });
       } else {
         await ctx.db.insert("exercises", {
           ...exercise,

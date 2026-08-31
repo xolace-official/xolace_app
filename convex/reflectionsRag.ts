@@ -26,7 +26,7 @@ import { rag, REFLECTION_POOL_NAMESPACE, NO_GRANULAR_LABEL } from "./rag";
 export const getReflectionForRag = internalQuery({
   args: { reflectionId: v.id("reflections") },
   handler: async (ctx, args) => {
-    const r = await ctx.db.get(args.reflectionId);
+    const r = await ctx.db.get("reflections", args.reflectionId);
     if (!r) return null;
     return {
       displayText: r.displayText,
@@ -129,7 +129,7 @@ export const backfillPool = internalAction({
 export const getSessionForSemantic = internalQuery({
   args: { sessionId: v.id("sessions") },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return null;
 
     const metadata = await ctx.db
@@ -161,7 +161,7 @@ export const finalizeSemanticMatches = internalMutation({
     for (const key of args.candidateKeys) {
       const id = ctx.db.normalizeId("reflections", key);
       if (!id) continue;
-      const r = await ctx.db.get(id);
+      const r = await ctx.db.get("reflections", id);
       if (!r || r.status !== "active") continue;
       if (
         args.intensity !== null &&
@@ -173,7 +173,7 @@ export const finalizeSemanticMatches = internalMutation({
       if (matched.length >= 4) break;
     }
 
-    await ctx.db.patch(args.sessionId, { semanticMatchIds: matched });
+    await ctx.db.patch("sessions", args.sessionId, { semanticMatchIds: matched });
   },
 });
 

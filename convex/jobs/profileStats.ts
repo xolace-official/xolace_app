@@ -14,10 +14,10 @@ export const updateAfterSession = internalMutation({
     sessionId: v.id("sessions"),
   },
   handler: async (ctx, args) => {
-    const profile = await ctx.db.get(args.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
     if (!profile) return;
 
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session || session.state !== "completed") return;
 
     const now = Date.now();
@@ -148,7 +148,7 @@ export const updateAfterSession = internalMutation({
       }
     }
 
-    await ctx.db.patch(args.emotionalProfileId, {
+    await ctx.db.patch("emotional_profiles", args.emotionalProfileId, {
       sessionCount: newSessionCount,
       currentStreak: newStreak,
       longestStreak: newLongestStreak,
@@ -183,7 +183,7 @@ export const updateAfterSession = internalMutation({
       .take(1);
 
     if (attributedLog && attributedLog.resultedInSession === undefined) {
-      await ctx.db.patch(attributedLog._id, { resultedInSession: true });
+      await ctx.db.patch("notification_log", attributedLog._id, { resultedInSession: true });
     }
 
     // Check for milestone notification

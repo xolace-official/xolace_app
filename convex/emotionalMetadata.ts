@@ -37,7 +37,7 @@ async function resolveSuggestedSpecialty(
   // and every store arg is spread into the metadata row, so taking it as an
   // arg would either persist a duplicate of it or need destructuring out.
   // Matches "open_prompt" to the pipeline's own default for legacy rows.
-  const session = await ctx.db.get(args.sessionId);
+  const session = await ctx.db.get("sessions", args.sessionId);
   const specialty = suggestedSpecialty({
     ...args,
     entryType: session?.entryType ?? "open_prompt",
@@ -149,7 +149,7 @@ export const store = internalMutation({
     };
 
     if (existing) {
-      await ctx.db.patch(existing._id, row);
+      await ctx.db.patch("emotional_metadata", existing._id, row);
       return;
     }
     await ctx.db.insert("emotional_metadata", {
@@ -216,7 +216,7 @@ export const replaceForRefinement = internalMutation({
     // session before it gets here, so there is nothing to replace.
     if (!existing) return null;
 
-    await ctx.db.patch(existing._id, {
+    await ctx.db.patch("emotional_metadata", existing._id, {
       classifierVersion: args.classifierVersion,
       primaryEmotion: args.primaryEmotion,
       primaryEmotionConfidence: args.primaryEmotionConfidence,
@@ -277,7 +277,7 @@ export const adjustEpisodicImportance = internalMutation({
     const next = adjustImportance(metadata.episodicImportance, args.feedback);
     if (next === current) return { changed: false };
 
-    await ctx.db.patch(metadata._id, { episodicImportance: next });
+    await ctx.db.patch("emotional_metadata", metadata._id, { episodicImportance: next });
     return { changed: true };
   },
 });

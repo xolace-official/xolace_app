@@ -53,7 +53,7 @@ export const setAvatar = mutation({
       .unique();
     if (!prefs) throw new Error("Preferences not found");
 
-    await ctx.db.patch(prefs._id, { avatarId: args.key });
+    await ctx.db.patch("preferences", prefs._id, { avatarId: args.key });
     return null;
   },
 });
@@ -89,7 +89,7 @@ export const seedAvatar = internalMutation({
 
     const doc = { ...args, url };
     if (existing) {
-      await ctx.db.patch(existing._id, doc);
+      await ctx.db.patch("avatars", existing._id, doc);
     } else {
       await ctx.db.insert("avatars", doc);
     }

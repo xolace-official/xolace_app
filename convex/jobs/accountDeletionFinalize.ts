@@ -27,7 +27,7 @@ export const drainConversations: DrainStep = async (ctx, profileId) => {
     .query("xolacer_conversations")
     .withIndex("by_user_and_status", (q) => q.eq("userProfileId", profileId))
     .take(BATCH_SIZE);
-  for (const conversation of asUser) await ctx.db.delete(conversation._id);
+  for (const conversation of asUser) await ctx.db.delete("xolacer_conversations", conversation._id);
 
   const asXolacer = await ctx.db
     .query("xolacer_conversations")
@@ -35,7 +35,7 @@ export const drainConversations: DrainStep = async (ctx, profileId) => {
       q.eq("xolacerProfileId", profileId)
     )
     .take(BATCH_SIZE);
-  for (const conversation of asXolacer) await ctx.db.delete(conversation._id);
+  for (const conversation of asXolacer) await ctx.db.delete("xolacer_conversations", conversation._id);
 
   return asUser.length === BATCH_SIZE || asXolacer.length === BATCH_SIZE;
 };
@@ -57,13 +57,13 @@ export const drainRatingsGiven: DrainStep = async (ctx, profileId) => {
       )
       .unique();
     if (rated) {
-      await ctx.db.patch(rated._id, {
+      await ctx.db.patch("xolacer_profiles", rated._id, {
         ratingSum: Math.max(0, (rated.ratingSum ?? 0) - rating.rating),
         ratingCount: Math.max(0, (rated.ratingCount ?? 0) - 1),
         updatedAt: Date.now(),
       });
     }
-    await ctx.db.delete(rating._id);
+    await ctx.db.delete("conversation_ratings", rating._id);
   }
   return ratings.length === BATCH_SIZE;
 };
@@ -77,7 +77,7 @@ export const drainRatingsReceived: DrainStep = async (ctx, profileId) => {
     .query("conversation_ratings")
     .withIndex("by_xolacer", (q) => q.eq("xolacerProfileId", profileId))
     .take(BATCH_SIZE);
-  for (const rating of ratings) await ctx.db.delete(rating._id);
+  for (const rating of ratings) await ctx.db.delete("conversation_ratings", rating._id);
   return ratings.length === BATCH_SIZE;
 };
 
@@ -88,7 +88,7 @@ export const drainSemanticVersions: DrainStep = async (ctx, profileId) => {
       q.eq("emotionalProfileId", profileId)
     )
     .take(BATCH_SIZE);
-  for (const version of versions) await ctx.db.delete(version._id);
+  for (const version of versions) await ctx.db.delete("semantic_profiles", version._id);
   return versions.length === BATCH_SIZE;
 };
 
@@ -117,7 +117,7 @@ export async function finalizePurge(
     .query("preferences")
     .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
     .unique();
-  if (preferences) await ctx.db.delete(preferences._id);
+  if (preferences) await ctx.db.delete("preferences", preferences._id);
 
   // A deleted user must never receive a follow-up nudge. Scheduled because
   // it cancels component workflows and is independently bounded.
@@ -129,7 +129,7 @@ export async function finalizePurge(
     .query("xolacer_profiles")
     .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
     .unique();
-  if (xolacerProfile) await ctx.db.delete(xolacerProfile._id);
+  if (xolacerProfile) await ctx.db.delete("xolacer_profiles", xolacerProfile._id);
 
   // Stream-hosted chat content is external — the row deletes above don't
   // reach it. Fail-open action: logs and continues on Stream outage so a
@@ -147,6 +147,6 @@ export async function finalizePurge(
   // its key. Skipping this leaves a phantom in the percentile denominator.
   await rankDelete(ctx, profileId);
 
-  await ctx.db.delete(profileId);
-  await ctx.db.delete(userId);
+  await ctx.db.delete("emotional_profiles", profileId);
+  await ctx.db.delete("users", userId);
 }

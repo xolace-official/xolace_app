@@ -251,7 +251,7 @@ async function ensureCamperName(
     await takenCamperTags(ctx, conversation.xolacerProfileId, conversation._id),
     legacyCamperTag(conversation._id),
   );
-  await ctx.db.patch(conversation._id, { camperTag: tag });
+  await ctx.db.patch("xolacer_conversations", conversation._id, { camperTag: tag });
   return camperName(tag);
 }
 
@@ -430,7 +430,7 @@ async function requireConversationParticipant(
   conversationId: Id<"xolacer_conversations">,
 ) {
   const { user, profile } = await requireAuth(ctx);
-  const conversation = await ctx.db.get(conversationId);
+  const conversation = await ctx.db.get("xolacer_conversations", conversationId);
   if (!conversation) throw new Error("Conversation not found");
   const role =
     conversation.userProfileId === profile._id
@@ -682,7 +682,7 @@ export const sessionSuggestion = query({
     // route param and renders inside no error boundary — a throw there takes
     // the whole screen down.
     const { profile } = await requireAuth(ctx);
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session || session.emotionalProfileId !== profile._id) return null;
 
 
@@ -1114,7 +1114,7 @@ export const requestConversation = mutation({
         // Profile CTA says "Open chat" here; a request is just a resume — and
         // a resume takes an open slot, so it answers to the same cap.
         await requireOpenSlot(ctx, "seeker", profile._id);
-        await ctx.db.patch(existing._id, {
+        await ctx.db.patch("xolacer_conversations", existing._id, {
           status: "open",
           restingReason: undefined,
         });
@@ -1140,7 +1140,7 @@ export const requestConversation = mutation({
       // Overwritten, never merged: a re-request from the roster months later
       // must badge as direct.
       const origin = await deriveOrigin(ctx, profile._id, xolacer);
-      await ctx.db.patch(existing._id, {
+      await ctx.db.patch("xolacer_conversations", existing._id, {
         status: "requested",
         closedReason: undefined,
         requestedAt: Date.now(),
@@ -1261,7 +1261,7 @@ export const markAccepted = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const conversation = await ctx.db.get(args.conversationId);
+    const conversation = await ctx.db.get("xolacer_conversations", args.conversationId);
     if (!conversation || conversation.status !== "requested") return;
     // The transactional guard. Between `getForAccept` and here sits a Stream
     // round trip, and either party can have filled their last slot in another
@@ -1270,7 +1270,7 @@ export const markAccepted = internalMutation({
     // lifecycle state is needed.
     await requireOpenSlot(ctx, "xolacer", conversation.xolacerProfileId);
     await requireOpenSlot(ctx, "seeker", conversation.userProfileId);
-    await ctx.db.patch(args.conversationId, {
+    await ctx.db.patch("xolacer_conversations", args.conversationId, {
       status: "open",
       streamChannelId: args.streamChannelId,
       acceptedAt: Date.now(),
@@ -1363,7 +1363,7 @@ export const declineRequest = mutation({
     );
     if (role !== "xolacer") throw new Error("Only the xolacer can decline");
     if (conversation.status !== "requested") return null;
-    await ctx.db.patch(args.conversationId, {
+    await ctx.db.patch("xolacer_conversations", args.conversationId, {
       status: "closed",
       closedReason: "declined",
       declinedAt: Date.now(),
@@ -1399,7 +1399,7 @@ export const restConversation = mutation({
     if (!canManualRest(conversation, role)) {
       throw new Error("This conversation can't be closed");
     }
-    await ctx.db.patch(args.conversationId, {
+    await ctx.db.patch("xolacer_conversations", args.conversationId, {
       status: "resting",
       restingReason: "manual",
     });
@@ -1427,7 +1427,7 @@ export const archiveConversation = mutation({
     );
     const now = Date.now();
     await ctx.db.patch(
-      args.conversationId,
+      "xolacer_conversations", args.conversationId,
       role === "user" ? { archivedByUserAt: now } : { archivedByXolacerAt: now },
     );
     return null;
@@ -1445,7 +1445,7 @@ export const unarchiveConversation = mutation({
       args.conversationId,
     );
     await ctx.db.patch(
-      args.conversationId,
+      "xolacer_conversations", args.conversationId,
       role === "user"
         ? { archivedByUserAt: undefined }
         : { archivedByXolacerAt: undefined },
@@ -1478,10 +1478,10 @@ export const deleteConversation = mutation({
     const mine =
       role === "user" ? { deletedByUser: true } : { deletedByXolacer: true };
     if (bothPartiesDeleted({ ...conversation, ...mine })) {
-      await ctx.db.delete(args.conversationId);
+      await ctx.db.delete("xolacer_conversations", args.conversationId);
       return null;
     }
-    await ctx.db.patch(args.conversationId, mine);
+    await ctx.db.patch("xolacer_conversations", args.conversationId, mine);
     return null;
   },
 });
@@ -1521,12 +1521,12 @@ export const markBlocked = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     for (const conversationId of args.conversationIds) {
-      const conversation = await ctx.db.get(conversationId);
+      const conversation = await ctx.db.get("xolacer_conversations", conversationId);
       // Re-checked here, not just in the plan: the freeze is a network round
       // trip, so the row can have been blocked in between. Any other closed
       // reason is still overwritten — see `planBlock`.
       if (!conversation || isBlocked(conversation.closedReason)) continue;
-      await ctx.db.patch(conversationId, {
+      await ctx.db.patch("xolacer_conversations", conversationId, {
         status: "closed",
         closedReason: "blocked",
       });
@@ -1610,7 +1610,7 @@ export const resumeConversation = mutation({
     // rather than reported as `resumed: false`, which the client reads as the
     // xolacer being unavailable — the wrong person to explain.
     await requireOpenSlot(ctx, "seeker", conversation.userProfileId);
-    await ctx.db.patch(args.conversationId, {
+    await ctx.db.patch("xolacer_conversations", args.conversationId, {
       status: "open",
       lastMessageAt: Date.now(),
       // Cleared with the state it describes: leaving "manual" behind on an
@@ -1632,7 +1632,7 @@ export const touchConversation = mutation({
       args.conversationId,
     );
     if (conversation.status !== "open") return null;
-    await ctx.db.patch(args.conversationId, { lastMessageAt: Date.now() });
+    await ctx.db.patch("xolacer_conversations", args.conversationId, { lastMessageAt: Date.now() });
     return null;
   },
 });
@@ -1663,7 +1663,7 @@ export const notifyNewMessage = internalMutation({
     const conversationId = ctx.db.normalizeId("xolacer_conversations", rawId);
     if (!conversationId) return null;
 
-    const conversation = await ctx.db.get(conversationId);
+    const conversation = await ctx.db.get("xolacer_conversations", conversationId);
     // Stream cannot deliver into a channel we consider shut, but a resting or
     // blocked pair whose channel Stream has not frozen yet would still arrive
     // here — a closed conversation notifies nobody.
@@ -1697,7 +1697,7 @@ export const notifyNewMessage = internalMutation({
 
     // Stamped before the send is scheduled, in the same transaction, so a
     // burst arriving as separate webhook calls cannot each read a stale window.
-    await ctx.db.patch(conversationId, { [notifiedField]: now });
+    await ctx.db.patch("xolacer_conversations", conversationId, { [notifiedField]: now });
 
     // Whatever the recipient already calls the sender everywhere else: a
     // xolacer sees a pseudonym, a seeker sees the public display name.
@@ -1775,8 +1775,8 @@ export const rateConversation = mutation({
 
     if (existing) {
       if (existing.rating === rounded) return null;
-      await ctx.db.patch(existing._id, { rating: rounded, updatedAt: now });
-      await ctx.db.patch(xolacer._id, {
+      await ctx.db.patch("conversation_ratings", existing._id, { rating: rounded, updatedAt: now });
+      await ctx.db.patch("xolacer_profiles", xolacer._id, {
         ratingSum: (xolacer.ratingSum ?? 0) - existing.rating + rounded,
         updatedAt: now,
       });
@@ -1791,7 +1791,7 @@ export const rateConversation = mutation({
       createdAt: now,
       updatedAt: now,
     });
-    await ctx.db.patch(xolacer._id, {
+    await ctx.db.patch("xolacer_profiles", xolacer._id, {
       ratingSum: (xolacer.ratingSum ?? 0) + rounded,
       ratingCount: (xolacer.ratingCount ?? 0) + 1,
       updatedAt: now,
@@ -1911,7 +1911,7 @@ export const upsertMyXolacerProfile = mutation({
 
     const existing = await getXolacerProfileByProfileId(ctx, profile._id);
     if (existing) {
-      await ctx.db.patch(existing._id, { ...args, updatedAt: Date.now() });
+      await ctx.db.patch("xolacer_profiles", existing._id, { ...args, updatedAt: Date.now() });
       return null;
     }
     await ctx.db.insert("xolacer_profiles", {
@@ -1958,7 +1958,7 @@ export const setXolacerPhoto = mutation({
       // ponytail: replacing a photo orphans the previous blob — storing only
       // the URL means there's no storageId left to delete. Add a
       // `photoStorageId` field if xolacer photo churn ever matters.
-      await ctx.db.patch(existing._id, { photoUrl: url, updatedAt: Date.now() });
+      await ctx.db.patch("xolacer_profiles", existing._id, { photoUrl: url, updatedAt: Date.now() });
       return null;
     }
     await ctx.db.insert("xolacer_profiles", {
@@ -1991,7 +1991,7 @@ export const publishProfile = mutation({
     ) {
       throw new Error("Profile is incomplete");
     }
-    await ctx.db.patch(xolacer._id, { complete: true, updatedAt: Date.now() });
+    await ctx.db.patch("xolacer_profiles", xolacer._id, { complete: true, updatedAt: Date.now() });
     return null;
   },
 });
@@ -2014,7 +2014,7 @@ export const setXolacerActive = mutation({
 
     const xolacer = await getXolacerProfileByProfileId(ctx, profile._id);
     if (!xolacer) throw new Error("No xolacer profile");
-    await ctx.db.patch(xolacer._id, { active: args.active, updatedAt: Date.now() });
+    await ctx.db.patch("xolacer_profiles", xolacer._id, { active: args.active, updatedAt: Date.now() });
     return null;
   },
 });
@@ -2037,7 +2037,7 @@ export const sweep = internalMutation({
       )
       .take(100);
     for (const conversation of quiet) {
-      await ctx.db.patch(conversation._id, {
+      await ctx.db.patch("xolacer_conversations", conversation._id, {
         status: "resting",
         restingReason: "quiet",
       });
@@ -2057,7 +2057,7 @@ export const sweep = internalMutation({
       .take(100);
     for (const conversation of requested) {
       if (hasRequestExpired(conversation.requestedAt, now)) {
-        await ctx.db.patch(conversation._id, {
+        await ctx.db.patch("xolacer_conversations", conversation._id, {
           status: "closed",
           closedReason: "expired",
         });

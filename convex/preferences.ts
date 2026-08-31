@@ -44,7 +44,7 @@ export const updateQuotePreferences = mutation({
     if (!prefs) throw new Error("Preferences not found");
 
     const existing = prefs.quotes;
-    await ctx.db.patch(prefs._id, {
+    await ctx.db.patch("preferences", prefs._id, {
       quotes: {
         themes: args.themes,
         notificationEnabled: args.notificationEnabled,
@@ -235,7 +235,7 @@ export const update = mutation({
     if (args.voice !== undefined) patch.voice = args.voice ?? undefined;
 
     if (Object.keys(patch).length > 0) {
-      await ctx.db.patch(preferences._id, patch);
+      await ctx.db.patch("preferences", preferences._id, patch);
     }
 
     // Notification writes are merges, never replacements. `args.notifications`
@@ -280,7 +280,7 @@ export const update = mutation({
 export const getResolvedVoiceSlug = internalQuery({
   args: { emotionalProfileId: v.id("emotional_profiles") },
   handler: async (ctx, args): Promise<string | null> => {
-    const profile = await ctx.db.get(args.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
     if (!profile) return null;
     const prefs = await ctx.db
       .query("preferences")

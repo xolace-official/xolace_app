@@ -24,7 +24,7 @@ export async function updateNotificationPrefs(
 
   if (!preferences) return;
 
-  await ctx.db.patch(preferences._id, {
+  await ctx.db.patch("preferences", preferences._id, {
     notifications: { ...preferences.notifications, ...partial },
   });
 }

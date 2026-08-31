@@ -34,7 +34,7 @@ export const setStreak = mutation({
     const { profile } = await requireAuth(ctx);
 
     const newStreak = args.mode === "bump" ? profile.currentStreak + 1 : 1;
-    await ctx.db.patch(profile._id, {
+    await ctx.db.patch("emotional_profiles", profile._id, {
       currentStreak: newStreak,
       // Keep the user in the "active" variant (streak window is 48h)
       lastSessionAt: Date.now(),
@@ -113,7 +113,7 @@ export const seedFollowUpCard = mutation({
           q.eq("emotionalProfileId", profile._id).eq("status", status),
         )
         .collect();
-      for (const c of existing) await ctx.db.delete(c._id);
+      for (const c of existing) await ctx.db.delete("follow_up_cards", c._id);
     }
 
     const defaultText =
@@ -164,12 +164,12 @@ export const cleanupStuckFollowUps = mutation({
         } catch {
           // Placeholder workflowId or already-terminal workflow — nothing to do.
         }
-        await ctx.db.patch(card._id, { status: "expired" });
+        await ctx.db.patch("follow_up_cards", card._id, { status: "expired" });
 
         // Unpin the session so getStartContext won't treat it as already-started.
-        const session = await ctx.db.get(card.sessionId);
+        const session = await ctx.db.get("sessions", card.sessionId);
         if (session?.followUpWorkflowId) {
-          await ctx.db.patch(card.sessionId, { followUpWorkflowId: undefined });
+          await ctx.db.patch("sessions", card.sessionId, { followUpWorkflowId: undefined });
         }
         retired += 1;
       }
@@ -199,9 +199,9 @@ export const seedXolacer = internalMutation({
   handler: async (ctx, args) => {
     assertDevToolsEnabled();
 
-    const user = await ctx.db.get(args.userId);
+    const user = await ctx.db.get("users", args.userId);
     if (!user) throw new Error("No such user");
-    await ctx.db.patch(user._id, { isXolacer: true });
+    await ctx.db.patch("users", user._id, { isXolacer: true });
 
     const emotionalProfileId = user.emotionalProfileId;
     const existing = await ctx.db
@@ -219,7 +219,7 @@ export const seedXolacer = internalMutation({
     };
 
     if (existing) {
-      await ctx.db.patch(existing._id, fields);
+      await ctx.db.patch("xolacer_profiles", existing._id, fields);
       return emotionalProfileId;
     }
     await ctx.db.insert("xolacer_profiles", {

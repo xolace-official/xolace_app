@@ -17,7 +17,7 @@ export const drainEscalations: DrainStep = async (ctx, profileId) => {
     .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
     .take(BATCH_SIZE);
   for (const event of escalations) {
-    await ctx.db.patch(event._id, { emotionalProfileId: undefined });
+    await ctx.db.patch("escalation_events", event._id, { emotionalProfileId: undefined });
   }
   return escalations.length === BATCH_SIZE;
 };
@@ -27,7 +27,7 @@ export const drainConsentRecords: DrainStep = async (ctx, profileId) => {
     .query("consent_records")
     .withIndex("by_profile_type", (q) => q.eq("emotionalProfileId", profileId))
     .take(BATCH_SIZE);
-  for (const record of records) await ctx.db.delete(record._id);
+  for (const record of records) await ctx.db.delete("consent_records", record._id);
   return records.length === BATCH_SIZE;
 };
 
@@ -36,7 +36,7 @@ export const drainNotifications: DrainStep = async (ctx, profileId) => {
     .query("notification_log")
     .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
     .take(BATCH_SIZE);
-  for (const notif of notifications) await ctx.db.delete(notif._id);
+  for (const notif of notifications) await ctx.db.delete("notification_log", notif._id);
   return notifications.length === BATCH_SIZE;
 };
 
@@ -47,7 +47,7 @@ export const drainResonances: DrainStep = async (ctx, profileId) => {
       q.eq("emotionalProfileId", profileId)
     )
     .take(BATCH_SIZE);
-  for (const resonance of resonances) await ctx.db.delete(resonance._id);
+  for (const resonance of resonances) await ctx.db.delete("reflection_resonances", resonance._id);
   return resonances.length === BATCH_SIZE;
 };
 
@@ -59,7 +59,7 @@ export const drainReports: DrainStep = async (ctx, profileId) => {
       q.eq("reporterProfileId", profileId)
     )
     .take(BATCH_SIZE);
-  for (const report of reports) await ctx.db.delete(report._id);
+  for (const report of reports) await ctx.db.delete("reflection_reports", report._id);
   return reports.length === BATCH_SIZE;
 };
 
@@ -73,7 +73,7 @@ export const drainFeedback: DrainStep = async (ctx, profileId) => {
     .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
     .take(BATCH_SIZE);
   for (const record of records) {
-    await ctx.db.patch(record._id, {
+    await ctx.db.patch("feedback", record._id, {
       emotionalProfileId: undefined,
       text: undefined,
     });
@@ -93,7 +93,7 @@ export const drainProductFeedback: DrainStep = async (ctx, profileId) => {
     )
     .take(BATCH_SIZE);
   for (const record of records) {
-    await ctx.db.patch(record._id, { emotionalProfileId: undefined });
+    await ctx.db.patch("product_feedback", record._id, { emotionalProfileId: undefined });
   }
   return records.length === BATCH_SIZE;
 };
@@ -103,7 +103,7 @@ export const drainQuotes: DrainStep = async (ctx, profileId) => {
     .query("daily_quotes")
     .withIndex("by_profile_date", (q) => q.eq("emotionalProfileId", profileId))
     .take(BATCH_SIZE);
-  for (const quote of quotes) await ctx.db.delete(quote._id);
+  for (const quote of quotes) await ctx.db.delete("daily_quotes", quote._id);
   return quotes.length === BATCH_SIZE;
 };
 
@@ -114,7 +114,7 @@ export const drainWaitlist: DrainStep = async (ctx, profileId) => {
       q.eq("emotionalProfileId", profileId)
     )
     .take(BATCH_SIZE);
-  for (const row of rows) await ctx.db.delete(row._id);
+  for (const row of rows) await ctx.db.delete("insight_waitlist", row._id);
   return rows.length === BATCH_SIZE;
 };
 

@@ -55,7 +55,7 @@ async function finalizeFollowUp(
   requiresFollowUp: boolean,
 ): Promise<void> {
   if (session.requiresFollowUp !== requiresFollowUp) {
-    await ctx.db.patch(session._id, { requiresFollowUp });
+    await ctx.db.patch("sessions", session._id, { requiresFollowUp });
   }
   // One-active-per-profile + idempotency are enforced in followUps; here we
   // only guard against the obvious double-start on the same session.
@@ -87,7 +87,7 @@ async function finalizeCompletion(
 ): Promise<void> {
   const now = Date.now();
 
-  await ctx.db.patch(session._id, {
+  await ctx.db.patch("sessions", session._id, {
     state: "completed",
     pathCompleted: opts.pathCompleted,
     ...(opts.pathChosen ? { pathChosen: opts.pathChosen } : {}),
@@ -142,7 +142,7 @@ async function applyPostSessionFeedback(
     postSessionMood?: Doc<"sessions">["postSessionMood"];
   },
 ): Promise<void> {
-  await ctx.db.patch(session._id, {
+  await ctx.db.patch("sessions", session._id, {
     ...(feedback.contributedReflection !== undefined
       ? { contributedReflection: feedback.contributedReflection }
       : {}),
@@ -246,7 +246,7 @@ export const submitInput = mutation({
     const rawText = args.rawInput;
     const now = new Date();
 
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       state: "processing",
       rawInput: rawText,
       rawInputLength: rawText.length,
@@ -283,7 +283,7 @@ export const confirmMirror = mutation({
       throw new Error(`Cannot confirm mirror in state "${session.state}"`);
     }
 
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       state: "confirmed",
       confirmationState: args.confirmationState,
       updatedAt: Date.now(),
@@ -346,7 +346,7 @@ export const selectPath = mutation({
       throw new Error(`Cannot select path in state "${session.state}"`);
     }
 
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       state: "path_selected",
       pathChosen: args.pathChosen,
       updatedAt: Date.now(),
@@ -382,7 +382,7 @@ export const startPath = mutation({
       throw new Error(`Cannot start path in state "${session.state}"`);
     }
 
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       state: "path_in_progress",
       exerciseId: args.exerciseId,
       updatedAt: Date.now(),
@@ -537,7 +537,7 @@ export const retrySession = mutation({
       throw new Error("Cannot retry a session with no stored input");
     }
 
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       state: "processing",
       errorMessage: undefined,
       updatedAt: Date.now(),
@@ -569,7 +569,7 @@ export const abandon = mutation({
       );
     }
 
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       state: "abandoned",
       updatedAt: Date.now(),
     });
@@ -836,7 +836,7 @@ export const deliverMirror = internalMutation({
     gapNamed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) {
       throw new Error("Session not found");
     }
@@ -846,7 +846,7 @@ export const deliverMirror = internalMutation({
       return;
     }
 
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       state: "mirror_delivered",
       mirrorText: args.mirrorText,
       mirrorModelVersion: args.mirrorModelVersion,
@@ -869,7 +869,7 @@ export const deliverMirror = internalMutation({
 export const getMirrorAudioStorageId = internalQuery({
   args: { sessionId: v.id("sessions") },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     return session?.mirrorAudioStorageId ?? null;
   },
 });
@@ -883,9 +883,9 @@ export const storeMirrorAudio = internalMutation({
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return;
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       mirrorAudioStorageId: args.storageId,
       updatedAt: Date.now(),
     });
@@ -898,9 +898,9 @@ export const storeMirrorAudio = internalMutation({
 export const clearMirrorAudio = internalMutation({
   args: { sessionId: v.id("sessions") },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return;
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       mirrorAudioStorageId: undefined,
       updatedAt: Date.now(),
     });
@@ -928,12 +928,12 @@ export const failSession = internalMutation({
     errorMessage: v.string(),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return;
 
     if (session.state !== "processing") return;
 
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       state: "error",
       errorMessage: args.errorMessage,
       updatedAt: Date.now(),
@@ -951,10 +951,10 @@ export const writeExerciseSlots = internalMutation({
     slots: v.record(v.string(), v.string()),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return;
     const existing = session.exerciseSlots ?? {};
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       exerciseSlots: { ...existing, ...args.slots },
     });
   },
@@ -971,13 +971,13 @@ export const storeDistilledText = internalMutation({
     distilledText: v.string(),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return;
 
     // Only store if session hasn't been abandoned/completed already
     if (session.state === "completed" || session.state === "abandoned") return;
 
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch("sessions", args.sessionId, {
       distilledText: args.distilledText,
       updatedAt: Date.now(),
     });
@@ -991,7 +991,7 @@ export const storeDistilledText = internalMutation({
 export const getSessionKept = internalQuery({
   args: { sessionId: v.id("sessions") },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     return session?.kept ?? null;
   },
 });
@@ -1034,7 +1034,7 @@ export const checkAbandoned = internalMutation({
         if ((stalePathStates as readonly string[]).includes(state)) {
           await finalizeCompletion(ctx, session, { pathCompleted: false });
         } else {
-          await ctx.db.patch(session._id, {
+          await ctx.db.patch("sessions", session._id, {
             state: "abandoned",
             updatedAt: Date.now(),
           });

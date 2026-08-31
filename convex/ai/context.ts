@@ -78,13 +78,13 @@ export const buildSessionContext = internalQuery({
     sessionId: v.id("sessions"),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) {
       throw new Error("Session not found");
     }
 
     // Load profile
-    const profile = await ctx.db.get(session.emotionalProfileId);
+    const profile = await ctx.db.get("emotional_profiles", session.emotionalProfileId);
     if (!profile) {
       throw new Error("Profile not found");
     }
@@ -116,7 +116,7 @@ export const buildSessionContext = internalQuery({
     // profile carries the longitudinal weight; recent rows below stay
     // as a recency signal).
     const semanticProfileDoc = profile.currentSemanticProfileId
-      ? await ctx.db.get(profile.currentSemanticProfileId)
+      ? await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId)
       : null;
 
     // Load recent emotional metadata (ordered by _creationTime desc)

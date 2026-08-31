@@ -3,12 +3,12 @@ import { isPoolable } from "./poolability";
 
 describe("isPoolable", () => {
   // kept | contributed | safeguard → poolable
-  const cases: Array<{
+  const cases: {
     kept?: boolean;
     contributed?: boolean;
     safeguard?: "none" | "gentle" | "elevated" | "crisis";
     expected: boolean;
-  }> = [
+  }[] = [
     { kept: true, contributed: true, safeguard: "none", expected: true },
     { kept: true, contributed: true, safeguard: "gentle", expected: true },
     { kept: true, contributed: true, safeguard: "elevated", expected: true },
