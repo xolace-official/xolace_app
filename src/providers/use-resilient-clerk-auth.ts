@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/expo";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import * as Sentry from "@sentry/react-native";
 
 type ClerkGetToken = ReturnType<typeof useAuth>["getToken"];
@@ -17,6 +17,39 @@ const RETRY_DELAY_MS = 300;
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 /**
+ * Convex's `setAuth` is only re-run when `fetchAccessToken` changes identity, and
+ * `ConvexProviderWithClerk` rebuilds that only when `orgId`/`orgRole`/`sessionId`
+ * change. Once Convex has latched `noAuth` nothing else moves it, so a desync with
+ * a perfectly mintable token hangs forever. {@link AuthSyncGuard} lives below the
+ * provider (it needs `useConvexAuth`) and calls this to bump a nonce we fold into
+ * the `sessionId` we report, which is a dep — that rebuilds `fetchAccessToken` and
+ * re-runs `setAuth`. The value is only ever read as a memo dep, never sent anywhere.
+ */
+let reauthEpoch = 0;
+const epochListeners = new Set<() => void>();
+export const subscribeEpoch = (listener: () => void) => {
+  epochListeners.add(listener);
+  return () => {
+    epochListeners.delete(listener);
+  };
+};
+export const getReauthEpoch = () => reauthEpoch;
+
+export function requestConvexReauth() {
+  reauthEpoch++;
+  epochListeners.forEach((listener) => listener());
+}
+
+/**
+ * The reported `sessionId`, tagged with the re-auth nonce. Epoch 0 (the normal
+ * case) reports Clerk's value untouched.
+ */
+export const sessionIdWithEpoch = (
+  sessionId: string | null | undefined,
+  epoch: number,
+) => (epoch > 0 && sessionId ? `${sessionId}#${epoch}` : sessionId);
+
+/**
  * Drop-in replacement for Clerk's `useAuth`, passed to `ConvexProviderWithClerk`
  * to fix the cold-start logout: on launch Clerk reports `isSignedIn: true` before
  * its client can mint a token, so Convex's single init token fetch fails and
@@ -26,13 +59,20 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
  * While we retry, Convex stays `isLoading`, so the app shows the loader instead of
  * flashing auth.
  *
- * `getToken` MUST keep a stable identity — `ConvexProviderWithClerk` keys its
- * `fetchAccessToken` (and the `setAuth` effect) on it, so a new identity each
- * render would churn re-auth. We hold the live Clerk callbacks in refs and expose
- * one `useCallback([])`-stable wrapper (documented React Compiler exception).
+ * `getToken` keeps a stable identity via refs + a `useCallback([])` wrapper
+ * (documented React Compiler exception). Note `ConvexProviderWithClerk` does NOT
+ * key `fetchAccessToken` on `getToken` — its deps are `[orgId, orgRole, sessionId]`
+ * ("Clerk's Expo useAuth hook is not memoized so we don't include getToken") — so
+ * the stability is defensive, not load-bearing. `sessionId` being a dep is what
+ * {@link requestConvexReauth} exploits.
  */
 export function useResilientClerkAuth() {
   const auth = useAuth();
+  const epoch = useSyncExternalStore(
+    subscribeEpoch,
+    getReauthEpoch,
+    getReauthEpoch,
+  );
   const getTokenRef = useRef(auth.getToken);
   const isSignedInRef = useRef(auth.isSignedIn);
   useEffect(() => {
@@ -80,5 +120,9 @@ export function useResilientClerkAuth() {
     return null;
   }, []);
 
-  return { ...auth, getToken };
+  return {
+    ...auth,
+    getToken,
+    sessionId: sessionIdWithEpoch(auth.sessionId, epoch),
+  };
 }
