@@ -5,14 +5,9 @@ import { cn } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { StreakCalendar } from "@/src/features/reflect/components/streak-calendar";
 import type { UserVariant } from "@/src/features/reflect/types";
-import {
-  NIGHT_ENCOURAGEMENT,
-  NIGHT_HEADLINE,
-} from "@/src/features/reflect/night-copy";
-import {
-  QUIET_RETURN_PROMPTS,
-  type QuietReturnTier,
-} from "@/src/features/reflect/quiet-return-copy";
+import { NIGHT_ENCOURAGEMENT } from "@/src/features/reflect/night-copy";
+import { resolveCardContent } from "@/src/features/reflect/compose/resolve-card-content";
+import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
 import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 import { Tour } from "@/src/components/ui/tour";
 
@@ -49,14 +44,14 @@ export const QuietReturnHeader = ({
 }: Props) => {
   const [eventColor] = useCSSVariable(["--color-event"]);
 
-  const headline = isNight
-    ? NIGHT_HEADLINE
-    : activeQuietReturn
-      ? QUIET_RETURN_PROMPTS[activeQuietReturn]
-      : eventPrompt ?? "What’s here right now... what are you feeling?";
+  const card = resolveCardContent({
+    isNight,
+    quietReturnTier: activeQuietReturn,
+    eventPrompt,
+  });
 
-  const showEventPrompt = !isNight && !activeQuietReturn && !!eventPrompt;
-  const isLongPrompt = !!activeQuietReturn || showEventPrompt;
+  const showEventPrompt = card.source === "event";
+  const isLongPrompt = card.scale === "small";
 
   const encouragement = isNight
     ? NIGHT_ENCOURAGEMENT
@@ -124,7 +119,7 @@ export const QuietReturnHeader = ({
             (encouragement || showStreakCalendar || showEventPrompt) && "mt-4",
           )}
         >
-          {headline}
+          {card.text}
         </AppText>
       </Tour.Step>
     </View>
