@@ -6,17 +6,20 @@
  *
  * What is real here matters as much as what is not. `buildSessionContext`,
  * `evaluateSafeguard`, `decideMirrorOutcome`, the prompt builders and every
- * mutation the action calls run for real against a seeded backend. Only the
- * boundaries the test backend cannot provide are faked: the Convex components
- * (`action-cache`, `rate-limiter`, `rag`, `revenuecat`, posthog, aggregate)
- * and the Anthropic network client. No API keys are set and no `fetch` is
- * stubbed — a branch is steered by the value a provider "returned".
+ * mutation the action calls run for real against a seeded backend. Faked are
+ * the Convex components the test backend cannot register (`action-cache`,
+ * `rate-limiter`, `rag`, `revenuecat`, posthog, aggregate) and the Anthropic
+ * network client — a branch is steered by the value a provider "returned",
+ * never by a `fetch` stub.
  *
  * Scheduled work is asserted at the enqueue boundary: `_scheduled_functions`
- * says what was queued with which arguments, and the downstream job is never
- * run. The one exception is `reflectionDistiller.distill`, executed at the
- * bottom of this file with its LLM call mocked so the distillation chain has
- * real coverage at least once.
+ * says what was queued with which arguments. The three callees are stubbed to
+ * no-ops because `convex-test` schedules on a real `setTimeout` and would
+ * otherwise run them — `ai/tts:generateMirrorAudio` would reach ElevenLabs for
+ * real the moment that key is present in the environment, and a job firing
+ * after its test body would read the next test's stub state.
+ * `reflectionDistiller.distill` is executed for real in its own file
+ * (`reflectionDistiller.test.ts`), which is why it cannot also be real here.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "../_generated/api";
@@ -34,6 +37,7 @@ import {
   actionCacheMock,
   aggregatesMock,
   anthropicMock,
+  noopJob,
   posthogMock,
   rateLimiterMock,
   ragMock,
@@ -50,7 +54,7 @@ const RAW_TEXT = "another week of shipping and nobody said anything";
  * to the unremarkable happy-path defaults; each test names only what it bends.
  */
 const stub = vi.hoisted(() => ({
-  cache: {} as { moderation?: unknown; classification?: unknown; distilled?: unknown },
+  cache: {} as { moderation?: unknown; classification?: unknown },
   limit: { ok: true } as { ok: boolean; retryAfter?: number },
   articulator: "" as string | Error,
 }));
@@ -60,7 +64,16 @@ vi.mock("../posthog", () => posthogMock());
 // Free tier throughout — the premium seam (audio tags, wider limits) has no
 // branch of its own in `generateMirror` and is covered where it is decided.
 vi.mock("../revenuecat", () => revenuecatMock(false));
-vi.mock("../rag", () => ragMock());
+// One episodic memory in the namespace. Only reached by the non-first-session
+// test below: `generateMirror` short-circuits recall entirely on a cold start.
+vi.mock("../rag", () =>
+  ragMock({
+    entries: [
+      { entryId: "entry_1", key: "past-session-1", text: "Same week, last month." },
+    ],
+    results: [{ entryId: "entry_1", score: 0.42 }],
+  }),
+);
 vi.mock("../ai/cached", () => actionCacheMock(() => stub.cache));
 vi.mock("../lib/rateLimits", async (orig) => ({
   ...(await orig<typeof import("../lib/rateLimits")>()),
@@ -70,6 +83,17 @@ vi.mock("../ai/providers/anthropic", async (orig) => ({
   ...(await orig<typeof import("../ai/providers/anthropic")>()),
   ...anthropicMock(() => stub.articulator),
 }));
+// Scheduled callees. `scheduleMirrorAudio` stays real — it owns the fallback
+// skip this file asserts; only the action it enqueues is neutered.
+vi.mock("../ai/tts", async (orig) => ({
+  ...(await orig<typeof import("../ai/tts")>()),
+  generateMirrorAudio: noopJob(),
+}));
+vi.mock("../episodicMemory", async (orig) => ({
+  ...(await orig<typeof import("../episodicMemory")>()),
+  ingestSession: noopJob(),
+}));
+vi.mock("../jobs/reflectionDistiller", () => ({ distill: noopJob() }));
 
 beforeEach(() => {
   stub.cache = {
@@ -226,13 +250,18 @@ describe("generateMirror", () => {
 
   it("delivers the mirror, stores metadata and queues the downstream chain", async () => {
     const { user, sessionId } = await seedPipeline();
-    // A prior session so this is not a cold start — the pattern summary and
-    // recentMetadata paths in buildSessionContext run with real rows.
+    // Not a cold start. `sessionCount` is what `isFirstSession` reads, and
+    // seeding rows alone leaves it at 0 — which would keep the pattern
+    // summaries on their first-session branch and skip episodic recall
+    // outright, quietly making the assertions below vacuous.
     const priorSession = await seedSession(user.root, user.profileId, {
       state: "completed",
       mirrorText: "Last week's version of this.",
     });
     await seedMetadata(user.root, priorSession, user.profileId);
+    await user.root.run((ctx) =>
+      ctx.db.patch("emotional_profiles", user.profileId, { sessionCount: 1 }),
+    );
 
     await run(user, sessionId);
 
@@ -251,7 +280,10 @@ describe("generateMirror", () => {
       thematicTags: ["work"],
       riskFlag: false,
       safeguardLevel: "none",
-      episodicMatchKeys: [],
+      // Episodic recall really ran: the key is provenance for Understanding,
+      // the score is what the claim-strength router reads.
+      episodicMatchKeys: ["past-session-1"],
+      episodicTopScore: 0.42,
     });
 
     const calls = await scheduledCalls(user.root);
@@ -270,63 +302,5 @@ describe("generateMirror", () => {
     expect(scheduled(calls, "episodicMemory:ingestSession")?.args).toMatchObject({
       sessionId,
     });
-  });
-});
-
-describe("reflectionDistiller.distill", () => {
-  it("stores the distilled text on a kept session", async () => {
-    const { user, sessionId } = await seedPipeline();
-    stub.cache.distilled = "I kept shipping and waited for someone to notice.";
-
-    await user.root.action(internal.jobs.reflectionDistiller.distill, {
-      sessionId,
-      rawText: RAW_TEXT,
-      mirrorText: MIRROR,
-      primaryEmotion: "anxiety",
-      intensity: 5,
-      thematicTags: ["work"],
-      userLanguageTags: ["stretched thin"],
-    });
-
-    expect((await readSession(user, sessionId))?.distilledText).toBe(
-      stub.cache.distilled,
-    );
-  });
-
-  it("stores nothing when the model returns NULL", async () => {
-    const { user, sessionId } = await seedPipeline();
-    stub.cache.distilled = "NULL";
-
-    await user.root.action(internal.jobs.reflectionDistiller.distill, {
-      sessionId,
-      rawText: RAW_TEXT,
-      mirrorText: MIRROR,
-      primaryEmotion: "anxiety",
-      intensity: 5,
-      thematicTags: ["work"],
-      userLanguageTags: ["stretched thin"],
-    });
-
-    expect((await readSession(user, sessionId))?.distilledText).toBeUndefined();
-  });
-
-  it("skips a session the user chose not to keep", async () => {
-    const user = await asNewUser();
-    const sessionId = await seedSession(user.root, user.profileId, {
-      kept: false,
-    });
-    stub.cache.distilled = "should never be written";
-
-    await user.root.action(internal.jobs.reflectionDistiller.distill, {
-      sessionId,
-      rawText: RAW_TEXT,
-      mirrorText: MIRROR,
-      primaryEmotion: "anxiety",
-      intensity: 5,
-      thematicTags: ["work"],
-      userLanguageTags: ["stretched thin"],
-    });
-
-    expect((await readSession(user, sessionId))?.distilledText).toBeUndefined();
   });
 });

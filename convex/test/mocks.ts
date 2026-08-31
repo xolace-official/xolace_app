@@ -19,6 +19,7 @@
  * Only mock what the file under test actually reaches. An unused mock is a
  * real code path silently stubbed out.
  */
+import { internalAction } from "../_generated/server";
 
 /** `convex/lib/aggregates` — writes are no-ops; nothing reads ranks back. */
 export const aggregatesMock = () => ({
@@ -51,6 +52,21 @@ export const rateLimiterMock = (
     reset: async () => {},
   },
 });
+
+/**
+ * A registered internal action that does nothing, to spread over a module
+ * whose job is scheduled by the code under test.
+ *
+ * `convex-test` schedules on a real `setTimeout`, so a `runAfter(0, …)` job
+ * genuinely runs — `ai/tts:generateMirrorAudio` reaches ElevenLabs the moment
+ * `ELEVENLABS_VOICE_API_KEY` is present, and a job that fires after its test
+ * body has finished reads whatever the *next* test set. A test that asserts
+ * the enqueue must neuter the callee.
+ *
+ * No args validator on purpose: this stands in for several signatures, and
+ * validating args it is about to ignore would only make it brittle.
+ */
+export const noopJob = () => internalAction({ handler: async () => null });
 
 /** `convex/posthog` — analytics capture is fire-and-forget. */
 export const posthogMock = () => ({
