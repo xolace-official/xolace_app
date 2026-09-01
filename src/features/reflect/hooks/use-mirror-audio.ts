@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -18,15 +19,35 @@ export function useMirrorAudio(
     sessionId ? { sessionId } : 'skip',
   );
 
-  const player = useAudioPlayer(audioUrl ?? null);
+  // The native player is only built on the first tap: `new AudioPlayer(url)` runs
+  // synchronously during render and loading the file cost 34.7ms of MirrorState's
+  // render when the URL arrived. Most mirrors are never played.
+  const [activated, setActivated] = useState(false);
+  const player = useAudioPlayer(activated ? (audioUrl ?? null) : null);
   const status = useAudioPlayerStatus(player);
+  const awaitingFirstPlay = useRef(false);
 
   // Ready once a playable URL has loaded (undefined while the query is in flight,
   // null when the session has no mirror audio).
   const isReady = !!audioUrl;
 
+  // First tap only marks intent — playback starts once the player finishes loading.
+  useEffect(() => {
+    if (!awaitingFirstPlay.current || !status.isLoaded) return;
+    awaitingFirstPlay.current = false;
+    setAudioModeAsync({ playsInSilentMode: true })
+      .then(() => player.play())
+      .catch((e) => console.error('[useMirrorAudio] first play failed:', e));
+  }, [status.isLoaded, player]);
+
   const toggle = async () => {
     if (!isReady || !audioUrl) return;
+    if (!activated) {
+      awaitingFirstPlay.current = true;
+      setActivated(true);
+      return;
+    }
+    if (!status.isLoaded) return;
     try {
       if (status.playing) {
         player.pause();

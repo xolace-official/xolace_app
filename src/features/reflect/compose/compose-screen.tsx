@@ -141,13 +141,15 @@ export const ComposeScreen = ({
   }, [navigation, tourActive, skip]);
 
   // Flux's entrance is a spring started on his own mount, so firing the haptic
-  // here lands them in the same frame.
+  // here lands them in the same frame. The outgoing copy of a cross-fade is a
+  // fresh mount in the exiting subtree, so it must not re-fire the entrance for
+  // a screen the user is leaving.
   const entranceFired = useRef(false);
   useEffect(() => {
-    if (entranceFired.current) return;
+    if (entranceFired.current || !focusOnExpand) return;
     entranceFired.current = true;
     playHomeEntrance();
-  }, []);
+  }, [focusOnExpand]);
 
   const handleTap = () => {
     playTypingBegin();
