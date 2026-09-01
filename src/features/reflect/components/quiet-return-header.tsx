@@ -8,8 +8,6 @@ import type { UserVariant } from "@/src/features/reflect/types";
 import { NIGHT_ENCOURAGEMENT } from "@/src/features/reflect/night-copy";
 import { resolveCardContent } from "@/src/features/reflect/compose/resolve-card-content";
 import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import { Tour } from "@/src/components/ui/tour";
 
 type Props = {
   variant: UserVariant;
@@ -51,7 +49,6 @@ export const QuietReturnHeader = ({
   });
 
   const showEventPrompt = card.source === "event";
-  const isLongPrompt = card.scale === "small";
 
   const encouragement = isNight
     ? NIGHT_ENCOURAGEMENT
@@ -104,24 +101,6 @@ export const QuietReturnHeader = ({
       ) : eventPill ? (
         <View className="flex-row justify-end">{eventPill}</View>
       ) : null}
-
-      {/* First step of the reflect tour — the prompt is read before anything
-          is done about it, so it leads. */}
-      <Tour.Step
-        order={0}
-        title={TOUR_STEPS[0].title}
-        description={TOUR_STEPS[0].description}
-      >
-        <AppText
-          className={cn(
-            "font-semibold text-foreground",
-            isLongPrompt ? "text-2xl leading-9" : "text-4xl",
-            (encouragement || showStreakCalendar || showEventPrompt) && "mt-4",
-          )}
-        >
-          {card.text}
-        </AppText>
-      </Tour.Step>
     </View>
   );
 };

@@ -22,8 +22,7 @@ import {
   computeQuietReturn,
 } from "@/src/helpers/utils/user-variant";
 import type { ReflectionStateName } from "@/src/features/reflect/types";
-import { IdleState } from "@/src/features/reflect/components/states/idle-state";
-import { TypingState } from "@/src/features/reflect/components/states/typing-state";
+import { ComposeScreen } from "@/src/features/reflect/compose/compose-screen";
 import { ProcessingState } from "@/src/features/reflect/components/states/processing-state";
 import { MirrorState } from "@/src/features/reflect/components/states/mirror-state";
 import { ClarifyState } from "@/src/features/reflect/components/states/clarify-state";
@@ -170,32 +169,30 @@ export const ReflectScreen = () => {
 
   const renderScreen = (screen: ReflectionStateName, isOutgoing = false) => {
     switch (screen) {
+      // idle normalizes to typing (#256): one compose screen renders both, and
+      // which one it is reading as comes from state.screen, not from `screen`.
       case "idle":
-        return (
-          <IdleState
-            variant={state.userVariant}
-            quietReturn={state.quietReturn}
-            selectedTextures={state.selectedTextures}
-            dispatch={dispatch}
-            onTap={() => dispatch({ type: "TAP_INPUT" })}
-            onScaffoldSubmit={submitScaffold}
-            onVoiceTap={startVoiceFromIdle}
-            isRecording={isRecording}
-            spaceName={context?.preferences?.spaceName}
-          />
-        );
       case "typing":
       case "typing-nudge":
         return (
-          <TypingState
-            showNudge={state.screen === "typing-nudge"}
+          <ComposeScreen
+            screen={state.screen}
+            // The outgoing copy is a fading picture of the screen being left;
+            // it must not pull focus from the one arriving.
+            focusOnExpand={!isOutgoing}
+            variant={state.userVariant}
+            quietReturn={state.quietReturn}
+            selectedTextures={state.selectedTextures}
             entryText={state.entryText}
             dispatch={dispatch}
+            onTap={() => dispatch({ type: "TAP_INPUT" })}
             onSubmit={submitReflection}
             onDismiss={handleDismissTyping}
-            onVoiceTap={startVoiceFromTyping}
+            onScaffoldSubmit={submitScaffold}
+            onVoiceTapIdle={startVoiceFromIdle}
+            onVoiceTapTyping={startVoiceFromTyping}
             isRecording={isRecording}
-            autoFocus={!isOutgoing}
+            spaceName={context?.preferences?.spaceName}
           />
         );
       case "processing":
@@ -285,7 +282,10 @@ export const ReflectScreen = () => {
     bottom: insets.bottom,
   };
 
-  const isIdle = current === "idle";
+  // The settled screen name is `typing` for both idle and composing since #256,
+  // so the header follows the reducer's own state: it belongs to the resting
+  // card, and it gets out of the way the moment the composer opens.
+  const isIdle = state.screen === "idle";
   // The wash belongs to the idle/typing canvas. It stays mounted while an
   // outgoing idle/typing screen is still fading, so it leaves with that screen
   // rather than popping out from under the one replacing it.
