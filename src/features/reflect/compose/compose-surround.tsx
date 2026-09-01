@@ -17,7 +17,6 @@ import { ComposeChrome } from "@/src/features/reflect/compose/compose-chrome";
 import { useMorphGeometry } from "@/src/features/reflect/compose/morph-geometry";
 import { TextureBand } from "@/src/features/reflect/compose/texture-band";
 import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
 import type { ReflectionAction, UserVariant } from "@/src/features/reflect/types";
 import { a11yHidden } from "@/src/lib/utils";
 
@@ -37,7 +36,6 @@ type Props = {
   reduceMotion: boolean;
   variant: UserVariant;
   isNight: boolean;
-  activeQuietReturn: QuietReturnTier | null;
   eventPrompt: string | null;
   eventLabel: string | null;
   spaceName?: string;
@@ -63,7 +61,6 @@ export const ComposeSurround = ({
   reduceMotion,
   variant,
   isNight,
-  activeQuietReturn,
   eventPrompt,
   eventLabel,
   spaceName,
@@ -134,8 +131,6 @@ export const ComposeSurround = ({
       >
         <ComposeChrome
           variant={variant}
-          isNight={isNight}
-          activeQuietReturn={activeQuietReturn}
           eventPrompt={eventPrompt}
           eventLabel={eventLabel}
           spaceName={spaceName}
@@ -161,9 +156,12 @@ export const ComposeSurround = ({
           it is the mic; once words are chosen the card is already holding the
           answer, so the same spot becomes the way to send it. Swapping in place
           is what keeps the band's frame fixed — nothing below the card grows,
-          and the mic is never crowded out of its own position. */}
+          and the mic is never crowded out of its own position. It rides the
+          band down rather than just fading: either way it is the way out that
+          isn't the card, and a user who has committed to writing is not
+          offered one. */}
       <Animated.View
-        style={[{ position: "absolute", left: 0, right: 0 }, micStyle, recede]}
+        style={[{ position: "absolute", left: 0, right: 0 }, micStyle, bandStyle]}
         pointerEvents={overlay}
         className="h-10 items-center justify-center"
         {...receded}

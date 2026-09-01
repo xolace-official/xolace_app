@@ -5,8 +5,6 @@
  * IdleState, TypingState, and the session-end variants.
  */
 
-export const NIGHT_ENCOURAGEMENT = "Still awake.";
-
 export const NIGHT_HEADLINE = "What's carrying over?";
 
 export const NIGHT_TEXTURE_WORDS = [

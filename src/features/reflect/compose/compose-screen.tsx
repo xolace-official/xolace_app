@@ -195,7 +195,6 @@ export const ComposeScreen = ({
           reduceMotion={reduceMotion}
           variant={variant}
           isNight={isNight}
-          activeQuietReturn={activeQuietReturn}
           eventPrompt={activeEventPrompt}
           eventLabel={activeEventLabel}
           spaceName={spaceName}

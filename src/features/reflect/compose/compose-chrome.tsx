@@ -1,53 +1,90 @@
 import { View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { useRouter } from "expo-router";
-import { PressableFeedback, Separator, useThemeColor } from "heroui-native";
+import { PressableFeedback, useThemeColor } from "heroui-native";
+import { useCSSVariable } from "uniwind";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
-import { QuietReturnHeader } from "@/src/features/reflect/components/quiet-return-header";
-import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
+import { StreakCalendar } from "@/src/features/reflect/components/streak-calendar";
 import type { UserVariant } from "@/src/features/reflect/types";
 import { playSoftPress } from "@/src/lib/haptics";
 
 const QUOTE_ICON_NAME = { ios: "sparkles", android: "auto_awesome" } as const;
+const EVENT_ICON_NAME = {
+  ios: "heart.fill",
+  android: "favorite",
+  web: "favorite",
+} as const;
 
 type Props = {
   variant: UserVariant;
-  isNight: boolean;
-  activeQuietReturn: QuietReturnTier | null;
   eventPrompt: string | null;
   eventLabel: string | null;
   spaceName?: string;
 };
 
 /**
- * What sits above the card: who the user is here, and the one other way in.
+ * The Perch strip: one thin row above the card (#257).
+ *
+ * Who the user is here — streak, space name, the event they're inside — and the
+ * one other way in, collected onto a single line so the chrome informs without
+ * competing with the card. There is no encouragement line any more: Flux and
+ * the prompt carry that, and a second reassuring sentence only said it twice.
+ *
+ * The strip is identity, so it no longer defers to whatever the card is
+ * saying. The event pill tracks the event period rather than the card: the
+ * card shows one prompt and night or a quiet return may outrank the event's,
+ * but the user is still inside the event either way. The streak likewise shows
+ * for any active user — it used to hide at night and on a quiet return only
+ * because it shared a row with the encouragement copy that has now gone.
  */
 export const ComposeChrome = ({
   variant,
-  isNight,
-  activeQuietReturn,
   eventPrompt,
   eventLabel,
   spaceName,
 }: Props) => {
   const router = useRouter();
   const accentColor = useThemeColor("accent") as string;
+  const [eventColor] = useCSSVariable(["--color-event"]);
   const todayQuotes = useQuery(api.dailyQuotes.getToday);
   const hasQuote = !!(todayQuotes?.session ?? todayQuotes?.curated);
 
   return (
-    <>
-      <QuietReturnHeader
-        variant={variant}
-        isNight={isNight}
-        activeQuietReturn={activeQuietReturn}
-        eventPrompt={eventPrompt}
-        eventLabel={eventLabel}
-        spaceName={spaceName}
-        className="pt-0 pb-3"
-      />
+    <View className="flex-row items-center gap-2 pb-3">
+      {variant.kind === "active" && (
+        <StreakCalendar currentStreak={variant.dayCount} />
+      )}
+
+      {!!spaceName && (
+        <View className="shrink rounded-full bg-accent/15 px-3 py-1">
+          <AppText
+            className="text-xs font-semibold text-accent"
+            numberOfLines={1}
+          >
+            {spaceName}
+          </AppText>
+        </View>
+      )}
+
+      {!!eventPrompt && (
+        <View className="shrink flex-row items-center gap-1.5 rounded-full bg-event/15 px-3 py-1">
+          <SymbolView
+            name={EVENT_ICON_NAME}
+            size={11}
+            tintColor={String(eventColor)}
+          />
+          <AppText
+            className="shrink text-xs font-semibold text-event"
+            numberOfLines={1}
+          >
+            {eventLabel ?? "This month"}
+          </AppText>
+        </View>
+      )}
+
+      <View className="flex-1" />
 
       {hasQuote && (
         <PressableFeedback
@@ -57,7 +94,6 @@ export const ComposeChrome = ({
           }}
           accessibilityLabel="Open today's reflection"
           hitSlop={8}
-          className="items-center pb-3"
         >
           <View className="flex-row items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1.5">
             <SymbolView name={QUOTE_ICON_NAME} size={11} tintColor={accentColor} />
@@ -67,6 +103,6 @@ export const ComposeChrome = ({
           </View>
         </PressableFeedback>
       )}
-    </>
+    </View>
   );
 };
