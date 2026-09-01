@@ -1,6 +1,8 @@
 import { StyleSheet, View } from "react-native";
 import Animated, {
   Extrapolation,
+  FadeIn,
+  FadeOut,
   interpolate,
   useAnimatedStyle,
   type SharedValue,
@@ -10,12 +12,16 @@ import { useState } from "react";
 import { Tour } from "@/src/components/ui/tour";
 import { IdleMenu } from "@/src/features/idle-menu/menu";
 import { MicButton } from "@/src/features/reflect/components/mic-button";
+import { PillButton } from "@/src/components/shared/pill-button";
 import { ComposeChrome } from "@/src/features/reflect/compose/compose-chrome";
 import { useMorphGeometry } from "@/src/features/reflect/compose/morph-geometry";
 import { TextureBand } from "@/src/features/reflect/compose/texture-band";
 import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
 import type { ReflectionAction, UserVariant } from "@/src/features/reflect/types";
+
+const SLOT_IN = FadeIn.duration(220);
+const SLOT_OUT = FadeOut.duration(140);
 
 type Props = {
   progress: SharedValue<number>;
@@ -121,26 +127,51 @@ export const ComposeSurround = ({
           isNight={isNight}
           selectedTextures={selectedTextures}
           dispatch={dispatch}
-          onScaffoldSubmit={onScaffoldSubmit}
         />
       </Animated.View>
 
-      {/* The mic stands outside the card at rest: the card is the page, the
-          mic is something the user does. */}
+      {/* One slot under the card, for whichever way out is live. Empty-handed
+          it is the mic; once words are chosen the card is already holding the
+          answer, so the same spot becomes the way to send it. Swapping in place
+          is what keeps the band's frame fixed — nothing below the card grows,
+          and the mic is never crowded out of its own position. */}
       <Animated.View
         style={[{ position: "absolute", left: 0, right: 0 }, micStyle, recede]}
         pointerEvents={overlay}
-        className="items-center"
+        className="h-10 items-center justify-center"
       >
-        <Tour.Step
-          order={2}
-          title={TOUR_STEPS[2].title}
-          description={TOUR_STEPS[2].description}
-          shape="circle"
-          className="self-center"
-        >
-          <MicButton size="md" isRecording={isRecording} onPress={onVoiceTap} />
-        </Tour.Step>
+        {selectedTextures.length > 0 ? (
+          <Animated.View
+            style={StyleSheet.absoluteFill}
+            entering={SLOT_IN}
+            exiting={SLOT_OUT}
+            className="items-center justify-center"
+          >
+            {/* Sized to the mic it replaces, so the slot's height is constant. */}
+            <PillButton
+              label="Let it out"
+              onPress={onScaffoldSubmit}
+              className="px-6 py-2"
+            />
+          </Animated.View>
+        ) : (
+          <Animated.View
+            style={StyleSheet.absoluteFill}
+            entering={SLOT_IN}
+            exiting={SLOT_OUT}
+            className="items-center justify-center"
+          >
+            <Tour.Step
+              order={2}
+              title={TOUR_STEPS[2].title}
+              description={TOUR_STEPS[2].description}
+              shape="circle"
+              className="self-center"
+            >
+              <MicButton size="md" isRecording={isRecording} onPress={onVoiceTap} />
+            </Tour.Step>
+          </Animated.View>
+        )}
       </Animated.View>
 
       <Animated.View

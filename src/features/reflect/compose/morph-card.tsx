@@ -17,6 +17,7 @@ import { playSoftPress } from "@/src/lib/haptics";
 import { PresenceDot } from "@/src/features/reflect/components/presence-dot";
 import { PillButton } from "@/src/components/shared/pill-button";
 import { MicButton } from "@/src/features/reflect/components/mic-button";
+import { SelectionEcho } from "@/src/features/reflect/compose/selection-echo";
 import { Tour } from "@/src/components/ui/tour";
 import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 import {
@@ -45,6 +46,7 @@ type Props = {
   expanded: boolean;
   card: CardContent;
   entryText: string;
+  selectedTextures: string[];
   showNudge: boolean;
   nudgeMessage: string;
   isRecording: boolean;
@@ -75,6 +77,7 @@ export const MorphCard = ({
   expanded,
   card,
   entryText,
+  selectedTextures,
   showNudge,
   nudgeMessage,
   isRecording,
@@ -128,6 +131,13 @@ export const MorphCard = ({
 
   const bodyStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.get(), [0.4, 1], [0, 1], Extrapolation.CLAMP),
+  }));
+
+  // The tapped words hand over to the text input as the card opens — one
+  // answer surface, not two. Absolute so the expanded card's layout never
+  // reserves room for a thing it isn't showing.
+  const echoStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.get(), [0, 0.35], [1, 0], Extrapolation.CLAMP),
   }));
 
   // Flux aims at the presence dot through CARD_PAD, so the padding is
@@ -221,6 +231,21 @@ export const MorphCard = ({
             disabled={!canSubmit}
           />
         </View>
+      </Animated.View>
+
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            left: CARD_PAD,
+            right: CARD_PAD,
+            bottom: CARD_PAD,
+          },
+          echoStyle,
+        ]}
+        pointerEvents="none"
+      >
+        <SelectionEcho words={selectedTextures} />
       </Animated.View>
 
       {!expanded && (

@@ -82,7 +82,7 @@ export const ReflectScreen = () => {
     turnsCount,
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
-  const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
+  const safeAreaStyle = { paddingTop: insets.top };
   // Warm amber 'warning' tint sets the crisis button apart without the alarm of
   // a hard red — gentle but present, in keeping with the campfire palette.
   const crisisTint = useThemeColor("warning") as string;

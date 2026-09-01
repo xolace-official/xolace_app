@@ -3,37 +3,45 @@ import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { TagGroup } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/shared/pill-button";
 import { TextureSetTabs } from "@/src/features/reflect/components/texture-set-tabs";
 import { Tour } from "@/src/components/ui/tour";
 import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 import { NIGHT_TEXTURE_WORDS } from "@/src/features/reflect/night-copy";
 import {
+  MAX_TEXTURES,
+  TEXTURE_PILL,
   TEXTURE_SETS,
   resolveTextureSetId,
+  textureHue,
   type TextureSetId,
 } from "@/src/features/reflect/texture-sets";
+import { cn } from "@/src/lib/utils";
 import type { ReflectionAction } from "@/src/features/reflect/types";
 import { playSoftPress, playTextureSelect } from "@/src/lib/haptics";
 import { posthog } from "@/src/config/posthog";
 import { useAppStore } from "@/src/store/store";
 
-const BUTTON_INITIAL_ANIMATE = { opacity: 0, translateY: 20 } as const;
-const BUTTON_VISIBLE_ANIMATE = { opacity: 1, translateY: 0 } as const;
-const BUTTON_HIDDEN_ANIMATE = { opacity: 0, translateY: 20 } as const;
-const BUTTON_EASING: [number, number, number, number] = [
-  0.455, 0.03, 0.515, 0.955,
+/**
+ * Words tipped onto a table, not filed into a form.
+ *
+ * Each pill gets its own tilt, drop and nudge, cycling by position — enough
+ * that no two sit on a shared line or a shared left edge, small enough that
+ * nothing looks broken or moves out of thumb's reach. Classes rather than a
+ * style prop: `TagGroup.Item` forwards className and drops style.
+ */
+const SCATTER = [
+  "-rotate-2",
+  "rotate-1 mt-2 ml-1",
+  "rotate-3 mt-0.5",
+  "-rotate-1 mt-2.5 ml-2",
+  "rotate-2 mt-1",
+  "-rotate-3 mt-2 ml-1",
+  "rotate-1",
+  "-rotate-2 mt-1.5 ml-2",
 ];
-const BUTTON_TRANSITION_IN = {
-  type: "timing" as const,
-  duration: 300,
-  easing: BUTTON_EASING,
-};
-const BUTTON_TRANSITION_OUT = {
-  type: "timing" as const,
-  duration: 200,
-  easing: BUTTON_EASING,
-};
+
+const PILL = "border";
+
 const WORDS_FADE_OUT = { type: "timing" as const, duration: 150 };
 const WORDS_FADE_IN = { type: "timing" as const, duration: 200 };
 
@@ -41,7 +49,6 @@ type Props = {
   isNight: boolean;
   selectedTextures: string[];
   dispatch: React.Dispatch<ReflectionAction>;
-  onScaffoldSubmit: () => void;
 };
 
 /**
@@ -55,7 +62,6 @@ export const TextureBand = ({
   isNight,
   selectedTextures,
   dispatch,
-  onScaffoldSubmit,
 }: Props) => {
   const storedSetId = useAppStore((s) => s.textureSetId);
   const setTextureSetId = useAppStore((s) => s.setTextureSetId);
@@ -72,6 +78,8 @@ export const TextureBand = ({
   const selectedTextureKeys = new Set(selectedTextures);
   const wordsFadeAnimate = { opacity: wordsVisible ? 1 : 0 };
 
+  const atCap = selectedTextures.length >= MAX_TEXTURES;
+
   const handleToggle = (word: string) => {
     playTextureSelect();
     dispatch({ type: "TOGGLE_TEXTURE", word });
@@ -82,7 +90,11 @@ export const TextureBand = ({
     for (const word of TEXTURE_WORDS) {
       const isSelected = selectedTextures.includes(word);
       const shouldBeSelected = next.has(word);
-      if (isSelected !== shouldBeSelected) handleToggle(word);
+      if (isSelected === shouldBeSelected) continue;
+      // At the cap the reducer refuses the add, so don't answer the tap with a
+      // haptic that promises one.
+      if (!isSelected && atCap) continue;
+      handleToggle(word);
     }
   };
 
@@ -95,15 +107,6 @@ export const TextureBand = ({
     playSoftPress();
     posthog.capture("texture_set_changed", { from: resolvedSetId, to: id });
   };
-
-  const hasSelections = selectedTextures.length > 0;
-  // Mount the button when selections appear and keep it mounted until its exit
-  // animation finishes (onTransitionEnd). Visibility is derived directly from
-  // hasSelections, so no effect-driven state sync is needed.
-  const [buttonMounted, setButtonMounted] = useState(hasSelections);
-  if (hasSelections && !buttonMounted) {
-    setButtonMounted(true);
-  }
 
   return (
     <View className="px-6 pt-6 pb-8">
@@ -149,42 +152,39 @@ export const TextureBand = ({
             onSelectionChange={handleSelectionChange}
             animation="disable-all"
           >
-            <TagGroup.List className="flex-row flex-wrap gap-2 pr-14">
-              {TEXTURE_WORDS.map((word) => (
-                <TagGroup.Item
-                  key={word}
-                  id={word}
-                  className="min-w-18 justify-center"
-                >
-                  {({ isSelected }) => (
+            <TagGroup.List className="flex-row flex-wrap items-start gap-x-2 gap-y-2.5 pr-14">
+              {TEXTURE_WORDS.map((word, i) => {
+                const skin = TEXTURE_PILL[textureHue(word)];
+                const isSelected = selectedTextureKeys.has(word);
+                return (
+                  <TagGroup.Item
+                    key={word}
+                    id={word}
+                    className={cn(
+                      PILL,
+                      SCATTER[i % SCATTER.length],
+                      isSelected ? skin.selected : skin.rest,
+                      // Full up: the words still on offer step back rather than
+                      // silently swallowing taps.
+                      atCap && !isSelected && "opacity-35",
+                    )}
+                  >
                     <TagGroup.ItemLabel
-                      className={
-                        isSelected ? "text-accent" : "text-foreground/80"
-                      }
+                      className={cn(
+                        "text-xs",
+                        skin.label,
+                        !isSelected && "opacity-75",
+                      )}
                     >
                       {word}
                     </TagGroup.ItemLabel>
-                  )}
-                </TagGroup.Item>
-              ))}
+                  </TagGroup.Item>
+                );
+              })}
             </TagGroup.List>
           </TagGroup>
         </EaseView>
       </Tour.Step>
-
-      {buttonMounted && (
-        <EaseView
-          initialAnimate={BUTTON_INITIAL_ANIMATE}
-          animate={hasSelections ? BUTTON_VISIBLE_ANIMATE : BUTTON_HIDDEN_ANIMATE}
-          transition={hasSelections ? BUTTON_TRANSITION_IN : BUTTON_TRANSITION_OUT}
-          onTransitionEnd={({ finished }) => {
-            if (finished && !hasSelections) setButtonMounted(false);
-          }}
-          className="mt-5"
-        >
-          <PillButton label="Let it out" onPress={onScaffoldSubmit} />
-        </EaseView>
-      )}
     </View>
   );
 };

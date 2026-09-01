@@ -175,6 +175,7 @@ export const ComposeScreen = ({
             expanded={expanded}
             card={card}
             entryText={entryText}
+            selectedTextures={selectedTextures}
             showNudge={showNudge}
             nudgeMessage={nudgeMessage}
             isRecording={isRecording}

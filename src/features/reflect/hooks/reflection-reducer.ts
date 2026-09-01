@@ -3,6 +3,7 @@ import type {
   ReflectionAction,
   EntryType,
 } from '@/src/features/reflect/types';
+import { MAX_TEXTURES } from '@/src/features/reflect/texture-sets';
 
 export const MAX_TURNS = 2;
 
@@ -47,10 +48,19 @@ export function reducer(
     }
 
     case 'TOGGLE_TEXTURE': {
-      const textures = state.selectedTextures.includes(action.word)
-        ? state.selectedTextures.filter((w) => w !== action.word)
-        : [...state.selectedTextures, action.word];
-      return { ...state, selectedTextures: textures };
+      if (state.selectedTextures.includes(action.word)) {
+        return {
+          ...state,
+          selectedTextures: state.selectedTextures.filter(
+            (w) => w !== action.word,
+          ),
+        };
+      }
+      if (state.selectedTextures.length >= MAX_TEXTURES) return state;
+      return {
+        ...state,
+        selectedTextures: [...state.selectedTextures, action.word],
+      };
     }
 
     case 'SCAFFOLD_SUBMIT':
