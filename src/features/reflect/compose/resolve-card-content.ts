@@ -14,7 +14,7 @@ import { NIGHT_HEADLINE } from "@/src/features/reflect/night-copy";
  * Type scale is card-local: the card is a fixed size, so long text scales down
  * within it rather than pushing the page around.
  */
-export const DEFAULT_PROMPT = "What’s here right now... what are you feeling?";
+export const DEFAULT_PROMPT = "What’s sitting with you right now?";
 
 /** Above this many characters the card drops to the smaller scale. */
 const LONG_TEXT_CHARS = 60;
