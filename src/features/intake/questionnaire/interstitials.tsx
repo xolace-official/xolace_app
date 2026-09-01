@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 import { MascotConversation } from '@/src/features/intake/questionnaire/conversation';
 import { MASCOT_SHAKE } from '@/src/features/intake/questionnaire/mascot';
-import { useShake } from '@/src/features/intake/questionnaire/use-shake';
+import { useShakeToOpen } from '@/src/features/feedback-tray/trigger/use-shake-to-open';
 
 const PRIVACY_LINES = [
   { text: 'Quick one before we go on — about the name you just picked.' },
@@ -22,8 +22,9 @@ const PRIVACY_LINES = [
  * nothing else is on it, so the thing you're told about is a thing you already
  * did.
  *
- * NOTE: shake-to-feedback is not wired up in the app yet — this slot describes
- * a capability that is still to ship.
+ * The gate runs the *same* detector as the feedback tray's global shake trigger,
+ * so a shake that opens the gate is by definition a shake that opens the tray —
+ * the promise on this screen can't drift from the behaviour it describes.
  */
 const SHAKE_LINES = [
   { text: 'Last thing. Give your phone a shake.', gated: true },
@@ -45,9 +46,11 @@ export function PrivacyStep({ onDone }: { onDone: () => void }) {
 }
 
 export function ShakeStep({ onDone }: { onDone: () => void }) {
-  const shaken = useShake();
+  const [shaken, setShaken] = useState(false);
   // A simulator has no accelerometer, so the hint doubles as the gesture.
   const [bypassed, setBypassed] = useState(false);
+
+  useShakeToOpen({ enabled: !shaken, onShake: () => setShaken(true) });
 
   return (
     <MascotConversation
