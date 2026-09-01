@@ -3,6 +3,7 @@ import type {
   ReflectionAction,
   EntryType,
 } from '@/src/features/reflect/types';
+import { MAX_TEXTURES } from '@/src/features/reflect/texture-sets';
 
 export const MAX_TURNS = 2;
 
@@ -37,8 +38,13 @@ export function reducer(
         entryType: state.selectedTextures.length > 0 ? 'hybrid' : 'typed',
       };
 
+    // Closing the composer is not a decision to throw the writing away — the
+    // draft survives on the resting card and is discarded explicitly (#258).
     case 'DISMISS_TYPING':
-      return { ...state, screen: 'idle', entryText: '' };
+      return { ...state, screen: 'idle' };
+
+    case 'DISCARD_DRAFT':
+      return { ...state, entryText: '' };
 
     case 'TEXT_CHANGE': {
       const entryType: EntryType =
@@ -47,10 +53,19 @@ export function reducer(
     }
 
     case 'TOGGLE_TEXTURE': {
-      const textures = state.selectedTextures.includes(action.word)
-        ? state.selectedTextures.filter((w) => w !== action.word)
-        : [...state.selectedTextures, action.word];
-      return { ...state, selectedTextures: textures };
+      if (state.selectedTextures.includes(action.word)) {
+        return {
+          ...state,
+          selectedTextures: state.selectedTextures.filter(
+            (w) => w !== action.word,
+          ),
+        };
+      }
+      if (state.selectedTextures.length >= MAX_TEXTURES) return state;
+      return {
+        ...state,
+        selectedTextures: [...state.selectedTextures, action.word],
+      };
     }
 
     case 'SCAFFOLD_SUBMIT':

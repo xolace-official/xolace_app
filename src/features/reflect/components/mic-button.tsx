@@ -52,7 +52,7 @@ export const MicButton = ({ size, isRecording, onPress }: Props) => {
   }, [isRecording, reduceMotion, scale, bgOpacity]);
 
   const iconSize = size === "md" ? 20 : 14;
-  const containerSize = size === "md" ? 38 : 26;
+  const containerSize = size === "md" ? 40 : 26;
 
   const containerStyle = useAnimatedStyle(() => ({
     width: containerSize,
@@ -73,10 +73,6 @@ export const MicButton = ({ size, isRecording, onPress }: Props) => {
     opacity: bgOpacity.get(),
   }));
 
-  const iconWrapperStyle = useAnimatedStyle(() => ({
-    opacity: isRecording ? 1 : 0.4,
-  }));
-
   const handlePress = () => {
     playSoftPress();
     onPress();
@@ -92,11 +88,14 @@ export const MicButton = ({ size, isRecording, onPress }: Props) => {
         isRecording ? "Stop voice input" : "Start voice input"
       }
     >
-      <Animated.View style={containerStyle}>
+      {/* A bordered surface, not a bare glyph: the way out that isn't the card
+          has to read as something you can press. */}
+      <Animated.View
+        style={containerStyle}
+        className="border border-border bg-surface-secondary"
+      >
         <Animated.View style={bgStyle} />
-        <Animated.View style={iconWrapperStyle}>
-          <SymbolView name={MIC_NAME} size={iconSize} tintColor={accentColor} />
-        </Animated.View>
+        <SymbolView name={MIC_NAME} size={iconSize} tintColor={accentColor} />
       </Animated.View>
     </PressableFeedback>
   );

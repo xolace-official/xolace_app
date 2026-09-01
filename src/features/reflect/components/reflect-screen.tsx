@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, type ViewStyle, View } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { Stack, useRouter } from "expo-router";
 import AccountCircle from "@expo/material-symbols/account_circle.xml";
 import CrisisAlert from "@expo/material-symbols/crisis_alert.xml";
@@ -21,8 +22,7 @@ import {
   computeQuietReturn,
 } from "@/src/helpers/utils/user-variant";
 import type { ReflectionStateName } from "@/src/features/reflect/types";
-import { IdleState } from "@/src/features/reflect/components/states/idle-state";
-import { TypingState } from "@/src/features/reflect/components/states/typing-state";
+import { ComposeScreen } from "@/src/features/reflect/compose/compose-screen";
 import { ProcessingState } from "@/src/features/reflect/components/states/processing-state";
 import { MirrorState } from "@/src/features/reflect/components/states/mirror-state";
 import { ClarifyState } from "@/src/features/reflect/components/states/clarify-state";
@@ -30,6 +30,7 @@ import { GaveUpState } from "@/src/features/reflect/components/states/gave-up-st
 import { PathSelectionState } from "@/src/features/reflect/components/states/path-selection-state";
 import { EscalationState } from "@/src/features/reflect/components/states/escalation-state";
 import { ErrorState } from "@/src/features/reflect/components/states/error-state";
+import { ReflectWash } from "@/src/features/reflect/components/reflect-wash";
 import { SpaceNamePromptDialog } from "@/src/features/reflect/components/space-name-prompt-dialog";
 import { ClarifyFeedbackSheet } from "@/src/features/reflect/components/states/clarify-feedback-sheet";
 import { useFeedbackShake } from "@/src/features/feedback-tray/feedback-tray-provider";
@@ -40,6 +41,13 @@ import { useFeedbackShake } from "@/src/features/feedback-tray/feedback-tray-pro
 // onOutgoingComplete never fires, leaving it mounted forever.
 const EASE_ANIMATE_OUT_INITIAL = { opacity: 1 };
 const EASE_ANIMATE_OUT = { opacity: 0 };
+
+const WASH_FADE_IN = FadeIn.duration(300);
+const WASH_FADE_OUT = FadeOut.duration(300);
+
+const WASH_SCREENS: ReflectionStateName[] = ["idle", "typing", "typing-nudge"];
+const isWashScreen = (screen: ReflectionStateName) =>
+  WASH_SCREENS.includes(screen);
 
 export const ReflectScreen = () => {
   const router = useRouter();
@@ -74,7 +82,7 @@ export const ReflectScreen = () => {
     turnsCount,
   } = useReflectionMachine();
   const insets = useSafeAreaInsets();
-  const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };
+  const safeAreaStyle = { paddingTop: insets.top };
   // Warm amber 'warning' tint sets the crisis button apart without the alarm of
   // a hard red — gentle but present, in keeping with the campfire palette.
   const crisisTint = useThemeColor("warning") as string;
@@ -144,10 +152,7 @@ export const ReflectScreen = () => {
     });
   }, [context?.profile, dispatch]);
 
-  // One-shot: open the space-name dialog the first time the user reaches
-  // path-selection without a name set. Adjusted during render with a state
-  // guard (not a ref — refs can't be read during render) rather than a
-  // useEffect, which avoids a cascading render.
+
   if (
     current === "path-selection" &&
     !spaceNameDialogFired &&
@@ -161,32 +166,30 @@ export const ReflectScreen = () => {
 
   const renderScreen = (screen: ReflectionStateName, isOutgoing = false) => {
     switch (screen) {
+      // idle normalizes to typing (#256): one compose screen renders both, and
+      // which one it is reading as comes from state.screen, not from `screen`.
       case "idle":
-        return (
-          <IdleState
-            variant={state.userVariant}
-            quietReturn={state.quietReturn}
-            selectedTextures={state.selectedTextures}
-            dispatch={dispatch}
-            onTap={() => dispatch({ type: "TAP_INPUT" })}
-            onScaffoldSubmit={submitScaffold}
-            onVoiceTap={startVoiceFromIdle}
-            isRecording={isRecording}
-            spaceName={context?.preferences?.spaceName}
-          />
-        );
       case "typing":
       case "typing-nudge":
         return (
-          <TypingState
-            showNudge={state.screen === "typing-nudge"}
+          <ComposeScreen
+            screen={state.screen}
+            // The outgoing copy is a fading picture of the screen being left;
+            // it must not pull focus from the one arriving.
+            focusOnExpand={!isOutgoing}
+            variant={state.userVariant}
+            quietReturn={state.quietReturn}
+            selectedTextures={state.selectedTextures}
             entryText={state.entryText}
             dispatch={dispatch}
+            onTap={() => dispatch({ type: "TAP_INPUT" })}
             onSubmit={submitReflection}
             onDismiss={handleDismissTyping}
-            onVoiceTap={startVoiceFromTyping}
+            onScaffoldSubmit={submitScaffold}
+            onVoiceTapIdle={startVoiceFromIdle}
+            onVoiceTapTyping={startVoiceFromTyping}
             isRecording={isRecording}
-            autoFocus={!isOutgoing}
+            spaceName={context?.preferences?.spaceName}
           />
         );
       case "processing":
@@ -276,7 +279,15 @@ export const ReflectScreen = () => {
     bottom: insets.bottom,
   };
 
-  const isIdle = current === "idle";
+  // The settled screen name is `typing` for both idle and composing since #256,
+  // so the header follows the reducer's own state: it belongs to the resting
+  // card, and it gets out of the way the moment the composer opens.
+  const isIdle = state.screen === "idle";
+  // The wash belongs to the idle/typing canvas. It stays mounted while an
+  // outgoing idle/typing screen is still fading, so it leaves with that screen
+  // rather than popping out from under the one replacing it.
+  const showWash =
+    isWashScreen(current) || (previous !== null && isWashScreen(previous));
   const stackScreenOptions = {
     headerShown: isIdle,
     headerTransparent: true,
@@ -299,6 +310,19 @@ export const ReflectScreen = () => {
   return (
     <View className="flex-1 bg-background" style={safeAreaStyle}>
       <Stack.Screen options={stackScreenOptions} />
+      {showWash && (
+        <Animated.View
+          entering={WASH_FADE_IN}
+          exiting={WASH_FADE_OUT}
+          pointerEvents="none"
+          // Absolute children lay out against the border box, so this ignores
+          // the host's safe-area padding and the wash runs edge to edge —
+          // under the status bar and the home indicator.
+          style={StyleSheet.absoluteFill}
+        >
+          <ReflectWash />
+        </Animated.View>
+      )}
       {/* Mounted only while idle. A `hidden` toolbar button still leaves its
           transparent host view laid out across the top of the screen on
           Android, where (unlike UIKit) an invisible view still consumes

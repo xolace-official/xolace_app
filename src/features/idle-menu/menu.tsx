@@ -47,10 +47,10 @@ export const IdleMenu = () => {
             the profile and crisis controls in the header, so it can simply be
             wrapped — see TOUR_STEPS for the ordering. */}
         <Tour.Step
-          order={5}
+          order={3}
           shape="circle"
-          title={TOUR_STEPS[5].title}
-          description={TOUR_STEPS[5].description}
+          title={TOUR_STEPS[3].title}
+          description={TOUR_STEPS[3].description}
         >
           <MenuTrigger isOpen={isOpen} isOpenJS={isOpenJS} onPress={toggle} />
         </Tour.Step>

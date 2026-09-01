@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+  REFLECT_TOUR_VERSION,
+  shouldShowReflectTour,
+} from "@/src/features/reflect/tour-copy";
 import { useAppStore } from "./store";
 
 describe("store partialize", () => {
@@ -46,6 +50,27 @@ describe("store partialize", () => {
     // "Never two sessions in a row" is only enforceable if the id survives a
     // relaunch — the app is routinely closed between one session and the next.
     expect(persisted).toContain("plusOfferShownSessionId");
+  });
+});
+
+describe("reflect tour version", () => {
+  it("defaults to 0, so a device that never finished a tour sees the current one", () => {
+    expect(useAppStore.getState().reflectTourVersion).toBe(0);
+    expect(shouldShowReflectTour(0)).toBe(true);
+  });
+
+  it("does not re-show the tour to a device already at the current version", () => {
+    expect(shouldShowReflectTour(REFLECT_TOUR_VERSION)).toBe(false);
+  });
+
+  it("is persisted, so a finished tour stays finished across relaunches", () => {
+    const state = useAppStore.getState();
+    const persisted = Object.keys(
+      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
+        .persist.getOptions()
+        .partialize(state),
+    );
+    expect(persisted).toContain("reflectTourVersion");
   });
 });
 

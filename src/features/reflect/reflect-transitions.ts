@@ -37,11 +37,15 @@ export type ScreenTransitionConfig = {
 };
 
 /**
- * Normalizes screen names so typing-nudge maps to typing.
- * This prevents cross-fade transitions when toggling between typing/typing-nudge.
+ * Normalizes screen names onto the screen that actually renders them.
+ *
+ * `typing-nudge` is `typing` with a line added, and since #256 `idle` is the
+ * same compose screen at rest — one card at two sizes, told apart by a progress
+ * value rather than by mounting a different tree. Cross-fading between any of
+ * the three would destroy the object the morph is moving.
  */
 export function normalizeScreen(screen: ReflectionStateName): ReflectionStateName {
-  return screen === 'typing-nudge' ? 'typing' : screen;
+  return screen === 'typing-nudge' || screen === 'idle' ? 'typing' : screen;
 }
 
 const fade = (enterDuration: number, exitDuration: number): ScreenTransitionConfig => ({

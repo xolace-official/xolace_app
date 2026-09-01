@@ -83,7 +83,12 @@ export const StreakCalendar = ({ currentStreak }: Props) => {
       runOnUI(() => {
         "worklet";
         const layout = measure(miniRef);
-        if (layout !== null) scheduleOnRN(setMiniLayout, layout);
+        // A null measure means the reveal cannot be staged, and nothing
+        // retries. Acknowledge the streak anyway — the mini deliberately shows
+        // a day behind while a reveal is pending, so without this it sits one
+        // short forever. A missed animation beats a wrong number.
+        if (layout === null) scheduleOnRN(setLastAcknowledgedStreak, currentStreak);
+        else scheduleOnRN(setMiniLayout, layout);
       })();
     }, REVEAL_START_DELAY_MS);
     return () => clearTimeout(timer);

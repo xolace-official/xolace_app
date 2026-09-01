@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { posthog } from "@/src/config/posthog";
+import {
+  REFLECT_TOUR_VERSION,
+  shouldShowReflectTour,
+} from "@/src/features/reflect/tour-copy";
 import { useAppStore } from "@/src/store/store";
 
 /**
  * When the first-install walkthrough runs, and what to record about it.
  *
  * Stepping belongs to `<Tour>` — this only decides whether it is open, and
- * marks it seen once it closes either way.
+ * stamps the current tour version once it closes either way.
  */
 export function useReflectTour() {
-  const reflectTourSeen = useAppStore((s) => s.reflectTourSeen);
-  const setReflectTourSeen = useAppStore((s) => s.setReflectTourSeen);
+  const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
+  const setReflectTourVersion = useAppStore((s) => s.setReflectTourVersion);
   const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
   const homeSheetBlocking = useAppStore((s) => s.homeSheetBlocking);
 
@@ -25,7 +29,12 @@ export function useReflectTour() {
   // homeSheetBlocking gate the spotlight would render under the return-welcome
   // or awareness sheet.
   useEffect(() => {
-    if (reflectTourSeen || !founderWelcomeSeen || homeSheetBlocking) return;
+    if (
+      !shouldShowReflectTour(reflectTourVersion) ||
+      !founderWelcomeSeen ||
+      homeSheetBlocking
+    )
+      return;
 
     const timer = setTimeout(() => {
       setIsActive(true);
@@ -33,17 +42,17 @@ export function useReflectTour() {
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [reflectTourSeen, founderWelcomeSeen, homeSheetBlocking]);
+  }, [reflectTourVersion, founderWelcomeSeen, homeSheetBlocking]);
 
   const finish = () => {
     setIsActive(false);
-    setReflectTourSeen(true);
+    setReflectTourVersion(REFLECT_TOUR_VERSION);
     posthog.capture("tour_completed");
   };
 
   const skip = () => {
     setIsActive(false);
-    setReflectTourSeen(true);
+    setReflectTourVersion(REFLECT_TOUR_VERSION);
     posthog.capture("tour_skipped", { at_step: lastStep.current });
   };
 
