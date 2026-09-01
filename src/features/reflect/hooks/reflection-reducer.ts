@@ -38,8 +38,13 @@ export function reducer(
         entryType: state.selectedTextures.length > 0 ? 'hybrid' : 'typed',
       };
 
+    // Closing the composer is not a decision to throw the writing away — the
+    // draft survives on the resting card and is discarded explicitly (#258).
     case 'DISMISS_TYPING':
-      return { ...state, screen: 'idle', entryText: '' };
+      return { ...state, screen: 'idle' };
+
+    case 'DISCARD_DRAFT':
+      return { ...state, entryText: '' };
 
     case 'TEXT_CHANGE': {
       const entryType: EntryType =

@@ -24,6 +24,7 @@ export type FeedbackType = 'not_quite' | 'say_more';
 export type ReflectionAction =
   | { type: 'TAP_INPUT' }
   | { type: 'DISMISS_TYPING' }
+  | { type: 'DISCARD_DRAFT' }
   | { type: 'TEXT_CHANGE'; text: string }
   | { type: 'TOGGLE_TEXTURE'; word: string }
   | { type: 'SCAFFOLD_SUBMIT' }

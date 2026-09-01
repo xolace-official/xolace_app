@@ -56,6 +56,7 @@ type Props = {
   onChangeText: (text: string) => void;
   onSubmit: () => void;
   onDismiss: () => void;
+  onDiscardDraft: () => void;
   onVoiceTap: () => void;
 };
 
@@ -87,6 +88,7 @@ export const MorphCard = ({
   onChangeText,
   onSubmit,
   onDismiss,
+  onDiscardDraft,
   onVoiceTap,
 }: Props) => {
   const geo = useMorphGeometry();
@@ -130,6 +132,17 @@ export const MorphCard = ({
     ),
   }));
 
+  // Discard is the resting card's counterpart to the composer's close button —
+  // same corner, opposite half of the morph, so the card never offers both.
+  const restControlsStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      progress.get(),
+      [0, HANDOFF],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+  }));
+
   const bodyStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.get(), [0.4, 1], [0, 1], Extrapolation.CLAMP),
   }));
@@ -151,6 +164,9 @@ export const MorphCard = ({
   // or a screen reader finds a close button for a composer that isn't open.
   const composerA11y = a11yHidden(!expanded);
   const restA11y = a11yHidden(expanded);
+  // A retained draft is the user's own words, not the space's — italic and
+  // dimmer so the card never reads as if it asked the question.
+  const isDraft = card.source === "draft";
 
   return (
     <Animated.View
@@ -161,6 +177,19 @@ export const MorphCard = ({
       ]}
       className="border border-foreground/8 bg-surface shadow-lg"
     >
+      {/* First child, so it sits *under* everything else in the card: the
+          resting card is one big tap target, except where a real control
+          (discard) is painted on top of it. */}
+      {!expanded && (
+        <Pressable
+          onPress={onOpen}
+          accessibilityRole="button"
+          accessibilityLabel="Tap to begin writing"
+          accessibilityHint="Opens the composer to start typing"
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        />
+      )}
+
       <View className="flex-row items-center gap-2">
         <Animated.View style={controlsStyle}>
           <PresenceDot />
@@ -175,7 +204,11 @@ export const MorphCard = ({
         >
           <Animated.Text
             style={promptStyle}
-            className="font-normal text-foreground"
+            className={
+              isDraft
+                ? "font-normal italic text-foreground/60"
+                : "font-normal text-foreground"
+            }
           >
             {card.text}
           </Animated.Text>
@@ -207,6 +240,27 @@ export const MorphCard = ({
             </AppText>
           </Pressable>
         </Animated.View>
+        {isDraft && (
+          <Animated.View
+            style={restControlsStyle}
+            pointerEvents={expanded ? "none" : "auto"}
+            {...restA11y}
+          >
+            <Pressable
+              onPress={() => {
+                playSoftPress();
+                onDiscardDraft();
+              }}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Discard draft"
+              accessibilityHint="Clears what you've written so far"
+              className="rounded-full bg-foreground/8 px-2.5 py-1"
+            >
+              <AppText className="text-xs text-foreground/40">Discard</AppText>
+            </Pressable>
+          </Animated.View>
+        )}
       </View>
 
       {showNudge && (
@@ -263,16 +317,6 @@ export const MorphCard = ({
       >
         <SelectionEcho words={selectedTextures} />
       </Animated.View>
-
-      {!expanded && (
-        <Pressable
-          onPress={onOpen}
-          accessibilityRole="button"
-          accessibilityLabel="Tap to begin writing"
-          accessibilityHint="Opens the composer to start typing"
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-        />
-      )}
     </Animated.View>
   );
 };

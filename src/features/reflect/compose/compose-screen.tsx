@@ -102,6 +102,9 @@ export const ComposeScreen = ({
     isNight,
     quietReturnTier: activeQuietReturn,
     eventPrompt: activeEventPrompt,
+    // Dismissing the composer keeps the writing (#258), so the resting card
+    // shows the draft's opening line rather than a prompt over the top of it.
+    draft: entryText,
   });
 
   const [nudgeMessage] = useState(
@@ -184,6 +187,7 @@ export const ComposeScreen = ({
             onChangeText={handleChangeText}
             onSubmit={onSubmit}
             onDismiss={onDismiss}
+            onDiscardDraft={() => dispatch({ type: "DISCARD_DRAFT" })}
             onVoiceTap={onVoiceTapTyping}
           />
         </View>
