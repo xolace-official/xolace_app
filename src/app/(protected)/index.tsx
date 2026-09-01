@@ -17,6 +17,7 @@ import { MonthlyEventSheet } from '@/src/features/awareness-events/components/mo
 import { useAwarenessEvent } from '@/src/features/awareness-events/hooks/use-awareness-event';
 import { ReturnWelcomeSheet } from '@/src/features/reflect/components/return-welcome-sheet';
 import { useReturnWelcome } from '@/src/features/reflect/hooks/use-return-welcome';
+import { shouldShowReflectTour } from '@/src/features/reflect/tour-copy';
 import { FollowUpCheckInSheet } from '@/src/features/reflect/components/follow-up-check-in-sheet';
 import { useFollowUpCheckIn } from '@/src/features/reflect/hooks/use-follow-up-check-in';
 import {
@@ -86,7 +87,7 @@ export default function ProtectedIndex() {
   const clearLastNotification = useAppStore((s) => s.clearLastNotification);
   const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
   const setFounderWelcomeSeen = useAppStore((s) => s.setFounderWelcomeSeen);
-  const reflectTourSeen = useAppStore((s) => s.reflectTourSeen);
+  const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
   const setHomeSheetBlocking = useAppStore((s) => s.setHomeSheetBlocking);
   const [showWelcome, setShowWelcome] = useState(false);
   const isFocused = useIsFocused();
@@ -94,11 +95,13 @@ export default function ProtectedIndex() {
   const { markInteractive } = useObserve();
 
   // Snapshot, not live read. The awareness sheet waits for a launch where the
-  // tour is already behind the user — reading reflectTourSeen live would pop the
+  // tour is already behind the user — reading the version live would pop the
   // sheet the instant the tour completed, stacking a third interruption onto a
   // first run. Persisted state hydrates synchronously (unified-storage), so this
   // is the real value on the very first render.
-  const [tourSeenAtMount] = useState(reflectTourSeen);
+  const [tourSeenAtMount] = useState(
+    !shouldShowReflectTour(reflectTourVersion),
+  );
 
   // Same getFullContext query ReflectScreen subscribes to — Convex dedupes it,
   // so this is a cached read, not a second round-trip.

@@ -130,7 +130,7 @@ export const ComposeScreen = ({
   });
 
   const { isActive: tourActive, finish, skip, trackStep } = useReflectTour();
-  const setReflectTourSeen = useAppStore((s) => s.setReflectTourSeen);
+  const setReflectTourVersion = useAppStore((s) => s.setReflectTourVersion);
 
   // Dismiss the tour if the user navigates away (e.g. the header's Help button)
   useEffect(() => {
@@ -216,7 +216,7 @@ export const ComposeScreen = ({
         {/* DEV ONLY — tap to restart tour for testing */}
         {__DEV__ && !tourActive && !expanded && (
           <PressableFeedback
-            onPress={() => setReflectTourSeen(false)}
+            onPress={() => setReflectTourVersion(0)}
             className="absolute bottom-5 right-4 p-3"
             hitSlop={8}
           >

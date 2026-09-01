@@ -1,13 +1,20 @@
-// Indexed by a step's `order`, so entries stay in place even when one stops
-// being rendered. Since #256 index 1 ("Start by writing") has no target: the
-// blank tap area it pointed at is gone, and the card carries step 0 instead.
-// The tour rewrite (#246) collapses this list to four steps.
+/**
+ * Bump when the tour is re-cut for a screen that has changed enough that the
+ * old walkthrough describes the wrong thing. A device stores the version it
+ * last finished; anything lower sees the current tour once.
+ */
+export const REFLECT_TOUR_VERSION = 1;
+
+/** Whether the tour should run for a device that last finished `version`. */
+export const shouldShowReflectTour = (version: number) =>
+  version < REFLECT_TOUR_VERSION;
+
+// Indexed by a step's `order`. Four steps since the rewrite (#259): the card,
+// the mic, the chips, the menu — nothing a user would have found on their own.
 export const TOUR_STEPS = [
   { title: 'The question changes.', description: 'With the time of day, and how long you have been away.' },
-  { title: 'Start by writing.', description: "Tap here and type whatever's on your mind." },
-  { title: 'Or speak instead.', description: 'Tap this button to record your voice.' },
+  { title: 'Speak instead.', description: 'Tap this button to record your voice.' },
   { title: 'Can\'t write? Tap words that fit.', description: 'Select any that match how you feel right now.' },
-  { title: 'Switch word sets.', description: 'Different sets for different moods.' },
   { title: 'The rest lives here.', description: 'Discovery, Vent and Settings.' },
 ] as const;
 

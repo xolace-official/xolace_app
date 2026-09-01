@@ -51,9 +51,9 @@ type TogglesSlice = {
   /** One-time flag — once dismissed, session-end notification nudge never shows again. */
   notifNudgeDismissed: boolean;
   setNotifNudgeDismissed: (v: boolean) => void;
-  /** One-time flag — once true, reflect screen tour never shows again on this device. */
-  reflectTourSeen: boolean;
-  setReflectTourSeen: (v: boolean) => void;
+  /** Version of the reflect tour this device last finished. `0` means none. */
+  reflectTourVersion: number;
+  setReflectTourVersion: (v: number) => void;
   /** Feature flag — when false, bridge card is hidden and route is inaccessible. */
   bridgeEnabled: boolean;
   setBridgeEnabled: (v: boolean) => void;
@@ -142,8 +142,8 @@ export const useAppStore = create<AppState>()(
         notifNudgeDismissed: false,
         setNotifNudgeDismissed: (v) => set({ notifNudgeDismissed: v }),
 
-        reflectTourSeen: false,
-        setReflectTourSeen: (v) => set({ reflectTourSeen: v }),
+        reflectTourVersion: 0,
+        setReflectTourVersion: (v) => set({ reflectTourVersion: v }),
 
         bridgeEnabled: true,
         setBridgeEnabled: (v) => set({ bridgeEnabled: v }),
@@ -216,7 +216,7 @@ export const useAppStore = create<AppState>()(
           nightModeEnabled: s.nightModeEnabled,
           toneTipSeen: s.toneTipSeen,
           notifNudgeDismissed: s.notifNudgeDismissed,
-          reflectTourSeen: s.reflectTourSeen,
+          reflectTourVersion: s.reflectTourVersion,
           bridgeEnabled: s.bridgeEnabled,
           bridgeIntroSeen: s.bridgeIntroSeen,
           ventIntroSeen: s.ventIntroSeen,

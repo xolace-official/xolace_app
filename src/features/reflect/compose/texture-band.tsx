@@ -138,23 +138,17 @@ export const TextureBand = ({
       </AppText>
 
       {!isNight && (
-        <Tour.Step
-          order={4}
-          title={TOUR_STEPS[4].title}
-          description={TOUR_STEPS[4].description}
-        >
-          <TextureSetTabs
-            activeSet={resolvedSetId}
-            onSelect={handleSetChange}
-            disabled={!wordsVisible}
-          />
-        </Tour.Step>
+        <TextureSetTabs
+          activeSet={resolvedSetId}
+          onSelect={handleSetChange}
+          disabled={!wordsVisible}
+        />
       )}
 
       <Tour.Step
-        order={3}
-        title={TOUR_STEPS[3].title}
-        description={TOUR_STEPS[3].description}
+        order={2}
+        title={TOUR_STEPS[2].title}
+        description={TOUR_STEPS[2].description}
       >
         <EaseView
           animate={wordsFadeAnimate}

@@ -188,9 +188,9 @@ export const ComposeSurround = ({
             className="items-center justify-center"
           >
             <Tour.Step
-              order={2}
-              title={TOUR_STEPS[2].title}
-              description={TOUR_STEPS[2].description}
+              order={1}
+              title={TOUR_STEPS[1].title}
+              description={TOUR_STEPS[1].description}
               shape="circle"
               className="self-center"
             >
