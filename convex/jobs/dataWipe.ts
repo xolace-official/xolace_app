@@ -104,6 +104,19 @@ export const wipe = internalMutation({
     if (semanticVersions.length === BATCH_SIZE) hasMore = true;
     for (const version of semanticVersions) await ctx.db.delete("semantic_profiles", version._id);
 
+    // ── Delete the intake row ────────────────────────────────────
+    // Answers about how someone copes and what they're carrying cannot
+    // survive "wipe my data". `onboardingComplete` stays true on the
+    // surviving profile on purpose — the flag and the answers have
+    // different lifetimes (CONTEXT.md, "Intake, and the two onboardings").
+    const intake = await ctx.db
+      .query("intake_responses")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", emotionalProfileId)
+      )
+      .unique();
+    if (intake) await ctx.db.delete("intake_responses", intake._id);
+
     // ── Reset emotional profile counters ─────────────────────────
     // Only reset on the final batch (no more sessions to delete)
     if (!hasMore) {

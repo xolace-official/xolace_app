@@ -65,6 +65,7 @@ import type * as exercises_match from "../exercises/match.js";
 import type * as feedback from "../feedback.js";
 import type * as followUps from "../followUps.js";
 import type * as http from "../http.js";
+import type * as intake from "../intake.js";
 import type * as integrations_stream from "../integrations/stream.js";
 import type * as jobs_accountDeletion from "../jobs/accountDeletion.js";
 import type * as jobs_accountDeletionFinalize from "../jobs/accountDeletionFinalize.js";
@@ -194,6 +195,7 @@ declare const fullApi: ApiFromModules<{
   feedback: typeof feedback;
   followUps: typeof followUps;
   http: typeof http;
+  intake: typeof intake;
   "integrations/stream": typeof integrations_stream;
   "jobs/accountDeletion": typeof jobs_accountDeletion;
   "jobs/accountDeletionFinalize": typeof jobs_accountDeletionFinalize;

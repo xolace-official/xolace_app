@@ -119,6 +119,13 @@ export async function finalizePurge(
     .unique();
   if (preferences) await ctx.db.delete("preferences", preferences._id);
 
+  // Intake answers — one row per profile, so no drain step needed.
+  const intake = await ctx.db
+    .query("intake_responses")
+    .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
+    .unique();
+  if (intake) await ctx.db.delete("intake_responses", intake._id);
+
   // A deleted user must never receive a follow-up nudge. Scheduled because
   // it cancels component workflows and is independently bounded.
   await ctx.scheduler.runAfter(0, internal.followUps.purgeForProfile, {

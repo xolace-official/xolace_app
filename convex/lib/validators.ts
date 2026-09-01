@@ -131,3 +131,101 @@ export const insightFeatureValidator = v.union(
   v.literal("intensity_history"),
   v.literal("words_language")
 );
+
+// ===========================================================
+// INTAKE (post-signup segmentation questionnaire, T3 / #234)
+// ===========================================================
+//
+// The answer columns of `intake_responses`, shared by the schema and by the
+// `intake.complete` mutation args so the two can never drift.
+//
+// Q1 (username) is absent on purpose — it writes `preferences.displayName`.
+// "prefer_not_to_say" is a real value, never an absent field; Q5 and Q7 omit
+// it because they have a native neutral option.
+export const intakeAnswerValidators = {
+  intent: v.union(
+    v.literal("understand_feelings"),
+    v.literal("get_through_hard_moment"),
+    v.literal("feel_less_alone"),
+    v.literal("make_it_regular"),
+    v.literal("just_looking"),
+    v.literal("prefer_not_to_say"),
+  ),
+  // Q3 multi-select, max 3 — capped in the mutation; a validator can't
+  // express a length bound. Order carries no meaning.
+  weighingOn: v.array(
+    v.union(
+      v.literal("work"),
+      v.literal("relationships"),
+      v.literal("family"),
+      v.literal("identity"),
+      v.literal("health"),
+      v.literal("money"),
+      v.literal("purpose"),
+      v.literal("a_loss"),
+      v.literal("big_change"),
+      v.literal("cant_name_yet"),
+      v.literal("prefer_not_to_say"),
+    ),
+  ),
+  emotionAwareness: v.union(
+    v.literal("know_and_can_say"),
+    v.literal("know_but_no_words"),
+    v.literal("something_off_unclear"),
+    v.literal("numb_or_cant_tell"),
+    v.literal("prefer_not_to_say"),
+  ),
+  disclosureStyle: v.union(
+    v.literal("all_at_once"),
+    v.literal("bit_at_a_time"),
+    v.literal("keep_it_brief"),
+    v.literal("depends"),
+  ),
+  // Q6 multi-select, max 3 — capped in the mutation.
+  copingStyle: v.array(
+    v.union(
+      v.literal("dont_know_how"),
+      v.literal("calming_creative"),
+      v.literal("distract"),
+      v.literal("lean_on_people"),
+      v.literal("outside_things"),
+      v.literal("prefer_not_to_say"),
+    ),
+  ),
+  supportFrequency: v.union(
+    v.literal("occasionally"),
+    v.literal("frequently"),
+    v.literal("every_day"),
+    v.literal("not_sure"),
+  ),
+  ageBracket: v.union(
+    v.literal("under_18"),
+    v.literal("18_24"),
+    v.literal("25_34"),
+    v.literal("35_44"),
+    v.literal("45_plus"),
+    v.literal("prefer_not_to_say"),
+  ),
+  acquisitionSource: v.union(
+    v.literal("friend_family"),
+    v.literal("professional"),
+    v.literal("short_form_video"),
+    v.literal("social"),
+    v.literal("ad"),
+    v.literal("store_search"),
+    v.literal("editorial"),
+    v.literal("other"),
+  ),
+  // Series branch (Q10/Q11) — optional ONLY because the branch may not have
+  // fired. Absent = acquisitionSource !== "short_form_video". Never
+  // "declined".
+  seriesSeen: v.optional(
+    v.union(
+      v.literal("loved_it"),
+      v.literal("it_was_okay"),
+      v.literal("not_for_me"),
+      v.literal("not_seen"),
+    ),
+  ),
+  seriesWantInApp: v.optional(v.boolean()),
+};
