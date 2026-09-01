@@ -19,6 +19,7 @@ import { TextureBand } from "@/src/features/reflect/compose/texture-band";
 import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
 import type { ReflectionAction, UserVariant } from "@/src/features/reflect/types";
+import { a11yHidden } from "@/src/lib/utils";
 
 const SLOT_IN = FadeIn.duration(220);
 const SLOT_OUT = FadeOut.duration(140);
@@ -103,6 +104,10 @@ export const ComposeSurround = ({
 
   const inFlow = expanded ? "none" : "auto";
   const overlay = expanded ? "none" : "box-none";
+  // `recede` takes these to opacity 0, which a screen reader does not honour —
+  // without this the whole texture band and a second mic stay swipe-reachable
+  // behind the open composer.
+  const receded = a11yHidden(expanded);
   const chromeStyle = {
     paddingTop: Math.max(0, stableHeaderHeight - geo.insetTop),
   };
@@ -125,6 +130,7 @@ export const ComposeSurround = ({
         style={[chromeStyle, recede]}
         pointerEvents={inFlow}
         className="px-6 pt-4"
+        {...receded}
       >
         <ComposeChrome
           variant={variant}
@@ -142,6 +148,7 @@ export const ComposeSurround = ({
         style={bandStyle}
         pointerEvents={inFlow}
         onLayout={(e) => setBandTop(e.nativeEvent.layout.y)}
+        {...receded}
       >
         <TextureBand
           isNight={isNight}
@@ -159,6 +166,7 @@ export const ComposeSurround = ({
         style={[{ position: "absolute", left: 0, right: 0 }, micStyle, recede]}
         pointerEvents={overlay}
         className="h-10 items-center justify-center"
+        {...receded}
       >
         {selectedTextures.length > 0 ? (
           <Animated.View
@@ -197,6 +205,7 @@ export const ComposeSurround = ({
       <Animated.View
         style={[StyleSheet.absoluteFill, recede]}
         pointerEvents={overlay}
+        {...receded}
       >
         <IdleMenu />
       </Animated.View>

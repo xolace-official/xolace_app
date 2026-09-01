@@ -26,6 +26,7 @@ import {
   useMorphGeometry,
 } from "@/src/features/reflect/compose/morph-geometry";
 import type { CardContent } from "@/src/features/reflect/compose/resolve-card-content";
+import { a11yHidden } from "@/src/lib/utils";
 
 // Mirror of MAX_RAW_INPUT in convex/sessions.ts. The input simply stops
 // accepting past this, so a user never hits the server's anti-tamper throw.
@@ -145,6 +146,11 @@ export const MorphCard = ({
   const cardPadding = { padding: CARD_PAD };
   const canSubmit = entryText.trim().length > 0;
   const controlsPointerEvents = expanded ? "auto" : "none";
+  // The card is one object at two sizes, so both readings are always mounted.
+  // Whichever one `progress` has faded out has to leave the a11y tree with it,
+  // or a screen reader finds a close button for a composer that isn't open.
+  const composerA11y = a11yHidden(!expanded);
+  const restA11y = a11yHidden(expanded);
 
   return (
     <Animated.View
@@ -174,10 +180,18 @@ export const MorphCard = ({
             {card.text}
           </Animated.Text>
         </Tour.Step>
-        <Animated.View style={controlsStyle} pointerEvents={controlsPointerEvents}>
+        <Animated.View
+          style={controlsStyle}
+          pointerEvents={controlsPointerEvents}
+          {...composerA11y}
+        >
           <MicButton size="sm" isRecording={isRecording} onPress={onVoiceTap} />
         </Animated.View>
-        <Animated.View style={controlsStyle} pointerEvents={controlsPointerEvents}>
+        <Animated.View
+          style={controlsStyle}
+          pointerEvents={controlsPointerEvents}
+          {...composerA11y}
+        >
           <Pressable
             onPress={() => {
               playSoftPress();
@@ -208,6 +222,7 @@ export const MorphCard = ({
       <Animated.View
         style={[{ flex: 1 }, bodyStyle]}
         pointerEvents={controlsPointerEvents}
+        {...composerA11y}
       >
         <TextInput
           ref={inputRef}
@@ -244,6 +259,7 @@ export const MorphCard = ({
           echoStyle,
         ]}
         pointerEvents="none"
+        {...restA11y}
       >
         <SelectionEcho words={selectedTextures} />
       </Animated.View>
