@@ -1,8 +1,8 @@
 /**
  * Sizing + animation constants for the streak calendar.
  *
- * The card renders at two sizes: a mini version that lives in the
- * QuietReturnHeader and a full-size version used during the reveal.
+ * The card renders at two sizes: a mini version that lives in the Perch strip
+ * and a full-size version used during the reveal.
  * All inner dimensions derive proportionally from the card size so
  * the morph between the two is a pure transform (translate + scale)
  * — no layout animation.

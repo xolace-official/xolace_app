@@ -35,9 +35,10 @@ type Props = {
  * The strip is identity, so it no longer defers to whatever the card is
  * saying. The event pill tracks the event period rather than the card: the
  * card shows one prompt and night or a quiet return may outrank the event's,
- * but the user is still inside the event either way. The streak likewise shows
- * for any active user — it used to hide at night and on a quiet return only
- * because it shared a row with the encouragement copy that has now gone.
+ * but the user is still inside the event either way. The streak card is always
+ * present, reading 0 when there is no live streak: it anchors the left of the
+ * strip, and a counter that vanishes the moment it lapses hides exactly the
+ * fact it exists to report.
  */
 export const ComposeChrome = ({
   variant,
@@ -53,9 +54,10 @@ export const ComposeChrome = ({
 
   return (
     <View className="flex-row items-center gap-2 pb-3">
-      {variant.kind === "active" && (
-        <StreakCalendar currentStreak={variant.dayCount} />
-      )}
+      <StreakCalendar
+        currentStreak={variant.kind === "active" ? variant.dayCount : 0}
+      />
+
 
       {!!spaceName && (
         <View className="shrink rounded-full bg-accent/15 px-3 py-1">
