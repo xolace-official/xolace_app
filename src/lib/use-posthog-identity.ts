@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useQuery } from 'convex/react';
+import { useConvexAuth, useQuery } from 'convex/react';
 import { usePostHog } from 'posthog-react-native';
 import { api } from '@/convex/_generated/api';
 
@@ -19,7 +19,10 @@ import { api } from '@/convex/_generated/api';
 export function usePostHogIdentity() {
 
   const posthog = usePostHog();
-  const context = useQuery(api.users.getFullContext);
+  // Skips while signed out: this now mounts at the root (so it also runs
+  // during intake), where a signed-out user would otherwise hit requireAuth.
+  const { isAuthenticated } = useConvexAuth();
+  const context = useQuery(api.users.getFullContext, isAuthenticated ? {} : 'skip');
   const identified = useRef<string | null>(null);
 
   useEffect(() => {

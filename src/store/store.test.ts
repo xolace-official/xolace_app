@@ -51,6 +51,18 @@ describe("store partialize", () => {
     // relaunch — the app is routinely closed between one session and the next.
     expect(persisted).toContain("plusOfferShownSessionId");
   });
+
+  // A cold kill mid-intake must restart at the founder message with nothing
+  // half-answered (T6, issue #263).
+  it("intake answers are NOT persisted", () => {
+    const state = useAppStore.getState();
+    const persisted = Object.keys(
+      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
+        .persist.getOptions()
+        .partialize(state),
+    );
+    expect(persisted).not.toContain("intakeAnswers");
+  });
 });
 
 describe("reflect tour version", () => {
