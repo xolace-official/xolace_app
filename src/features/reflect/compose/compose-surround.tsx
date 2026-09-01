@@ -1,32 +1,23 @@
 import { StyleSheet, View } from "react-native";
 import Animated, {
   Extrapolation,
-  FadeIn,
-  FadeOut,
   interpolate,
   useAnimatedStyle,
   type SharedValue,
 } from "react-native-reanimated";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { useState } from "react";
-import { Tour } from "@/src/components/ui/tour";
 import { IdleMenu } from "@/src/features/idle-menu/menu";
-import { MicButton } from "@/src/features/reflect/components/mic-button";
-import { PillButton } from "@/src/components/shared/pill-button";
 import { ComposeChrome } from "@/src/features/reflect/compose/compose-chrome";
+import {
+  ComposeSlot,
+  SLOT_BAND_GAP,
+  SLOT_H,
+} from "@/src/features/reflect/compose/compose-slot";
 import { useMorphGeometry } from "@/src/features/reflect/compose/morph-geometry";
 import { TextureBand } from "@/src/features/reflect/compose/texture-band";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 import type { ReflectionAction, UserVariant } from "@/src/features/reflect/types";
 import { a11yHidden } from "@/src/lib/utils";
-
-const SLOT_IN = FadeIn.duration(220);
-const SLOT_OUT = FadeOut.duration(140);
-
-/** The mic/send slot's fixed height — `h-10` below. */
-const SLOT_H = 40;
-/** The least room the slot will accept between itself and the first word. */
-const SLOT_BAND_GAP = 12;
 
 type Props = {
   progress: SharedValue<number>;
@@ -152,53 +143,14 @@ export const ComposeSurround = ({
         />
       </Animated.View>
 
-      {/* One slot under the card, for whichever way out is live. Empty-handed
-          it is the mic; once words are chosen the card is already holding the
-          answer, so the same spot becomes the way to send it. Swapping in place
-          is what keeps the band's frame fixed — nothing below the card grows,
-          and the mic is never crowded out of its own position. It rides the
-          band down rather than just fading: either way it is the way out that
-          isn't the card, and a user who has committed to writing is not
-          offered one. */}
-      <Animated.View
+      <ComposeSlot
+        expanded={expanded}
+        hasSelection={selectedTextures.length > 0}
+        isRecording={isRecording}
         style={[{ position: "absolute", left: 0, right: 0 }, micStyle, bandStyle]}
-        pointerEvents={overlay}
-        className="h-10 items-center justify-center"
-        {...receded}
-      >
-        {selectedTextures.length > 0 ? (
-          <Animated.View
-            style={StyleSheet.absoluteFill}
-            entering={SLOT_IN}
-            exiting={SLOT_OUT}
-            className="items-center justify-center"
-          >
-            {/* Sized to the mic it replaces, so the slot's height is constant. */}
-            <PillButton
-              label="Let it out"
-              onPress={onScaffoldSubmit}
-              className="px-6 py-2"
-            />
-          </Animated.View>
-        ) : (
-          <Animated.View
-            style={StyleSheet.absoluteFill}
-            entering={SLOT_IN}
-            exiting={SLOT_OUT}
-            className="items-center justify-center"
-          >
-            <Tour.Step
-              order={1}
-              title={TOUR_STEPS[1].title}
-              description={TOUR_STEPS[1].description}
-              shape="circle"
-              className="self-center"
-            >
-              <MicButton size="md" isRecording={isRecording} onPress={onVoiceTap} />
-            </Tour.Step>
-          </Animated.View>
-        )}
-      </Animated.View>
+        onScaffoldSubmit={onScaffoldSubmit}
+        onVoiceTap={onVoiceTap}
+      />
 
       <Animated.View
         style={[StyleSheet.absoluteFill, recede]}

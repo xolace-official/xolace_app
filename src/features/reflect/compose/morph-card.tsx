@@ -1,44 +1,19 @@
 import type { RefObject } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, TextInput } from "react-native";
 import Animated, {
-  Extrapolation,
   FadeInDown,
   FadeOut,
-  interpolate,
-  useAnimatedStyle,
-  useDerivedValue,
   type SharedValue,
 } from "react-native-reanimated";
-import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
-import { Presets } from "react-native-pulsar";
-import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { playSoftPress } from "@/src/lib/haptics";
-import { PresenceDot } from "@/src/features/reflect/components/presence-dot";
-import { PillButton } from "@/src/components/shared/pill-button";
-import { MicButton } from "@/src/features/reflect/components/mic-button";
 import { SelectionEcho } from "@/src/features/reflect/compose/selection-echo";
-import { Tour } from "@/src/components/ui/tour";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import {
-  CARD_PAD,
-  HANDOFF,
-  useMorphGeometry,
-} from "@/src/features/reflect/compose/morph-geometry";
+import { MorphCardBody } from "@/src/features/reflect/compose/morph-card-body";
+import { MorphCardHeader } from "@/src/features/reflect/compose/morph-card-header";
+import { useMorphCardStyles } from "@/src/features/reflect/compose/morph-card-styles";
+import { CARD_PAD } from "@/src/features/reflect/compose/morph-geometry";
 import type { CardContent } from "@/src/features/reflect/compose/resolve-card-content";
 import { a11yHidden } from "@/src/lib/utils";
-
-// Mirror of MAX_RAW_INPUT in convex/sessions.ts. The input simply stops
-// accepting past this, so a user never hits the server's anti-tamper throw.
-// No visible counter: a live count under an emotional freeform field reads as
-// "your feelings must fit," and ~800 words is unreachable in normal use.
-const MAX_RAW_INPUT = 5_000;
-
-/** Prompt type scale, resting → composing, per card content scale. */
-const PROMPT_SIZE = {
-  large: [21, 14],
-  small: [17, 13],
-} as const;
 
 type Props = {
   progress: SharedValue<number>;
@@ -71,9 +46,6 @@ type Props = {
  * unmounts across that — `progress` is the only difference between the two
  * readings, which is what keeps it feeling like the page opened rather than
  * like a screen was replaced.
- *
- * The bottom edge tracks the keyboard's real animated height rather than a
- * guessed endpoint, so the card never grows under it.
  */
 export const MorphCard = ({
   progress,
@@ -94,82 +66,21 @@ export const MorphCard = ({
   onDiscardDraft,
   onVoiceTap,
 }: Props) => {
-  const geo = useMorphGeometry();
-  const { height: kb } = useReanimatedKeyboardAnimation();
-  const muted = useThemeColor("muted") as string;
-  const [restSize, expandedSize] = PROMPT_SIZE[card.scale];
-
-  const expH = useDerivedValue(() => {
-    const kbH = -kb.get();
-    const bottom =
-      geo.H - geo.insetTop - (kbH > 0 ? kbH + 12 : geo.insetBottom + 16);
-    return bottom - geo.expTop;
-  });
-
-  const cardStyle = useAnimatedStyle(() => {
-    const p = progress.get();
-    return {
-      opacity: fade.get(),
-      top: interpolate(p, [0, 1], [geo.restTop, geo.expTop]),
-      left: interpolate(p, [0, 1], [geo.restLeft, geo.expLeft]),
-      width: interpolate(p, [0, 1], [geo.restW, geo.expW]),
-      height: interpolate(p, [0, 1], [geo.restH, expH.get()]),
-      borderRadius: interpolate(p, [0, 1], [16, 32]),
-      transform: [{ rotateZ: `${interpolate(p, [0, 1], [-4, 0])}deg` }],
-    };
-  });
-
-  const promptStyle = useAnimatedStyle(() => ({
-    fontSize: interpolate(progress.get(), [0, 1], [restSize, expandedSize]),
-    opacity: interpolate(progress.get(), [0, 1], [1, 0.45]),
-  }));
-
-  // The composer's controls arrive with the card, so it reads as one object
-  // rather than as a page with parts assembled onto it.
-  const controlsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.get(),
-      [HANDOFF, 1],
-      [0, 1],
-      Extrapolation.CLAMP,
-    ),
-  }));
-
-  // Discard is the resting card's counterpart to the composer's close button —
-  // same corner, opposite half of the morph, so the card never offers both.
-  const restControlsStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.get(),
-      [0, HANDOFF],
-      [1, 0],
-      Extrapolation.CLAMP,
-    ),
-  }));
-
-  const bodyStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.get(), [0.4, 1], [0, 1], Extrapolation.CLAMP),
-  }));
-
-  // The tapped words hand over to the text input as the card opens — one
-  // answer surface, not two. Absolute so the expanded card's layout never
-  // reserves room for a thing it isn't showing.
-  const echoStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.get(), [0, 0.35], [1, 0], Extrapolation.CLAMP),
-  }));
+  const {
+    cardStyle,
+    promptStyle,
+    controlsStyle,
+    restControlsStyle,
+    bodyStyle,
+    echoStyle,
+  } = useMorphCardStyles(progress, fade, card.scale);
 
   // Flux aims at the presence dot through CARD_PAD, so the padding is
   // geometry rather than a class the card can quietly restyle.
   const cardPadding = { padding: CARD_PAD };
-  const canSubmit = entryText.trim().length > 0;
-  const controlsPointerEvents = expanded ? "auto" : "none";
   // The card is one object at two sizes, so both readings are always mounted.
-  // Whichever one `progress` has faded out has to leave the a11y tree with it,
-  // or a screen reader finds a close button for a composer that isn't open.
-  const composerA11y = a11yHidden(!expanded);
+  // Whichever one `progress` has faded out has to leave the a11y tree with it.
   const restA11y = a11yHidden(expanded);
-  // A retained draft is the user's own words, not the space's — italic and
-  // dimmer so the card never reads as if it asked the question.
-  const isDraft = card.source === "draft";
 
   return (
     <Animated.View
@@ -193,57 +104,15 @@ export const MorphCard = ({
         />
       )}
 
-      <View className="flex-row items-center gap-2">
-        <Animated.View style={controlsStyle}>
-          <PresenceDot />
-        </Animated.View>
-        {/* The prompt is the card's own voice and stays visible while writing,
-            so the tour's first step is about the line rather than the page. */}
-        <Tour.Step
-          order={0}
-          title={TOUR_STEPS[0].title}
-          description={TOUR_STEPS[0].description}
-          className="flex-1"
-        >
-          <Animated.Text
-            style={promptStyle}
-            className={
-              isDraft
-                ? "font-normal italic text-foreground/60"
-                : "font-normal text-foreground"
-            }
-          >
-            {card.text}
-          </Animated.Text>
-        </Tour.Step>
-        <Animated.View
-          style={controlsStyle}
-          pointerEvents={controlsPointerEvents}
-          {...composerA11y}
-        >
-          <MicButton size="sm" isRecording={isRecording} onPress={onVoiceTap} />
-        </Animated.View>
-        <Animated.View
-          style={controlsStyle}
-          pointerEvents={controlsPointerEvents}
-          {...composerA11y}
-        >
-          <Pressable
-            onPress={() => {
-              playSoftPress();
-              onDismiss();
-            }}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Close the composer"
-            className="items-center justify-center rounded-full bg-foreground/8 p-1.5"
-          >
-            <AppText className="text-xs leading-none text-foreground/40">
-              ✕
-            </AppText>
-          </Pressable>
-        </Animated.View>
-      </View>
+      <MorphCardHeader
+        card={card}
+        expanded={expanded}
+        isRecording={isRecording}
+        controlsStyle={controlsStyle}
+        promptStyle={promptStyle}
+        onDismiss={onDismiss}
+        onVoiceTap={onVoiceTap}
+      />
 
       {showNudge && (
         <Animated.View
@@ -255,34 +124,15 @@ export const MorphCard = ({
         </Animated.View>
       )}
 
-      <Animated.View
-        style={[{ flex: 1 }, bodyStyle]}
-        pointerEvents={controlsPointerEvents}
-        {...composerA11y}
-      >
-        <TextInput
-          ref={inputRef}
-          multiline
-          maxLength={MAX_RAW_INPUT}
-          placeholder={isRecording ? "I'm listening..." : "Start typing..."}
-          placeholderTextColor={muted}
-          value={entryText}
-          onChangeText={onChangeText}
-          style={{ textAlignVertical: "top" }}
-          className="flex-1 pt-4 text-lg text-foreground"
-        />
-
-        <View className="items-center pt-2">
-          <PillButton
-            label="Let it out"
-            onPress={() => {
-              Presets.propel();
-              onSubmit();
-            }}
-            disabled={!canSubmit}
-          />
-        </View>
-      </Animated.View>
+      <MorphCardBody
+        expanded={expanded}
+        entryText={entryText}
+        isRecording={isRecording}
+        inputRef={inputRef}
+        style={bodyStyle}
+        onChangeText={onChangeText}
+        onSubmit={onSubmit}
+      />
 
       <Animated.View
         style={[

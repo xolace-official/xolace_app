@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
-import { useNavigation } from "expo-router";
 import { PressableFeedback } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { Tour } from "@/src/components/ui/tour";
 import { FluxPerch } from "@/src/features/reflect/compose/flux-perch";
 import { MorphCard } from "@/src/features/reflect/compose/morph-card";
 import { ComposeSurround } from "@/src/features/reflect/compose/compose-surround";
-import { resolveCardContent } from "@/src/features/reflect/compose/resolve-card-content";
+import { useComposeCard } from "@/src/features/reflect/compose/use-compose-card";
+import { useComposeLifecycle } from "@/src/features/reflect/compose/use-compose-lifecycle";
 import { useMorph } from "@/src/features/reflect/compose/use-morph";
 import { useReflectTour } from "@/src/features/reflect/hooks/use-reflect-tour";
 import { useTypingPause } from "@/src/features/reflect/hooks/use-typing-pause";
@@ -23,14 +23,8 @@ import type {
 } from "@/src/features/reflect/types";
 import { useSessionMode } from "@/src/context/session-mode-context";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { playHomeEntrance, playTypingBegin } from "@/src/lib/haptics";
+import { playTypingBegin } from "@/src/lib/haptics";
 import { useAppStore } from "@/src/store/store";
-
-const NUDGE_MESSAGES = [
-  "There's no rush. Let it come.",
-  "Even a few words are enough.",
-  "You don't need to explain, just say what's there.",
-];
 
 type Props = {
   screen: ReflectionStateName;
@@ -78,41 +72,18 @@ export const ComposeScreen = ({
   focusOnExpand = true,
 }: Props) => {
   const { isNight } = useSessionMode();
-  const navigation = useNavigation();
   const reduceMotion = useEffectiveReducedMotion();
 
   const expanded = screen !== "idle";
   const showNudge = screen === "typing-nudge";
   const inputRef = useRef<TextInput>(null);
 
-  const pendingEventPrompt = useAppStore((s) => s.pendingEventPrompt);
-  // Read the clock once at mount (lazy init keeps the call out of the render
-  // body so React Compiler can still optimize this component). The prompt has a
-  // multi-day expiry, so mount-time accuracy is sufficient.
-  const [now] = useState(() => Date.now());
-  const eventPromptActive =
-    !!pendingEventPrompt && pendingEventPrompt.expiresAt > now;
-  const activeEventPrompt = eventPromptActive ? pendingEventPrompt.text : null;
-  const activeEventLabel = eventPromptActive
-    ? (pendingEventPrompt.label ?? null)
-    : null;
-  const activeQuietReturn = !isNight ? quietReturn : null;
-
-  const card = resolveCardContent({
+  const { card, nudgeMessage, eventPrompt, eventLabel } = useComposeCard({
     isNight,
-    quietReturnTier: activeQuietReturn,
-    eventPrompt: activeEventPrompt,
-    // Dismissing the composer keeps the writing (#258), so the resting card
-    // shows the draft's opening line rather than a prompt over the top of it.
-    // Only at rest: open, the line is the card's own voice above what you are
-    // writing, and swapping it for your own first line as you type would make
-    // the composer echo you back at yourself.
-    draft: expanded ? null : entryText,
+    quietReturn,
+    expanded,
+    entryText,
   });
-
-  const [nudgeMessage] = useState(
-    () => NUDGE_MESSAGES[Math.floor(Math.random() * NUDGE_MESSAGES.length)],
-  );
 
   const { resetTimer, clearTimer } = useTypingPause(
     () => dispatch({ type: "PAUSE_TIMEOUT" }),
@@ -132,24 +103,7 @@ export const ComposeScreen = ({
   const { isActive: tourActive, finish, skip, trackStep } = useReflectTour();
   const setReflectTourVersion = useAppStore((s) => s.setReflectTourVersion);
 
-  // Dismiss the tour if the user navigates away (e.g. the header's Help button)
-  useEffect(() => {
-    const unsub = navigation.addListener("blur", () => {
-      if (tourActive) skip();
-    });
-    return unsub;
-  }, [navigation, tourActive, skip]);
-
-  // Flux's entrance is a spring started on his own mount, so firing the haptic
-  // here lands them in the same frame. The outgoing copy of a cross-fade is a
-  // fresh mount in the exiting subtree, so it must not re-fire the entrance for
-  // a screen the user is leaving.
-  const entranceFired = useRef(false);
-  useEffect(() => {
-    if (entranceFired.current || !focusOnExpand) return;
-    entranceFired.current = true;
-    playHomeEntrance();
-  }, [focusOnExpand]);
+  useComposeLifecycle(focusOnExpand, tourActive, skip);
 
   const handleTap = () => {
     playTypingBegin();
@@ -205,8 +159,8 @@ export const ComposeScreen = ({
           reduceMotion={reduceMotion}
           variant={variant}
           isNight={isNight}
-          eventPrompt={activeEventPrompt}
-          eventLabel={activeEventLabel}
+          eventPrompt={eventPrompt}
+          eventLabel={eventLabel}
           spaceName={spaceName}
           selectedTextures={selectedTextures}
           dispatch={dispatch}
