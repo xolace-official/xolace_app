@@ -42,6 +42,17 @@ const SCATTER = [
 
 const PILL = "border";
 
+/**
+ * How far the words are allowed to grow.
+ *
+ * Everything else on this screen — the prompt, the mirror — scales without a
+ * ceiling. These don't: a pill is a fixed-ish shape holding one or two words,
+ * and past ~1.3x they wrap, the band grows tall enough to reach the mic, and
+ * the card underneath overflows. Capping the label keeps the whole band's
+ * height bounded, which is what the scaled gap below assumes.
+ */
+const MAX_PILL_FONT_SCALE = 1.3;
+
 const WORDS_FADE_OUT = { type: "timing" as const, duration: 150 };
 const WORDS_FADE_IN = { type: "timing" as const, duration: 200 };
 
@@ -109,8 +120,14 @@ export const TextureBand = ({
   };
 
   return (
-    <View className="px-6 pt-6 pb-8">
-      <AppText className="mb-3 text-xs text-foreground/30">
+    // The old `pt-6`/`pb-8` were dead space standing in for a gap the band
+    // could not actually guarantee — the surround now measures this frame and
+    // holds the mic off it, so the padding can go back to being padding.
+    <View className="px-6 pt-4 pb-6">
+      <AppText
+        maxFontSizeMultiplier={MAX_PILL_FONT_SCALE}
+        className="mb-3 text-xs text-foreground/30"
+      >
         Or just tap what feels close:
       </AppText>
 
@@ -170,6 +187,7 @@ export const TextureBand = ({
                     )}
                   >
                     <TagGroup.ItemLabel
+                      maxFontSizeMultiplier={MAX_PILL_FONT_SCALE}
                       className={cn(
                         "text-xs",
                         skin.label,

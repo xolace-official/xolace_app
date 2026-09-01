@@ -16,15 +16,25 @@ type Props = {
 const SELECTED_A11Y_STATE = { selected: true } as const;
 const UNSELECTED_A11Y_STATE = { selected: false } as const;
 
-export const TextureSetTabs = ({ activeSet, onSelect, disabled }: Props) => {
-  // const accentColor = useThemeColor("accent") as string;
-  // const underlineStyle = useMemo(
-  //   () => ({ backgroundColor: accentColor, opacity: 0.6 }),
-  //   [accentColor],
-  // );
+/** Matches the pills below — see MAX_PILL_FONT_SCALE in texture-band. */
+const MAX_TAB_FONT_SCALE = 1.3;
 
+const CONTINUOUS = { borderCurve: "continuous" } as const;
+
+/**
+ * A solid segmented track, deliberately unlike the words it filters.
+ *
+ * The pills below are translucent, tone-tinted and scattered, and half of them
+ * already carry the accent's violet — so a translucent accent-tinted tab read
+ * as a ninth word rather than the switch above them. Opaque fill on a recessed
+ * track, square-ish against their capsules: two different kinds of thing.
+ */
+export const TextureSetTabs = ({ activeSet, onSelect, disabled }: Props) => {
   return (
-    <View className="flex-row gap-2 mb-3">
+    <View
+      style={CONTINUOUS}
+      className="mb-3 flex-row gap-1 self-start rounded-xl bg-foreground/5 p-1"
+    >
       {TEXTURE_SET_IDS.map((id) => {
         const isActive = id === activeSet;
         return (
@@ -37,23 +47,19 @@ export const TextureSetTabs = ({ activeSet, onSelect, disabled }: Props) => {
               isActive ? SELECTED_A11Y_STATE : UNSELECTED_A11Y_STATE
             }
             accessibilityLabel={TEXTURE_SET_LABELS[id]}
-            className={`rounded-full px-3 py-1 border ${
-              isActive
-                ? "bg-accent/10 border-accent/55"
-                : "bg-transparent border-foreground/10"
+            style={CONTINUOUS}
+            className={`rounded-lg px-3 py-1.5 ${
+              isActive ? "bg-accent" : "bg-transparent"
             }`}
           >
             <AppText
-              className={`text-xs font-medium ${isActive ? "text-accent" : "text-foreground/40"}`}
+              maxFontSizeMultiplier={MAX_TAB_FONT_SCALE}
+              className={`text-xs font-medium ${
+                isActive ? "text-accent-foreground" : "text-foreground/45"
+              }`}
             >
               {TEXTURE_SET_LABELS[id]}
             </AppText>
-            {/*{isActive && (
-              <View
-                className="absolute bottom-0 left-3 right-3 h-px rounded-full"
-                style={underlineStyle}
-              />
-            )}*/}
           </PressableFeedback>
         );
       })}

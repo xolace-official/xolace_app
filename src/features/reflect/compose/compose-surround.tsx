@@ -23,6 +23,11 @@ import type { ReflectionAction, UserVariant } from "@/src/features/reflect/types
 const SLOT_IN = FadeIn.duration(220);
 const SLOT_OUT = FadeOut.duration(140);
 
+/** The mic/send slot's fixed height — `h-10` below. */
+const SLOT_H = 40;
+/** The least room the slot will accept between itself and the first word. */
+const SLOT_BAND_GAP = 12;
+
 type Props = {
   progress: SharedValue<number>;
   /** The reduced-motion cross-fade's opacity. 1 whenever motion is allowed. */
@@ -101,7 +106,18 @@ export const ComposeSurround = ({
   const chromeStyle = {
     paddingTop: Math.max(0, stableHeaderHeight - geo.insetTop),
   };
-  const micStyle = { top: geo.restTop + geo.restH + 20 };
+
+  // The band is bottom-anchored and grows upward with the reader's text size,
+  // so at large accessibility sizes it climbs into the slot parked under the
+  // card. The card's geometry is where the slot wants to be; the band's
+  // measured top is where it is still allowed to be — take whichever is higher.
+  const [bandTop, setBandTop] = useState(0);
+  const restingTop = geo.restTop + geo.restH + 20;
+  const micStyle = {
+    top: bandTop
+      ? Math.min(restingTop, bandTop - SLOT_H - SLOT_BAND_GAP)
+      : restingTop,
+  };
 
   return (
     <>
@@ -122,7 +138,11 @@ export const ComposeSurround = ({
 
       <View className="flex-1" />
 
-      <Animated.View style={bandStyle} pointerEvents={inFlow}>
+      <Animated.View
+        style={bandStyle}
+        pointerEvents={inFlow}
+        onLayout={(e) => setBandTop(e.nativeEvent.layout.y)}
+      >
         <TextureBand
           isNight={isNight}
           selectedTextures={selectedTextures}
