@@ -152,10 +152,7 @@ export const ReflectScreen = () => {
     });
   }, [context?.profile, dispatch]);
 
-  // One-shot: open the space-name dialog the first time the user reaches
-  // path-selection without a name set. Adjusted during render with a state
-  // guard (not a ref — refs can't be read during render) rather than a
-  // useEffect, which avoids a cascading render.
+
   if (
     current === "path-selection" &&
     !spaceNameDialogFired &&

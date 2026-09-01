@@ -23,9 +23,6 @@ type Props = {
 
 /**
  * What sits above the card: who the user is here, and the one other way in.
- *
- * It informs without competing — the prompt itself moved onto the card (#256),
- * so nothing up here speaks for the space.
  */
 export const ComposeChrome = ({
   variant,
@@ -70,8 +67,6 @@ export const ComposeChrome = ({
           </View>
         </PressableFeedback>
       )}
-
-      <Separator className="mb-0" />
     </>
   );
 };

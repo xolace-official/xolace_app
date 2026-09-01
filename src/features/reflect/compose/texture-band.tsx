@@ -106,7 +106,7 @@ export const TextureBand = ({
   }
 
   return (
-    <View className="border-t border-foreground/5 px-6 pt-6 pb-8">
+    <View className="px-6 pt-6 pb-8">
       <AppText className="mb-3 text-xs text-foreground/30">
         Or just tap what feels close:
       </AppText>
