@@ -1,0 +1,127 @@
+/**
+ * One section of questions, one step.
+ *
+ * The questionnaire card is *only* the questions: mascot bubble above it says
+ * why this section is being asked, the card pages through the section's own
+ * questions, and the screen ends when the section does. Interstitials are
+ * their own screens (see `conversation.tsx`), never pages in here.
+ */
+import type { ReactNode } from 'react';
+import { useRef, useState } from 'react';
+import { ScrollView, View } from 'react-native';
+
+import {
+  Questionnaire,
+  type QuestionnaireAnswers,
+  type QuestionnaireItemDefinition,
+} from '@/src/components/ui/questionnaire';
+import { AppText } from '@/src/components/shared/app-text';
+import { MascotSays } from '@/src/features/intake/questionnaire/mascot';
+import { IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
+import { applyCap, type IntakeQuestion } from '@/src/features/intake/questions';
+
+const NO_CAPS: readonly string[] = [];
+
+interface SectionScreenProps {
+  /** "Section 1 of 3 · You" — the only place the section is named. */
+  eyebrow: string;
+  title: string;
+  /** What the mascot says about this section. */
+  says: string;
+  questions: readonly IntakeQuestion[];
+  items: readonly QuestionnaireItemDefinition[];
+  /** Multi-selects to hold at MAX_SELECTIONS. */
+  capped?: readonly string[];
+  submitLabel?: string;
+  onDone: (answers: QuestionnaireAnswers) => void;
+  /** Extra `Questionnaire.Item`s after the section's own — the series branch. */
+  children?: ReactNode;
+  defaultAnswers?: QuestionnaireAnswers;
+  /** Lift the answers out when the screen branches on one of them. */
+  value?: QuestionnaireAnswers;
+  onChange?: (answers: QuestionnaireAnswers) => void;
+}
+
+/*
+ * A plain function, not a component: the root finds its questions by
+ * `child.type === Questionnaire.Item` in one shallow pass, so a wrapper
+ * component would hide the whole set from it.
+ */
+export function renderQuestion(question: IntakeQuestion) {
+  return (
+    <Questionnaire.Item key={question.name} name={question.name} required multiple={question.multiple}>
+      <Questionnaire.Question>{question.question}</Questionnaire.Question>
+      {question.description ? (
+        <Questionnaire.Description>{question.description}</Questionnaire.Description>
+      ) : null}
+      <Questionnaire.Choices>
+        {question.choices.map((choice) => (
+          <Questionnaire.Choice key={choice.value} value={choice.value} label={choice.label} />
+        ))}
+      </Questionnaire.Choices>
+      <Questionnaire.Error />
+    </Questionnaire.Item>
+  );
+}
+
+export function SectionScreen({
+  eyebrow,
+  title,
+  says,
+  questions,
+  items,
+  capped = NO_CAPS,
+  submitLabel = 'Continue',
+  onDone,
+  children,
+  defaultAnswers,
+  value,
+  onChange,
+}: SectionScreenProps) {
+  const [own, setOwn] = useState<QuestionnaireAnswers>(defaultAnswers ?? {});
+  const answers = value ?? own;
+  const setAnswers = onChange ?? setOwn;
+  const scroller = useRef<ScrollView>(null);
+
+  return (
+    <IntakeScreen>
+      <ScrollView
+        ref={scroller}
+        contentContainerClassName="px-5 pt-3 pb-16 gap-5"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="gap-1">
+          <AppText className="text-[11px] uppercase tracking-widest text-foreground/40 font-[Poppins-Medium]">
+            {eyebrow}
+          </AppText>
+          <AppText className="text-2xl text-foreground font-[Poppins-SemiBold]">{title}</AppText>
+        </View>
+
+        <MascotSays>{says}</MascotSays>
+
+        <Questionnaire
+          items={items}
+          answers={answers}
+          onAnswersChange={(next) => setAnswers(applyCap(next, capped))}
+          // Only the active question is mounted, but the scroller is ours and
+          // keeps its offset — so a long list like Q3 would drop the next
+          // question in mid-page with its own text scrolled off the top.
+          onItemChange={() => scroller.current?.scrollTo({ y: 0, animated: true })}
+          onSubmit={onDone}
+          swipeable
+        >
+          <Questionnaire.Progress variant="pips" />
+          {questions.map(renderQuestion)}
+          {children}
+          <Questionnaire.Footer>
+            <Questionnaire.Back />
+            <Questionnaire.Spacer />
+            <Questionnaire.Next />
+            <Questionnaire.Submit>{submitLabel}</Questionnaire.Submit>
+          </Questionnaire.Footer>
+        </Questionnaire>
+      </ScrollView>
+    </IntakeScreen>
+  );
+}

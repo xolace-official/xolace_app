@@ -23,7 +23,7 @@ const textVariants = tv({
       bold: 'font-bold',
     },
     muted: {
-      true: 'text-muted-foreground',
+      true: 'text-muted',
     },
   },
   defaultVariants: {

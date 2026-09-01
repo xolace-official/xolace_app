@@ -16,6 +16,10 @@
     "src/helpers/hooks/use-direction.ts": {
       "item": "use-direction",
       "digest": "sha256:9202d8550abaed8720af42d0320acf51e227fbf23f649b5636fd26475b849867"
+    },
+    "src/components/ui/questionnaire.tsx": {
+      "item": "questionnaire",
+      "digest": "sha256:321d252604c0afcbdb00854ae90fa2a4775478b4693a57d5a33ce1214cf24f3f"
     }
   },
   "roots": {
@@ -24,6 +28,23 @@
       "cn",
       "text",
       "use-direction"
+    ],
+    "questionnaire": [
+      "questionnaire",
+      "button",
+      "animated-pressable",
+      "cn",
+      "icons",
+      "use-direction",
+      "native",
+      "use-theme",
+      "spinner",
+      "text",
+      "frame",
+      "input",
+      "keyboard-avoider",
+      "use-keyboard-avoidance",
+      "label"
     ]
   },
   "legacyFiles": [],
