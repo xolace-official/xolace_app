@@ -165,6 +165,8 @@ No wellness/meditation carve-out. No explicit health ban, but the **on-screen-pl
 
 ## Overall verdict
 
+> Covers Spotify / Apple Music / YouTube. **Part 2** (below) surveys every other streaming service with a dev API and the licensable-catalogue route — it does not change the streaming verdicts but adds a self-host recommendation.
+
 | Provider | Playlist create/populate | Programmatic playback | Works without paid subscription | RN / Expo support | ToS fit for a Xolace "path" | Per-provider verdict |
 |---|---|---|---|---|---|---|
 | **Spotify** | Yes (`playlist-modify-*` scopes) | Premium only (Web Playback SDK browser-only; App Remote controls installed app) | No (playback) | Community `@wwdrew/expo-spotify-sdk`; no official RN SDK | **Poor** — non-commercial-only, no mixing with other audio, no sync-to-visuals, no derived metrics; **and new apps capped at 5 users, extended access reserved for artist-discovery use cases (Feb 2026)** | **Not viable** |
@@ -186,3 +188,203 @@ If the product intent for "music" is specifically *ambient/background audio duri
 - Existence of a maintained React Native binding for Apple's **Android** MusicKit SDK (none found).
 - Google OAuth verification / security-assessment burden for `youtube.force-ssl` at production scale.
 - App Store review posture for an embedded YouTube player inside a larger app (Apple guideline 4.2 / 5.2.3) — no current first-party citation obtained.
+
+
+---
+
+# Part 2 — other streaming services & licensable catalogs
+
+Second pass on ticket #271: every *other* music service with a third-party developer API, plus the royalty-free self-host route. **Bottom line: the Part 1 call holds for streaming** (Apple Music and YouTube remain the only viable streaming shapes) — but this pass adds a non-streaming option worth the roadmap: self-host a small licensed ambient catalogue next to the ElevenLabs `paths` tracks.
+
+**One-line recommendation:** No other streaming provider beats the Apple Music / YouTube options — every full-catalog API is closed/partner-only, non-commercial-only, or preview-only for third parties — but the **royalty-free self-host route does change the picture**: Xolace can license a small ambient/wellness catalog (Pixabay Music at zero cost, or a paid library like Epidemic Sound / Uppbeat / Soundstripe with indemnity) and serve the audio from Convex storage exactly like the ElevenLabs `paths` tracks, with no streaming API, no subscriber-gating, and identical iOS/Android behaviour.
+
+---
+
+## Deezer
+
+- **API open?** No. The Deezer Developer Portal currently blocks new app creation ("We're not accepting new application creation at this time" — reported widely; the portal itself gates this behind login so treat the exact wording as UNVERIFIED, but the docs and terms are live at <https://developers.deezer.com/api> and <https://developers.deezer.com/termsofuse>).
+- **Playlist create/populate?** The API historically supports playlist add via the `manage_library` permission, but moot given registration is closed.
+- **Playback?** Non-subscribers get 30 s previews only: "only users registered with a Premium+ account on the Site can access and listen to the full length recordings … which are otherwise accessible only up to 30 seconds" (<https://developers.deezer.com/termsofuse> §II). The old native "Deezer SDK" for iOS/Android was deprecated years ago; no current first-party RN playback SDK.
+- **ToS fit?** Fatal for Xolace: "the use of the Services is strictly limited for a non-commercial purpose and in a non-commercial environment" and the developer "shall not perceive, receive, generate, benefit … any moneys, incomes, revenues" (<https://developers.deezer.com/termsofuse> §IV). A paid mental-health app is squarely commercial.
+
+**Verdict:** Not viable (API closed + non-commercial-only).
+
+## Amazon Music
+
+- **API open?** No. "These Amazon Music APIs are currently in a closed Beta" and access "is limited to already approved developers"; you must "contact your Amazon Business Development representative" (<https://developer.amazon.com/docs/music/get_started_program-overview.html>, <https://developer.amazon.com/docs/music/API_web_overview.html>).
+- **Playlist create/populate?** The Web API User/Library endpoints exist (<https://developer.amazon.com/docs/music/API_web_library.html>) but only for approved partners.
+- **Playback?** "The Amazon Music Web API now provides full audio playback capabilities for users of all subscription tiers: Free, Prime, and Unlimited" (<https://developer.amazon.com/docs/music/API_web_player.html>) — but it is a **web** player API; "we currently don't have a public SDK" (program overview). Auth is Login With Amazon / OAuth 2.0 (<https://developer.amazon.com/docs/music/API_web_LWA.html>). Alexa Music Skill API (<https://developer.amazon.com/en-US/docs/alexa/music-skills/understand-the-music-skill-api.html>) is for Alexa devices, not embeddable in a mobile app.
+- **ToS fit?** Not assessable — partner agreement is private.
+
+**Verdict:** API closed (partner-only, no public SDK).
+
+## TIDAL
+
+- **API open?** Partly. The Developer Platform (<https://developer.tidal.com>) has self-serve client registration for the **catalog/metadata + playlist** APIs (JSON:API at `openapi.tidal.com/v2`, OAuth 2.0 Auth Code + PKCE / Client Credentials — <https://github.com/tidal-music/tidal-sdk>). Submitting a *third-party consumer playback app* still requires TIDAL approval (<https://github.com/orgs/tidal-music/discussions/179>).
+- **Playlist create/populate?** Yes, on the roadmap/available via the playlists API and user collections (<https://github.com/orgs/tidal-music/discussions/6>).
+- **Playback?** Preview-only for third parties. "Audio bytes flow exclusively through the official TIDAL Player SDK; the Playback API only issues signed manifests" and "third-party applications can only include playback of TIDAL previews, not full tracks" — the 30 s cap applies **even when authenticating with a paid TIDAL HiFi account** (<https://github.com/orgs/tidal-music/discussions/214>, <https://github.com/orgs/tidal-music/discussions/40>). Player SDKs exist for Web/iOS/Android. Full-length playback was "targeted for later 2024" with no confirmed GA as of this research — UNVERIFIED, needs a human check against <https://developer.tidal.com/documentation> (SPA, not machine-readable).
+- **ToS fit?** Not fully assessable; the platform is consumer-integration oriented. No health-specific clause surfaced.
+
+**Verdict:** Not viable today (playback is preview-only for third parties — same ceiling as the ruled-out Spotify path, worse install base than Apple Music).
+
+## SoundCloud
+
+- **API open?** Barely. "You need a SoundCloud Artist Pro subscription to register API applications and receive credentials," then submit an app form and accept the API Terms (<https://developers.soundcloud.com/docs/api/register-app>). Multi-year GitHub issue threads report registration being closed/unresponsive for long stretches (<https://github.com/soundcloud/api/issues/219>, `/issues/251`) — treat "open" as fragile / UNVERIFIED month to month.
+- **Playlist create/populate?** Yes — playlists ("sets") are creatable/editable via the API for authenticated users (<https://developers.soundcloud.com/docs/api/guide>).
+- **Playback?** Full-track streaming via the HLS/`stream_url` endpoint (OAuth-signed, short-lived) or the JS/iframe widget; no modern first-party native RN SDK. Playback is subject to per-track monetisation/geo rules.
+- **ToS fit?** "SoundCloud API Terms of Use" plus usage policies (<https://help.soundcloud.com/hc/en-us/articles/115003446727>) — no explicit health/medical bar found, but the widget is restricted from "commercial use, distribution or exploitation" without a partnership (mirrors Last.fm). Commercial embedding at Xolace's scale would likely need SoundCloud sign-off.
+- **Catalog is UGC** — quality and licensing per track are inconsistent, a poor fit for a curated "support action."
+
+**Verdict:** Not viable (Artist Pro paywall to even get a key, unreliable approvals, commercial-widget restriction, UGC catalog).
+
+## Boomplay (Africa)
+
+- **API open?** No public/self-serve developer API or partner-program documentation exists on any Boomplay first-party property. Third-party aggregators (MusicAPI, Musicfetch) scrape/proxy it; that is not a licensed route. The only Boomplay "SDK" reference is the IAB Open Measurement (OM) ad-viewability SDK, unrelated to playback.
+- Everything else (playlist, playback, ToS): **UNVERIFIED — needs a human check** via direct BD contact with Boomplay/Transsion.
+
+**Verdict:** Not viable (no discoverable developer API).
+
+## Audiomack (Africa-strong)
+
+- **API open?** Yes, apparently self-serve. The Data API (<https://audiomack.com/data-api/docs>) uses OAuth 1.0a and exposes `POST /v1/user/register` to create an account + obtain tokens. This is the one provider on the list with a genuinely open, no-paywall developer path.
+- **Playlist create/populate?** Yes — `POST /v1/playlist`, `PUT /v1/playlist/:id`, add/remove tracks, on the authenticated user's account.
+- **Playback?** Yes — endpoints return a `streaming_url` (an MP3 path, valid ~10 s, re-request just before play) and a `/v1/music/:id/play` play endpoint. No first-party native RN SDK — you would drive it with the app's existing `expo-audio` player. Works iOS + Android (plain HTTPS MP3). No subscription required for playback in principle (Audiomack's consumer model is ad-supported free).
+- **ToS fit?** The public API docs contain **no** commercial-use, health/medical, or sync-to-visuals clauses (<https://audiomack.com/data-api/docs>). Silence is not permission — commercial embedding in a paid mental-health app should be confirmed with Audiomack. UNVERIFIED — needs a human check (email Audiomack developer/BD, and read the API Terms of Use accepted at registration).
+- Catalog skews hip-hop/afrobeats/reggae/electronic and is partly UGC — decent for an Africa-audience "music" card, thin for ambient/calming material.
+
+**Verdict:** Viable — narrow shape only: an optional "African catalog" music card, self-registered OAuth app, playback through `expo-audio` on short-lived MP3 URLs, pending a written commercial-use OK. Does not beat Apple Music for the general user base.
+
+## Anghami (MENA)
+
+- **API open?** No. The official surface is the "Anghami + OSN+ SDK" (<https://docs.sdk.anghami.com/>, <https://docs.sdk.anghami.com/developer-portal>), proto-first with generated clients (Go/TS/Swift/Java/Python). But: "The portal URL above is a placeholder while we build out the public developer onboarding flow" — until then "contact your Anghami partnership lead for API access." So it is partner-gated in practice.
+- **Playlist / playback / subscription:** SDK advertises browse + stream of the full catalog and reading user library/history, with "Entitlements live outside the SDK" (i.e. a paid Anghami plan gates full playback). Native SDK availability for RN specifically is **UNVERIFIED**.
+- **ToS fit?** Partner agreement not public — not assessable.
+
+**Verdict:** API closed (partner-only placeholder).
+
+## JioSaavn / Gaana (India)
+
+- **JioSaavn:** No official public API. Only reverse-engineered/unofficial wrappers exist (<https://github.com/cyberboysumanjay/JioSaavnAPI>) — not a licensed route. **Verdict: Not viable.**
+- **Gaana:** Historically opened a developer platform (Meta Data / User Data / Player APIs, app-concept review to get a key — MediaNama 2014). No current first-party developer portal is reachable/documented in 2025–26; ownership churn (Times Internet → distressed) makes it **UNVERIFIED — needs a human check**. **Verdict: Not viable / unverifiable.**
+
+## Napster / Rhapsody
+
+- Historically the most permissive full-playback API (the old Rhapsody/Napster "member" API with a native SDK). **Discontinued.** Napster was sold to Infinite Reality on 25 Mar 2025 (<https://en.wikipedia.org/wiki/Napster_(streaming_service)>) and pivoted away from a developer platform; the developer portal and API sign-up are gone. No first-party developer docs resolve.
+
+**Verdict:** API closed (discontinued).
+
+## Qobuz
+
+- **API open?** No. "You need to have a Developer agreement signed with Qobuz … there is no publicly open way to get access." Request an `app_id` by emailing api@qobuz.com; a partner "Apps & UX Guidelines" PDF exists (<https://static.qobuz.com/apps/api/Qobuz-AppsGuidelines-V1.0.pdf>). Community API docs are unofficial (<https://github.com/csngoh/api-documentation>).
+- Playback requires a Qobuz subscription; no first-party RN SDK. High-fidelity/audiophile catalog, small user base, premium price — wrong audience shape for Xolace anyway.
+
+**Verdict:** API closed (partner-only, NDA).
+
+## Yandex Music
+
+- **API open?** No official API at all. "There is no official developer documentation from Yandex for their Music API"; everything is reverse-engineered (<https://yandex-music.readthedocs.io/>). Also RU-centric with sanctions/geo exposure.
+
+**Verdict:** Not viable (no official API).
+
+## Pandora
+
+- **API open?** No. "Pandora does not have a public API … generally do not make Pandora available through other sites and applications." There is a partner-only developer portal reached via a partnership request form (<https://developer.pandora.com/docs/overview/partner-access/>). US/AU/NZ only.
+
+**Verdict:** API closed (partner-only).
+
+## Last.fm
+
+- **API open?** Yes for metadata, self-serve key (<https://www.last.fm/api/account/create>). **No playback** — Last.fm has not streamed audio since ~2014; the API is artist/album/track metadata, tags, similar-artists, scrobbling, and search.
+- **Commercial use:** "free for non-commercial use; commercial use requires a separate agreement via partners@last.fm," and the widget is "not provided for commercial use, distribution or exploitation" (<https://www.last.fm/api/tos>, <https://www.last.fm/legal/terms>).
+- **Useful for track selection?** Marginally. `track.getSimilar` / `tag.getTopTracks` (e.g. tag `calm`, `ambient`, `sleep`) could help *rank or pick* which owned/licensed track to surface for a session — but MusicBrainz (CC0) or the licensable catalog's own semantic search (Epidemic Sound Soundmatch, below) do this without a commercial-use negotiation.
+
+**Verdict:** Metadata only (no playback; commercial metadata use needs a Last.fm agreement).
+
+## 7digital (B2B, now "MassiveMusic")
+
+- **API open?** Partner/commercial only. The classic REST API (v1.2) covers catalogue/search/charts/lookup; "To use the streaming endpoints, you need to arrange access to them with 7digital as they aren't included in the free API" (<https://docs.7digital.com/>, <https://7digital.gitbook.io/api-doc>). Streaming links are OAuth-signed, single-use, 60-min TTL.
+- This is a licensed full-catalog B2B route (powers Canva, Soundtrack Your Brand, etc.) — real, but a **commercial licensing deal + per-stream royalty reporting**, i.e. major-label economics. Overkill and expensive for one post-v1 "action type."
+
+**Verdict:** API closed to self-serve (commercial deal + label royalties required).
+
+---
+
+## Royalty-free / licensable catalogs
+
+This is the most useful outcome. Xolace already self-hosts generated audio (ElevenLabs `paths` tracks) in Convex storage and plays it with `expo-audio`. A curated ambient/wellness music catalog can be delivered the **exact same way** — download once, store in Convex, stream to the client — which sidesteps every streaming-API ToS, every subscriber gate, every "playback SDK only" restriction, and every iOS-vs-Android difference. No music API is needed at all.
+
+### Pixabay Music — zero cost
+
+- **Licensing model:** Pixabay Content License. Verbatim grant: "irrevocable, worldwide, perpetual …, non-exclusive and royalty-free right to download, use, copy, modify or adapt the Content for commercial or non-commercial purposes" and this "includes the right to redistribute the Content under the Content License … via an API" (<https://pixabay.com/service/terms/>). No attribution required.
+- **Cost:** Free.
+- **Self-host?** Yes — that is the intended model. The Pixabay API docs (images/video) already require "download them to your server first" and prohibit permanent hotlinking (<https://pixabay.com/api/docs/>). Note: **Pixabay has no public *music* API** — music/SFX have no API section — so the workflow is manual curation + upload, not a programmatic pull. Fine for a hand-picked wellness set.
+- **ToS caveats to check with a human/legal:**
+  1. "Standalone" clause — you "cannot sell or distribute Content on a Standalone basis … where no creative effort has been applied." Serving a track as one action inside a paid app (with UI, session context, curation) is incorporation, not standalone resale — reasonable read, but confirm.
+  2. Health/medical clause — cannot use Content that depicts a person "as suffering from, or medicating for, a physical or mental ailment" for commercial purposes. This targets *photos/video of people*; instrumental ambient tracks don't trigger it. Pick instrumental/no-vocal tracks and it's a non-issue.
+- **Quality:** Mixed (it's a free pool), but there is plenty of usable ambient/piano/lo-fi. Curation effort is the cost.
+
+**Verdict:** Viable — best zero-cost self-host option; needs a one-time legal read of the "standalone" clause and hand-curation.
+
+### Epidemic Sound (Connect / Partner Content API)
+
+- **Licensing model:** Epidemic owns 100% of its catalog rights and sublicenses through the API "without additional clearance requirements"; music is "cleared for personal and commercial use across platforms" (<https://www.epidemicsound.com/business/developers/>, <https://developers.epidemicsound.com/docs/>).
+- **API:** Real and modern — full catalog, HLS streaming previews, plus AI tools (Soundmatch video-to-music, semantic search, similar-section, beat detection). **Requires a partnership agreement** before you get Developer Portal credentials (partners include Squarespace, Unfold, Technogym).
+- **Self-host?** Model is API-delivered streaming under an active agreement, not "download and keep forever." Offline/permanent caching would be a contract point.
+- **Cost:** Custom B2B pricing (not published) — realistically the priciest option here, aimed at platforms embedding music licensing for *their* creators.
+
+**Verdict:** Viable — shape: paid partner API with guaranteed indemnity and good semantic-selection tooling; likely too heavy/expensive for one post-v1 action type, revisit only if "music" becomes a headline feature.
+
+### Uppbeat
+
+- **Licensing model:** Subscription (Free / Essentials / Creator / Pro / Business & Team licenses). "Permitted Media includes online games or applications" (<https://uppbeat.io/user-agreement>), so in-app use is contemplated. But: "You may not … download and stockpile Content for future use outside of the subscription period" and downloads "must be synchronised, integrated with, or applied to … your Permitted Material" — i.e. no building a standalone music-player feature out of it, and hosting rights lapse if you stop paying.
+- **API:** No developer API / programmatic catalog found on any first-party page. Manual download only.
+- **Cost:** Subscription tiers (Business/Team for multi-seat commercial).
+
+**Verdict:** Viable with friction — usable as a self-hosted curated set *while subscribed*, but the "no stockpiling / sync-only" terms and absence of an API make it worse than Pixabay (free, perpetual) for this use. Confirm the Business license permits streaming tracks to end users as an app feature — UNVERIFIED.
+
+### Jamendo (API route)
+
+- **API:** Self-serve dev portal, returns full-track audio URLs, ~35k requests/month free tier (<https://developer.jamendo.com/v3.0>).
+- **Licensing model:** All tracks are Creative Commons. "The API may be used freely for non-commercial uses. For any other type of use including but not limited to commercial uses" you must buy a license — "Commercial use shall be understood as any use that is intended for or directed toward commercial advantage or any monetary compensation" (<https://devportal.jamendo.com/api_terms_of_use>). Also: "Applications must not be specifically designed to cache the content nor offering … offline access," and you must credit each track + backlink to its Jamendo page.
+- Commercial route = Jamendo Licensing per-track sync licenses, from **€29/track ("Online" use)** up to ~€1,189/track (<https://licensing.jamendo.com/en/pricing>). A curated set of ~20 tracks ≈ €580 one-off at the low tier — cheap, perpetual, and it does sidestep the streaming-ToS problem, but you're paying per track and the API's own caching ban means you'd license + download outside the API, not stream it.
+
+**Verdict:** Viable via paid per-track sync licenses (not via the free API, which is non-commercial-only and bans caching). Comparable end state to Pixabay but with a real (small) cost and attribution obligation.
+
+### Others (quick)
+
+- **Free Music Archive / Tribe of Noise:** API was shut down ("due to the heavy load … they had to shut down the API"); site allows app developers for direct web access but no API (<https://freemusicarchive.org/app-developers>). Catalog is CC (attribution/NC varies per track). **Verdict: Metadata/manual only, no API.**
+- **Bandcamp:** Public content API discontinued, "not granting any new developer keys"; remaining API is sales-reporting for artists/labels only (<https://get.bandcamp.help/en/articles/15263422>). **Verdict: API closed.**
+- **Soundstripe / Artlist / Musicbed / Melodie:** subscription royalty-free libraries in the Uppbeat mould; Soundstripe and Melodie advertise partner/API programs for platforms. Not investigated in depth here — **UNVERIFIED**, but they occupy the same "paid partner API, indemnified catalog" slot as Epidemic Sound and would only matter if the self-host route is chosen and Pixabay's quality proves insufficient.
+- **NASA / Free PD / incompetech (Kevin MacLeod):** genuinely free/CC0 or cheap-license instrumental pools; viable to hand-pick a handful, no API, pure manual curation.
+
+---
+
+## Summary table
+
+| Provider | API open to new devs? | Playback in React Native? | Free tier? | ToS fit for paid mental-health app | Verdict |
+|---|---|---|---|---|---|
+| Deezer | No (new apps blocked) | Preview 30 s only; old SDK dead | n/a | Non-commercial only — fatal | Not viable |
+| Amazon Music | No (closed beta, BD contact) | Web player API, no public SDK | n/a | Private partner terms | API closed |
+| TIDAL | Metadata/playlist yes; consumer playback app needs approval | Preview 30 s only for 3rd parties (even with paid acct) | n/a | Consumer-integration oriented | Not viable (today) |
+| SoundCloud | Only with Artist Pro sub + manual review | Full track via signed HLS; no native SDK | Ad-supported | Commercial widget use needs partnership; UGC catalog | Not viable |
+| Boomplay | No discoverable dev API | — | — | UNVERIFIED | Not viable |
+| Audiomack | Yes — self-serve OAuth 1.0a | Short-lived MP3 URL via `expo-audio`; no SDK | Yes (ad-supported) | API docs silent on commercial/health — needs written OK | Viable — narrow (Africa "music card") |
+| Anghami | No (partner placeholder) | SDK, entitlement-gated | n/a | Private partner terms | API closed |
+| JioSaavn | No official API | — | — | — | Not viable |
+| Gaana | Historic; not reachable now | (had Player API) | — | UNVERIFIED | Not viable / unverifiable |
+| Napster/Rhapsody | Discontinued (2025 sale) | — | — | — | API closed |
+| Qobuz | No (signed dev agreement, email) | No RN SDK; sub required | n/a | NDA | API closed |
+| Yandex Music | No official API (reverse-engineered) | — | — | — | Not viable |
+| Pandora | No (partner form only), US/AU/NZ | Partner SDK | n/a | Private | API closed |
+| Last.fm | Yes (metadata key) | None (no audio) | Yes non-commercial | Commercial metadata use needs agreement | Metadata only |
+| 7digital / MassiveMusic | Commercial deal only | Signed stream URLs | Catalogue yes, streaming no | Full label licensing + royalties | API closed (self-serve) |
+| **Pixabay Music (self-host)** | n/a (no music API; manual) | Yes — host in Convex, `expo-audio` | **Free** | Commercial OK, no attribution; check "standalone" + person-medicating clauses | **Viable — best zero-cost** |
+| Epidemic Sound (self-host/API) | Partner agreement required | HLS via API under contract | No | Fully cleared + indemnified; offline is a contract point | Viable — heavy/costly |
+| Uppbeat (self-host) | No API; manual download | Yes while subscribed | Limited free | In-app use allowed; no stockpiling, sync-only, lapses with sub | Viable with friction |
+| Jamendo (paid sync licenses) | Yes (free API is NC-only + no caching) | Yes if licensed + self-hosted | API free tier NC only | Commercial = €29–1,189/track + credit/backlink | Viable via paid licenses |
+
+## Recommendation for the map
+
+**The "music stays fog, narrowed" call holds for *streaming*.** After this second pass, there is still no streaming provider that beats the earlier findings: Apple Music (viable, iOS-first, subscriber-gated) and YouTube (viable only as a visible video card) remain the frontier. Every other full-catalog API is closed or partner-only (Amazon, Pandora, Qobuz, Anghami, Napster, JioSaavn, Yandex, 7digital), non-commercial-only (Deezer, Jamendo's free API, Last.fm), or restricts third-party playback to 30-second previews (TIDAL, Deezer). The only genuinely open self-serve streaming API on the list is **Audiomack**, and it's a narrow win — an optional Africa-audience "music card" playing short-lived MP3 URLs through the existing `expo-audio` player, contingent on a written commercial-use confirmation, and no better than Apple Music for the general user base.
+
+**What this pass adds is a new, non-streaming option worth putting on the roadmap:** *self-host a small curated licensed ambient/wellness catalog alongside the ElevenLabs `paths` tracks.* It reuses infrastructure Xolace already has (Convex storage + `expo-audio`), needs no external API at runtime, has no subscriber gate, and behaves identically on iOS and Android — removing every blocker that keeps streaming "in the fog." Cheapest path is **Pixabay Music** (free, commercial use explicitly granted, redistribution allowed, no attribution) with a one-time legal read of the "standalone distribution" clause and instrumental-only track selection; **Jamendo paid sync licenses** (~€29/track) or a **subscription library (Uppbeat / Epidemic Sound / Soundstripe)** are fallbacks if curated quality or indemnity matters. This stays **post-v1** and is a small, self-contained action type — but unlike the streaming options it is actually buildable without a partnership negotiation or an App Store subscriber-gating problem.
