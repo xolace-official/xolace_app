@@ -6,7 +6,11 @@ type WashTokens = {
 };
 
 /**
- * Nine stops, 40° apart, starting at 3 o'clock and running clockwise.
+ * Nine stops, 45° apart, starting at 3 o'clock and running clockwise. Skia
+ * spaces a `SweepGradient`'s colours evenly when no `positions` are given —
+ * first at 0°, last at 360° — and even spacing is what this ramp wants: the
+ * peak lands exactly straight down, and the quiet stops get the same width as
+ * the loud ones instead of a dead wedge before the wrap.
  *
  * Three things make a sweep read as light on a surface rather than as paint:
  *
@@ -21,8 +25,8 @@ type WashTokens = {
  *
  * The bottom half rises to a peak straight down and falls off evenly — an
  * unordered ramp reads as two blobs with a dip between them, not as fill. The
- * top is quiet but not flat: one 8% accent stop straight up keeps it off the
- * floor.
+ * top is quiet but not flat: one 8% accent stop on the up-right keeps it off
+ * the floor.
  *
  * Colours come from tokens, never hex. `--accent` is the only one that
  * actually moves per palette (`--ember` is the same orange in all eleven —
@@ -36,12 +40,12 @@ export const buildSweepStops = ({
   background,
 }: WashTokens) => [
   accent + "33", //   0° right
-  accent + "4D", //  40° down-right
-  accent + "73", //  80° down — peak
-  accent + "4D", // 120° down-left
-  accent + "26", // 160° left
-  surfaceTertiary, // 200° up-left
-  surface, //        240°
-  accent + "14", // 280° up — the lift
-  background, //     320° up-right
+  accent + "4D", //  45° down-right
+  accent + "73", //  90° down — peak
+  accent + "4D", // 135° down-left
+  accent + "26", // 180° left
+  surfaceTertiary, // 225° up-left
+  surface, //        270° up
+  accent + "14", // 315° up-right — the lift
+  background, //     360° ≡ 0°, closing the turn
 ];
