@@ -51,21 +51,25 @@ export const ProcessingState = () => {
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       // Fade out
-      opacity.value = withTiming(
-        0,
-        { duration: FADE_DURATION_MS, easing: Easing.out(Easing.ease) },
-        (finished) => {
-          "worklet";
-          if (!finished) return;
-          // Compute next index on UI thread, schedule React state update on JS thread
-          const nextIndex = (phraseIndexSV.value + 1) % PHRASES.length;
-          phraseIndexSV.value = nextIndex;
-          scheduleOnRN(setPhraseIndex, nextIndex);
-          opacity.value = withTiming(1, {
-            duration: FADE_DURATION_MS,
-            easing: Easing.in(Easing.ease),
-          });
-        },
+      opacity.set(
+        withTiming(
+          0,
+          { duration: FADE_DURATION_MS, easing: Easing.out(Easing.ease) },
+          (finished) => {
+            "worklet";
+            if (!finished) return;
+            // Compute next index on UI thread, schedule React state update on JS thread
+            const nextIndex = (phraseIndexSV.get() + 1) % PHRASES.length;
+            phraseIndexSV.set(nextIndex);
+            scheduleOnRN(setPhraseIndex, nextIndex);
+            opacity.set(
+              withTiming(1, {
+                duration: FADE_DURATION_MS,
+                easing: Easing.in(Easing.ease),
+              }),
+            );
+          },
+        ),
       );
     }, PHRASE_DURATION_MS);
 
@@ -75,7 +79,7 @@ export const ProcessingState = () => {
   }, [opacity, phraseIndexSV]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
+    opacity: opacity.get(),
   }));
 
   const shimmerOverlayStyle = {

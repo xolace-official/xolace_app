@@ -73,9 +73,9 @@ export const MicButton = ({ size, isRecording, onPress }: Props) => {
     opacity: bgOpacity.get(),
   }));
 
-  const iconWrapperStyle = useAnimatedStyle(() => ({
-    opacity: isRecording ? 1 : 0.4,
-  }));
+  // Plain style: it reads no shared value, so a worklet here just runs a
+  // constant on the UI thread every frame the container animates.
+  const iconWrapperStyle = { opacity: isRecording ? 1 : 0.4 };
 
   const handlePress = () => {
     playSoftPress();

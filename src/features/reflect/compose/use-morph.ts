@@ -40,15 +40,25 @@ export function useMorph({
   const progress = useSharedValue(expanded ? 1 : 0);
   const fade = useSharedValue(1);
   const settled = useRef(false);
+  const wasExpanded = useRef(expanded);
 
   useEffect(() => {
     const to = expanded ? 1 : 0;
     const first = !settled.current;
+    const morphed = expanded !== wasExpanded.current;
+    wasExpanded.current = expanded;
     settled.current = true;
 
     if (first) {
       // Whatever the screen resumed into is where the card already is.
       progress.set(to);
+    } else if (!morphed) {
+      // `reduceMotion` resolves asynchronously (Convex preferences + the OS
+      // a11y flag), so it flips under a settled card. That is not a morph —
+      // replaying one here cross-fades the whole screen out and back for no
+      // reason, and only ever for reduced-motion users.
+      progress.set(to);
+      return;
     } else if (reduceMotion) {
       fade.set(
         withSequence(
