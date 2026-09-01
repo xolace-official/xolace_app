@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PROMPT,
   resolveCardContent,
-} from "./resolve-card-content";
+} from "@/src/features/reflect/compose/resolve-card-content";
 import { QUIET_RETURN_PROMPTS } from "@/src/features/reflect/quiet-return-copy";
 import { NIGHT_HEADLINE } from "@/src/features/reflect/night-copy";
 

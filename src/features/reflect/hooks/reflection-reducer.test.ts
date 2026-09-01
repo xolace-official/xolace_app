@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initialState, reducer } from "./reflection-reducer";
+import { initialState, reducer } from "@/src/features/reflect/hooks/reflection-reducer";
 
 /** Draft retention (#258): only an explicit act throws the writing away. */
 describe("reducer — draft retention", () => {
