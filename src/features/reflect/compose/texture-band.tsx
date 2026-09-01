@@ -28,16 +28,22 @@ import { useAppStore } from "@/src/store/store";
  * that no two sit on a shared line or a shared left edge, small enough that
  * nothing looks broken or moves out of thumb's reach. Classes rather than a
  * style prop: `TagGroup.Item` forwards className and drops style.
+ *
+ * The drops are half what they were: a wrapped row is as tall as its deepest
+ * `mt`, so on a three-row set they were buying scatter with height the band
+ * doesn't have — and the height came out of the send button, which the
+ * surround then had to park on the card. The tilt carries the effect; the
+ * vertical nudge only has to break the shared baseline.
  */
 const SCATTER = [
   "-rotate-2",
-  "rotate-1 mt-2 ml-1",
+  "rotate-1 mt-1 ml-1",
   "rotate-3 mt-0.5",
-  "-rotate-1 mt-2.5 ml-2",
-  "rotate-2 mt-1",
-  "-rotate-3 mt-2 ml-1",
+  "-rotate-1 mt-1.5 ml-2",
+  "rotate-2 mt-0.5",
+  "-rotate-3 mt-1 ml-1",
   "rotate-1",
-  "-rotate-2 mt-1.5 ml-2",
+  "-rotate-2 mt-1 ml-2",
 ];
 
 const PILL = "border";
@@ -169,7 +175,7 @@ export const TextureBand = ({
             onSelectionChange={handleSelectionChange}
             animation="disable-all"
           >
-            <TagGroup.List className="flex-row flex-wrap items-start gap-x-2 gap-y-2.5 pr-14">
+            <TagGroup.List className="flex-row flex-wrap items-start gap-x-2 gap-y-1.5 pr-14">
               {TEXTURE_WORDS.map((word, i) => {
                 const skin = TEXTURE_PILL[textureHue(word)];
                 const isSelected = selectedTextureKeys.has(word);
