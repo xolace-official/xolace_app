@@ -15,6 +15,15 @@ import { AppText } from '@/src/components/shared/app-text';
 export const MASCOT_TALK = require('@/assets/images/flux/flux-whisper.png');
 export const MASCOT_POINT = require('@/assets/images/flux/flux-point-down-removebg-preview.png');
 
+// One pose per slot in the flow. Same render, same character — only the pose
+// changes, so the flow reads as one Flux reacting rather than a set of icons.
+export const MASCOT_WAVE = require('@/assets/images/flux/name-accepted-wave.png');
+export const MASCOT_WRITING = require('@/assets/images/flux/writer-flux.png');
+export const MASCOT_CURIOUS = require('@/assets/images/flux/flux-curiosity.png');
+export const MASCOT_BUNDLE = require('@/assets/images/flux/flux-bundle.png');
+export const MASCOT_MAP = require('@/assets/images/flux/flux-map.png');
+export const MASCOT_SHAKE = require('@/assets/images/flux/flux-shake.png');
+
 interface MascotSaysProps {
   children: string;
   source?: ImageSourcePropType;
@@ -25,9 +34,11 @@ interface MascotSaysProps {
 export function MascotSays({ children, source = MASCOT_TALK, continued }: MascotSaysProps) {
   return (
     <Animated.View entering={FadeInUp.duration(220)} className="flex-row items-end gap-2">
-      <View className="h-14 w-14 items-center justify-center">
+      {/* 76, not 56: the section poses carry props — a telescope, a bundle, a
+          map — and a prop is what disappears first as the render shrinks. */}
+      <View className="h-[76px] w-[76px] items-center justify-center">
         {continued ? null : (
-          <Image source={source} style={{ width: 56, height: 56 }} contentFit="contain" />
+          <Image source={source} style={{ width: 76, height: 76 }} contentFit="contain" />
         )}
       </View>
 

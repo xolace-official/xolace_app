@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
+import { reflectionRank } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
 import { intakeAnswerValidators } from "./lib/validators";
 import { validateDisplayName } from "./lib/displayName";
@@ -110,5 +111,56 @@ export const complete = mutation({
     });
 
     return null;
+  },
+});
+
+/**
+ * How many sessions back from now the "left lighter" share is measured over.
+ * One transaction, one read — this is a once-per-user screen, not a hot path.
+ *
+ * ponytail: bounded scan. If intake volume makes it hot, materialize it the
+ * way `jobs/cohortCounts` does and read one row instead.
+ */
+const MOOD_WINDOW = 250;
+
+/** Below this many rated sessions the share is noise, so we don't show it. */
+const MIN_RATED = 25;
+
+/**
+ * The two real numbers the intake count screen stands on.
+ *
+ * `campers` is the population of the `reflectionRank` aggregate — every
+ * emotional profile, O(log n), no scan. `lighterPercent` is the share of the
+ * last {@link MOOD_WINDOW} sessions *that recorded a post-session mood* which
+ * recorded "lighter"; null until there are enough of them to mean anything.
+ * A null is the client's cue to drop the line, never to invent one.
+ */
+export const campfireStats = query({
+  args: {},
+  returns: v.object({
+    campers: v.number(),
+    lighterPercent: v.union(v.number(), v.null()),
+  }),
+  handler: async (ctx) => {
+    await requireAuth(ctx);
+
+    const campers = await reflectionRank.count(ctx);
+
+    const recent = await ctx.db
+      .query("sessions")
+      .withIndex("by_date")
+      .order("desc")
+      .take(MOOD_WINDOW);
+
+    const rated = recent.filter((s) => s.postSessionMood !== undefined);
+    const lighter = rated.filter((s) => s.postSessionMood === "lighter").length;
+
+    return {
+      campers,
+      lighterPercent:
+        rated.length >= MIN_RATED
+          ? Math.round((lighter / rated.length) * 100)
+          : null,
+    };
   },
 });

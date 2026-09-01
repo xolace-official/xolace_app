@@ -48,6 +48,11 @@ const FOLLOW_UP_ICON: CrossPlatformSymbol = {
   android: "notifications_active",
   web: "notifications_active",
 };
+const INTAKE_ICON: CrossPlatformSymbol = {
+  ios: "figure.walk.arrival",
+  android: "restart_alt",
+  web: "restart_alt",
+};
 const SENTRY_ICON: CrossPlatformSymbol = {
   ios: "ant.circle",
   android: "bug_report",
@@ -82,6 +87,7 @@ export const DevToolsSection = () => {
   };
   const setStreak = useMutation(api.devTools.setStreak);
   const seedFollowUpCard = useMutation(api.devTools.seedFollowUpCard);
+  const resetIntake = useMutation(api.devTools.resetIntake);
   const [busy, setBusy] = useState(false);
 
   const seedFollowUp = (tier: "acute" | "elevated" | "standard") => {
@@ -127,6 +133,23 @@ export const DevToolsSection = () => {
           variant: "danger",
           label: "Streak update failed",
           description: "Is DEV_TOOLS_ENABLED set on this deployment?",
+        });
+      })
+      .finally(() => setBusy(false));
+  };
+
+  const replayIntake = () => {
+    if (busy) return;
+    setBusy(true);
+    // No navigation of our own: `onboardingComplete` is the root guard, so the
+    // subscription that reads it swaps the whole group out from under us.
+    resetIntake()
+      .catch((e) => {
+        toast.show({
+          variant: "danger",
+          label: "Intake reset failed",
+          description:
+            e instanceof Error ? e.message : "Is DEV_TOOLS_ENABLED set?",
         });
       })
       .finally(() => setBusy(false));
@@ -184,6 +207,13 @@ export const DevToolsSection = () => {
           onPress={() => seedFollowUp(tier)}
         />
       ))}
+
+      <SettingsRow
+        variant="action"
+        icon={icon(INTAKE_ICON)}
+        label="Replay intake"
+        onPress={replayIntake}
+      />
 
       <SettingsRow
         variant="action"

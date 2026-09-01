@@ -10,6 +10,7 @@ import { Pressable, View } from 'react-native';
 
 import { Questionnaire, type QuestionnaireAnswers } from '@/src/components/ui/questionnaire';
 import { AppText } from '@/src/components/shared/app-text';
+import { MASCOT_MAP } from '@/src/features/intake/questionnaire/mascot';
 import { SectionScreen } from '@/src/features/intake/questionnaire/section-screen';
 import {
   SECTION_FINDING,
@@ -49,6 +50,7 @@ export function FindingStep({ onDone }: { onDone: (answers: QuestionnaireAnswers
     <SectionScreen
       eyebrow="Section 3 of 3 · Finding us"
       title="How you got here"
+      mascot={MASCOT_MAP}
       says="Last few. This part is for us — it tells us where people like you are finding Xolace."
       questions={SECTION_FINDING}
       items={items}

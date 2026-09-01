@@ -7,7 +7,7 @@
  * waits for an actual shake) instead of on a tap.
  */
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View, type ImageSourcePropType } from 'react-native';
 import { Button } from 'heroui-native';
 
 import { AppText } from '@/src/components/shared/app-text';
@@ -24,6 +24,8 @@ export interface ConversationLine {
 interface MascotConversationProps {
   eyebrow: string;
   lines: readonly ConversationLine[];
+  /** The pose for this slot. Defaults to the talking one. */
+  mascot?: ImageSourcePropType;
   /** Flips true when the gated moment has happened. */
   gateOpen?: boolean;
   /** Shown in place of the button while a gated line waits. */
@@ -37,6 +39,7 @@ interface MascotConversationProps {
 export function MascotConversation({
   eyebrow,
   lines,
+  mascot,
   gateOpen = true,
   gateHint,
   onGateBypass,
@@ -67,7 +70,7 @@ export function MascotConversation({
 
         <View className="flex-1 justify-end gap-3">
           {lines.slice(0, shown).map((line, index) => (
-            <MascotSays key={line.text} continued={index > 0}>
+            <MascotSays key={line.text} source={mascot} continued={index > 0}>
               {line.text}
             </MascotSays>
           ))}

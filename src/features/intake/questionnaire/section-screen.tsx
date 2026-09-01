@@ -8,7 +8,7 @@
  */
 import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, type ImageSourcePropType } from 'react-native';
 
 import {
   Questionnaire,
@@ -28,6 +28,8 @@ interface SectionScreenProps {
   title: string;
   /** What the mascot says about this section. */
   says: string;
+  /** The pose for this section. Defaults to the talking one. */
+  mascot?: ImageSourcePropType;
   questions: readonly IntakeQuestion[];
   items: readonly QuestionnaireItemDefinition[];
   /** Multi-selects to hold at MAX_SELECTIONS. */
@@ -68,6 +70,7 @@ export function SectionScreen({
   eyebrow,
   title,
   says,
+  mascot,
   questions,
   items,
   capped = NO_CAPS,
@@ -98,7 +101,7 @@ export function SectionScreen({
           <AppText className="text-2xl text-foreground font-[Poppins-SemiBold]">{title}</AppText>
         </View>
 
-        <MascotSays>{says}</MascotSays>
+        <MascotSays source={mascot}>{says}</MascotSays>
 
         <Questionnaire
           items={items}

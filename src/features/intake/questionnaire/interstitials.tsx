@@ -6,6 +6,7 @@
 import { useState } from 'react';
 
 import { MascotConversation } from '@/src/features/intake/questionnaire/conversation';
+import { MASCOT_SHAKE } from '@/src/features/intake/questionnaire/mascot';
 import { useShake } from '@/src/features/intake/questionnaire/use-shake';
 
 const PRIVACY_LINES = [
@@ -52,6 +53,7 @@ export function ShakeStep({ onDone }: { onDone: () => void }) {
     <MascotConversation
       eyebrow="Shake to tell us"
       lines={SHAKE_LINES}
+      mascot={MASCOT_SHAKE}
       gateOpen={shaken || bypassed}
       gateHint="Go on, shake it."
       onGateBypass={() => setBypassed(true)}

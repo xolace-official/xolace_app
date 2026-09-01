@@ -13,8 +13,11 @@ import { useQuery } from 'convex/react';
 
 import { api } from '@/convex/_generated/api';
 import type { QuestionnaireAnswers } from '@/src/components/ui/questionnaire';
+import { BeatStep } from '@/src/features/intake/questionnaire/beat-step';
+import { CountStep } from '@/src/features/intake/questionnaire/count-step';
 import { FindingStep } from '@/src/features/intake/questionnaire/finding-step';
 import { PrivacyStep, ShakeStep } from '@/src/features/intake/questionnaire/interstitials';
+import { MASCOT_WAVE, MASCOT_WRITING } from '@/src/features/intake/questionnaire/mascot';
 import { NameStep } from '@/src/features/intake/questionnaire/name-step';
 import { CarryStep, YouStep } from '@/src/features/intake/questionnaire/section-steps';
 import { suggestHandle } from '@/src/features/intake/questions';
@@ -23,7 +26,7 @@ import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlemen
 import type { IntakeAnswers } from '@/src/store/intake-slice';
 import { useAppStore } from '@/src/store/store';
 
-type Step = 'name' | 'you' | 'privacy' | 'carry' | 'shake' | 'finding';
+type Step = 'name' | 'hey' | 'you' | 'noted' | 'privacy' | 'carry' | 'shake' | 'finding' | 'count';
 
 /**
  * Q11 is presented as Yes/No, so the questionnaire holds it as a string; the
@@ -41,6 +44,10 @@ function toIntakeAnswers(answers: QuestionnaireAnswers): IntakeAnswers {
 export default function IntakeQuestionnaire() {
   const router = useRouter();
   const [step, setStep] = useState<Step>('name');
+  // The name is echoed back on the beat after it's picked, and threaded into
+  // each section's mascot line after that. Local, not from the store: the
+  // store's copy is the submission payload, not screen state.
+  const [name, setName] = useState('');
   const setIntakeAnswers = useAppStore((s) => s.setIntakeAnswers);
 
   // Deduped against the root's subscription. An existing user already has a
@@ -49,6 +56,7 @@ export default function IntakeQuestionnaire() {
   const { isPlus } = usePlusEntitlement();
   const completeIntake = useIntakeComplete();
   const finishing = useRef(false);
+  const finalAnswers = useRef<QuestionnaireAnswers | null>(null);
 
   const record = (answers: QuestionnaireAnswers, next: Step) => {
     setIntakeAnswers(toIntakeAnswers(answers));
@@ -90,11 +98,25 @@ export default function IntakeQuestionnaire() {
       return (
         <NameStep
           initialName={context.preferences?.displayName || suggestHandle()}
-          onDone={(displayName) => record({ displayName }, 'you')}
+          onDone={(displayName) => {
+            setName(displayName);
+            record({ displayName }, 'hey');
+          }}
+        />
+      );
+    case 'hey':
+      return (
+        <BeatStep
+          line={`Hey, ${name}.`}
+          subline="That's the only name anyone here sees."
+          mascot={MASCOT_WAVE}
+          onDone={() => setStep('you')}
         />
       );
     case 'you':
-      return <YouStep onDone={(answers) => record(answers, 'privacy')} />;
+      return <YouStep onDone={(answers) => record(answers, 'noted')} />;
+    case 'noted':
+      return <BeatStep line="Noted." mascot={MASCOT_WRITING} onDone={() => setStep('privacy')} />;
     case 'privacy':
       return <PrivacyStep onDone={() => setStep('carry')} />;
     case 'carry':
@@ -102,6 +124,18 @@ export default function IntakeQuestionnaire() {
     case 'shake':
       return <ShakeStep onDone={() => setStep('finding')} />;
     case 'finding':
-      return <FindingStep onDone={finish} />;
+      return (
+        <FindingStep
+          onDone={(answers) => {
+            finalAnswers.current = answers;
+            record(answers, 'count');
+          }}
+        />
+      );
+    case 'count':
+      // The count reads real numbers, so it can't be the screen that submits —
+      // a slow or failed stats read must never hold the answers hostage. They
+      // are already in the store by now; this only walks on.
+      return <CountStep onDone={() => finish(finalAnswers.current ?? {})} />;
   }
 }
