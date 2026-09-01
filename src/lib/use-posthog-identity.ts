@@ -26,6 +26,14 @@ export function usePostHogIdentity() {
   const identified = useRef<string | null>(null);
 
   useEffect(() => {
+    // This hook mounts at the root now, so it outlives a sign-out — without
+    // this the ref would still name the old profile and a sign-in as the same
+    // user in the same run would skip identify, stranding every later event on
+    // the anonymous id that `posthog.reset()` just handed out.
+    if (!isAuthenticated) {
+      identified.current = null;
+      return;
+    }
     const profileId = context?.profile?._id;
     if (!profileId || identified.current === profileId) return;
     identified.current = profileId;
@@ -41,5 +49,5 @@ export function usePostHogIdentity() {
         first_sign_in_date: new Date(context.user.createdAt).toISOString(),
       },
     });
-  }, [context, posthog]);
+  }, [context, posthog, isAuthenticated]);
 }
