@@ -23,6 +23,7 @@ export const MASCOT_CURIOUS = require('@/assets/images/flux/flux-curiosity.png')
 export const MASCOT_BUNDLE = require('@/assets/images/flux/flux-bundle.png');
 export const MASCOT_MAP = require('@/assets/images/flux/flux-map.png');
 export const MASCOT_SHAKE = require('@/assets/images/flux/flux-shake.png');
+export const MASCOT_COMPOUND = require('@/assets/images/flux/flux-compound.png');
 
 interface MascotSaysProps {
   children: string;

@@ -9,7 +9,7 @@
 import { useEffect, useRef } from 'react';
 import { Pressable } from 'react-native';
 import { Image, type ImageSource } from 'expo-image';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
@@ -19,7 +19,7 @@ import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduce
  * Long enough to actually read the line and look at him. 1400 was a flicker —
  * the screen was gone before the eye had finished the headline.
  */
-const BEAT_MS = 2400;
+const BEAT_MS = 3400;
 
 interface BeatStepProps {
   /** The one thing it says. "Noted." / "Hey, Camper 4821." */
@@ -55,9 +55,9 @@ export function BeatStep({ line, subline, mascot, onDone }: BeatStepProps) {
         className="flex-1"
       >
         <Animated.View
-          // Duration, not a spring: an overshoot on a line you are trying to
-          // read makes the text bounce under the eye that is reading it.
-          entering={reduced ? FadeIn.duration(160) : FadeInDown.duration(280)}
+          // No translate at all: any vertical travel on a headline moves the
+          // line under the eye that is trying to read it. It just appears.
+          entering={reduced ? FadeIn.duration(160) : FadeIn.duration(280)}
           className="px-8 pt-12 gap-2"
         >
           <AppText className="text-center text-[34px] leading-[40px] text-accent font-[Poppins-SemiBold]">

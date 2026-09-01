@@ -14,6 +14,7 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { QuestionnaireAnswers } from '@/src/components/ui/questionnaire';
 import { BeatStep } from '@/src/features/intake/questionnaire/beat-step';
+import { CompoundingStep } from '@/src/features/intake/questionnaire/compounding-step';
 import { CountStep } from '@/src/features/intake/questionnaire/count-step';
 import { FindingStep } from '@/src/features/intake/questionnaire/finding-step';
 import { PrivacyStep, ShakeStep } from '@/src/features/intake/questionnaire/interstitials';
@@ -26,7 +27,17 @@ import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlemen
 import type { IntakeAnswers } from '@/src/store/intake-slice';
 import { useAppStore } from '@/src/store/store';
 
-type Step = 'name' | 'hey' | 'you' | 'noted' | 'privacy' | 'carry' | 'shake' | 'finding' | 'count';
+type Step =
+  | 'name'
+  | 'hey'
+  | 'you'
+  | 'noted'
+  | 'privacy'
+  | 'carry'
+  | 'compounding'
+  | 'shake'
+  | 'finding'
+  | 'count';
 
 /**
  * Q11 is presented as Yes/No, so the questionnaire holds it as a string; the
@@ -120,7 +131,9 @@ export default function IntakeQuestionnaire() {
     case 'privacy':
       return <PrivacyStep onDone={() => setStep('carry')} />;
     case 'carry':
-      return <CarryStep onDone={(answers) => record(answers, 'shake')} />;
+      return <CarryStep onDone={(answers) => record(answers, 'compounding')} />;
+    case 'compounding':
+      return <CompoundingStep onDone={() => setStep('shake')} />;
     case 'shake':
       return <ShakeStep onDone={() => setStep('finding')} />;
     case 'finding':
