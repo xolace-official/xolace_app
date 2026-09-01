@@ -46,6 +46,8 @@ type Props = {
   fade: SharedValue<number>;
   expanded: boolean;
   card: CardContent;
+  /** Whether there is retained writing to discard, at either size. */
+  hasDraft: boolean;
   entryText: string;
   selectedTextures: string[];
   showNudge: boolean;
@@ -78,6 +80,7 @@ export const MorphCard = ({
   fade,
   expanded,
   card,
+  hasDraft,
   entryText,
   selectedTextures,
   showNudge,
@@ -240,27 +243,6 @@ export const MorphCard = ({
             </AppText>
           </Pressable>
         </Animated.View>
-        {isDraft && (
-          <Animated.View
-            style={restControlsStyle}
-            pointerEvents={expanded ? "none" : "auto"}
-            {...restA11y}
-          >
-            <Pressable
-              onPress={() => {
-                playSoftPress();
-                onDiscardDraft();
-              }}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="Discard draft"
-              accessibilityHint="Clears what you've written so far"
-              className="rounded-full bg-foreground/8 px-2.5 py-1"
-            >
-              <AppText className="text-xs text-foreground/40">Discard</AppText>
-            </Pressable>
-          </Animated.View>
-        )}
       </View>
 
       {showNudge && (
@@ -317,6 +299,36 @@ export const MorphCard = ({
       >
         <SelectionEcho words={selectedTextures} />
       </Animated.View>
+
+      {/* Discard sits in the corner the composer's ✕ will occupy — same place,
+          opposite half of the morph, so the card never offers both. Absolute,
+          and mounted on the draft rather than on `expanded`: appearing in the
+          header row would reflow the prompt the moment a first word is typed,
+          and unmounting on tap would pop it out mid-morph. */}
+      {hasDraft && (
+        <Animated.View
+          style={[
+            { position: "absolute", top: CARD_PAD, right: CARD_PAD },
+            restControlsStyle,
+          ]}
+          pointerEvents={expanded ? "none" : "auto"}
+          {...restA11y}
+        >
+          <Pressable
+            onPress={() => {
+              playSoftPress();
+              onDiscardDraft();
+            }}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Discard draft"
+            accessibilityHint="Clears what you've written so far"
+            className="rounded-full bg-foreground/8 px-2.5 py-1"
+          >
+            <AppText className="text-xs text-foreground/40">Discard</AppText>
+          </Pressable>
+        </Animated.View>
+      )}
     </Animated.View>
   );
 };

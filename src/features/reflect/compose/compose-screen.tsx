@@ -104,7 +104,10 @@ export const ComposeScreen = ({
     eventPrompt: activeEventPrompt,
     // Dismissing the composer keeps the writing (#258), so the resting card
     // shows the draft's opening line rather than a prompt over the top of it.
-    draft: entryText,
+    // Only at rest: open, the line is the card's own voice above what you are
+    // writing, and swapping it for your own first line as you type would make
+    // the composer echo you back at yourself.
+    draft: expanded ? null : entryText,
   });
 
   const [nudgeMessage] = useState(
@@ -177,6 +180,7 @@ export const ComposeScreen = ({
             fade={fade}
             expanded={expanded}
             card={card}
+            hasDraft={entryText.trim().length > 0}
             entryText={entryText}
             selectedTextures={selectedTextures}
             showNudge={showNudge}
