@@ -160,9 +160,10 @@ export function ConnectScreen({
         {loading ? (
           <View className="gap-3 pt-2">
             <Skeleton className="h-11 rounded-2xl" />
-            <Skeleton className="h-20 rounded-3xl" />
-            <Skeleton className="h-20 rounded-3xl" />
-            <Skeleton className="h-20 rounded-3xl" />
+            {/* Row-shaped, not card-shaped — the list it resolves into is flat. */}
+            <Skeleton className="h-[68px] rounded-none" />
+            <Skeleton className="h-[68px] rounded-none" />
+            <Skeleton className="h-[68px] rounded-none" />
           </View>
         ) : (
           <>
