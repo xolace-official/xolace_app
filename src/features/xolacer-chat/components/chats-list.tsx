@@ -10,13 +10,13 @@ import { ConversationRow } from './conversation-row';
 export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConversations>;
 
 /**
- * All lifecycle states live in one list — resting rows dim rather than hide
- * (the history is the point), and a xolacer's incoming requests sit inline
- * with accept/decline so "Waiting" is never a screen to remember.
+ * All lifecycle states live in one flat list — one continuous run of rows the
+ * way every messaging app reads, so a request or a resting thread is never a
+ * screen to remember.
  *
  * Archive is the one thing that does hide a row, and it renders through this
  * same component: `archived` swaps which half of the list it was handed, not
- * which screen you're on.
+ * which screen you're on. Getting back out is the long-press sheet.
  *
  * The long-press action sheet is deliberately not rendered here — see
  * `useConversationRowActions` for where it has to live instead.
@@ -29,7 +29,6 @@ export function ChatsList({
   onBrowseXolacers,
   onLongPress,
   onOpen,
-  onUnarchive,
 }: {
   conversations: ConversationList;
   archived: boolean;
@@ -38,7 +37,6 @@ export function ChatsList({
   onBrowseXolacers: () => void;
   onLongPress: (conversation: ConversationList[number]) => void;
   onOpen: () => void;
-  onUnarchive: (conversation: ConversationList[number]) => void;
 }) {
   const router = useRouter();
 
@@ -104,12 +102,15 @@ export function ChatsList({
   }
 
   return (
-    <View className="gap-2.5">
-      {header}
-      {conversations.map((conversation) => (
+    // Rows are full-bleed, so the list cancels the scroll container's own
+    // horizontal padding and each row puts it back on itself.
+    <View className="-mx-4">
+      {header && <View className="px-4 pb-2.5">{header}</View>}
+      {conversations.map((conversation, index) => (
         <ConversationRow
           key={conversation.id}
           conversation={conversation}
+          showSeparator={index < conversations.length - 1}
           onPress={() => {
             playSoftPress();
             // Opening a thread leaves this screen mounted, so a sheet raised on
@@ -125,7 +126,6 @@ export function ChatsList({
             playSoftPress();
             onLongPress(conversation);
           }}
-          onUnarchive={archived ? () => onUnarchive(conversation) : undefined}
         />
       ))}
     </View>

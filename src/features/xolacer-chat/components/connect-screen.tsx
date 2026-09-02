@@ -196,7 +196,6 @@ export function ConnectScreen({
                 onBrowseXolacers={() => setSelected('xolacers')}
                 onLongPress={setSheetFor}
                 onOpen={() => setSheetFor(null)}
-                onUnarchive={toggleArchive}
               />
             ) : (
               <XolacerRoster
