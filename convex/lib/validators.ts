@@ -135,6 +135,17 @@ export const insightFeatureValidator = v.union(
 // ===========================================================
 // INTAKE (post-signup segmentation questionnaire, T3 / #234)
 // ===========================================================
+
+/**
+ * Questionnaire revision stamped onto every `intake_responses` row. A
+ * capture-time stamp, NOT a re-prompt gate — bumping it never re-interrogates
+ * anyone (T3, issue #234). Server-owned: the client never sends a version, but
+ * it does read this one to stamp the `intake_version` person property (T7).
+ * It lives here, beside the answers, so the client can read it without
+ * importing a server module.
+ */
+export const INTAKE_VERSION = 1;
+
 //
 // The answer columns of `intake_responses`, shared by the schema and by the
 // `intake.complete` mutation args so the two can never drift.

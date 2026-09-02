@@ -7,8 +7,9 @@
  * their own screens (see `conversation.tsx`), never pages in here.
  */
 import type { ReactNode } from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView, View, type ImageSourcePropType } from 'react-native';
+import { usePostHog } from 'posthog-react-native';
 
 import {
   Questionnaire,
@@ -19,6 +20,11 @@ import { AppText } from '@/src/components/shared/app-text';
 import { MascotSays } from '@/src/features/intake/questionnaire/mascot';
 import { IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
 import { applyCap } from '@/src/features/intake/answer-rules';
+import {
+  stepKeyOfAnswer,
+  trackQuestionAnswered,
+  trackStepViewed,
+} from '@/src/features/intake/analytics';
 import type { IntakeQuestion } from '@/src/features/intake/questions';
 
 const NO_CAPS: readonly string[] = [];
@@ -85,6 +91,34 @@ export function SectionScreen({
   const setAnswers = onChange ?? setOwn;
   const scroller = useRef<ScrollView>(null);
 
+  /*
+   * The funnel's per-question steps (T7, #267) are only visible from in here:
+   * a section is one route, and the questions inside it are paged by the
+   * questionnaire itself.
+   */
+  const posthog = usePostHog();
+  const active = useRef<string | null>(null);
+  const orderOf = (name: string) => items.findIndex((item) => item.name === name);
+
+  useEffect(() => {
+    // The first question — the only one `onItemChange` never reports, since
+    // nothing moved to it.
+    const first = items.find((item) => !item.disabled)?.name;
+    const key = first ? stepKeyOfAnswer(first) : undefined;
+    if (!first || !key) return;
+    active.current = first;
+    trackStepViewed(posthog, key);
+    // Mount only: `items` is rebuilt every render, and the branch can only
+    // ever append questions after this one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const trackCommit = (name: string | null, from: QuestionnaireAnswers) => {
+    const key = name ? stepKeyOfAnswer(name) : undefined;
+    const answer = name ? from[name] : undefined;
+    if (key && answer !== undefined) trackQuestionAnswered(posthog, key, answer);
+  };
+
   return (
     <IntakeScreen>
       <ScrollView
@@ -109,8 +143,21 @@ export function SectionScreen({
           // Only the active question is mounted, but the scroller is ours and
           // keeps its offset — so a long list like Q3 would drop the next
           // question in mid-page with its own text scrolled off the top.
-          onItemChange={() => scroller.current?.scrollTo({ y: 0, animated: true })}
-          onSubmit={onDone}
+          onItemChange={(name) => {
+            scroller.current?.scrollTo({ y: 0, animated: true });
+            const previous = active.current;
+            active.current = name;
+            const key = stepKeyOfAnswer(name);
+            if (key) trackStepViewed(posthog, key);
+            // Only a forward move is an answer being committed: the way on is
+            // gated on an answer, the way back isn't, and the answer a back
+            // step leaves behind was recorded on the way in.
+            if (previous && orderOf(name) > orderOf(previous)) trackCommit(previous, answers);
+          }}
+          onSubmit={(final) => {
+            trackCommit(active.current, final);
+            onDone(final);
+          }}
           swipeable
         >
           <Questionnaire.Progress variant="pips" />

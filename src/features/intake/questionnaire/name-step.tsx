@@ -22,7 +22,8 @@ import { playSoftPress } from '@/src/lib/haptics';
 
 interface NameStepProps {
   initialName: string;
-  onDone: (name: string) => void;
+  /** `edited` is false when the suggested handle was kept as-is. */
+  onDone: (name: string, edited: boolean) => void;
 }
 
 export function NameStep({ initialName, onDone }: NameStepProps) {
@@ -32,7 +33,7 @@ export function NameStep({ initialName, onDone }: NameStepProps) {
   const advance = () => {
     if (name.trim().length === 0) return;
     playSoftPress();
-    onDone(name.trim());
+    onDone(name.trim(), name.trim() !== initialName);
   };
 
   return (

@@ -38,6 +38,9 @@ const FALLBACK = {
   monthly: { price: "$9.99/mo", detail: "billed monthly", numericPrice: 9.99 },
 } as const;
 
+/** Why the paywall is closing — intake's `intake_completed` outcome hangs on it. */
+export type PaywallExitReason = "purchased" | "dismissed";
+
 type Props = {
   surface?: PaywallSurface;
   /**
@@ -45,13 +48,13 @@ type Props = {
    * paywall route; intake overrides it to run its terminal step, since it has
    * no back edge to pop to.
    */
-  onExit?: () => void;
+  onExit?: (reason: PaywallExitReason) => void;
 };
 
 export function PaywallScreen({ surface, onExit }: Props) {
   const posthog = usePostHog();
   const defaultClose = usePaywall((s) => s.close);
-  const closePaywall = onExit ?? defaultClose;
+  const closePaywall = onExit ?? (() => defaultClose());
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { offerings, purchase, isLoading, refreshOfferings } = useRevenueCat();
@@ -114,7 +117,7 @@ export function PaywallScreen({ surface, onExit }: Props) {
     setBusy(true);
     purchase(selectedPkg, surface ?? undefined)
       .then((ok) => {
-        if (ok) closePaywall(); // server entitlement query flips reactively
+        if (ok) closePaywall("purchased"); // server entitlement query flips reactively
       })
       .finally(() => setBusy(false));
   };
@@ -129,7 +132,7 @@ export function PaywallScreen({ surface, onExit }: Props) {
           <PaywallCloseButton
             surface={surface}
             sessionCount={summary?.sessionCount ?? null}
-            onClose={onExit}
+            onClose={onExit && (() => onExit("dismissed"))}
           />
         </Stack.Toolbar.View>
       </Stack.Toolbar>

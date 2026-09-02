@@ -6,12 +6,20 @@
  * no back edge, so the step cursor is state, not history, and a cold kill lands
  * back at the start with the (non-persisted) answers slice already empty.
  */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery } from 'convex/react';
+import { usePostHog } from 'posthog-react-native';
 
 import { api } from '@/convex/_generated/api';
 import type { QuestionnaireAnswers } from '@/src/components/ui/questionnaire';
+import {
+  trackPaywallSkipped,
+  trackQuestionAnswered,
+  trackQuestionnaireCompleted,
+  trackStepViewed,
+  type IntakeStepKey,
+} from '@/src/features/intake/analytics';
 import { BeatStep } from '@/src/features/intake/questionnaire/beat-step';
 import { CompoundingStep } from '@/src/features/intake/questionnaire/compounding-step';
 import { CountStep } from '@/src/features/intake/questionnaire/count-step';
@@ -38,6 +46,17 @@ type Step =
   | 'shake'
   | 'finding'
   | 'count';
+
+/**
+ * The steps this screen owns a funnel entry for (T7 §2.3). The section screens
+ * fire their own per-question steps; the beats, the compounding screen and the
+ * camper count carry no answer and are not in the taxonomy.
+ */
+const STEP_KEYS: Partial<Record<Step, IntakeStepKey>> = {
+  name: 'username',
+  privacy: 'interstitial_privacy',
+  shake: 'interstitial_feedback_awareness',
+};
 
 /**
  * Q11 is presented as Yes/No, so the questionnaire holds it as a string; the
@@ -69,6 +88,13 @@ export default function IntakeQuestionnaire() {
   const finishing = useRef(false);
   const finalAnswers = useRef<QuestionnaireAnswers | null>(null);
 
+  const posthog = usePostHog();
+  const completed = useRef(false);
+  useEffect(() => {
+    const key = STEP_KEYS[step];
+    if (key) trackStepViewed(posthog, key);
+  }, [step, posthog]);
+
   const recordAndAdvance = (answers: QuestionnaireAnswers, next: Step) => {
     setIntakeAnswers(toIntakeAnswers(answers));
     setStep(next);
@@ -90,14 +116,24 @@ export default function IntakeQuestionnaire() {
     if (finishing.current) return;
     finishing.current = true;
     setIntakeAnswers(toIntakeAnswers(answers));
+    // Read back rather than reusing `answers`: this event carries the whole
+    // set — Q1 included — and the person-property dual-write with it. Its own
+    // latch, because the one above comes off again after a failed write and
+    // the questionnaire is only finished once however many times Done is
+    // pressed after that.
+    if (!completed.current) {
+      completed.current = true;
+      trackQuestionnaireCompleted(posthog, useAppStore.getState().intakeAnswers);
+    }
     if (!isPlus) {
       router.push('/(intake)/paywall');
       return;
     }
+    trackPaywallSkipped(posthog);
     // `completeIntake` swallows a failed write (toast + stay put), so the latch
     // has to come off or Done is inert for the rest of the flow — and intake
     // has no back edge to escape through.
-    void completeIntake().finally(() => {
+    void completeIntake('skipped_paywall').finally(() => {
       finishing.current = false;
     });
   };
@@ -110,7 +146,10 @@ export default function IntakeQuestionnaire() {
       return (
         <NameStep
           initialName={context.preferences?.displayName || suggestHandle()}
-          onDone={(displayName) => {
+          onDone={(displayName, edited) => {
+            // The handle itself never leaves the device — only whether the
+            // suggested one was kept (T7 §2.3).
+            trackQuestionAnswered(posthog, 'username', edited ? 'edited' : 'accepted_suggested');
             setName(displayName);
             recordAndAdvance({ displayName }, 'hey');
           }}

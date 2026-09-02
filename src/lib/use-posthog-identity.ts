@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useConvexAuth, useQuery } from 'convex/react';
 import { usePostHog } from 'posthog-react-native';
 import { api } from '@/convex/_generated/api';
+import { intakePersonProperties } from '@/src/features/intake/analytics';
 
 /**
  * Identify the client on the pseudonymous `emotional_profiles._id`.
@@ -43,10 +44,19 @@ export function usePostHogIdentity() {
     // only way to confirm the call on a dev build.
     if (__DEV__) console.log('[posthog] identify', profileId);
 
+    // Intake answers as person properties (T7, issue #267). The dual-write
+    // proper happens at questionnaire submit; this is the backfill, and it is
+    // the only path for an install that ran intake before it shipped — intake
+    // never runs twice.
+    const intake = context.intake
+      ? intakePersonProperties(context.intake, context.intake.intakeVersion)
+      : null;
+
     posthog.identify(profileId, {
-      $set: { auth_provider: context.user.authProvider },
+      $set: { auth_provider: context.user.authProvider, ...intake?.$set },
       $set_once: {
         first_sign_in_date: new Date(context.user.createdAt).toISOString(),
+        ...intake?.$set_once,
       },
     });
   }, [context, posthog, isAuthenticated]);

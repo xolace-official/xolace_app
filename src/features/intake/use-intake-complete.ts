@@ -1,10 +1,12 @@
 import { useMutation } from 'convex/react';
 import { useRouter } from 'expo-router';
 import { useToast } from 'heroui-native';
+import { usePostHog } from 'posthog-react-native';
 import type { FunctionArgs } from 'convex/server';
 import * as Sentry from '@sentry/react-native';
 
 import { api } from '@/convex/_generated/api';
+import { trackIntakeCompleted, type IntakeOutcome } from '@/src/features/intake/analytics';
 import { useAppStore } from '@/src/store/store';
 
 type CompleteArgs = FunctionArgs<typeof api.intake.complete>;
@@ -22,8 +24,9 @@ export function useIntakeComplete() {
   const complete = useMutation(api.intake.complete);
   const router = useRouter();
   const { toast } = useToast();
+  const posthog = usePostHog();
 
-  return async () => {
+  return async (outcome: IntakeOutcome) => {
     const { intakeAnswers, resetIntakeAnswers } = useAppStore.getState();
     try {
       await complete(intakeAnswers as CompleteArgs);
@@ -39,6 +42,9 @@ export function useIntakeComplete() {
       });
       return;
     }
+    // After the mutation resolves, before the slice is cleared — a failed
+    // write stays out of the funnel, since the user is still in intake.
+    trackIntakeCompleted(posthog, outcome, intakeAnswers);
     resetIntakeAnswers();
     router.replace('/(protected)');
   };

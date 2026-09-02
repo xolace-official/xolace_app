@@ -17,5 +17,12 @@ import { PaywallScreen } from '@/src/features/purchases/screens/paywall-screen';
 export default function IntakePlans() {
   const completeIntake = useIntakeComplete();
 
-  return <PaywallScreen surface="intake" onExit={() => void completeIntake()} />;
+  return (
+    <PaywallScreen
+      surface="intake"
+      onExit={(reason) =>
+        void completeIntake(reason === 'purchased' ? 'purchased' : 'dismissed_paywall')
+      }
+    />
+  );
 }

@@ -1,12 +1,15 @@
+import { useEffect, useRef } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Button, useThemeColor } from 'heroui-native';
 import { useQuery } from 'convex/react';
+import { usePostHog } from 'posthog-react-native';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { trackIntakeStarted } from '@/src/features/intake/analytics';
 import { GateFade } from '@/src/features/profile/components/gate-fade';
 import { IntakeBlank } from '@/src/features/intake/questionnaire/intake-screen';
 import { FounderMarquee } from '@/src/features/intake/founder-message/founder-marquee';
@@ -42,6 +45,18 @@ export default function IntakeIndex() {
   // subscribed to it and Convex dedupes, so reading `sessionCount` off it costs
   // nothing — whereas a second query is a second thing to be undefined.
   const context = useQuery(api.users.getFullContext);
+
+  // Funnel entry (T7, #267). Held until the count resolves — `session_count`
+  // and `is_returning_user` are the funnel's two breakdowns, so firing early
+  // with a guessed zero would mislabel every returning user. The latch is what
+  // keeps a re-render from re-entering the funnel and restarting the clock.
+  const posthog = usePostHog();
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current || context === undefined) return;
+    started.current = true;
+    trackIntakeStarted(posthog, context.profile.sessionCount);
+  }, [context, posthog]);
 
   // Never guess the audience: an unresolved count would silently render a
   // returning user the new-user letter. The root gate already blocks on this

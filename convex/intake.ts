@@ -2,15 +2,12 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { reflectionRank } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
-import { intakeAnswerValidators } from "./lib/validators";
+import { INTAKE_VERSION, intakeAnswerValidators } from "./lib/validators";
 import { validateDisplayName } from "./lib/displayName";
 
-/**
- * Questionnaire revision stamped onto every row written from here. A
- * capture-time stamp, NOT a re-prompt gate — bumping it never re-interrogates
- * anyone (T3, issue #234). Server-owned: the client never sends a version.
- */
-export const INTAKE_VERSION = 1;
+// Lives in `lib/validators` so the client can read it for the `intake_version`
+// person property (T7) without importing a server module.
+export { INTAKE_VERSION };
 
 /** Max options a multi-select question accepts. A validator can't express it. */
 const MAX_SELECTIONS = 3;

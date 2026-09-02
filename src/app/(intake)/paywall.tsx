@@ -20,6 +20,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { IntakeBlank, IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
+import { trackStepViewed } from '@/src/features/intake/analytics';
 import { intentLine } from '@/src/features/intake/paywall/intent-line';
 import {
   InsightsOfferCard,
@@ -78,13 +79,16 @@ export default function IntakeOffer() {
     // purchased rate stays comparable to the rest. This is the A/B impression
     // — it is where the personalized line is or isn't shown.
     track('intake_offer_opened');
+    // The last step of the funnel's paged flow (T7 §2.3) — this deck is what
+    // `step_key: "paywall"` means, not the pricing screen behind it.
+    trackStepViewed(posthog, 'paywall');
     // Once on mount — this is the impression, not a re-render signal.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDismiss = () => {
     track('paywall_dismissed');
-    void completeIntake();
+    void completeIntake('dismissed_paywall');
   };
 
   /*
@@ -101,7 +105,7 @@ export default function IntakeOffer() {
     useCallback(() => {
       if (!isPlus || skipping.current) return;
       skipping.current = true;
-      void completeIntake();
+      void completeIntake('skipped_paywall');
     }, [isPlus, completeIntake])
   );
 
