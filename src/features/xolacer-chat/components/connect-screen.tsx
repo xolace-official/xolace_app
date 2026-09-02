@@ -95,8 +95,11 @@ export function ConnectScreen({
   const loading = status === undefined || conversations === undefined;
   const archivedChats = (conversations ?? []).filter((c) => c.archived);
   const activeChats = (conversations ?? []).filter((c) => !c.archived);
+  // Archived ones count: archiving your last active chat shouldn't bounce you
+  // to the roster, it should leave you on Chats with the Archived row in front
+  // of you. Only someone with no conversations at all meets the roster.
   const segment: Segment =
-    selected ?? (activeChats.length > 0 ? 'chats' : 'xolacers');
+    selected ?? ((conversations ?? []).length > 0 ? 'chats' : 'xolacers');
   // The sheet outlives the list it was raised from now that it renders out
   // here, so leaving Chats — by the segment control or by a notification —
   // would strand it over the roster with the tab bar still hidden.
