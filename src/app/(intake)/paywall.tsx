@@ -12,7 +12,7 @@
  * dismissal budget. Do not connect them.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ScrollView, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button } from 'heroui-native';
 import { usePostHog, useFeatureFlag } from 'posthog-react-native';
@@ -39,6 +39,15 @@ export const INTAKE_PERSONALIZED_LINE_FLAG = 'intake-paywall-personalized-line';
 
 const GAP = 14;
 const EDGE = 20;
+
+const styles = StyleSheet.create({
+  deck: {
+    paddingHorizontal: EDGE,
+    gap: GAP,
+    alignItems: 'stretch',
+    paddingVertical: 4,
+  },
+});
 
 export default function IntakeOffer() {
   const router = useRouter();
@@ -208,12 +217,7 @@ export default function IntakeOffer() {
           decelerationRate="fast"
           snapToInterval={cardWidth + GAP}
           snapToAlignment="start"
-          contentContainerStyle={{
-            paddingHorizontal: EDGE,
-            gap: GAP,
-            alignItems: 'stretch',
-            paddingVertical: 4,
-          }}
+          contentContainerStyle={styles.deck}
         >
           <VoiceOfferCard width={cardWidth} />
           <XolacersOfferCard width={cardWidth} />
