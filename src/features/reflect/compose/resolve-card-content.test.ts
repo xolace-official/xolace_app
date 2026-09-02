@@ -79,9 +79,9 @@ describe("resolveCardContent — type scale", () => {
   });
 
   it("drops long text to the smaller scale", () => {
-    for (const tier of Object.keys(QUIET_RETURN_PROMPTS) as Array<
-      keyof typeof QUIET_RETURN_PROMPTS
-    >) {
+    for (const tier of Object.keys(
+      QUIET_RETURN_PROMPTS
+    ) as (keyof typeof QUIET_RETURN_PROMPTS)[]) {
       expect(resolveCardContent({ quietReturnTier: tier }).scale).toBe("small");
     }
     expect(

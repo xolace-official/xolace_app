@@ -1,31 +1,29 @@
 import { Platform } from "react-native";
 import { useEffect, useRef } from "react";
 import { Accelerometer } from "expo-sensors";
-import { leadingDebounce } from "../engine/debounce";
+import { createShakeDetector } from "./shake-detector";
 
 /**
- * Units matter here: the speed formula below is the classic Android shake
- * snippet, whose 800 threshold assumes SensorManager values in m/s². expo-sensors
- * reports **g** (~9.81x smaller), so the equivalent is ~80. 100 keeps it a
- * deliberate shake rather than a pocket jostle.
+ * Explicit, because the platform defaults disagree — Android gates at 100ms
+ * while iOS leaves CoreMotion at its ~100Hz default. 50ms is fast enough to
+ * catch every half-cycle of a 4Hz shake and cheap enough to leave running.
  */
-const SHAKE_THRESHOLD = 100;
-const SAMPLE_INTERVAL_MS = 100;
-const DEBOUNCE_MS = 500;
+const SAMPLE_INTERVAL_MS = 50;
 
 type Options = {
   /** Pure-derived per call-site. When false, no accelerometer subscription. */
   enabled: boolean;
-  /** Fired (leading-debounced) on a qualifying shake or the dev menu item. */
+  /** Fired on a qualifying shake. */
   onShake: () => void;
 };
 
 /**
  * Subscribes to the accelerometer only while `enabled`, and tears the
  * subscription down when disabled or on unmount (covers navigating away from a
- * screen-scoped call site). A 500ms leading debounce absorbs rapid repeat
- * shakes. The dev-menu fallback is registered once globally (see
- * useDevMenuTrigger), not here, to avoid duplicate menu items.
+ * screen-scoped call site). Shake qualification lives in `createShakeDetector`
+ * — see its tests for the motion it does and does not accept. The dev-menu
+ * fallback is registered once globally (see useDevMenuTrigger), not here, to
+ * avoid duplicate menu items.
  */
 export const useShakeToOpen = ({ enabled, onShake }: Options) => {
   const onShakeRef = useRef(onShake);
@@ -37,29 +35,15 @@ export const useShakeToOpen = ({ enabled, onShake }: Options) => {
     if (!enabled || Platform.OS === "web") return;
 
     let cancelled = false;
-    let lastUpdate = 0;
-    let lastX = 0;
-    let lastY = 0;
-    let lastZ = 0;
-    const fire = leadingDebounce(() => onShakeRef.current(), DEBOUNCE_MS);
+    const detect = createShakeDetector();
     let subscription: ReturnType<typeof Accelerometer.addListener> | null =
       null;
 
     Accelerometer.isAvailableAsync().then((available) => {
       if (!available || cancelled) return;
-      subscription = Accelerometer.addListener(({ x, y, z }) => {
-        const now = Date.now();
-        if (now - lastUpdate <= SAMPLE_INTERVAL_MS) return;
-        const diff = now - lastUpdate;
-        lastUpdate = now;
-        const speed =
-          ((Math.abs(x - lastX) + Math.abs(y - lastY) + Math.abs(z - lastZ)) /
-            diff) *
-          10000;
-        if (speed > SHAKE_THRESHOLD) fire();
-        lastX = x;
-        lastY = y;
-        lastZ = z;
+      Accelerometer.setUpdateInterval(SAMPLE_INTERVAL_MS);
+      subscription = Accelerometer.addListener((sample) => {
+        if (detect(sample, Date.now())) onShakeRef.current();
       });
     });
 

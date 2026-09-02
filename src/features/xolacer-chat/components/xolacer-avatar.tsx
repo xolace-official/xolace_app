@@ -29,7 +29,13 @@ export function XolacerAvatar({
 
   if (photoUrl) {
     return (
-      <View className={cn(box, 'rounded-full overflow-hidden bg-surface-secondary')}>
+      <View
+        className={cn(
+          box,
+          'rounded-full overflow-hidden bg-surface-secondary',
+          muted && 'opacity-50',
+        )}
+      >
         <Image source={{ uri: photoUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
       </View>
     );

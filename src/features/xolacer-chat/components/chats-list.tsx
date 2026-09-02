@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PressableFeedback } from 'heroui-native';
@@ -10,81 +11,59 @@ import { ConversationRow } from './conversation-row';
 export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConversations>;
 
 /**
- * All lifecycle states live in one list — resting rows dim rather than hide
- * (the history is the point), and a xolacer's incoming requests sit inline
- * with accept/decline so "Waiting" is never a screen to remember.
+ * All lifecycle states live in one flat list — one continuous run of rows the
+ * way every messaging app reads, so a request or a resting thread is never a
+ * screen to remember.
  *
- * Archive is the one thing that does hide a row, and it renders through this
- * same component: `archived` swaps which half of the list it was handed, not
- * which screen you're on.
+ * Archive is the one thing that does hide a row, and it is a route rather than
+ * a filter over this list: a place with an address, reached from an entry row
+ * passed in as `header`, so it inherits the stack's header and back button and
+ * the tab bar keeps working. This component only ever renders the list it was
+ * handed — both screens hand it the same kind of rows.
  *
  * The long-press action sheet is deliberately not rendered here — see
  * `useConversationRowActions` for where it has to live instead.
  */
 export function ChatsList({
   conversations,
-  archived,
-  archivedCount,
-  onToggleArchived,
+  empty,
+  header,
   onBrowseXolacers,
   onLongPress,
   onOpen,
-  onUnarchive,
 }: {
   conversations: ConversationList;
-  archived: boolean;
-  archivedCount: number;
-  onToggleArchived: () => void;
-  onBrowseXolacers: () => void;
+  /**
+   * Copy for the empty state. Defaults to the never-had-a-chat one; a caller
+   * that filtered the list (Connect hides archived rows) has to say so itself,
+   * or someone whose chats are all archived is told they have none.
+   */
+  empty?: { title: string; body: string };
+  /** Rendered above the rows, full-bleed like them. */
+  header?: ReactNode;
+  /** Omitted where there is nowhere to browse from — the Archived screen. */
+  onBrowseXolacers?: () => void;
   onLongPress: (conversation: ConversationList[number]) => void;
   onOpen: () => void;
-  onUnarchive: (conversation: ConversationList[number]) => void;
 }) {
   const router = useRouter();
-
-  const header = archived ? (
-    <PressableFeedback
-      onPress={() => {
-        playSoftPress();
-        onToggleArchived();
-      }}
-      accessibilityRole="button"
-      accessibilityLabel="Back to chats"
-    >
-      <AppText className="text-[13px] font-semibold text-accent">← Chats</AppText>
-    </PressableFeedback>
-  ) : archivedCount > 0 ? (
-    <PressableFeedback
-      onPress={() => {
-        playSoftPress();
-        onToggleArchived();
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={`Archived, ${archivedCount} conversations`}
-    >
-      <AppText className="text-[13px] font-semibold text-muted">
-        Archived ({archivedCount}) →
-      </AppText>
-    </PressableFeedback>
-  ) : null;
 
   if (conversations.length === 0) {
     return (
       <View className="gap-2.5">
-        {header}
+        {header && <View className="-mx-4">{header}</View>}
         <View className="min-h-95 items-center justify-center gap-2.5 px-8">
           <View className="h-12 w-12 rounded-2xl bg-surface-secondary items-center justify-center">
-            <AppText className="text-lg">{archived ? '🗂️' : '💬'}</AppText>
+            <AppText className="text-lg">💬</AppText>
           </View>
           <AppText className="text-[15px] font-semibold text-foreground">
-            {archived ? 'Nothing archived' : 'No conversations yet'}
+            {empty?.title ?? 'No conversations yet'}
           </AppText>
           <AppText className="text-[13px] text-muted text-center leading-5 max-w-60">
-            {archived
-              ? 'Archived conversations live here until something new happens on them.'
-              : "When you message a Xolacer, it'll live here - including anything you've talked about before."}
+            {empty?.body ??
+              "When you message a Xolacer, it'll live here - including anything you've talked about before."}
           </AppText>
-          {!archived && (
+          {onBrowseXolacers && (
             <PressableFeedback
               onPress={() => {
                 playSoftPress();
@@ -104,12 +83,15 @@ export function ChatsList({
   }
 
   return (
-    <View className="gap-2.5">
+    // Rows are full-bleed, so the list cancels the scroll container's own
+    // horizontal padding and each row puts it back on itself.
+    <View className="-mx-4">
       {header}
-      {conversations.map((conversation) => (
+      {conversations.map((conversation, index) => (
         <ConversationRow
           key={conversation.id}
           conversation={conversation}
+          showSeparator={index < conversations.length - 1}
           onPress={() => {
             playSoftPress();
             // Opening a thread leaves this screen mounted, so a sheet raised on
@@ -125,7 +107,6 @@ export function ChatsList({
             playSoftPress();
             onLongPress(conversation);
           }}
-          onUnarchive={archived ? () => onUnarchive(conversation) : undefined}
         />
       ))}
     </View>
