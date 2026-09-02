@@ -7,9 +7,11 @@
  * purchase run intake's terminal step rather than popping a modal, because
  * intake has no back edge to pop to.
  *
- * This is the screen that fires `paywall_opened{surface:"intake"}` — on every
- * other surface that event means "saw pricing", and the offer deck before this
- * one carries no price. The deck's own impression is `intake_offer_opened`.
+ * This is the screen that fires `paywall_opened{surface:"intake"}` and its
+ * `paywall_dismissed` — on every other surface those mean "saw pricing" and
+ * "left pricing", and the offer deck before this one carries no price. The deck
+ * has its own pair, `intake_offer_opened` / `intake_offer_dismissed`; keeping
+ * them apart is what keeps intake's dismissal rate inside [0, 1].
  */
 import { useIntakeComplete } from '@/src/features/intake/use-intake-complete';
 import { PaywallScreen } from '@/src/features/purchases/screens/paywall-screen';

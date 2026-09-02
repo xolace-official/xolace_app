@@ -102,7 +102,13 @@ export default function IntakeOffer() {
   }, [shownArm]);
 
   const handleDismiss = () => {
-    track('paywall_dismissed', shownArm === true);
+    // Paired with `intake_offer_opened`, not `paywall_dismissed`: on the other
+    // three surfaces a dismissal is a dismissal of *pricing*, and this screen
+    // carries none. Firing `paywall_dismissed{surface:"intake"}` here would let
+    // intake's dismissals outnumber its `paywall_opened`s — that event fires on
+    // `(intake)/plans`, which a deck-dismisser never reaches. The pricing screen
+    // still fires it, so intake's dismissal rate means what it does elsewhere.
+    track('intake_offer_dismissed', shownArm === true);
     void completeIntake('dismissed_paywall');
   };
 
