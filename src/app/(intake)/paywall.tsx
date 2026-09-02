@@ -47,7 +47,7 @@ export default function IntakeOffer() {
   const answers = useAppStore((s) => s.intakeAnswers);
   const { width, height } = useWindowDimensions();
   const reduced = useEffectiveReducedMotion();
-  const { isPlus } = usePlusEntitlement();
+  const { isPlus, isResolved } = usePlusEntitlement();
   const skipping = useRef(false);
   const [skipFailed, setSkipFailed] = useState(false);
 
@@ -55,7 +55,17 @@ export default function IntakeOffer() {
   // a slow flag load can never show a half-personalized screen.
   const arm = useFeatureFlag(INTAKE_PERSONALIZED_LINE_FLAG);
   const personalized = arm === true || arm === 'test';
-  const line = intentLine(answers, personalized);
+
+  // The arm is frozen at the instant the impression fires, and the line renders
+  // from the frozen value — never from the live flag. A flag landing after mount
+  // would otherwise show the treatment line against a control impression, which
+  // contaminates both arms. `null` = the impression hasn't fired yet.
+  const [shownArm, setShownArm] = useState<boolean | null>(null);
+  // Latched during render, not in an effect: the deck and the impression have
+  // to agree, and an effect would let one frame of the deck render against a
+  // still-null arm.
+  if (shownArm === null && isResolved && !isPlus) setShownArm(personalized);
+  const line = intentLine(answers, shownArm === true);
 
   // The peek on the right is what says "there is more" — the deck has no dots.
   const cardWidth = Math.min(width - EDGE * 2 - 44, 320);
@@ -64,31 +74,35 @@ export default function IntakeOffer() {
   const deckHeight = Math.min(430, height * 0.54);
 
   // Session 0 by construction: intake runs once, before any session exists.
-  const track = (event: string) =>
+  const track = (event: string, treatment: boolean) =>
     posthog.capture(event, {
       surface: 'intake',
       session_count: 0,
-      personalized,
-      arm: personalized ? 'treatment' : 'control',
+      personalized: treatment,
+      arm: treatment ? 'treatment' : 'control',
     });
 
   useEffect(() => {
-    if (isPlus) return; // already entitled at mount — nothing was shown
+    // Keyed on the latch above, so "shown" and "counted as shown" are the same
+    // moment. `isPlus` is false until *both* entitlement sources answer, so an
+    // on-mount capture counted subscribers who are pushed straight back out by
+    // the focus effect below and never see this screen.
+    if (shownArm === null) return;
     // Its own event, not `paywall_opened`: on the other three surfaces that
     // event means "saw pricing", and there is no price on this screen. The
     // pricing impression fires from `(intake)/plans`, so intake's opened →
     // purchased rate stays comparable to the rest. This is the A/B impression
     // — it is where the personalized line is or isn't shown.
-    track('intake_offer_opened');
+    track('intake_offer_opened', shownArm);
     // The last step of the funnel's paged flow (T7 §2.3) — this deck is what
     // `step_key: "paywall"` means, not the pricing screen behind it.
     trackStepViewed(posthog, 'paywall');
-    // Once on mount — this is the impression, not a re-render signal.
+    // `track` is re-created every render; `shownArm` only ever flips once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [shownArm]);
 
   const handleDismiss = () => {
-    track('paywall_dismissed');
+    track('paywall_dismissed', shownArm === true);
     void completeIntake('dismissed_paywall');
   };
 
@@ -147,6 +161,12 @@ export default function IntakeOffer() {
       </IntakeScreen>
     );
   }
+
+  // Hold a blank frame until the impression has fired. The deck must not be on
+  // screen before entitlement resolves: a subscriber whose SDK was still
+  // loading would get a flash of the pitch the focus effect above exists to
+  // spare them, and the arm would be logged against a screen nobody saw.
+  if (shownArm === null) return <IntakeBlank />;
 
   return (
     <IntakeScreen>
