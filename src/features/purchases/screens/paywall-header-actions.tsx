@@ -18,9 +18,19 @@ type CloseProps = {
   sessionCount?: number | null;
   /** Overrides the route close — see PaywallScreen's `onExit`. */
   onClose?: () => void;
+  /**
+   * Set once an exit is already in flight. Blocks the press *here* rather than
+   * in the handler, so a second tap can't fire a second `paywall_dismissed`.
+   */
+  isDisabled?: boolean;
 };
 
-export function PaywallCloseButton({ surface, sessionCount = null, onClose }: CloseProps) {
+export function PaywallCloseButton({
+  surface,
+  sessionCount = null,
+  onClose,
+  isDisabled = false,
+}: CloseProps) {
   const posthog = usePostHog();
   const defaultClose = usePaywall((s) => s.close);
   const closePaywall = onClose ?? defaultClose;
@@ -30,6 +40,7 @@ export function PaywallCloseButton({ surface, sessionCount = null, onClose }: Cl
     <PressableFeedback
       accessibilityRole="button"
       accessibilityLabel="Close"
+      isDisabled={isDisabled}
       hitSlop={12}
       onPress={() => {
         posthog.capture("paywall_dismissed", {

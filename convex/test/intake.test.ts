@@ -101,6 +101,23 @@ describe("intake.complete", () => {
     });
   });
 
+  it("rejects a half-filled series pair, writing nothing", async () => {
+    const user = await asNewUser();
+
+    await expectCode(
+      () =>
+        user.t.mutation(api.intake.complete, {
+          ...ANSWERS,
+          acquisitionSource: "short_form_video",
+          seriesSeen: "loved_it",
+        }),
+      "missing_series_answer",
+    );
+
+    expect(await readIntake(user)).toBeNull();
+    expect(await readState(user)).toMatchObject({ onboardingComplete: false });
+  });
+
   it("rejects a multi-select over three, writing nothing", async () => {
     const user = await asNewUser();
 

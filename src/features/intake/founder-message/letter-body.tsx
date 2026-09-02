@@ -8,11 +8,7 @@ import {
   RETURNING_CALLOUT_LABEL,
   type AudienceKey,
   type Segment,
-} from './letter-copy';
-
-// The founder message body: shared heart, then the returning-user callout
-// (highlighted block, existing users only), then the shared hand-off line and
-// sign-off.
+} from '@/src/features/intake/founder-message/letter-copy';
 
 const PARAGRAPH_CLASS = 'text-foreground/80 text-[15px] leading-6.5 font-[Poppins-Regular]';
 

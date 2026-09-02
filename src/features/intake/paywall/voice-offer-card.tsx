@@ -6,10 +6,10 @@
 import { View } from 'react-native';
 import { PressableFeedback } from 'heroui-native';
 import { SymbolView } from 'expo-symbols';
-import { useCSSVariable } from 'uniwind';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { OFFER_MASCOT, OfferCard } from '@/src/features/intake/paywall/offer-card';
+import { useTokenColor } from '@/src/features/profile/hooks/use-token-color';
 import { useVoicePreview } from '@/src/features/settings/hooks/use-voice-preview';
 import { VOICE_OPTIONS } from '@/src/features/settings/voice-options';
 import { playSoftPress } from '@/src/lib/haptics';
@@ -22,7 +22,7 @@ const PREMIUM_VOICES = VOICE_OPTIONS.filter((o) => o.premium && o.value !== 'aut
 /** Card 1 — the only interactive one. Hearing the voice is the whole sell. */
 export function VoiceOfferCard({ width }: { width: number }) {
   const preview = useVoicePreview();
-  const ink = useCSSVariable('--color-offer-ink') as string;
+  const ink = useTokenColor('offer-ink');
 
   return (
     <OfferCard tag="Voices" title="Pick your Xolace voice" tint="witnessed" width={width} mascot={OFFER_MASCOT.voices}>
@@ -49,14 +49,14 @@ export function VoiceOfferCard({ width }: { width: number }) {
               <AppText className="text-[15px] text-offer-ink font-[Poppins-Medium]">
                 {voice.label}
               </AppText>
-              <AppText numberOfLines={1} className="text-[12px] text-offer-ink/60 font-[Poppins-Regular]">
+              <AppText numberOfLines={1} className="text-[12px] text-offer-ink/65 font-[Poppins-Regular]">
                 {voice.description}
               </AppText>
             </View>
           </PressableFeedback>
         );
       })}
-      <AppText className="text-[13px] leading-[18px] text-offer-ink/70 font-[Poppins-Regular]">
+      <AppText className="text-[13px] leading-4.5 text-offer-ink/70 font-[Poppins-Regular]">
         Tap one — that&apos;s how your reflections get read back.
       </AppText>
     </OfferCard>

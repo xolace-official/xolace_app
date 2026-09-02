@@ -22,8 +22,10 @@ export default function IntakePlans() {
   return (
     <PaywallScreen
       surface="intake"
+      // Returned, not fire-and-forget: `false` (a swallowed write) is what
+      // unlatches the paywall's single-flight exit guard.
       onExit={(reason) =>
-        void completeIntake(reason === 'purchased' ? 'purchased' : 'dismissed_paywall')
+        completeIntake(reason === 'purchased' ? 'purchased' : 'dismissed_paywall')
       }
     />
   );

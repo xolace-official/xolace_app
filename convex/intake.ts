@@ -61,6 +61,17 @@ export const complete = mutation({
     // never ran (never "declined").
     const branched = args.acquisitionSource === "short_form_video";
 
+
+    if (
+      branched &&
+      (args.seriesSeen === undefined || args.seriesWantInApp === undefined)
+    ) {
+      throw new ConvexError({
+        code: "missing_series_answer",
+        message: "Both series answers are required for short-form-video arrivals",
+      });
+    }
+
     const answers = {
       emotionalProfileId: profile._id,
       intakeVersion: INTAKE_VERSION,
