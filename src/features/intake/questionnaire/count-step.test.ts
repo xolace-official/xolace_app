@@ -53,7 +53,7 @@ describe('CountStep', () => {
 
   it('shows the numbers once they land', () => {
     const text = render({ campers: 1234, lighterPercent: 71 });
-    expect(text).toContain('1,234');
+    expect(text).toContain((1234).toLocaleString());
     expect(text.join(' ')).toMatch(/71\s*% say lighter/);
     expect(text).toContain('Continue');
   });

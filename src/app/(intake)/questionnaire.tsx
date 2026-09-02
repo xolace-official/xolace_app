@@ -126,7 +126,7 @@ export default function IntakeQuestionnaire() {
       trackQuestionnaireCompleted(posthog, useAppStore.getState().intakeAnswers);
     }
     if (!isPlus) {
-      router.push('/(intake)/paywall');
+      router.replace('/(intake)/paywall');
       return;
     }
     trackPaywallSkipped(posthog);
