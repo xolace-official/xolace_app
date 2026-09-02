@@ -141,11 +141,21 @@ let startedAt = 0;
  */
 let returningUser = false;
 
+/**
+ * Intake ends once, however many screens race to end it. The offer deck is
+ * still mounted under `(intake)/plans` when a purchase completes there, so a
+ * single frame of focus during teardown would otherwise emit a second
+ * `intake_completed` — with the opposite outcome. Module-level, because the
+ * racing calls come from two different components' copies of the hook.
+ */
+let completedFired = false;
+
 const durationMs = () => (startedAt === 0 ? 0 : Date.now() - startedAt);
 
 export function trackIntakeStarted(posthog: PostHog, sessionCount: number) {
   startedAt = Date.now();
   returningUser = sessionCount > 0;
+  completedFired = false;
   posthog.capture('intake_started', {
     session_count: sessionCount,
     is_returning_user: sessionCount > 0,
@@ -160,9 +170,14 @@ export function trackStepViewed(posthog: PostHog, stepKey: IntakeStepKey) {
 export function trackQuestionAnswered(
   posthog: PostHog,
   questionKey: IntakeStepKey,
-  value: string | string[]
+  value: string | string[],
+  /** Extra props for a question that needs one — see `username` below. */
+  extra?: Record<string, unknown>
 ) {
-  posthog.capture('intake_question_answered', questionAnsweredProps(questionKey, value));
+  posthog.capture('intake_question_answered', {
+    ...questionAnsweredProps(questionKey, value),
+    ...extra,
+  });
 }
 
 const branchedSeries = (answers: IntakeAnswers) =>
@@ -192,6 +207,8 @@ export function trackIntakeCompleted(
   outcome: IntakeOutcome,
   answers: IntakeAnswers
 ) {
+  if (completedFired) return;
+  completedFired = true;
   posthog.capture('intake_completed', {
     outcome,
     duration_ms: durationMs(),

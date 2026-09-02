@@ -139,22 +139,28 @@ export default function IntakeQuestionnaire() {
   };
 
   switch (step) {
-    case 'name':
+    case 'name': {
       // Held until the query answers so the field isn't seeded with a
       // suggestion the user's own saved name is about to replace.
       if (context === undefined) return <IntakeBlank />;
+      const saved = context.preferences?.displayName;
       return (
         <NameStep
-          initialName={context.preferences?.displayName || suggestHandle()}
+          initialName={saved || suggestHandle()}
           onDone={(displayName, edited) => {
             // The handle itself never leaves the device — only whether the
-            // suggested one was kept (T7 §2.3).
-            trackQuestionAnswered(posthog, 'username', edited ? 'edited' : 'accepted_suggested');
+            // one already in the field was kept (T7 §2.3). `had_saved_name`
+            // is what tells the two apart: an existing user was never shown a
+            // suggestion, so their "kept it" says nothing about suggestions.
+            trackQuestionAnswered(posthog, 'username', edited ? 'edited' : 'accepted_suggested', {
+              had_saved_name: !!saved,
+            });
             setName(displayName);
             recordAndAdvance({ displayName }, 'hey');
           }}
         />
       );
+    }
     case 'hey':
       return (
         <BeatStep
