@@ -8,14 +8,14 @@ import { isSpecialty } from '@/convex/lib/specialties';
 import PersonIcon from '@expo/material-symbols/person.xml';
 import BedtimeIcon from '@expo/material-symbols/bedtime.xml';
 import { AppText } from '@/src/components/shared/app-text';
-import { ConfirmationDialog } from '@/src/components/shared/confirmation-dialog';
 import { SegmentedControl } from '@/src/components/shared/segmented-control';
 import { cn } from '@/src/lib/utils';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useChatWarmup } from '../use-chat-warmup';
 import { useConversationRowActions } from '../use-conversation-row-actions';
-import { ChatActionSheet } from './chat-action-sheet';
+import { ArchivedEntryRow } from './archived-entry-row';
 import { ChatsList } from './chats-list';
+import { ConversationActions } from './conversation-actions';
 import { XolacerRoster } from './xolacer-roster';
 import { XolacerSetupBanner } from './xolacer-setup-banner';
 
@@ -66,11 +66,8 @@ export function ConnectScreen({
   const [filter, setFilter] = useState<string | null>(
     isSpecialty(specialty) ? specialty : null,
   );
-  // The Archived view is a filter over the same list, not a route — so it
-  // costs nothing to leave and nothing to come back to.
-  const [showArchived, setShowArchived] = useState(false);
-  const { sheetFor, setSheetFor, toggleArchive, close, deleteFor, setDeleteFor, confirmDelete } =
-    useConversationRowActions();
+  const actions = useConversationRowActions();
+  const { sheetFor, setSheetFor } = actions;
 
   // Arriving with a specialty (from a profile's "others listen to this too")
   // snaps to the roster filtered to it; arriving from a notification snaps to
@@ -125,6 +122,15 @@ export function ConnectScreen({
   // is gone, so the icon itself carries it: a moon instead of a face, on the
   // one control that leads to the switch.
   const paused = published && !status.xolacerActive;
+
+  // Archived is a screen in this stack rather than a filter swapped in under a
+  // text link: it gets a title, a back button and a place in the history, and
+  // you can leave for another tab from it without backing out first. All that
+  // is left here is the way in, and only once there is something behind it.
+  const archivedEntry =
+    archivedChats.length > 0 ? (
+      <ArchivedEntryRow count={archivedChats.length} showSeparator={activeChats.length > 0} />
+    ) : undefined;
 
   return (
     <>
@@ -190,10 +196,8 @@ export function ConnectScreen({
 
             {segment === 'chats' ? (
               <ChatsList
-                conversations={showArchived ? archivedChats : activeChats}
-                archived={showArchived}
-                archivedCount={archivedChats.length}
-                onToggleArchived={() => setShowArchived((shown) => !shown)}
+                conversations={activeChats}
+                header={archivedEntry}
                 onBrowseXolacers={() => setSelected('xolacers')}
                 onLongPress={setSheetFor}
                 onOpen={() => setSheetFor(null)}
@@ -209,36 +213,7 @@ export function ConnectScreen({
         )}
       </ScrollView>
 
-      {/*
-        The action sheet only exists while a row is long-pressed, and it sits
-        out here rather than in the list because Android bottom-aligns it to
-        its parent — inside the scroll view that lands it over the middle of
-        the screen. Close is the xolacer wrapping an open conversation up
-        early, the same `resting` the quiet sweep would reach in 14 days, so it
-        runs on the tap with no confirmation and nothing is lost either way.
-      */}
-      {sheetFor && (
-        <ChatActionSheet
-          conversation={sheetFor}
-          onDismiss={() => setSheetFor(null)}
-          onArchive={() => toggleArchive(sheetFor)}
-          onClose={() => close(sheetFor)}
-          onDelete={() => {
-            setSheetFor(null);
-            setDeleteFor(sheetFor);
-          }}
-        />
-      )}
-
-      <ConfirmationDialog
-        isOpen={deleteFor !== null}
-        onOpenChange={(open) => !open && setDeleteFor(null)}
-        title="Delete this request?"
-        description="It disappears from your list for good. Their copy stays until they delete it too."
-        confirmLabel="Delete"
-        onConfirm={confirmDelete}
-        isDestructive
-      />
+      <ConversationActions actions={actions} />
     </>
   );
 }
