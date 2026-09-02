@@ -31,6 +31,9 @@ export const PAYWALL_SURFACE_FEATURE: Record<PaywallSurface, PaywallFeatureId | 
   bridge_draft: "caps",
   settings_row: null,
   profile_row: null,
+  // Intake sells all four offers on its own card deck first; by the time the
+  // feature list renders there is no single row to single out.
+  intake: null,
   // Every proactive moment sells the same capability — the thing that keeps
   // coming back, shown early — so they all highlight the insights row.
   session_close: "insights",

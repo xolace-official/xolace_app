@@ -40,11 +40,23 @@ const FALLBACK = {
 
 type Props = {
   surface?: PaywallSurface;
+  /**
+   * Where a dismiss or a completed purchase goes. Defaults to closing the
+   * paywall route; intake overrides it to run its terminal step, since it has
+   * no back edge to pop to.
+   */
+  onExit?: () => void;
+  /**
+   * Set false when the caller already fired `paywall_opened` for this surface
+   * (intake does, on the offer screen that precedes this one).
+   */
+  trackOpen?: boolean;
 };
 
-export function PaywallScreen({ surface }: Props) {
+export function PaywallScreen({ surface, onExit, trackOpen = true }: Props) {
   const posthog = usePostHog();
-  const closePaywall = usePaywall((s) => s.close);
+  const defaultClose = usePaywall((s) => s.close);
+  const closePaywall = onExit ?? defaultClose;
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { offerings, purchase, isLoading, refreshOfferings } = useRevenueCat();
@@ -79,6 +91,7 @@ export function PaywallScreen({ surface }: Props) {
   };
 
   useEffect(() => {
+    if (!trackOpen) return;
     posthog.capture("paywall_opened", {
       surface: surface ?? null,
       session_count: summary?.sessionCount ?? null,
@@ -119,7 +132,7 @@ export function PaywallScreen({ surface }: Props) {
     <>
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.View>
-          <PaywallCloseButton surface={surface} />
+          <PaywallCloseButton surface={surface} onClose={onExit} />
         </Stack.Toolbar.View>
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">

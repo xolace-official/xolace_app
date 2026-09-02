@@ -110,6 +110,9 @@
     --resonance: oklch(0.796 0.0347 167.72 / 15%);
     --resonance-foreground: oklch(0.796 0.0347 167.72);
 
+    /* Ink for text on a saturated tone-colored panel — see the dark block. */
+    --offer-ink: oklch(18% 0.02 285);
+
     /* Mirror tone badge colors — each tone has its own hue family */
     --tone-poetic: oklch(70% 0.18 305);
     --tone-gentle: oklch(68% 0.17 15);
@@ -239,6 +242,11 @@
     --resonance: oklch(0.796 0.0347 167.72 / 15%);
     --resonance-foreground: oklch(0.796 0.0347 167.72);
 
+    /* Ink for text sitting on a saturated tone-colored panel (the intake offer
+     * cards). Deliberately theme-invariant: every --tone-* is a light surface
+     * (L ≈ 70–76%) in BOTH schemes, so the readable ink is dark either way. */
+    --offer-ink: oklch(18% 0.02 285);
+
     /* Mirror tone badge colors — slightly brighter on dark for legibility */
     --tone-poetic: oklch(74% 0.18 305);
     --tone-gentle: oklch(72% 0.17 15);
@@ -299,6 +307,8 @@
 
   --color-event: var(--event);
   --color-event-foreground: var(--event-foreground);
+
+  --color-offer-ink: var(--offer-ink);
 
   --color-tone-poetic: var(--tone-poetic);
   --color-tone-gentle: var(--tone-gentle);

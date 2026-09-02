@@ -21,6 +21,19 @@ export default function IntakeLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="questionnaire" />
       <Stack.Screen name="paywall" />
+      {/* The plans step is the one intake screen with a header: PaywallScreen
+          hangs its close and Restore buttons off the native toolbar. Still not
+          a modal — it's a linear step, so it keeps intake's forward-only
+          gesture rule. */}
+      <Stack.Screen
+        name="plans"
+        options={{
+          headerShown: true,
+          title: '',
+          headerTransparent: true,
+          headerShadowVisible: false,
+        }}
+      />
     </Stack>
   );
 }

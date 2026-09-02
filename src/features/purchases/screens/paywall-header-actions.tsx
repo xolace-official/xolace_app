@@ -10,11 +10,14 @@ const CLOSE_ICON_NAME = { ios: "xmark", android: "close", web: "close" } as cons
 
 type CloseProps = {
   surface?: PaywallSurface;
+  /** Overrides the route close — see PaywallScreen's `onExit`. */
+  onClose?: () => void;
 };
 
-export function PaywallCloseButton({ surface }: CloseProps) {
+export function PaywallCloseButton({ surface, onClose }: CloseProps) {
   const posthog = usePostHog();
-  const closePaywall = usePaywall((s) => s.close);
+  const defaultClose = usePaywall((s) => s.close);
+  const closePaywall = onClose ?? defaultClose;
   const tintColor = useThemeColor("muted") as string;
 
   return (
