@@ -18,7 +18,8 @@ import {
 import { AppText } from '@/src/components/shared/app-text';
 import { MascotSays } from '@/src/features/intake/questionnaire/mascot';
 import { IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
-import { applyCap, type IntakeQuestion } from '@/src/features/intake/questions';
+import { applyCap } from '@/src/features/intake/answer-rules';
+import type { IntakeQuestion } from '@/src/features/intake/questions';
 
 const NO_CAPS: readonly string[] = [];
 
@@ -38,7 +39,6 @@ interface SectionScreenProps {
   onDone: (answers: QuestionnaireAnswers) => void;
   /** Extra `Questionnaire.Item`s after the section's own — the series branch. */
   children?: ReactNode;
-  defaultAnswers?: QuestionnaireAnswers;
   /** Lift the answers out when the screen branches on one of them. */
   value?: QuestionnaireAnswers;
   onChange?: (answers: QuestionnaireAnswers) => void;
@@ -49,7 +49,7 @@ interface SectionScreenProps {
  * `child.type === Questionnaire.Item` in one shallow pass, so a wrapper
  * component would hide the whole set from it.
  */
-export function renderQuestion(question: IntakeQuestion) {
+function renderQuestion(question: IntakeQuestion) {
   return (
     <Questionnaire.Item key={question.name} name={question.name} required multiple={question.multiple}>
       <Questionnaire.Question>{question.question}</Questionnaire.Question>
@@ -77,11 +77,10 @@ export function SectionScreen({
   submitLabel = 'Continue',
   onDone,
   children,
-  defaultAnswers,
   value,
   onChange,
 }: SectionScreenProps) {
-  const [own, setOwn] = useState<QuestionnaireAnswers>(defaultAnswers ?? {});
+  const [own, setOwn] = useState<QuestionnaireAnswers>({});
   const answers = value ?? own;
   const setAnswers = onChange ?? setOwn;
   const scroller = useRef<ScrollView>(null);

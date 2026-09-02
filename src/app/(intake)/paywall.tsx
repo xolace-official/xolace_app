@@ -11,23 +11,24 @@
  * declining here is not a proactive-offer dismissal and must never spend the
  * dismissal budget. Do not connect them.
  */
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Button } from 'heroui-native';
 import { usePostHog, useFeatureFlag } from 'posthog-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { AppText } from '@/src/components/shared/app-text';
-import { IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
+import { IntakeBlank, IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
 import { intentLine } from '@/src/features/intake/paywall/intent-line';
 import {
   InsightsOfferCard,
   LimitsOfferCard,
-  VoiceOfferCard,
   XolacersOfferCard,
 } from '@/src/features/intake/paywall/offer-cards';
+import { VoiceOfferCard } from '@/src/features/intake/paywall/voice-offer-card';
 import { useIntakeComplete } from '@/src/features/intake/use-intake-complete';
+import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import { useAppStore } from '@/src/store/store';
@@ -45,6 +46,8 @@ export default function IntakeOffer() {
   const answers = useAppStore((s) => s.intakeAnswers);
   const { width, height } = useWindowDimensions();
   const reduced = useEffectiveReducedMotion();
+  const { isPlus } = usePlusEntitlement();
+  const skipping = useRef(false);
 
   // Treatment is the enabled arm; an unresolved flag falls back to control, so
   // a slow flag load can never show a half-personalized screen.
@@ -68,7 +71,13 @@ export default function IntakeOffer() {
     });
 
   useEffect(() => {
-    track('paywall_opened');
+    if (isPlus) return; // already entitled at mount — nothing was shown
+    // Its own event, not `paywall_opened`: on the other three surfaces that
+    // event means "saw pricing", and there is no price on this screen. The
+    // pricing impression fires from `(intake)/plans`, so intake's opened →
+    // purchased rate stays comparable to the rest. This is the A/B impression
+    // — it is where the personalized line is or isn't shown.
+    track('intake_offer_opened');
     // Once on mount — this is the impression, not a re-render signal.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -77,6 +86,26 @@ export default function IntakeOffer() {
     track('paywall_dismissed');
     void completeIntake();
   };
+
+  /*
+   * A current subscriber must never be pitched (T4, #235). The questionnaire's
+   * skip branch reads `isPlus`, which is false until both entitlement sources
+   * answer — so a subscriber whose SDK was still loading gets pushed here
+   * anyway. Finish intake the moment it resolves, and hold a blank frame
+   * meanwhile so the deck is never *shown* to them.
+   *
+   * Focus-scoped: a purchase completing on `(intake)/plans` also flips `isPlus`,
+   * and this screen is still mounted underneath it.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      if (!isPlus || skipping.current) return;
+      skipping.current = true;
+      void completeIntake();
+    }, [isPlus, completeIntake])
+  );
+
+  if (isPlus) return <IntakeBlank />;
 
   return (
     <IntakeScreen>

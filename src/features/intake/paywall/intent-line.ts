@@ -9,7 +9,14 @@
  */
 import type { IntakeAnswers } from '@/src/store/intake-slice';
 
-const INTENT_LINE: Record<string, string> = {
+type Intent = NonNullable<IntakeAnswers['intent']>;
+
+/**
+ * Keyed off the `intent` enum rather than `string`: renaming a literal in
+ * `intakeAnswerValidators` then fails to compile here, instead of silently
+ * dropping the line for everyone who picked it.
+ */
+const INTENT_LINE: Partial<Record<Intent, string>> = {
   understand_feelings: "You came to understand what you're feeling.",
   get_through_hard_moment: 'You came to get through something hard.',
   feel_less_alone: 'You came to feel less alone.',
@@ -20,5 +27,5 @@ const INTENT_LINE: Record<string, string> = {
 export function intentLine(answers: IntakeAnswers, personalized: boolean): string | null {
   if (!personalized) return null;
   const intent = answers.intent;
-  return (typeof intent === 'string' && INTENT_LINE[intent]) || null;
+  return (intent && INTENT_LINE[intent]) || null;
 }

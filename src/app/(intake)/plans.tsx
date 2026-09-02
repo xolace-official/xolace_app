@@ -7,8 +7,9 @@
  * purchase run intake's terminal step rather than popping a modal, because
  * intake has no back edge to pop to.
  *
- * `paywall_opened` already fired on the offer screen (the impression that
- * matters for the A/B), so this screen does not fire it a second time.
+ * This is the screen that fires `paywall_opened{surface:"intake"}` — on every
+ * other surface that event means "saw pricing", and the offer deck before this
+ * one carries no price. The deck's own impression is `intake_offer_opened`.
  */
 import { useIntakeComplete } from '@/src/features/intake/use-intake-complete';
 import { PaywallScreen } from '@/src/features/purchases/screens/paywall-screen';
@@ -16,7 +17,5 @@ import { PaywallScreen } from '@/src/features/purchases/screens/paywall-screen';
 export default function IntakePlans() {
   const completeIntake = useIntakeComplete();
 
-  return (
-    <PaywallScreen surface="intake" trackOpen={false} onExit={() => void completeIntake()} />
-  );
+  return <PaywallScreen surface="intake" onExit={() => void completeIntake()} />;
 }

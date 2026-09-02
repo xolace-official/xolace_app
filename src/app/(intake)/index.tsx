@@ -8,6 +8,7 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { GateFade } from '@/src/features/profile/components/gate-fade';
+import { IntakeBlank } from '@/src/features/intake/questionnaire/intake-screen';
 import { FounderMarquee } from '@/src/features/intake/founder-message/founder-marquee';
 import { LetterBody } from '@/src/features/intake/founder-message/letter-body';
 import {
@@ -37,16 +38,17 @@ export default function IntakeIndex() {
   const { width } = useWindowDimensions();
   const background = useThemeColor('background') as string;
 
-  // Narrow query, per the convention in convex/users.ts — a leaf screen that
-  // needs one number doesn't pull the whole app context.
-  const sessionCount = useQuery(api.users.getSessionCount);
+  // The root gate query (#263), not a narrow one: the root is already
+  // subscribed to it and Convex dedupes, so reading `sessionCount` off it costs
+  // nothing — whereas a second query is a second thing to be undefined.
+  const context = useQuery(api.users.getFullContext);
 
   // Never guess the audience: an unresolved count would silently render a
-  // returning user the new-user letter. The root gate already blocks on the
-  // context query, so this is a belt-and-braces frame, not a visible flash.
-  if (sessionCount === undefined) return <View className="flex-1 bg-background" />;
+  // returning user the new-user letter. The root gate already blocks on this
+  // query, so this is a belt-and-braces frame, not a visible flash.
+  if (context === undefined) return <IntakeBlank />;
 
-  const audience = sessionCount > 0 ? 'existing' : 'new';
+  const audience = context.profile.sessionCount > 0 ? 'existing' : 'new';
 
   return (
     <View

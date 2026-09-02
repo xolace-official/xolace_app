@@ -1,3 +1,9 @@
+/*
+ * VENDORED — registry output, tracked in `panelui-lock.json` with its digest.
+ * Exempt from the 200-line ceiling in CLAUDE.md because it is not hand-written
+ * and is replaced wholesale on the next pull, not edited. Do not treat its
+ * length as precedent for a file we author.
+ */
 /**
  * Questionnaire — one question at a time, with progress, validation and a way
  * back.

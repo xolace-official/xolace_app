@@ -10,11 +10,17 @@ const CLOSE_ICON_NAME = { ios: "xmark", android: "close", web: "close" } as cons
 
 type CloseProps = {
   surface?: PaywallSurface;
+  /**
+   * Paired with `paywall_opened`'s, so a dismissal can be attributed to where
+   * in the life of the account it happened. `null` while the summary is still
+   * loading — never silently 0, which is a real cohort (intake).
+   */
+  sessionCount?: number | null;
   /** Overrides the route close — see PaywallScreen's `onExit`. */
   onClose?: () => void;
 };
 
-export function PaywallCloseButton({ surface, onClose }: CloseProps) {
+export function PaywallCloseButton({ surface, sessionCount = null, onClose }: CloseProps) {
   const posthog = usePostHog();
   const defaultClose = usePaywall((s) => s.close);
   const closePaywall = onClose ?? defaultClose;
@@ -26,7 +32,10 @@ export function PaywallCloseButton({ surface, onClose }: CloseProps) {
       accessibilityLabel="Close"
       hitSlop={12}
       onPress={() => {
-        posthog.capture("paywall_dismissed", { surface: surface ?? null });
+        posthog.capture("paywall_dismissed", {
+          surface: surface ?? null,
+          session_count: sessionCount,
+        });
         closePaywall();
       }}
     >

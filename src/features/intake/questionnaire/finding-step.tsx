@@ -21,6 +21,7 @@ import {
   SERIES_WANT_QUESTION,
 } from '@/src/features/intake/questions';
 import { playTextureSelect } from '@/src/lib/haptics';
+import { cn } from '@/src/lib/utils';
 
 const BASE = SECTION_FINDING.map((q) => ({ name: q.name, required: true }));
 
@@ -69,9 +70,10 @@ export function FindingStep({ onDone }: { onDone: (answers: QuestionnaireAnswers
             accessibilityRole="radio"
             accessibilityState={{ selected: seen }}
             onPress={chooseYes}
-            className={`w-full rounded-xl border px-3.5 py-3 ${
+            className={cn(
+              'w-full rounded-xl border px-3.5 py-3',
               seen ? 'border-accent bg-accent/10' : 'border-border bg-surface'
-            }`}
+            )}
           >
             <AppText className="text-base text-foreground font-[Poppins-Medium]">Yes</AppText>
           </Pressable>

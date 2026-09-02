@@ -1,71 +1,18 @@
 /**
- * The four offers on the intake deck, each drawn as the thing itself rather
- * than as an illustration of it: the voice card really plays the voices, the
- * others are miniatures of the surfaces they unlock.
+ * Three of the four offers on the intake deck, each drawn as the thing itself
+ * rather than as an illustration of it — miniatures of the surfaces they
+ * unlock. The fourth, the voice card, is interactive and lives in
+ * `voice-offer-card.tsx`.
  *
  * Four is the cap. A fifth card is a fifth thing to weigh at the exact moment
  * the user is deciding whether any of it is for them.
  */
 import { View } from 'react-native';
-import { PressableFeedback } from 'heroui-native';
-import { SymbolView } from 'expo-symbols';
-import { useCSSVariable } from 'uniwind';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { OFFER_MASCOT, OfferCard, OfferMock, OfferPill } from '@/src/features/intake/paywall/offer-card';
-import { useVoicePreview } from '@/src/features/settings/hooks/use-voice-preview';
-import { VOICE_OPTIONS } from '@/src/features/settings/voice-options';
-import { playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
 
-const PLAY = { ios: 'play.fill', android: 'play_arrow', web: 'play_arrow' } as const;
-const STOP = { ios: 'stop.fill', android: 'stop', web: 'stop' } as const;
-
-const PREMIUM_VOICES = VOICE_OPTIONS.filter((o) => o.premium && o.value !== 'auto');
-
-/** Card 1 — the only interactive one. Hearing the voice is the whole sell. */
-export function VoiceOfferCard({ width }: { width: number }) {
-  const preview = useVoicePreview();
-  const ink = useCSSVariable('--color-offer-ink') as string;
-
-  return (
-    <OfferCard tag="Voices" title="Pick your Xolace voice" tint="witnessed" width={width} mascot={OFFER_MASCOT.voices}>
-      {PREMIUM_VOICES.map((voice) => {
-        const slug = voice.value as Exclude<typeof voice.value, 'auto'>;
-        const playing = preview.playingSlug === slug;
-        return (
-          <PressableFeedback
-            key={slug}
-            accessibilityRole="button"
-            accessibilityLabel={
-              playing ? `Stop ${voice.label} preview` : `Play the ${voice.label} voice`
-            }
-            onPress={() => {
-              playSoftPress();
-              preview.toggle(slug);
-            }}
-            className="flex-row items-center gap-3 rounded-2xl bg-offer-ink/10 px-3.5 py-3"
-          >
-            <View className="h-9 w-9 items-center justify-center rounded-full bg-offer-ink/20">
-              <SymbolView name={playing ? STOP : PLAY} size={14} tintColor={ink} />
-            </View>
-            <View className="flex-1">
-              <AppText className="text-[15px] text-offer-ink font-[Poppins-Medium]">
-                {voice.label}
-              </AppText>
-              <AppText numberOfLines={1} className="text-[12px] text-offer-ink/60 font-[Poppins-Regular]">
-                {voice.description}
-              </AppText>
-            </View>
-          </PressableFeedback>
-        );
-      })}
-      <AppText className="text-[13px] leading-[18px] text-offer-ink/70 font-[Poppins-Regular]">
-        Tap one — that&apos;s how your reflections get read back.
-      </AppText>
-    </OfferCard>
-  );
-}
 
 /** Card 2 — Xolacers. Two bubbles is the product; anything more is decoration. */
 export function XolacersOfferCard({ width }: { width: number }) {
@@ -156,6 +103,9 @@ export function InsightsOfferCard({ width }: { width: number }) {
           <OfferPill>Tired</OfferPill>
         </View>
       </OfferMock>
+      <AppText className="text-[13px] leading-[18px] text-offer-ink/70 font-[Poppins-Regular]">
+        And more the longer you keep going.
+      </AppText>
     </OfferCard>
   );
 }

@@ -13,7 +13,6 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
 
 export const MASCOT_TALK = require('@/assets/images/flux/flux-whisper.png');
-export const MASCOT_POINT = require('@/assets/images/flux/flux-point-down-removebg-preview.png');
 
 // One pose per slot in the flow. Same render, same character — only the pose
 // changes, so the flow reads as one Flux reacting rather than a set of icons.

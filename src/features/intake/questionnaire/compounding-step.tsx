@@ -57,7 +57,7 @@ export function CompoundingStep({ onDone }: { onDone: () => void }) {
               on weight and full opacity instead — the setup line is the muted
               one. */}
           <AppText className="text-[23px] leading-[32px] text-foreground font-[Poppins-SemiBold]">
-            Xolace's whole mission is to never lose sight of what's compounding for you.
+            Xolace&apos;s whole mission is to never lose sight of what&apos;s compounding for you.
           </AppText>
         </Animated.View>
 

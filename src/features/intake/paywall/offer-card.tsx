@@ -19,7 +19,7 @@ import { cn } from '@/src/lib/utils';
 /** One Flux pose per card, bleeding off the top-right corner. */
 export const OFFER_MASCOT = {
   voices: require('@/assets/images/flux/flux-whisper.png'),
-  xolacers: require('@/assets/images/flux/jump-love-bgremove.png'),
+  xolacers: require('@/assets/images/flux/flux-pair-listening.png'),
   insights: require('@/assets/images/flux/plus-mascot.png'),
   limits: require('@/assets/images/flux/flux-campfire.png'),
 } as const;

@@ -17,15 +17,13 @@ import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
-import { IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
+import { IntakeBlank, IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
 import { playSoftPress } from '@/src/lib/haptics';
 
 export function CountStep({ onDone }: { onDone: () => void }) {
   const stats = useQuery(api.intake.campfireStats);
 
-  // Not a skeleton: the screen is one number, and a shimmering placeholder
-  // where it goes reads worse than a beat of empty background.
-  if (stats === undefined) return <View className="flex-1 bg-background" />;
+  if (stats === undefined) return <IntakeBlank />;
 
   return (
     <IntakeScreen>

@@ -7,7 +7,6 @@
  * back at the start with the (non-persisted) answers slice already empty.
  */
 import { useRef, useState } from 'react';
-import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from 'convex/react';
 
@@ -17,11 +16,12 @@ import { BeatStep } from '@/src/features/intake/questionnaire/beat-step';
 import { CompoundingStep } from '@/src/features/intake/questionnaire/compounding-step';
 import { CountStep } from '@/src/features/intake/questionnaire/count-step';
 import { FindingStep } from '@/src/features/intake/questionnaire/finding-step';
+import { IntakeBlank } from '@/src/features/intake/questionnaire/intake-screen';
 import { PrivacyStep, ShakeStep } from '@/src/features/intake/questionnaire/interstitials';
 import { MASCOT_WAVE, MASCOT_WRITING } from '@/src/features/intake/questionnaire/mascot';
 import { NameStep } from '@/src/features/intake/questionnaire/name-step';
 import { CarryStep, YouStep } from '@/src/features/intake/questionnaire/section-steps';
-import { suggestHandle } from '@/src/features/intake/questions';
+import { suggestHandle } from '@/src/features/intake/answer-rules';
 import { useIntakeComplete } from '@/src/features/intake/use-intake-complete';
 import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
 import type { IntakeAnswers } from '@/src/store/intake-slice';
@@ -69,7 +69,7 @@ export default function IntakeQuestionnaire() {
   const finishing = useRef(false);
   const finalAnswers = useRef<QuestionnaireAnswers | null>(null);
 
-  const record = (answers: QuestionnaireAnswers, next: Step) => {
+  const recordAndAdvance = (answers: QuestionnaireAnswers, next: Step) => {
     setIntakeAnswers(toIntakeAnswers(answers));
     setStep(next);
   };
@@ -80,10 +80,11 @@ export default function IntakeQuestionnaire() {
    * sees the offer, but still gets the message and the questions.
    *
    * `isPlus` is false until both entitlement sources answer, so a subscriber
-   * whose SDK is still loading eleven questions later sees the paywall — an
-   * extra screen they leave with "Not now", which completes intake the same
-   * way. Waiting on `isResolved` instead would trade that for a Done button
-   * that silently does nothing.
+   * whose SDK is still loading eleven questions later is pushed anyway.
+   * Waiting on `isResolved` here would trade that for a Done button that
+   * silently does nothing, so the offer screen catches it instead: it holds a
+   * blank frame and finishes intake the moment entitlement resolves, and the
+   * deck is never shown to someone already paying.
    */
   const finish = (answers: QuestionnaireAnswers) => {
     if (finishing.current) return;
@@ -105,13 +106,13 @@ export default function IntakeQuestionnaire() {
     case 'name':
       // Held until the query answers so the field isn't seeded with a
       // suggestion the user's own saved name is about to replace.
-      if (context === undefined) return <View className="flex-1 bg-background" />;
+      if (context === undefined) return <IntakeBlank />;
       return (
         <NameStep
           initialName={context.preferences?.displayName || suggestHandle()}
           onDone={(displayName) => {
             setName(displayName);
-            record({ displayName }, 'hey');
+            recordAndAdvance({ displayName }, 'hey');
           }}
         />
       );
@@ -125,13 +126,13 @@ export default function IntakeQuestionnaire() {
         />
       );
     case 'you':
-      return <YouStep onDone={(answers) => record(answers, 'noted')} />;
+      return <YouStep onDone={(answers) => recordAndAdvance(answers, 'noted')} />;
     case 'noted':
       return <BeatStep line="Noted." mascot={MASCOT_WRITING} onDone={() => setStep('privacy')} />;
     case 'privacy':
       return <PrivacyStep onDone={() => setStep('carry')} />;
     case 'carry':
-      return <CarryStep onDone={(answers) => record(answers, 'compounding')} />;
+      return <CarryStep onDone={(answers) => recordAndAdvance(answers, 'compounding')} />;
     case 'compounding':
       return <CompoundingStep onDone={() => setStep('shake')} />;
     case 'shake':
@@ -141,7 +142,7 @@ export default function IntakeQuestionnaire() {
         <FindingStep
           onDone={(answers) => {
             finalAnswers.current = answers;
-            record(answers, 'count');
+            recordAndAdvance(answers, 'count');
           }}
         />
       );

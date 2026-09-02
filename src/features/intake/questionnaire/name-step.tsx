@@ -17,7 +17,7 @@ import { Button, useThemeColor } from 'heroui-native';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
-import { suggestHandle } from '@/src/features/intake/questions';
+import { suggestHandle } from '@/src/features/intake/answer-rules';
 import { playSoftPress } from '@/src/lib/haptics';
 
 interface NameStepProps {

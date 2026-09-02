@@ -46,14 +46,9 @@ type Props = {
    * no back edge to pop to.
    */
   onExit?: () => void;
-  /**
-   * Set false when the caller already fired `paywall_opened` for this surface
-   * (intake does, on the offer screen that precedes this one).
-   */
-  trackOpen?: boolean;
 };
 
-export function PaywallScreen({ surface, onExit, trackOpen = true }: Props) {
+export function PaywallScreen({ surface, onExit }: Props) {
   const posthog = usePostHog();
   const defaultClose = usePaywall((s) => s.close);
   const closePaywall = onExit ?? defaultClose;
@@ -91,7 +86,6 @@ export function PaywallScreen({ surface, onExit, trackOpen = true }: Props) {
   };
 
   useEffect(() => {
-    if (!trackOpen) return;
     posthog.capture("paywall_opened", {
       surface: surface ?? null,
       session_count: summary?.sessionCount ?? null,
@@ -132,7 +126,11 @@ export function PaywallScreen({ surface, onExit, trackOpen = true }: Props) {
     <>
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.View>
-          <PaywallCloseButton surface={surface} onClose={onExit} />
+          <PaywallCloseButton
+            surface={surface}
+            sessionCount={summary?.sessionCount ?? null}
+            onClose={onExit}
+          />
         </Stack.Toolbar.View>
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
