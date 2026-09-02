@@ -15,6 +15,13 @@ import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduce
 
 import { FounderCard } from './founder-card';
 import { FOUNDER_MARQUEE_CARDS } from './marquee-data';
+import {
+  beltSlots,
+  slotLeft,
+  CARD_HEIGHT,
+  CARD_STRIDE,
+  CARD_WIDTH,
+} from './marquee-geometry';
 
 // Horizontal auto-drift belt with pan-to-nudge — the same mechanic as the
 // onboarding MoodMarquee (useFrameCallback + per-item modulo positioning), but
@@ -26,10 +33,6 @@ import { FOUNDER_MARQUEE_CARDS } from './marquee-data';
 // the drift rather than the screen — the belt still pans by hand.
 
 const AUTO_SPEED = 16; // px/s
-const CARD_WIDTH = 150;
-const CARD_HEIGHT = 200;
-const CARD_STRIDE = CARD_WIDTH * 0.82; // deliberate overlap, so the band reads as a stack
-const BELT_WIDTH = FOUNDER_MARQUEE_CARDS.length * CARD_STRIDE;
 const ROTATIONS = [-4, 3, -2, 4, -3];
 
 type Props = {
@@ -43,6 +46,11 @@ const FounderMarqueeComponent = ({ viewport }: Props) => {
   const restSpeed = reducedMotion ? 0 : AUTO_SPEED;
   const offset = useSharedValue(0);
   const speed = useSharedValue(restSpeed);
+
+  // Wide screens (tablets, unfolded foldables) get extra slots so the belt is
+  // always wider than the track; the card set repeats to fill them.
+  const slots = beltSlots(viewport, FOUNDER_MARQUEE_CARDS.length);
+  const beltWidth = slots * CARD_STRIDE;
 
   useFrameCallback((frame) => {
     const dt = (frame?.timeSincePreviousFrame ?? 0) / 1000;
@@ -60,8 +68,14 @@ const FounderMarqueeComponent = ({ viewport }: Props) => {
   return (
     <GestureDetector gesture={pan}>
       <View className="flex-1">
-        {FOUNDER_MARQUEE_CARDS.map((card, index) => (
-          <BeltCard key={card.id} index={index} viewport={viewport} offset={offset} />
+        {Array.from({ length: slots }, (_, index) => (
+          <BeltCard
+            key={index}
+            index={index}
+            viewport={viewport}
+            beltWidth={beltWidth}
+            offset={offset}
+          />
         ))}
       </View>
     </GestureDetector>
@@ -73,17 +87,15 @@ export const FounderMarquee = memo(FounderMarqueeComponent);
 type BeltCardProps = {
   index: number;
   viewport: number;
+  beltWidth: number;
   offset: SharedValue<number>;
 };
 
-const BeltCard = ({ index, viewport, offset }: BeltCardProps) => {
-  const card = FOUNDER_MARQUEE_CARDS[index];
-  const restingLeft = index * CARD_STRIDE;
+const BeltCard = ({ index, viewport, beltWidth, offset }: BeltCardProps) => {
+  const card = FOUNDER_MARQUEE_CARDS[index % FOUNDER_MARQUEE_CARDS.length];
 
   const style = useAnimatedStyle(() => {
-    const drift = ((offset.get() % BELT_WIDTH) + BELT_WIDTH) % BELT_WIDTH;
-    let left = (((restingLeft - drift) % BELT_WIDTH) + BELT_WIDTH) % BELT_WIDTH; // [0, BELT_WIDTH)
-    if (left > viewport) left -= BELT_WIDTH; // recycle far cards to the near side → continuous belt
+    const left = slotLeft(index, offset.get(), beltWidth, viewport);
     return {
       position: 'absolute' as const,
       left,
