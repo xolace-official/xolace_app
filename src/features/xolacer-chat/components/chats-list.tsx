@@ -26,12 +26,19 @@ export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConve
  */
 export function ChatsList({
   conversations,
+  empty,
   header,
   onBrowseXolacers,
   onLongPress,
   onOpen,
 }: {
   conversations: ConversationList;
+  /**
+   * Copy for the empty state. Defaults to the never-had-a-chat one; a caller
+   * that filtered the list (Connect hides archived rows) has to say so itself,
+   * or someone whose chats are all archived is told they have none.
+   */
+  empty?: { title: string; body: string };
   /** Rendered above the rows, full-bleed like them. */
   header?: ReactNode;
   /** Omitted where there is nowhere to browse from — the Archived screen. */
@@ -50,11 +57,11 @@ export function ChatsList({
             <AppText className="text-lg">💬</AppText>
           </View>
           <AppText className="text-[15px] font-semibold text-foreground">
-            No conversations yet
+            {empty?.title ?? 'No conversations yet'}
           </AppText>
           <AppText className="text-[13px] text-muted text-center leading-5 max-w-60">
-            When you message a Xolacer, it&apos;ll live here - including anything you&apos;ve
-            talked about before.
+            {empty?.body ??
+              "When you message a Xolacer, it'll live here - including anything you've talked about before."}
           </AppText>
           {onBrowseXolacers && (
             <PressableFeedback

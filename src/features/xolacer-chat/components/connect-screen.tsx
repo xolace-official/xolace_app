@@ -200,6 +200,14 @@ export function ConnectScreen({
             {segment === 'chats' ? (
               <ChatsList
                 conversations={activeChats}
+                empty={
+                  archivedChats.length > 0
+                    ? {
+                        title: 'No active conversations',
+                        body: "Everything you've talked about is archived. It comes back here on its own when there's new activity.",
+                      }
+                    : undefined
+                }
                 header={archivedEntry}
                 onBrowseXolacers={() => setSelected('xolacers')}
                 onLongPress={setSheetFor}
