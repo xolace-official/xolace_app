@@ -764,16 +764,16 @@ function QuestionnaireBody({
    * fixed when it mounts, and an effect runs after that — which would leave
    * every transition playing the direction of the one before it.
    */
-  const previousIndex = useRef(activeIndex);
-  const direction: 1 | -1 = activeIndex >= previousIndex.current ? 1 : -1;
-  const navigated = useRef(false);
-
-  useEffect(() => {
-    if (activeIndex !== previousIndex.current) {
-      previousIndex.current = activeIndex;
-      navigated.current = true;
-    }
-  }, [activeIndex]);
+  const [nav, setNav] = useState<{
+    index: number;
+    direction: 1 | -1;
+    navigated: boolean;
+  }>({ index: activeIndex, direction: 1, navigated: false });
+  const direction: 1 | -1 =
+    nav.index === activeIndex ? nav.direction : activeIndex > nav.index ? 1 : -1;
+  if (nav.index !== activeIndex) {
+    setNav({ index: activeIndex, direction, navigated: true });
+  }
 
   const navigate = useCallback(
     (delta: 1 | -1) => {
@@ -790,7 +790,7 @@ function QuestionnaireBody({
   // Move the reader onto the question that just arrived, so a screen reader
   // reads the new question rather than leaving focus where the button was.
   useEffect(() => {
-    if (!navigated.current) return;
+    if (!nav.navigated) return;
     const node = paneRef.current;
     if (!node) return;
     const tag = findNodeHandle(node);

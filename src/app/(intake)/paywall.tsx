@@ -11,7 +11,7 @@
  * declining here is not a proactive-offer dismissal and must never spend the
  * dismissal budget. Do not connect them.
  */
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button } from 'heroui-native';
@@ -49,6 +49,7 @@ export default function IntakeOffer() {
   const reduced = useEffectiveReducedMotion();
   const { isPlus } = usePlusEntitlement();
   const skipping = useRef(false);
+  const [skipFailed, setSkipFailed] = useState(false);
 
   // Treatment is the enabled arm; an unresolved flag falls back to control, so
   // a slow flag load can never show a half-personalized screen.
@@ -101,15 +102,51 @@ export default function IntakeOffer() {
    * Focus-scoped: a purchase completing on `(intake)/plans` also flips `isPlus`,
    * and this screen is still mounted underneath it.
    */
+  const skipForSubscriber = useCallback(() => {
+    if (skipping.current) return;
+    skipping.current = true;
+    setSkipFailed(false);
+    void completeIntake('skipped_paywall').then((written) => {
+      if (written) return;
+      // The write was swallowed (toast + stay put) and this screen renders
+      // nothing while `isPlus`. Unlatch and put a retry on it, or the blank
+      // frame becomes a room with no door and force-quitting — which wipes the
+      // non-persisted answers — is the only way out.
+      skipping.current = false;
+      setSkipFailed(true);
+    });
+  }, [completeIntake]);
+
   useFocusEffect(
     useCallback(() => {
-      if (!isPlus || skipping.current) return;
-      skipping.current = true;
-      void completeIntake('skipped_paywall');
-    }, [isPlus, completeIntake])
+      if (!isPlus) return;
+      skipForSubscriber();
+    }, [isPlus, skipForSubscriber])
   );
 
-  if (isPlus) return <IntakeBlank />;
+  if (isPlus) {
+    if (!skipFailed) return <IntakeBlank />;
+    return (
+      <IntakeScreen>
+        <View className="flex-1 justify-center gap-4 px-5">
+          <AppText className="text-[22px] leading-[29px] text-foreground font-[Poppins-SemiBold]">
+            That didn&apos;t go through.
+          </AppText>
+          <AppText className="text-[15px] leading-[21px] text-foreground/50 font-[Poppins-Regular]">
+            Your answers are still here. Check your connection and try again.
+          </AppText>
+          <Button
+            onPress={() => {
+              playSoftPress();
+              skipForSubscriber();
+            }}
+          >
+            <Button.Label>Try again</Button.Label>
+          </Button>
+        </View>
+      </IntakeScreen>
+    );
+  }
 
   return (
     <IntakeScreen>

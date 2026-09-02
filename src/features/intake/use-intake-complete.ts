@@ -19,6 +19,10 @@ type CompleteArgs = FunctionArgs<typeof api.intake.complete>;
  *
  * The `replace` is belt-and-braces: the reactive guard evicts `(intake)` on
  * its own once the flag lands.
+ *
+ * Resolves `true` when the write landed, `false` when it was swallowed — a
+ * caller that renders nothing while it waits needs to know it has to offer a
+ * retry, since the toast is the only other thing that said so.
  */
 export function useIntakeComplete() {
   const complete = useMutation(api.intake.complete);
@@ -26,7 +30,7 @@ export function useIntakeComplete() {
   const { toast } = useToast();
   const posthog = usePostHog();
 
-  return async (outcome: IntakeOutcome) => {
+  return async (outcome: IntakeOutcome): Promise<boolean> => {
     const { intakeAnswers, resetIntakeAnswers } = useAppStore.getState();
     try {
       await complete(intakeAnswers as CompleteArgs);
@@ -40,12 +44,13 @@ export function useIntakeComplete() {
         label: "Couldn't finish setting up",
         description: 'Check your connection and try again.',
       });
-      return;
+      return false;
     }
     // After the mutation resolves, before the slice is cleared — a failed
     // write stays out of the funnel, since the user is still in intake.
     trackIntakeCompleted(posthog, outcome, intakeAnswers);
     resetIntakeAnswers();
     router.replace('/(protected)');
+    return true;
   };
 }
