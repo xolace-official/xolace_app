@@ -53,7 +53,7 @@ export function ConversationRow({
             {conversation.counterpartPresent && <PresenceDot />}
           </View>
           <View className="flex-1 min-w-0">
-            <View className="flex-row items-baseline gap-1.5">
+            <View className="flex-row items-center gap-1.5">
               <AppText
                 className={cn(
                   'shrink text-sm font-semibold',
@@ -63,6 +63,21 @@ export function ConversationRow({
               >
                 {conversation.counterpartName}
               </AppText>
+              {/* Beside the name rather than above the sentence: on line 2 the
+                  pill ate half the width and truncated the one line that
+                  explains the state. The name gives up space for it instead. */}
+              {chip && (
+                <View
+                  className={cn(
+                    'shrink-0 rounded-full px-2 py-0.5',
+                    chip.tone === 'warn' ? 'bg-warning/20' : 'bg-surface-tertiary',
+                  )}
+                >
+                  <AppText className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    {chip.label}
+                  </AppText>
+                </View>
+              )}
               <AppText className="text-[11px] text-muted ml-auto">
                 {formatCompactTime(when)}
               </AppText>
@@ -88,23 +103,9 @@ export function ConversationRow({
               )}
             </View>
             {statusLine && (
-              <View className="flex-row items-center gap-1.5 mt-0.5">
-                {chip && (
-                  <View
-                    className={cn(
-                      'rounded-full px-2 py-0.5',
-                      chip.tone === 'warn' ? 'bg-warning/20' : 'bg-surface-tertiary',
-                    )}
-                  >
-                    <AppText className="text-[10px] font-semibold uppercase tracking-wide text-muted">
-                      {chip.label}
-                    </AppText>
-                  </View>
-                )}
-                <AppText className="flex-1 text-xs text-muted" numberOfLines={1}>
-                  {statusLine}
-                </AppText>
-              </View>
+              <AppText className="text-xs text-muted mt-0.5" numberOfLines={1}>
+                {statusLine}
+              </AppText>
             )}
           </View>
         </View>
