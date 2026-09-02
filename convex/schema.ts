@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { vWorkflowId } from "@convex-dev/workflow";
 import {
   insightFeatureValidator,
+  intakeAnswerValidators,
   motionPreferenceValidator,
   resourceValidator,
   safeguardLevelValidator,
@@ -334,6 +335,39 @@ export default defineSchema({
   })
     .index("by_profile", ["emotionalProfileId"])
     .index("by_retention", ["dataRetentionPreference"]),
+
+  // ===========================================================
+  // 3b. INTAKE RESPONSES
+  // ===========================================================
+  //
+  // The post-signup segmentation questionnaire (T3, issue #234). One row per
+  // profile, written once by `intake.complete` in the same transaction that
+  // flips `emotional_profiles.onboardingComplete`.
+  //
+  // Named typed columns, not EAV and not a JSON blob: 11 fixed questions is
+  // not a dynamic form engine, and the consumers (ai/context.ts, follow-up
+  // cadence, cohort segmentation) read these as typed enums with no cast.
+  //
+  // Pseudonymous side — every answer is about a feeling human.
+  // "prefer_not_to_say" is a real value everywhere it appears; an absent
+  // field means only "the branch never fired" (the series pair below).
+  //
+  // Lifecycle: purged by dataWipe and accountDeletion; deliberately NOT aged
+  // out by dataRetentionPreference (see CONTEXT.md, "Intake, and the two
+  // onboardings").
+  intake_responses: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+
+    // Questionnaire revision this row was captured under. A stamp, NOT a
+    // gate — bumping it never re-prompts anyone. A future re-run is a
+    // considered migration that flips `onboardingComplete` back to false.
+    intakeVersion: v.number(),
+    completedAt: v.number(),
+
+    // The ten answer columns (Q2–Q11). Shared with the `intake.complete`
+    // mutation args so the two can never drift.
+    ...intakeAnswerValidators,
+  }).index("by_profile", ["emotionalProfileId"]),
 
   // ===========================================================
   // 4. SESSIONS

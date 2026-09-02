@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
 import { useUniwind } from 'uniwind'
 import * as SplashScreen from 'expo-splash-screen';
-import { useConvexAuth } from 'convex/react';
+import { useConvexAuth, useQuery } from 'convex/react';
 import { useAuth } from '@clerk/expo';
 import { usePostHog } from 'posthog-react-native';
 import {
@@ -28,7 +28,9 @@ import {
 } from '@expo-google-fonts/space-grotesk';
 import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 
+import { api } from '@/convex/_generated/api';
 import { RootProvider } from '@/src/providers/root-provider';
+import { usePostHogIdentity } from '@/src/lib/use-posthog-identity';
 import { useAppStore } from '@/src/store/store';
 import { UpdateBottomSheet, type UpdateBottomSheetMode } from '@/src/components/shared/update-bottom-sheet';
 import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
@@ -95,13 +97,27 @@ const AppContent = () => {
   const { isSignedIn, isLoaded: isClerkLoaded, userId } = useAuth();
   const posthog = usePostHog();
 
+  // The intake gate (T6, issue #263). Hoisted to the root — with
+  // usePostHogIdentity, which reads the same query — so the root is the single
+  // subscriber and Convex dedupes every downstream read.
+  const context = useQuery(api.users.getFullContext, isAuthenticated ? {} : 'skip');
+  usePostHogIdentity();
+  const onboardingComplete = context?.profile.onboardingComplete === true;
+  const intakeGateLoading = isAuthenticated && context === undefined;
+
   // Record the exact inputs to the route-group guard on every change. On a prod
   // cold start where the user is wrongly sent to (auth), this breadcrumb trail
   // shows whether Clerk loaded signed-out (cache miss) or Clerk is signed-in
   // while Convex never authenticated (desync) — the two have different fixes.
   useEffect(() => {
     Sentry.setUser(userId ? { id: userId } : null);
-    const group = isAuthenticated ? "(protected)" : introSeen ? "(auth)" : "(onboarding)";
+    const group = !isAuthenticated
+      ? introSeen
+        ? "(auth)"
+        : "(onboarding)"
+      : onboardingComplete
+        ? "(protected)"
+        : "(intake)";
     Sentry.addBreadcrumb({
       category: "auth.guard",
       level: isClerkLoaded && isSignedIn && !isAuthenticated ? "warning" : "info",
@@ -112,9 +128,20 @@ const AppContent = () => {
         clerkSignedIn: !!isSignedIn,
         convexAuthenticated: isAuthenticated,
         convexAuthLoading: isAuthLoading,
+        onboardingComplete,
+        intakeGateLoading,
       },
     });
-  }, [introSeen, isAuthenticated, isAuthLoading, isClerkLoaded, isSignedIn, userId]);
+  }, [
+    introSeen,
+    isAuthenticated,
+    isAuthLoading,
+    isClerkLoaded,
+    isSignedIn,
+    userId,
+    onboardingComplete,
+    intakeGateLoading,
+  ]);
   const pathname = usePathname();
   const params = useGlobalSearchParams();
   const previousPathname = useRef<string | undefined>(undefined);
@@ -136,7 +163,9 @@ const AppContent = () => {
     }
   }, [pathname, params, posthog]);
 
-  if (isAuthLoading) return <FullRippleLoader />;
+  // Hold the loader while the gate query is in flight rather than rendering
+  // (protected) optimistically and bouncing the user out of it a frame later.
+  if (isAuthLoading || intakeGateLoading) return <FullRippleLoader />;
   return (
     <Stack screenOptions={NO_HEADER}>
       <Stack.Protected guard={!isAuthenticated && !introSeen}>
@@ -145,7 +174,10 @@ const AppContent = () => {
       <Stack.Protected guard={!isAuthenticated && introSeen}>
         <Stack.Screen name="(auth)" options={NO_HEADER} />
       </Stack.Protected>
-      <Stack.Protected guard={isAuthenticated}>
+      <Stack.Protected guard={isAuthenticated && !onboardingComplete}>
+        <Stack.Screen name="(intake)" options={NO_HEADER} />
+      </Stack.Protected>
+      <Stack.Protected guard={isAuthenticated && onboardingComplete}>
         <Stack.Screen name="(protected)" options={NO_HEADER} />
         <Stack.Screen
           name="(paywall)"

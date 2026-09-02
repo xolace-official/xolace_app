@@ -230,3 +230,25 @@ export const seedXolacer = internalMutation({
     return emotionalProfileId;
   },
 });
+
+/**
+ * Put the caller back at the start of intake.
+ *
+ * `onboardingComplete` is the root layout's guard, so flipping it false is the
+ * whole trick — the next render mounts `(intake)` again. The answers row is
+ * left alone: `intake.complete` overwrites it by profile, and keeping it means
+ * a replay exercises the update path rather than only the insert.
+ */
+export const resetIntake = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    assertDevToolsEnabled();
+    const { profile } = await requireAuth(ctx);
+    await ctx.db.patch("emotional_profiles", profile._id, {
+      onboardingComplete: false,
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});

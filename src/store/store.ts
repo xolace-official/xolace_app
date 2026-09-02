@@ -14,6 +14,7 @@ import {
   plusOfferPersistedKeys,
   type PlusOfferSlice,
 } from './plus-offer-slice';
+import { createIntakeSlice, type IntakeSlice } from './intake-slice';
 
 type ThemeSlice = {
   theme: 'system' | 'light' | 'dark';
@@ -110,7 +111,7 @@ type LastNotificationSlice = {
   clearLastNotification: () => void;
 };
 
-export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & PlusOfferSlice & PreferencesSlice & UpdateCheckSlice & LastNotificationSlice;
+export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & PlusOfferSlice & IntakeSlice & PreferencesSlice & UpdateCheckSlice & LastNotificationSlice;
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -191,6 +192,8 @@ export const useAppStore = create<AppState>()(
         setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
 
         ...createPlusOfferSlice(set),
+
+        ...createIntakeSlice(set),
 
         textureSetId: 'flat',
         setTextureSetId: (id) => set({ textureSetId: id }),

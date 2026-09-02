@@ -3,7 +3,13 @@ import { useEffect, useRef } from "react";
 import { Accelerometer } from "expo-sensors";
 import { leadingDebounce } from "../engine/debounce";
 
-const SHAKE_THRESHOLD = 250;
+/**
+ * Units matter here: the speed formula below is the classic Android shake
+ * snippet, whose 800 threshold assumes SensorManager values in m/s². expo-sensors
+ * reports **g** (~9.81x smaller), so the equivalent is ~80. 100 keeps it a
+ * deliberate shake rather than a pocket jostle.
+ */
+const SHAKE_THRESHOLD = 100;
 const SAMPLE_INTERVAL_MS = 100;
 const DEBOUNCE_MS = 500;
 

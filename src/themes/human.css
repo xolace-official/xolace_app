@@ -43,6 +43,8 @@
       --resonance: oklch(0.82 0.05 60 / 18%);
       --resonance-foreground: oklch(0.82 0.05 60);
 
+      --offer-ink: oklch(18% 0.02 285);
+
       --tone-poetic: oklch(70% 0.18 305);
       --tone-gentle: oklch(68% 0.17 15);
       --tone-direct: oklch(68% 0.15 225);
@@ -123,6 +125,8 @@
 
       --resonance: oklch(0.82 0.05 60 / 14%);
       --resonance-foreground: oklch(0.82 0.05 60);
+
+      --offer-ink: oklch(18% 0.02 285);
 
       --tone-poetic: oklch(74% 0.18 305);
       --tone-gentle: oklch(72% 0.17 15);

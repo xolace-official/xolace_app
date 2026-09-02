@@ -1,7 +1,6 @@
 import { Stack } from "expo-router";
 import { AppPresence } from "@/src/providers/app-presence";
 import { useNotifications } from "@/src/lib/use-notifications";
-import { usePostHogIdentity } from "@/src/lib/use-posthog-identity";
 import {
   StreamChatProvider,
   StreamOverlayProvider,
@@ -45,8 +44,11 @@ const CHAT_OPTIONS = {
 } as const;
 
 export default function ProtectedLayout() {
+  // Stays here, not at the root: not mounting the notification response
+  // listener during intake is what makes "intake wins, a pending deep link is
+  // not preserved" true with no extra code (T3, issue #234).
+  // usePostHogIdentity is hoisted to the root — it must run during intake.
   useNotifications();
-  usePostHogIdentity();
 
   return (
     // Above the Stack so the message overlay can lay itself out against the

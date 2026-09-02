@@ -184,7 +184,16 @@ export const getFullContext = query({
       }
     }
 
-    return { user, profile, preferences, hasPendingFollowUp };
+    // The intake answers, for the client's PostHog person-property backfill
+    // (T7, issue #267): an install that ran intake before the dual-write
+    // shipped never re-runs it, so app open is the only place those properties
+    // can still be set. One bounded index lookup, same as the rest of this.
+    const intake = await ctx.db
+      .query("intake_responses")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+      .unique();
+
+    return { user, profile, preferences, hasPendingFollowUp, intake };
   },
 });
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
@@ -38,13 +38,27 @@ const FALLBACK = {
   monthly: { price: "$9.99/mo", detail: "billed monthly", numericPrice: 9.99 },
 } as const;
 
+/** Why the paywall is closing — intake's `intake_completed` outcome hangs on it. */
+export type PaywallExitReason = "purchased" | "dismissed";
+
 type Props = {
   surface?: PaywallSurface;
+  /**
+   * Where a dismiss or a completed purchase goes. Defaults to closing the
+   * paywall route; intake overrides it to run its terminal step, since it has
+   * no back edge to pop to.
+   *
+   * Called at most once per mount. Resolve `false` if the exit was swallowed
+   * (intake's write can fail and leave the user on this screen) — that unlatches
+   * the guard so the close button works again.
+   */
+  onExit?: (reason: PaywallExitReason) => void | Promise<boolean>;
 };
 
-export function PaywallScreen({ surface }: Props) {
+export function PaywallScreen({ surface, onExit }: Props) {
   const posthog = usePostHog();
-  const closePaywall = usePaywall((s) => s.close);
+  const defaultClose = usePaywall((s) => s.close);
+  const closePaywall = onExit ?? (() => defaultClose());
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { offerings, purchase, isLoading, refreshOfferings } = useRevenueCat();
@@ -55,6 +69,13 @@ export function PaywallScreen({ surface }: Props) {
   const [busy, setBusy] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [ctaHeight, setCtaHeight] = useState(0);
+  // Single-flight exit. Intake hangs its terminal step (the answers write, the
+  // `intake_completed` event) off `onExit`, so a second call would persist and
+  // track a second outcome — a dismiss racing the purchase that just landed, or
+  // two taps on close. The ref is what actually guards: two presses in one frame
+  // both read stale state.
+  const exiting = useRef(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   const annualPkg = offerings?.current?.annual ?? null;
   const monthlyPkg = offerings?.current?.monthly ?? null;
@@ -102,12 +123,26 @@ export function PaywallScreen({ surface }: Props) {
 
   const selectedPkg = selected === "annual" ? annualPkg : monthlyPkg;
 
+  const exit = (reason: PaywallExitReason) => {
+    if (exiting.current) return;
+    exiting.current = true;
+    setIsExiting(true);
+    Promise.resolve(closePaywall(reason)).then((written) => {
+      // Only intake reports back, and only to say the write was swallowed
+      // (toast + stay put). Unlatch, or the close button is inert on a screen
+      // with no back edge.
+      if (written !== false) return;
+      exiting.current = false;
+      setIsExiting(false);
+    });
+  };
+
   const handleContinue = () => {
     if (!selectedPkg) return; // payments not live yet — CTA is a visual placeholder
     setBusy(true);
     purchase(selectedPkg, surface ?? undefined)
       .then((ok) => {
-        if (ok) closePaywall(); // server entitlement query flips reactively
+        if (ok) exit("purchased"); // server entitlement query flips reactively
       })
       .finally(() => setBusy(false));
   };
@@ -119,7 +154,12 @@ export function PaywallScreen({ surface }: Props) {
     <>
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.View>
-          <PaywallCloseButton surface={surface} />
+          <PaywallCloseButton
+            surface={surface}
+            sessionCount={summary?.sessionCount ?? null}
+            onClose={onExit && (() => exit("dismissed"))}
+            isDisabled={isExiting}
+          />
         </Stack.Toolbar.View>
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">

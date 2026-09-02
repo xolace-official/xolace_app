@@ -22,7 +22,10 @@ export type PaywallSurface =
   // opened; the `moment` id rides on the card's own events.
   | "session_close"
   | "mirror_landed"
-  | "profile_insight";
+  | "profile_insight"
+  // Post-signup intake, session 0 (#266). Its own offer screen fires
+  // paywall_opened; the plans step under `(intake)/plans` reuses this surface.
+  | "intake";
 
 type PaywallState = {
   open: (surface: PaywallSurface) => void;
