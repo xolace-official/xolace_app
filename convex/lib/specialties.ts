@@ -7,9 +7,11 @@ import { v } from "convex/values";
  * impossible.
  *
  * The list deliberately stops short of clinical territory: no depression, no
- * trauma, no addiction. Advertising a peer volunteer as a specialist in those
- * invites exactly the conversations the escalation exclusion exists to keep
- * out.
+ * trauma. Advertising a peer volunteer as a specialist in those invites
+ * exactly the conversations the escalation exclusion exists to keep out.
+ * Addiction is in, phrased as recovery and sobriety — peer support is the one
+ * place that tradition already lives — but it stays a listening declaration,
+ * not treatment.
  *
  * `label` is the compact chip (roster rows, profile); `pickerLabel` is the
  * fuller phrasing used in the setup list, where there's room to be specific;
@@ -64,6 +66,12 @@ export const SPECIALTIES = [
     listensTo: "identity and belonging",
   },
   {
+    slug: "addiction",
+    label: "Addiction",
+    pickerLabel: "Addiction & recovery",
+    listensTo: "addiction and staying sober",
+  },
+  {
     slug: "change",
     label: "Big changes",
     pickerLabel: "Big life changes",
@@ -73,8 +81,8 @@ export const SPECIALTIES = [
 
 export type Specialty = (typeof SPECIALTIES)[number]["slug"];
 
-/** Hard cap. Past three, a profile stops saying anything specific at all. */
-export const MAX_SPECIALTIES = 3;
+/** Hard cap. Past four, a profile stops saying anything specific at all. */
+export const MAX_SPECIALTIES = 4;
 
 export const specialtyValidator = v.union(
   ...SPECIALTIES.map((specialty) => v.literal(specialty.slug)),
