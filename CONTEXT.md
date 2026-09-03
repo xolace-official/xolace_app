@@ -3,6 +3,54 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Xolacer rating: decoupled from conversation lifecycle (2026-09-03)
+
+The rate entry point used to live only in `ThreadStatusBar`, which renders
+only when a conversation is **not `open`**. The one seeker-reachable path out
+of `open` is the 14-day quiet sweep, so a seeker could not rate a xolacer for
+~two weeks — and the entry point, a small underlined link, was missed even
+then. `canRate` never actually required `resting`; placement did.
+
+**Eligibility is now `role === "user"` + not blocked + `messageCount >= 15`**,
+evaluated on any status including `open`. `hasRealExchange` (≥ 1 message
+after accept) stays as the floor beneath the count. **15 is provisional** —
+a tunable constant to retune once analytics exist, not a settled truth.
+
+**`messageCount` is a new server-side counter** on `xolacer_conversations`,
+incremented in `notifyNewMessage` (Stream `message.new` webhook) **before**
+its `status !== "open"` early-return, so messages in a `resting` thread still
+count. Existing rows start at 0; no backfill. It exists because message
+content lives in Stream and the `canRate` predicate had nothing to count.
+
+**Placement.** The xolacer profile screen is the primary home: a prominent
+rate card in the action area (replacing the stars-only row), shown once the
+bar is met, collapsing to a quiet "You rated ★N — change" line after the
+first rating. The thread keeps a rate entry in the overflow menu
+(`XolacerMenu`); the existing post-quiet `RatePrompt` stays. No inline nudge
+inside the message list.
+
+**Reversed here, not elsewhere.** The "quiet, skippable, ignoring it is the
+default" stance in the `RatePrompt` / `RateConversationScreen` docstrings is
+deliberately reversed **for the profile surface** — discovery failed, so that
+surface is prominent until the first rating. Every other surface keeps the
+low-key posture.
+
+**Unchanged.** Single 1–5 overall score, one editable `conversation_ratings`
+row per conversation, `MIN_RATINGS_TO_DISPLAY = 5`.
+
+**Deferred, not rejected.** Optional written reviews with a 7 Cups-style
+moderation → staged-visibility pipeline. It will happen; migration is a safe
+additive change (`review` / `reviewStatus` fields on `conversation_ratings`,
+optional `review` arg on `rateConversation`), so nothing is pre-built now.
+
+**Separate follow-up.** Auto-resting window 14d → 7d (`RESTING_AFTER_MS`) —
+now purely a xolacer-capacity change, since rating no longer depends on it.
+A seeker-side manual "wrap up" was considered and rejected: it would force a
+seeker who wants to rate to first end a conversation they may want to keep,
+and archive already covers "off my list."
+
+See [ADR 0005](docs/adr/0005-rating-decoupled-from-conversation-lifecycle.md).
+
 ## Intake, and the two onboardings (2026-08-28)
 
 Two flows in this repo both want the word "onboarding". They share nothing —
