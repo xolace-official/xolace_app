@@ -1789,6 +1789,12 @@ export default defineSchema({
     declinedAt: v.optional(v.number()),
     // Drives the resting sweep. Updated by touchConversation on send.
     lastMessageAt: v.optional(v.number()),
+    // Messages exchanged here, counted server-side by `notifyNewMessage` (the
+    // Stream webhook) on every status, so a conversation that keeps going
+    // quietly while `resting` still accumulates. Gates rating — see
+    // `MIN_MESSAGES_TO_RATE`. Absent on rows that predate the field and read
+    // as 0; deliberately not backfilled.
+    messageCount: v.optional(v.number()),
     // When a message notification last went out to each side. Two fields and
     // not one: a single row-wide stamp let the seeker's own message open a
     // window that then swallowed the xolacer's reply to it. Absent until that
@@ -1889,4 +1895,19 @@ export default defineSchema({
   })
     // "the most recent week we have" — and the cron's own idempotency lookup.
     .index("by_weekStart", ["weekStart"]),
+
+  // ===========================================================
+  // STREAM WEBHOOK DEDUPE
+  // ===========================================================
+  //
+  // One row per Stream event we have already counted, keyed by the stable
+  // `X-Webhook-Id` header Stream reuses across retries of the same event.
+  // Stream retries any delivery it cannot confirm, and a replayed
+  // `message.new` would otherwise increment `messageCount` twice — handing a
+  // pair the rating gate they had not actually reached. Purged by the xolacer
+  // sweep once a day old, far past Stream's retry window.
+  //
+  stream_webhook_events: defineTable({
+    webhookId: v.string(),
+  }).index("by_webhookId", ["webhookId"]),
 });

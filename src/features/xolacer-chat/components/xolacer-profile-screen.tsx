@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Button, PressableFeedback, Skeleton, useThemeColor, useToast } from 'heroui-native';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EditIcon from '@expo/material-symbols/edit.xml';
 import { useMutation, useQuery } from 'convex/react';
@@ -16,6 +17,7 @@ import {
   declineCooldownActive,
   declineCooldownNote,
   hasSpoken,
+  rateCtaState,
 } from '@/src/features/xolacer-chat/utils';
 import { formatMonthYear } from '@/src/features/xolacer-chat/format-time';
 import { XolacerMenu } from './xolacer-menu';
@@ -29,7 +31,10 @@ type Profile = NonNullable<FunctionReturnType<typeof api.xolacerChat.xolacerProf
 const styles = StyleSheet.create({
   borderCurve: { borderCurve: 'continuous' },
   factIcon: { marginTop: 2 },
+  rateMascot: { width: 56, height: 56 },
 });
+
+const FLUX_PAIR = require('@/assets/images/flux/flux-pair-listening.png');
 
 /** Native back chevron — liquid glass on iOS 26, Material back arrow on Android. */
 const HEADER_OPTIONS = {
@@ -49,6 +54,11 @@ const CHAT_ICON = {
   web: 'forum',
 } as const;
 const MOON_ICON = { ios: 'moon', android: 'bedtime', web: 'bedtime' } as const;
+const CHEVRON_ICON = {
+  ios: 'chevron.right',
+  android: 'chevron_right',
+  web: 'chevron_right',
+} as const;
 
 export function XolacerProfileScreen({
   profileId,
@@ -128,6 +138,7 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
           name={profile.displayName}
           conversationId={conversation?.id}
           hasHistory={conversation ? hasSpoken(conversation) : false}
+          rateState={rateCtaState(profile)}
         />
       )}
 
@@ -219,6 +230,17 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
         className="gap-3 border-t border-border/40 px-6 pt-4"
         style={{ paddingBottom: Math.max(insets.bottom, 20) }}
       >
+        <RateCard
+          profile={profile}
+          onPress={() => {
+            playSoftPress();
+            if (conversation)
+              router.push({
+                pathname: '/rate/[conversationId]',
+                params: { conversationId: conversation.id },
+              });
+          }}
+        />
         <ProfileCta
           profile={profile}
           onAsk={handleAsk}
@@ -266,6 +288,73 @@ function ProfileRating({ profile }: { profile: Profile }) {
         {profile.ratingCount} conversation{profile.ratingCount === 1 ? '' : 's'} rated
       </AppText>
     </View>
+  );
+}
+
+/**
+ * The primary place a xolacer gets rated.
+ *
+ * Deliberately prominent, and deliberately not waiting for the conversation to
+ * wind down: the old underlined link in the post-quiet status bar was reachable
+ * only after a fortnight of silence, which is why almost nothing was ever
+ * rated. Once the seeker has scored this xolacer the card collapses to a quiet
+ * line — the app has its answer and stops asking for it.
+ */
+function RateCard({ profile, onPress }: { profile: Profile; onPress: () => void }) {
+  const accent = useThemeColor('accent') as string;
+  const state = rateCtaState(profile);
+  if (state === 'hidden') return null;
+
+  if (state === 'rated') {
+    return (
+      <PressableFeedback
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`You rated ${profile.myRating} out of 5. Change your rating.`}
+        hitSlop={8}
+      >
+        <AppText className="text-center text-xs text-muted">
+          You rated ★{profile.myRating} — <AppText className="text-accent">change</AppText>
+        </AppText>
+      </PressableFeedback>
+    );
+  }
+
+  return (
+    <PressableFeedback
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Rate your conversation with ${profile.displayName}`}
+    >
+      <View
+        className="flex-row items-center gap-3 rounded-3xl border border-border/40 bg-surface p-3"
+        style={styles.borderCurve}
+      >
+        {/* Contained rather than overflowing: the card sits directly under two
+            bordered blocks, and a mascot breaking its edge would read as a
+            different kind of surface. */}
+        <View
+          className="h-14 w-14 overflow-hidden rounded-2xl bg-accent/10"
+          style={styles.borderCurve}
+        >
+          <Image source={FLUX_PAIR} style={styles.rateMascot} contentFit="cover" />
+        </View>
+        <View className="flex-1 gap-1">
+          <AppText className="text-[15px] font-semibold leading-5 text-foreground">
+            How was talking with {profile.displayName}?
+          </AppText>
+          <View className="flex-row items-end justify-between gap-3">
+            <AppText className="flex-1 text-[11px] leading-4 text-muted">
+              Only you and Xolace see your score.
+            </AppText>
+            <View className="flex-row items-center gap-1">
+              <AppText className="text-[13px] font-semibold text-accent">Rate</AppText>
+              <SymbolView name={CHEVRON_ICON} size={11} tintColor={accent} />
+            </View>
+          </View>
+        </View>
+      </View>
+    </PressableFeedback>
   );
 }
 

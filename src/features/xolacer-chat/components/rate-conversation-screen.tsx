@@ -20,10 +20,15 @@ const HEADER_OPTIONS = {
 } as const;
 
 /**
- * The one place a rating is ever asked for: after a conversation has gone
- * quiet, never mid-thread. Asking during a live exchange would turn it into a
- * transaction; asking at the natural end of one is the only moment where the
- * question isn't intrusive.
+ * Where a rating is actually given, whatever pointed here: the profile's rate
+ * card (the prominent one), the thread overflow menu, or the post-quiet prompt
+ * in the status bar.
+ *
+ * No longer gated on the conversation having wound down — a real back-and-forth
+ * is rateable while it is still live (see `canRate`). What has not changed is
+ * the promise this screen makes before any star is picked: only the seeker and
+ * Xolace ever see the number, and the xolacer sees an aggregate that names no
+ * conversation.
  */
 export function RateConversationScreen({ conversationId }: { conversationId: string }) {
   const router = useRouter();
@@ -46,7 +51,7 @@ export function RateConversationScreen({ conversationId }: { conversationId: str
     );
   }
 
-  // Either the conversation vanished or nothing was ever exchanged — there is
+  // Either the conversation vanished, or there is not enough of it to judge —
   // no honest thing to ask about, so say so rather than show an empty prompt.
   if (conversation === null || !conversation.canRate) {
     return (

@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
 });
 
 /**
- * Fixed taxonomy, hard cap of three. Past the cap the unpicked chips dim
+ * Fixed taxonomy, hard cap of four. Past the cap the unpicked chips dim
  * rather than disappear, so a xolacer can see what they didn't pick and swap
  * — a list that shrinks as you use it feels broken.
  */
@@ -83,8 +83,8 @@ export function SpecialtyPicker({
 
       <AppText className="px-0.5 text-[11px] leading-4 text-muted">
         {atCap
-          ? 'Three is the limit — deselect one to swap.'
-          : 'Pick up to three. People can filter the roster by these.'}
+          ? 'Four is the limit — deselect one to swap.'
+          : 'Pick up to four. People can filter the roster by these.'}
       </AppText>
     </View>
   );

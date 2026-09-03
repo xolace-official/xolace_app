@@ -49,7 +49,7 @@ export const SETUP_STEPS: SetupStep[] = [
   {
     id: 'specialties',
     title: "What you're here for",
-    description: 'Pick up to three. People can filter the roster by these.',
+    description: 'Pick up to four. People can filter the roster by these.',
     missingLabel: 'pick what you’re here for',
     isComplete: (draft) => draft.specialties.length > 0,
   },

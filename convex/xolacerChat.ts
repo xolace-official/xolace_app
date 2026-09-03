@@ -50,7 +50,6 @@ import {
   canManualRest,
   canRate,
   declineCooldownUntil,
-  hasRealExchange,
   hasRequestExpired,
   isArchivedFor,
   isAtOpenCap,
@@ -567,6 +566,15 @@ export const xolacerProfile = query({
       present: v.boolean(),
       /** Viewing your own profile — the request CTA is replaced, not disabled. */
       isSelf: v.boolean(),
+      /**
+       * May the viewer rate this xolacer right now — the profile's rate card
+       * is the primary place to do it, so this is answered here rather than
+       * costing the screen a second round-trip into `getConversation`.
+       * Always false on your own profile.
+       */
+      canRate: v.boolean(),
+      /** The score the viewer already gave, if any. */
+      myRating: v.optional(v.number()),
       conversation: v.union(
         v.null(),
         v.object({
@@ -626,6 +634,9 @@ export const xolacerProfile = query({
         ? (await presentProfileIds(ctx)).has(args.xolacerProfileId)
         : false;
 
+    const myRating =
+      !isSelf && conversation ? await findRating(ctx, conversation._id) : null;
+
     return {
       xolacerProfileId: args.xolacerProfileId,
       displayName: xolacer.displayName ?? "",
@@ -637,6 +648,11 @@ export const xolacerProfile = query({
       present,
       available: xolacerAvailable(xolacer, openCount),
       isSelf,
+      // The row found here is always the viewer-as-seeker direction (the index
+      // is keyed userProfileId → xolacerProfileId), so "user" is the viewer's
+      // role on it by construction.
+      canRate: !isSelf && conversation ? canRate(conversation, "user") : false,
+      myRating: myRating?.rating,
       conversation: conversation
         ? {
             id: conversation._id,
@@ -1651,7 +1667,14 @@ export const touchConversation = mutation({
  * retries.
  */
 export const notifyNewMessage = internalMutation({
-  args: { channelId: v.string(), senderId: v.string() },
+  args: {
+    channelId: v.string(),
+    senderId: v.string(),
+    // Stream's `X-Webhook-Id`, stable across its retries of the same event.
+    // Optional: a delivery whose header was dropped, and any client older than
+    // the deploy that started sending it, still counts as before.
+    webhookId: v.optional(v.string()),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     if (!chatEnabled()) return null;
@@ -1664,10 +1687,43 @@ export const notifyNewMessage = internalMutation({
     if (!conversationId) return null;
 
     const conversation = await ctx.db.get("xolacer_conversations", conversationId);
+    if (!conversation) return null;
+
+    // Counted before the status gate below, not after: a conversation that
+    // keeps going quietly after the resting sweep is still a conversation, and
+    // its messages are exactly the ones that should carry it over the rating
+    // threshold. This is the server-authoritative per-message signal —
+    // `touchConversation` is client-called and best-effort.
+    //
+    // Once per event, though: Stream retries any delivery it cannot confirm,
+    // and a replayed `message.new` counted twice would hand a pair the rating
+    // gate they had not reached. The seen-check and the insert share this
+    // mutation's transaction, so two concurrent copies of one event cannot
+    // both get through.
+    const webhookId = args.webhookId;
+    let alreadyCounted = false;
+    if (webhookId) {
+      const seen = await ctx.db
+        .query("stream_webhook_events")
+        .withIndex("by_webhookId", (q) => q.eq("webhookId", webhookId))
+        .unique();
+      if (seen) alreadyCounted = true;
+      else await ctx.db.insert("stream_webhook_events", { webhookId });
+    }
+    if (!alreadyCounted) {
+      await ctx.db.patch("xolacer_conversations", conversationId, {
+        messageCount: (conversation.messageCount ?? 0) + 1,
+        // Server-authoritative recency, so a conversation still being used
+        // does not read as quiet when `touchConversation` never lands.
+        // Monotonic: a retry or a clock skew must not walk the stamp back.
+        lastMessageAt: Math.max(conversation.lastMessageAt ?? 0, Date.now()),
+      });
+    }
+
     // Stream cannot deliver into a channel we consider shut, but a resting or
     // blocked pair whose channel Stream has not frozen yet would still arrive
     // here — a closed conversation notifies nobody.
-    if (!conversation || conversation.status !== "open") return null;
+    if (conversation.status !== "open") return null;
 
     const recipientProfileId = messageNotificationRecipient(
       conversation,
@@ -1758,7 +1814,9 @@ export const rateConversation = mutation({
     if (isBlocked(conversation.closedReason)) {
       throw new Error("This conversation is closed");
     }
-    if (!hasRealExchange(conversation)) {
+    // Through the shared predicate, so the message-count threshold is enforced
+    // here and not merely suggested by the client's hidden CTA.
+    if (!canRate(conversation, role)) {
       throw new Error("Nothing to rate yet");
     }
 
@@ -2068,6 +2126,19 @@ export const sweep = internalMutation({
           conversation.userProfileId,
         );
       }
+    }
+
+    // Retire webhook-dedupe rows a day old — Stream gives up retrying long
+    // before that, so nothing past the window can still be deduped against.
+    // ponytail: bounded per pass; the six-hourly cadence catches the rest.
+    const stale = await ctx.db
+      .query("stream_webhook_events")
+      .withIndex("by_creation_time", (q) =>
+        q.lt("_creationTime", now - 24 * 60 * 60 * 1000),
+      )
+      .take(500);
+    for (const row of stale) {
+      await ctx.db.delete("stream_webhook_events", row._id);
     }
   },
 });

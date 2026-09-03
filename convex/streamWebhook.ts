@@ -68,9 +68,15 @@ export const streamEvents = httpAction(async (ctx, request) => {
     return new Response(null, { status: 200 });
   }
 
+  // Stream reuses this id across every retry of the same event, which is what
+  // makes the message count safe against a redelivery. Absent header (a hook
+  // or proxy that drops it) falls through to counting, as before.
+  const webhookId = request.headers.get("x-webhook-id") ?? undefined;
+
   await ctx.runMutation(internal.xolacerChat.notifyNewMessage, {
     channelId: event.channel_id,
     senderId,
+    webhookId,
   });
   return new Response(null, { status: 200 });
 });
