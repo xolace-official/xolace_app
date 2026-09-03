@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Button, PressableFeedback, Skeleton, useThemeColor, useToast } from 'heroui-native';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EditIcon from '@expo/material-symbols/edit.xml';
 import { useMutation, useQuery } from 'convex/react';
@@ -30,7 +31,10 @@ type Profile = NonNullable<FunctionReturnType<typeof api.xolacerChat.xolacerProf
 const styles = StyleSheet.create({
   borderCurve: { borderCurve: 'continuous' },
   factIcon: { marginTop: 2 },
+  rateMascot: { width: 56, height: 56 },
 });
+
+const FLUX_PAIR = require('@/assets/images/flux/flux-pair-listening.png');
 
 /** Native back chevron — liquid glass on iOS 26, Material back arrow on Android. */
 const HEADER_OPTIONS = {
@@ -50,6 +54,11 @@ const CHAT_ICON = {
   web: 'forum',
 } as const;
 const MOON_ICON = { ios: 'moon', android: 'bedtime', web: 'bedtime' } as const;
+const CHEVRON_ICON = {
+  ios: 'chevron.right',
+  android: 'chevron_right',
+  web: 'chevron_right',
+} as const;
 
 export function XolacerProfileScreen({
   profileId,
@@ -292,6 +301,7 @@ function ProfileRating({ profile }: { profile: Profile }) {
  * line — the app has its answer and stops asking for it.
  */
 function RateCard({ profile, onPress }: { profile: Profile; onPress: () => void }) {
+  const accent = useThemeColor('accent') as string;
   const state = rateCtaState(profile);
   if (state === 'hidden') return null;
 
@@ -317,18 +327,32 @@ function RateCard({ profile, onPress }: { profile: Profile; onPress: () => void 
       accessibilityLabel={`Rate your conversation with ${profile.displayName}`}
     >
       <View
-        className="flex-row items-center gap-3 rounded-3xl border border-accent/25 bg-accent/8 p-4"
+        className="flex-row items-center gap-3 rounded-3xl border border-border/40 bg-surface p-3"
         style={styles.borderCurve}
       >
-        <View className="flex-1 gap-0.5">
-          <AppText className="text-[15px] font-semibold text-foreground">
+        {/* Contained rather than overflowing: the card sits directly under two
+            bordered blocks, and a mascot breaking its edge would read as a
+            different kind of surface. */}
+        <View
+          className="h-14 w-14 overflow-hidden rounded-2xl bg-accent/10"
+          style={styles.borderCurve}
+        >
+          <Image source={FLUX_PAIR} style={styles.rateMascot} contentFit="cover" />
+        </View>
+        <View className="flex-1 gap-1">
+          <AppText className="text-[15px] font-semibold leading-5 text-foreground">
             How was talking with {profile.displayName}?
           </AppText>
-          <AppText className="text-[12px] leading-4 text-muted">
-            Only you and Xolace see your score — they only ever see an overall number.
-          </AppText>
+          <View className="flex-row items-end justify-between gap-3">
+            <AppText className="flex-1 text-[11px] leading-4 text-muted">
+              Only you and Xolace see your score.
+            </AppText>
+            <View className="flex-row items-center gap-1">
+              <AppText className="text-[13px] font-semibold text-accent">Rate</AppText>
+              <SymbolView name={CHEVRON_ICON} size={11} tintColor={accent} />
+            </View>
+          </View>
         </View>
-        <AppText className="text-[13px] font-semibold text-accent">Rate</AppText>
       </View>
     </PressableFeedback>
   );
