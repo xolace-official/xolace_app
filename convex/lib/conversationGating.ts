@@ -15,7 +15,7 @@ export type BlockPlanRow = Pick<
 >;
 type RatingInputs = Pick<
   Conversation,
-  "closedReason" | "acceptedAt" | "lastMessageAt"
+  "closedReason" | "acceptedAt" | "lastMessageAt" | "messageCount"
 >;
 
 /**
@@ -195,9 +195,29 @@ export function hasRealExchange(conversation: RatingInputs): boolean {
 }
 
 /**
+ * How many messages a conversation has to carry before it can be scored.
+ *
+ * Provisional, and expected to move once rating-conversion analytics exist:
+ * 15 is a starting guess, set below 7 Cups' ~30 because their conversations
+ * are live-chat paced and Xolace threads are slower and sparser. It is the
+ * line between "we talked" and "I said hi", and nothing else depends on the
+ * exact number.
+ */
+export const MIN_MESSAGES_TO_RATE = 15;
+
+/**
  * May this participant rate this conversation? A xolacer never rates the
  * people who come to them, nothing is rateable before a real exchange, and a
  * blocked conversation is never rateable by anyone.
+ *
+ * Deliberately says nothing about `status`: a real back-and-forth is rateable
+ * while it is still live. The old "only once it has wound down" behaviour was
+ * an accident of where the prompt was rendered, not a rule — and waiting for
+ * the 14-day quiet sweep is why almost nothing was ever rated.
+ *
+ * `messageCount` is absent on rows written before the counter existed and is
+ * read as 0: those conversations become rateable after 15 further messages
+ * rather than being backfilled.
  */
 export function canRate(
   conversation: RatingInputs,
@@ -206,7 +226,8 @@ export function canRate(
   return (
     role === "user" &&
     !isBlocked(conversation.closedReason) &&
-    hasRealExchange(conversation)
+    hasRealExchange(conversation) &&
+    (conversation.messageCount ?? 0) >= MIN_MESSAGES_TO_RATE
   );
 }
 

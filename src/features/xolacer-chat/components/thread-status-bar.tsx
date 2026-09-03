@@ -206,10 +206,14 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
 }
 
 /**
- * The single entry to the rating prompt, offered only once a conversation has
- * gone quiet — never mid-thread, where it would turn an emotional exchange
- * into a transaction. It's a link, not a modal: ignoring it is the default,
- * and an unrated conversation just never enters anyone's denominator.
+ * The wind-down entry to the rating prompt: a conversation that goes quiet on
+ * its own is still a natural moment to ask, so this stays exactly as it was.
+ *
+ * It is no longer the *only* entry, and no longer the prominent one — the
+ * profile screen's rate card is, and it deliberately pushes until the seeker
+ * has scored once. Here it stays a link, in keeping with the surface: this bar
+ * is already delivering the news that the conversation ended. An unrated
+ * conversation still just never enters anyone's denominator.
  */
 function RatePrompt({ conversation }: { conversation: ThreadConversation }) {
   const router = useRouter();

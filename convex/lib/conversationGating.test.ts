@@ -12,6 +12,7 @@ import {
   isAtOpenCap,
   isBlocked,
   isPairBlocked,
+  MIN_MESSAGES_TO_RATE,
   planBlock,
   presenceDisclosed,
   REQUEST_EXPIRY_MS,
@@ -403,13 +404,15 @@ describe("isBlocked", () => {
 describe("canRate", () => {
   const ACCEPTED = 1_000;
   const AFTER = 2_000;
+  const ENOUGH = MIN_MESSAGES_TO_RATE;
 
-  // role | closedReason | exchange → rateable
+  // role | closedReason | exchange | messages → rateable
   const cases: {
     role: "user" | "xolacer";
     reason?: "declined" | "expired" | "blocked" | "xolacer_left";
     acceptedAt?: number;
     lastMessageAt?: number;
+    messageCount?: number;
     expected: boolean;
     label?: string;
   }[] = [
@@ -417,6 +420,7 @@ describe("canRate", () => {
       role: "user",
       acceptedAt: ACCEPTED,
       lastMessageAt: AFTER,
+      messageCount: ENOUGH,
       expected: true,
     },
     // A closed conversation is still rateable — only a block isn't.
@@ -425,6 +429,7 @@ describe("canRate", () => {
       reason: "xolacer_left",
       acceptedAt: ACCEPTED,
       lastMessageAt: AFTER,
+      messageCount: ENOUGH,
       expected: true,
     },
     // The xolacer never rates the people who come to them.
@@ -432,6 +437,7 @@ describe("canRate", () => {
       role: "xolacer",
       acceptedAt: ACCEPTED,
       lastMessageAt: AFTER,
+      messageCount: ENOUGH,
       expected: false,
     },
     // Accepted then ignored: the handshake stamp is the only timestamp.
@@ -439,15 +445,39 @@ describe("canRate", () => {
       role: "user",
       acceptedAt: ACCEPTED,
       lastMessageAt: ACCEPTED,
+      messageCount: ENOUGH,
       expected: false,
     },
     { role: "user", expected: false },
+    // The threshold, one tick either side of it and exactly on it.
+    {
+      role: "user",
+      acceptedAt: ACCEPTED,
+      lastMessageAt: AFTER,
+      messageCount: ENOUGH - 1,
+      expected: false,
+    },
+    {
+      role: "user",
+      acceptedAt: ACCEPTED,
+      lastMessageAt: AFTER,
+      messageCount: ENOUGH + 1,
+      expected: true,
+    },
+    // Predates the counter: absent reads as 0, and is not backfilled.
+    {
+      role: "user",
+      acceptedAt: ACCEPTED,
+      lastMessageAt: AFTER,
+      expected: false,
+    },
     // safety rows: a blocked conversation never rates, whatever else is true
     {
       role: "user",
       reason: "blocked",
       acceptedAt: ACCEPTED,
       lastMessageAt: AFTER,
+      messageCount: ENOUGH,
       expected: false,
       label: "safety",
     },
@@ -456,13 +486,14 @@ describe("canRate", () => {
       reason: "blocked",
       acceptedAt: ACCEPTED,
       lastMessageAt: AFTER,
+      messageCount: ENOUGH,
       expected: false,
       label: "safety",
     },
   ];
 
   for (const c of cases) {
-    const name = `${c.label ? `${c.label}: ` : ""}role=${c.role} closedReason=${c.reason} accepted=${c.acceptedAt} last=${c.lastMessageAt} → ${c.expected}`;
+    const name = `${c.label ? `${c.label}: ` : ""}role=${c.role} closedReason=${c.reason} accepted=${c.acceptedAt} last=${c.lastMessageAt} messages=${c.messageCount} → ${c.expected}`;
     it(name, () => {
       expect(
         canRate(
@@ -470,6 +501,7 @@ describe("canRate", () => {
             closedReason: c.reason,
             acceptedAt: c.acceptedAt,
             lastMessageAt: c.lastMessageAt,
+            messageCount: c.messageCount,
           },
           c.role,
         ),

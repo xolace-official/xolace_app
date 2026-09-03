@@ -173,3 +173,23 @@ export function acceptFailureLabel(error: unknown): string {
     ? `You're holding ${data.max ?? 8} open conversations. Let one rest before accepting another.`
     : "They've got as many conversations open as they can hold right now. This request stays in your inbox.";
 }
+
+/**
+ * What the rate call-to-action should be doing right now.
+ *
+ * One rule, three surfaces: the profile's rate card, the thread overflow menu,
+ * and the post-quiet prompt in the status bar. The server has already decided
+ * whether rating is allowed at all (`canRate` — role, blocking, and the
+ * message-count threshold); this only picks between asking and acknowledging.
+ *
+ * `hidden` wins over a defined `myRating`: a conversation that became
+ * un-rateable (a block) stops offering the link even to someone who already
+ * scored it.
+ */
+export function rateCtaState(input: {
+  canRate: boolean;
+  myRating?: number;
+}): 'hidden' | 'prompt' | 'rated' {
+  if (!input.canRate) return 'hidden';
+  return input.myRating === undefined ? 'prompt' : 'rated';
+}

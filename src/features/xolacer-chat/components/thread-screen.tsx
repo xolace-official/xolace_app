@@ -8,6 +8,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { useStreamConnection } from '../providers/stream-chat-provider';
 import { useDismissThreadNotifications } from '../use-dismiss-thread-notifications';
 import { useThreadConversation } from '../use-thread-conversation';
+import { rateCtaState } from '../utils';
 import { XolacerMenu } from './xolacer-menu';
 import { ComposerPlaceholder } from './composer-placeholder';
 import { SafetyStrip } from './safety-strip';
@@ -72,6 +73,7 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
         name={conversation.counterpartName}
         conversationId={conversation.id}
         hasHistory={Boolean(conversation.streamChannelId)}
+        rateState={rateCtaState(conversation)}
       />
     </>
   );

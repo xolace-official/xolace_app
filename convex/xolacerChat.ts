@@ -50,7 +50,6 @@ import {
   canManualRest,
   canRate,
   declineCooldownUntil,
-  hasRealExchange,
   hasRequestExpired,
   isArchivedFor,
   isAtOpenCap,
@@ -567,6 +566,15 @@ export const xolacerProfile = query({
       present: v.boolean(),
       /** Viewing your own profile — the request CTA is replaced, not disabled. */
       isSelf: v.boolean(),
+      /**
+       * May the viewer rate this xolacer right now — the profile's rate card
+       * is the primary place to do it, so this is answered here rather than
+       * costing the screen a second round-trip into `getConversation`.
+       * Always false on your own profile.
+       */
+      canRate: v.boolean(),
+      /** The score the viewer already gave, if any. */
+      myRating: v.optional(v.number()),
       conversation: v.union(
         v.null(),
         v.object({
@@ -626,6 +634,9 @@ export const xolacerProfile = query({
         ? (await presentProfileIds(ctx)).has(args.xolacerProfileId)
         : false;
 
+    const myRating =
+      !isSelf && conversation ? await findRating(ctx, conversation._id) : null;
+
     return {
       xolacerProfileId: args.xolacerProfileId,
       displayName: xolacer.displayName ?? "",
@@ -637,6 +648,11 @@ export const xolacerProfile = query({
       present,
       available: xolacerAvailable(xolacer, openCount),
       isSelf,
+      // The row found here is always the viewer-as-seeker direction (the index
+      // is keyed userProfileId → xolacerProfileId), so "user" is the viewer's
+      // role on it by construction.
+      canRate: !isSelf && conversation ? canRate(conversation, "user") : false,
+      myRating: myRating?.rating,
       conversation: conversation
         ? {
             id: conversation._id,
@@ -1664,10 +1680,21 @@ export const notifyNewMessage = internalMutation({
     if (!conversationId) return null;
 
     const conversation = await ctx.db.get("xolacer_conversations", conversationId);
+    if (!conversation) return null;
+
+    // Counted before the status gate below, not after: a conversation that
+    // keeps going quietly after the resting sweep is still a conversation, and
+    // its messages are exactly the ones that should carry it over the rating
+    // threshold. This is the server-authoritative per-message signal —
+    // `touchConversation` is client-called and best-effort.
+    await ctx.db.patch("xolacer_conversations", conversationId, {
+      messageCount: (conversation.messageCount ?? 0) + 1,
+    });
+
     // Stream cannot deliver into a channel we consider shut, but a resting or
     // blocked pair whose channel Stream has not frozen yet would still arrive
     // here — a closed conversation notifies nobody.
-    if (!conversation || conversation.status !== "open") return null;
+    if (conversation.status !== "open") return null;
 
     const recipientProfileId = messageNotificationRecipient(
       conversation,
@@ -1758,7 +1785,9 @@ export const rateConversation = mutation({
     if (isBlocked(conversation.closedReason)) {
       throw new Error("This conversation is closed");
     }
-    if (!hasRealExchange(conversation)) {
+    // Through the shared predicate, so the message-count threshold is enforced
+    // here and not merely suggested by the client's hidden CTA.
+    if (!canRate(conversation, role)) {
       throw new Error("Nothing to rate yet");
     }
 

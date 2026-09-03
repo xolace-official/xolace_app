@@ -4,6 +4,7 @@ import { useToast } from 'heroui-native';
 import { useAction } from 'convex/react';
 import BlockIcon from '@expo/material-symbols/block.xml';
 import FlagIcon from '@expo/material-symbols/flag.xml';
+import StarIcon from '@expo/material-symbols/star.xml';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { OverflowMenu } from '@/src/components/shared/overflow-menu';
@@ -30,6 +31,11 @@ import { playSoftPress } from '@/src/lib/haptics';
  * presence of `conversationId`, which is also the block target. The display
  * name goes no further than the form's copy.
  *
+ * Rate is the secondary entry to the rating screen — the primary one is the
+ * card on the xolacer's profile. Offered on any status once the seeker is
+ * eligible, which the caller decides with `rateCtaState`; this component only
+ * picks the wording.
+ *
  * Block is conditionally *mounted*, never `hidden`: a profile reached from the
  * roster may have no conversation row, and there is no channel and nothing to
  * escape. (A hidden toolbar item also leaves a transparent touch-eating band
@@ -41,6 +47,7 @@ export function XolacerMenu({
   conversationId,
   origin,
   hasHistory = true,
+  rateState = 'hidden',
 }: {
   profileId: Id<'emotional_profiles'>;
   name: string;
@@ -48,6 +55,8 @@ export function XolacerMenu({
   origin: 'thread' | 'profile';
   /** Whether anything was ever written here — see `hasSpoken`. */
   hasHistory?: boolean;
+  /** Whether to offer rating here, and in which wording — see `rateCtaState`. */
+  rateState?: 'hidden' | 'prompt' | 'rated';
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -81,6 +90,21 @@ export function XolacerMenu({
   return (
     <>
       <OverflowMenu>
+        {rateState !== 'hidden' && conversationId && (
+          <OverflowMenu.Action
+            icon={process.env.EXPO_OS === 'ios' ? 'star' : StarIcon}
+            onPress={() => {
+              playSoftPress();
+              router.push({
+                pathname: '/rate/[conversationId]',
+                params: { conversationId },
+              });
+            }}
+          >
+            {rateState === 'prompt' ? 'Rate this conversation' : 'Change your rating'}
+          </OverflowMenu.Action>
+        )}
+
         <OverflowMenu.Action
           icon={process.env.EXPO_OS === 'ios' ? 'flag' : FlagIcon}
           onPress={() => {

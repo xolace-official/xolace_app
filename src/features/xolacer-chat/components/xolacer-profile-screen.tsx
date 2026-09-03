@@ -16,6 +16,7 @@ import {
   declineCooldownActive,
   declineCooldownNote,
   hasSpoken,
+  rateCtaState,
 } from '@/src/features/xolacer-chat/utils';
 import { formatMonthYear } from '@/src/features/xolacer-chat/format-time';
 import { XolacerMenu } from './xolacer-menu';
@@ -128,6 +129,7 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
           name={profile.displayName}
           conversationId={conversation?.id}
           hasHistory={conversation ? hasSpoken(conversation) : false}
+          rateState={rateCtaState(profile)}
         />
       )}
 
@@ -219,6 +221,17 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
         className="gap-3 border-t border-border/40 px-6 pt-4"
         style={{ paddingBottom: Math.max(insets.bottom, 20) }}
       >
+        <RateCard
+          profile={profile}
+          onPress={() => {
+            playSoftPress();
+            if (conversation)
+              router.push({
+                pathname: '/rate/[conversationId]',
+                params: { conversationId: conversation.id },
+              });
+          }}
+        />
         <ProfileCta
           profile={profile}
           onAsk={handleAsk}
@@ -266,6 +279,58 @@ function ProfileRating({ profile }: { profile: Profile }) {
         {profile.ratingCount} conversation{profile.ratingCount === 1 ? '' : 's'} rated
       </AppText>
     </View>
+  );
+}
+
+/**
+ * The primary place a xolacer gets rated.
+ *
+ * Deliberately prominent, and deliberately not waiting for the conversation to
+ * wind down: the old underlined link in the post-quiet status bar was reachable
+ * only after a fortnight of silence, which is why almost nothing was ever
+ * rated. Once the seeker has scored this xolacer the card collapses to a quiet
+ * line — the app has its answer and stops asking for it.
+ */
+function RateCard({ profile, onPress }: { profile: Profile; onPress: () => void }) {
+  const state = rateCtaState(profile);
+  if (state === 'hidden') return null;
+
+  if (state === 'rated') {
+    return (
+      <PressableFeedback
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`You rated ${profile.myRating} out of 5. Change your rating.`}
+        hitSlop={8}
+      >
+        <AppText className="text-center text-xs text-muted">
+          You rated ★{profile.myRating} — <AppText className="text-accent">change</AppText>
+        </AppText>
+      </PressableFeedback>
+    );
+  }
+
+  return (
+    <PressableFeedback
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Rate your conversation with ${profile.displayName}`}
+    >
+      <View
+        className="flex-row items-center gap-3 rounded-3xl border border-accent/25 bg-accent/8 p-4"
+        style={styles.borderCurve}
+      >
+        <View className="flex-1 gap-0.5">
+          <AppText className="text-[15px] font-semibold text-foreground">
+            How was talking with {profile.displayName}?
+          </AppText>
+          <AppText className="text-[12px] leading-4 text-muted">
+            Only you and Xolace see your score — they only ever see an overall number.
+          </AppText>
+        </View>
+        <AppText className="text-[13px] font-semibold text-accent">Rate</AppText>
+      </View>
+    </PressableFeedback>
   );
 }
 
