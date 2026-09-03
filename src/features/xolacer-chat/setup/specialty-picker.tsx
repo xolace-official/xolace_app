@@ -83,7 +83,7 @@ export function SpecialtyPicker({
 
       <AppText className="px-0.5 text-[11px] leading-4 text-muted">
         {atCap
-          ? 'Three is the limit — deselect one to swap.'
+          ? 'Four is the limit — deselect one to swap.'
           : 'Pick up to four. People can filter the roster by these.'}
       </AppText>
     </View>

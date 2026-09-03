@@ -1895,4 +1895,19 @@ export default defineSchema({
   })
     // "the most recent week we have" — and the cron's own idempotency lookup.
     .index("by_weekStart", ["weekStart"]),
+
+  // ===========================================================
+  // STREAM WEBHOOK DEDUPE
+  // ===========================================================
+  //
+  // One row per Stream event we have already counted, keyed by the stable
+  // `X-Webhook-Id` header Stream reuses across retries of the same event.
+  // Stream retries any delivery it cannot confirm, and a replayed
+  // `message.new` would otherwise increment `messageCount` twice — handing a
+  // pair the rating gate they had not actually reached. Purged by the xolacer
+  // sweep once a day old, far past Stream's retry window.
+  //
+  stream_webhook_events: defineTable({
+    webhookId: v.string(),
+  }).index("by_webhookId", ["webhookId"]),
 });

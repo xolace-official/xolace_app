@@ -1667,7 +1667,14 @@ export const touchConversation = mutation({
  * retries.
  */
 export const notifyNewMessage = internalMutation({
-  args: { channelId: v.string(), senderId: v.string() },
+  args: {
+    channelId: v.string(),
+    senderId: v.string(),
+    // Stream's `X-Webhook-Id`, stable across its retries of the same event.
+    // Optional: a delivery whose header was dropped, and any client older than
+    // the deploy that started sending it, still counts as before.
+    webhookId: v.optional(v.string()),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     if (!chatEnabled()) return null;
@@ -1687,9 +1694,31 @@ export const notifyNewMessage = internalMutation({
     // its messages are exactly the ones that should carry it over the rating
     // threshold. This is the server-authoritative per-message signal —
     // `touchConversation` is client-called and best-effort.
-    await ctx.db.patch("xolacer_conversations", conversationId, {
-      messageCount: (conversation.messageCount ?? 0) + 1,
-    });
+    //
+    // Once per event, though: Stream retries any delivery it cannot confirm,
+    // and a replayed `message.new` counted twice would hand a pair the rating
+    // gate they had not reached. The seen-check and the insert share this
+    // mutation's transaction, so two concurrent copies of one event cannot
+    // both get through.
+    const webhookId = args.webhookId;
+    let alreadyCounted = false;
+    if (webhookId) {
+      const seen = await ctx.db
+        .query("stream_webhook_events")
+        .withIndex("by_webhookId", (q) => q.eq("webhookId", webhookId))
+        .unique();
+      if (seen) alreadyCounted = true;
+      else await ctx.db.insert("stream_webhook_events", { webhookId });
+    }
+    if (!alreadyCounted) {
+      await ctx.db.patch("xolacer_conversations", conversationId, {
+        messageCount: (conversation.messageCount ?? 0) + 1,
+        // Server-authoritative recency, so a conversation still being used
+        // does not read as quiet when `touchConversation` never lands.
+        // Monotonic: a retry or a clock skew must not walk the stamp back.
+        lastMessageAt: Math.max(conversation.lastMessageAt ?? 0, Date.now()),
+      });
+    }
 
     // Stream cannot deliver into a channel we consider shut, but a resting or
     // blocked pair whose channel Stream has not frozen yet would still arrive
@@ -2097,6 +2126,19 @@ export const sweep = internalMutation({
           conversation.userProfileId,
         );
       }
+    }
+
+    // Retire webhook-dedupe rows a day old — Stream gives up retrying long
+    // before that, so nothing past the window can still be deduped against.
+    // ponytail: bounded per pass; the six-hourly cadence catches the rest.
+    const stale = await ctx.db
+      .query("stream_webhook_events")
+      .withIndex("by_creation_time", (q) =>
+        q.lt("_creationTime", now - 24 * 60 * 60 * 1000),
+      )
+      .take(500);
+    for (const row of stale) {
+      await ctx.db.delete("stream_webhook_events", row._id);
     }
   },
 });
