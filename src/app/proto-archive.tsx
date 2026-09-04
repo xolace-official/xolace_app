@@ -8,8 +8,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import type { CSSTransitionProperties } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import Animated, {
-  runOnJS,
+  cubicBezier,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -25,6 +27,27 @@ const GAP = 16;
 const TITLE_GAP = 44; // constant, never flex — see the title-travel note
 
 const SPRING = { damping: 18, stiffness: 160, mass: 0.9 };
+// The card's size change is a CSS transition, never a `withSpring(height)` in a
+// useAnimatedStyle: that re-ran Yoga (and the shadow) every frame for the card
+// and every row below it. Layout animations were the first attempt and are
+// asymmetric here — Reanimated snapshots on re-render and LegendList reclaims
+// the row's space the moment the height style drops, so closing snapped.
+// A transition is one declarative pair of values, so open and close are the
+// same animation played in opposite directions.
+// The curve matters as much as the duration: a quint-out (0.23, 1, 0.32, 1)
+// puts 85% of the travel in the first 100ms, which the eye reads as a snap
+// with a shimmer after it. This one ramps in before it decelerates.
+const CARD_EASE = cubicBezier(0.4, 0, 0.2, 1);
+const CARD_TRANSITION: CSSTransitionProperties = {
+  transitionProperty: ["height", "marginBottom"],
+  transitionDuration: 340,
+  transitionTimingFunction: CARD_EASE,
+};
+const BODY_TRANSITION: CSSTransitionProperties = {
+  transitionProperty: ["opacity"],
+  transitionDuration: 220,
+  transitionTimingFunction: CARD_EASE,
+};
 const WEEKDAYS = ["Tuesday", "Sunday", "Thursday", "Monday", "Friday", "Wednesday", "Saturday"];
 const TINTS = ["#F4E9B8", "#F3D3DC", "#E7E5E2", "#DCE6DE"];
 const INK = "#141414";
@@ -145,7 +168,7 @@ function Card({
       if (Math.abs(e.translationX) > DISMISS_X || Math.abs(e.velocityX) > 900) {
         dragX.set(
           withTiming(Math.sign(e.translationX) * 600, { duration: 200 }, () => {
-            runOnJS(onDismiss)(item.id);
+            scheduleOnRN(onDismiss, item.id);
           }),
         );
       } else {
@@ -207,14 +230,14 @@ function FlowCard({
   onToggle: (id: string | null) => void;
   reduced: boolean;
 }) {
-  const wrap = useAnimatedStyle(() => ({
-    height: reduced ? (isOpen ? EXPANDED : COLLAPSED) : withSpring(isOpen ? EXPANDED : COLLAPSED, SPRING),
-  }));
-  const body = useAnimatedStyle(() => ({ opacity: withTiming(isOpen ? 1 : 0, { duration: 240 }) }));
-
   return (
     <Animated.View
-      style={[{ marginBottom: isOpen ? GAP : PEEK - COLLAPSED, zIndex: isOpen ? 9999 : index }, wrap]}
+      style={{
+        height: isOpen ? EXPANDED : COLLAPSED,
+        marginBottom: isOpen ? GAP : PEEK - COLLAPSED,
+        zIndex: isOpen ? 9999 : index,
+        ...(reduced ? null : CARD_TRANSITION),
+      }}
     >
       <Pressable
         style={[styles.card, { backgroundColor: item.tint }]}
@@ -229,7 +252,14 @@ function FlowCard({
         <Text numberOfLines={1} style={styles.cardTitle}>
           {item.title}
         </Text>
-        <Animated.View pointerEvents={isOpen ? "auto" : "none"} style={[styles.body, body]}>
+        <Animated.View
+          pointerEvents={isOpen ? "auto" : "none"}
+          style={[
+            styles.body,
+            { opacity: isOpen ? 1 : 0 },
+            reduced ? null : BODY_TRANSITION,
+          ]}
+        >
           <Text style={styles.bodyText}>{item.excerpt}</Text>
           <View style={styles.tagRow}>
             <View style={styles.tag}>
