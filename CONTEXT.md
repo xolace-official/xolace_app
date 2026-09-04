@@ -580,3 +580,26 @@ once in `evaluateSafeguard`'s final return, never at call sites.
 Deliberate non-moves: the action was NOT split into smaller actions (more
 `runQuery` round-trips, worse locality), and the `clarify.ts`/`process.ts`
 back-half duplication is a separate deferred candidate.
+
+## Episodic key classes (2026-09-04)
+
+"Episodic key" no longer means "sessionId". The personal RAG namespace
+(`namespace = emotionalProfileId`) holds two classes of entry, and the
+distinction is load-bearing rather than cosmetic:
+
+- **Session entries** — `key = sessionId`, the composite of raw + mirror +
+  distilled + metadata line. Read by both consumers, and the only class whose
+  weight is earned: `applyMemoryFeedback` casts `key as Id<"sessions">` on the
+  assumption that anything it receives is one.
+- **Reply entries** — `key = reply:<quoteId>`, a provenance label plus the
+  user's reply to a daily thought. Read **only** by the semantic-profile
+  agent; the mirror's `searchEpisodicMemory` filters them out with
+  `status = EPISODIC_STATUS`. Weight is `REPLY_IMPORTANCE`, seeded and never
+  adjusted.
+
+Two invariants follow. A new key class must (a) declare which consumers may
+retrieve it, since "everything in the namespace reaches the mirror" is no
+longer true, and (b) have a purge call-site in every job that deletes its
+source rows — enforced by the `sessionCascade` guard, not by convention.
+
+See `docs/adr/0007-replies-reach-the-profile-not-the-mirror.md`.

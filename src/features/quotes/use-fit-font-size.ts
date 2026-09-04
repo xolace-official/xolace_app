@@ -7,6 +7,7 @@
  * search step (~6) and settles.
  */
 import { useRef, useState } from "react";
+import { PixelRatio } from "react-native";
 import type { LayoutChangeEvent, NativeSyntheticEvent, TextLayoutEventData } from "react-native";
 
 const MAX_STEPS = 8;
@@ -15,8 +16,11 @@ export function useFitFontSize(text: string, { min, max }: { min: number; max: n
   const [boxHeight, setBoxHeight] = useState(0);
   const [search, setSearch] = useState({ lo: min, hi: max, size: max, steps: 0 });
 
-  // restart the search whenever the text or the box it must fill changes
-  const key = `${text.length}|${boxHeight}|${min}|${max}`;
+  // restart the search whenever the text, the box it must fill, or the OS text
+  // size changes — `fontScale` multiplies every candidate, so a stale search
+  // settles on a size that no longer fits
+  const fontScale = PixelRatio.getFontScale();
+  const key = `${text.length}|${boxHeight}|${min}|${max}|${fontScale}`;
   const keyRef = useRef(key);
   if (keyRef.current !== key) {
     keyRef.current = key;
