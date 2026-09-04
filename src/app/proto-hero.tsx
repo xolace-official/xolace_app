@@ -36,7 +36,7 @@ const QUOTES = [
   },
   {
     label: "tiny (24)",
-    title: "Small Returns",
+    title: "Holding patterns now",
     body: "It counts. It really does.",
   },
 ];
