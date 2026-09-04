@@ -21,6 +21,7 @@ const PEEK = 146;
 const COLLAPSED = 172;
 const EXPANDED = 288;
 const GAP = 16;
+const TITLE_GAP = 44; // constant, never flex — see the title-travel note
 
 const SPRING = { damping: 18, stiffness: 160, mass: 0.9 };
 const WEEKDAYS = ["Tuesday", "Sunday", "Thursday", "Monday", "Friday", "Wednesday", "Saturday"];
@@ -164,7 +165,7 @@ function Card({
             {item.reaction ? `, ${item.reaction}` : ""}
           </Text>
 
-          {isOpen ? null : <View style={{ flex: 1 }} />}
+          <View style={{ height: TITLE_GAP }} />
 
           <Text numberOfLines={1} style={styles.cardTitle}>
             {item.title}
