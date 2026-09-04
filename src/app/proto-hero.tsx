@@ -1,20 +1,65 @@
 /**
- * THROWAWAY PROTOTYPE — wayfinder #294. Not for merge.
+ * THROWAWAY PROTOTYPE — wayfinder #294 / #302. Not for merge.
  * Hero card on device: Space Grotesk voice + fit-to-fill type + poster palette.
+ * #302 adds: real theme chrome behind the card, and a dark poster variant to A/B
+ * against the bright one on `*-dark` chrome.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppText } from "@/src/components/shared/app-text";
 import { LinearGradient } from "expo-linear-gradient";
 import { Canvas, Fill, Turbulence, ColorMatrix, Group } from "@shopify/react-native-skia";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
+import { Uniwind, useUniwind } from "uniwind";
 import { useFitFontSize } from "@/src/features/quotes/use-fit-font-size";
 
-const HERO = ["#F9F06B", "#FBE3A0", "#FBD7DE", "#F7AFC4", "#CFC9C6", "#B9B7B4"] as const;
 const LOCATIONS = [0, 0.22, 0.46, 0.62, 0.82, 1] as const;
-const PAPER = "#F4F3F1";
-const INK = "#141414";
-const INK_SOFT = "#5D5D5D";
+
+/**
+ * Two candidate posters. The bright one is what #295 shipped in both light and
+ * dark. The dark one extends the design's archive ink set (#33322E / #3B3A36)
+ * to a full poster: same hue journey (yellow -> pink -> grey), low luminance.
+ */
+const PALETTES = [
+  {
+    label: "bright",
+    stops: ["#F9F06B", "#FBE3A0", "#FBD7DE", "#F7AFC4", "#CFC9C6", "#B9B7B4"],
+    grain: 0.09,
+    paper: "#F4F3F1",
+    plate: "#FFFFFF",
+    ink: "#141414",
+    inkSoft: "#5D5D5D",
+    inkFaint: "#6B6B6B",
+    h1Second: "#5C5C5C",
+    back: "rgba(255,255,255,0.42)",
+    share: "#FFFFFF",
+    shareLabel: "#141414",
+    resonate: "#F5726A",
+    resonateLabel: "#2B1414",
+    hairline: "rgba(0,0,0,0.10)",
+  },
+  {
+    label: "dark",
+    stops: ["#4A4526", "#443E2C", "#443036", "#402A33", "#33322E", "#26251F"],
+    grain: 0.05,
+    paper: "#33322E",
+    plate: "#3B3A36",
+    ink: "#F2F0EA",
+    inkSoft: "#A9A69D",
+    inkFaint: "#8C8A82",
+    h1Second: "#9B978C",
+    back: "rgba(255,255,255,0.14)",
+    share: "#3B3A36",
+    shareLabel: "#F2F0EA",
+    resonate: "#C4564F",
+    resonateLabel: "#FBEDEB",
+    hairline: "rgba(255,255,255,0.10)",
+  },
+] as const;
+
+/** the chromes #302 names: system-initiated night, a paid dark, the defaults */
+const THEMES = ["light", "dark", "nightly-dark", "noir-dark", "nightly-light"] as const;
 
 const QUOTES = [
   {
@@ -71,29 +116,46 @@ function tierSize(text: string) {
 export default function ProtoHero() {
   const insets = useSafeAreaInsets();
   const [qi, setQi] = useState(1);
-  const [vi, setVi] = useState(0);
+  const [vi, setVi] = useState(2); // C · tracked out — locked by #294
   const [fi, setFi] = useState(0);
+  const [pi, setPi] = useState(0);
+  const [ti, setTi] = useState(1); // start on `dark` chrome — the case under judgement
   const [grain, setGrain] = useState(true);
-  const [grainOpacity, setGrainOpacity] = useState(0.09);
 
   const quote = QUOTES[qi];
   const voice = VOICES[vi];
   const mode = FIT_MODES[fi];
+  const p = PALETTES[pi];
+  const grainOpacity = p.grain;
+
+  // real chrome, not the stub — #302 judges the card against the actual screen
+  const setChrome = (next: number) => {
+    setTi(next);
+    Uniwind.setTheme(THEMES[next]);
+  };
+  // the chrome chip drives the app's real theme; put it back on the way out
+  const { theme: enteredWith } = useUniwind();
+  useEffect(() => {
+    const restore = enteredWith;
+    Uniwind.setTheme(THEMES[ti]);
+    return () => Uniwind.setTheme(restore as (typeof THEMES)[number]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fit = useFitFontSize(quote.body, { min: 13, max: 56 });
   const bodySize =
     mode === "measured" ? fit.fontSize : mode === "tiers" ? tierSize(quote.body) : 14.5;
 
   return (
-    <View style={styles.screen}>
+    <View className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={{ paddingBottom: 8 }} showsVerticalScrollIndicator={false}>
         <LinearGradient
-          colors={HERO as unknown as string[]}
-          locations={LOCATIONS as unknown as number[]}
+          colors={p.stops as unknown as [string, string, ...string[]]}
+          locations={LOCATIONS as unknown as [number, number, ...number[]]}
           start={{ x: 0.1, y: 0 }}
           end={{ x: 0.9, y: 1 }}
-          style={[styles.hero, { paddingTop: insets.top + 12 }]}
+          style={[styles.hero, { paddingTop: insets.top + 12, borderColor: p.hairline }]}
         >
           {grain ? (
             <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -114,25 +176,29 @@ export default function ProtoHero() {
 
           <View style={styles.heroTop}>
             <View style={{ gap: 14, flex: 1 }}>
-              <View style={styles.backButton} />
-              <Text style={[styles.h1, voice.style, { transform: [{ scaleX: voice.scaleX }] }]}>
+              <View style={[styles.backButton, { backgroundColor: p.back }]} />
+              <Text
+                style={[styles.h1, voice.style, { color: p.ink, transform: [{ scaleX: voice.scaleX }] }]}
+              >
                 TODAY'S{"\n"}
-                <Text style={{ color: "#5C5C5C" }}>THOUGHT</Text>
+                <Text style={{ color: p.h1Second }}>THOUGHT</Text>
               </Text>
             </View>
-            <View style={styles.avatar} />
           </View>
 
           {/* paper card — fixed box, type fills it */}
-          <View style={styles.paper}>
-            <Text style={styles.source}>based on what you shared Tuesday.</Text>
-            <View style={styles.titlePlate}>
+          <View style={[styles.paper, { backgroundColor: p.paper }]}>
+            <Text style={[styles.source, { color: p.inkFaint }]}>
+              based on what you shared Tuesday.
+            </Text>
+            <View style={[styles.titlePlate, { backgroundColor: p.plate }]}>
               <Text
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.8}
                 style={[
                   styles.title,
+                  { color: p.ink },
                   voice.style,
                   { transform: [{ scaleX: voice.scaleX }] },
                 ]}
@@ -146,7 +212,7 @@ export default function ProtoHero() {
                   fontFamily: "SpaceGrotesk-Regular",
                   fontSize: bodySize,
                   lineHeight: Math.round(bodySize * 1.5),
-                  color: INK_SOFT,
+                  color: p.inkSoft,
                 }}
               >
                 {quote.body}
@@ -175,14 +241,29 @@ export default function ProtoHero() {
           </View>
 
           <View style={styles.actionRow}>
-            <View style={[styles.action, { backgroundColor: "#FFFFFF", flex: 1 }]}>
-              <Text style={styles.actionLabel}>Share</Text>
+            <View style={[styles.action, { backgroundColor: p.share, flex: 1 }]}>
+              <Text style={[styles.actionLabel, { color: p.shareLabel }]}>Share</Text>
             </View>
-            <View style={[styles.action, { backgroundColor: "#F5726A", flex: 1.15 }]}>
-              <Text style={[styles.actionLabel, { color: "#2B1414" }]}>Resonate</Text>
+            <View style={[styles.action, { backgroundColor: p.resonate, flex: 1.15 }]}>
+              <Text style={[styles.actionLabel, { color: p.resonateLabel }]}>Resonate</Text>
             </View>
           </View>
         </LinearGradient>
+
+        {/* the themed screen below the card — #297's composer + archive entry.
+            This is the chrome the poster is judged against. */}
+        <View className="px-6 pt-6 pb-10 gap-4">
+          <AppText className="text-foreground/60 text-sm">Reply to this</AppText>
+          <View className="rounded-2xl border border-border bg-surface px-4 py-4">
+            <AppText className="text-foreground/40">Say something back…</AppText>
+          </View>
+          <View className="rounded-2xl bg-accent/10 px-4 py-4 items-center">
+            <AppText className="text-foreground font-medium">See old thoughts</AppText>
+          </View>
+          <AppText className="text-foreground/50 text-xs">
+            Kept safe. This stays yours.
+          </AppText>
+        </View>
       </ScrollView>
 
       {/* prototype controls */}
@@ -197,9 +278,15 @@ export default function ProtoHero() {
             onPress={() => setFi((i) => (i + 1) % FIT_MODES.length)}
           />
           <Chip label={grain ? `grain ${grainOpacity.toFixed(2)}` : "grain off"} onPress={() => setGrain((g) => !g)} />
+        </Row>
+        <Row>
           <Chip
-            label="+"
-            onPress={() => setGrainOpacity((o) => (o >= 0.2 ? 0.03 : Math.round((o + 0.03) * 100) / 100))}
+            label={`poster: ${p.label}`}
+            onPress={() => setPi((i) => (i + 1) % PALETTES.length)}
+          />
+          <Chip
+            label={`chrome: ${THEMES[ti]}`}
+            onPress={() => setChrome((ti + 1) % THEMES.length)}
           />
         </Row>
       </View>
@@ -220,33 +307,24 @@ function Chip({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#3A3A3A" },
   hero: {
     margin: 10,
     borderRadius: 28,
     overflow: "hidden",
     paddingHorizontal: 20,
     paddingBottom: 20,
+    // #295's fixed edge — same hairline + shadow on both extremes of chrome
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
   },
   heroTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.42)",
-  },
-  h1: { fontSize: 37, lineHeight: 37, color: INK, maxWidth: 230 },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 3,
-    borderColor: "#FFF",
-    backgroundColor: "#2FB6C9",
-  },
+  backButton: { width: 44, height: 44, borderRadius: 22 },
+  h1: { fontSize: 37, lineHeight: 37, maxWidth: 230 },
   paper: {
     marginTop: 20,
-    backgroundColor: PAPER,
     borderRadius: 20,
     padding: 18,
     shadowColor: "#000",
@@ -257,12 +335,10 @@ const styles = StyleSheet.create({
   source: {
     fontFamily: "SpaceGrotesk-Regular",
     fontSize: 12.5,
-    color: "#6B6B6B",
     textAlign: "center",
     marginBottom: 8,
   },
   titlePlate: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 12,
@@ -271,12 +347,12 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 4 },
   },
-  title: { fontSize: 27, color: "#111", textAlign: "center" },
+  title: { fontSize: 27, textAlign: "center" },
   // the fixed box fit-to-fill targets — a full card of text at any length
   bodyBox: { height: 300, marginTop: 16, overflow: "hidden" },
   actionRow: { flexDirection: "row", gap: 12, marginTop: 18 },
   action: { height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  actionLabel: { fontFamily: "SpaceGrotesk-SemiBold", fontSize: 15, color: INK },
+  actionLabel: { fontFamily: "SpaceGrotesk-SemiBold", fontSize: 15 },
   controls: {
     gap: 8,
     paddingHorizontal: 12,
