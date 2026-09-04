@@ -5,6 +5,12 @@ import { useFitFontSize } from '@/src/features/quotes/use-fit-font-size';
 
 /** the body box is a fraction of the screen, not a literal 300 (SE 233, 17 Pro 306) */
 const BODY_BOX_RATIO = 0.35;
+
+/** The box the quote fills. Shared so the skeleton is the same shape (#309). */
+export function usePosterBoxHeight() {
+  const { height } = useWindowDimensions();
+  return Math.round(height * BODY_BOX_RATIO);
+}
 const LINE_HEIGHT_RATIO = 1.5;
 
 /**
@@ -15,8 +21,7 @@ const LINE_HEIGHT_RATIO = 1.5;
  * A titleless quote omits the plate and nothing else moves.
  */
 export function PosterBody({ title, body }: { title?: string; body: string }) {
-  const { height } = useWindowDimensions();
-  const boxHeight = Math.round(height * BODY_BOX_RATIO);
+  const boxHeight = usePosterBoxHeight();
   const shadow = useCSSVariable('--color-poster-shadow') as string;
   const fit = useFitFontSize(body);
 

@@ -1363,6 +1363,11 @@ export default defineSchema({
     isPremium: v.boolean(),
 
     // User reaction. Null until the user reacts.
+    // DEPRECATED(remove-after: app >= 1.10.0): the "not_today" literal only —
+    // #303 ships no control for it, so no client writes it any more. Narrowing
+    // the union NOW makes an old binary's react({reaction:"not_today"}) fail
+    // argument validation: the button breaks visibly, it does not degrade. The
+    // 9 existing rows stay; the toggle renders off and the first tap overwrites.
     reaction: v.optional(
       v.union(v.literal("resonates"), v.literal("not_today")),
     ),

@@ -68,10 +68,17 @@ export const getToday = query({
 /**
  * Set a reaction on today's displayed quote.
  * Pass quoteId of whichever quote is currently shown.
+ *
+ * @deprecated the `"not_today"` member of `reaction` — see the marker below.
  */
 export const react = mutation({
   args: {
     quoteId: v.id("daily_quotes"),
+    // DEPRECATED(remove-after: app >= 1.10.0): the "not_today" literal only.
+    // #303 removed its control, so current clients only ever send "resonates".
+    // Removing it THROWS, it does not degrade — a pre-#309 binary calling
+    // react({reaction:"not_today"}) fails argument validation and the button
+    // visibly breaks. Keep it until the supported version floor has passed.
     reaction: v.union(v.literal("resonates"), v.literal("not_today")),
   },
   handler: async (ctx, args) => {
