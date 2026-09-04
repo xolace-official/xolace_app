@@ -6,6 +6,7 @@
 import { useState } from "react";
 
 import { useMutation } from "convex/react";
+import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor, useToast } from "heroui-native";
 import * as Sentry from "@sentry/react-native";
@@ -53,6 +54,11 @@ const INTAKE_ICON: CrossPlatformSymbol = {
   android: "restart_alt",
   web: "restart_alt",
 };
+const PROTO_ICON: CrossPlatformSymbol = {
+  ios: "square.stack",
+  android: "layers",
+  web: "layers",
+};
 const SENTRY_ICON: CrossPlatformSymbol = {
   ios: "ant.circle",
   android: "bug_report",
@@ -75,6 +81,7 @@ const RETURN_WELCOME_TIERS: { tier: ReturnWelcomeTier; label: string }[] = [
 
 export const DevToolsSection = () => {
   const { toast } = useToast();
+  const router = useRouter();
   const mutedIconColor = useThemeColor("muted") as string;
   const setLastAcknowledgedStreak = useAppStore(
     (s) => s.setLastAcknowledgedStreak,
@@ -213,6 +220,21 @@ export const DevToolsSection = () => {
         icon={icon(INTAKE_ICON)}
         label="Replay intake"
         onPress={replayIntake}
+      />
+
+      {/* wayfinder prototypes — reachable without a deep link, since every
+          build variant claims the same `xolace://` scheme */}
+      <SettingsRow
+        variant="action"
+        icon={icon(PROTO_ICON)}
+        label="Prototype · hero card (#294)"
+        onPress={() => router.push("/proto-hero")}
+      />
+      <SettingsRow
+        variant="action"
+        icon={icon(PROTO_ICON)}
+        label="Prototype · archive stack (#296)"
+        onPress={() => router.push("/proto-archive")}
       />
 
       <SettingsRow
