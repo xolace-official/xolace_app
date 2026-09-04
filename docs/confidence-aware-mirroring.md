@@ -199,16 +199,53 @@ stored boolean would bake today's uncalibrated guess into history permanently.
 
 ### 3.5 Entry-type eligibility
 
-Reach on `open_prompt` / `guided_entry` / `voice` only. **Never** `word_cloud` or
-`body_scan` — those users chose low bandwidth on purpose.
+Reach on `open_prompt` / `guided_entry` / `voice` / `word_cloud`. **Never**
+`body_scan` — a tapped body area is low bandwidth by choice, so faintness there is
+the format, not a gap in what they gave. `body_scan` has 0 sessions in the dataset,
+so its exclusion is reasoning rather than measurement.
 
-Confirmed by measurement, not left as a guess
+**`word_cloud` was excluded here until 2026-09-04. That exclusion is reversed.**
+
+The original ruling was measured, not guessed
 ([#175 §7](https://github.com/xolace-official/xolace_app/issues/175)): of 73
-`word_cloud` sessions, **72 (98.6%) sit at `sp <= 2`**. Unexcluded, word cloud would
-have been **58.5% of all reaching sessions** — the reach would have become the
-word-cloud experience and been judged on the entry type it was never designed for.
-`body_scan` has 0 sessions in the dataset, so its exclusion is reasoning rather than
-measurement.
+`word_cloud` sessions, **72 (98.6%) sit at `sp <= 2`**, so unexcluded, word cloud
+would have been **58.5% of all reaching sessions** — the reach would become the
+word-cloud experience and be judged on the entry type it was never designed for.
+
+That measurement still stands and was **knowingly overridden**, not refuted. What
+changed is the reading of it. The exclusion assumed a tap-only user does not want to
+be asked for more. But "the mirror cannot see what this attaches to" was true of
+those sessions too, and suppressing the reach did not make it less true — it just
+made the mirror assert a read it had not earned. Since the reach became
+interrogative (`CONTEXT.md`, 2026-08-25) the alternative is no longer a flat
+statement of shortfall; it is a question the user can answer with one tap on
+"Say more". So:
+
+**Accepted consequence, stated plainly:** word-cloud specificity sits at `sp <= 2`
+almost always, so for that entry type the gate collapses *in practice* to
+`!memoryConnected` — the `sp < LOW_SPECIFICITY` check is still evaluated at runtime,
+it just almost always passes. Nearly every word cloud without an episodic hit — every
+cold start, every first-week user — now gets a question rather than a mirror. **The reach is the ordinary word-cloud
+experience.** That is the intended behaviour, not a side effect.
+
+**What bounds it:** the specificity gate still runs (the ~1.4% of word clouds at
+`sp >= 3` do not reach), plus the same-day guard (§3.7), one reach per profile per
+calendar day. Nothing else. No word_cloud-specific limiter was added: for this entry type
+specificity measures *the format*, not *the gap*, so a lower `sp` cutoff barely
+bites (the distribution bunches at 1–2), and finding a separate faintness signal for
+tap-only modes is research, not a gate change.
+
+**How to revert:** `REACH_ELIGIBLE_ENTRY_TYPES` in `convex/ai/routing.ts` is one set
+literal. `gapNamed` is persisted per session with a `by_profile_gapNamed` index and
+`entryType` sits on the same row, so the 58.5% claim is re-measurable on production
+data with no new instrumentation. If it lands badly, remove the string.
+
+**Prompt consequence:** `getEntryTypeInstructions("word_cloud")` normally asks for
+"a complete emotional picture", which contradicts reaching's "there is not enough
+here to build a full mirror" and invites holding to fill in behind the words. Those
+blocks can now co-occur, so that one sentence drops on the faint path. The other two
+— "these ARE their language" and "do not add emotions not implied by the words" —
+stay, because the reach needs them harder than the normal path does.
 
 ### 3.6 The escalation guard
 

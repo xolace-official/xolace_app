@@ -108,11 +108,12 @@ const CASES: Case[] = [
   { input: "I keep replaying how I let everyone down at work. I'm such a fraud and everyone can see it.", expected: false, note: "high intensity WITH shape — not a reach" },
 
   // -------------------------------------------------------------------
-  // 6. Entry-type eligibility (§3.5). Low-bandwidth formats are excluded
-  // on purpose: those users chose to say little, so faintness is the
-  // format, not a gap in what they gave.
+  // 6. Entry-type eligibility (§3.5). body_scan is excluded on purpose: a
+  // tapped body area is low bandwidth by choice, so faintness is the format,
+  // not a gap. word_cloud was excluded on the same reasoning until 2026-09-04
+  // and is now eligible — expect almost every faint word cloud to reach.
   // -------------------------------------------------------------------
-  { input: "heavy, tight, blank", expected: false, entryType: "word_cloud", anchor: true, note: "word_cloud is ineligible however faint" },
+  { input: "heavy, tight, blank", expected: true, entryType: "word_cloud", anchor: true, note: "word_cloud is eligible since the §3.5 reversal" },
   { input: "chest, throat", expected: false, entryType: "body_scan", anchor: true, note: "body_scan is ineligible however faint" },
   { input: "I am sad", expected: true, entryType: "guided_entry", note: "guided_entry is eligible" },
   { input: "just feeling low, nothing specific", expected: true, entryType: "voice", note: "voice is eligible" },

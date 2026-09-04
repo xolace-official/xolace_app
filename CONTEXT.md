@@ -3,6 +3,31 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Word cloud can reach (2026-09-04)
+
+Reverses the entry-type exclusion in
+[`docs/confidence-aware-mirroring.md`](docs/confidence-aware-mirroring.md) §3.5.
+`word_cloud` is now reach-eligible; `body_scan` is not. The pair that used to
+move together has been split.
+
+The exclusion was measured, not guessed — 98.6% of word clouds sit at `sp <= 2`,
+so unexcluded they would have been 58.5% of all reaching sessions. That number
+is overridden, not refuted. The reasoning it rested on ("those users chose to
+say little") stopped holding once the reach became interrogative (below): the
+alternative to a reach is no longer a flat statement of shortfall, it is a
+question answerable with one tap on "Say more".
+
+**The accepted consequence is that the reach becomes the ordinary word-cloud
+experience.** Word-cloud specificity is `sp <= 2` almost always, so the gate
+collapses *in practice* to `!memoryConnected` for that entry type — the
+`sp < LOW_SPECIFICITY` check still runs and still excludes the rare high-specificity
+word cloud. Beyond that gate, the same-day guard is the only thing bounding it. No word_cloud-specific limiter: for a tapped entry,
+specificity measures the format, not the gap, so tightening the cutoff would be
+a threshold pretending to be a signal.
+
+No ADR — `REACH_ELIGIBLE_ENTRY_TYPES` is one set literal, and reversibility is
+the criterion that fails.
+
 ## Xolacer rating: decoupled from conversation lifecycle (2026-09-03)
 
 The rate entry point used to live only in `ThreadStatusBar`, which renders

@@ -47,13 +47,18 @@ describe("routeClaimStrength — the gate", () => {
 });
 
 describe("routeClaimStrength — suppression", () => {
-  it("never reaches on low-bandwidth entry types", () => {
-    expect(route({ entryType: "word_cloud" })).toBe("measured");
+  it("never reaches on body_scan, the one remaining low-bandwidth type", () => {
     expect(route({ entryType: "body_scan" })).toBe("measured");
   });
 
   it("reaches on the eligible entry types", () => {
-    for (const entryType of ["open_prompt", "guided_entry", "voice"]) {
+    // word_cloud joined this list on 2026-09-04 — §3.5 reversed.
+    for (const entryType of [
+      "open_prompt",
+      "guided_entry",
+      "voice",
+      "word_cloud",
+    ]) {
       expect(route({ entryType })).toBe("reaching");
     }
   });
@@ -85,7 +90,7 @@ describe("routeClaimStrength — suppression", () => {
 
   it("never holds on a suppressed session, at any turn including the cap", () => {
     for (const suppressor of [
-      { entryType: "word_cloud" },
+      { entryType: "body_scan" },
       { isEscalation: true },
     ]) {
       expect(route({ ...suppressor, gapNamedThisSession: true })).toBe(

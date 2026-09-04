@@ -86,7 +86,7 @@ export function buildArticulatorPrompt(
   const claimStrengthInstructions = getClaimStrengthInstructions(claimStrength);
   const safeguardInstructions = getSafeguardInstructions(safeguardLevel);
   const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
-  const entryTypeInstructions = getEntryTypeInstructions(entryType);
+  const entryTypeInstructions = getEntryTypeInstructions(entryType, isFaint);
   const identityLine = getIdentityLine(spaceName);
   const [lastMirror, ...olderMirrors] = recentMirrors;
 
@@ -363,11 +363,17 @@ The read here is clear and well-formed. Trust it. Name the feeling precisely and
 
 /**
  * Returns entry-type-specific mirroring guidance.
+ *
  */
-function getEntryTypeInstructions(entryType?: string): string {
+function getEntryTypeInstructions(
+  entryType?: string,
+  isFaint?: boolean
+): string {
   switch (entryType) {
     case "word_cloud":
-      return "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language: build the mirror around them. Make the combination feel like a complete emotional picture. Do not add emotions not implied by the words.\n\n";
+      return isFaint
+        ? "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language: build the mirror around them. Do not add emotions not implied by the words.\n\n"
+        : "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language: build the mirror around them. Make the combination feel like a complete emotional picture. Do not add emotions not implied by the words.\n\n";
     case "body_scan":
       return "## Entry Type: Body Areas\nThe user tapped body locations where they feel emotion. Translate somatic to emotional: chest = grief/anxiety/tightness, stomach = dread/guilt, head = overwhelm/rumination, throat = suppression/things unsaid, hands = helplessness/restlessness.\n\n";
     case "voice":

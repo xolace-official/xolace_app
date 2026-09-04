@@ -198,6 +198,7 @@ export const intakeAnswerValidators = {
       v.literal("dont_know_how"),
       v.literal("calming_creative"),
       v.literal("distract"),
+      v.literal("let_it_out"),
       v.literal("lean_on_people"),
       v.literal("outside_things"),
       v.literal("prefer_not_to_say"),
