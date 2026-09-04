@@ -49,6 +49,25 @@
     --color-ember: oklch(78% 0.13 75);
 
     --font-poppins-medium: "Poppins-Medium";
+
+    /* Poster — the quotes poster is a printed object: its palette is the
+     * content, not the container, so it does not follow the active theme.
+     * Fixed on purpose; see the fixed-palette convention in CLAUDE.md.
+     * The two values a token cannot express (the gradient stop array and the
+     * Skia grain opacity) live in src/features/quotes/poster-palette.ts. */
+    --color-poster-paper: #f4f3f1;
+    --color-poster-plate: #ffffff;
+    --color-poster-ink: #141414;
+    --color-poster-ink-soft: #5d5d5d;
+    --color-poster-ink-faint: #6b6b6b;
+    --color-poster-hairline: rgba(0, 0, 0, 0.1);
+    --color-poster-shadow: #000000;
+
+    /* The poster's voice is fixed too: `--font-*` is a per-theme variable
+     * (nightly swaps the whole family to SN Pro), and a printed object does not
+     * change typeface with the chrome behind it. */
+    --font-poster-display: "SpaceGrotesk-Bold";
+    --font-poster-body: "SpaceGrotesk-Regular";
 }
 
 @layer theme {
