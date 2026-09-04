@@ -45,13 +45,23 @@ const LOW_SPECIFICITY = 3;
 const HIGH_SPECIFICITY = 6;
 
 /**
- * Low-bandwidth entry types are excluded on purpose (§3.5): those users chose
- * to say little, so faintness is the format, not a gap in what they gave.
+ * `body_scan` is excluded on purpose (§3.5): a tapped body area is low
+ * bandwidth by choice, so faintness is the format, not a gap in what they gave.
+ *
+ * `word_cloud` WAS excluded on the same reasoning and no longer is (§3.5,
+ * reversed 2026-09-04). Texture words are still low bandwidth, but "the mirror
+ * cannot see what this attaches to" was true of those sessions too, and
+ * suppression meant they got a confident-sounding read instead of a question.
+ * The known cost is volume: word-cloud specificity sits at `sp <= 2` almost
+ * always, so the gate collapses to `!memoryConnected` and the reach becomes
+ * the ordinary word-cloud experience. The same-day guard (§3.7) is what bounds
+ * it. This is one set literal — revert it if the data says to.
  */
 const REACH_ELIGIBLE_ENTRY_TYPES = new Set([
   "open_prompt",
   "guided_entry",
   "voice",
+  "word_cloud",
 ]);
 
 export interface ClaimStrengthSignal {

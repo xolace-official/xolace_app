@@ -216,6 +216,7 @@ export const ReflectScreen = () => {
             clarifyText={state.clarifyText}
             dispatch={dispatch}
             onSubmit={submitClarification}
+            feedbackType={state.lastFeedbackType}
             // Armed, not open: the sheet is still transitioning in at mount
             // time, and autoFocus would raise the keyboard underneath it.
             autoFocus={!isOutgoing && mirrorFeedbackTurn === null}

@@ -6,7 +6,7 @@ import { TextArea, LinkButton } from 'heroui-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
-import type { ReflectionAction } from '@/src/features/reflect/types';
+import type { FeedbackType, ReflectionAction } from '@/src/features/reflect/types';
 
 type Props = {
   previousMirror: string;
@@ -14,6 +14,13 @@ type Props = {
   dispatch: React.Dispatch<ReflectionAction>;
   onSubmit: () => void;
   autoFocus?: boolean;
+  /**
+   * Which button opened this screen. "not_quite" is a correction; "say_more"
+   * is an answer — and since the reach closes on a question, a mirror that
+   * just asked something must not be followed by a screen accusing it of
+   * missing. Defaults to the correction copy, which is the older behaviour.
+   */
+  feedbackType?: FeedbackType | null;
 };
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -31,6 +38,7 @@ export const ClarifyState = ({
   dispatch,
   onSubmit,
   autoFocus = true,
+  feedbackType,
 }: Props) => {
   useEffect(() => {
     Presets.wobble();
@@ -50,6 +58,7 @@ export const ClarifyState = ({
   }, [autoFocus]);
 
   const canSubmit = clarifyText.trim().length > 0;
+  const isSayMore = feedbackType === 'say_more';
 
   return (
     <View className="flex-1">
@@ -94,7 +103,7 @@ export const ClarifyState = ({
           transition={EASE_PROMPT_TRANSITION}
         >
           <AppText className="mb-4 text-center text-lg text-foreground">
-            What didn&apos;t land right?
+            {isSayMore ? 'Say more' : "What didn't land right?"}
           </AppText>
         </EaseView>
 
@@ -102,7 +111,9 @@ export const ClarifyState = ({
           <TextArea
             ref={inputRef}
             autoFocus={autoFocus}
-            placeholder="Help me understand better..."
+            placeholder={
+              isSayMore ? 'Add what\'s missing...' : 'Help me understand better...'
+            }
             value={clarifyText}
             onChangeText={(text: string) =>
               dispatch({ type: 'CLARIFY_TEXT_CHANGE', text })
