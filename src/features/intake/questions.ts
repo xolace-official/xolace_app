@@ -38,6 +38,8 @@ export interface IntakeQuestion {
   choices: readonly IntakeChoice[];
   /** Accepts up to `MAX_SELECTIONS` answers. */
   multiple?: boolean;
+  /** Two-up answers. Only where every label is short enough to hold a half. */
+  twoUp?: boolean;
 }
 
 const PREFER_NOT_TO_SAY: IntakeChoice = {
@@ -64,6 +66,7 @@ export const SECTION_YOU: readonly IntakeQuestion[] = [
     question: "What's weighing on you lately?",
     description: `Pick up to ${MAX_SELECTIONS}.`,
     multiple: true,
+    twoUp: true,
     choices: [
       { value: 'work', label: 'Work' },
       { value: 'relationships', label: 'Relationships' },
@@ -74,7 +77,7 @@ export const SECTION_YOU: readonly IntakeQuestion[] = [
       { value: 'purpose', label: 'Purpose' },
       { value: 'a_loss', label: 'A loss' },
       { value: 'big_change', label: 'A big change' },
-      { value: 'cant_name_yet', label: "Something I can't name yet" },
+      { value: 'cant_name_yet', label: "Can't name" },
       PREFER_NOT_TO_SAY,
     ],
   },
@@ -115,6 +118,7 @@ export const SECTION_CARRY: readonly IntakeQuestion[] = [
         label: 'I use calming or creative outlets (breathing, journaling, music, art, meditation)',
       },
       { value: 'distract', label: 'I distract myself' },
+      { value: 'let_it_out', label: 'I let it out (vent, cry, write it all down)' },
       { value: 'lean_on_people', label: 'I lean on people around me' },
       { value: 'outside_things', label: 'I rely on outside things (substances, meds, other)' },
       PREFER_NOT_TO_SAY,
@@ -123,6 +127,7 @@ export const SECTION_CARRY: readonly IntakeQuestion[] = [
   {
     name: 'supportFrequency',
     question: 'How often do you feel you need support?',
+    twoUp: true,
     choices: [
       { value: 'occasionally', label: 'Occasionally' },
       { value: 'frequently', label: 'Frequently' },
@@ -137,6 +142,7 @@ export const SECTION_FINDING: readonly IntakeQuestion[] = [
   {
     name: 'ageBracket',
     question: 'How old are you?',
+    twoUp: true,
     choices: [
       { value: 'under_18', label: 'Under 18' },
       { value: '18_24', label: '18–24' },

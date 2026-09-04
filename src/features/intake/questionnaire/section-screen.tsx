@@ -62,7 +62,7 @@ function renderQuestion(question: IntakeQuestion) {
       {question.description ? (
         <Questionnaire.Description>{question.description}</Questionnaire.Description>
       ) : null}
-      <Questionnaire.Choices>
+      <Questionnaire.Choices columns={question.twoUp ? 2 : 1}>
         {question.choices.map((choice) => (
           <Questionnaire.Choice key={choice.value} value={choice.value} label={choice.label} />
         ))}

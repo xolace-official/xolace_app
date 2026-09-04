@@ -1212,6 +1212,8 @@ QuestionnaireDescription.displayName = 'Questionnaire.Description';
 
 export interface QuestionnaireChoicesProps extends Omit<ViewProps, 'children'> {
   className?: string;
+  /** Lay the answers out two-up. Only for lists of short labels. */
+  columns?: 1 | 2;
   children?: ReactNode;
 }
 
@@ -1220,7 +1222,12 @@ export interface QuestionnaireChoicesProps extends Omit<ViewProps, 'children'> {
  * only the ones that can be picked so a disabled answer does not take a letter
  * out of the sequence with it.
  */
-function QuestionnaireChoices({ className, children, ...props }: QuestionnaireChoicesProps) {
+function QuestionnaireChoices({
+  className,
+  columns = 1,
+  children,
+  ...props
+}: QuestionnaireChoicesProps) {
   const { shortcuts } = useQuestionnaire('Questionnaire.Choices');
   const slots = questionnaireVariants();
 
@@ -1240,9 +1247,27 @@ function QuestionnaireChoices({ className, children, ...props }: QuestionnaireCh
     });
   }, [children, shortcuts]);
 
+  // Two-up: each answer gets its own half-width cell so the rows still
+  // stretch to the tallest label on their line.
+  const laid =
+    columns === 2
+      ? Children.map(badged, (child, index) =>
+          isValidElement(child) ? (
+            <View key={index} className="w-[48%]">
+              {child}
+            </View>
+          ) : (
+            child
+          )
+        )
+      : badged;
+
   return (
-    <View className={slots.choices({ className })} {...props}>
-      {textChildren(badged)}
+    <View
+      className={slots.choices({ className: cn(columns === 2 && 'flex-row flex-wrap', className) })}
+      {...props}
+    >
+      {textChildren(laid)}
     </View>
   );
 }
