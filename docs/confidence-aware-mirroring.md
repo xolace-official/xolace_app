@@ -222,13 +222,15 @@ statement of shortfall; it is a question the user can answer with one tap on
 "Say more". So:
 
 **Accepted consequence, stated plainly:** word-cloud specificity sits at `sp <= 2`
-almost always, so for that entry type the gate collapses to `!memoryConnected`.
-Every word cloud without an episodic hit — every cold start, every first-week user —
-now gets a question rather than a mirror. **The reach is the ordinary word-cloud
+almost always, so for that entry type the gate collapses *in practice* to
+`!memoryConnected` — the `sp < LOW_SPECIFICITY` check is still evaluated at runtime,
+it just almost always passes. Nearly every word cloud without an episodic hit — every
+cold start, every first-week user — now gets a question rather than a mirror. **The reach is the ordinary word-cloud
 experience.** That is the intended behaviour, not a side effect.
 
-**What bounds it:** the same-day guard (§3.7), one reach per profile per calendar
-day. Nothing else. No word_cloud-specific limiter was added: for this entry type
+**What bounds it:** the specificity gate still runs (the ~1.4% of word clouds at
+`sp >= 3` do not reach), plus the same-day guard (§3.7), one reach per profile per
+calendar day. Nothing else. No word_cloud-specific limiter was added: for this entry type
 specificity measures *the format*, not *the gap*, so a lower `sp` cutoff barely
 bites (the distribution bunches at 1–2), and finding a separate faintness signal for
 tap-only modes is research, not a gate change.

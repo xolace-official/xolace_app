@@ -19,8 +19,9 @@ question answerable with one tap on "Say more".
 
 **The accepted consequence is that the reach becomes the ordinary word-cloud
 experience.** Word-cloud specificity is `sp <= 2` almost always, so the gate
-collapses to `!memoryConnected` for that entry type. The same-day guard is the
-only thing bounding it. No word_cloud-specific limiter: for a tapped entry,
+collapses *in practice* to `!memoryConnected` for that entry type — the
+`sp < LOW_SPECIFICITY` check still runs and still excludes the rare high-specificity
+word cloud. Beyond that gate, the same-day guard is the only thing bounding it. No word_cloud-specific limiter: for a tapped entry,
 specificity measures the format, not the gap, so tightening the cutoff would be
 a threshold pretending to be a signal.
 
