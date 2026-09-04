@@ -15,7 +15,7 @@ We're building the AI-native mental health app that takes people from 'I don't e
 
 ### Retention & Engagement
 
-Retention mechanics are on the table. Gamification is welcome when it serves the user — streaks, milestones, insight unlocks, progress tracking, and consistency acknowledgment are all legitimate tools. We need to build features that enable proactive mental health care and engagement.
+Retention mechanics are on the table. Gamification is welcome anything like streaks, milestones, insight unlocks, progress tracking, and consistency acknowledgment are all legitimate tools, obviously thinking up  other niche stuff to is also important. We need to build features that enable proactive mental health care and engagement, giving the user a sense of goal to achieve. Building up retention is crucially important 
 
 ### The Metaphor
 

@@ -3,6 +3,43 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Quote prompt reads raw reply text (2026-09-04)
+
+The reply box on Today's Thought puts a user sentence into the quote
+generator for the first time. `loadEmotionalContext` in
+`convex/ai/quotesDistiller.ts` carried an explicit "NEVER accesses rawInput
+— only emotional metadata" invariant; that invariant now describes the
+*session* half of the context only, and the comment is rewritten rather
+than left standing. See
+[`docs/adr/0006-replies-cross-the-quote-metadata-boundary.md`](docs/adr/0006-replies-cross-the-quote-metadata-boundary.md).
+
+No model call is added. A reply is new signal, but the signal is text, so
+it is *read*, never distilled — the Cognition Layer Constitution is
+satisfied by construction. `loadRecentReplies` feeds the 3 most recent
+replies within 7 days into `buildQuotePrompt`, truncated to ~280 chars,
+newest first, each labelled with its recency. `3` and `7 days` are tunable
+constants; the query is identical at `1`.
+
+**The verbatim-overlap check in `validateQuote` is load-bearing, not
+polish.** A generated quote is publicly shareable, so without it a name in
+a reply can reach a shared card — and verbatim user words in context are
+the most reliable way to produce the reader-narrating output the prompt's
+NEVER block exists to prevent. A quote sharing a distinctive 4-word run
+with any reply in context is rejected into the existing retry-once loop.
+
+A reply cannot cause a quote to exist: the generation gate is unchanged, so
+no recent session still means no quote. Replies live as fields on
+`daily_quotes` (`reply`, `repliedAt`, `replyModeration`), one per quote,
+editable, capped at 500 chars — the `savedAt` no-join-table precedent.
+`dataRetention` still leaves `daily_quotes` alone; wipe and account
+deletion already delete the rows wholesale.
+
+Moderation on send is `moderateInput` only — deliberately softer than a
+session's path, with no `evaluateSafeguard` and no `escalation_events` row,
+because nothing was mirrored and there is no verdict to record. A flagged
+reply is stored, excluded from the prompt, and answered with the crisis
+resource view in place of the "Kept safe" confirmation.
+
 ## Word cloud can reach (2026-09-04)
 
 Reverses the entry-type exclusion in
