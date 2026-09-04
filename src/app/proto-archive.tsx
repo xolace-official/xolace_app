@@ -16,6 +16,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { ScrollView } from "react-native-gesture-handler";
+import { LegendList } from "@legendapp/list/react-native";
 
 const PEEK = 146;
 const COLLAPSED = 172;
@@ -188,6 +189,62 @@ function Card({
   );
 }
 
+/**
+ * The same card, laid out in normal flow. The peek is a negative bottom
+ * margin, so opening a card is just its own height changing — the list
+ * reflows everything below it and owns the scroll extent.
+ */
+function FlowCard({
+  item,
+  index,
+  isOpen,
+  onToggle,
+  reduced,
+}: {
+  item: Item;
+  index: number;
+  isOpen: boolean;
+  onToggle: (id: string | null) => void;
+  reduced: boolean;
+}) {
+  const wrap = useAnimatedStyle(() => ({
+    height: reduced ? (isOpen ? EXPANDED : COLLAPSED) : withSpring(isOpen ? EXPANDED : COLLAPSED, SPRING),
+  }));
+  const body = useAnimatedStyle(() => ({ opacity: withTiming(isOpen ? 1 : 0, { duration: 240 }) }));
+
+  return (
+    <Animated.View
+      style={[{ marginBottom: isOpen ? GAP : PEEK - COLLAPSED, zIndex: isOpen ? 9999 : index }, wrap]}
+    >
+      <Pressable
+        style={[styles.card, { backgroundColor: item.tint }]}
+        onPress={() => onToggle(isOpen ? null : item.id)}
+      >
+        <Text style={styles.date}>{item.date}</Text>
+        <Text style={styles.meta}>
+          {item.weekday}
+          {item.reaction ? `, ${item.reaction}` : ""}
+        </Text>
+        <View style={{ height: TITLE_GAP }} />
+        <Text numberOfLines={1} style={styles.cardTitle}>
+          {item.title}
+        </Text>
+        <Animated.View pointerEvents={isOpen ? "auto" : "none"} style={[styles.body, body]}>
+          <Text style={styles.bodyText}>{item.excerpt}</Text>
+          <View style={styles.tagRow}>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>Share</Text>
+            </View>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>Unsave</Text>
+            </View>
+          </View>
+        </Animated.View>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 const COUNTS = [0, 1, 4, 24];
 
 export default function ProtoArchive() {
@@ -199,6 +256,8 @@ export default function ProtoArchive() {
   const [reduced, setReduced] = useState(false);
   const [removed, setRemoved] = useState<string[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [legend, setLegend] = useState(true);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const items = useMemo(
     () => makeItems(COUNTS[ci]).filter((i) => !removed.includes(i.id)),
@@ -237,9 +296,30 @@ export default function ProtoArchive() {
         <Toggle label={inPlace ? "open: in place" : "open: to top"} onPress={() => setInPlace((v) => !v)} />
         <Toggle label={swipe ? "swipe: on" : "swipe: off"} onPress={() => setSwipe((v) => !v)} />
         <Toggle label={reduced ? "motion: reduced" : "motion: full"} onPress={() => setReduced((v) => !v)} />
-        <Toggle label="reset" onPress={() => { setRemoved([]); setOpenIndex(null); }} />
+        <Toggle label={legend ? "list: legend" : "list: map"} onPress={() => setLegend((v) => !v)} />
+        <Toggle label="reset" onPress={() => { setRemoved([]); setOpenIndex(null); setOpenId(null); }} />
       </View>
 
+      {legend && items.length > 0 ? (
+        <LegendList
+          data={items}
+          keyExtractor={(item) => item.id}
+          estimatedItemSize={PEEK}
+          recycleItems
+          extraData={openId}
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item, index }) => (
+            <FlowCard
+              item={item}
+              index={index}
+              isOpen={item.id === openId}
+              onToggle={setOpenId}
+              reduced={reduced}
+            />
+          )}
+        />
+      ) : (
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {items.length === 0 ? (
           <View style={styles.empty}>
@@ -267,6 +347,7 @@ export default function ProtoArchive() {
         )}
         <View style={{ height: 40 }} />
       </ScrollView>
+      )}
     </View>
   );
 }
