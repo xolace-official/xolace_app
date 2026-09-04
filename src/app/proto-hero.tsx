@@ -38,6 +38,9 @@ const PALETTES = [
     resonate: "#F5726A",
     resonateLabel: "#2B1414",
     hairline: "rgba(0,0,0,0.10)",
+    deck: "#CBC9C5",
+    send: "#F2E85C",
+    sendLabel: "#141414",
   },
   {
     label: "dark",
@@ -55,6 +58,9 @@ const PALETTES = [
     resonate: "#C4564F",
     resonateLabel: "#FBEDEB",
     hairline: "rgba(255,255,255,0.10)",
+    deck: "#2C2B27",
+    send: "#8F8733",
+    sendLabel: "#F7F3D8",
   },
 ] as const;
 
@@ -121,6 +127,7 @@ export default function ProtoHero() {
   const [pi, setPi] = useState(0);
   const [ti, setTi] = useState(1); // start on `dark` chrome — the case under judgement
   const [grain, setGrain] = useState(true);
+  const [deckThemed, setDeckThemed] = useState(false);
 
   const quote = QUOTES[qi];
   const voice = VOICES[vi];
@@ -250,19 +257,41 @@ export default function ProtoHero() {
           </View>
         </LinearGradient>
 
-        {/* the themed screen below the card — #297's composer + archive entry.
-            This is the chrome the poster is judged against. */}
-        <View className="px-6 pt-6 pb-10 gap-4">
-          <AppText className="text-foreground/60 text-sm">Reply to this</AppText>
-          <View className="rounded-2xl border border-border bg-surface px-4 py-4">
-            <AppText className="text-foreground/40">Say something back…</AppText>
+        {/* #297's composer + archive entry. In the design this is a SECOND CARD,
+            not bare chrome — so the screen shows very little theme at all. The
+            chip toggles whether that card is themed or part of the poster set,
+            because that decides how much dark chrome the poster ever meets. */}
+        <View
+          style={[
+            styles.lowerCard,
+            deckThemed ? null : { backgroundColor: p.deck },
+          ]}
+          className={deckThemed ? "bg-surface" : undefined}
+        >
+          <View
+            style={[styles.composer, deckThemed ? null : { backgroundColor: p.paper }]}
+            className={deckThemed ? "bg-background" : undefined}
+          >
+            <AppText
+              className={deckThemed ? "text-foreground/45" : undefined}
+              style={deckThemed ? undefined : { color: p.inkFaint }}
+            >
+              What does this bring for you?
+            </AppText>
+            <View style={[styles.composerSend, { backgroundColor: p.send }]}>
+              <Text style={[styles.composerSendLabel, { color: p.sendLabel }]}>Share</Text>
+            </View>
           </View>
-          <View className="rounded-2xl bg-accent/10 px-4 py-4 items-center">
-            <AppText className="text-foreground font-medium">See old thoughts</AppText>
-          </View>
-          <AppText className="text-foreground/50 text-xs">
-            Kept safe. This stays yours.
-          </AppText>
+          <Text
+            style={[
+              styles.deckLink,
+              VOICES[vi].style,
+              deckThemed ? null : { color: p.ink },
+            ]}
+            className={deckThemed ? "text-foreground" : undefined}
+          >
+            SEE OLD THOUGHTS
+          </Text>
         </View>
       </ScrollView>
 
@@ -287,6 +316,10 @@ export default function ProtoHero() {
           <Chip
             label={`chrome: ${THEMES[ti]}`}
             onPress={() => setChrome((ti + 1) % THEMES.length)}
+          />
+          <Chip
+            label={deckThemed ? "deck: themed" : "deck: poster"}
+            onPress={() => setDeckThemed((d) => !d)}
           />
         </Row>
       </View>
@@ -353,6 +386,30 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: "row", gap: 12, marginTop: 18 },
   action: { height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   actionLabel: { fontFamily: "SpaceGrotesk-SemiBold", fontSize: 15 },
+  lowerCard: {
+    marginHorizontal: 10,
+    marginTop: 12,
+    marginBottom: 24,
+    borderRadius: 28,
+    padding: 16,
+    gap: 18,
+  },
+  composer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 999,
+    paddingLeft: 18,
+    paddingRight: 6,
+    paddingVertical: 6,
+  },
+  composerSend: {
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  composerSendLabel: { fontFamily: "SpaceGrotesk-SemiBold", fontSize: 14 },
+  deckLink: { fontSize: 22, paddingHorizontal: 4, paddingBottom: 4 },
   controls: {
     gap: 8,
     paddingHorizontal: 12,
