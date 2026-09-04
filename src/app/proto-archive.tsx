@@ -21,9 +21,9 @@ const PEEK = 146;
 const COLLAPSED = 172;
 const EXPANDED = 288;
 const GAP = 16;
-const SCALE_STEP = 0.028;
-const SCALE_CLAMP = 3; // falloff reads only for the top few; beyond that it just shrinks cards
+
 const SPRING = { damping: 18, stiffness: 160, mass: 0.9 };
+const WEEKDAYS = ["Tuesday", "Sunday", "Thursday", "Monday", "Friday", "Wednesday", "Saturday"];
 const TINTS = ["#F4E9B8", "#F3D3DC", "#E7E5E2", "#DCE6DE"];
 const INK = "#141414";
 const INK_SOFT = "#5D5D5D";
@@ -39,7 +39,15 @@ const SAMPLE = [
   ["Enough Today", "You did the plain version of the hard thing. It counts."],
 ];
 
-type Item = { id: string; title: string; excerpt: string; tint: string; date: string };
+type Item = {
+  id: string;
+  title: string;
+  excerpt: string;
+  tint: string;
+  date: string;
+  weekday: string;
+  reaction?: "resonated" | "not today";
+};
 
 function makeItems(n: number): Item[] {
   return Array.from({ length: n }, (_, i) => {
@@ -49,7 +57,9 @@ function makeItems(n: number): Item[] {
       title,
       excerpt,
       tint: TINTS[i % TINTS.length],
-      date: `SEP ${String(28 - (i % 28)).padStart(2, "0")}`,
+      date: `${String(28 - (i % 28)).padStart(2, "0")}/09`,
+      weekday: WEEKDAYS[i % 7],
+      reaction: i % 3 === 0 ? "resonated" : i % 3 === 1 ? undefined : "not today",
     };
   });
 }
@@ -91,7 +101,7 @@ function Card({
 
   if (openIndex === null) {
     y = index * PEEK;
-    scale = 1 - Math.min(index, SCALE_CLAMP) * SCALE_STEP;
+    scale = 1;
   } else if (isOpen) {
     y = inPlace ? index * PEEK : 0;
     scale = 1;
@@ -99,11 +109,11 @@ function Card({
   } else if (index < openIndex) {
     // in place: cards above simply stay where they are
     y = index * PEEK - (inPlace ? 0 : 180);
-    scale = inPlace ? 1 - Math.min(index, SCALE_CLAMP) * SCALE_STEP : 0.9;
+    scale = inPlace ? 1 : 0.9;
     opacity = inPlace ? 1 : 0;
   } else {
     y = (inPlace ? openIndex * PEEK : 0) + EXPANDED + GAP + (index - openIndex - 1) * PEEK;
-    scale = 1 - Math.min(index - openIndex - 1, SCALE_CLAMP) * SCALE_STEP;
+    scale = 1;
   }
 
   // reduced motion: no travel animation, no scale — position snaps, opacity fades
@@ -120,9 +130,6 @@ function Card({
     };
   });
 
-  const excerpt = useAnimatedStyle(() => ({
-    opacity: withTiming(isOpen ? 0 : 1, { duration: 180 }),
-  }));
   const body = useAnimatedStyle(() => ({
     opacity: withTiming(isOpen ? 1 : 0, { duration: 240 }),
   }));
@@ -151,14 +158,18 @@ function Card({
           style={[styles.card, { backgroundColor: item.tint }]}
           onPress={() => onToggle(isOpen ? null : index)}
         >
-          <View style={styles.metaRow}>
-            <Text style={styles.date}>{item.date}</Text>
-            <Text style={styles.meta}>kept</Text>
-          </View>
-          <Text style={styles.cardTitle}>{item.title.toUpperCase()}</Text>
-          <Animated.Text numberOfLines={2} style={[styles.excerpt, excerpt]}>
-            {item.excerpt}
-          </Animated.Text>
+          <Text style={styles.date}>{item.date}</Text>
+          <Text style={styles.meta}>
+            {item.weekday}
+            {item.reaction ? `, ${item.reaction}` : ""}
+          </Text>
+
+          {isOpen ? null : <View style={{ flex: 1 }} />}
+
+          <Text numberOfLines={1} style={styles.cardTitle}>
+            {item.title}
+          </Text>
+
           <Animated.View pointerEvents={isOpen ? "auto" : "none"} style={[styles.body, body]}>
             <Text style={styles.bodyText}>{item.excerpt}</Text>
             <View style={styles.tagRow}>
@@ -289,12 +300,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 14 },
     elevation: 8,
   },
-  metaRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
-  date: { fontFamily: "SpaceGrotesk-Medium", fontSize: 11.5, letterSpacing: 0.7, color: "#6D6D6D" },
-  meta: { fontFamily: "SpaceGrotesk-Regular", fontSize: 11.5, color: "#6D6D6D" },
-  cardTitle: { fontFamily: "SpaceGrotesk-Bold", fontSize: 20, letterSpacing: 1.2, color: INK, marginBottom: 8 },
-  excerpt: { fontFamily: "SpaceGrotesk-Regular", fontSize: 13.5, lineHeight: 20, color: INK_SOFT },
-  body: { position: "absolute", left: 20, right: 20, top: 96, bottom: 18 },
+  date: { fontFamily: "SpaceGrotesk-Medium", fontSize: 12.5, color: INK },
+  meta: { fontFamily: "SpaceGrotesk-Regular", fontSize: 12.5, color: INK_SOFT, marginTop: 1 },
+  cardTitle: { fontFamily: "SpaceGrotesk-Bold", fontSize: 30, letterSpacing: -0.6, color: INK },
+  body: { marginTop: 12 },
   bodyText: { fontFamily: "SpaceGrotesk-Regular", fontSize: 14, lineHeight: 22, color: INK_SOFT, marginBottom: 14 },
   tagRow: { flexDirection: "row", gap: 10 },
   tag: { borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: "rgba(20,20,20,0.07)" },
