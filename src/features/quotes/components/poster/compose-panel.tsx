@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { PressableFeedback } from "heroui-native";
+import { usePostHog } from "posthog-react-native";
 import { Presets } from "react-native-pulsar";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/src/components/shared/app-text";
@@ -27,20 +28,26 @@ export function ComposePanel({
   reply,
   flagged,
   reachSubline,
+  remembered,
   isSending,
   onSend,
 }: {
   reply?: string;
   flagged: boolean;
   reachSubline: boolean;
+  remembered: boolean;
   isSending: boolean;
   onSend: (text: string) => Promise<void>;
 }) {
   const router = useRouter();
+  const posthog = usePostHog();
   const inputRef = useRef<TextInput>(null);
   const [draft, setDraft] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [focused, setFocused] = useState(false);
+  // Once per mount: refocusing after a blur is the same attempt, and without
+  // this `quote_replied` has no denominator to measure abandonment against.
+  const startedRef = useRef(false);
 
   const [faint, ink] = useCSSVariable([
     "--color-poster-ink-faint",
@@ -70,6 +77,7 @@ export function ComposePanel({
         reply={reply}
         flagged={flagged}
         reachSubline={reachSubline}
+        remembered={remembered}
         onEdit={() => {
           Presets.flick();
           setDraft(reply);
@@ -92,7 +100,13 @@ export function ComposePanel({
         ref={inputRef}
         value={draft}
         onChangeText={setDraft}
-        onFocus={() => setFocused(true)}
+        onFocus={() => {
+          setFocused(true);
+          if (!startedRef.current) {
+            startedRef.current = true;
+            posthog.capture("quote_reply_started", { is_edit: reply !== undefined });
+          }
+        }}
         onBlur={() => setFocused(false)}
         multiline
         maxLength={REPLY_MAX_LENGTH}
@@ -154,12 +168,14 @@ function SentPanel({
   reply,
   flagged,
   reachSubline,
+  remembered,
   onEdit,
   onOpenResources,
 }: {
   reply: string;
   flagged: boolean;
   reachSubline: boolean;
+  remembered: boolean;
   onEdit: () => void;
   onOpenResources: () => void;
 }) {
@@ -194,9 +210,18 @@ function SentPanel({
             KEPT SAFE
           </AppText>
           <AppText className="mt-0.5 text-[13px] leading-[19px] text-poster-ink-soft">
-            {reachSubline
-              ? "Tomorrow's thought will listen to what you just said."
-              : "This stays yours."}
+            {/* "This stays yours" was true when a reply was inert. It no
+                longer is: with personal memory on, it also goes into what
+                Xolace understands of you (#315). The two destinations are
+                independent, so a reply can reach both — only a reply that
+                reaches neither is still nothing but kept. */}
+            {reachSubline && remembered
+              ? "Tomorrow's thought will listen. It stays in what Xolace knows of you."
+              : reachSubline
+                ? "Tomorrow's thought will listen to what you just said."
+                : remembered
+                  ? "Yours only — and it stays in what Xolace knows of you."
+                  : "This stays yours."}
           </AppText>
         </View>
       )}

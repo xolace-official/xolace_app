@@ -11,12 +11,15 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
-import { aggregatesMock } from "./mocks.helpers";
+import { aggregatesMock, ragMock } from "./mocks.helpers";
 import { asNewUser, type SeededUser } from "./harness.helpers";
 
 const stub = vi.hoisted(() => ({ flagged: false, unavailable: false }));
+/** Keys handed to `rag.deleteByKeyAsync` — the reply purge's only evidence. */
+const ragDeletes = vi.hoisted(() => [] as string[]);
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
+vi.mock("../rag", () => ragMock({}, ragDeletes));
 vi.mock("../ai/providers/moderation", async (orig) => {
   const actual = await orig<typeof import("../ai/providers/moderation")>();
   return {
@@ -51,6 +54,7 @@ const readQuote = (user: SeededUser, quoteId: Awaited<ReturnType<typeof seedQuot
 beforeEach(() => {
   stub.flagged = false;
   stub.unavailable = false;
+  ragDeletes.length = 0;
 });
 
 describe("replying to a quote", () => {
@@ -141,6 +145,9 @@ describe("reply parity with the erasure loops", () => {
     });
 
     expect(await readQuote(user, quoteId)).toBeNull();
+    // The row dying is only half of it — the embedding must die with it,
+    // and this loop touches no vector on its own (ADR 0007).
+    expect(ragDeletes).toContain(`reply:${quoteId}`);
   });
 
   it("goes with the row on account deletion", async () => {
@@ -154,6 +161,7 @@ describe("reply parity with the erasure loops", () => {
     await user.root.run(async (ctx) => drainQuotes(ctx, user.profileId));
 
     expect(await readQuote(user, quoteId)).toBeNull();
+    expect(ragDeletes).toContain(`reply:${quoteId}`);
   });
 });
 

@@ -37,8 +37,16 @@ export const REFLECTION_POOL_NAMESPACE = "reflection-pool";
 
 // No granular label on this entry (personal + pool namespaces alike).
 export const NO_GRANULAR_LABEL = "";
-// Personal episodic memory never filters on status (a peer-pool concern).
+// Personal episodic memory never filters on status (a peer-pool concern) —
+// EXCEPT to exclude replies. See REPLY_STATUS below.
 export const EPISODIC_STATUS = "n/a";
+// A daily-quote reply in the personal namespace (ADR 0007). Its own status
+// value is the whole mechanism: `searchEpisodicMemory` filters the mirror down
+// to EPISODIC_STATUS, so a reply reaches the semantic-profile agent's
+// unfiltered search and nothing else.
+export const REPLY_STATUS = "reply";
+// A reply carries no classification — no mirror ran on it.
+export const NO_PRIMARY_EMOTION = "n/a";
 
 export const rag = new RAG(components.rag, {
   textEmbeddingModel: openai.embedding("text-embedding-3-small"),

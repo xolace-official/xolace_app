@@ -111,7 +111,19 @@ type LastNotificationSlice = {
   clearLastNotification: () => void;
 };
 
-export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & PlusOfferSlice & IntakeSlice & PreferencesSlice & UpdateCheckSlice & LastNotificationSlice;
+/**
+ * Ephemeral, not persisted. A kept quote reply the user chose to start a
+ * session from (#316) — the reflect card reads it, the composer never does.
+ * Not a route param: this is raw user text, and params ride in navigation
+ * state and history.
+ */
+type ReplySeedSlice = {
+  replySeed: string | null;
+  setReplySeed: (reply: string) => void;
+  clearReplySeed: () => void;
+};
+
+export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & PlusOfferSlice & IntakeSlice & PreferencesSlice & UpdateCheckSlice & LastNotificationSlice & ReplySeedSlice;
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -206,6 +218,10 @@ export const useAppStore = create<AppState>()(
         lastNotification: null,
         setLastNotification: (n) => set({ lastNotification: n }),
         clearLastNotification: () => set({ lastNotification: null }),
+
+        replySeed: null,
+        setReplySeed: (reply) => set({ replySeed: reply }),
+        clearReplySeed: () => set({ replySeed: null }),
       }),
       {
         name: 'xolace-app',

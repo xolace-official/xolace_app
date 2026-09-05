@@ -1,4 +1,4 @@
-import { rag } from "../../rag";
+import { rag, EPISODIC_STATUS } from "../../rag";
 
 /**
  * One episodic memory that informed a mirror: composite text for the
@@ -31,6 +31,13 @@ export type EpisodicSearch = {
  * re-searches against the accumulated input, because the detail that arrives
  * on turn 2 may be exactly what makes Tuesday relevant (§5.2).
  *
+ * The `status` filter is LOAD-BEARING and looks like a no-op: it filters on
+ * the only value session entries carry, but a second key class exists — daily
+ * quote replies, tagged REPLY_STATUS. Dropping it would silently ship the
+ * "both consumers" option that ADR 0007 rejected, and would break the
+ * `key as Id<"sessions">` cast in applyMemoryFeedback. See
+ * docs/adr/0007-replies-reach-the-profile-not-the-mirror.md.
+ *
  * Deliberately no `vectorScoreThreshold`: vector search returns its nearest
  * neighbours however far away they are, so the score is the only thing that
  * says whether memory connected — but below-floor memories must still reach
@@ -47,6 +54,7 @@ export async function searchEpisodicMemory(
       namespace: emotionalProfileId,
       query: rawText,
       limit: 4,
+      filters: [{ name: "status", value: EPISODIC_STATUS }],
     });
     const retained = entries
       .filter((e) => e.key !== undefined && e.key !== currentSessionId)

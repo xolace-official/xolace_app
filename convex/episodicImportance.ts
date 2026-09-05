@@ -28,6 +28,14 @@ export const DEFAULT_IMPORTANCE = 1;
 /** A decayed memory sinks to here but stays retrievable — never erased. */
 export const MIN_IMPORTANCE = 0.2;
 export const MAX_IMPORTANCE = 1;
+/**
+ * Weight of a daily-quote reply entry (ADR 0007). Seeded, never earned and
+ * never adjusted — feedback only reaches session memories. Deliberately not
+ * DEFAULT_IMPORTANCE: that *is* MAX_IMPORTANCE, so a defaulted reply would sit
+ * permanently at the ceiling of the profile agent's unfiltered search,
+ * outranking every session memory that had ever decayed.
+ */
+export const REPLY_IMPORTANCE = 0.7;
 
 // Growth is gentler than decay: a mirror that misses is stronger evidence
 // the retrieved memory was noise than a single hit is that it was signal.

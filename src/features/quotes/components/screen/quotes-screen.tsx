@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { usePostHog } from "posthog-react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { ActionRow } from "@/src/features/quotes/components/poster/action-row";
@@ -34,11 +35,13 @@ export function QuotesScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const router = useRouter();
   const openPaywall = usePaywall((s) => s.open);
+  const posthog = usePostHog();
 
   const {
     quote,
     sourceLine,
     replyReaches,
+    replyRemembered,
     isSendingReply,
     sendReply,
     isFirstVisit,
@@ -49,6 +52,7 @@ export function QuotesScreen() {
     react,
     setSaved,
     completePreferences,
+    savedCount,
   } = useTodayQuote();
 
   const {
@@ -107,6 +111,11 @@ export function QuotesScreen() {
   }
 
   const hasQuote = quote !== null && sourceLine !== null && !isColdStarting;
+  // An unavailable moderation check is not a clean one, so the reply is fed
+  // nowhere — neither tomorrow's quote (quotesDistiller) nor the semantic
+  // profile (ADR 0007). It is not flagged either, so no crisis panel replaces
+  // the confirmation and the subline is the only place that can be honest.
+  const replyUnmoderated = quote?.replyModeration?.unavailable ?? false;
 
   return (
     <>
@@ -167,13 +176,19 @@ export function QuotesScreen() {
                 <ComposePanel
                   reply={quote.reply}
                   flagged={quote.replyModeration?.flagged ?? false}
-                  reachSubline={replyReaches}
+                  reachSubline={replyReaches && !replyUnmoderated}
+                  remembered={replyRemembered && !replyUnmoderated}
                   isSending={isSendingReply}
                   onSend={sendReply}
                 />
               ) : null
             }
-            onOpenArchive={() => router.push("/(protected)/quotes/archive")}
+            onOpenArchive={() => {
+              posthog.capture("quote_archive_opened", {
+                kept_count: savedCount ?? 0,
+              });
+              router.push("/(protected)/quotes/archive");
+            }}
           />
         </KeyboardAwareScrollView>
 
@@ -196,8 +211,9 @@ export function QuotesScreen() {
           >
             <SharingCard
               ref={sharingCardRef}
+              title={quote.title}
               text={removeEmDash(quote.text)}
-              onMascotLoadEnd={onSharingCardImageLoadEnd}
+              onReady={onSharingCardImageLoadEnd}
             />
           </View>
         )}

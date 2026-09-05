@@ -2,14 +2,23 @@ import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import {
   internalAction,
+  internalMutation,
   internalQuery,
+  type ActionCtx,
   type MutationCtx,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
-import { rag, NO_GRANULAR_LABEL, EPISODIC_STATUS } from "./rag";
+import {
+  rag,
+  NO_GRANULAR_LABEL,
+  NO_PRIMARY_EMOTION,
+  EPISODIC_STATUS,
+  REPLY_STATUS,
+} from "./rag";
 import {
   DEFAULT_IMPORTANCE,
+  REPLY_IMPORTANCE,
   isActionableFeedback,
   type MemoryFeedback,
 } from "./episodicImportance";
@@ -255,6 +264,198 @@ export async function purgeEpisodicEntries(
     });
   }
 }
+
+// =============================================================
+// REPLY ENTRIES — the second episodic key class (ADR 0007).
+//
+// A reply to a daily quote lands in the SAME personal namespace,
+// keyed `reply:<quoteId>` and tagged `status: REPLY_STATUS`. The
+// tag is the whole mechanism: searchEpisodicMemory filters the
+// mirror down to EPISODIC_STATUS and therefore never retrieves a
+// reply, while the semantic-profile agent's unfiltered search does.
+//
+// The `reply:` prefix is what keeps applyMemoryFeedback's
+// `key as Id<"sessions">` cast honest — a violation is wrong on
+// inspection, not at runtime.
+// =============================================================
+
+/**
+ * Every episodic key class and the purge helper that owns it. Wipe parity
+ * is an absolute invariant here, so `lib/sessionCascade.test.ts` asserts each
+ * helper below actually has a call-site in a deletion job — adding a class
+ * without wiring its purge fails the suite instead of quietly letting an
+ * embedding outlive the account that wrote it.
+ */
+export const EPISODIC_PURGE_HELPERS = {
+  session: "purgeEpisodicEntries",
+  reply: "purgeReplyEntries",
+} as const;
+
+/** RAG key for a reply entry — prefixed, never a bare id. */
+function replyKey(quoteId: Id<"daily_quotes">): string {
+  return `reply:${quoteId}`;
+}
+
+/**
+ * The composite for one reply, or null when it must not be in memory
+ * (cleared, moderation-flagged, or personal memory off). Null still carries
+ * the namespace, because "not in memory" has to be able to purge.
+ */
+export const getReplyForEpisodic = internalQuery({
+  args: { quoteId: v.id("daily_quotes") },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    emotionalProfileId: Id<"emotional_profiles">;
+    composite: string | null;
+  } | null> => {
+    const quote = await ctx.db.get("daily_quotes", args.quoteId);
+    if (!quote) return null;
+    const emotionalProfileId = quote.emotionalProfileId;
+
+    // A reply edited down to nothing purges.
+    const reply = quote.reply?.trim();
+    if (!reply) return { emotionalProfileId, composite: null };
+
+    // Parity with the quote prompt: a flagged reply is kept as the person's
+    // words but never fed anywhere. `unavailable` is not a clean verdict
+    // either, so it is treated the same (quotesDistiller does likewise).
+    const moderation = quote.replyModeration;
+    if (moderation?.flagged || moderation?.unavailable) {
+      return { emotionalProfileId, composite: null };
+    }
+
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) =>
+        q.eq("emotionalProfileId", emotionalProfileId),
+      )
+      .unique();
+    // Memory off means not embedded AT ALL — no degraded metadata-only line
+    // like a session gets, because a reply *is* its text. It still reaches
+    // tomorrow's quote (ADR 0006 is unchanged); the two paths diverge here.
+    if (preferences?.personalMemoryEnabled === false) {
+      return { emotionalProfileId, composite: null };
+    }
+
+    // One-line provenance label, then the reply. The quote text is NOT here:
+    // it is model-authored and on a short reply would dominate the embedding,
+    // matching on the quote's themes instead of the person's words. Bare text
+    // is equally wrong — the profile agent writes narrative claims from opaque
+    // composites and would report a reply as a reflection.
+    return {
+      emotionalProfileId,
+      composite: `reply to a daily thought (${quote.date})\n\n${reply}`,
+    };
+  },
+});
+
+/**
+ * Embed one reply into its owner's personal namespace, or purge it when it
+ * no longer belongs there. Idempotent on the key, so an edit replaces.
+ *
+ * Free and premium are identical: the semantic profile is not a feature you
+ * receive. Reach is lagged by design — consolidation fires from session
+ * completion, so the reply is seen at the next completed reflection.
+ */
+export const ingestReply = internalAction({
+  args: { quoteId: v.id("daily_quotes") },
+  handler: async (ctx, args) => {
+    const source = await ctx.runQuery(
+      internal.episodicMemory.getReplyForEpisodic,
+      { quoteId: args.quoteId },
+    );
+    // Row is gone — the wipe/deletion loops purge with the profile id in hand.
+    if (!source) return;
+
+    if (source.composite === null) {
+      await purgeReplyEntries(ctx, source.emotionalProfileId, [args.quoteId]);
+      return;
+    }
+
+    await rag.add(ctx, {
+      namespace: source.emotionalProfileId,
+      key: replyKey(args.quoteId),
+      text: source.composite,
+      // Seeded, never earned (see REPLY_IMPORTANCE).
+      importance: REPLY_IMPORTANCE,
+      // All three declared filters are required on every add (see rag.ts).
+      filterValues: [
+        { name: "primaryEmotion", value: NO_PRIMARY_EMOTION },
+        { name: "granularLabel", value: NO_GRANULAR_LABEL },
+        { name: "status", value: REPLY_STATUS },
+      ],
+    });
+  },
+});
+
+/**
+ * Purge a batch of replies' episodic entries. Called from the SAME loops that
+ * delete `daily_quotes` rows (jobs/dataWipe, jobs/accountDeletionSteps) —
+ * those loops touch no vector on their own, so this is the only thing keeping
+ * a reply embedding from outliving the account.
+ */
+export async function purgeReplyEntries(
+  ctx: MutationCtx | ActionCtx,
+  emotionalProfileId: Id<"emotional_profiles">,
+  quoteIds: Id<"daily_quotes">[],
+): Promise<void> {
+  if (quoteIds.length === 0) return;
+  const namespace = await rag.getNamespace(ctx, {
+    namespace: emotionalProfileId,
+  });
+  if (!namespace) return;
+  for (const quoteId of quoteIds) {
+    await rag.deleteByKeyAsync(ctx, {
+      namespaceId: namespace.namespaceId,
+      key: replyKey(quoteId),
+    });
+  }
+}
+
+/** One page of quotes per purge step (see purgeAllRepliesForProfile). */
+const REPLY_PURGE_BATCH = 100;
+
+/**
+ * Purge EVERY reply embedding for one profile — the personal-memory opt-out
+ * transition. `getReplyForEpisodic` only stops future ingestion; the replies
+ * already embedded have to come back out, or "off" is retroactively a lie.
+ * The `daily_quotes` rows themselves stay: this is a memory opt-out, not a
+ * wipe (that is jobs/dataWipe) and not a deletion (jobs/accountDeletionSteps).
+ */
+export const purgeAllRepliesForProfile = internalMutation({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+    cursor: v.optional(v.union(v.string(), v.null())),
+  },
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("daily_quotes")
+      .withIndex("by_profile_date", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId),
+      )
+      .paginate({ numItems: REPLY_PURGE_BATCH, cursor: args.cursor ?? null });
+
+    // Only replied rows ever had a key; the rest are a no-op by construction.
+    await purgeReplyEntries(
+      ctx,
+      args.emotionalProfileId,
+      page.page.filter((q) => q.reply !== undefined).map((q) => q._id),
+    );
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.episodicMemory.purgeAllRepliesForProfile,
+        {
+          emotionalProfileId: args.emotionalProfileId,
+          cursor: page.continueCursor,
+        },
+      );
+    }
+  },
+});
 
 // =============================================================
 // Backfill — one-shot migration over past sessions.

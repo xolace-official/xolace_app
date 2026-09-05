@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { AppText } from '@/src/components/shared/app-text';
@@ -27,11 +28,28 @@ export const PLATE_GAP = 16;
  * The box height never depends on the text — a short quote grows to fill it and
  * a long one shrinks — so the poster is the same object at every quote length.
  * A titleless quote omits the plate and nothing else moves.
+ *
+ * `onSettled` fires once the fit search has landed. Nothing on screen needs it —
+ * the search costs a few frames and the body is simply invisible until then. The
+ * share export does: captured mid-search it comes back a blank paper card (#317).
  */
-export function PosterBody({ title, body }: { title?: string; body: string }) {
+export function PosterBody({
+  title,
+  body,
+  onSettled,
+}: {
+  title?: string;
+  body: string;
+  onSettled?: () => void;
+}) {
   const boxHeight = usePosterBoxHeight();
   const shadow = useCSSVariable('--color-poster-shadow') as string;
   const fit = useFitFontSize(body);
+  const settled = fit.settled;
+
+  useEffect(() => {
+    if (settled) onSettled?.();
+  }, [settled, onSettled]);
 
   const bodyType = {
     fontSize: fit.fontSize,

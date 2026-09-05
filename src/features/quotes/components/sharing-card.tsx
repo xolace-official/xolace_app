@@ -1,242 +1,94 @@
-import { forwardRef } from "react";
-import {
-  StyleProp,
-  StyleSheet,
-  TextStyle,
-  ImageStyle,
-  ViewStyle,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { forwardRef, useEffect, useState } from "react";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
-import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { shareTextScale } from "@/src/features/quotes/share-text-scale";
+import { PosterBody } from "@/src/features/quotes/components/poster/poster-body";
+import { PosterSurface } from "@/src/features/quotes/components/poster/poster-surface";
+
+/** Flux at the fire — the mascot the card carried before the rebuild (#317) */
+const MASCOT = require("@/assets/images/flux/campfire-mini.jpeg");
+
+/** the hero's own gutter (`hero-card`'s margin), so the twin lays out at its width */
+const HERO_GUTTER = 10;
 
 type Props = {
+  title?: string;
   text: string;
-  onMascotLoadEnd?: () => void;
+  /** fired once the twin is safe to capture: mascot decoded and the fit landed */
+  onReady?: () => void;
 };
 
-const GRADIENT_START: [number, number] = [0, 0];
-const GRADIENT_END: [number, number] = [1, 1];
-const SPARKLE_ICON = {
-  ios: "sparkles" as const,
-  android: "auto_awesome" as const,
-};
-
+/**
+ * The poster twin: what gets exported when the quote is shared (#317).
+ *
+ * A rebuild, not a capture of the hero — the hero sits in a ScrollView and
+ * carries the back button, the star and the action row, none of which belong on
+ * a posted image. So the twin composes the same primitives (`PosterSurface` +
+ * `PosterBody`) in the hero's own pt geometry, and the export is the hero's
+ * aspect scaled up rather than a second, re-laid-out composition.
+ *
+ * It is always the fixed bright palette, never the sharer's theme: the poster
+ * is the one surface where a per-user palette actively costs recognisability
+ * (#295). It never carries the source line either — provenance is the screen's
+ * Xolace+ entry point, and an export is not a place to sell.
+ */
 export const SharingCard = forwardRef<View, Props>(function SharingCard(
-  { text, onMascotLoadEnd },
+  { title, text, onReady },
   ref,
 ) {
   const { width } = useWindowDimensions();
-  const cardWidth = width;
-  const cardHeight = width * (16 / 9);
+  const [mascotLoaded, setMascotLoaded] = useState(false);
+  const [fitSettled, setFitSettled] = useState(false);
 
-  const backgroundColor = useThemeColor("background") as string;
-  const foregroundColor = useThemeColor("foreground") as string;
-  const accentColor = useThemeColor("accent") as string;
-
-  const cardDynamicStyle = {
-    width: cardWidth,
-    height: cardHeight,
-    backgroundColor,
-  };
-
-  const topGlowColors: [string, string] = [`${accentColor}20`, "transparent"];
-  const bottomGlowColors: [string, string] = [
-    "transparent",
-    `${accentColor}18`,
-  ];
-
-  const quoteTextStyle = {
-    color: foregroundColor,
-    ...shareTextScale(text, { fontSize: 30, lineHeight: 44 }),
-  };
-
-
-  const reminderChipStyle = {
-    backgroundColor: `${accentColor}14`,
-    borderColor: `${accentColor}2E`,
-  };
-
-  const reminderChipTextStyle = {
-    color: `${accentColor}D6`,
-  };
-
-  const mascotHaloStyle = {
-    width: cardWidth * 0.34,
-    height: cardWidth * 0.34,
-    right: cardWidth * 0.06,
-    bottom: cardHeight * 0.12,
-    backgroundColor: `${accentColor}14`,
-    borderColor: `${accentColor}22`,
-  };
-
-  const mascotStyle = {
-    width: "100%" as const,
-    height: "100%" as const,
-    opacity: 0.52,
-  };
-
-  const brandChipStyle = {
-    backgroundColor: `${accentColor}16`,
-    borderColor: `${accentColor}2E`,
-  };
-
-  const brandTextStyle = {
-    color: `${accentColor}D9`,
-  };
-
-  const cardCombinedStyle = StyleSheet.compose(
-    styles.card,
-    cardDynamicStyle,
-  ) as StyleProp<ViewStyle>;
-  const mascotHaloCombinedStyle = StyleSheet.compose(
-    styles.mascotHalo,
-    mascotHaloStyle,
-  ) as StyleProp<ViewStyle>;
-  const mascotCombinedStyle = StyleSheet.compose(
-    styles.mascot,
-    mascotStyle,
-  ) as StyleProp<ImageStyle>;
-  const reminderChipCombinedStyle = StyleSheet.compose(
-    styles.reminderChip,
-    reminderChipStyle,
-  ) as StyleProp<ViewStyle>;
-  const reminderChipTextCombinedStyle = StyleSheet.compose(
-    styles.reminderChipText,
-    reminderChipTextStyle,
-  ) as StyleProp<TextStyle>;
-  const brandChipCombinedStyle = StyleSheet.compose(
-    styles.brandChip,
-    brandChipStyle,
-  ) as StyleProp<ViewStyle>;
-  const brandTextCombinedStyle = StyleSheet.compose(
-    styles.brandText,
-    brandTextStyle,
-  ) as StyleProp<TextStyle>;
-  const quoteTextCombinedStyle = StyleSheet.compose(
-    styles.quoteText,
-    quoteTextStyle,
-  ) as StyleProp<TextStyle>;
+  // The fit search takes a few frames and paints nothing until it lands, so a
+  // capture on layout alone exports a blank paper card.
+  useEffect(() => {
+    if (mascotLoaded && fitSettled) onReady?.();
+  }, [mascotLoaded, fitSettled, onReady]);
 
   return (
-    <View ref={ref} style={cardCombinedStyle}>
-      <LinearGradient
-        colors={topGlowColors}
-        start={GRADIENT_START}
-        end={GRADIENT_END}
-        style={styles.gradientTop}
-        pointerEvents="none"
-      />
-      <LinearGradient
-        colors={bottomGlowColors}
-        start={GRADIENT_START}
-        end={GRADIENT_END}
-        style={styles.gradientBottom}
-        pointerEvents="none"
-      />
-
-      <View style={mascotHaloCombinedStyle} pointerEvents="none">
-        <Image
-          source={require("@/assets/images/flux/campfire-mini.jpeg")}
-          style={mascotCombinedStyle}
-          contentFit="cover"
-          pointerEvents="none"
-          onLoadEnd={onMascotLoadEnd}
-        />
-      </View>
-
-
-      <View className="flex-1 justify-center" style={styles.contentPadding}>
-        <View style={reminderChipCombinedStyle}>
-          <SymbolView
-            name={SPARKLE_ICON}
-            size={10}
-            tintColor={`${accentColor}D6`}
-          />
-          <AppText style={reminderChipTextCombinedStyle}>
-            QUIET REMINDER
+    <View
+      ref={ref}
+      collapsable={false}
+      style={{ width: width - HERO_GUTTER * 2 }}
+    >
+      <PosterSurface>
+        <View className="px-5 pb-6 pt-7">
+          <AppText className="max-w-57.5 font-poster-display text-[37px] leading-[36.8px] tracking-[1.6px] text-poster-ink">
+            {"TODAY'S\n"}
+            <AppText className="font-poster-display text-[37px] leading-9.2 tracking-[1.6px] text-poster-ink-soft">
+              QUOTE
+            </AppText>
           </AppText>
-        </View>
 
-        <AppText style={quoteTextCombinedStyle}>{text}</AppText>
+          <View className="mt-5 rounded-[20px] bg-poster-paper p-4.5">
+            <PosterBody
+              title={title}
+              body={text}
+              onSettled={() => setFitSettled(true)}
+            />
+          </View>
 
-        <View style={brandChipCombinedStyle}>
-          <AppText style={brandTextCombinedStyle}>~ xolace</AppText>
+          {/* the wordmark the screen doesn't need: on an export it is the only
+              thing saying where the poster came from */}
+          <View className="mt-5 flex-row items-center gap-2">
+            <Image
+              source={MASCOT}
+              style={styles.mascot}
+              contentFit="cover"
+              onLoadEnd={() => setMascotLoaded(true)}
+            />
+            <AppText className="font-poster-display text-[15px] tracking-[1.6px] text-poster-ink-soft">
+              XOLACE
+            </AppText>
+          </View>
         </View>
-      </View>
+      </PosterSurface>
     </View>
   );
 });
 
 const styles = StyleSheet.create({
-  card: {
-    overflow: "hidden",
-  },
-  quoteText: {
-    fontFamily: "Poppins-SemiBold",
-  },
-  gradientTop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "55%",
-  },
-  gradientBottom: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: "50%",
-  },
-  mascotHalo: {
-    position: "absolute",
-    borderRadius: 999,
-    borderWidth: 1,
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  mascot: {
-    width: "100%",
-    height: "100%",
-  },
-  contentPadding: {
-    paddingHorizontal: 40,
-    gap: 18,
-  },
-  reminderChip: {
-    alignSelf: "flex-start",
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 6,
-  },
-  reminderChipText: {
-    fontSize: 10,
-    letterSpacing: 1.1,
-    fontFamily: "Poppins-Medium",
-  },
-  brandChip: {
-    alignSelf: "flex-start",
-    marginTop: 6,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  brandText: {
-    fontSize: 12,
-    fontFamily: "Poppins-Medium",
-    letterSpacing: 0.3,
-  },
+  /* the source is a lilac-backed render, so it is worn as a round badge */
+  mascot: { width: 38, height: 38, borderRadius: 19 },
 });

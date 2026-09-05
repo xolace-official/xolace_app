@@ -3,6 +3,7 @@ import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
 import { purgeSessions } from "../lib/sessionCascade";
+import { purgeReplyEntries } from "../episodicMemory";
 import { rankReplace } from "../lib/aggregates";
 
 const BATCH_SIZE = 100;
@@ -70,6 +71,14 @@ export const wipe = internalMutation({
       .take(BATCH_SIZE);
 
     if (quotes.length === BATCH_SIZE) hasMore = true;
+    // A reply's embedding must not outlive the row it came from — this loop
+    // touches no vector on its own (ADR 0007). Only replied rows have a key:
+    // most of a batch is untouched quotes, and a cleared reply already purged.
+    await purgeReplyEntries(
+      ctx,
+      emotionalProfileId,
+      quotes.filter((q) => q.reply !== undefined).map((q) => q._id),
+    );
     for (const q of quotes) await ctx.db.delete("daily_quotes", q._id);
 
     // ── Anonymize escalation events ──────────────────────────────

@@ -88,16 +88,24 @@ export const ragMock = (
     entries?: { entryId: string; key?: string; text: string }[];
     results?: { entryId: string; score: number }[];
   } = {},
+  /** Sink for keys passed to `deleteByKeyAsync` — pass one to assert a purge. */
+  deletedKeys?: string[],
 ) => ({
   REFLECTION_POOL_NAMESPACE: "reflection-pool",
   NO_GRANULAR_LABEL: "",
   EPISODIC_STATUS: "n/a",
+  REPLY_STATUS: "reply",
+  NO_PRIMARY_EMOTION: "n/a",
   rag: {
     search: async () => ({
       entries: result.entries ?? [],
       results: result.results ?? [],
     }),
     add: async () => {},
+    getNamespace: async () => ({ namespaceId: "ns_test" }),
+    deleteByKeyAsync: async (_ctx: unknown, args: { key: string }) => {
+      deletedKeys?.push(args.key);
+    },
   },
 });
 
