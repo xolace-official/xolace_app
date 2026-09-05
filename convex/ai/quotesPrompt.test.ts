@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { buildQuotePrompt, parseQuoteResponse, type QuoteSession } from "./quotesPrompt";
+import {
+  buildQuotePrompt,
+  parseQuoteResponse,
+  selectReplyContext,
+  REPLY_CONTEXT_COUNT,
+  REPLY_CONTEXT_MAX_CHARS,
+  REPLY_CONTEXT_WINDOW_DAYS,
+  type QuoteReply,
+  type QuoteSession,
+} from "./quotesPrompt";
 import { validateTitle } from "./quotesQuality";
 
 const now = new Date("2026-07-07T00:00:00Z").getTime();
@@ -131,6 +140,106 @@ describe("buildQuotePrompt", () => {
     expect(withTitles.userPrompt).toContain("Recent titles already used");
     expect(withTitles.userPrompt).toContain('- "The crack"');
     expect(without.userPrompt).not.toContain("Recent titles already used");
+  });
+});
+
+describe("reply context (#314)", () => {
+  const day = 24 * 60 * 60 * 1000;
+  const reply = (over: Partial<QuoteReply>): QuoteReply => ({
+    text: "today felt lighter than it has in weeks",
+    repliedAt: now - day,
+    flagged: false,
+    ...over,
+  });
+
+  describe("selectReplyContext", () => {
+    it("returns the newest replies first, at most REPLY_CONTEXT_COUNT", () => {
+      const selected = selectReplyContext(
+        [
+          reply({ text: "third", repliedAt: now - 3 * day }),
+          reply({ text: "first", repliedAt: now - 1 * day }),
+          reply({ text: "fourth", repliedAt: now - 4 * day }),
+          reply({ text: "second", repliedAt: now - 2 * day }),
+        ],
+        now,
+      );
+
+      expect(REPLY_CONTEXT_COUNT).toBe(3);
+      expect(selected.map((r) => r.text)).toEqual(["first", "second", "third"]);
+    });
+
+    it("drops replies older than the 7-day window, keeping one on the edge", () => {
+      const selected = selectReplyContext(
+        [
+          reply({ text: "inside", repliedAt: now - 6 * day }),
+          reply({ text: "on the edge", repliedAt: now - REPLY_CONTEXT_WINDOW_DAYS * day }),
+          reply({ text: "outside", repliedAt: now - 8 * day }),
+        ],
+        now,
+      );
+
+      expect(selected.map((r) => r.text)).toEqual(["inside", "on the edge"]);
+    });
+
+    it("excludes flagged replies", () => {
+      const selected = selectReplyContext(
+        [
+          reply({ text: "flagged", repliedAt: now - day, flagged: true }),
+          reply({ text: "clean", repliedAt: now - 2 * day }),
+        ],
+        now,
+      );
+
+      expect(selected.map((r) => r.text)).toEqual(["clean"]);
+    });
+
+    it("truncates each reply to REPLY_CONTEXT_MAX_CHARS with an ellipsis", () => {
+      const long = "word ".repeat(200).trim();
+      const [selected] = selectReplyContext([reply({ text: long })], now);
+
+      expect(selected.text.length).toBeLessThanOrEqual(REPLY_CONTEXT_MAX_CHARS + 1);
+      expect(selected.text.endsWith("…")).toBe(true);
+
+      const short = selectReplyContext([reply({ text: "  short one  " })], now);
+      expect(short[0].text).toBe("short one");
+    });
+
+    it("drops blank replies", () => {
+      expect(selectReplyContext([reply({ text: "   " })], now)).toEqual([]);
+    });
+
+    it("is the same shape at a count of 1", () => {
+      const one = selectReplyContext([reply({ text: "only" })], now).slice(0, 1);
+      expect(one).toEqual([{ text: "only", repliedAt: now - day }]);
+    });
+  });
+
+  describe("buildQuotePrompt", () => {
+    it("renders the reply block newest first with recency labels, only when replies exist", () => {
+      const { userPrompt } = buildQuotePrompt({
+        ...baseParams,
+        renderedProfile: null,
+        replies: [
+          { text: "today felt lighter", repliedAt: now - day },
+          { text: "still tired of pretending", repliedAt: now - 3 * day },
+        ],
+      });
+
+      expect(userPrompt).toContain("What they wrote back to recent quotes");
+      expect(userPrompt).toContain('- "today felt lighter" — 1 day ago');
+      expect(userPrompt).toContain('- "still tired of pretending" — 3 days ago');
+      expect(userPrompt.indexOf("today felt lighter")).toBeLessThan(
+        userPrompt.indexOf("still tired of pretending"),
+      );
+
+      const none = buildQuotePrompt({ ...baseParams, renderedProfile: null });
+      expect(none.userPrompt).not.toContain("What they wrote back to recent quotes");
+    });
+
+    it("carries the NEVER line that keeps the register and drops the content", () => {
+      const { systemPrompt } = buildQuotePrompt({ ...baseParams, renderedProfile: null });
+      expect(systemPrompt).toContain("take its register, not its content");
+    });
   });
 });
 

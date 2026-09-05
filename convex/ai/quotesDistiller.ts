@@ -5,14 +5,22 @@ import { ActionCtx, internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Doc, Id } from "../_generated/dataModel";
 import { renderSemanticProfile } from "../semanticProfiles";
-import { buildQuotePrompt } from "./quotesPrompt";
+import {
+  buildQuotePrompt,
+  selectReplyContext,
+  REPLY_CONTEXT_WINDOW_DAYS,
+  type QuoteReply,
+} from "./quotesPrompt";
 import { dailyAngleSeed } from "./quotesQuality";
 import { requestQuoteText } from "./quotesRequest";
 
 /**
  * Load recent emotional metadata for session-derived quote generation.
  * Uses up to 3 most recent sessions within the last 7 days.
- * NEVER accesses rawInput — only emotional metadata.
+ * NEVER accesses rawInput — only emotional metadata. That invariant holds for
+ * this query, but no longer for the quote path as a whole: `loadRecentReplies`
+ * below carries the user's own reply text into the prompt, bounded and guarded
+ * (#314, docs/adr/0006-replies-cross-the-quote-metadata-boundary.md).
  */
 export const loadEmotionalContext = internalQuery({
   args: {
@@ -93,6 +101,44 @@ export const loadRecentQuotes = internalQuery({
 });
 
 /**
+ * Load what the user wrote back to their recent quotes (#314). This is the one
+ * place raw user text reaches the quote path — bounded by `selectReplyContext`
+ * (3 within 7 days, ~280 chars each, flagged replies excluded) and guarded by
+ * the prompt's "take its register, not its content" NEVER line. See
+ * docs/adr/0006-replies-cross-the-quote-metadata-boundary.md.
+ */
+export const loadRecentReplies = internalQuery({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+    referenceDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const cutoffMs = args.referenceDate - REPLY_CONTEXT_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+    const cutoffDate = new Date(cutoffMs).toISOString().slice(0, 10);
+
+    // ≤2 rows/day over the window, so 20 covers it with headroom; the reply
+    // fields are on the row, so this is the same read either way.
+    const rows = await ctx.db
+      .query("daily_quotes")
+      .withIndex("by_profile_date", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId).gte("date", cutoffDate)
+      )
+      .order("desc")
+      .take(20);
+
+    const candidates: QuoteReply[] = rows
+      .filter((r) => r.reply !== undefined && r.repliedAt !== undefined)
+      .map((r) => ({
+        text: r.reply as string,
+        repliedAt: r.repliedAt as number,
+        flagged: r.replyModeration?.flagged ?? false,
+      }));
+
+    return selectReplyContext(candidates, args.referenceDate);
+  },
+});
+
+/**
  * Generate a session-derived quote for one user.
  * Called per-user by the nightly cron batch processor.
  */
@@ -119,7 +165,7 @@ export async function distillQuoteForUser(
   try {
       const refMs = new Date(args.date + "T00:00:00Z").getTime();
 
-      const [context, recentQuotes, semanticProfileDoc] = await Promise.all([
+      const [context, recentQuotes, semanticProfileDoc, replies] = await Promise.all([
         ctx.runQuery(internal.ai.quotesDistiller.loadEmotionalContext, {
           emotionalProfileId: args.emotionalProfileId,
           referenceDate: refMs,
@@ -131,6 +177,10 @@ export async function distillQuoteForUser(
         ctx.runQuery(internal.semanticProfiles.getCurrent, {
           emotionalProfileId: args.emotionalProfileId,
         }) as Promise<Doc<"semantic_profiles"> | null>,
+        ctx.runQuery(internal.ai.quotesDistiller.loadRecentReplies, {
+          emotionalProfileId: args.emotionalProfileId,
+          referenceDate: refMs,
+        }) as Promise<{ text: string; repliedAt: number }[]>,
       ]);
 
       if (!context) {
@@ -153,6 +203,7 @@ export async function distillQuoteForUser(
         preferredThemes: args.preferredThemes,
         recentQuoteTexts: recentQuotes.texts,
         recentQuoteTitles: recentQuotes.titles,
+        replies,
       });
 
       const quote = await requestQuoteText({

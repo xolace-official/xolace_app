@@ -16,6 +16,56 @@ export type QuoteSession = {
 };
 
 /**
+ * A reply the user wrote back to one of their quotes. Raw user text — the one
+ * place it reaches this prompt, bounded by the constants below and guarded by
+ * the NEVER line plus `validateQuote`'s overlap check
+ * (docs/adr/0006-replies-cross-the-quote-metadata-boundary.md).
+ */
+export type QuoteReply = {
+  text: string;
+  repliedAt: number;
+  flagged: boolean;
+};
+
+/** Tunable aperture. The query and the block are identical at 1. */
+export const REPLY_CONTEXT_COUNT = 3;
+export const REPLY_CONTEXT_WINDOW_DAYS = 7;
+export const REPLY_CONTEXT_MAX_CHARS = 280;
+
+/**
+ * The aperture, as one pure pass: drop flagged replies, drop anything older
+ * than the window, newest first, at most `REPLY_CONTEXT_COUNT`, each truncated
+ * to `REPLY_CONTEXT_MAX_CHARS`. Called by `loadRecentReplies` so the bounds are
+ * tested here rather than against the database.
+ */
+export function selectReplyContext(
+  replies: QuoteReply[],
+  now: number,
+): { text: string; repliedAt: number }[] {
+  const cutoff = now - REPLY_CONTEXT_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+
+  return replies
+    .filter((r) => !r.flagged && r.repliedAt >= cutoff && r.text.trim().length > 0)
+    .sort((a, b) => b.repliedAt - a.repliedAt)
+    .slice(0, REPLY_CONTEXT_COUNT)
+    .map((r) => {
+      const text = r.text.trim();
+      return {
+        repliedAt: r.repliedAt,
+        text:
+          text.length > REPLY_CONTEXT_MAX_CHARS
+            ? `${text.slice(0, REPLY_CONTEXT_MAX_CHARS).trimEnd()}…`
+            : text,
+      };
+    });
+}
+
+function recencyLabel(now: number, at: number): string {
+  const daysAgo = Math.max(1, Math.round((now - at) / (1000 * 60 * 60 * 24)));
+  return daysAgo === 1 ? "1 day ago" : `${daysAgo} days ago`;
+}
+
+/**
  * Assembles the system/user prompt for a session-derived quote. Drives off
  * the semantic profile (recurring themes + trajectory) when one exists, with
  * the 2-session summary folded in as a recency signal. Falls back to the
@@ -30,6 +80,7 @@ export function buildQuotePrompt(params: {
   preferredThemes: string[];
   recentQuoteTexts: string[];
   recentQuoteTitles: string[];
+  replies?: { text: string; repliedAt: number }[];
 }): { systemPrompt: string; userPrompt: string } {
   const {
     angleSeed,
@@ -39,15 +90,14 @@ export function buildQuotePrompt(params: {
     preferredThemes,
     recentQuoteTexts,
     recentQuoteTitles,
+    replies = [],
   } = params;
 
   const emotionalSummary: string = sessions
     .map((s) => {
       const label = s.granularLabel ?? s.primaryEmotion;
       const tags = s.thematicTags.length > 0 ? ` (${s.thematicTags.join(", ")})` : "";
-      const daysAgo = Math.max(1, Math.round((now - s.sessionCreatedAt) / (1000 * 60 * 60 * 24)));
-      const recency = daysAgo === 1 ? "1 day ago" : `${daysAgo} days ago`;
-      return `- ${label}, intensity ${s.intensity}/10${tags} — ${recency}`;
+      return `- ${label}, intensity ${s.intensity}/10${tags} — ${recencyLabel(now, s.sessionCreatedAt)}`;
     })
     .join("\n");
 
@@ -80,7 +130,8 @@ NEVER (these produce a reflection of the reader, not a quote):
 - NEVER narrate the reader's progress or inner process — no "You're beginning to...", "You're learning that...", "Part of you knows..."
 - NEVER explain, interpret, or reassure about what the reader feels or why
 - NEVER chain clauses with semicolons or stacked commas ("the X, the Y, the Z")
-- NEVER reference the reader's situation or session details directly; the emotional register should feel personally resonant, not descriptive of specifics`;
+- NEVER reference the reader's situation or session details directly; the emotional register should feel personally resonant, not descriptive of specifics
+- NEVER quote, paraphrase, or reference the specifics of a reply the reader wrote — take its register, not its content`;
 
   const themesLine =
     preferredThemes.length > 0
@@ -97,11 +148,18 @@ NEVER (these produce a reflection of the reader, not a quote):
       ? `\nRecent titles already used — pick a different one:\n${recentQuoteTitles.map((t) => `- "${t}"`).join("\n")}`
       : "";
 
+  const repliesLine =
+    replies.length > 0
+      ? `\nWhat they wrote back to recent quotes, their own words, newest first — the live signal. Take the register, never the content:\n${replies
+          .map((r) => `- "${r.text}" — ${recencyLabel(now, r.repliedAt)}`)
+          .join("\n")}`
+      : "";
+
   const contextBlock = renderedProfile
     ? `Longitudinal emotional profile:\n${renderedProfile}\n\nRecent signal (last few days):\n${emotionalSummary}`
     : `Recent emotional themes:\n${emotionalSummary}`;
 
-  const userPrompt = `${contextBlock}${themesLine}${avoidLine}${avoidTitlesLine}\n\nGenerate a quote:`;
+  const userPrompt = `${contextBlock}${repliesLine}${themesLine}${avoidLine}${avoidTitlesLine}\n\nGenerate a quote:`;
 
   return { systemPrompt, userPrompt };
 }

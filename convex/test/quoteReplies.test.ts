@@ -152,3 +152,49 @@ describe("reply parity with the erasure loops", () => {
     expect(await readQuote(user, quoteId)).toBeNull();
   });
 });
+
+describe("loadRecentReplies (#314)", () => {
+  it("reads replies inside the window, skips flagged ones and quotes never replied to", async () => {
+    const user = await asNewUser();
+    const now = new Date("2026-01-08T00:00:00Z").getTime();
+    const day = 24 * 60 * 60 * 1000;
+
+    const seedReplied = async (
+      date: string,
+      reply: string | undefined,
+      repliedAt?: number,
+      flagged = false,
+    ) =>
+      user.root.run(async (ctx) =>
+        ctx.db.insert("daily_quotes", {
+          emotionalProfileId: user.profileId,
+          date,
+          type: "curated" as const,
+          text: "the quote",
+          isPremium: false,
+          createdAt: now,
+          ...(reply === undefined
+            ? {}
+            : {
+                reply,
+                repliedAt,
+                replyModeration: { flagged, categories: [], checkedAt: repliedAt! },
+              }),
+        }),
+      );
+
+    await seedReplied("2026-01-07", "yesterday", now - day);
+    await seedReplied("2026-01-06", "flagged one", now - 2 * day, true);
+    await seedReplied("2026-01-05", "three days back", now - 3 * day);
+    await seedReplied("2026-01-04", undefined);
+    // Outside the 7-day date window entirely.
+    await seedReplied("2025-12-20", "long ago", now - 19 * day);
+
+    const replies = await user.root.query(internal.ai.quotesDistiller.loadRecentReplies, {
+      emotionalProfileId: user.profileId,
+      referenceDate: now,
+    });
+
+    expect(replies.map((r) => r.text)).toEqual(["yesterday", "three days back"]);
+  });
+});
