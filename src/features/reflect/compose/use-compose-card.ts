@@ -24,6 +24,7 @@ export const useComposeCard = ({
   entryText,
 }: Args) => {
   const pendingEventPrompt = useAppStore((s) => s.pendingEventPrompt);
+  const replySeed = useAppStore((s) => s.replySeed);
   // Read the clock once at mount (lazy init keeps the call out of the render
   // body so React Compiler can still optimize this). The prompt has a
   // multi-day expiry, so mount-time accuracy is sufficient.
@@ -45,6 +46,7 @@ export const useComposeCard = ({
     // writing, and swapping it for your own first line as you type would make
     // the composer echo you back at yourself.
     draft: expanded ? null : entryText,
+    replySeed,
   });
 
   const [nudgeMessage] = useState(

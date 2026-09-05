@@ -10,6 +10,14 @@ import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 import type { CardContent } from "@/src/features/reflect/compose/resolve-card-content";
 import { a11yHidden } from "@/src/lib/utils";
 
+/**
+ * The resting card is a fixed 3:4 page with `overflow: hidden`, so a long
+ * prompt — or a retained draft's opening line, which is arbitrary user text —
+ * ran under the selection echo and was cut mid-glyph. Capped only at rest:
+ * open, the card is full-width and the line has room to say everything.
+ */
+const REST_PROMPT_LINES = 4;
+
 type Props = {
   card: CardContent;
   expanded: boolean;
@@ -57,6 +65,7 @@ export const MorphCardHeader = ({
       >
         <Animated.Text
           style={promptStyle}
+          numberOfLines={expanded ? undefined : REST_PROMPT_LINES}
           className={
             isDraft
               ? "font-normal italic text-foreground/60"

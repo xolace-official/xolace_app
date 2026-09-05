@@ -10,6 +10,7 @@ import {
   StackedQuoteCard,
 } from "@/src/features/quotes/components/archive/stacked-quote-card";
 import { useSavedQuotes } from "@/src/features/quotes/hooks/use-saved-quotes";
+import { useAppStore } from "@/src/store/store";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 
 /**
@@ -30,6 +31,7 @@ export function QuoteStack({
   const { results, status, loadMore, unsave } = useSavedQuotes();
   const reduced = useEffectiveReducedMotion();
   const router = useRouter();
+  const setReplySeed = useAppStore((s) => s.setReplySeed);
 
   // One query for the whole stack, not one per card. `undefined` while it
   // loads counts as active, so the offer appears only once we know it is safe
@@ -77,9 +79,16 @@ export function QuoteStack({
             if (openId === item._id) onToggle(null);
             void unsave(item._id, item.type);
           }}
-          // The reflect home, and nothing else: the composer starts empty and
-          // the ordinary typed path initiates with `open_prompt` (#316).
-          onSeed={() => router.replace("/")}
+          // The reply seeds the screen, never `rawInput` (#316): it becomes the
+          // reflect card's line and the composer opens empty under it, so the
+          // ordinary typed path initiates with `open_prompt`. Through the store
+          // rather than a route param — this is raw user text, and params ride
+          // in navigation state and history.
+          onSeed={() => {
+            if (!item.reply) return;
+            setReplySeed(item.reply);
+            router.replace("/");
+          }}
         />
       )}
     />

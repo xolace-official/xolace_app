@@ -8,6 +8,36 @@ import { NIGHT_HEADLINE } from "@/src/features/reflect/night-copy";
 
 const EVENT_PROMPT = "It's Pride month. What are you carrying about that?";
 
+describe("resolveCardContent — reply seed (#316)", () => {
+  const SEED = "I kept thinking about this all day";
+
+  it("speaks the kept reply back over anything the space would say", () => {
+    const { text, source } = resolveCardContent({
+      replySeed: SEED,
+      isNight: true,
+      quietReturnTier: "anniversary",
+      eventPrompt: EVENT_PROMPT,
+    });
+    expect(source).toBe("reply-seed");
+    expect(text).toContain(SEED);
+  });
+
+  it("yields to a live draft — unfinished words outrank a kept one", () => {
+    const { source } = resolveCardContent({ replySeed: SEED, draft: "today I" });
+    expect(source).toBe("draft");
+  });
+
+  it("clips a long reply to one card-sized line", () => {
+    const { text } = resolveCardContent({ replySeed: "x".repeat(400) });
+    expect(text.length).toBeLessThan(120);
+    expect(text).toContain("…");
+  });
+
+  it("is no seed at all when the reply is whitespace", () => {
+    expect(resolveCardContent({ replySeed: "   " }).source).toBe("default");
+  });
+});
+
 describe("resolveCardContent — priority", () => {
   it("falls back to the default prompt when nothing else applies", () => {
     const { text, source } = resolveCardContent({});

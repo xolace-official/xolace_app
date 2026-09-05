@@ -34,6 +34,7 @@ import { ReflectWash } from "@/src/features/reflect/components/reflect-wash";
 import { SpaceNamePromptDialog } from "@/src/features/reflect/components/space-name-prompt-dialog";
 import { ClarifyFeedbackSheet } from "@/src/features/reflect/components/states/clarify-feedback-sheet";
 import { useFeedbackShake } from "@/src/features/feedback-tray/feedback-tray-provider";
+import { useAppStore } from "@/src/store/store";
 
 // EaseView only runs a transition — and only then emits onTransitionEnd — when
 // initialAnimate differs from animate. Without an explicit opacity: 1 start the
@@ -97,6 +98,11 @@ export const ReflectScreen = () => {
       state.screen !== "typing-nudge" &&
       state.screen !== "processing",
   });
+  // A reply the user chose to start from (#316). It is the card's line, never
+  // the input's contents — the composer opens empty.
+  const replySeed = useAppStore((s) => s.replySeed);
+  const clearReplySeed = useAppStore((s) => s.clearReplySeed);
+
   const context = useQuery(api.users.getFullContext);
   const updatePreferences = useMutation(api.preferences.update);
   const { current, previous, isTransitioning, onOutgoingComplete } =
@@ -139,6 +145,20 @@ export const ReflectScreen = () => {
     }
     handleNotQuite();
   };
+
+  // Arriving with a seed opens the composer for the user; leaving the compose
+  // screens by any other route (submitted, a session resumed under them) spends
+  // it, so the card cannot re-open itself on a later visit to idle.
+  useEffect(() => {
+    if (!replySeed) return;
+    if (state.screen === "idle") {
+      dispatch({ type: "TAP_INPUT" });
+      return;
+    }
+    if (state.screen !== "typing" && state.screen !== "typing-nudge") {
+      clearReplySeed();
+    }
+  }, [replySeed, state.screen, dispatch, clearReplySeed]);
 
   useEffect(() => {
     if (!context?.profile) return;
@@ -184,7 +204,12 @@ export const ReflectScreen = () => {
             dispatch={dispatch}
             onTap={() => dispatch({ type: "TAP_INPUT" })}
             onSubmit={submitReflection}
-            onDismiss={handleDismissTyping}
+            onDismiss={() => {
+              // Closing the composer spends the offer: the draft survives
+              // (#258), but the card goes back to its own voice.
+              clearReplySeed();
+              handleDismissTyping();
+            }}
             onScaffoldSubmit={submitScaffold}
             onVoiceTapIdle={startVoiceFromIdle}
             onVoiceTapTyping={startVoiceFromTyping}
