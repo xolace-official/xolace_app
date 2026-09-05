@@ -287,7 +287,7 @@ describe("validateTitle", () => {
 
   it("rejects titles outside 3-20 characters", () => {
     expect(validateTitle("Hi", quote)).toEqual({ ok: false, reason: "too short" });
-    expect(validateTitle("Yes", quote).ok).toBe(true);
+    expect(validateTitle("A b", quote).ok).toBe(true); // exactly 3
     expect(validateTitle("Twenty characters ok", quote).ok).toBe(true); // exactly 20
     expect(validateTitle("Twenty one characters", quote)).toEqual({
       ok: false,
