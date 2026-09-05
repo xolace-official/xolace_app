@@ -68,6 +68,11 @@
     /* The deck: the poster's second sheet, not themed chrome. It is what keeps
      * the hero from being an isolated lit rectangle on a dark chrome (#305). */
     --color-poster-deck: #cbc9c5;
+    /* The composer on the deck: the field it is typed into, and the send pill
+     * — the only saturated colour outside the hero, so it takes the poster's
+     * own yellow rather than the accent (#305/#313). */
+    --color-poster-field: #e4e2de;
+    --color-poster-send: #f0e94d;
     /* The archive card's chip fill — ink at 7%, so one value sits on every tint */
     --color-poster-chip: rgba(20, 20, 20, 0.07);
     /* The archive card tints, cycled by item index (#296). Fixed objects inside

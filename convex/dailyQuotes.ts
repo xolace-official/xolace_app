@@ -1,10 +1,11 @@
 import { paginationOptsValidator } from "convex/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
+import { moderateInput } from "./ai/providers/moderation";
 import { internal } from "./_generated/api";
 
 function utcDateString(): string {
@@ -67,6 +68,11 @@ export const getToday = query({
       // loaded here, so it costs nothing over a second query.
       savedCount: profile.savedQuoteCount ?? 0,
       sessionLocked: !isPremium && (sessionQuote !== null || recentCompletedSession !== null),
+      // Whether a reply written now would actually reach tomorrow's quote:
+      // premium AND inside the same session window generation needs (#313).
+      // Not the inverse of `sessionLocked` — that predicate is false for a
+      // premium user and for a free user with no history alike.
+      replyReaches: isPremium && recentCompletedSession !== null,
     };
   },
 });
@@ -155,6 +161,84 @@ export const unsave = mutation({
       // clamped: a count that drifted low must never go negative
       savedQuoteCount: Math.max(0, (profile.savedQuoteCount ?? 0) - 1),
       updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+/**
+ * The cap on a reply. Client-side `maxLength` mirrors it; this is the fence.
+ */
+export const REPLY_MAX_LENGTH = 500;
+
+/**
+ * Write back to today's quote. One reply per quote — sending again overwrites,
+ * which is what makes it editable.
+ *
+ * An action, because moderation is a network call. Deliberately softer than a
+ * session's safety path: `moderateInput` only, no `evaluateSafeguard` and no
+ * `escalation_events` row, because nothing was mirrored and there is no verdict
+ * to record (docs/adr/0006-replies-cross-the-quote-metadata-boundary.md). A
+ * flagged reply is still stored — it is the person's words, and dropping them
+ * would be the one response worse than not asking. The client answers it with
+ * crisis resources in place of the "Kept safe" confirmation.
+ *
+ * A reply cannot make a quote exist: nothing here touches the generation gate.
+ */
+export const reply = action({
+  args: { quoteId: v.id("daily_quotes"), text: v.string() },
+  handler: async (ctx, args): Promise<{ flagged: boolean }> => {
+    const text = args.text.trim();
+    if (text.length === 0) {
+      throw new ConvexError({ code: "reply_empty", message: "Reply is empty" });
+    }
+    if (text.length > REPLY_MAX_LENGTH) {
+      throw new ConvexError({
+        code: "reply_too_long",
+        message: `Reply exceeds ${REPLY_MAX_LENGTH} characters`,
+      });
+    }
+
+    const moderation = await moderateInput(text);
+    const categories = Object.entries(moderation.categories)
+      .filter(([, hit]) => hit)
+      .map(([name]) => name);
+
+    await ctx.runMutation(internal.dailyQuotes.writeReply, {
+      quoteId: args.quoteId,
+      text,
+      moderation: {
+        flagged: moderation.flagged,
+        categories,
+        checkedAt: Date.now(),
+      },
+    });
+
+    return { flagged: moderation.flagged };
+  },
+});
+
+/**
+ * Internal: land a moderated reply on the row. Ownership is re-checked here
+ * rather than in the action — auth propagates from the action, and this is the
+ * only thing that actually writes.
+ */
+export const writeReply = internalMutation({
+  args: {
+    quoteId: v.id("daily_quotes"),
+    text: v.string(),
+    moderation: v.object({
+      flagged: v.boolean(),
+      categories: v.array(v.string()),
+      checkedAt: v.number(),
+    }),
+  },
+  handler: async (ctx, args) => {
+    await requireOwnQuote(ctx, args.quoteId);
+    await ctx.db.patch("daily_quotes", args.quoteId, {
+      reply: args.text,
+      repliedAt: Date.now(),
+      replyModeration: args.moderation,
     });
     return null;
   },

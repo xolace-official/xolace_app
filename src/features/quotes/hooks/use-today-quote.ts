@@ -63,6 +63,7 @@ export function useTodayQuote() {
   const coldStart = useAction(api.dailyQuotes.coldStart);
   const reactToQuote = useMutation(api.dailyQuotes.react);
   const clearReaction = useMutation(api.dailyQuotes.clearReaction);
+  const replyToQuote = useAction(api.dailyQuotes.reply);
   const saveQuote = useMutation(api.dailyQuotes.save).withOptimisticUpdate(
     (store, args) => patchSaved(store, args.quoteId, true),
   );
@@ -72,6 +73,7 @@ export function useTodayQuote() {
   const { state: notifState, scheduleNotification } = useQuoteNotifications();
 
   const [isManualColdStarting, setIsManualColdStarting] = useState(false);
+  const [isSendingReply, setIsSendingReply] = useState(false);
   const [coldStartError, setColdStartError] = useState(false);
   const viewedTrackedRef = useRef(false);
   const gateViewedTrackedRef = useRef(false);
@@ -200,9 +202,37 @@ export function useTodayQuote() {
     }
   };
 
+  /**
+   * Write back to today's thought. The action moderates before it stores, so
+   * this is a real round trip with no optimistic patch — the panel keeps the
+   * text on screen until it lands, and a flagged reply comes back saying so.
+   */
+  const sendReply = async (text: string) => {
+    if (!quote) return;
+    setIsSendingReply(true);
+    try {
+      const { flagged } = await replyToQuote({ quoteId: quote._id, text });
+      posthog.capture("quote_replied", {
+        quote_type: quote.type,
+        length: text.length,
+        flagged,
+        is_edit: quote.reply !== undefined,
+      });
+    } catch (e) {
+      console.error("[quotes] reply failed", e);
+      throw e;
+    } finally {
+      setIsSendingReply(false);
+    }
+  };
+
   return {
     quote,
     sourceLine,
+    /** Premium AND session-in-window — what makes the reach sub-line true. */
+    replyReaches: todayQuotes?.replyReaches ?? false,
+    isSendingReply,
+    sendReply,
     /** The archive's count strip — rides on `getToday`, so a star moves it. */
     savedCount: todayQuotes?.savedCount ?? 0,
     isFirstVisit,

@@ -1393,6 +1393,31 @@ export default defineSchema({
     // `savedAt` set — a kept quote is the user's archive, not a cached daily.
     savedAt: v.optional(v.number()),
 
+    // What the user wrote back to this quote. One per quote, editable, capped
+    // at REPLY_MAX_LENGTH (dailyQuotes.ts). Fields on the row, not a join
+    // table — the `savedAt` precedent, and it makes wipe/account-deletion
+    // parity free: both loops already delete daily_quotes rows wholesale.
+    //
+    // This is raw user text on the quote path. It reaches tomorrow's quote
+    // prompt bounded and guarded (#314) — see
+    // docs/adr/0006-replies-cross-the-quote-metadata-boundary.md.
+    reply: v.optional(v.string()),
+    repliedAt: v.optional(v.number()),
+
+    // `moderateInput` on send, and nothing else: no evaluateSafeguard, no
+    // escalation_events row, because nothing was mirrored and there is no
+    // verdict to record. Written on every send, flagged or not, so a reader
+    // can tell "checked and clean" from "never checked". A flagged reply is
+    // still stored, is excluded from the quote prompt, and is answered with
+    // crisis resources in place of the "Kept safe" confirmation.
+    replyModeration: v.optional(
+      v.object({
+        flagged: v.boolean(),
+        categories: v.array(v.string()),
+        checkedAt: v.number(),
+      }),
+    ),
+
     createdAt: v.number(),
   })
     // Primary client query: "what are today's quotes for this user?"

@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { ActionRow } from "@/src/features/quotes/components/poster/action-row";
+import { ComposePanel } from "@/src/features/quotes/components/poster/compose-panel";
 import { DeckCard } from "@/src/features/quotes/components/poster/deck-card";
 import { HeartBurst, useHeartBurst } from "@/src/features/quotes/components/heart-burst";
 import { HeroCard } from "@/src/features/quotes/components/poster/hero-card";
@@ -37,6 +38,9 @@ export function QuotesScreen() {
   const {
     quote,
     sourceLine,
+    replyReaches,
+    isSendingReply,
+    sendReply,
     isFirstVisit,
     isColdStarting,
     coldStartError,
@@ -110,6 +114,9 @@ export function QuotesScreen() {
         <KeyboardAwareScrollView
           contentContainerStyle={{ paddingBottom: bottom + 16 }}
           showsVerticalScrollIndicator={false}
+          // Without this the first tap on the composer's send pill is eaten
+          // dismissing the keyboard, and the user has to tap Share twice.
+          keyboardShouldPersistTaps="handled"
         >
           <HeroCard
             onBack={goBack}
@@ -153,6 +160,17 @@ export function QuotesScreen() {
           </HeroCard>
 
           <DeckCard
+            composer={
+              hasQuote ? (
+                <ComposePanel
+                  reply={quote.reply}
+                  flagged={quote.replyModeration?.flagged ?? false}
+                  reachSubline={replyReaches}
+                  isSending={isSendingReply}
+                  onSend={sendReply}
+                />
+              ) : null
+            }
             onOpenArchive={() => router.push("/(protected)/quotes/archive")}
           />
         </KeyboardAwareScrollView>
