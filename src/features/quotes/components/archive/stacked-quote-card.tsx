@@ -8,6 +8,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { ARCHIVE_TINT_VARS } from "@/src/features/quotes/poster-palette";
 import { formatDate } from "@/src/features/quotes/components/archive/archive-date";
+import { canSeedReflection } from "@/src/features/quotes/components/archive/reply-seed";
 
 /** The peek band: how much of a closed card the card below it leaves showing. */
 export const PEEK = 146;
@@ -54,15 +55,19 @@ export function StackedQuoteCard({
   index,
   isOpen,
   reduced,
+  hasActiveSession,
   onToggle,
   onUnsave,
+  onSeed,
 }: {
   quote: Doc<"daily_quotes">;
   index: number;
   isOpen: boolean;
   reduced: boolean;
+  hasActiveSession: boolean;
   onToggle: () => void;
   onUnsave: () => void;
+  onSeed: () => void;
 }) {
   const [shadow, ...tints] = useCSSVariable([
     "--color-poster-shadow",
@@ -79,6 +84,8 @@ export function StackedQuoteCard({
   const [measured, setMeasured] = useState({ id: quote._id, height: 0 });
   const contentHeight = measured.id === quote._id ? measured.height : 0;
   const expanded = Math.max(MIN_EXPANDED, contentHeight + CARD_PAD_V * 2);
+
+  const seedable = canSeedReflection(quote, hasActiveSession);
 
   const { dayMonth, weekday } = formatDate(quote.date);
   const meta = quote.reaction === "resonates" ? `${weekday}, resonated` : weekday;
@@ -126,6 +133,34 @@ export function StackedQuoteCard({
             <AppText className="mb-3.5 font-poster-body text-[14px] leading-5.5 text-poster-ink-soft">
               {quote.text}
             </AppText>
+            {/* The reply, and one onward ask beside it (#316). Fixed copy plus
+                the stored reply — no LLM call, no new query: `reply` is a
+                field on the row this card already reads. Accepting opens the
+                ordinary composer empty; nothing carries over, because #300
+                already embeds these words once. */}
+            {seedable && (
+              <View className="mb-3.5 rounded-2xl border border-poster-hairline px-4 py-3">
+                <AppText className="font-poster-display text-[12.5px] tracking-[1px] text-poster-ink">
+                  YOU WROTE BACK
+                </AppText>
+                <AppText
+                  numberOfLines={3}
+                  className="mt-1 font-poster-body text-[13.5px] leading-5 text-poster-ink-soft"
+                >
+                  {quote.reply}
+                </AppText>
+                <PressableFeedback
+                  onPress={onSeed}
+                  accessibilityRole="button"
+                  accessibilityLabel="Start a reflection from your reply"
+                >
+                  <AppText className="mt-2.5 font-poster-body text-[13.5px] font-semibold text-poster-ink underline">
+                    Start something from this →
+                  </AppText>
+                </PressableFeedback>
+              </View>
+            )}
+
             <PressableFeedback
               onPress={onUnsave}
               accessibilityRole="button"

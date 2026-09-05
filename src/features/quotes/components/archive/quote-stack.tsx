@@ -1,5 +1,8 @@
 import { View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
+import { useRouter } from "expo-router";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import {
@@ -26,6 +29,13 @@ export function QuoteStack({
 }) {
   const { results, status, loadMore, unsave } = useSavedQuotes();
   const reduced = useEffectiveReducedMotion();
+  const router = useRouter();
+
+  // One query for the whole stack, not one per card. `undefined` while it
+  // loads counts as active, so the offer appears only once we know it is safe
+  // — accepting into a waiting mirror is the failure it guards (#316).
+  const activeSession = useQuery(api.sessions.getActive);
+  const hasActiveSession = activeSession !== null;
 
   if (status === "LoadingFirstPage") return null;
 
@@ -61,11 +71,15 @@ export function QuoteStack({
           index={index}
           isOpen={item._id === openId}
           reduced={reduced}
+          hasActiveSession={hasActiveSession}
           onToggle={() => onToggle(item._id === openId ? null : item._id)}
           onUnsave={() => {
             if (openId === item._id) onToggle(null);
             void unsave(item._id, item.type);
           }}
+          // The reflect home, and nothing else: the composer starts empty and
+          // the ordinary typed path initiates with `open_prompt` (#316).
+          onSeed={() => router.replace("/")}
         />
       )}
     />
