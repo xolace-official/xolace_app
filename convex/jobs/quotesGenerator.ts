@@ -82,6 +82,7 @@ export const storeCuratedAndMarkShown = internalMutation({
     emotionalProfileId: v.id("emotional_profiles"),
     date: v.string(),
     text: v.string(),
+    title: v.optional(v.string()),
     quoteId: v.id("quotes"),
   },
   handler: async (ctx, args) => {
@@ -102,6 +103,7 @@ export const storeCuratedAndMarkShown = internalMutation({
         date: args.date,
         type: "curated",
         text: args.text,
+        title: args.title,
         isPremium: false,
         reaction: undefined,
         createdAt: Date.now(),
@@ -167,7 +169,7 @@ export const processUser = internalAction({
     }
 
     // 2. Curated quote
-    const curatedQuote: { _id: string; text: string } | null = await ctx.runQuery(
+    const curatedQuote: { _id: string; text: string; title?: string } | null = await ctx.runQuery(
       internal.quotes.pickCuratedQuote,
       { emotionalProfileId: args.emotionalProfileId, themes, shownQuoteIds }
     );
@@ -178,6 +180,7 @@ export const processUser = internalAction({
         emotionalProfileId: args.emotionalProfileId,
         date,
         text: curatedQuote.text,
+        title: curatedQuote.title,
         quoteId: curatedQuote._id as any,
       });
     }

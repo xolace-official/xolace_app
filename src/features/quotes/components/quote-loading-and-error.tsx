@@ -1,7 +1,11 @@
 import { View } from "react-native";
 import { PressableFeedback, SkeletonGroup } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { usePosterBoxHeight } from "@/src/features/quotes/components/poster/poster-body";
+import {
+  PLATE_GAP,
+  PLATE_HEIGHT,
+  usePosterBoxHeight,
+} from "@/src/features/quotes/components/poster/poster-body";
 
 /**
  * Cold start and error render as the poster box, not as a takeover: the body
@@ -43,6 +47,13 @@ export function QuoteLoadingAndError({
     <SkeletonGroup isLoading isSkeletonOnly>
       {/* the source line's own row, or the card jumps when the quote lands */}
       <SkeletonGroup.Item className="mb-2 h-3 w-2/3 self-center rounded-full" />
+      {/* the title plate's row. Reserved unconditionally: every curated quote
+          carries a title (#310), so holding the space is right far more often
+          than not — a titleless quote closes the gap instead of opening one. */}
+      <SkeletonGroup.Item
+        className="rounded-xl"
+        style={{ height: PLATE_HEIGHT, marginBottom: PLATE_GAP }}
+      />
       <View className="justify-center" style={boxStyle}>
         <View className="gap-4">
           <SkeletonGroup.Item className="h-9 rounded-xl" />

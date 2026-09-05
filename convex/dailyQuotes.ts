@@ -124,6 +124,7 @@ export const store = internalMutation({
     date: v.string(),
     type: v.union(v.literal("session"), v.literal("curated")),
     text: v.string(),
+    title: v.optional(v.string()),
     sessionContextIds: v.optional(v.array(v.id("sessions"))),
   },
   handler: async (ctx, args) => {
@@ -150,6 +151,7 @@ export const store = internalMutation({
       date: args.date,
       type: args.type,
       text: args.text,
+      title: args.title,
       sessionContextIds: args.sessionContextIds,
       isPremium: args.type === "session",
       reaction: undefined,

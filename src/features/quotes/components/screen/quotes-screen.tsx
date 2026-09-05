@@ -131,7 +131,7 @@ export function QuotesScreen() {
                   line={sourceLine}
                   onUnlock={() => openPaywall("daily_quote")}
                 />
-                <PosterBody body={removeEmDash(quote.text)} />
+                <PosterBody title={quote.title} body={removeEmDash(quote.text)} />
               </>
             ) : (
               <QuoteLoadingAndError

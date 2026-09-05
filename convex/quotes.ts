@@ -83,6 +83,7 @@ export const seed = internalMutation({
     quotes: v.array(
       v.object({
         text: v.string(),
+        title: v.optional(v.string()),
         themes: v.array(v.string()),
         source: v.optional(v.string()),
         language: v.optional(v.string()),
@@ -105,6 +106,7 @@ export const seed = internalMutation({
     for (const q of args.quotes) {
       await ctx.db.insert("quotes", {
         text: q.text,
+        title: q.title,
         themes: q.themes,
         source: q.source,
         language: q.language ?? "en",

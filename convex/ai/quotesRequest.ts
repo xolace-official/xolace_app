@@ -3,7 +3,7 @@
 
 import { getAnthropicClient } from "./providers/anthropic";
 import { parseQuoteResponse } from "./quotesPrompt";
-import { validateQuote } from "./quotesQuality";
+import { validateQuote, validateTitle } from "./quotesQuality";
 
 const DISTILLER_MODEL = "claude-haiku-4-5-20251001";
 
@@ -15,13 +15,17 @@ const RETRY_NUDGE =
  * toward aphorism shape rather than dropping the user's quote for the day.
  * Returns null when both attempts fail.
  *
+ * The title is soft (#310): a rejected title comes back `undefined` alongside a
+ * valid quote and never spends a retry — a user does not lose their quote for
+ * the day over a plate.
+ *
  * `label` only appears in logs (the emotional profile id at the call site).
  */
 export async function requestQuoteText(args: {
   systemPrompt: string;
   userPrompt: string;
   label: string;
-}): Promise<string | null> {
+}): Promise<{ text: string; title?: string } | null> {
   const client = getAnthropicClient();
   const prompts = [args.userPrompt, `${args.userPrompt}\n\n${RETRY_NUDGE}`];
 
@@ -68,7 +72,19 @@ export async function requestQuoteText(args: {
       continue;
     }
 
-    return parsed.quote;
+    let title: string | undefined;
+    if (parsed.title) {
+      const titleCheck = validateTitle(parsed.title, parsed.quote);
+      if (titleCheck.ok) {
+        title = parsed.title;
+      } else {
+        console.warn(
+          `[quotesDistiller] Title rejected for ${args.label} (quote kept): ${titleCheck.reason}`
+        );
+      }
+    }
+
+    return { text: parsed.quote, title };
   }
 
   return null;

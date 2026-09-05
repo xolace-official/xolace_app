@@ -1324,6 +1324,9 @@ export default defineSchema({
   //
   quotes: defineTable({
     text: v.string(),
+    // Plate above the quote on the poster. Permanently optional (#310) — a
+    // titleless row renders with the plate omitted.
+    title: v.optional(v.string()),
     // Theme slugs: "resilience", "self-compassion", "relationships",
     // "grief-and-loss", "change", "anxiety", "identity", "loneliness"
     themes: v.array(v.string()),
@@ -1354,6 +1357,10 @@ export default defineSchema({
 
     // The quote text.
     text: v.string(),
+
+    // Plate above the quote on the poster. Permanently optional (#310): a
+    // rejected title stores as undefined rather than costing the user the quote.
+    title: v.optional(v.string()),
 
     // Which sessions were used as context (session-derived only).
     sessionContextIds: v.optional(v.array(v.id("sessions"))),

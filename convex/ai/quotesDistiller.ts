@@ -83,10 +83,12 @@ export const loadRecentQuotes = internalQuery({
       .order("desc")
       .take(14);
 
-    return rows
-      .filter((r) => r.type === "session")
-      .slice(0, 7)
-      .map((r) => r.text);
+    const recent = rows.filter((r) => r.type === "session").slice(0, 7);
+
+    return {
+      texts: recent.map((r) => r.text),
+      titles: recent.map((r) => r.title).filter((t): t is string => !!t),
+    };
   },
 });
 
@@ -117,7 +119,7 @@ export async function distillQuoteForUser(
   try {
       const refMs = new Date(args.date + "T00:00:00Z").getTime();
 
-      const [context, recentQuoteTexts, semanticProfileDoc] = await Promise.all([
+      const [context, recentQuotes, semanticProfileDoc] = await Promise.all([
         ctx.runQuery(internal.ai.quotesDistiller.loadEmotionalContext, {
           emotionalProfileId: args.emotionalProfileId,
           referenceDate: refMs,
@@ -125,7 +127,7 @@ export async function distillQuoteForUser(
         ctx.runQuery(internal.ai.quotesDistiller.loadRecentQuotes, {
           emotionalProfileId: args.emotionalProfileId,
           beforeDate: args.date,
-        }) as Promise<string[]>,
+        }) as Promise<{ texts: string[]; titles: string[] }>,
         ctx.runQuery(internal.semanticProfiles.getCurrent, {
           emotionalProfileId: args.emotionalProfileId,
         }) as Promise<Doc<"semantic_profiles"> | null>,
@@ -149,29 +151,31 @@ export async function distillQuoteForUser(
         sessions: context.sessions,
         renderedProfile,
         preferredThemes: args.preferredThemes,
-        recentQuoteTexts,
+        recentQuoteTexts: recentQuotes.texts,
+        recentQuoteTitles: recentQuotes.titles,
       });
 
-      const quoteText = await requestQuoteText({
+      const quote = await requestQuoteText({
         systemPrompt,
         userPrompt,
         label: args.emotionalProfileId,
       });
 
-      if (!quoteText) return null;
+      if (!quote) return null;
 
       const quoteId = await ctx.runMutation(internal.dailyQuotes.store, {
         emotionalProfileId: args.emotionalProfileId,
         date: args.date,
         type: "session",
-        text: quoteText,
+        text: quote.text,
+        title: quote.title,
         sessionContextIds: context.sessionIds as any,
       });
 
       console.log(
         `[quotesDistiller] Stored session-derived quote ${quoteId} for ${args.emotionalProfileId} (${args.date})`
       );
-      return quoteText;
+      return quote.text;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildQuotePrompt, parseQuoteResponse, type QuoteSession } from "./quotesPrompt";
+import { validateTitle } from "./quotesQuality";
 
 const now = new Date("2026-07-07T00:00:00Z").getTime();
 
@@ -20,6 +21,7 @@ const baseParams = {
   sessions: oneSession,
   preferredThemes: [] as string[],
   recentQuoteTexts: [] as string[],
+  recentQuoteTitles: [] as string[],
 };
 
 describe("buildQuotePrompt", () => {
@@ -109,10 +111,26 @@ describe("buildQuotePrompt", () => {
     expect(empty.userPrompt).toContain("Recent emotional themes:\n");
   });
 
-  it("asks for seed-and-write JSON output", () => {
+  it("asks for seed-title-quote JSON output in one call", () => {
     const { systemPrompt } = buildQuotePrompt({ ...baseParams, renderedProfile: null });
-    expect(systemPrompt).toContain('{"seeds": ["...", "..."], "quote": "..."}');
+    expect(systemPrompt).toContain('{"seeds": ["...", "..."], "title": "...", "quote": "..."}');
+    expect(systemPrompt).toContain("The title:");
     expect(systemPrompt).toContain("NEVER narrate the reader's progress");
+    // one envelope, one call — no second instruction block asking for a title
+    expect(systemPrompt.match(/Output ONLY this JSON/g)).toHaveLength(1);
+  });
+
+  it("appends recent titles to the avoid block only when given", () => {
+    const withTitles = buildQuotePrompt({
+      ...baseParams,
+      renderedProfile: null,
+      recentQuoteTitles: ["The crack", "Soft animal"],
+    });
+    const without = buildQuotePrompt({ ...baseParams, renderedProfile: null });
+
+    expect(withTitles.userPrompt).toContain("Recent titles already used");
+    expect(withTitles.userPrompt).toContain('- "The crack"');
+    expect(without.userPrompt).not.toContain("Recent titles already used");
   });
 });
 
@@ -132,9 +150,70 @@ describe("parseQuoteResponse", () => {
     expect(parseQuoteResponse('{"seeds":[1,"a"],"quote":"A line."}')?.seeds).toEqual(["a"]);
   });
 
+  it("reads the title from the widened envelope", () => {
+    const parsed = parseQuoteResponse('{"seeds":["a"],"title":"  Soft animal  ","quote":"A line."}');
+    expect(parsed).toEqual({ quote: "A line.", seeds: ["a"], title: "Soft animal" });
+  });
+
+  it("keeps the quote when the title is missing, empty, or not a string", () => {
+    expect(parseQuoteResponse('{"seeds":["a"],"quote":"A line."}')?.title).toBeUndefined();
+    expect(parseQuoteResponse('{"title":"","quote":"A line."}')?.title).toBeUndefined();
+    expect(parseQuoteResponse('{"title":7,"quote":"A line."}')?.quote).toBe("A line.");
+  });
+
   it("returns null for unusable responses", () => {
     expect(parseQuoteResponse("You are not the storm.")).toBeNull();
     expect(parseQuoteResponse('{"seeds":["a"],"quote":""}')).toBeNull();
     expect(parseQuoteResponse('{"seeds":["a"], quote:}')).toBeNull();
+  });
+});
+
+describe("validateTitle", () => {
+  const quote = "The wound is the place where the light enters you.";
+
+  it("accepts a plate-shaped title", () => {
+    expect(validateTitle("Where light enters", quote)).toEqual({ ok: true });
+    expect(validateTitle("Soft animal", quote).ok).toBe(true);
+  });
+
+  it("rejects titles outside 3-20 characters", () => {
+    expect(validateTitle("Hi", quote)).toEqual({ ok: false, reason: "too short" });
+    expect(validateTitle("Yes", quote).ok).toBe(true);
+    expect(validateTitle("Twenty characters ok", quote).ok).toBe(true); // exactly 20
+    expect(validateTitle("Twenty one characters", quote)).toEqual({
+      ok: false,
+      reason: "too long",
+    });
+  });
+
+  it("rejects medical and clinical terms", () => {
+    expect(validateTitle("The diagnosis", quote)).toEqual({
+      ok: false,
+      reason: "blocked term: diagnosis",
+    });
+    expect(validateTitle("After therapy", quote).ok).toBe(false);
+  });
+
+  it("rejects terminal punctuation only", () => {
+    expect(validateTitle("Still here.", quote)).toEqual({
+      ok: false,
+      reason: "terminal punctuation",
+    });
+    expect(validateTitle("Still here?", quote).ok).toBe(false);
+    expect(validateTitle("Still here!", quote).ok).toBe(false);
+    expect(validateTitle("Held, briefly", quote).ok).toBe(true);
+  });
+
+  it("rejects a verbatim prefix of the quote, case-insensitively", () => {
+    expect(validateTitle("The wound is", quote)).toEqual({
+      ok: false,
+      reason: "verbatim prefix of the quote",
+    });
+    expect(validateTitle("THE WOUND", quote).ok).toBe(false);
+    expect(validateTitle("The place", quote).ok).toBe(true); // mid-quote is fine
+  });
+
+  it("does not check proper nouns", () => {
+    expect(validateTitle("Tuesday In June", quote).ok).toBe(true);
   });
 });

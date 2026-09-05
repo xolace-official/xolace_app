@@ -14,6 +14,14 @@ export function usePosterBoxHeight() {
 const LINE_HEIGHT_RATIO = 1.5;
 
 /**
+ * The plate's height and the gap under it, fixed so the cold-start skeleton can
+ * reserve the same space (#310). The title carries an explicit `leading-[34px]`
+ * to make the height deterministic under `adjustsFontSizeToFit`.
+ */
+export const PLATE_HEIGHT = 58;
+export const PLATE_GAP = 16;
+
+/**
  * The poster's body: a title plate over a fit-to-fill quote in a fixed box.
  *
  * The box height never depends on the text — a short quote grows to fill it and
@@ -41,7 +49,7 @@ export function PosterBody({ title, body }: { title?: string; body: string }) {
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.8}
-            className="text-center font-poster-display text-[27px] tracking-[1.6px] text-poster-ink"
+            className="text-center font-poster-display text-[27px] leading-[34px] tracking-[1.6px] text-poster-ink"
           >
             {title.toUpperCase()}
           </AppText>

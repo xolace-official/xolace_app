@@ -29,8 +29,17 @@ export function buildQuotePrompt(params: {
   renderedProfile: string | null;
   preferredThemes: string[];
   recentQuoteTexts: string[];
+  recentQuoteTitles: string[];
 }): { systemPrompt: string; userPrompt: string } {
-  const { angleSeed, now, sessions, renderedProfile, preferredThemes, recentQuoteTexts } = params;
+  const {
+    angleSeed,
+    now,
+    sessions,
+    renderedProfile,
+    preferredThemes,
+    recentQuoteTexts,
+    recentQuoteTitles,
+  } = params;
 
   const emotionalSummary: string = sessions
     .map((s) => {
@@ -49,7 +58,13 @@ Work in two steps:
 2. Write ONE original line in that same register. It must not be attributable to any of them: no close paraphrase, no borrowed image. You are taking the register, not the words.
 
 Output ONLY this JSON, nothing before or after:
-{"seeds": ["...", "..."], "quote": "..."}
+{"seeds": ["...", "..."], "title": "...", "quote": "..."}
+
+The title:
+- A plate above the quote, not a summary of it: 2-3 words, at most 20 characters
+- Names the territory the quote sits in, never restates its opening words
+- No ending period, question mark, or exclamation mark
+- No medical or clinical terminology
 
 The quote:
 - Aphorism shape: one sentence, around 20 words, sayable in a single breath. If the thought does not fit, find a smaller way to say it — never leave a cut-off fragment.
@@ -77,11 +92,16 @@ NEVER (these produce a reflection of the reader, not a quote):
       ? `\nRecent quotes already shown — do NOT reuse these framings, metaphors, or angles:\n${recentQuoteTexts.map((t) => `- "${t}"`).join("\n")}`
       : "";
 
+  const avoidTitlesLine =
+    recentQuoteTitles.length > 0
+      ? `\nRecent titles already used — pick a different one:\n${recentQuoteTitles.map((t) => `- "${t}"`).join("\n")}`
+      : "";
+
   const contextBlock = renderedProfile
     ? `Longitudinal emotional profile:\n${renderedProfile}\n\nRecent signal (last few days):\n${emotionalSummary}`
     : `Recent emotional themes:\n${emotionalSummary}`;
 
-  const userPrompt = `${contextBlock}${themesLine}${avoidLine}\n\nGenerate a quote:`;
+  const userPrompt = `${contextBlock}${themesLine}${avoidLine}${avoidTitlesLine}\n\nGenerate a quote:`;
 
   return { systemPrompt, userPrompt };
 }
@@ -90,10 +110,12 @@ NEVER (these produce a reflection of the reader, not a quote):
  * Parses the seed-and-write JSON response. Tolerates the model wrapping the
  * object in prose or a ```json fence by slicing to the outermost braces.
  * Returns null when there is no usable quote — the caller retries or skips.
+ * A missing or non-string `title` is not a parse failure: the title is soft and
+ * the quote still stands without it (#310).
  */
 export function parseQuoteResponse(
   raw: string,
-): { quote: string; seeds: string[] } | null {
+): { quote: string; seeds: string[]; title?: string } | null {
   const start = raw.indexOf("{");
   const end = raw.lastIndexOf("}");
   if (start === -1 || end <= start) return null;
@@ -102,6 +124,7 @@ export function parseQuoteResponse(
     const parsed = JSON.parse(raw.slice(start, end + 1)) as {
       quote?: unknown;
       seeds?: unknown;
+      title?: unknown;
     };
     const quote = typeof parsed.quote === "string" ? parsed.quote.trim() : "";
     if (!quote) return null;
@@ -109,7 +132,8 @@ export function parseQuoteResponse(
     const seeds = Array.isArray(parsed.seeds)
       ? parsed.seeds.filter((s): s is string => typeof s === "string")
       : [];
-    return { quote, seeds };
+    const title = typeof parsed.title === "string" ? parsed.title.trim() : "";
+    return title ? { quote, seeds, title } : { quote, seeds };
   } catch {
     return null;
   }
