@@ -105,7 +105,7 @@ export function StackedQuoteCard({
         accessibilityState={{ expanded: isOpen }}
       >
         <View onLayout={(e) => setMeasured({ id: quote._id, height: e.nativeEvent.layout.height })}>
-          <AppText className="font-poster-body font-medium text-[12.5px] text-poster-ink">{dayMonth}</AppText>
+          <AppText className="font-poster-body text-[12.5px] text-poster-ink">{dayMonth}</AppText>
           <AppText className="mt-px font-poster-body text-[12.5px] text-poster-ink-soft">{meta}</AppText>
 
           <View style={styles.titleGap} />
@@ -121,7 +121,7 @@ export function StackedQuoteCard({
             pointerEvents={isOpen ? "auto" : "none"}
             style={[styles.body, { opacity: isOpen ? 1 : 0 }, reduced ? null : BODY_TRANSITION]}
           >
-            <AppText className="mb-3.5 font-poster-body text-[14px] leading-[22px] text-poster-ink-soft">
+            <AppText className="mb-3.5 font-poster-body text-[14px] leading-5.5 text-poster-ink-soft">
               {quote.text}
             </AppText>
             <PressableFeedback
@@ -130,7 +130,7 @@ export function StackedQuoteCard({
               accessibilityLabel="Remove from saved"
               className="self-start rounded-full bg-poster-chip px-4 py-2"
             >
-              <AppText className="font-poster-body font-medium text-[12.5px] text-poster-ink">Unsave</AppText>
+              <AppText className="font-poster-body text-[12.5px] text-poster-ink">Unsave</AppText>
             </PressableFeedback>
           </Animated.View>
         </View>

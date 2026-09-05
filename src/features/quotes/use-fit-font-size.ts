@@ -10,7 +10,7 @@
  */
 import { useState } from "react";
 import { PixelRatio } from "react-native";
-import type { LayoutChangeEvent, NativeSyntheticEvent, TextLayoutEventData } from "react-native";
+import type { LayoutChangeEvent, TextLayoutEvent } from "react-native";
 
 const MAX_STEPS = 8;
 
@@ -42,7 +42,7 @@ export function useFitFontSize(
     setBoxHeight((prev) => (prev === h ? prev : h));
   };
 
-  const onTextLayout = (e: NativeSyntheticEvent<TextLayoutEventData>) => {
+  const onTextLayout = (e: TextLayoutEvent) => {
     if (!boxHeight) return;
     const lines = e.nativeEvent.lines;
     if (!lines.length) return;

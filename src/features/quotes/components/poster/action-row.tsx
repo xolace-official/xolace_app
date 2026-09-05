@@ -19,14 +19,7 @@ const HEART_ICON = { ios: "heart", android: "favorite_border" } as const;
 const HEART_ON_ICON = { ios: "heart.fill", android: "favorite" } as const;
 const SPRING = { damping: 18, stiffness: 160, mass: 0.9 };
 
-/**
- * Share + Resonate, as two labelled pills on the poster — the design's shape,
- * not the old pair of glass circles: Resonate is a toggle with a colour fill
- * that inverts to white type when it is on (#303).
- *
- * `not_today` ships no control — an old row that carries it renders the toggle
- * off, and the first tap overwrites it.
- */
+
 export function ActionRow({
   resonates,
   isSharingLoading,
@@ -64,19 +57,20 @@ export function ActionRow({
   const shadowStyle = { shadowColor: shadow };
 
   return (
-    <View className="mt-[18px] flex-row gap-3">
+    <View className="mt-4.5 flex-row gap-3">
       <PressableFeedback
         onPress={onShare}
         isDisabled={!!isSharingLoading}
         accessibilityRole="button"
         accessibilityLabel="Share"
         style={styles.share}
+
       >
         <View
-          className="h-[52px] flex-row items-center justify-center gap-2.5 rounded-[14px] bg-poster-plate"
+          className="h-13 flex-row items-center justify-center gap-2.5 rounded-[14px] bg-poster-plate"
           style={[styles.pill, shadowStyle]}
         >
-          <AppText className="font-poster-body text-[15px] font-semibold text-poster-ink">
+          <AppText className="text-[15px] font-semibold text-poster-ink">
             Share
           </AppText>
           <SymbolView
@@ -98,11 +92,11 @@ export function ActionRow({
           accessibilityState={{ selected: resonates }}
         >
           <View
-            className="h-[52px] flex-row items-center justify-center gap-2.5 rounded-[14px] bg-poster-resonate"
+            className="h-13 flex-row items-center justify-center gap-2.5 rounded-[14px] bg-poster-resonate"
             style={[styles.pill, shadowStyle]}
           >
             <AppText
-              className="font-poster-body text-[15px] font-semibold"
+              className="text-[15px] font-semibold"
               style={{ color: resonates ? white : inkDeep }}
             >
               Resonate

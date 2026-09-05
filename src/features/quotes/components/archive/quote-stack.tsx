@@ -37,7 +37,7 @@ export function QuoteStack({
         <AppText className="font-poster-display text-lg tracking-[1.2px] text-foreground">
           Nothing kept yet
         </AppText>
-        <AppText className="font-poster-body text-[13.5px] text-foreground/60">
+        <AppText className="font-poster-body text-[13.5px] text-foreground/65">
           Star a quote and it waits here for you.
         </AppText>
       </View>

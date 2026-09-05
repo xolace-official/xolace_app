@@ -1,8 +1,6 @@
 /**
  * Shrinks the type as the text gets longer so a long quote still lands inside
- * the capture. Lived in `quote-text-scale.ts` until the poster's measured
- * fit-to-fill (#308) replaced it on screen; the share capture is a fixed-size
- * off-screen render, so the tiers are all it ever needed.
+ * the capture.
  */
 export function shareTextScale(
   text: string,
