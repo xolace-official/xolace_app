@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { PressableFeedback } from "heroui-native";
+import { usePostHog } from "posthog-react-native";
 import { Presets } from "react-native-pulsar";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/src/components/shared/app-text";
@@ -39,10 +40,14 @@ export function ComposePanel({
   onSend: (text: string) => Promise<void>;
 }) {
   const router = useRouter();
+  const posthog = usePostHog();
   const inputRef = useRef<TextInput>(null);
   const [draft, setDraft] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [focused, setFocused] = useState(false);
+  // Once per mount: refocusing after a blur is the same attempt, and without
+  // this `quote_replied` has no denominator to measure abandonment against.
+  const startedRef = useRef(false);
 
   const [faint, ink] = useCSSVariable([
     "--color-poster-ink-faint",
@@ -95,7 +100,13 @@ export function ComposePanel({
         ref={inputRef}
         value={draft}
         onChangeText={setDraft}
-        onFocus={() => setFocused(true)}
+        onFocus={() => {
+          setFocused(true);
+          if (!startedRef.current) {
+            startedRef.current = true;
+            posthog.capture("quote_reply_started", { is_edit: reply !== undefined });
+          }
+        }}
         onBlur={() => setFocused(false)}
         multiline
         maxLength={REPLY_MAX_LENGTH}

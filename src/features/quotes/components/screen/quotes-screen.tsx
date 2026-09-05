@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { usePostHog } from "posthog-react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { ActionRow } from "@/src/features/quotes/components/poster/action-row";
@@ -34,6 +35,7 @@ export function QuotesScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const router = useRouter();
   const openPaywall = usePaywall((s) => s.open);
+  const posthog = usePostHog();
 
   const {
     quote,
@@ -50,6 +52,7 @@ export function QuotesScreen() {
     react,
     setSaved,
     completePreferences,
+    savedCount,
   } = useTodayQuote();
 
   const {
@@ -180,7 +183,12 @@ export function QuotesScreen() {
                 />
               ) : null
             }
-            onOpenArchive={() => router.push("/(protected)/quotes/archive")}
+            onOpenArchive={() => {
+              posthog.capture("quote_archive_opened", {
+                kept_count: savedCount ?? 0,
+              });
+              router.push("/(protected)/quotes/archive");
+            }}
           />
         </KeyboardAwareScrollView>
 
