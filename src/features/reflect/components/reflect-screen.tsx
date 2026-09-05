@@ -13,6 +13,7 @@ import { api } from "@/convex/_generated/api";
 import { useReflectionMachine } from "@/src/features/reflect/hooks/use-reflection-machine";
 import { MAX_TURNS } from "@/src/features/reflect/hooks/reflection-reducer";
 import { useScreenTransition } from "@/src/features/reflect/hooks/use-screen-transition";
+import { useReplySeed } from "@/src/features/reflect/hooks/use-reply-seed";
 import {
   SCREEN_TRANSITIONS,
   DEFAULT_SCREEN_TRANSITION,
@@ -100,7 +101,6 @@ export const ReflectScreen = () => {
   });
   // A reply the user chose to start from (#316). It is the card's line, never
   // the input's contents — the composer opens empty.
-  const replySeed = useAppStore((s) => s.replySeed);
   const clearReplySeed = useAppStore((s) => s.clearReplySeed);
 
   const context = useQuery(api.users.getFullContext);
@@ -146,19 +146,7 @@ export const ReflectScreen = () => {
     handleNotQuite();
   };
 
-  // Arriving with a seed opens the composer for the user; leaving the compose
-  // screens by any other route (submitted, a session resumed under them) spends
-  // it, so the card cannot re-open itself on a later visit to idle.
-  useEffect(() => {
-    if (!replySeed) return;
-    if (state.screen === "idle") {
-      dispatch({ type: "TAP_INPUT" });
-      return;
-    }
-    if (state.screen !== "typing" && state.screen !== "typing-nudge") {
-      clearReplySeed();
-    }
-  }, [replySeed, state.screen, dispatch, clearReplySeed]);
+  useReplySeed(state.screen, dispatch);
 
   useEffect(() => {
     if (!context?.profile) return;

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import {
   internalAction,
+  internalMutation,
   internalQuery,
   type ActionCtx,
   type MutationCtx,
@@ -412,6 +413,49 @@ export async function purgeReplyEntries(
     });
   }
 }
+
+/** One page of quotes per purge step (see purgeAllRepliesForProfile). */
+const REPLY_PURGE_BATCH = 100;
+
+/**
+ * Purge EVERY reply embedding for one profile — the personal-memory opt-out
+ * transition. `getReplyForEpisodic` only stops future ingestion; the replies
+ * already embedded have to come back out, or "off" is retroactively a lie.
+ * The `daily_quotes` rows themselves stay: this is a memory opt-out, not a
+ * wipe (that is jobs/dataWipe) and not a deletion (jobs/accountDeletionSteps).
+ */
+export const purgeAllRepliesForProfile = internalMutation({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+    cursor: v.optional(v.union(v.string(), v.null())),
+  },
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("daily_quotes")
+      .withIndex("by_profile_date", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId),
+      )
+      .paginate({ numItems: REPLY_PURGE_BATCH, cursor: args.cursor ?? null });
+
+    // Only replied rows ever had a key; the rest are a no-op by construction.
+    await purgeReplyEntries(
+      ctx,
+      args.emotionalProfileId,
+      page.page.filter((q) => q.reply !== undefined).map((q) => q._id),
+    );
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.episodicMemory.purgeAllRepliesForProfile,
+        {
+          emotionalProfileId: args.emotionalProfileId,
+          cursor: page.continueCursor,
+        },
+      );
+    }
+  },
+});
 
 // =============================================================
 // Backfill — one-shot migration over past sessions.

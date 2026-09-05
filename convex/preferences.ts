@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, internalQuery } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 import { mirrorToneValidator, motionPreferenceValidator } from "./lib/validators";
 import { validateSpaceName } from "./lib/spaceName";
@@ -213,6 +214,12 @@ export const update = mutation({
     }
     if (args.contributeByDefault !== undefined)
       patch.contributeByDefault = args.contributeByDefault;
+    // Turning personal memory OFF has to reach backwards: new replies stop
+    // being embedded on their own, but the ones already in the namespace
+    // would otherwise keep answering searches.
+    const memoryTurnedOff =
+      args.personalMemoryEnabled === false &&
+      preferences.personalMemoryEnabled !== false;
     if (args.personalMemoryEnabled !== undefined)
       patch.personalMemoryEnabled = args.personalMemoryEnabled;
     if (args.dataRetentionPreference !== undefined)
@@ -236,6 +243,14 @@ export const update = mutation({
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch("preferences", preferences._id, patch);
+    }
+
+    if (memoryTurnedOff) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.episodicMemory.purgeAllRepliesForProfile,
+        { emotionalProfileId: profile._id },
+      );
     }
 
     // Notification writes are merges, never replacements. `args.notifications`
