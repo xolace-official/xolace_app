@@ -13,7 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { quoteTextScale } from "@/src/features/quotes/quote-text-scale";
+import { shareTextScale } from "@/src/features/quotes/share-text-scale";
 
 type Props = {
   text: string;
@@ -53,7 +53,7 @@ export const SharingCard = forwardRef<View, Props>(function SharingCard(
 
   const quoteTextStyle = {
     color: foregroundColor,
-    ...quoteTextScale(text, { fontSize: 30, lineHeight: 44 }),
+    ...shareTextScale(text, { fontSize: 30, lineHeight: 44 }),
   };
 
 

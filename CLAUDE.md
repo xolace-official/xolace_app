@@ -15,7 +15,7 @@ We're building the AI-native mental health app that takes people from 'I don't e
 
 ### Retention & Engagement
 
-Retention mechanics are on the table. Gamification is welcome when it serves the user — streaks, milestones, insight unlocks, progress tracking, and consistency acknowledgment are all legitimate tools. We need to build features that enable proactive mental health care and engagement.
+Retention mechanics are on the table. Gamification is welcome anything like streaks, milestones, insight unlocks, progress tracking, and consistency acknowledgment are all legitimate tools, obviously thinking up  other niche stuff to is also important. We need to build features that enable proactive mental health care and engagement, giving the user a sense of goal to achieve. Building up retention is crucially important 
 
 ### The Metaphor
 
@@ -124,6 +124,7 @@ minimum-supported UI may still call. Instead mark, don't delete:
 - `notifications.removeToken` absent `pushToken` arg (remove-after: app >= 1.9.0) — old clients call `removeToken({})`, which is treated as "remove every device for this profile". Require the token once no store-published client omits it.
 - Profile-keyed push recipient fallback in `sendPushToProfile` (`convex/lib/pushNotifications.ts`, remove-after: app >= 1.9.0) — a user who hasn't relaunched since the multi-device deploy still has their token under the old profile-keyed recipient, and the nudge meant to bring them back has to reach them. Any registration retires that recipient; remove the fallback once the supported version floor has passed.
 - The two `confirmationState === "gave_up"` conditions in `convex/lib/followUpCadence.ts` (`followUpTier`'s Elevated bump and `computeRequiresFollowUp`'s force-grant, remove-after: app >= 1.10.0) — new clients collapse the at-cap row to "That's it" and record `refined`, so only pre-#176 binaries still write `gave_up` at the cap (new ones reach it only on the `isMaxRefinementError` race path). Deprecated in place with **no** `holding`/`gapNamed` equivalent by ruling (docs/confidence-aware-mirroring.md §8): deleting them now would strip old-binary users of today's check-in. Remove both clauses once the supported version floor passes.
+- `daily_quotes.reaction` member `"not_today"` (`convex/schema.ts` + `convex/dailyQuotes.ts` `react`, remove-after: app >= 1.10.0) — #303 ships no control for it, so no current client writes it. Sharper than the rest of this ledger: narrowing the union **throws rather than degrading** — a pre-#309 binary's `react({reaction:"not_today"})` fails argument validation and the button visibly breaks. The 9 existing rows stay; the toggle renders off and the first tap overwrites.
 - Client `isMaxRefinementError` message-substring fallback (`.includes('Maximum refinement turns')` in `src/features/reflect/session-service.ts`) — the server now throws a `ConvexError` with code `max_refinement_turns`; remove the fallback once the backend deployed before that code is no longer reachable. Conversely, the server's error message must keep the "Maximum refinement turns" substring until no store-published client matches on it.
 
 ## Good to know
@@ -152,6 +153,7 @@ Scheduled functions always run their currently-deployed version, not the version
 - **Images**: Use `expo-image` only, never `Image` from `react-native`.
 - **Platform-specific code**: Use Expo platform extensions (`.ios.tsx`, `.android.tsx`, `.web.tsx`). For styling, use Uniwind platform selectors (`ios:`, `android:`).
 - **Theme colors**: Use CSS variables (e.g., `--background`, `--foreground`, `--accent`, `--surface`, `--overlay`). Never hard-code colors. All themes must define the same set of variables. Use `useThemeColor` from `heroui-native` when you need color values in JS.
+- **Fixed palettes**: A surface may hold a fixed palette when its palette *is* the content, not the container — it is a printed object and does not follow the active theme. Members: the quotes poster (**hero and deck — one printed object, two sheets**), `vent/`, `auth/`. This is a named category, not a per-feature exemption: anything not listed here follows the Theme colors convention above. A fixed palette still lands as tokens (e.g. `--poster-*` under `@theme static` in `global.css`) so no hex enters a component; only the values a token cannot express — a gradient stop array, a Skia opacity — live in a palette module beside the feature.
 - **Fonts**: Poppins loaded via `expo-font` plugin. Space Grotesk loaded dynamically via `@expo-google-fonts/space-grotesk` in root layout. Font mapping in `global.css` `@theme` block.
 - **File size**: Keep files under 200 lines. Extract logic into hooks, utils, services.
 - **Imports**: Always use `@/src/` path alias. Avoid barrel re-exports that pull in unused code.

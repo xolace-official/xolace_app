@@ -30,7 +30,16 @@ export interface LabeledCase<E> {
 export interface EvalOptions {
   /** Minimum aggregate accuracy across all cases. Defaults to 0.8. */
   threshold?: number;
+  /** Per-case budget for the live model call. Defaults to 30s. */
+  timeoutMs?: number;
 }
+
+/**
+ * A live model call does not fit vitest's 5s default — a slow-but-correct
+ * response would read as a failing prompt, which is the one thing an eval must
+ * not do.
+ */
+const DEFAULT_CASE_TIMEOUT_MS = 30_000;
 
 /**
  * Register a labeled live-model eval as a Vitest suite. Each case becomes an
@@ -45,6 +54,7 @@ export function runLabeledEval<E, C extends LabeledCase<E>>(
   options: EvalOptions = {},
 ): void {
   const threshold = options.threshold ?? 0.8;
+  const timeoutMs = options.timeoutMs ?? DEFAULT_CASE_TIMEOUT_MS;
 
   describe(suiteName, () => {
     let correct = 0;
@@ -53,12 +63,16 @@ export function runLabeledEval<E, C extends LabeledCase<E>>(
       const label = `${c.anchor ? "[anchor] " : ""}${c.note}`;
       // skipIf, not an early return: a keyless run must report skips, not
       // greens — a silently-passing eval is indistinguishable from a real one.
-      it.skipIf(!hasApiKey())(label, async () => {
-        const got = await run(c);
-        if (got === c.expected) correct++;
-        // Anchors must be exactly right; non-anchors feed the aggregate.
-        if (c.anchor) expect(got).toBe(c.expected);
-      });
+      it.skipIf(!hasApiKey())(
+        label,
+        async () => {
+          const got = await run(c);
+          if (got === c.expected) correct++;
+          // Anchors must be exactly right; non-anchors feed the aggregate.
+          if (c.anchor) expect(got).toBe(c.expected);
+        },
+        timeoutMs,
+      );
     }
 
     it.skipIf(!hasApiKey())(

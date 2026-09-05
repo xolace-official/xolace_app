@@ -3,6 +3,43 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Quote prompt reads raw reply text (2026-09-04)
+
+The reply box on Today's Thought puts a user sentence into the quote
+generator for the first time. `loadEmotionalContext` in
+`convex/ai/quotesDistiller.ts` carried an explicit "NEVER accesses rawInput
+— only emotional metadata" invariant; that invariant now describes the
+*session* half of the context only, and the comment is rewritten rather
+than left standing. See
+[`docs/adr/0006-replies-cross-the-quote-metadata-boundary.md`](docs/adr/0006-replies-cross-the-quote-metadata-boundary.md).
+
+No model call is added. A reply is new signal, but the signal is text, so
+it is *read*, never distilled — the Cognition Layer Constitution is
+satisfied by construction. `loadRecentReplies` feeds the 3 most recent
+replies within 7 days into `buildQuotePrompt`, truncated to ~280 chars,
+newest first, each labelled with its recency. `3` and `7 days` are tunable
+constants; the query is identical at `1`.
+
+**The verbatim-overlap check in `validateQuote` is load-bearing, not
+polish.** A generated quote is publicly shareable, so without it a name in
+a reply can reach a shared card — and verbatim user words in context are
+the most reliable way to produce the reader-narrating output the prompt's
+NEVER block exists to prevent. A quote sharing a distinctive 4-word run
+with any reply in context is rejected into the existing retry-once loop.
+
+A reply cannot cause a quote to exist: the generation gate is unchanged, so
+no recent session still means no quote. Replies live as fields on
+`daily_quotes` (`reply`, `repliedAt`, `replyModeration`), one per quote,
+editable, capped at 500 chars — the `savedAt` no-join-table precedent.
+`dataRetention` still leaves `daily_quotes` alone; wipe and account
+deletion already delete the rows wholesale.
+
+Moderation on send is `moderateInput` only — deliberately softer than a
+session's path, with no `evaluateSafeguard` and no `escalation_events` row,
+because nothing was mirrored and there is no verdict to record. A flagged
+reply is stored, excluded from the prompt, and answered with the crisis
+resource view in place of the "Kept safe" confirmation.
+
 ## Word cloud can reach (2026-09-04)
 
 Reverses the entry-type exclusion in
@@ -543,3 +580,26 @@ once in `evaluateSafeguard`'s final return, never at call sites.
 Deliberate non-moves: the action was NOT split into smaller actions (more
 `runQuery` round-trips, worse locality), and the `clarify.ts`/`process.ts`
 back-half duplication is a separate deferred candidate.
+
+## Episodic key classes (2026-09-04)
+
+"Episodic key" no longer means "sessionId". The personal RAG namespace
+(`namespace = emotionalProfileId`) holds two classes of entry, and the
+distinction is load-bearing rather than cosmetic:
+
+- **Session entries** — `key = sessionId`, the composite of raw + mirror +
+  distilled + metadata line. Read by both consumers, and the only class whose
+  weight is earned: `applyMemoryFeedback` casts `key as Id<"sessions">` on the
+  assumption that anything it receives is one.
+- **Reply entries** — `key = reply:<quoteId>`, a provenance label plus the
+  user's reply to a daily thought. Read **only** by the semantic-profile
+  agent; the mirror's `searchEpisodicMemory` filters them out with
+  `status = EPISODIC_STATUS`. Weight is `REPLY_IMPORTANCE`, seeded and never
+  adjusted.
+
+Two invariants follow. A new key class must (a) declare which consumers may
+retrieve it, since "everything in the namespace reaches the mirror" is no
+longer true, and (b) have a purge call-site in every job that deletes its
+source rows — enforced by the `sessionCascade` guard, not by convention.
+
+See `docs/adr/0007-replies-reach-the-profile-not-the-mirror.md`.

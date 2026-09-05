@@ -105,13 +105,13 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   FadeOut,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
   type EntryExitAnimationFunction,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { tv } from 'tailwind-variants';
 import { useCSSVariable } from 'uniwind';
 import { Button, Input } from 'heroui-native';
@@ -842,9 +842,9 @@ function QuestionnaireBody({
         .onEnd((event) => {
           const threshold = width * SWIPE_FRACTION;
           if (event.translationX < -threshold && canAdvance) {
-            runOnJS(navigate)(1);
+            scheduleOnRN(navigate, 1);
           } else if (event.translationX > threshold && canRetreat) {
-            runOnJS(navigate)(-1);
+            scheduleOnRN(navigate, -1);
           }
           // Springs back either way. When the move is taken the question is
           // replaced outright, so this only ever shows on a move that was not.

@@ -105,6 +105,11 @@ export default defineSchema({
     // every user's percentile goes wrong with no error surfaced.
     sessionCount: v.number(),
 
+    // Quotes the user has kept (daily_quotes.savedAt set). Maintained on
+    // save/unsave like sessionCount is on session completion. Optional —
+    // rows written before the archive shipped have no count; read as `?? 0`.
+    savedQuoteCount: v.optional(v.number()),
+
     firstSessionAt: v.optional(v.number()),
 
     // Timestamp of most recent session.
@@ -1324,6 +1329,9 @@ export default defineSchema({
   //
   quotes: defineTable({
     text: v.string(),
+    // Plate above the quote on the poster. Permanently optional (#310) — a
+    // titleless row renders with the plate omitted.
+    title: v.optional(v.string()),
     // Theme slugs: "resilience", "self-compassion", "relationships",
     // "grief-and-loss", "change", "anxiety", "identity", "loneliness"
     themes: v.array(v.string()),
@@ -1355,6 +1363,10 @@ export default defineSchema({
     // The quote text.
     text: v.string(),
 
+    // Plate above the quote on the poster. Permanently optional (#310): a
+    // rejected title stores as undefined rather than costing the user the quote.
+    title: v.optional(v.string()),
+
     // Which sessions were used as context (session-derived only).
     sessionContextIds: v.optional(v.array(v.id("sessions"))),
 
@@ -1363,8 +1375,51 @@ export default defineSchema({
     isPremium: v.boolean(),
 
     // User reaction. Null until the user reacts.
+    // DEPRECATED(remove-after: app >= 1.10.0): the "not_today" literal only —
+    // #303 ships no control for it, so no client writes it any more. Narrowing
+    // the union NOW makes an old binary's react({reaction:"not_today"}) fail
+    // argument validation: the button breaks visibly, it does not degrade. The
+    // 9 existing rows stay; the toggle renders off and the first tap overwrites.
     reaction: v.optional(
       v.union(v.literal("resonates"), v.literal("not_today")),
+    ),
+
+    // When the user kept this quote. Undefined = not saved. Independent of
+    // `reaction`: save means "I want this back" and populates the archive,
+    // resonate means "this landed" and populates nothing (#311).
+    //
+    // RETENTION: nothing prunes daily_quotes today. Any future
+    // jobs/dataRetention.ts pass over this table MUST skip rows with
+    // `savedAt` set — a kept quote is the user's archive, not a cached daily.
+    savedAt: v.optional(v.number()),
+
+    // What the user wrote back to this quote. One per quote, editable, capped
+    // at REPLY_MAX_LENGTH (dailyQuotes.ts). Fields on the row, not a join
+    // table — the `savedAt` precedent, and it makes wipe/account-deletion
+    // parity free: both loops already delete daily_quotes rows wholesale.
+    //
+    // This is raw user text on the quote path. It reaches tomorrow's quote
+    // prompt bounded and guarded (#314) — see
+    // docs/adr/0006-replies-cross-the-quote-metadata-boundary.md.
+    reply: v.optional(v.string()),
+    repliedAt: v.optional(v.number()),
+
+    // `moderateInput` on send, and nothing else: no evaluateSafeguard, no
+    // escalation_events row, because nothing was mirrored and there is no
+    // verdict to record. Written on every send, flagged or not, so a reader
+    // can tell "checked and clean" from "never checked". A flagged reply is
+    // still stored, is excluded from the quote prompt, and is answered with
+    // crisis resources in place of the "Kept safe" confirmation.
+    // `unavailable: true` means moderation never actually ran (API down or no
+    // key) — `flagged: false` there is an absence of a verdict, not a clean
+    // one, so the reply is excluded from the quote prompt like a flagged one.
+    replyModeration: v.optional(
+      v.object({
+        flagged: v.boolean(),
+        categories: v.array(v.string()),
+        checkedAt: v.number(),
+        unavailable: v.optional(v.boolean()),
+      }),
     ),
 
     createdAt: v.number(),
@@ -1373,7 +1428,12 @@ export default defineSchema({
     .index("by_profile_date", ["emotionalProfileId", "date"])
 
     // Cron idempotency: "has this user already got a quote today?"
-    .index("by_profile_date_type", ["emotionalProfileId", "date", "type"]),
+    .index("by_profile_date_type", ["emotionalProfileId", "date", "type"])
+
+    // The archive: saved quotes, newest first. Unsaved rows carry an
+    // undefined `savedAt`, which sorts out of any numeric range — that is
+    // what keeps them out of the paginated list, with no filter pass.
+    .index("by_profile_saved", ["emotionalProfileId", "savedAt"]),
 
   // ===========================================================
   // 16. CONSENT RECORDS

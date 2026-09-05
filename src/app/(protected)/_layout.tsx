@@ -71,6 +71,7 @@ export default function ProtectedLayout() {
             options={{ gestureEnabled: false, animation: "fade" }}
           />
           <Stack.Screen name="quotes/index" />
+          <Stack.Screen name="quotes/archive" />
 
           
           <Stack.Screen name="chat/[conversationId]" options={CHAT_OPTIONS} />

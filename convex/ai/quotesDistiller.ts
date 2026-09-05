@@ -5,14 +5,22 @@ import { ActionCtx, internalAction, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Doc, Id } from "../_generated/dataModel";
 import { renderSemanticProfile } from "../semanticProfiles";
-import { buildQuotePrompt } from "./quotesPrompt";
+import {
+  buildQuotePrompt,
+  selectReplyContext,
+  REPLY_CONTEXT_WINDOW_DAYS,
+  type QuoteReply,
+} from "./quotesPrompt";
 import { dailyAngleSeed } from "./quotesQuality";
 import { requestQuoteText } from "./quotesRequest";
 
 /**
  * Load recent emotional metadata for session-derived quote generation.
  * Uses up to 3 most recent sessions within the last 7 days.
- * NEVER accesses rawInput — only emotional metadata.
+ * NEVER accesses rawInput — only emotional metadata. That invariant holds for
+ * this query, but no longer for the quote path as a whole: `loadRecentReplies`
+ * below carries the user's own reply text into the prompt, bounded and guarded
+ * (#314, docs/adr/0006-replies-cross-the-quote-metadata-boundary.md).
  */
 export const loadEmotionalContext = internalQuery({
   args: {
@@ -83,10 +91,52 @@ export const loadRecentQuotes = internalQuery({
       .order("desc")
       .take(14);
 
-    return rows
-      .filter((r) => r.type === "session")
-      .slice(0, 7)
-      .map((r) => r.text);
+    const recent = rows.filter((r) => r.type === "session").slice(0, 7);
+
+    return {
+      texts: recent.map((r) => r.text),
+      titles: recent.map((r) => r.title).filter((t): t is string => !!t),
+    };
+  },
+});
+
+/**
+ * Load what the user wrote back to their recent quotes (#314). This is the one
+ * place raw user text reaches the quote path — bounded by `selectReplyContext`
+ * (3 within 7 days, ~280 chars each, flagged replies excluded) and guarded by
+ * the prompt's "take its register, not its content" NEVER line. See
+ * docs/adr/0006-replies-cross-the-quote-metadata-boundary.md.
+ */
+export const loadRecentReplies = internalQuery({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+    referenceDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const cutoffMs = args.referenceDate - REPLY_CONTEXT_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+    const cutoffDate = new Date(cutoffMs).toISOString().slice(0, 10);
+
+    // ≤2 rows/day over the window, so 20 covers it with headroom; the reply
+    // fields are on the row, so this is the same read either way.
+    const rows = await ctx.db
+      .query("daily_quotes")
+      .withIndex("by_profile_date", (q) =>
+        q.eq("emotionalProfileId", args.emotionalProfileId).gte("date", cutoffDate)
+      )
+      .order("desc")
+      .take(20);
+
+    const candidates: QuoteReply[] = rows
+      .filter((r) => r.reply !== undefined && r.repliedAt !== undefined)
+      .map((r) => ({
+        text: r.reply as string,
+        repliedAt: r.repliedAt as number,
+        // An unavailable check is not a clean one — treat it like a flag so
+        // unmoderated text never reaches the prompt.
+        flagged: (r.replyModeration?.flagged ?? false) || (r.replyModeration?.unavailable ?? false),
+      }));
+
+    return selectReplyContext(candidates, args.referenceDate);
   },
 });
 
@@ -117,7 +167,7 @@ export async function distillQuoteForUser(
   try {
       const refMs = new Date(args.date + "T00:00:00Z").getTime();
 
-      const [context, recentQuoteTexts, semanticProfileDoc] = await Promise.all([
+      const [context, recentQuotes, semanticProfileDoc, replies] = await Promise.all([
         ctx.runQuery(internal.ai.quotesDistiller.loadEmotionalContext, {
           emotionalProfileId: args.emotionalProfileId,
           referenceDate: refMs,
@@ -125,10 +175,14 @@ export async function distillQuoteForUser(
         ctx.runQuery(internal.ai.quotesDistiller.loadRecentQuotes, {
           emotionalProfileId: args.emotionalProfileId,
           beforeDate: args.date,
-        }) as Promise<string[]>,
+        }) as Promise<{ texts: string[]; titles: string[] }>,
         ctx.runQuery(internal.semanticProfiles.getCurrent, {
           emotionalProfileId: args.emotionalProfileId,
         }) as Promise<Doc<"semantic_profiles"> | null>,
+        ctx.runQuery(internal.ai.quotesDistiller.loadRecentReplies, {
+          emotionalProfileId: args.emotionalProfileId,
+          referenceDate: refMs,
+        }) as Promise<{ text: string; repliedAt: number }[]>,
       ]);
 
       if (!context) {
@@ -149,29 +203,32 @@ export async function distillQuoteForUser(
         sessions: context.sessions,
         renderedProfile,
         preferredThemes: args.preferredThemes,
-        recentQuoteTexts,
+        recentQuoteTexts: recentQuotes.texts,
+        recentQuoteTitles: recentQuotes.titles,
+        replies,
       });
 
-      const quoteText = await requestQuoteText({
+      const quote = await requestQuoteText({
         systemPrompt,
         userPrompt,
         label: args.emotionalProfileId,
       });
 
-      if (!quoteText) return null;
+      if (!quote) return null;
 
       const quoteId = await ctx.runMutation(internal.dailyQuotes.store, {
         emotionalProfileId: args.emotionalProfileId,
         date: args.date,
         type: "session",
-        text: quoteText,
+        text: quote.text,
+        title: quote.title,
         sessionContextIds: context.sessionIds as any,
       });
 
       console.log(
         `[quotesDistiller] Stored session-derived quote ${quoteId} for ${args.emotionalProfileId} (${args.date})`
       );
-      return quoteText;
+      return quote.text;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(

@@ -49,6 +49,45 @@
     --color-ember: oklch(78% 0.13 75);
 
     --font-poppins-medium: "Poppins-Medium";
+
+    /* Poster — the quotes poster is a printed object: its palette is the
+     * content, not the container, so it does not follow the active theme.
+     * Fixed on purpose; see the fixed-palette convention in CLAUDE.md.
+     * The two values a token cannot express (the gradient stop array and the
+     * Skia grain opacity) live in src/features/quotes/poster-palette.ts. */
+    --color-poster-paper: #f4f3f1;
+    --color-poster-plate: #ffffff;
+    --color-poster-ink: #141414;
+    --color-poster-ink-soft: #5d5d5d;
+    --color-poster-ink-faint: #6b6b6b;
+    --color-poster-hairline: rgba(0, 0, 0, 0.1);
+    --color-poster-shadow: #000000;
+    /* the design's Resonate fill and the deeper ink it sets its label in */
+    --color-poster-resonate: #f5726a;
+    --color-poster-ink-deep: #2b1414;
+    /* The deck: the poster's second sheet, not themed chrome. It is what keeps
+     * the hero from being an isolated lit rectangle on a dark chrome (#305). */
+    --color-poster-deck: #cbc9c5;
+    /* The composer on the deck: the field it is typed into, and the send pill
+     * — the only saturated colour outside the hero, so it takes the poster's
+     * own yellow rather than the accent (#305/#313). */
+    --color-poster-field: #e4e2de;
+    --color-poster-send: #f0e94d;
+    /* The archive card's chip fill — ink at 7%, so one value sits on every tint */
+    --color-poster-chip: rgba(20, 20, 20, 0.07);
+    /* The archive card tints, cycled by item index (#296). Fixed objects inside
+     * a themed container — only the index picks one, so the array that walks
+     * them is assembled at the call site. */
+    --color-archive-tint-1: #f4e9b8;
+    --color-archive-tint-2: #f3d3dc;
+    --color-archive-tint-3: #e7e5e2;
+    --color-archive-tint-4: #dce6de;
+
+    /* The poster's voice is fixed too: `--font-*` is a per-theme variable
+     * (nightly swaps the whole family to SN Pro), and a printed object does not
+     * change typeface with the chrome behind it. */
+    --font-poster-display: "SpaceGrotesk-Bold";
+    --font-poster-body: "SpaceGrotesk-Regular";
 }
 
 @layer theme {

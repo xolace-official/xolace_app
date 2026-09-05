@@ -1,9 +1,8 @@
 /**
- * Shrinks quote type as the text gets longer so a long quote still lands
- * inside the card instead of running past it. Short quotes keep their
- * original size — the tiers only kick in past a full card of text.
+ * Shrinks the type as the text gets longer so a long quote still lands inside
+ * the capture.
  */
-export function quoteTextScale(
+export function shareTextScale(
   text: string,
   base: { fontSize: number; lineHeight: number },
 ) {

@@ -1,56 +1,66 @@
 import { View } from "react-native";
-import { Button, SkeletonGroup } from "heroui-native";
+import { PressableFeedback, SkeletonGroup } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import {
+  PLATE_GAP,
+  PLATE_HEIGHT,
+  usePosterBoxHeight,
+} from "@/src/features/quotes/components/poster/poster-body";
 
-type Props = {
-  isFirstVisit: boolean;
-  isLoading: boolean;
-  isColdStarting: boolean;
-  coldStartError: boolean;
-  top: number;
-  onRetry: () => void;
-};
-
+/**
+ * Cold start and error render as the poster box, not as a takeover: the body
+ * box height is a constant fraction of the screen (#294), so the skeleton is
+ * the real shape and nothing reflows when the quote arrives.
+ */
 export function QuoteLoadingAndError({
-  isFirstVisit,
-  isLoading,
-  isColdStarting,
   coldStartError,
-  top,
   onRetry,
-}: Props) {
-  const loadingContainerStyle = { paddingTop: top + 36 };
+}: {
+  coldStartError: boolean;
+  onRetry: () => void;
+}) {
+  const boxStyle = { height: usePosterBoxHeight() };
 
-  if (!isFirstVisit && (isLoading || isColdStarting)) {
+  if (coldStartError) {
     return (
-      <View
-        className="flex-1 justify-center px-8"
-        style={loadingContainerStyle}
-      >
-        <SkeletonGroup isLoading isSkeletonOnly>
-          <View className="gap-5">
-            <SkeletonGroup.Item className="h-1.5 w-8 rounded-full" />
-            <SkeletonGroup.Item className="h-10 rounded-xl" />
-            <SkeletonGroup.Item className="h-10 w-4/5 rounded-xl" />
-            <SkeletonGroup.Item className="h-10 w-2/3 rounded-xl" />
-          </View>
-        </SkeletonGroup>
-      </View>
-    );
-  }
-
-  if (coldStartError && !isColdStarting) {
-    return (
-      <View className="flex-1 items-center justify-center gap-4">
-        <AppText className="text-xs text-foreground/40">
+      <View className="items-center justify-center gap-4" style={boxStyle}>
+        <AppText className="font-poster-body text-poster-ink-faint">
           Something went wrong.
         </AppText>
-        <Button size="sm" variant="ghost" onPress={onRetry}>
-          Retry
-        </Button>
+        {/* Not a themed `Button`: it sits on the poster's fixed paper, where a
+            themed foreground goes white-on-white in a dark chrome. */}
+        <PressableFeedback
+          onPress={onRetry}
+          accessibilityRole="button"
+          accessibilityLabel="Retry"
+          hitSlop={12}
+        >
+          <AppText className="rounded-full bg-poster-plate px-4 py-2 font-poster-body text-poster-ink">
+            Retry
+          </AppText>
+        </PressableFeedback>
       </View>
     );
   }
 
-  return null;
+  return (
+    <SkeletonGroup isLoading isSkeletonOnly>
+      {/* the source line's own row, or the card jumps when the quote lands */}
+      <SkeletonGroup.Item className="mb-2 h-3 w-2/3 self-center rounded-full" />
+      {/* the title plate's row. Reserved unconditionally: every curated quote
+          carries a title (#310), so holding the space is right far more often
+          than not — a titleless quote closes the gap instead of opening one. */}
+      <SkeletonGroup.Item
+        className="rounded-xl"
+        style={{ height: PLATE_HEIGHT, marginBottom: PLATE_GAP }}
+      />
+      <View className="justify-center" style={boxStyle}>
+        <View className="gap-4">
+          <SkeletonGroup.Item className="h-9 rounded-xl" />
+          <SkeletonGroup.Item className="h-9 w-4/5 rounded-xl" />
+          <SkeletonGroup.Item className="h-9 w-2/3 rounded-xl" />
+        </View>
+      </View>
+    </SkeletonGroup>
+  );
 }

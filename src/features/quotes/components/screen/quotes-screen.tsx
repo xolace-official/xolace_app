@@ -1,39 +1,27 @@
-import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useRouter } from "expo-router";
-import { useAction, useMutation, useQuery } from "convex/react";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withSequence,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
-import { usePostHog } from "posthog-react-native";
-import { GlassView } from "expo-glass-effect";
-import { LinearGradient } from "expo-linear-gradient";
-import { PressableFeedback, useThemeColor } from "heroui-native";
-import { SymbolView } from "expo-symbols";
+import { StatusBar } from "expo-status-bar";
 import { EaseView } from "react-native-ease/uniwind";
-import { api } from "@/convex/_generated/api";
-import { QuoteCard } from "@/src/features/quotes/components/quote-card";
-import { SharingCard } from "@/src/features/quotes/components/sharing-card";
+import { Presets } from "react-native-pulsar";
+import { ActionRow } from "@/src/features/quotes/components/poster/action-row";
+import { ComposePanel } from "@/src/features/quotes/components/poster/compose-panel";
+import { DeckCard } from "@/src/features/quotes/components/poster/deck-card";
+import { HeartBurst, useHeartBurst } from "@/src/features/quotes/components/heart-burst";
+import { HeroCard } from "@/src/features/quotes/components/poster/hero-card";
+import { PosterBody } from "@/src/features/quotes/components/poster/poster-body";
+import { PosterSourceLine } from "@/src/features/quotes/components/poster/poster-source-line";
 import { PreferenceSetupSheet } from "@/src/features/quotes/components/preference-setup-sheet";
-import { QuoteShareSheet } from "@/src/features/quotes/components/quote-share-sheet";
 import { QuoteLoadingAndError } from "@/src/features/quotes/components/quote-loading-and-error";
-import { useQuoteNotifications } from "@/src/features/quotes/hooks/use-quote-notifications";
+import { QuoteShareSheet } from "@/src/features/quotes/components/quote-share-sheet";
+import { StarButton } from "@/src/features/quotes/components/poster/star-button";
+import { SharingCard } from "@/src/features/quotes/components/sharing-card";
 import { useQuoteSharing } from "@/src/features/quotes/hooks/use-quote-sharing";
+import { useTodayQuote } from "@/src/features/quotes/hooks/use-today-quote";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { Presets } from "react-native-pulsar";
-import { StatusBar } from "expo-status-bar";
 
-const GRADIENT_START: [number, number] = [1, 0];
-const GRADIENT_END: [number, number] = [0.4, 0.3];
-const HEART_ICON = { ios: "heart.fill", android: "favorite" } as const;
-const CLOSE_ICON = { ios: "xmark", android: "close" } as const;
 const EASE_INITIAL = { opacity: 0, translateY: 20 };
 const EASE_ANIMATE = { opacity: 1, translateY: 0 };
 const EASE_TRANSITION = {
@@ -45,43 +33,23 @@ const EASE_TRANSITION = {
 export function QuotesScreen() {
   const { top, bottom } = useSafeAreaInsets();
   const router = useRouter();
-  const posthog = usePostHog();
-  const foregroundColor = useThemeColor("foreground") as string;
-  const accentColor = useThemeColor("accent") as string;
-
-  const todayQuotes = useQuery(api.dailyQuotes.getToday);
-  const quotePrefs = useQuery(api.preferences.getQuotePreferences);
-  const coldStart = useAction(api.dailyQuotes.coldStart);
-  const reactToQuote = useMutation(api.dailyQuotes.react);
-  const clearReaction = useMutation(api.dailyQuotes.clearReaction);
-
-  const { state: notifState, scheduleNotification } = useQuoteNotifications();
   const openPaywall = usePaywall((s) => s.open);
 
-  const [isManualColdStarting, setIsManualColdStarting] = useState(false);
-  const [coldStartError, setColdStartError] = useState(false);
-  const viewedTrackedRef = useRef(false);
-  const gateViewedTrackedRef = useRef(false);
-
-  const coldStartIssuedRef = useRef(false);
-
-  const isLoading = todayQuotes === undefined || quotePrefs === undefined;
-  const displayedQuote = todayQuotes?.session ?? todayQuotes?.curated ?? null;
-  const sessionLocked = todayQuotes?.sessionLocked ?? false;
-  const showNudge =
-    !isLoading &&
-    displayedQuote !== null &&
-    todayQuotes?.hasSessionToday === false;
-  const isFirstVisit = !isLoading && quotePrefs === null;
-  const needsColdStart =
-    !isLoading &&
-    !isFirstVisit &&
-    displayedQuote === null &&
-    !isManualColdStarting &&
-    !coldStartError;
-  const isColdStarting = isManualColdStarting || needsColdStart;
-
-  console.log(`[quotesScreen:needsColdStart] needsColdStart=${needsColdStart}`);
+  const {
+    quote,
+    sourceLine,
+    replyReaches,
+    isSendingReply,
+    sendReply,
+    isFirstVisit,
+    isColdStarting,
+    coldStartError,
+    isCompletingPreferences,
+    retry,
+    react,
+    setSaved,
+    completePreferences,
+  } = useTodayQuote();
 
   const {
     handleShare,
@@ -94,202 +62,32 @@ export function QuotesScreen() {
     setShowShareSheet,
     shareImageUri,
     setShareImageUri,
-  } = useQuoteSharing(displayedQuote);
+  } = useQuoteSharing(quote);
 
-  // Heart burst animation
-  const heartScale = useSharedValue(0);
-  const heartOpacity = useSharedValue(0);
-  const heartStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: heartScale.get() }],
-    opacity: heartOpacity.get(),
-  }));
+  const heartBurst = useHeartBurst();
 
-  const triggerHeartBurst = () => {
-    heartScale.set(0);
-    heartOpacity.set(1);
-    heartScale.set(
-      withSequence(
-        withSpring(1.5, { damping: 6, stiffness: 200 }),
-        withDelay(180, withTiming(0, { duration: 320 })),
-      ),
-    );
-    heartOpacity.set(
-      withSequence(
-        withTiming(1, { duration: 40 }),
-        withDelay(350, withTiming(0, { duration: 270 })),
-      ),
-    );
-  };
-
-  useEffect(() => {
-    if (!needsColdStart || coldStartIssuedRef.current) return;
-    coldStartIssuedRef.current = true;
-    coldStart().catch((e) => {
-      console.error(e);
-      coldStartIssuedRef.current = false;
-      setColdStartError(true);
+  // the burst fires on the way *to* resonating, never on clearing it — and
+  // only once the write landed, so a rejected tap doesn't celebrate nothing
+  const handleReact = (next: "resonates" | null) => {
+    void react(next).then((ok) => {
+      if (ok && next === "resonates") heartBurst.trigger();
     });
-  }, [needsColdStart, coldStart]);
-
-  useEffect(() => {
-    if (
-      viewedTrackedRef.current ||
-      isFirstVisit ||
-      isLoading ||
-      !displayedQuote
-    )
-      return;
-    viewedTrackedRef.current = true;
-    posthog.capture("quote_viewed", {
-      quote_type: displayedQuote.type,
-      has_session_today: todayQuotes?.hasSessionToday ?? false,
-    });
-  }, [
-    isFirstVisit,
-    isLoading,
-    displayedQuote,
-    todayQuotes?.hasSessionToday,
-    posthog,
-  ]);
-
-  useEffect(() => {
-    if (gateViewedTrackedRef.current || isLoading || !sessionLocked) return;
-    gateViewedTrackedRef.current = true;
-    posthog.capture("premium_gate_hit", {
-      feature: "daily_quote",
-      hasData: true,
-    });
-  }, [isLoading, sessionLocked, posthog]);
-
-  const handleUnlockQuote = () => {
-    openPaywall("daily_quote");
   };
 
-  const runManualColdStart = async () => {
-    if (coldStartIssuedRef.current) return;
-    coldStartIssuedRef.current = true;
-    setIsManualColdStarting(true);
-    await coldStart()
-      .catch((e) => {
-        console.error(e);
-        coldStartIssuedRef.current = false;
-        setColdStartError(true);
-      })
-      .finally(() => {
-        setIsManualColdStarting(false);
-      });
+  const goBack = () => {
+    Presets.flick();
+    router.back();
   };
 
-  const handlePrefsComplete = async (
-    themes: string[],
-    notifEnabled: boolean,
-    notifTime?: string,
-  ) => {
-    posthog.capture("quote_preferences_set", {
-      theme_count: themes.length,
-      themes,
-      notifications_enabled: notifEnabled,
-      notification_time: notifTime ?? null,
-    });
-    await scheduleNotification(themes, notifEnabled, notifTime);
-    setColdStartError(false);
-    await runManualColdStart();
-  };
-
-  const handleRetry = () => {
-    setColdStartError(false);
-    coldStartIssuedRef.current = false;
-    void runManualColdStart();
-  };
-
-  const handleReact = async (
-    reaction: "resonates" | "not_today" | null | undefined,
-  ) => {
-    if (!displayedQuote) return;
-    if (!reaction) {
-      posthog.capture("quote_reaction_cleared", {
-        previous_reaction: displayedQuote.reaction ?? null,
-        quote_type: displayedQuote.type,
-      });
-      await clearReaction({ quoteId: displayedQuote._id });
-    } else {
-      posthog.capture("quote_reacted", {
-        reaction,
-        quote_type: displayedQuote.type,
-      });
-      await reactToQuote({ quoteId: displayedQuote._id, reaction });
-    }
-  };
-
-  const closeButtonStyle = { paddingTop: top + 12 };
-  const gradientBottomColors: [string, string] = [
-    "transparent",
-    `${accentColor}28`,
-  ];
-  const gradientTopRightColors: [string, string] = [
-    `${accentColor}20`,
-    "transparent",
-  ];
-  const glassStyle = {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    backgroundColor: `${foregroundColor}10`,
-  };
-  const prefContentStyle = { padding: 24, paddingTop: top + 24, gap: 16 };
-
-  return (
-    <>
-      <StatusBar hidden />
-      <View className="flex-1 bg-background">
-        <LinearGradient
-          colors={gradientBottomColors}
-          style={styles.gradientBottom}
-          pointerEvents="none"
-        />
-        <LinearGradient
-          colors={gradientTopRightColors}
-          start={GRADIENT_START}
-          end={GRADIENT_END}
-          style={styles.gradientTopRight}
-          pointerEvents="none"
-        />
-
-        {/* Heart burst overlay */}
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.heartBurst, heartStyle]}
-        >
-          <SymbolView name={HEART_ICON} size={96} tintColor={accentColor} />
-        </Animated.View>
-
-        {/* Close button */}
-        <View className="absolute top-0 right-5 z-10" style={closeButtonStyle}>
-          <PressableFeedback
-            onPress={() => {
-              Presets.flick();
-              router.back();
-            }}
-            accessibilityLabel="Close"
-            hitSlop={12}
-          >
-            <GlassView style={glassStyle} glassEffectStyle="clear">
-              <SymbolView
-                name={CLOSE_ICON}
-                size={15}
-                tintColor={`${foregroundColor}70`}
-              />
-            </GlassView>
-          </PressableFeedback>
-        </View>
-
-        {/* First visit — preference setup */}
-        {isFirstVisit && (
+  // First visit is its own themed takeover — no hero behind it.
+  if (isFirstVisit) {
+    return (
+      <>
+        <StatusBar hidden />
+        <View className="flex-1 bg-background">
           <ScrollView
             className="flex-1"
-            contentContainerStyle={prefContentStyle}
+            contentContainerStyle={{ padding: 24, paddingTop: top + 24, gap: 16 }}
             showsVerticalScrollIndicator={false}
           >
             <EaseView
@@ -298,44 +96,91 @@ export function QuotesScreen() {
               transition={EASE_TRANSITION}
             >
               <PreferenceSetupSheet
-                onComplete={handlePrefsComplete}
-                isLoading={notifState === "requesting" || isColdStarting}
+                onComplete={completePreferences}
+                isLoading={isCompletingPreferences}
               />
             </EaseView>
           </ScrollView>
-        )}
+        </View>
+      </>
+    );
+  }
 
-        <QuoteLoadingAndError
-          isFirstVisit={isFirstVisit}
-          isLoading={isLoading}
-          isColdStarting={isColdStarting}
-          coldStartError={coldStartError}
-          top={top}
-          onRetry={handleRetry}
-        />
+  const hasQuote = quote !== null && sourceLine !== null && !isColdStarting;
 
-        {/* Immersive quote display */}
-        {!isFirstVisit && !isLoading && !isColdStarting && displayedQuote && (
-          <QuoteCard
-            text={removeEmDash(displayedQuote.text)}
-            type={displayedQuote.type}
-            reaction={displayedQuote.reaction}
-            onReact={handleReact}
-            onShare={handleShare}
-            onHeartBurst={triggerHeartBurst}
-            isSharingLoading={isSharingLoading}
-            showNudge={showNudge}
-            locked={sessionLocked}
-            onUnlock={handleUnlockQuote}
-            top={top}
-            bottom={bottom}
+  return (
+    <>
+      <StatusBar hidden />
+      <View className="flex-1 bg-background">
+        <HeartBurst scale={heartBurst.scale} opacity={heartBurst.opacity} />
+        <KeyboardAwareScrollView
+          contentContainerStyle={{ paddingBottom: bottom + 16 }}
+          showsVerticalScrollIndicator={false}
+          // Without this the first tap on the composer's send pill is eaten
+          // dismissing the keyboard, and the user has to tap Share twice.
+          keyboardShouldPersistTaps="handled"
+        >
+          <HeroCard
+            onBack={goBack}
+            star={
+              hasQuote ? (
+                <StarButton
+                  saved={quote.savedAt !== undefined}
+                  onToggle={(next) => void setSaved(next)}
+                />
+              ) : null
+            }
+            actions={
+              hasQuote ? (
+                <ActionRow
+                  resonates={quote.reaction === "resonates"}
+                  isSharingLoading={isSharingLoading}
+                  onShare={handleShare}
+                  onReact={handleReact}
+                />
+              ) : (
+                // holds the row's space so the hero does not grow when the
+                // quote lands — the poster box is only half of that promise
+                <View className="mt-4 h-12" />
+              )
+            }
+          >
+            {hasQuote ? (
+              <>
+                <PosterSourceLine
+                  line={sourceLine}
+                  onUnlock={() => openPaywall("daily_quote")}
+                />
+                <PosterBody title={quote.title} body={removeEmDash(quote.text)} />
+              </>
+            ) : (
+              <QuoteLoadingAndError
+                coldStartError={coldStartError && !isColdStarting}
+                onRetry={retry}
+              />
+            )}
+          </HeroCard>
+
+          <DeckCard
+            composer={
+              hasQuote ? (
+                <ComposePanel
+                  reply={quote.reply}
+                  flagged={quote.replyModeration?.flagged ?? false}
+                  reachSubline={replyReaches}
+                  isSending={isSendingReply}
+                  onSend={sendReply}
+                />
+              ) : null
+            }
+            onOpenArchive={() => router.push("/(protected)/quotes/archive")}
           />
-        )}
+        </KeyboardAwareScrollView>
 
         <QuoteShareSheet
           visible={showShareSheet}
           imageUri={shareImageUri}
-          quoteType={displayedQuote?.type ?? "curated"}
+          quoteType={quote?.type ?? "curated"}
           onClose={() => {
             setShowShareSheet(false);
             setShareImageUri(null);
@@ -343,7 +188,7 @@ export function QuotesScreen() {
         />
 
         {/* Off-screen sharing card for capture */}
-        {showSharingCard && displayedQuote && (
+        {showSharingCard && quote && (
           <View
             style={styles.offscreen}
             pointerEvents="none"
@@ -351,7 +196,7 @@ export function QuotesScreen() {
           >
             <SharingCard
               ref={sharingCardRef}
-              text={removeEmDash(displayedQuote.text)}
+              text={removeEmDash(quote.text)}
               onMascotLoadEnd={onSharingCardImageLoadEnd}
             />
           </View>
@@ -362,33 +207,5 @@ export function QuotesScreen() {
 }
 
 const styles = StyleSheet.create({
-  gradientBottom: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 220,
-  },
-  gradientTopRight: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    width: 140,
-    height: 140,
-  },
-  heartBurst: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 20,
-  },
-  offscreen: {
-    position: "absolute",
-    top: -10000,
-    left: 0,
-  },
+  offscreen: { position: "absolute", top: -10000, left: 0 },
 });

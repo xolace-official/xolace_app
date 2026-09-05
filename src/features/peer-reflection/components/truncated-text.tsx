@@ -3,8 +3,7 @@ import {
   Pressable,
   View,
   StyleSheet,
-  type NativeSyntheticEvent,
-  type TextLayoutEventData,
+  type TextLayoutEvent,
 } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 import { AppText } from "@/src/components/shared/app-text";
@@ -20,9 +19,7 @@ export const TruncatedText = ({ text, className }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const [clipped, setClipped] = useState(false);
 
-  const handleFullTextLayout = (
-    e: NativeSyntheticEvent<TextLayoutEventData>,
-  ) => {
+  const handleFullTextLayout = (e: TextLayoutEvent) => {
     setClipped(e.nativeEvent.lines.length > MAX_LINES);
   };
 

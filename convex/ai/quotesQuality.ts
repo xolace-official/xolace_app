@@ -62,3 +62,42 @@ export function validateQuote(text: string): { ok: boolean; reason?: string } {
 
   return { ok: true };
 }
+
+/** Stored cap. The plate renders it bare at 27px; the client shrinks to 0.8 to fit. */
+export const TITLE_MAX_LENGTH = 20;
+
+/**
+ * A title is a soft artifact (#310): a rejected one stores as `title: undefined`
+ * and the quote is kept. Deliberately no proper-noun check — a title is a plate,
+ * not a sentence, and a capitalized word in one is not the tell it is in a quote.
+ */
+export function validateTitle(
+  title: string,
+  quote: string,
+): { ok: boolean; reason?: string } {
+  const trimmed = title.trim();
+
+  if (trimmed.length < 3) return { ok: false, reason: "too short" };
+  if (trimmed.length > TITLE_MAX_LENGTH) return { ok: false, reason: "too long" };
+
+  if (/[.!?]$/.test(trimmed)) {
+    return { ok: false, reason: "terminal punctuation" };
+  }
+
+  const lower = trimmed.toLowerCase();
+  for (const term of MEDICAL_BLOCKLIST) {
+    if (lower.includes(term)) return { ok: false, reason: `blocked term: ${term}` };
+  }
+
+  if (quote.trim().toLowerCase().startsWith(lower)) {
+    return { ok: false, reason: "verbatim prefix of the quote" };
+  }
+
+  // Prompt asks for a 2-3 word plate (quotesPrompt.ts) — enforce it.
+  const words = trimmed.split(/\s+/).length;
+  if (words < 2 || words > 3) {
+    return { ok: false, reason: `expected 2-3 words, got ${words}` };
+  }
+
+  return { ok: true };
+}
