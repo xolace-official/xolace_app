@@ -68,8 +68,18 @@ export function resolveCardContent({
   return withScale(DEFAULT_PROMPT, "default");
 }
 
+/** Split by grapheme cluster so a cut at SEED_CHARS never leaves half an emoji. */
+function units(text: string): string[] {
+  const Segmenter = Intl.Segmenter;
+  if (!Segmenter) return Array.from(text); // Hermes without full-ICU: code points
+  return Array.from(new Segmenter(undefined, { granularity: "grapheme" }).segment(text), (s) => s.segment);
+}
+
 function clip(text: string): string {
-  return text.length > SEED_CHARS ? `${text.slice(0, SEED_CHARS).trimEnd()}…` : text;
+  const chars = units(text);
+  return chars.length > SEED_CHARS
+    ? `${chars.slice(0, SEED_CHARS).join("").trimEnd()}…`
+    : text;
 }
 
 function withScale(text: string, source: CardContentSource): CardContent {

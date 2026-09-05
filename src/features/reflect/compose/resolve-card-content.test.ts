@@ -33,6 +33,13 @@ describe("resolveCardContent — reply seed (#316)", () => {
     expect(text).toContain("…");
   });
 
+  it("never cuts an emoji in half at the clip boundary", () => {
+    const { text } = resolveCardContent({ replySeed: `${"x".repeat(87)}👍🏽 tail` });
+    expect(text).toContain("👍🏽");
+    expect(/[\uD800-\uDFFF]/.test(text.replace(/\p{Emoji}/gu, ""))).toBe(false);
+    expect(text).toContain("…");
+  });
+
   it("is no seed at all when the reply is whitespace", () => {
     expect(resolveCardContent({ replySeed: "   " }).source).toBe("default");
   });
