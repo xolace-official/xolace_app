@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { ActionRow } from "@/src/features/quotes/components/poster/action-row";
+import { HeartBurst, useHeartBurst } from "@/src/features/quotes/components/heart-burst";
 import { HeroCard } from "@/src/features/quotes/components/poster/hero-card";
 import { PosterBody } from "@/src/features/quotes/components/poster/poster-body";
 import { PosterSourceLine } from "@/src/features/quotes/components/poster/poster-source-line";
@@ -56,6 +57,14 @@ export function QuotesScreen() {
     setShareImageUri,
   } = useQuoteSharing(quote);
 
+  const heartBurst = useHeartBurst();
+
+  // the burst fires on the way *to* resonating, never on clearing it
+  const handleReact = (next: "resonates" | null) => {
+    if (next === "resonates") heartBurst.trigger();
+    void react(next);
+  };
+
   const goBack = () => {
     Presets.flick();
     router.back();
@@ -94,6 +103,7 @@ export function QuotesScreen() {
     <>
       <StatusBar hidden />
       <View className="flex-1 bg-background">
+        <HeartBurst scale={heartBurst.scale} opacity={heartBurst.opacity} />
         <KeyboardAwareScrollView
           contentContainerStyle={{ paddingBottom: bottom + 16 }}
           showsVerticalScrollIndicator={false}
@@ -106,7 +116,7 @@ export function QuotesScreen() {
                   resonates={quote.reaction === "resonates"}
                   isSharingLoading={isSharingLoading}
                   onShare={handleShare}
-                  onReact={react}
+                  onReact={handleReact}
                 />
               ) : (
                 // holds the row's space so the hero does not grow when the

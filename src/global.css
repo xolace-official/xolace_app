@@ -62,6 +62,9 @@
     --color-poster-ink-faint: #6b6b6b;
     --color-poster-hairline: rgba(0, 0, 0, 0.1);
     --color-poster-shadow: #000000;
+    /* the design's Resonate fill and the deeper ink it sets its label in */
+    --color-poster-resonate: #f5726a;
+    --color-poster-ink-deep: #2b1414;
 
     /* The poster's voice is fixed too: `--font-*` is a per-theme variable
      * (nightly swaps the whole family to SN Pro), and a printed object does not

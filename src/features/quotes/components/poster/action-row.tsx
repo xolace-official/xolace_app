@@ -1,15 +1,31 @@
-import { View } from "react-native";
+import { useEffect } from "react";
+import { StyleSheet, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { PressableFeedback } from "heroui-native";
-import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { SymbolView } from "expo-symbols";
 import { useCSSVariable } from "uniwind";
 import { Presets } from "react-native-pulsar";
+import { AppText } from "@/src/components/shared/app-text";
 
 const SHARE_ICON = { ios: "square.and.arrow.up", android: "share" } as const;
 const SHARING_ICON = { ios: "arrow.2.circlepath", android: "refresh" } as const;
+const HEART_ICON = { ios: "heart", android: "favorite_border" } as const;
+const HEART_ON_ICON = { ios: "heart.fill", android: "favorite" } as const;
+const SPRING = { damping: 18, stiffness: 160, mass: 0.9 };
 
 /**
- * Share + resonate. `not_today` ships no control (#303) — an old row that
- * carries it renders the toggle off, and the first tap overwrites it.
+ * Share + Resonate, as two labelled pills on the poster — the design's shape,
+ * not the old pair of glass circles: Resonate is a toggle with a colour fill
+ * that inverts to white type when it is on (#303).
+ *
+ * `not_today` ships no control — an old row that carries it renders the toggle
+ * off, and the first tap overwrites it.
  */
 export function ActionRow({
   resonates,
@@ -22,58 +38,95 @@ export function ActionRow({
   onShare: () => void;
   onReact: (next: "resonates" | null) => void;
 }) {
-  const ink = useCSSVariable("--color-poster-ink") as string;
+  const [ink, inkDeep, white, shadow] = useCSSVariable([
+    "--color-poster-ink",
+    "--color-poster-ink-deep",
+    "--color-poster-plate",
+    "--color-poster-shadow",
+  ]) as string[];
+
+  // the pill answers the tap itself; the full-screen burst is the screen's
+  const pop = useSharedValue(1);
+  const isFirst = useSharedValue(true);
+  useEffect(() => {
+    if (isFirst.get()) {
+      isFirst.set(false);
+      return;
+    }
+    pop.set(
+      withSequence(withTiming(1.06, { duration: 130 }), withSpring(1, SPRING)),
+    );
+  }, [resonates, pop, isFirst]);
+  const popStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pop.get() }],
+  }));
+
+  const shadowStyle = { shadowColor: shadow };
 
   return (
-    <View className="mt-4 flex-row gap-3">
-      <PosterButton
-        icon={isSharingLoading ? SHARING_ICON : SHARE_ICON}
-        tint={ink}
-        label="Share"
-        isDisabled={!!isSharingLoading}
+    <View className="mt-[18px] flex-row gap-3">
+      <PressableFeedback
         onPress={onShare}
-      />
-      <PosterButton
-        icon={
-          resonates
-            ? ({ ios: "heart.fill", android: "favorite" } as const)
-            : ({ ios: "heart", android: "favorite_border" } as const)
-        }
-        tint={ink}
-        label={resonates ? "Resonates, on" : "Resonates"}
-        onPress={() => {
-          Presets.chirp();
-          onReact(resonates ? null : "resonates");
-        }}
-      />
+        isDisabled={!!isSharingLoading}
+        accessibilityRole="button"
+        accessibilityLabel="Share"
+        style={styles.share}
+      >
+        <View
+          className="h-[52px] flex-row items-center justify-center gap-2.5 rounded-[14px] bg-poster-plate"
+          style={[styles.pill, shadowStyle]}
+        >
+          <AppText className="font-poster-body text-[15px] font-semibold text-poster-ink">
+            Share
+          </AppText>
+          <SymbolView
+            name={isSharingLoading ? SHARING_ICON : SHARE_ICON}
+            size={16}
+            tintColor={ink}
+          />
+        </View>
+      </PressableFeedback>
+
+      <Animated.View style={[styles.resonate, popStyle]}>
+        <PressableFeedback
+          onPress={() => {
+            Presets.chirp();
+            onReact(resonates ? null : "resonates");
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Resonate"
+          accessibilityState={{ selected: resonates }}
+        >
+          <View
+            className="h-[52px] flex-row items-center justify-center gap-2.5 rounded-[14px] bg-poster-resonate"
+            style={[styles.pill, shadowStyle]}
+          >
+            <AppText
+              className="font-poster-body text-[15px] font-semibold"
+              style={{ color: resonates ? white : inkDeep }}
+            >
+              Resonate
+            </AppText>
+            <SymbolView
+              name={resonates ? HEART_ON_ICON : HEART_ICON}
+              size={18}
+              tintColor={resonates ? white : inkDeep}
+            />
+          </View>
+        </PressableFeedback>
+      </Animated.View>
     </View>
   );
 }
 
-function PosterButton({
-  icon,
-  tint,
-  label,
-  isDisabled,
-  onPress,
-}: {
-  icon: SymbolViewProps["name"];
-  tint: string;
-  label: string;
-  isDisabled?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <PressableFeedback
-      onPress={onPress}
-      isDisabled={isDisabled}
-      hitSlop={12}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
-      <View className="h-12 w-12 items-center justify-center rounded-full bg-poster-plate">
-        <SymbolView name={icon} size={19} tintColor={tint} />
-      </View>
-    </PressableFeedback>
-  );
-}
+const styles = StyleSheet.create({
+  share: { flex: 1 },
+  /* the design gives Resonate the wider half of the row */
+  resonate: { flex: 1.15 },
+  pill: {
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+});
