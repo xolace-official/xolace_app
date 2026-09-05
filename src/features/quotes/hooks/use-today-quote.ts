@@ -246,6 +246,8 @@ export function useTodayQuote() {
     sourceLine,
     /** Premium AND session-in-window — what makes the reach sub-line true. */
     replyReaches: todayQuotes?.replyReaches ?? false,
+    /** Personal memory on — the reply also lands in the semantic profile. */
+    replyRemembered: todayQuotes?.replyRemembered ?? false,
     isSendingReply,
     sendReply,
     /** The archive's count strip — rides on `getToday`, so a star moves it. */

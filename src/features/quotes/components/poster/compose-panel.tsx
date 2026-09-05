@@ -27,12 +27,14 @@ export function ComposePanel({
   reply,
   flagged,
   reachSubline,
+  remembered,
   isSending,
   onSend,
 }: {
   reply?: string;
   flagged: boolean;
   reachSubline: boolean;
+  remembered: boolean;
   isSending: boolean;
   onSend: (text: string) => Promise<void>;
 }) {
@@ -70,6 +72,7 @@ export function ComposePanel({
         reply={reply}
         flagged={flagged}
         reachSubline={reachSubline}
+        remembered={remembered}
         onEdit={() => {
           Presets.flick();
           setDraft(reply);
@@ -154,12 +157,14 @@ function SentPanel({
   reply,
   flagged,
   reachSubline,
+  remembered,
   onEdit,
   onOpenResources,
 }: {
   reply: string;
   flagged: boolean;
   reachSubline: boolean;
+  remembered: boolean;
   onEdit: () => void;
   onOpenResources: () => void;
 }) {
@@ -194,9 +199,18 @@ function SentPanel({
             KEPT SAFE
           </AppText>
           <AppText className="mt-0.5 text-[13px] leading-[19px] text-poster-ink-soft">
-            {reachSubline
-              ? "Tomorrow's thought will listen to what you just said."
-              : "This stays yours."}
+            {/* "This stays yours" was true when a reply was inert. It no
+                longer is: with personal memory on, it also goes into what
+                Xolace understands of you (#315). The two destinations are
+                independent, so a reply can reach both — only a reply that
+                reaches neither is still nothing but kept. */}
+            {reachSubline && remembered
+              ? "Tomorrow's thought will listen. It stays in what Xolace knows of you."
+              : reachSubline
+                ? "Tomorrow's thought will listen to what you just said."
+                : remembered
+                  ? "Yours only — and it stays in what Xolace knows of you."
+                  : "This stays yours."}
           </AppText>
         </View>
       )}

@@ -1,4 +1,5 @@
 import { purgeSessions } from "../lib/sessionCascade";
+import { purgeReplyEntries } from "../episodicMemory";
 import { BATCH_SIZE, DrainStep } from "./accountDeletionFinalize";
 
 export const drainSessions: DrainStep = async (ctx, profileId) => {
@@ -103,6 +104,13 @@ export const drainQuotes: DrainStep = async (ctx, profileId) => {
     .query("daily_quotes")
     .withIndex("by_profile_date", (q) => q.eq("emotionalProfileId", profileId))
     .take(BATCH_SIZE);
+  // Same parity as dataWipe: the vector dies with the row (ADR 0007), and
+  // only a replied row ever had a key.
+  await purgeReplyEntries(
+    ctx,
+    profileId,
+    quotes.filter((q) => q.reply !== undefined).map((q) => q._id),
+  );
   for (const quote of quotes) await ctx.db.delete("daily_quotes", quote._id);
   return quotes.length === BATCH_SIZE;
 };

@@ -24,7 +24,7 @@ export const getToday = query({
 
     const fiveDaysAgo = new Date(today + "T00:00:00Z").getTime() - 5 * 24 * 60 * 60 * 1000;
 
-    const [quotes, sessionToday, isPremium, recentCompletedSession] = await Promise.all([
+    const [quotes, sessionToday, isPremium, recentCompletedSession, preferences] = await Promise.all([
       ctx.db
         .query("daily_quotes")
         .withIndex("by_profile_date", (q) =>
@@ -50,6 +50,10 @@ export const getToday = query({
         )
         .filter((q) => q.eq(q.field("state"), "completed"))
         .first(),
+      ctx.db
+        .query("preferences")
+        .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+        .unique(),
     ]);
 
     // Session-derived (personalized) quotes are Xolace+ only — the LLM call is
@@ -73,6 +77,11 @@ export const getToday = query({
       // Not the inverse of `sessionLocked` — that predicate is false for a
       // premium user and for a free user with no history alike.
       replyReaches: isPremium && recentCompletedSession !== null,
+      // Whether a reply also becomes episodic memory for the semantic profile
+      // (ADR 0007). Free and premium alike — this one is not a feature you
+      // receive, it is the memory toggle. The composer's confirmation copy
+      // reads it so "This stays yours" can stop understating.
+      replyRemembered: preferences?.personalMemoryEnabled !== false,
     };
   },
 });
@@ -244,6 +253,14 @@ export const writeReply = internalMutation({
       reply: args.text,
       repliedAt: Date.now(),
       replyModeration: args.moderation,
+    });
+    // The reply also becomes episodic memory for the semantic profile — never
+    // for the mirror (ADR 0007). Scheduled, not awaited: the embed is a network
+    // call and the "Kept safe" confirmation must not wait on it. ingestReply
+    // owns every gate (flagged / memory-off / cleared), so this stays one line
+    // for every write path — an edit re-adds idempotently under the same key.
+    await ctx.scheduler.runAfter(0, internal.episodicMemory.ingestReply, {
+      quoteId: args.quoteId,
     });
     return null;
   },

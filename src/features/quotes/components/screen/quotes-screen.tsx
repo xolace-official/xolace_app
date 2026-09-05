@@ -39,6 +39,7 @@ export function QuotesScreen() {
     quote,
     sourceLine,
     replyReaches,
+    replyRemembered,
     isSendingReply,
     sendReply,
     isFirstVisit,
@@ -107,6 +108,11 @@ export function QuotesScreen() {
   }
 
   const hasQuote = quote !== null && sourceLine !== null && !isColdStarting;
+  // An unavailable moderation check is not a clean one, so the reply is fed
+  // nowhere — neither tomorrow's quote (quotesDistiller) nor the semantic
+  // profile (ADR 0007). It is not flagged either, so no crisis panel replaces
+  // the confirmation and the subline is the only place that can be honest.
+  const replyUnmoderated = quote?.replyModeration?.unavailable ?? false;
 
   return (
     <>
@@ -167,7 +173,8 @@ export function QuotesScreen() {
                 <ComposePanel
                   reply={quote.reply}
                   flagged={quote.replyModeration?.flagged ?? false}
-                  reachSubline={replyReaches}
+                  reachSubline={replyReaches && !replyUnmoderated}
+                  remembered={replyRemembered && !replyUnmoderated}
                   isSending={isSendingReply}
                   onSend={sendReply}
                 />
