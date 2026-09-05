@@ -83,7 +83,7 @@ export function OfferCard({ tag, title, tint, width, mascot, children }: OfferCa
       <OfferPill className={CHIP[tint]}>{tag}</OfferPill>
       <AppText
         style={{ paddingRight: mascotSize * 0.6 }}
-        className="text-[25px] leading-[30px] text-offer-ink font-[Poppins-SemiBold]"
+        className="text-[25px] leading-7.5 text-offer-ink font-[Poppins-SemiBold]"
       >
         {title}
       </AppText>

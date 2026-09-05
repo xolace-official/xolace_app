@@ -14,11 +14,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Button } from 'heroui-native';
+import { Button, useThemeColor } from 'heroui-native';
 import { usePostHog, useFeatureFlag } from 'posthog-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { GradientText } from '@/src/features/purchases/screens/gradient-text';
 import { IntakeBlank, IntakeScreen } from '@/src/features/intake/questionnaire/intake-screen';
 import { trackStepViewed } from '@/src/features/intake/analytics';
 import { intentLine } from '@/src/features/intake/paywall/intent-line';
@@ -56,6 +57,7 @@ export default function IntakeOffer() {
   const answers = useAppStore((s) => s.intakeAnswers);
   const { width, height } = useWindowDimensions();
   const reduced = useEffectiveReducedMotion();
+  const accentColor = useThemeColor('accent') as string;
   const { isPlus, isResolved } = usePlusEntitlement();
   const skipping = useRef(false);
   const [skipFailed, setSkipFailed] = useState(false);
@@ -197,9 +199,16 @@ export default function IntakeOffer() {
               </AppText>
             </Animated.View>
           ) : null}
-          <AppText className="text-[34px] leading-[41px] text-foreground font-[Poppins-SemiBold]">
-            Xolace+ is where it goes further.
-          </AppText>
+          <View className="flex-row flex-wrap items-baseline">
+            <GradientText
+              text="Xolace+"
+              className="text-[34px] leading-[41px] font-[Poppins-SemiBold]"
+              gradientProps={{ colors: [`${accentColor}80`, accentColor, `${accentColor}80`] }}
+            />
+            <AppText className="text-[30px] leading-[41px] text-foreground font-[Poppins-SemiBold]">
+              is where it goes further.
+            </AppText>
+          </View>
           <AppText className="text-[15px] leading-[21px] text-foreground/50 font-[Poppins-Regular]">
             Free for your first 7 days.
           </AppText>

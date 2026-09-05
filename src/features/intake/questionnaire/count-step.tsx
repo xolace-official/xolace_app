@@ -39,7 +39,7 @@ export function CountStep({ onDone }: { onDone: () => void }) {
         {stats === undefined ? null : (
           <>
             <Animated.View entering={FadeIn.duration(320)} className="gap-3">
-              <AppText className="text-center text-[64px] leading-[70px] text-accent font-[Poppins-SemiBold]">
+              <AppText className="text-center text-[64px] leading-17.5 text-accent font-[Poppins-SemiBold]">
                 {stats.campers.toLocaleString()}
               </AppText>
               <AppText className="text-center text-[20px] leading-7 text-foreground font-[Poppins-Medium]">
@@ -49,11 +49,11 @@ export function CountStep({ onDone }: { onDone: () => void }) {
 
             <Animated.View entering={FadeInUp.duration(320).delay(220)} className="mt-8 gap-3">
               {stats.lighterPercent === null ? null : (
-                <AppText className="text-center text-[16px] leading-6 text-foreground/60 font-[Poppins-Regular]">
+                <AppText className="text-center text-[16px] leading-6 text-foreground/65 font-[Poppins-Regular]">
                   When they say how they feel afterwards, {stats.lighterPercent}% say lighter.
                 </AppText>
               )}
-              <AppText className="text-center text-[16px] leading-6 text-foreground/60 font-[Poppins-Regular]">
+              <AppText className="text-center text-[16px] leading-6 text-foreground/65 font-[Poppins-Regular]">
                 You&apos;re not the only one who couldn&apos;t name it.
               </AppText>
             </Animated.View>

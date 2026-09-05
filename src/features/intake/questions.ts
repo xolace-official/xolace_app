@@ -162,7 +162,7 @@ export const SECTION_FINDING: readonly IntakeQuestion[] = [
       {
         value: SERIES_BRANCH_VALUE,
         label:
-          'Our video series, or other short-form video — TikTok, LinkedIn, Instagram, YouTube',
+          'Our video series, or other short-form video; TikTok, LinkedIn, Instagram',
       },
       { value: 'social', label: 'A social media post or account' },
       { value: 'ad', label: 'An online ad' },

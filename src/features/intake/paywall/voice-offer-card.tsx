@@ -57,7 +57,7 @@ export function VoiceOfferCard({ width }: { width: number }) {
         );
       })}
       <AppText className="text-[13px] leading-4.5 text-offer-ink/70 font-[Poppins-Regular]">
-        Tap one — that&apos;s how your reflections get read back.
+        Tap one; that&apos;s how your reflections get read back.
       </AppText>
     </OfferCard>
   );

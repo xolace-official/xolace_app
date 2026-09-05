@@ -1,7 +1,4 @@
-// PLACEHOLDER COPY — the founder owns the final words (#264). The screen renders
-// PLACEHOLDER_NOTICE above the letter so nobody mistakes this draft for shipped
-// copy; delete that constant and its usage in the same change that lands the real
-// text.
+// The founder's own words (#264). Edit only with him.
 //
 // Model (per #236 founder note): there is ONE founder message, shown to everyone.
 // Returning users (emotional_profiles.sessionCount > 0) see the same message PLUS
@@ -10,28 +7,36 @@
 export type Segment = { text: string; highlight?: true };
 export type AudienceKey = 'new' | 'existing';
 
-export const PLACEHOLDER_NOTICE = 'placeholder copy — final words to come';
-
 /** The heart of the message — identical for everyone. */
 export const FOUNDER_MESSAGE = {
   greeting: 'hey friend, I’m Nathaniel — Xolace’s CEO.',
   paragraphs: [
     [
       {
-        text: 'We built Xolace for the feeling most of us never say out loud: that heavy, unnamed thing in your chest that isn’t bad enough for therapy but won’t leave you alone. This is the space we wished existed.',
+        text: 'This is my personal letter to you. I spent years carrying something in silence, and then watched people I care about do the same, close enough to see it and not close enough to help. Xolace started with them. It didn’t take long to see how many others are in that same quiet place: not bad enough for therapy, not leaving you alone either.',
       },
     ],
     [
       {
-        text: 'When you open it, just write what’s actually going on — raw, unfiltered, even if it makes no sense yet. ',
+        text: 'You don’t have to bring the right words to it. Put down whatever’s actually there, in fragments if that’s what it is. ',
       },
       { text: 'The more honest, the clearer it gets.', highlight: true },
     ],
     [
       {
-        text: 'We know what it takes to trust something new with feelings you’ve spent years brushing past. ',
+        text: 'It’s still not perfect. It’s a journey to find what actually helps, for me and for everyone who trusts us enough to be here. We know how much it takes to trust something new with the feelings you’ve spent years burying or brushing past. We don’t take that lightly. ',
       },
       { text: 'Earning that trust is the whole job.', highlight: true },
+    ],
+    [
+      {
+        text: 'And long term, we’re not building AI to replace the people in your life. We’re building it to help you get clear enough to actually reach them.',
+      },
+    ],
+    [
+      { text: 'We’d love to walk this journey with you. You can reach me anytime at ' },
+      { text: 'nathan@xolaceinc.com or +233-55-821-8741', highlight: true },
+      { text: ' via email or WhatsApp/SMS.' },
     ],
   ] as Segment[][],
   /** The line that hands off to the questionnaire — shared. */

@@ -12,7 +12,6 @@ import { api } from '@/convex/_generated/api';
 import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppStore } from '@/src/store/store';
-import { FounderWelcomeSheet } from '@/src/features/founder-welcome/components/founder-welcome-sheet';
 import { MonthlyEventSheet } from '@/src/features/awareness-events/components/monthly-event-sheet';
 import { useAwarenessEvent } from '@/src/features/awareness-events/hooks/use-awareness-event';
 import { ReturnWelcomeSheet } from '@/src/features/reflect/components/return-welcome-sheet';
@@ -85,11 +84,8 @@ function NotificationBanner({ content, onDismiss }: { content: string; onDismiss
 export default function ProtectedIndex() {
   const lastNotification = useAppStore((s) => s.lastNotification);
   const clearLastNotification = useAppStore((s) => s.clearLastNotification);
-  const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
-  const setFounderWelcomeSeen = useAppStore((s) => s.setFounderWelcomeSeen);
   const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
   const setHomeSheetBlocking = useAppStore((s) => s.setHomeSheetBlocking);
-  const [showWelcome, setShowWelcome] = useState(false);
   const isFocused = useIsFocused();
   const awarenessEvent = useAwarenessEvent();
   const { markInteractive } = useObserve();
@@ -113,7 +109,7 @@ export default function ProtectedIndex() {
   // unresolved. It OUT-PRIORITIZES ReturnWelcomeSheet (reopen precedence): when
   // a follow-up is pending/ready we suppress the return-welcome for this reopen.
   const followUp = useFollowUpCheckIn({
-    active: founderWelcomeSeen && !showWelcome && isFocused && !!profile,
+    active: isFocused && !!profile,
     hasPendingFollowUp,
   });
 
@@ -126,20 +122,19 @@ export default function ProtectedIndex() {
   }, [profile, markInteractive]);
 
   // The lapsed-user greeting sits ahead of the awareness event in the home
-  // sheet chain: FounderWelcome → ReturnWelcome → MonthlyEvent. It only arms
-  // once founder welcome is resolved and the screen is focused.
+  // sheet chain: ReturnWelcome → MonthlyEvent. It only arms once the screen is
+  // focused.
   const returnWelcome = useReturnWelcome({
-    active: founderWelcomeSeen && !showWelcome && isFocused && !!profile && !followUp.blocking,
+    active: isFocused && !!profile && !followUp.blocking,
     variant: profile ? computeUserVariant(profile) : { kind: 'first-time' },
     quietReturn: profile ? computeQuietReturn(profile) : null,
     lastSessionAt: profile?.lastSessionAt,
   });
 
-  // Last link in the chain: FounderWelcome → ReturnWelcome → FollowUp →
-  // MonthlyEvent. It additionally waits for the tour, which owns the idle screen
-  // on a first run — see tourSeenAtMount.
+  // Last link in the chain: ReturnWelcome → FollowUp → MonthlyEvent. It
+  // additionally waits for the tour, which owns the idle screen on a first run
+  // — see tourSeenAtMount.
   const awarenessOpen =
-    founderWelcomeSeen &&
     tourSeenAtMount &&
     isFocused &&
     !returnWelcome.blocking &&
@@ -147,8 +142,6 @@ export default function ProtectedIndex() {
 
   // The tour subscribes to this so its coach marks never render under a sheet.
   const sheetBlocking =
-    !founderWelcomeSeen ||
-    showWelcome ||
     returnWelcome.blocking ||
     followUp.blocking ||
     (awarenessOpen && awarenessEvent !== null);
@@ -156,17 +149,6 @@ export default function ProtectedIndex() {
   useEffect(() => {
     setHomeSheetBlocking(sheetBlocking);
   }, [sheetBlocking, setHomeSheetBlocking]);
-
-  useEffect(() => {
-    if (founderWelcomeSeen) return;
-    const t = setTimeout(() => setShowWelcome(true), 400);
-    return () => clearTimeout(t);
-  }, [founderWelcomeSeen]);
-
-  const handleWelcomeDismiss = () => {
-    setFounderWelcomeSeen(true);
-    setShowWelcome(false);
-  };
 
   return (
     <>
@@ -179,7 +161,6 @@ export default function ProtectedIndex() {
           onDismiss={clearLastNotification}
         />
       )}
-      <FounderWelcomeSheet isOpen={showWelcome} onDismiss={handleWelcomeDismiss} />
       <ReturnWelcomeSheet
         isOpen={returnWelcome.isOpen}
         tier={returnWelcome.tier}

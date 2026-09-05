@@ -30,10 +30,8 @@ type ThemeSlice = {
 type OnboardingSlice = {
   introSeen: boolean;
   setIntroSeen: (v: boolean) => void;
-  founderWelcomeSeen: boolean;
-  setFounderWelcomeSeen: (v: boolean) => void;
   /**
-   * True while any home sheet (founder welcome, return welcome, follow-up,
+   * True while any home sheet (return welcome, follow-up,
    * monthly event) is open or armed to open. Transient — never persisted.
    * The reflect tour reads this so its coach marks don't render underneath a
    * sheet that is about to cover them.
@@ -141,8 +139,6 @@ export const useAppStore = create<AppState>()(
         introSeen: false,
         setIntroSeen: (v) => set({ introSeen: v }),
 
-        founderWelcomeSeen: false,
-        setFounderWelcomeSeen: (v) => set({ founderWelcomeSeen: v }),
         homeSheetBlocking: false,
         setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 
@@ -231,7 +227,6 @@ export const useAppStore = create<AppState>()(
           colorThemeId: s.colorThemeId,
           previousTheme: s.previousTheme,
           introSeen: s.introSeen,
-          founderWelcomeSeen: s.founderWelcomeSeen,
           nightModeEnabled: s.nightModeEnabled,
           toneTipSeen: s.toneTipSeen,
           notifNudgeDismissed: s.notifNudgeDismissed,

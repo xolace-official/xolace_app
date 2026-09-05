@@ -11,10 +11,10 @@ import { useShakeToOpen } from '@/src/features/feedback-tray/trigger/use-shake-t
 
 const PRIVACY_LINES = [
   { text: 'Quick one before we go on, about the name you just picked.' },
+  { text: 'That name is yours. Nothing here is tied to who you are outside this app.' },
   {
-    text: "You're a name you chose, not a name you were given. Nothing here is tied to your real identity.",
+    text: 'No one else sees your answers or name. They only change how Xolace meets you.',
   },
-  { text: 'No one else sees your answers. They only ever change how Xolace meets you.' },
 ];
 
 /**
@@ -30,7 +30,7 @@ const SHAKE_LINES = [
   { text: 'Last thing. Give your phone a shake.', gated: true },
   { text: 'That works anywhere in the app.' },
   {
-    text: 'Something broken, something you hate, something you wish was here; shake, and it goes straight to the people building this.',
+    text: 'Something broken, something you hate, something you wish was here; shake, tell us and it goes straight to the people building this.',
   },
 ];
 

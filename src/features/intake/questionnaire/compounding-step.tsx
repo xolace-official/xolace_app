@@ -24,7 +24,7 @@ export function CompoundingStep({ onDone }: { onDone: () => void }) {
   return (
     <IntakeScreen>
       <ScrollView
-        contentContainerClassName="flex-grow px-5 pt-3 pb-4 gap-4"
+        contentContainerClassName="grow px-5 pt-3 pb-4 gap-4"
         showsVerticalScrollIndicator={false}
       >
         <AppText className="text-[11px] uppercase tracking-widest text-foreground/40 font-[Poppins-Medium]">
@@ -32,7 +32,7 @@ export function CompoundingStep({ onDone }: { onDone: () => void }) {
         </AppText>
 
         <Animated.View entering={FadeIn.duration(300)}>
-          <AppText className="text-[22px] leading-[30px] text-foreground/50 font-[Poppins-Regular]">
+          <AppText className="text-[22px] leading-7.5 text-foreground/55 font-[Poppins-Regular]">
             We lose sight of what builds up.
           </AppText>
         </Animated.View>
@@ -56,7 +56,7 @@ export function CompoundingStep({ onDone }: { onDone: () => void }) {
               two saturated blocks touching read as one mistake. The payoff wins
               on weight and full opacity instead — the setup line is the muted
               one. */}
-          <AppText className="text-[23px] leading-[32px] text-foreground font-[Poppins-SemiBold]">
+          <AppText className="text-[23px] leading-8 text-foreground font-[Poppins-SemiBold]">
             Xolace&apos;s whole mission is to never lose sight of what&apos;s compounding for you.
           </AppText>
         </Animated.View>

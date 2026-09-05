@@ -16,7 +16,6 @@ import { FounderMarquee } from '@/src/features/intake/founder-message/founder-ma
 import { LetterBody } from '@/src/features/intake/founder-message/letter-body';
 import {
   FOUNDER_MESSAGE,
-  PLACEHOLDER_NOTICE,
 } from '@/src/features/intake/founder-message/letter-copy';
 
 /**
@@ -79,9 +78,6 @@ export default function IntakeIndex() {
           showsVerticalScrollIndicator={false}
           contentContainerClassName="px-6 pt-7 pb-12 gap-5"
         >
-          <AppText className="self-start rounded-full bg-warning/15 px-2.5 py-1 text-[10px] uppercase tracking-widest text-warning font-[Poppins-Medium]">
-            {PLACEHOLDER_NOTICE}
-          </AppText>
           <AppText className="text-lg text-foreground font-[Poppins-Regular]">
             {FOUNDER_MESSAGE.greeting}
           </AppText>
