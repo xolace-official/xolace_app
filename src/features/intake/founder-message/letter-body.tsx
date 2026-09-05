@@ -35,7 +35,7 @@ export const LetterBody = ({ audience }: Props) => (
 
     {audience === 'existing' ? (
       <View className="mt-1 rounded-2xl border-l-2 border-accent bg-accent/10 px-4 py-3">
-        <AppText className="mb-1 text-[11px] uppercase tracking-widest text-accent/60 font-[Poppins-Medium]">
+        <AppText className="mb-1 text-[11px] uppercase tracking-widest text-accent/65 font-[Poppins-Medium]">
           {RETURNING_CALLOUT_LABEL}
         </AppText>
         <AppText className="text-foreground/85 text-[15px] leading-6 font-[Poppins-Regular]">
@@ -47,7 +47,7 @@ export const LetterBody = ({ audience }: Props) => (
     <AppText className={PARAGRAPH_CLASS}>{FOUNDER_MESSAGE.transition}</AppText>
 
     <View className="pt-3">
-      <AppText className="text-sm text-foreground/60 font-[Poppins-Regular]">
+      <AppText className="text-sm text-foreground/65 font-[Poppins-Regular]">
         {FOUNDER_MESSAGE.closing}
       </AppText>
       <AppText className="mt-1 text-[17px] tracking-wide text-foreground/55 font-[Poppins-Regular]">

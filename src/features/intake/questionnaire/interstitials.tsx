@@ -10,7 +10,7 @@ import { MASCOT_SHAKE } from '@/src/features/intake/questionnaire/mascot';
 import { useShakeToOpen } from '@/src/features/feedback-tray/trigger/use-shake-to-open';
 
 const PRIVACY_LINES = [
-  { text: 'Quick one before we go on — about the name you just picked.' },
+  { text: 'Quick one before we go on, about the name you just picked.' },
   {
     text: "You're a name you chose, not a name you were given. Nothing here is tied to your real identity.",
   },
@@ -30,7 +30,7 @@ const SHAKE_LINES = [
   { text: 'Last thing. Give your phone a shake.', gated: true },
   { text: 'That works anywhere in the app.' },
   {
-    text: 'Something broken, something you hate, something you wish was here — shake, and it goes straight to the people building this.',
+    text: 'Something broken, something you hate, something you wish was here; shake, and it goes straight to the people building this.',
   },
 ];
 

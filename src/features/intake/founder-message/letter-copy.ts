@@ -51,7 +51,7 @@ export const RETURNING_CALLOUT_LABEL = 'since you’ve been here';
 
 export const RETURNING_CALLOUT: Segment[] = [
   {
-    text: 'You’ve been here a while, and that already means a lot — nothing you’ve done needs redoing. ',
+    text: 'You’ve been here a while, and that already means a lot, nothing you’ve done needs redoing. ',
   },
   {
     text: 'What’s changed is us: our sense of how far Xolace can go to help has grown, and these questions let it catch up to you.',
