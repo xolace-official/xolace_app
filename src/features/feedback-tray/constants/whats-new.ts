@@ -30,6 +30,38 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "1.10.0",
+    label: "Version 1.10.0",
+    date: "September 2026",
+    highlights: [
+      {
+        icon: { ios: "envelope.fill", android: "mail" },
+        title: "A letter from the founder",
+        body: "Right after you sign up, Nathaniel — Xolace's CEO — introduces himself in his own words, and tells you why this exists. If you've been here a while, he says that too.",
+      },
+      {
+        icon: { ios: "list.bullet.rectangle.fill", android: "assignment" },
+        title: "A few short questions, once",
+        body: "New sign-ups now walk through a brief intake so Xolace can meet you where you actually are, instead of guessing. It runs one time and then gets out of the way.",
+      },
+      {
+        icon: { ios: "rectangle.and.pencil.and.ellipsis", android: "edit_note" },
+        title: "The reflect screen, rebuilt",
+        body: "Tapping to write now opens the page that's already in front of you rather than jumping to a new screen, the background carries a soft wash of your theme's color, and your draft is kept if you close the composer by accident.",
+      },
+      {
+        icon: { ios: "star.fill", android: "star" },
+        title: "Keep a quote",
+        body: "Star a daily quote to save it — kept quotes now have their own archive you can scroll back through. Quotes also arrive with a title now, and you can reply to the deck's question.",
+      },
+      {
+        icon: { ios: "wand.and.stars", android: "auto_fix_high" },
+        title: "Steadier and quicker",
+        body: "A sign-in hang is fixed, the home screen loads faster, and there's a round of smaller fixes and polish throughout.",
+      },
+    ],
+  },
+  {
     id: "2026-08-ota-mirror-closing-question",
     label: "OTA Update",
     date: "August 2026",
