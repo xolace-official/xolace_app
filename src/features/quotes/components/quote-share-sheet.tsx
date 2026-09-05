@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Modal, Platform, StyleSheet, View, useWindowDimensions } from "react-native";
-import { Image } from "expo-image";
+import { Image, type ImageLoadEventData } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassView } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
@@ -48,8 +49,12 @@ export function QuoteShareSheet({ visible, imageUri, quoteType, onClose }: Props
   const { shareViaWhatsApp, shareViaTelegram, shareViaInstagram, shareMore, saveToLibrary } =
     useQuoteShareActions(imageUri, quoteType);
 
+  // The poster has no chosen frame — its aspect is whatever the hero's own
+  // geometry comes to (#317) — so the preview takes the exported image's aspect
+  // rather than a fixed 9:16 box that crops the title and the wordmark off.
+  const [aspect, setAspect] = useState<number | null>(null);
   const previewWidth = width * 0.72;
-  const previewHeight = previewWidth * (16 / 9);
+  const previewHeight = aspect ? previewWidth / aspect : previewWidth * (16 / 9);
 
   const backdropStyle = { backgroundColor };
   const gradientTopColors: [string, string] = [
@@ -136,7 +141,10 @@ export function QuoteShareSheet({ visible, imageUri, quoteType, onClose }: Props
               <Image
                 source={imageSource}
                 style={styles.previewImage}
-                contentFit="cover"
+                contentFit="contain"
+                onLoad={(e: ImageLoadEventData) =>
+                  setAspect(e.source.width / e.source.height)
+                }
               />
             ) : (
               <View className="flex-1 items-center justify-center">

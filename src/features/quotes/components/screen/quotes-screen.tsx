@@ -203,8 +203,9 @@ export function QuotesScreen() {
           >
             <SharingCard
               ref={sharingCardRef}
+              title={quote.title}
               text={removeEmDash(quote.text)}
-              onMascotLoadEnd={onSharingCardImageLoadEnd}
+              onReady={onSharingCardImageLoadEnd}
             />
           </View>
         )}
