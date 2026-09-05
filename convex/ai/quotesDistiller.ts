@@ -131,7 +131,9 @@ export const loadRecentReplies = internalQuery({
       .map((r) => ({
         text: r.reply as string,
         repliedAt: r.repliedAt as number,
-        flagged: r.replyModeration?.flagged ?? false,
+        // An unavailable check is not a clean one — treat it like a flag so
+        // unmoderated text never reaches the prompt.
+        flagged: (r.replyModeration?.flagged ?? false) || (r.replyModeration?.unavailable ?? false),
       }));
 
     return selectReplyContext(candidates, args.referenceDate);

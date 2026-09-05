@@ -93,5 +93,11 @@ export function validateTitle(
     return { ok: false, reason: "verbatim prefix of the quote" };
   }
 
+  // Prompt asks for a 2-3 word plate (quotesPrompt.ts) — enforce it.
+  const words = trimmed.split(/\s+/).length;
+  if (words < 2 || words > 3) {
+    return { ok: false, reason: `expected 2-3 words, got ${words}` };
+  }
+
   return { ok: true };
 }

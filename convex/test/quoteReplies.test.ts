@@ -14,18 +14,21 @@ import { api, internal } from "../_generated/api";
 import { aggregatesMock } from "./mocks.helpers";
 import { asNewUser, type SeededUser } from "./harness.helpers";
 
-const stub = vi.hoisted(() => ({ flagged: false }));
+const stub = vi.hoisted(() => ({ flagged: false, unavailable: false }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../ai/providers/moderation", async (orig) => {
   const actual = await orig<typeof import("../ai/providers/moderation")>();
   return {
     ...actual,
-    moderateInput: async () => ({
-      flagged: stub.flagged,
-      categories: { ...actual.EMPTY_CATEGORIES, "self-harm": stub.flagged },
-      categoryScores: {},
-    }),
+    moderateInput: async () =>
+      stub.unavailable
+        ? actual.MODERATION_UNAVAILABLE
+        : {
+            flagged: stub.flagged,
+            categories: { ...actual.EMPTY_CATEGORIES, "self-harm": stub.flagged },
+            categoryScores: {},
+          },
   };
 });
 
@@ -47,6 +50,7 @@ const readQuote = (user: SeededUser, quoteId: Awaited<ReturnType<typeof seedQuot
 
 beforeEach(() => {
   stub.flagged = false;
+  stub.unavailable = false;
 });
 
 describe("replying to a quote", () => {
@@ -196,5 +200,34 @@ describe("loadRecentReplies (#314)", () => {
     });
 
     expect(replies.map((r) => r.text)).toEqual(["yesterday", "three days back"]);
+  });
+
+  it("keeps a reply written while moderation was down, but withholds it from the prompt", async () => {
+    stub.unavailable = true;
+    const user = await asNewUser();
+    // Dated today so the row is inside loadRecentReplies' window — the
+    // exclusion under test has to be the moderation state, not the date.
+    const quoteId = await user.root.run(async (ctx) =>
+      ctx.db.insert("daily_quotes", {
+        emotionalProfileId: user.profileId,
+        date: new Date().toISOString().slice(0, 10),
+        type: "curated" as const,
+        text: "the quote",
+        isPremium: false,
+        createdAt: Date.now(),
+      }),
+    );
+
+    await user.t.action(api.dailyQuotes.reply, { quoteId, text: "unchecked words" });
+
+    const quote = await readQuote(user, quoteId);
+    expect(quote?.reply).toBe("unchecked words");
+    expect(quote?.replyModeration?.unavailable).toBe(true);
+
+    const replies = await user.root.query(internal.ai.quotesDistiller.loadRecentReplies, {
+      emotionalProfileId: user.profileId,
+      referenceDate: quote!.repliedAt!,
+    });
+    expect(replies).toEqual([]);
   });
 });

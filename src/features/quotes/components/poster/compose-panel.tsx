@@ -83,9 +83,10 @@ export function ComposePanel({
   }
 
   return (
-    // items-start, not items-end: the box grows downward as it fills, and a
-    // bottom-aligned pill grows straight down under the keyboard's prediction
-    // bar with it. Pinned to the first line, it stays reachable at any length.
+    <View className="gap-2">
+    {/* items-start, not items-end: the box grows downward as it fills, and a
+        bottom-aligned pill grows straight down under the keyboard's prediction
+        bar with it. Pinned to the first line, it stays reachable at any length. */}
     <View className="flex-row items-start gap-2.5 rounded-[20px] bg-poster-field p-2.5">
       <TextInput
         ref={inputRef}
@@ -126,6 +127,25 @@ export function ComposePanel({
           </AppText>
         )}
       </View>
+    </View>
+
+    {/* Editing an already-sent reply: a way back to it without sending. */}
+    {isEditing && (
+      <View className="flex-row justify-end px-1">
+        <PressableFeedback
+          onPress={() => {
+            setDraft("");
+            setIsEditing(false);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Cancel editing"
+        >
+          <AppText className="text-[13px] text-poster-ink-soft underline">
+            Cancel
+          </AppText>
+        </PressableFeedback>
+      </View>
+    )}
     </View>
   );
 }

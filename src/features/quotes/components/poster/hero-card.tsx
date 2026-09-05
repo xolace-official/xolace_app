@@ -49,7 +49,7 @@ export function HeroCard({
           {star}
         </View>
 
-        <AppText className="mt-3.5 max-w-57.5 font-poster-display text-[37px] leading-9.2 tracking-[1.6px] text-poster-ink">
+        <AppText className="mt-3.5 max-w-57.5 font-poster-display text-[37px] leading-[36.8px] tracking-[1.6px] text-poster-ink">
           {"TODAY'S\n"}
           <AppText className="font-poster-display text-[37px] leading-9.2 tracking-[1.6px] text-poster-ink-soft">
             QUOTE

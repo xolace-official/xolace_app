@@ -5,7 +5,7 @@ import type { MutationCtx } from "./_generated/server";
 import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
-import { moderateInput } from "./ai/providers/moderation";
+import { MODERATION_UNAVAILABLE, moderateInput } from "./ai/providers/moderation";
 import { internal } from "./_generated/api";
 
 function utcDateString(): string {
@@ -200,6 +200,9 @@ export const reply = action({
     }
 
     const moderation = await moderateInput(text);
+    // Moderation down is not a clean verdict. The reply is still kept — those
+    // are the person's words — but marked so the quote prompt skips it.
+    const unavailable = moderation === MODERATION_UNAVAILABLE;
     const categories = Object.entries(moderation.categories)
       .filter(([, hit]) => hit)
       .map(([name]) => name);
@@ -211,6 +214,7 @@ export const reply = action({
         flagged: moderation.flagged,
         categories,
         checkedAt: Date.now(),
+        unavailable,
       },
     });
 
@@ -231,6 +235,7 @@ export const writeReply = internalMutation({
       flagged: v.boolean(),
       categories: v.array(v.string()),
       checkedAt: v.number(),
+      unavailable: v.optional(v.boolean()),
     }),
   },
   handler: async (ctx, args) => {

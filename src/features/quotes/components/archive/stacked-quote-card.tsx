@@ -119,6 +119,8 @@ export function StackedQuoteCard({
 
           <Animated.View
             pointerEvents={isOpen ? "auto" : "none"}
+            accessibilityElementsHidden={!isOpen}
+            importantForAccessibility={isOpen ? "auto" : "no-hide-descendants"}
             style={[styles.body, { opacity: isOpen ? 1 : 0 }, reduced ? null : BODY_TRANSITION]}
           >
             <AppText className="mb-3.5 font-poster-body text-[14px] leading-5.5 text-poster-ink-soft">

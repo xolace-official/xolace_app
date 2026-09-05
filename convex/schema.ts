@@ -1410,11 +1410,15 @@ export default defineSchema({
     // can tell "checked and clean" from "never checked". A flagged reply is
     // still stored, is excluded from the quote prompt, and is answered with
     // crisis resources in place of the "Kept safe" confirmation.
+    // `unavailable: true` means moderation never actually ran (API down or no
+    // key) — `flagged: false` there is an absence of a verdict, not a clean
+    // one, so the reply is excluded from the quote prompt like a flagged one.
     replyModeration: v.optional(
       v.object({
         flagged: v.boolean(),
         categories: v.array(v.string()),
         checkedAt: v.number(),
+        unavailable: v.optional(v.boolean()),
       }),
     ),
 

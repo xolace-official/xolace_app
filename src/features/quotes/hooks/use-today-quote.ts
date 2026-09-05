@@ -168,19 +168,34 @@ export function useTodayQuote() {
     await runColdStart();
   };
 
-  /** `not_today` is gone from the UI (#303) — resonate is a toggle to null. */
+  /**
+   * `not_today` is gone from the UI (#303) — resonate is a toggle to null.
+   * Returns whether the write landed: a rejection must not escape (the row is
+   * fired with `void`), and the event is counted only after the round trip so
+   * a failed tap isn't scored as a reaction.
+   */
   const setReaction = async (next: "resonates" | null) => {
-    if (!quote) return;
-    if (!next) {
-      posthog.capture("quote_reaction_cleared", {
-        previous_reaction: quote.reaction ?? null,
-        quote_type: quote.type,
-      });
-      await clearReaction({ quoteId: quote._id });
-      return;
+    if (!quote) return false;
+    try {
+      if (next) {
+        await reactToQuote({ quoteId: quote._id, reaction: next });
+        posthog.capture("quote_reacted", {
+          reaction: next,
+          quote_type: quote.type,
+        });
+      } else {
+        const previous = quote.reaction ?? null;
+        await clearReaction({ quoteId: quote._id });
+        posthog.capture("quote_reaction_cleared", {
+          previous_reaction: previous,
+          quote_type: quote.type,
+        });
+      }
+      return true;
+    } catch (e) {
+      console.error("[quotes] reaction failed", e);
+      return false;
     }
-    posthog.capture("quote_reacted", { reaction: next, quote_type: quote.type });
-    await reactToQuote({ quoteId: quote._id, reaction: next });
   };
 
   /**

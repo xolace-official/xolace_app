@@ -66,10 +66,12 @@ export function QuotesScreen() {
 
   const heartBurst = useHeartBurst();
 
-  // the burst fires on the way *to* resonating, never on clearing it
+  // the burst fires on the way *to* resonating, never on clearing it — and
+  // only once the write landed, so a rejected tap doesn't celebrate nothing
   const handleReact = (next: "resonates" | null) => {
-    if (next === "resonates") heartBurst.trigger();
-    void react(next);
+    void react(next).then((ok) => {
+      if (ok && next === "resonates") heartBurst.trigger();
+    });
   };
 
   const goBack = () => {
