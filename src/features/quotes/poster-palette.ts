@@ -24,3 +24,16 @@ export const POSTER_GRADIENT = {
  * bands on device (#294).
  */
 export const POSTER_GRAIN_OPACITY = 0.09;
+
+/**
+ * The archive card tints, in the order the stack cycles them (#296). Names, not
+ * values — the colours are `@theme static` tokens like the rest of the printed
+ * palette; what a token cannot express is the *order*, which is what the item
+ * index walks.
+ */
+export const ARCHIVE_TINT_VARS = [
+  '--color-archive-tint-1',
+  '--color-archive-tint-2',
+  '--color-archive-tint-3',
+  '--color-archive-tint-4',
+] as const;

@@ -17,11 +17,17 @@ export type SourceLine = { text: string; isGate: boolean };
  * Move the star before the round-trip. Both of today's quotes are checked by
  * id because either one can be the poster's, and `savedCount` moves with the
  * flag so the archive's count strip doesn't lag a tap behind.
+ *
+ * Exported because the archive's unsave chip needs the same patch. It passes
+ * `countDelta` explicitly: the guard below reads the flag off today's two
+ * quotes, and an archive row from a past day is neither, so the inferred delta
+ * would be 0 for exactly the rows the archive is full of.
  */
-function patchSaved(
+export function patchSaved(
   store: OptimisticLocalStore,
   quoteId: Id<"daily_quotes">,
   saved: boolean,
+  countDelta?: number,
 ) {
   const current = store.getQuery(api.dailyQuotes.getToday, {});
   if (current === undefined) return;
@@ -31,7 +37,7 @@ function patchSaved(
   const wasSaved = [current.session, current.curated].some(
     (q) => q?._id === quoteId && q.savedAt !== undefined,
   );
-  const delta = saved ? (wasSaved ? 0 : 1) : wasSaved ? -1 : 0;
+  const delta = countDelta ?? (saved ? (wasSaved ? 0 : 1) : wasSaved ? -1 : 0);
 
   const patch = <T extends { _id: Id<"daily_quotes"> } | null>(quote: T) =>
     quote && quote._id === quoteId ? { ...quote, savedAt } : quote;
@@ -197,6 +203,8 @@ export function useTodayQuote() {
   return {
     quote,
     sourceLine,
+    /** The archive's count strip — rides on `getToday`, so a star moves it. */
+    savedCount: todayQuotes?.savedCount ?? 0,
     isFirstVisit,
     isLoading,
     isColdStarting,

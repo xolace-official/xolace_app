@@ -65,6 +65,18 @@
     /* the design's Resonate fill and the deeper ink it sets its label in */
     --color-poster-resonate: #f5726a;
     --color-poster-ink-deep: #2b1414;
+    /* The deck: the poster's second sheet, not themed chrome. It is what keeps
+     * the hero from being an isolated lit rectangle on a dark chrome (#305). */
+    --color-poster-deck: #cbc9c5;
+    /* The archive card's chip fill — ink at 7%, so one value sits on every tint */
+    --color-poster-chip: rgba(20, 20, 20, 0.07);
+    /* The archive card tints, cycled by item index (#296). Fixed objects inside
+     * a themed container — only the index picks one, so the array that walks
+     * them is assembled at the call site. */
+    --color-archive-tint-1: #f4e9b8;
+    --color-archive-tint-2: #f3d3dc;
+    --color-archive-tint-3: #e7e5e2;
+    --color-archive-tint-4: #dce6de;
 
     /* The poster's voice is fixed too: `--font-*` is a per-theme variable
      * (nightly swaps the whole family to SN Pro), and a printed object does not
