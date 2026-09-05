@@ -1,4 +1,7 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
@@ -60,10 +63,28 @@ export const getToday = query({
       session: isPremium ? sessionQuote : null,
       curated: quotes.find((q) => q.type === "curated") ?? null,
       hasSessionToday: sessionToday !== null,
+      // The archive's count strip reads this — the profile row is already
+      // loaded here, so it costs nothing over a second query.
+      savedCount: profile.savedQuoteCount ?? 0,
       sessionLocked: !isPremium && (sessionQuote !== null || recentCompletedSession !== null),
     };
   },
 });
+
+/**
+ * Auth + ownership for every mutation that writes a quote row. The quote id
+ * comes from the client, so the profile check is what stops one user patching
+ * another's row.
+ */
+async function requireOwnQuote(ctx: MutationCtx, quoteId: Id<"daily_quotes">) {
+  const { profile } = await requireAuth(ctx);
+  const quote = await ctx.db.get("daily_quotes", quoteId);
+  if (!quote) throw new Error("Quote not found");
+  if (quote.emotionalProfileId !== profile._id) {
+    throw new Error("Not your quote");
+  }
+  return { profile, quote };
+}
 
 /**
  * Set a reaction on today's displayed quote.
@@ -82,14 +103,7 @@ export const react = mutation({
     reaction: v.union(v.literal("resonates"), v.literal("not_today")),
   },
   handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
-
-    const quote = await ctx.db.get("daily_quotes", args.quoteId);
-    if (!quote) throw new Error("Quote not found");
-    if (quote.emotionalProfileId !== profile._id) {
-      throw new Error("Not your quote");
-    }
-
+    await requireOwnQuote(ctx, args.quoteId);
     await ctx.db.patch("daily_quotes", args.quoteId, { reaction: args.reaction });
     return null;
   },
@@ -101,16 +115,74 @@ export const react = mutation({
 export const clearReaction = mutation({
   args: { quoteId: v.id("daily_quotes") },
   handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
-
-    const quote = await ctx.db.get("daily_quotes", args.quoteId);
-    if (!quote) throw new Error("Quote not found");
-    if (quote.emotionalProfileId !== profile._id) {
-      throw new Error("Not your quote");
-    }
-
+    await requireOwnQuote(ctx, args.quoteId);
     await ctx.db.patch("daily_quotes", args.quoteId, { reaction: undefined });
     return null;
+  },
+});
+
+/**
+ * Keep a quote. Populates the archive; independent of `reaction` (#311).
+ * Idempotent — saving an already-saved quote leaves the timestamp and the
+ * count alone, so a double tap can't inflate `savedQuoteCount`.
+ */
+export const save = mutation({
+  args: { quoteId: v.id("daily_quotes") },
+  handler: async (ctx, args) => {
+    const { profile, quote } = await requireOwnQuote(ctx, args.quoteId);
+    if (quote.savedAt !== undefined) return null;
+
+    await ctx.db.patch("daily_quotes", args.quoteId, { savedAt: Date.now() });
+    await ctx.db.patch("emotional_profiles", profile._id, {
+      savedQuoteCount: (profile.savedQuoteCount ?? 0) + 1,
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+/**
+ * Drop a quote from the archive. The row stays — only `savedAt` clears.
+ */
+export const unsave = mutation({
+  args: { quoteId: v.id("daily_quotes") },
+  handler: async (ctx, args) => {
+    const { profile, quote } = await requireOwnQuote(ctx, args.quoteId);
+    if (quote.savedAt === undefined) return null;
+
+    await ctx.db.patch("daily_quotes", args.quoteId, { savedAt: undefined });
+    await ctx.db.patch("emotional_profiles", profile._id, {
+      // clamped: a count that drifted low must never go negative
+      savedQuoteCount: Math.max(0, (profile.savedQuoteCount ?? 0) - 1),
+      updatedAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+/**
+ * The archive: saved quotes, newest kept first.
+ *
+ * Deliberately not premium-gated, unlike `getToday`, which withholds today's
+ * session quote from a lapsed user. What they kept while subscribed is theirs;
+ * the gate is on *new* personalised quotes, not on taking back what was given.
+ *
+ * Not every past daily —
+ * `gt("savedAt", 0)` is a range on the index, and unsaved rows carry an
+ * undefined `savedAt` that sorts outside it.
+ */
+export const listSaved = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+
+    return await ctx.db
+      .query("daily_quotes")
+      .withIndex("by_profile_saved", (q) =>
+        q.eq("emotionalProfileId", profile._id).gt("savedAt", 0)
+      )
+      .order("desc")
+      .paginate(args.paginationOpts);
   },
 });
 

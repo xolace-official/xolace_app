@@ -105,6 +105,11 @@ export default defineSchema({
     // every user's percentile goes wrong with no error surfaced.
     sessionCount: v.number(),
 
+    // Quotes the user has kept (daily_quotes.savedAt set). Maintained on
+    // save/unsave like sessionCount is on session completion. Optional —
+    // rows written before the archive shipped have no count; read as `?? 0`.
+    savedQuoteCount: v.optional(v.number()),
+
     firstSessionAt: v.optional(v.number()),
 
     // Timestamp of most recent session.
@@ -1379,13 +1384,27 @@ export default defineSchema({
       v.union(v.literal("resonates"), v.literal("not_today")),
     ),
 
+    // When the user kept this quote. Undefined = not saved. Independent of
+    // `reaction`: save means "I want this back" and populates the archive,
+    // resonate means "this landed" and populates nothing (#311).
+    //
+    // RETENTION: nothing prunes daily_quotes today. Any future
+    // jobs/dataRetention.ts pass over this table MUST skip rows with
+    // `savedAt` set — a kept quote is the user's archive, not a cached daily.
+    savedAt: v.optional(v.number()),
+
     createdAt: v.number(),
   })
     // Primary client query: "what are today's quotes for this user?"
     .index("by_profile_date", ["emotionalProfileId", "date"])
 
     // Cron idempotency: "has this user already got a quote today?"
-    .index("by_profile_date_type", ["emotionalProfileId", "date", "type"]),
+    .index("by_profile_date_type", ["emotionalProfileId", "date", "type"])
+
+    // The archive: saved quotes, newest first. Unsaved rows carry an
+    // undefined `savedAt`, which sorts out of any numeric range — that is
+    // what keeps them out of the paginated list, with no filter pass.
+    .index("by_profile_saved", ["emotionalProfileId", "savedAt"]),
 
   // ===========================================================
   // 16. CONSENT RECORDS

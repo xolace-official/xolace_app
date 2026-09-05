@@ -125,6 +125,8 @@ export const wipe = internalMutation({
       const profileBeforeReset = await ctx.db.get("emotional_profiles", emotionalProfileId);
       await ctx.db.patch("emotional_profiles", emotionalProfileId, {
         sessionCount: 0,
+        // every daily_quotes row for this profile was deleted above, saved ones included
+        savedQuoteCount: 0,
         currentStreak: 0,
         dominantEmotionTags: [],
         firstSessionAt: undefined,

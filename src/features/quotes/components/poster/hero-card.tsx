@@ -19,10 +19,12 @@ const BACK_ICON = { ios: "chevron.left", android: "chevron_left" } as const;
  */
 export function HeroCard({
   onBack,
+  star,
   actions,
   children,
 }: {
   onBack: () => void;
+  star?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
 }) {
@@ -32,9 +34,11 @@ export function HeroCard({
   return (
     <PosterSurface style={styles.hero}>
       <View style={{ paddingTop: top + 12 }} className="px-5 pb-5">
-        {/* items-start, or the pressable stretches the full poster width and
-            a tap on blank paper navigates back. */}
-        <View className="items-start">
+        {/* A row, not a stacked block: main-axis auto-sizing is what keeps the
+            back pressable from spanning the poster, where a tap on blank paper
+            navigated back. Going back to a column needs that guarantee
+            restored (items-start), not just the star repositioned. */}
+        <View className="flex-row items-start justify-between">
           <PressableFeedback
             onPress={onBack}
             accessibilityRole="button"
@@ -45,6 +49,8 @@ export function HeroCard({
               <SymbolView name={BACK_ICON} size={17} tintColor={ink} />
             </View>
           </PressableFeedback>
+
+          {star}
         </View>
 
         <AppText className="mt-3.5 max-w-[230px] font-poster-display text-[37px] leading-[37px] tracking-[1.6px] text-poster-ink">

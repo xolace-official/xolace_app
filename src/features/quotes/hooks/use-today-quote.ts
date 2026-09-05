@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import type { OptimisticLocalStore } from "convex/browser";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useQuoteNotifications } from "@/src/features/quotes/hooks/use-quote-notifications";
 
 /**
@@ -10,6 +12,37 @@ import { useQuoteNotifications } from "@/src/features/quotes/hooks/use-quote-not
  * quote. One precedence chain, first match wins (#309).
  */
 export type SourceLine = { text: string; isGate: boolean };
+
+/**
+ * Move the star before the round-trip. Both of today's quotes are checked by
+ * id because either one can be the poster's, and `savedCount` moves with the
+ * flag so the archive's count strip doesn't lag a tap behind.
+ */
+function patchSaved(
+  store: OptimisticLocalStore,
+  quoteId: Id<"daily_quotes">,
+  saved: boolean,
+) {
+  const current = store.getQuery(api.dailyQuotes.getToday, {});
+  if (current === undefined) return;
+
+  const savedAt = saved ? Date.now() : undefined;
+
+  const wasSaved = [current.session, current.curated].some(
+    (q) => q?._id === quoteId && q.savedAt !== undefined,
+  );
+  const delta = saved ? (wasSaved ? 0 : 1) : wasSaved ? -1 : 0;
+
+  const patch = <T extends { _id: Id<"daily_quotes"> } | null>(quote: T) =>
+    quote && quote._id === quoteId ? { ...quote, savedAt } : quote;
+
+  store.setQuery(api.dailyQuotes.getToday, {}, {
+    ...current,
+    session: patch(current.session),
+    curated: patch(current.curated),
+    savedCount: Math.max(0, current.savedCount + delta),
+  });
+}
 
 /**
  * Everything today's poster needs: the quote, its one derived source line, and
@@ -24,6 +57,12 @@ export function useTodayQuote() {
   const coldStart = useAction(api.dailyQuotes.coldStart);
   const reactToQuote = useMutation(api.dailyQuotes.react);
   const clearReaction = useMutation(api.dailyQuotes.clearReaction);
+  const saveQuote = useMutation(api.dailyQuotes.save).withOptimisticUpdate(
+    (store, args) => patchSaved(store, args.quoteId, true),
+  );
+  const unsaveQuote = useMutation(api.dailyQuotes.unsave).withOptimisticUpdate(
+    (store, args) => patchSaved(store, args.quoteId, false),
+  );
   const { state: notifState, scheduleNotification } = useQuoteNotifications();
 
   const [isManualColdStarting, setIsManualColdStarting] = useState(false);
@@ -136,6 +175,25 @@ export function useTodayQuote() {
     await reactToQuote({ quoteId: quote._id, reaction: next });
   };
 
+  /**
+   * The star is optimistic, so a rejection un-fills it with nothing said. Log
+   * it, and count the event only once the write actually landed — capturing
+   * first would score every failed save as a save.
+   */
+  const setSaved = async (next: boolean) => {
+    if (!quote) return;
+    try {
+      await (next
+        ? saveQuote({ quoteId: quote._id })
+        : unsaveQuote({ quoteId: quote._id }));
+      posthog.capture(next ? "quote_saved" : "quote_unsaved", {
+        quote_type: quote.type,
+      });
+    } catch (e) {
+      console.error("[quotes] save toggle failed", e);
+    }
+  };
+
   return {
     quote,
     sourceLine,
@@ -146,6 +204,7 @@ export function useTodayQuote() {
     isCompletingPreferences: notifState === "requesting" || isColdStarting,
     retry,
     react: setReaction,
+    setSaved,
     completePreferences,
   };
 }

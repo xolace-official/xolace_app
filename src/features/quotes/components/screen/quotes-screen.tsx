@@ -13,6 +13,7 @@ import { PosterSourceLine } from "@/src/features/quotes/components/poster/poster
 import { PreferenceSetupSheet } from "@/src/features/quotes/components/preference-setup-sheet";
 import { QuoteLoadingAndError } from "@/src/features/quotes/components/quote-loading-and-error";
 import { QuoteShareSheet } from "@/src/features/quotes/components/quote-share-sheet";
+import { StarButton } from "@/src/features/quotes/components/poster/star-button";
 import { SharingCard } from "@/src/features/quotes/components/sharing-card";
 import { useQuoteSharing } from "@/src/features/quotes/hooks/use-quote-sharing";
 import { useTodayQuote } from "@/src/features/quotes/hooks/use-today-quote";
@@ -41,6 +42,7 @@ export function QuotesScreen() {
     isCompletingPreferences,
     retry,
     react,
+    setSaved,
     completePreferences,
   } = useTodayQuote();
 
@@ -110,6 +112,14 @@ export function QuotesScreen() {
         >
           <HeroCard
             onBack={goBack}
+            star={
+              hasQuote ? (
+                <StarButton
+                  saved={quote.savedAt !== undefined}
+                  onToggle={(next) => void setSaved(next)}
+                />
+              ) : null
+            }
             actions={
               hasQuote ? (
                 <ActionRow
