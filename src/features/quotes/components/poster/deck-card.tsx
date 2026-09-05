@@ -24,10 +24,10 @@ export function DeckCard({ onOpenArchive }: { onOpenArchive: () => void }) {
           onOpenArchive();
         }}
         accessibilityRole="button"
-        accessibilityLabel="See old thoughts"
+        accessibilityLabel="See old quotes"
       >
         <AppText className="px-1 pb-1 font-poster-display text-[22px] text-poster-ink">
-          SEE OLD THOUGHTS
+          SEE OLD QUOTES
         </AppText>
       </PressableFeedback>
     </View>

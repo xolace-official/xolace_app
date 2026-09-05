@@ -49,7 +49,7 @@ const BODY_TRANSITION: CSSTransitionProperties = {
   transitionTimingFunction: CARD_EASE,
 };
 
-export function StackedThoughtCard({
+export function StackedQuoteCard({
   quote,
   index,
   isOpen,
@@ -101,7 +101,7 @@ export function StackedThoughtCard({
           onToggle();
         }}
         accessibilityRole="button"
-        accessibilityLabel={quote.title ?? "Saved thought"}
+        accessibilityLabel={quote.title ?? "Saved quote"}
         accessibilityState={{ expanded: isOpen }}
       >
         <View onLayout={(e) => setMeasured({ id: quote._id, height: e.nativeEvent.layout.height })}>
@@ -114,7 +114,7 @@ export function StackedThoughtCard({
             numberOfLines={1}
             className="font-poster-display text-[30px] tracking-[-0.6px] text-poster-ink"
           >
-            {quote.title ?? "Kept thought"}
+            {quote.title ?? "Kept quote"}
           </AppText>
 
           <Animated.View

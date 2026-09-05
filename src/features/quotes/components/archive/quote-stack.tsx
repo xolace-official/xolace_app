@@ -1,12 +1,11 @@
-import { View, type ScrollViewProps } from "react-native";
+import { View } from "react-native";
 import { LegendList } from "@legendapp/list/react-native";
-import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import {
   PEEK,
-  StackedThoughtCard,
-} from "@/src/features/quotes/components/archive/stacked-thought-card";
+  StackedQuoteCard,
+} from "@/src/features/quotes/components/archive/stacked-quote-card";
 import { useSavedQuotes } from "@/src/features/quotes/hooks/use-saved-quotes";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 
@@ -18,7 +17,7 @@ import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduce
  * reflows everything below it. That is what makes the rows virtualisable, so
  * 24+ kept quotes need no "View all" cap (#296).
  */
-export function ThoughtStack({
+export function QuoteStack({
   openId,
   onToggle,
 }: {
@@ -39,7 +38,7 @@ export function ThoughtStack({
           Nothing kept yet
         </AppText>
         <AppText className="font-poster-body text-[13.5px] text-foreground/60">
-          Star a thought and it waits here for you.
+          Star a quote and it waits here for you.
         </AppText>
       </View>
     );
@@ -54,14 +53,10 @@ export function ThoughtStack({
       extraData={openId}
       onEndReached={status === "CanLoadMore" ? () => loadMore(12) : undefined}
       onEndReachedThreshold={0.4}
-      // The list's scroller has to be gorhom's, or the sheet and the list have
-      // no arbitration: without it a drag on the list neither scrolls nor pans,
-      // and the sheet cannot be dragged closed at all.
-      renderScrollComponent={renderScrollComponent}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
       renderItem={({ item, index }) => (
-        <StackedThoughtCard
+        <StackedQuoteCard
           quote={item}
           index={index}
           isOpen={item._id === openId}
@@ -76,9 +71,5 @@ export function ThoughtStack({
     />
   );
 }
-
-const renderScrollComponent = (props: ScrollViewProps) => (
-  <BottomSheetScrollView {...props}>{props.children}</BottomSheetScrollView>
-);
 
 const styles = { content: { paddingHorizontal: 14, paddingTop: 8, paddingBottom: 40 } } as const;

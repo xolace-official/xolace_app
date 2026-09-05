@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -7,7 +6,6 @@ import { StatusBar } from "expo-status-bar";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { ActionRow } from "@/src/features/quotes/components/poster/action-row";
-import { ArchiveSheet } from "@/src/features/quotes/components/archive/archive-sheet";
 import { DeckCard } from "@/src/features/quotes/components/poster/deck-card";
 import { HeartBurst, useHeartBurst } from "@/src/features/quotes/components/heart-burst";
 import { HeroCard } from "@/src/features/quotes/components/poster/hero-card";
@@ -40,7 +38,6 @@ export function QuotesScreen() {
     quote,
     sourceLine,
     isFirstVisit,
-    savedCount,
     isColdStarting,
     coldStartError,
     isCompletingPreferences,
@@ -64,7 +61,6 @@ export function QuotesScreen() {
   } = useQuoteSharing(quote);
 
   const heartBurst = useHeartBurst();
-  const [archiveOpen, setArchiveOpen] = useState(false);
 
   // the burst fires on the way *to* resonating, never on clearing it
   const handleReact = (next: "resonates" | null) => {
@@ -156,14 +152,10 @@ export function QuotesScreen() {
             )}
           </HeroCard>
 
-          <DeckCard onOpenArchive={() => setArchiveOpen(true)} />
+          <DeckCard
+            onOpenArchive={() => router.push("/(protected)/quotes/archive")}
+          />
         </KeyboardAwareScrollView>
-
-        <ArchiveSheet
-          isOpen={archiveOpen}
-          onClose={() => setArchiveOpen(false)}
-          savedCount={savedCount}
-        />
 
         <QuoteShareSheet
           visible={showShareSheet}

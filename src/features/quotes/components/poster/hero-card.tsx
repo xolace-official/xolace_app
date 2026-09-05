@@ -33,7 +33,7 @@ export function HeroCard({
 
   return (
     <PosterSurface style={styles.hero}>
-      <View style={{ paddingTop: top + 12 }} className="px-5 pb-5">
+      <View style={{ paddingTop: top }} className="px-5 pb-5">
         {/* A row, not a stacked block: main-axis auto-sizing is what keeps the
             back pressable from spanning the poster, where a tap on blank paper
             navigated back. Going back to a column needs that guarantee
@@ -56,7 +56,7 @@ export function HeroCard({
         <AppText className="mt-3.5 max-w-[230px] font-poster-display text-[37px] leading-[37px] tracking-[1.6px] text-poster-ink">
           {"TODAY'S\n"}
           <AppText className="font-poster-display text-[37px] leading-[37px] tracking-[1.6px] text-poster-ink-soft">
-            THOUGHT
+            QUOTE
           </AppText>
         </AppText>
 
