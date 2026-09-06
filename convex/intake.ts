@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalQuery, mutation, query } from "./_generated/server";
 import { reflectionRank } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
 import { INTAKE_VERSION, intakeAnswerValidators } from "./lib/validators";
@@ -171,4 +171,18 @@ export const campfireStats = query({
           : null,
     };
   },
+});
+
+/**
+ * Dashboard-only helper: paste the storage ids of the founder-marquee images
+ * (uploaded via the Convex dashboard Files tab) and get back their serving
+ * URLs, in the same order, to hard-code into `marquee-data.ts`. `null` means
+ * no file for that id. Serving URLs are stable, so this is a one-time lookup,
+ * not a runtime read.
+ */
+export const storageUrls = internalQuery({
+  args: { storageIds: v.array(v.id("_storage")) },
+  returns: v.array(v.union(v.string(), v.null())),
+  handler: async (ctx, args) =>
+    Promise.all(args.storageIds.map((id) => ctx.storage.getUrl(id))),
 });
