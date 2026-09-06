@@ -21,7 +21,7 @@ import {
   useMorphGeometry,
 } from "@/src/features/reflect/compose/morph-geometry";
 
-const FLUX = require("@/assets/images/flux/flux-whisper.webp");
+const FLUX = require("@/assets/images/flux/flux-whisper.png");
 
 /** Composed arrival: he settles onto the card rather than popping onto it. */
 const ENTRANCE_SPRING = { damping: 20, stiffness: 80, mass: 1 } as const;
