@@ -202,10 +202,10 @@ export default function IntakeOffer() {
           <View className="flex-row flex-wrap items-baseline">
             <GradientText
               text="Xolace+"
-              className="text-[34px] leading-[41px] font-[Poppins-SemiBold]"
+              className="text-[30px] leading-[38px] font-[Poppins-SemiBold]"
               gradientProps={{ colors: [`${accentColor}80`, accentColor, `${accentColor}80`] }}
             />
-            <AppText className="text-[30px] leading-[41px] text-foreground font-[Poppins-SemiBold]">
+            <AppText className="text-[22px] leading-[38px] text-foreground font-[Poppins-SemiBold]">
               is where it goes further.
             </AppText>
           </View>
