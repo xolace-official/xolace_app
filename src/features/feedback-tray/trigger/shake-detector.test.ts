@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createShakeDetector, type Sample } from "./shake-detector";
 
 /** Sampling interval of the traces below, in ms. */
-const DT = 50;
+const DT = 25;
 const T0 = 1_700_000_000_000;
 
 /** Deterministic pseudo-noise, so traces are reproducible. */
@@ -63,6 +63,13 @@ const shake = build(1600, (s) => {
   return { x: a * w, y: -1, z: 0.3 * a * w };
 });
 
+/** A half-hearted wrist flick: ~4Hz, ~2g, for 1s. Under the old gate, over this one. */
+const gentleShake = build(1600, (s) => {
+  const a = s < 1 ? 2 : 0;
+  const w = Math.sin(2 * Math.PI * 4 * s);
+  return { x: a * w, y: -1, z: 0.3 * a * w };
+});
+
 function countFires(trace: Trace) {
   const detect = createShakeDetector();
   return trace.filter((s) => detect(s, T0 + s.t)).length;
@@ -82,6 +89,10 @@ describe("createShakeDetector", () => {
 
   it("fires on a deliberate shake", () => {
     expect(countFires(shake)).toBe(1);
+  });
+
+  it("fires on a half-hearted wrist flick", () => {
+    expect(countFires(gentleShake)).toBe(1);
   });
 
   it("needs a fresh window to fire again, not just more samples", () => {

@@ -5,10 +5,12 @@ import { createShakeDetector } from "./shake-detector";
 
 /**
  * Explicit, because the platform defaults disagree — Android gates at 100ms
- * while iOS leaves CoreMotion at its ~100Hz default. 50ms is fast enough to
- * catch every half-cycle of a 4Hz shake and cheap enough to leave running.
+ * while iOS leaves CoreMotion at its ~100Hz default. At 50ms a 4Hz shake
+ * aliases badly — samples land off the peaks and read ~40% low, so a real
+ * shake has to be much harder than the threshold implies. 25ms lands close
+ * enough to the peaks and is still cheap enough to leave running.
  */
-const SAMPLE_INTERVAL_MS = 50;
+const SAMPLE_INTERVAL_MS = 25;
 
 type Options = {
   /** Pure-derived per call-site. When false, no accelerometer subscription. */
