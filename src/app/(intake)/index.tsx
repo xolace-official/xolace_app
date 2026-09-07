@@ -90,7 +90,7 @@ export default function IntakeIndex() {
               contentPosition="top"
             />
             <AppText className="text-[15px] text-foreground/70 font-[Poppins-Regular]">
-              Nathaniel, Accra
+              Nathaniel, your new friend
             </AppText>
           </View>
         </ScrollView>

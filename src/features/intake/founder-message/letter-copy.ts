@@ -9,7 +9,7 @@ export type AudienceKey = 'new' | 'existing';
 
 /** The heart of the message — identical for everyone. */
 export const FOUNDER_MESSAGE = {
-  greeting: 'hey friend, I’m Nathaniel — Xolace’s CEO.',
+  greeting: 'hey friend, I’m Nathaniel; Xolace’s CEO.',
   paragraphs: [
     [
       {
