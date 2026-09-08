@@ -91,19 +91,6 @@ export const MorphCard = ({
       ]}
       className="border border-foreground/8 bg-surface shadow-lg"
     >
-      {/* First child, so it sits *under* everything else in the card: the
-          resting card is one big tap target, except where a real control
-          (discard) is painted on top of it. */}
-      {!expanded && (
-        <Pressable
-          onPress={onOpen}
-          accessibilityRole="button"
-          accessibilityLabel="Tap to begin writing"
-          accessibilityHint="Opens the composer to start typing"
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-        />
-      )}
-
       <MorphCardHeader
         card={card}
         expanded={expanded}
@@ -133,6 +120,22 @@ export const MorphCard = ({
         onChangeText={onChangeText}
         onSubmit={onSubmit}
       />
+
+      {/* After the readings it covers, not before them: a sibling painted on
+          top of this — the prompt line especially — swallows the touch, and
+          RN's responder search walks ancestors rather than siblings, so the
+          tap died on the text instead of opening the card. Nothing it covers
+          is interactive at rest; the discard button below is mounted after it
+          and so still sits on top. */}
+      {!expanded && (
+        <Pressable
+          onPress={onOpen}
+          accessibilityRole="button"
+          accessibilityLabel="Tap to begin writing"
+          accessibilityHint="Opens the composer to start typing"
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        />
+      )}
 
       <Animated.View
         style={[
