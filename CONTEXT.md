@@ -3,6 +3,35 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Paths: kindling naming (2026-09-08)
+
+The background-generated set of 2–3 support actions offered after a
+session the pipeline judges needs support (see the Paths map,
+[#268](https://github.com/xolace-official/xolace_app/issues/268)) is named
+**kindling**, not "path" — "path" is taken. One item within it is a
+**twig**. The route is `(protected)/kindling/`.
+
+**Kindling ≠ path-selection.** The existing post-mirror choice
+(`path-selection` screen, `selectPath`/`completePath` mutations, the
+`session.state` enum's `path_selected`/`path_in_progress` values) keeps its
+code names but is now called **next step** in prose — immediate, free,
+always offered, a single choice among solo/peers/exit. Kindling is
+Xolace+-only, generated in the background from the Understanding, 2–3
+items, any order, some skippable. Code for kindling lives under new
+`convex/ai/paths/` and `paths`/`path_steps` tables per the map; "path"
+survives there only as an internal/schema word, never in prose or UI copy.
+
+Kindling is deliberately warmer than next step's plain, functional register
+— it's the more considered, AI-curated offering and the Xolace+ upsell
+moment, so a bit of fire-metaphor texture earns its keep here in a way it
+doesn't for next step. "Ember," "hearth," "glow," and "flame" were
+considered and rejected — all four are already load-bearing (a CSS theme
+token, shipped onboarding components, and `flame` already means System-1/
+hot-path in `docs/cognition-layer-architecture.md`). "Kindling" was
+unclaimed and is inherently a *gathered bundle* — matching the any-order,
+skippable shape — rather than a sequence, which also rules it out as a
+name collision with the ordered-sounding "path."
+
 ## Quote prompt reads raw reply text (2026-09-04)
 
 The reply box on Today's Thought puts a user sentence into the quote
