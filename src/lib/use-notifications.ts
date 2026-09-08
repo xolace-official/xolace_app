@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 import { useMutation, useQuery } from "convex/react";
 import { useAuth } from "@clerk/expo";
 import { api } from "@/convex/_generated/api";
@@ -103,11 +104,17 @@ export function useNotifications() {
   useEffect(() => {
     if (!isSignedIn) return;
 
+    // Web resolves the emitter stub, which implements neither of these and
+    // throws UnavailabilityError synchronously — from inside an effect body,
+    // that takes the whole protected layout down. The listener is the only
+    // part of this the stub tolerates.
+    const native = Platform.OS !== "web";
+
     return subscribeToNotificationTaps(
       {
-        getLast: Notifications.getLastNotificationResponse,
+        getLast: native ? Notifications.getLastNotificationResponse : () => null,
         subscribe: Notifications.addNotificationResponseReceivedListener,
-        clear: Notifications.clearLastNotificationResponse,
+        clear: native ? Notifications.clearLastNotificationResponse : () => {},
       },
       (response) => {
         const { content } = response.notification.request;

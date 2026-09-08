@@ -28,7 +28,13 @@ function source(launch: TapResponse | null) {
     clear: () => {
       cached = null;
     },
-    emit: (r) => listener?.(r),
+    // The native cache is written for *every* response, then the event is
+    // emitted (NotificationsEmitter.kt) — a fake that only seeds the launch
+    // response cannot see a warm tap being replayed.
+    emit: (r) => {
+      cached = r;
+      listener?.(r);
+    },
     removed: () => listener === null,
   };
   return src;
@@ -82,6 +88,20 @@ describe('subscribeToNotificationTaps', () => {
     const src = source(response('n4', { type: 'chat_message', conversationId: 'c4' }));
     const first = vi.fn();
     subscribeToNotificationTaps(src, first)();
+
+    const second = vi.fn();
+    subscribeToNotificationTaps(src, second);
+
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).not.toHaveBeenCalled();
+  });
+
+  it('does not replay a warm tap to a later subscriber', () => {
+    const src = source(null);
+    const first = vi.fn();
+    const unsubscribe = subscribeToNotificationTaps(src, first);
+    src.emit(response('n5', { type: 'chat_message', conversationId: 'c5' }));
+    unsubscribe();
 
     const second = vi.fn();
     subscribeToNotificationTaps(src, second);

@@ -44,9 +44,11 @@ const CHAT_OPTIONS = {
 } as const;
 
 export default function ProtectedLayout() {
-  // Stays here, not at the root: not mounting the notification response
-  // listener during intake is what makes "intake wins, a pending deep link is
-  // not preserved" true with no extra code (T3, issue #234).
+  // Stays here, not at the root: an unfinished user shouldn't pay for push.
+  // "Intake wins, a pending deep link is not preserved" (T3, issue #234) is no
+  // longer a free consequence of that — the launch tap now survives in the
+  // native cache rather than being dropped — so `(intake)`'s layout discards it
+  // explicitly. Change one of those two and you change the invariant.
   // usePostHogIdentity is hoisted to the root — it must run during intake.
   useNotifications();
 

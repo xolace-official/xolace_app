@@ -54,20 +54,25 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
   const launch = source.getLast();
   const launchId = launch?.notification.request.identifier ?? null;
 
-  const subscription = source.subscribe((response) => {
-    // A warm tap that landed while we were subscribing arrives through both
-    // paths. Handling it twice would navigate twice.
-    if (response.notification.request.identifier === launchId) return;
+  // Every tap is cleared once acted on, warm ones included. The native cache
+  // holds the *most recent* response, not just the launch one, so a tap left
+  // sitting there is replayed to the next subscriber — and this resubscribes
+  // whenever `(protected)` remounts (sign out → sign in) or Clerk's signed-in
+  // flag flips. Without this, coming back would yank the user into a thread
+  // they already read.
+  const consume = (response: R) => {
+    source.clear();
     onTap(response);
+  };
+
+  const subscription = source.subscribe((response) => {
+    // A tap that landed while we were subscribing arrives through both paths.
+    // Handling it twice would navigate twice.
+    if (response.notification.request.identifier === launchId) return;
+    consume(response);
   });
 
-  if (launch) {
-    // Clear before handling: within one process `(protected)` can unmount and
-    // remount (sign out → sign in), and re-reading a tap the user already acted
-    // on would yank them back into an old thread.
-    source.clear();
-    onTap(launch);
-  }
+  if (launch) consume(launch);
 
   return () => subscription.remove();
 }

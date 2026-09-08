@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 
 /**
  * Post-signup intake (T6, issue #263). A fourth root-level group, sibling to
@@ -16,6 +19,17 @@ const SCREEN_OPTIONS = {
 };
 
 export default function IntakeLayout() {
+  // "Intake wins, a pending deep link is not preserved" (T3, issue #234).
+  // That used to hold for free: the response listener lived in `(protected)`,
+  // so a tap that launched the app was gone before anything could read it.
+  // `(protected)` now recovers the launch tap from the native cache — which
+  // would fling a user out of intake the instant they finished it — so the
+  // invariant has to be stated rather than inherited.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    Notifications.clearLastNotificationResponse();
+  }, []);
+
   return (
     <Stack screenOptions={SCREEN_OPTIONS}>
       <Stack.Screen name="index" />
