@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
 import { useMutation, useQuery } from "convex/react";
 import { useAuth } from "@clerk/expo";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
-  chatNotificationRoute,
-  isChatNotificationType,
-} from "@/convex/lib/chatNotifications";
+  notificationTapPlan,
+  subscribeToNotificationTaps,
+} from "@/src/lib/notification-tap";
 import { requestPushToken } from "@/src/lib/push-token";
 import { useRouter } from "expo-router";
 import { useAppStore } from "@/src/store/store";
@@ -48,9 +48,6 @@ export function useNotifications() {
   const preferences = useQuery(api.preferences.get);
   const notificationsEnabled = preferences?.notifications.enabled;
 
-  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
-  const responseListener = useRef<Notifications.EventSubscription | null>(null);
-
   useEffect(() => {
     if (!isSignedIn) return;
 
@@ -90,54 +87,49 @@ export function useNotifications() {
 
     register();
 
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((_notification) => {
-        // No-op for now. Could be used for in-app notification UI.
-      });
-
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content.data;
-        const logId = data?.logId as Id<"notification_log"> | undefined;
-        const body = response.notification.request.content.body;
-
-        if (logId) {
-          markResultedInSession({ logId });
-
-          // Store notification content for the soft framing banner on the reflect screen.
-          if (body) {
-            setLastNotification({ content: body, notificationId: logId });
-          }
-        }
-
-        if (isChatNotificationType(data?.type)) {
-          // Conversation notifications carry a conversationId rather than a
-          // logId — there is no analytics row to mark — so they branch here
-          // instead of through markResultedInSession above.
-          router.navigate(
-            chatNotificationRoute(
-              data.type,
-              String(data.conversationId),
-              Date.now(),
-            ),
-          );
-        } else if (data?.screen === "quotes") {
-          router.push("/(protected)/quotes");
-        } else if (
-          data?.type === "gentle_return" ||
-          data?.type === "pattern_nudge" ||
-          data?.type === "milestone"
-        ) {
-          router.push("/(protected)");
-        }
-      });
-
     return () => {
       cancelled = true;
-      notificationListener.current?.remove();
-      responseListener.current?.remove();
     };
-  }, [isSignedIn, notificationsEnabled, registerToken, markResultedInSession, updatePreferences, router, setLastNotification]);
+  }, [isSignedIn, notificationsEnabled, registerToken, updatePreferences]);
+
+  // Tap handling, deliberately its own effect. It must not be torn down and
+  // re-subscribed every time a preference query resolves, and it must not be
+  // gated on `notificationsEnabled` — a tap means the notification was already
+  // delivered, so refusing to act on it only strands the user.
+  //
+  // `subscribeToNotificationTaps` is what makes cold starts work: the tap that
+  // launched the app fired natively long before this layout mounted, so it
+  // reaches us through `getLastNotificationResponse` rather than the listener.
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    return subscribeToNotificationTaps(
+      {
+        getLast: Notifications.getLastNotificationResponse,
+        subscribe: Notifications.addNotificationResponseReceivedListener,
+        clear: Notifications.clearLastNotificationResponse,
+      },
+      (response) => {
+        const { content } = response.notification.request;
+        const plan = notificationTapPlan(content.data, content.body, Date.now());
+
+        if (plan.logId) {
+          markResultedInSession({ logId: plan.logId as Id<"notification_log"> });
+        }
+        if (plan.banner) {
+          setLastNotification({
+            content: plan.banner.content,
+            notificationId: plan.banner.notificationId as Id<"notification_log">,
+          });
+        }
+        if (plan.navigation?.action === "navigate") {
+          router.navigate(plan.navigation.href);
+        } else if (plan.navigation) {
+          router.push(plan.navigation.href);
+        }
+      },
+    );
+  }, [isSignedIn, markResultedInSession, router, setLastNotification]);
 
   return { expoPushToken };
 }
