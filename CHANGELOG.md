@@ -4,6 +4,36 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.10.0] - (2026-09-05)
+
+### Added
+
+- **Post-signup intake** — a new, forward-only flow that runs once right after sign-up, before the app proper. It opens on the founder's letter, moves through a short questionnaire (11 questions, 2 interstitials, one branch that only opens for short-form-video answers), and ends on the Plus offer deck / plans step. It's a fourth root-level route group (`(intake)`), a sibling of `(onboarding)` / `(auth)` / `(protected)` and deliberately **not** nested under `(protected)` — an unfinished user never mounts Stream chat, presence, or push. Every step is a `push`/`replace` with gestures disabled: there is no back edge out of intake. Answers use the `intakeAnswerValidators` enums verbatim so they reach `intake.complete` untranslated, and the whole funnel is instrumented (`intake_completed` latched once, offer-deck impression matched to what was actually shown, person-property dual-write).
+- **The founder's message, in intake** — one letter shown to everyone (Nathaniel's own words, `founder-message/letter-copy.ts`, edited only with him). A returning user (`sessionCount > 0`) sees the same message plus one highlighted callout acknowledging they've been here — never a separate screen. One CTA for everyone ("I'm ready").
+- **Keep a quote** — a star on the daily quote saves it; kept quotes live in an archive you can scroll back through. Keeping is a field on the quote, not a local list.
+- **Quotes have titles** — a generated quote now arrives with a short title, rendered on a softened plate.
+- **Reply to the deck's question** — the quote deck can ask a question; your answer is kept safe, feeds *tomorrow's* quote (register only — it never reaches the mirror), and a kept reply can also surface on your profile as a reflection. The archive half of that surface reports back, and the reply gets a denominator.
+
+### Changed
+
+- **Reflect screen rebuilt (#246 build order)** — the idle screen and the composer are now one object at two sizes: a single progress value drives the card's position, size, rotation, corner radius and prompt size together, so tapping it opens the page already in front of you instead of cross-fading to a different screen. The bottom edge tracks the keyboard's real animated height. Behind it, a Skia sweep-gradient wash (centred, 55px blur, nine token-derived stops) replaces the flat background and gives every palette a distinct hue. The identity chrome — streak, space name, event pill, "A word for today" — is collected into one thin **Perch strip** that no longer defers to whichever prompt won; the old encouragement line is gone. Flux (the mascot) is resized and converted from a 431KB PNG to a 7.6KB WebP on this most-opened screen.
+- **Your draft survives closing the composer** — dismissing the card no longer wipes what you typed. The resting card shows the draft's opening line in place of the prompt (italic, dimmer, so it never reads as the space's question), with a Discard control where the composer's close button was. "Start fresh" still clears it.
+- **Reflect tour re-cut to four steps** — the card, the mic, the chips, the menu. The persisted `reflectTourSeen` boolean becomes a numeric `reflectTourVersion` gate, so a future re-cut can be shown again by bumping the number; existing devices read as version 0 and see the new tour once.
+- **The daily quote renders as a poster** — today's quote is the poster hero; the deck is the poster's *second sheet*, carrying a fixed print palette rather than theme chrome, with theme shrunk to the gutter and gap. The quote archive is a scrollable stack — opening a card animates only that card's own height (one Reanimated CSS transition on `height`/`marginBottom`, `cubic-bezier(0.4, 0, 0.2, 1)` at 340ms), virtualised, with no "View all" cap. A shared quote image is rebuilt at export size so it's the poster, not a screenshot of it.
+- **Xolace+ upsell redesign** — new mascot/postcard assets and a reusable `AnimatedDashedBorder`, applied to a darker postcard-style profile Plus row and proactive offer card (scrim, accent-highlighted `Xolace+`). Messaging moves from "nights" to "days"; the profile upsell row moves earlier in the screen, entitlement gating unchanged.
+- **Quote moderation and reaction UX hardened.**
+
+### Fixed
+
+- **Clerk ⇄ Convex auth desync hang** — a valid session could hang forever once Convex had latched `noAuth`. The guard now forces a Convex re-auth via a `sessionId` epoch bump instead of leaving the session alone, and signs out after a bounded number of attempts.
+- **Streak card no longer stranded** — it stays in the Perch strip at a count of 0, and a failed measure can't leave it invisible.
+
+### Backend
+
+- **Five proactive Xolace+ offer moments, wired end to end (#227)** — session end (competing in the one close slot, precedence `suggestion > plus > bridge`), mid-flow (its own call site right after "That's it", stood down inside a user's first session and on any mirror that only reached), and profile (beside the insight it talks about, with a real recurrence observation over the week's tags — arithmetic over a closed set, no model call per the Constitution rule). One `offerContext` query feeds all three sites; one recorded session id enforces "max one offer per session" across them; the card spends the budget when it *mounts*, so a plus decision that loses the close slot costs the user nothing. Policy (`choosePlusOffer`) is pure: safeguard veto first and unconditional, 7-day per-moment cooldown, three lifetime dismissals stop everything for 30 days, never two sessions running. Cooldown/dismissal state is device-local on the persisted `toggles` slice.
+- **`"use node"` directives dropped from `convex/ai/` and `convex/jobs/` (#248)** — those files use nothing from the Node runtime (the Anthropic SDK is fetch-based; the rest is fetch + Web Crypto). Running them in the default Convex runtime lowers cold-start cost and makes them reachable from `convex-test`. `streamGunzip.ts` keeps its directive — it needs `node:zlib`.
+- **Test suite migrated to Vitest + CI (#247, #249–#252)** — one `vitest.config.ts` (`node` default, `edge-runtime` opt-in per file for `convex-test`), a 44-file mechanical `bun:test` → `vitest` swap, and a `test` job added to CI. Leaf DB mutation, auth-guard, and mirror-pipeline coverage added; global v8 coverage thresholds set just under the observed `convex/**` baseline so the suite fails when coverage drops.
+
 ## [1.9.1] - OTA Update (2026-08-25)
 
 ### Added

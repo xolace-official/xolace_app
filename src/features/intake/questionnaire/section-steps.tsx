@@ -35,7 +35,7 @@ export function CarryStep({ onDone }: StepProps) {
       eyebrow="Section 2 of 3 · How you carry it"
       title="How this usually goes for you"
       mascot={MASCOT_BUNDLE}
-      says="This is the part that changes how Xolace talks to you — how much it asks, and how fast it gets there."
+      says="This is the part that changes how Xolace talks to you, how much it asks, and how fast it gets there."
       questions={SECTION_CARRY}
       items={CARRY_ITEMS}
       capped={['copingStyle']}

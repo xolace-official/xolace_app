@@ -60,11 +60,11 @@ export function BeatStep({ line, subline, mascot, onDone }: BeatStepProps) {
           entering={reduced ? FadeIn.duration(160) : FadeIn.duration(280)}
           className="px-8 pt-12 gap-2"
         >
-          <AppText className="text-center text-[34px] leading-[40px] text-accent font-[Poppins-SemiBold]">
+          <AppText className="text-center text-[34px] leading-1 text-accent font-[Poppins-SemiBold]">
             {line}
           </AppText>
           {subline ? (
-            <AppText className="text-center text-[15px] leading-5 text-foreground/50 font-[Poppins-Regular]">
+            <AppText className="text-center text-[15px] leading-5 text-foreground/55 font-[Poppins-Regular]">
               {subline}
             </AppText>
           ) : null}

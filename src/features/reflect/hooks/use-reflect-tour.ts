@@ -15,7 +15,6 @@ import { useAppStore } from "@/src/store/store";
 export function useReflectTour() {
   const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
   const setReflectTourVersion = useAppStore((s) => s.setReflectTourVersion);
-  const founderWelcomeSeen = useAppStore((s) => s.founderWelcomeSeen);
   const homeSheetBlocking = useAppStore((s) => s.homeSheetBlocking);
 
   const [isActive, setIsActive] = useState(false);
@@ -23,15 +22,12 @@ export function useReflectTour() {
   // number the event wants is the last step shown, not a render input.
   const lastStep = useRef(0);
 
-  // Start after the idle screen settles, once the founder welcome is dismissed
-  // and no other home sheet is covering the screen. A returning user on a build
-  // that added the tour has founderWelcomeSeen already true, so without the
-  // homeSheetBlocking gate the spotlight would render under the return-welcome
-  // or awareness sheet.
+  // Start after the idle screen settles, once no other home sheet is covering
+  // the screen — without the homeSheetBlocking gate the spotlight would render
+  // under the return-welcome or awareness sheet.
   useEffect(() => {
     if (
       !shouldShowReflectTour(reflectTourVersion) ||
-      !founderWelcomeSeen ||
       homeSheetBlocking
     )
       return;
@@ -42,7 +38,7 @@ export function useReflectTour() {
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [reflectTourVersion, founderWelcomeSeen, homeSheetBlocking]);
+  }, [reflectTourVersion, homeSheetBlocking]);
 
   const finish = () => {
     setIsActive(false);

@@ -61,7 +61,7 @@ export function MascotConversation({
   return (
     <IntakeScreen>
       <ScrollView
-        contentContainerClassName="flex-grow px-5 pt-3 pb-8 gap-4"
+        contentContainerClassName="grow px-5 pt-3 pb-8 gap-4"
         showsVerticalScrollIndicator={false}
       >
         <AppText className="text-[11px] uppercase tracking-widest text-foreground/40 font-[Poppins-Medium]">
@@ -78,7 +78,7 @@ export function MascotConversation({
 
         {waiting ? (
           <Pressable onPress={onGateBypass} disabled={!onGateBypass} className="py-4">
-            <AppText className="text-center text-[15px] text-foreground/50 font-[Poppins-Regular]">
+            <AppText className="text-center text-[15px] text-foreground/55 font-[Poppins-Regular]">
               {gateHint}
             </AppText>
           </Pressable>

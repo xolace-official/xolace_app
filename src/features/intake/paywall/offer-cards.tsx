@@ -116,7 +116,7 @@ export function InsightsOfferCard({ width }: { width: number }) {
  * struck through, so every row has to read as a real before/after.
  */
 const CAPS = [
-  { label: 'Reflections', free: '3 a day', plus: 'No cap' },
+  { label: 'Reflections', free: '3 an hour', plus: 'No cap' },
   { label: 'Voice vents', free: '1 a day', plus: 'No cap' },
   { label: 'Timeline', free: '30 days', plus: 'All of it' },
   { label: 'Daily quotes', free: 'Generic', plus: 'Your words' },
@@ -152,7 +152,7 @@ export function LimitsOfferCard({ width }: { width: number }) {
         ))}
       </OfferMock>
       <AppText className="text-[13px] leading-[18px] text-offer-ink/70 font-[Poppins-Regular]">
-        Nothing is taken away — the lid just comes off.
+        Nothing is taken away; the lid just comes off.
       </AppText>
     </OfferCard>
   );

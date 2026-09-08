@@ -59,7 +59,7 @@ export function OfferCard({ tag, title, tint, width, mascot, children }: OfferCa
   // Flux sits in the top-right and the title wraps beside him, so the corner
   // never reads as an empty margin. Sized off the card, not the screen — the
   // deck is the only thing that changes width.
-  const mascotSize = width * 0.54;
+  const mascotSize = width * 0.5;
 
   return (
     <View
@@ -82,15 +82,19 @@ export function OfferCard({ tag, title, tint, width, mascot, children }: OfferCa
       />
       <OfferPill className={CHIP[tint]}>{tag}</OfferPill>
       <AppText
-        style={{ paddingRight: mascotSize * 0.6 }}
-        className="text-[25px] leading-[30px] text-offer-ink font-[Poppins-SemiBold]"
+        style={{ paddingRight: mascotSize * 0.5 }}
+        className="text-[22px] leading-7 text-offer-ink font-[Poppins-SemiBold]"
       >
         {title}
       </AppText>
       {/* Bottom-anchored. The deck stretches every card to the tallest one, so
           the slack has to go somewhere; pooled under the title it reads as air
           around the headline, split above and below it reads as a hole. */}
-      <View className="flex-1 justify-end gap-2.5">{children}</View>
+      {/* `overflow-hidden`: if a mock stack still outgrows the deck's fixed
+          height on some device, it clips at the title instead of painting up
+          over it — Android measures every text block taller than iOS unless
+          `includeFontPadding` is off, which is what caused the overlap. */}
+      <View className="flex-1 justify-end gap-2.5 overflow-hidden">{children}</View>
     </View>
   );
 }
