@@ -82,7 +82,7 @@ export function VariantA({ preview }: { preview: PreviewState }) {
   );
 }
 
-function Row({
+export function Row({
   step,
   last,
   accent,

@@ -3,13 +3,14 @@ import { router } from 'expo-router';
 import { View, Pressable } from 'react-native';
 import { AppText } from '@/src/components/shared/app-text';
 
-export const VARIANTS = ['A', 'B', 'C'] as const;
+export const VARIANTS = ['A', 'B', 'C', 'D'] as const;
 export type VariantKey = (typeof VARIANTS)[number];
 
 const NAMES: Record<VariantKey, string> = {
   A: 'Devotional stack',
   B: 'Compact checklist',
   C: 'Focused spine',
+  D: 'Devotional + progress',
 };
 
 const STATES = ['active', 'loading', 'empty'] as const;
