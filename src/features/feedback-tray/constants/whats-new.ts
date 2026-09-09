@@ -30,6 +30,23 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-09-ota-minor-fixes",
+    label: "OTA Update",
+    date: "September 2026",
+    highlights: [
+      {
+        icon: { ios: "bell.badge.fill", android: "notifications_active" },
+        title: "Notifications open the right place",
+        body: "Tapping a notification now takes you where it meant to, and an old one you already dealt with won't quietly reopen later.",
+      },
+      {
+        icon: { ios: "wand.and.stars", android: "auto_fix_high" },
+        title: "Small fixes",
+        body: "The vent screen stays lit while you're in it, tapping the reflect card always opens it, and a few layout rough edges on Android are smoothed out.",
+      },
+    ],
+  },
+  {
     id: "1.10.0",
     label: "Version 1.10.0",
     date: "September 2026",

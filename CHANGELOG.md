@@ -4,6 +4,16 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.10.0] - OTA Update (2026-09-09)
+
+### Fixed
+
+- **Notification taps route where they should** — tapping a push notification now deep-links to the right screen, and a stale tap (an old notification response left in the native launch cache) no longer replays on remount or an auth-state flip to yank you somewhere unexpected. Intake still wins on a cold launch. Web guards the unsupported `getLast`/`clear` calls so they can't crash.
+- **The resting reflect card opens on tap again** — the tap target now sits above the readings it covers instead of below them, so a tap landing on the prompt line opens the composer rather than dying on the text. The discard control still sits on top.
+- **The vent screen stays awake** — the display no longer dims or sleeps mid-vent; the lock is released the moment the screen unmounts.
+- **The idle-menu scrim covers the whole window** — it now reaches back over the host screen's top-inset padding to dim the status-bar strip too.
+- **Android intake text no longer overflows its card** — `AppText` sets `includeFontPadding: false` on Android, so copy measures the same height it does on iOS and stops overflowing the fixed-height offer boxes.
+
 ## [1.10.0] - (2026-09-05)
 
 ### Added
