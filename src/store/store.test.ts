@@ -36,6 +36,16 @@ describe("store partialize", () => {
     expect(persisted).toContain("ventIntroSeen");
   });
 
+  it("xolacerPrimerSeen is persisted", () => {
+    const state = useAppStore.getState();
+    const persisted = Object.keys(
+      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
+        .persist.getOptions()
+        .partialize(state),
+    );
+    expect(persisted).toContain("xolacerPrimerSeen");
+  });
+
   // The whole point of the cooldown is that a "no" survives a relaunch.
   it("plus offer cadence state is persisted", () => {
     const state = useAppStore.getState();

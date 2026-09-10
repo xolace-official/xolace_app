@@ -62,6 +62,9 @@ type TogglesSlice = {
   /** One-time flag — once true, vent first-run intro never shows again. */
   ventIntroSeen: boolean;
   setVentIntroSeen: (v: boolean) => void;
+  /** One-time flag — once true, the Xolacer primer never gates a request again. */
+  xolacerPrimerSeen: boolean;
+  setXolacerPrimerSeen: (v: boolean) => void;
   /** One-time flag — once true, the "shake to send feedback" hint toast never shows again. */
   shakeHintSeen: boolean;
   setShakeHintSeen: (v: boolean) => void;
@@ -160,6 +163,8 @@ export const useAppStore = create<AppState>()(
         setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
         ventIntroSeen: false,
         setVentIntroSeen: (v) => set({ ventIntroSeen: v }),
+        xolacerPrimerSeen: false,
+        setXolacerPrimerSeen: (v) => set({ xolacerPrimerSeen: v }),
         shakeHintSeen: false,
         setShakeHintSeen: (v) => set({ shakeHintSeen: v }),
         returnWelcomeSeenAt: null,
@@ -234,6 +239,7 @@ export const useAppStore = create<AppState>()(
           bridgeEnabled: s.bridgeEnabled,
           bridgeIntroSeen: s.bridgeIntroSeen,
           ventIntroSeen: s.ventIntroSeen,
+          xolacerPrimerSeen: s.xolacerPrimerSeen,
           shakeHintSeen: s.shakeHintSeen,
           returnWelcomeSeenAt: s.returnWelcomeSeenAt,
           lastSeenVersion: s.lastSeenVersion,

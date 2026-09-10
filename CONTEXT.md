@@ -3,6 +3,44 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## The Xolacer primer (2026-09-10)
+
+A one-time bottom sheet, **"Before you ask,"** shown the first time a seeker
+taps to request a conversation with any Xolacer — the single call site is
+`handleAsk` in `xolacer-profile-screen.tsx`, ahead of
+`xolacerChat.requestConversation`. Four expectation-framed lines (a real
+person not a therapist; block/report are yours and block is permanent;
+rating comes later from the Xolacer's profile; it's one person listening to
+another, crisis resources are one tap away). The primary button
+**"I understand — send request"** is the acknowledgment *and* what fires the
+request — one deliberate tap after scrollable content, not a second modal.
+
+**Client-once, not consent-of-record.** Seen state is a persisted Zustand
+flag, `xolacerPrimerSeen`, in the `partialize` whitelist — the same shape as
+`bridgeIntroSeen` / `ventIntroSeen`. It is orientation, not a ticked-box
+legal acknowledgment, so there is deliberately **no** server field and no
+mutation-side enforcement: a reinstalled seeker seeing it once more is
+acceptable, and a schema field here would be a Store-Gap deprecation
+liability for no gain. Do not "fix" this into `emotional_profiles`.
+
+**Only the send tap sets the flag.** A swipe-down / backdrop dismiss cancels
+the request and leaves `xolacerPrimerSeen` false, so the next genuine "Ask
+to talk" re-opens it. Flag and request are written on one path; nothing
+half-commits. Never gates a `resting` resume or a re-request after the
+primer was already acknowledged.
+
+**Naming.** "primer" — component `XolacerPrimerSheet`, flag
+`xolacerPrimerSeen`, prose "the Xolacer primer." Rejected: "disclaimer"
+(legalistic, wrong register for a campfire app), "intro" (already overloaded
+— `bridgeIntroSeen`, `ventIntroSeen`, the `(onboarding)` Intro flow),
+"house rules" (punitive).
+
+**Not an ADR** — a gate is trivially reversible; two of the three ADR
+criteria fail. The profile's existing "What to expect" block stays as the
+returning-seeker reference and its header re-opens the same sheet; the
+primer copy is deduped against it. Funnel: `xolacer_primer_shown` /
+`xolacer_primer_resolved { outcome: "sent" | "dismissed" }`.
+
 ## Paths: kindling naming (2026-09-08)
 
 The background-generated set of 2–3 support actions offered after a
