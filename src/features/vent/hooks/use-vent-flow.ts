@@ -8,6 +8,11 @@ import type { SharedValue } from 'react-native-reanimated';
 import { api } from '@/convex/_generated/api';
 import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
 import { useVentRecorder } from '@/src/features/vent/hooks/use-vent-recorder';
+import {
+  playAffirmativePress,
+  playErrorNotice,
+  playSoftPress,
+} from '@/src/lib/haptics';
 
 export type VentState = 'idle' | 'recording' | 'processing' | 'heard' | 'gone' | 'error';
 
@@ -135,14 +140,25 @@ export function useVentFlow(): UseVentFlowReturn {
   const startVent = async () => {
     if (state !== 'idle') return;
 
+    // Haptics live here rather than on the button: the press is a request, and
+    // this is where it's known to have succeeded. A denied mic permission
+    // returns silently with no UI, so confirming the press there told the user
+    // it was recording when it wasn't.
     const started = await startRecording();
-    if (!started) return;
+    if (!started) {
+      playErrorNotice();
+      return;
+    }
+    playAffirmativePress();
     setState('recording');
     posthog.capture('vent_started');
   };
 
   const stopVent = async () => {
     if (state !== 'recording' || busyRef.current) return;
+    // Softer than the start — stopping is a release, not a commitment, and the
+    // two directions should not feel identical.
+    playSoftPress();
     busyRef.current = true;
     burnDoneRef.current = false;
     resultRef.current = null;

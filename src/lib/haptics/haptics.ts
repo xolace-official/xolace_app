@@ -1,6 +1,7 @@
 // Cross-platform haptics via react-native-pulsar (Android + web).
 // iOS uses CoreHaptics via haptics.ios.ts (Expo platform extension).
-import { Presets } from 'react-native-pulsar';
+import { Presets, usePatternComposer } from 'react-native-pulsar';
+import type { Pattern } from 'react-native-pulsar';
 import type { BreathPhase, HapticName } from './haptics.types';
 export type { BreathPhase, HapticName };
 
@@ -20,6 +21,52 @@ export function tap(_intensity?: number, _sharpness?: number): void {
 
 export function playProcessingBreath(): void {
   run(() => Presets.breath());
+}
+
+// Android's `Presets.breath()` is a fixed preset with no intensity parameter,
+// and lands far heavier than the iOS CoreHaptics envelope (which peaks at
+// intensity 0.6 and decays to zero). Processing is ambient, not an event — it
+// should register as presence, not as an alert.
+//
+// Duration carries most of the reduction here, deliberately. Pulsar's Android
+// tiers degrade: ADVANCED_SUPPORT (API 36+) renders both envelopes,
+// STANDARD_SUPPORT amplitude only, and LIMITED_SUPPORT (API 26+) is
+// timing-based waveform with no amplitude modulation at all — there this
+// collapses to a flat buzz for however long it runs. Shortening the pattern is
+// the only lever that quiets it at every tier.
+//
+// The ceiling stays well clear of silence on purpose: per the Sonar note in
+// AppearanceScreen, this team measured ~0.35 amplitude sitting under most LRAs'
+// perceptual floor (our observation, not a documented Pulsar threshold).
+// Undershooting reads as "broken", not "gentle".
+const PROCESSING_BREATH_MS = 1600;
+
+const PROCESSING_BREATH_PATTERN: Pattern = {
+  discretePattern: [],
+  continuousPattern: {
+    amplitude: [
+      { time: 0, value: 0.3 },
+      { time: PROCESSING_BREATH_MS * 0.45, value: 0.55 },
+      { time: PROCESSING_BREATH_MS * 0.65, value: 0.5 },
+      { time: PROCESSING_BREATH_MS, value: 0.0 },
+    ],
+    // Rendered on iOS and Android API 36+ only; ignored on the amplitude-only
+    // and waveform tiers, so no part of the intended feel may depend on it.
+    frequency: [
+      { time: 0, value: 0.15 },
+      { time: PROCESSING_BREATH_MS, value: 0.15 },
+    ],
+  },
+};
+
+/**
+ * Processing-state breath, amplitude-controlled. Returns a `play` callback so
+ * the pattern is parsed once on mount rather than per call — `playProcessingBreath`
+ * stays exported for any non-component caller.
+ */
+export function useProcessingBreathHaptic(): () => void {
+  const composer = usePatternComposer(PROCESSING_BREATH_PATTERN);
+  return () => run(() => composer.play());
 }
 
 export function playGentlePresence(): void {

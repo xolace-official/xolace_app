@@ -7,13 +7,31 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { playSoftenPulse } from '@/src/lib/haptics';
+import {
+  playCompassionateHold,
+  playGentlePresence,
+  playSoftenPulse,
+} from '@/src/lib/haptics';
 import { AppText } from '@/src/components/shared/app-text';
+
+// This beat's own pulsing dot, not the BreathBeat orb (that one is imperative,
+// driven by PacedOrb.playCycle with its own per-phase haptics). The dot below
+// runs withRepeat(1400ms, reverse), so a full cycle is 2800ms — the haptic
+// rides that same period to stay in phase with what the eye sees.
+const PULSE_CYCLE_MS = 2800;
+
+const INTENSITY_HAPTIC = {
+  light: playGentlePresence,
+  medium: playSoftenPulse,
+  heavy: playCompassionateHold,
+} as const;
 
 type Props = {
   content: string;
   fallbackContent?: string;
   durationSeconds: number;
+  /** Authored per-step in Convex. Defaults to `medium` (the previous fixed feel). */
+  hapticIntensity?: 'light' | 'medium' | 'heavy';
   reducedMotion: boolean;
   onComplete: () => void;
 };
@@ -22,17 +40,26 @@ export function HapticBeat({
   content,
   fallbackContent,
   durationSeconds,
+  hapticIntensity = 'medium',
   reducedMotion,
   onComplete,
 }: Props) {
   "use no memo";
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pulseIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pulse = useSharedValue(reducedMotion ? 1 : 0.5);
 
   useEffect(() => {
     // Gate haptic on reducedMotion per plan §4.2 — dissociated states can be startled.
     if (!reducedMotion) {
-      playSoftenPulse();
+      const playPulse = INTENSITY_HAPTIC[hapticIntensity];
+      // This beat *is* the haptic. Firing once on mount left the dot pulsing
+      // for the rest of the step with nothing under the finger — the one beat
+      // whose whole point is touch went quiet first. Repeat on the dot's cycle
+      // and stop with it.
+      playPulse();
+      pulseIntervalRef.current = setInterval(playPulse, PULSE_CYCLE_MS);
+
       pulse.set(withRepeat(
         withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.quad) }),
         -1,
@@ -40,10 +67,20 @@ export function HapticBeat({
       ));
     }
 
-    timerRef.current = setTimeout(onComplete, durationSeconds * 1000);
+    // Stop buzzing the moment the beat is over, not whenever the parent gets
+    // around to unmounting us — a transition animation would otherwise carry
+    // the pulse into the next beat.
+    timerRef.current = setTimeout(() => {
+      if (pulseIntervalRef.current) {
+        clearInterval(pulseIntervalRef.current);
+        pulseIntervalRef.current = null;
+      }
+      onComplete();
+    }, durationSeconds * 1000);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (pulseIntervalRef.current) clearInterval(pulseIntervalRef.current);
     };
     // Mount-once: haptic props are fixed for a beat's lifetime
     // eslint-disable-next-line react-hooks/exhaustive-deps

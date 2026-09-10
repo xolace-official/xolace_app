@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { Dialog, Button, Spinner, useThemeColor } from "heroui-native";
 import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
 import { AppText } from "@/src/components/shared/app-text";
+import { playAffirmativePress, playSoftPress } from "@/src/lib/haptics";
 
 type Props = {
   isOpen: boolean;
@@ -48,7 +49,10 @@ export const ConfirmationDialog = ({
             <Button
               variant="ghost"
               size="sm"
-              onPress={() => onOpenChange(false)}
+              onPress={() => {
+                playSoftPress();
+                onOpenChange(false);
+              }}
               isDisabled={isLoading}
             >
               Cancel
@@ -56,7 +60,13 @@ export const ConfirmationDialog = ({
             <Button
               variant={isDestructive ? "danger" : "primary"}
               size="sm"
-              onPress={onConfirm}
+              onPress={() => {
+                // Backing out stays soft; committing carries weight. This is the
+                // last touch before an irreversible action (wipe data, delete
+                // account), and it should not feel like any other button.
+                playAffirmativePress();
+                onConfirm();
+              }}
               isDisabled={isLoading}
             >
               {isLoading ? (

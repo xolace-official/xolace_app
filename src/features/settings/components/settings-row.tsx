@@ -3,6 +3,7 @@ import { Pressable, View } from "react-native";
 import { Switch, Separator, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
+import { playSoftPress, playTextureSelect } from "@/src/lib/haptics";
 import { cn } from "@/src/lib/utils";
 
 const CHEVRON_NAME = {
@@ -95,8 +96,17 @@ export const SettingsRow = (props: SettingsRowProps) => {
     }
 
     if (props.variant === "toggle") {
+      // On and off are deliberately distinguishable: a toggle that feels
+      // identical in both directions tells you it moved but not where it landed.
       return (
-        <Switch isSelected={props.isSelected} onSelectedChange={props.onToggle}>
+        <Switch
+          isSelected={props.isSelected}
+          onSelectedChange={(value) => {
+            if (value) playTextureSelect();
+            else playSoftPress();
+            props.onToggle(value);
+          }}
+        >
           <Switch.Thumb />
         </Switch>
       );
@@ -151,7 +161,12 @@ export const SettingsRow = (props: SettingsRowProps) => {
             props.variant === "chevron" ||
             props.variant === "action" ||
             props.variant === "nav"
-              ? props.onPress
+              ? () => {
+                  // A `danger` row only opens a confirmation — the weight
+                  // belongs on the confirm, not on reaching for it.
+                  playSoftPress();
+                  props.onPress?.();
+                }
               : undefined
           }
           android_ripple={ANDROID_RIPPLE}
