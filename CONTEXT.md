@@ -70,6 +70,32 @@ unclaimed and is inherently a *gathered bundle* — matching the any-order,
 skippable shape — rather than a sequence, which also rules it out as a
 name collision with the ordered-sounding "path."
 
+## Series, episode, standalone audio (2026-09-10)
+
+The kindling audio catalogue (`audio_tracks`, family `support`) has two
+shapes under a **topic**:
+
+- a **standalone audio** — a one-off support track, no ordering, no
+  grouping (the ElevenLabs support tracks shipped first); and
+- a **series** — an ordered set of **episodes** with emotional or
+  narrative continuity. The founder's *Xolace Podcast Roadmap* Track 1
+  ("The Spectrum", four acuity tiers) and Track 2 ("Reality, Not False
+  Hope", reframing) are the launch series. Any topic may carry more than
+  one.
+
+An **episode** is one audio inside a series, with a position in it.
+"Series" is the canonical term — not "podcast" (RSS-feed connotation) or
+"collection" (collides with playlists/favourites later); "Track 1/2" is
+founder-doc shorthand for the two launch series.
+
+**Narrator ≠ voice.** The `narrators` field on a catalogue row is a free
+display string ("Sage", or two names for a dialogue episode) — curated
+audio is a pre-rendered file, so the narrator is a production credit, not
+a runtime binding. The custom-voice cast (`VOICE_CATALOG`,
+`convex/lib/voices.ts`) is a separate thing: the Plus *picker* for the
+mirror and vent, where the slug is resolved to an ElevenLabs id for a
+per-request TTS call. Kindling audio never touches it.
+
 ## Quote prompt reads raw reply text (2026-09-04)
 
 The reply box on Today's Thought puts a user sentence into the quote
