@@ -103,6 +103,19 @@ export function isMaxRefinementError(error: unknown): boolean {
 }
 
 /**
+ * True when a user-facing error message is a rate-limit rejection — either the
+ * session-initiate limit (extractErrorMessage above) or the AI-mirror limit the
+ * backend writes into the session via failSession (convex/ai/process.ts). Both
+ * are the free/Plus cap, so the error screen offers the upgrade.
+ */
+export function isRateLimitMessage(message: string): boolean {
+  return (
+    message.includes("You've been reflecting a lot") ||
+    message.includes('limit for reflections')
+  );
+}
+
+/**
  * Produce a user-facing message derived from an error value.
  *
  * @param error - The value to inspect for generating a friendly message

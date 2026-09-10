@@ -29,6 +29,7 @@ export const PAYWALL_SURFACE_FEATURE: Record<PaywallSurface, PaywallFeatureId | 
   // Bridge has no feature row of its own — its cap lives under "Higher daily
   // limits" alongside reflections and vents.
   bridge_draft: "caps",
+  rate_limit: "caps",
   settings_row: null,
   profile_row: null,
   // Intake sells all four offers on its own card deck first; by the time the

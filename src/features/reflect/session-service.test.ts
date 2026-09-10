@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  extractErrorMessage,
   isMaxRefinementError,
+  isRateLimitMessage,
   projectScreen,
   type ServerSessionState,
 } from './session-service';
@@ -83,5 +85,17 @@ describe('isMaxRefinementError', () => {
     ).toBe(false);
     expect(isMaxRefinementError('Maximum refinement turns')).toBe(false);
     expect(isMaxRefinementError(null)).toBe(false);
+  });
+});
+
+describe('isRateLimitMessage', () => {
+  it('matches both rate-limit paths and nothing else', () => {
+    expect(
+      isRateLimitMessage(extractErrorMessage(new Error('RateLimited {"retryAfter":120000}'))),
+    ).toBe(true);
+    expect(
+      isRateLimitMessage("You've reached the limit for reflections. Try again in 2 minutes."),
+    ).toBe(true);
+    expect(isRateLimitMessage(extractErrorMessage(new Error('boom')))).toBe(false);
   });
 });
