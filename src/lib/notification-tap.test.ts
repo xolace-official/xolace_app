@@ -140,6 +140,19 @@ describe('notificationTapPlan', () => {
     });
   });
 
+  it('drops a thread route with no usable conversation id', () => {
+    for (const type of ['chat_accepted', 'chat_message']) {
+      expect(notificationTapPlan({ type }, null, 1000).navigation).toBeUndefined();
+      expect(notificationTapPlan({ type, conversationId: 42 }, null, 1000).navigation).toBeUndefined();
+      expect(notificationTapPlan({ type, conversationId: '' }, null, 1000).navigation).toBeUndefined();
+    }
+    // The Connect-tab types never read the id, so they still route.
+    expect(notificationTapPlan({ type: 'chat_expired' }, null, 1000).navigation).toEqual({
+      action: 'navigate',
+      href: { pathname: '/connect', params: { view: 'xolacers', t: '1000' } },
+    });
+  });
+
   it('routes quotes and nudges', () => {
     expect(notificationTapPlan({ screen: 'quotes' }, null, 1).navigation).toEqual({
       action: 'push',

@@ -110,14 +110,19 @@ export function notificationTapPlan(
   }
 
   if (isChatNotificationType(data?.type)) {
-    plan.navigation = {
-      action: "navigate",
-      href: chatNotificationRoute(
-        data!.type,
-        String(data!.conversationId),
-        tappedAt,
-      ),
-    };
+    const conversationId =
+      typeof data?.conversationId === "string" ? data.conversationId : "";
+    // Only accept and message open a thread by id; the other three land on
+    // Connect and ignore it. Without a real id there is no thread to open, so
+    // drop the navigation rather than pushing `/chat/undefined`.
+    const opensThread =
+      data!.type === "chat_accepted" || data!.type === "chat_message";
+    if (conversationId || !opensThread) {
+      plan.navigation = {
+        action: "navigate",
+        href: chatNotificationRoute(data!.type, conversationId, tappedAt),
+      };
+    }
   } else if (data?.screen === "quotes") {
     plan.navigation = { action: "push", href: "/(protected)/quotes" };
   } else if (
