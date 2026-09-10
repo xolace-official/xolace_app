@@ -15,13 +15,13 @@ const LINES: { id: string; icon: SymbolViewProps['name']; body: string }[] = [
     id: 'peer',
     icon: { ios: 'person', android: 'person', web: 'person' },
     body:
-      'A real person, not a therapist. They choose whether to accept — it may not be right away — and replies won’t always be quick. No diagnoses, no clinical advice.',
+      'A real person, not a therapist. They choose whether to accept, it may not be right away and replies won’t always be quick. No diagnoses, no clinical advice.',
   },
   {
     id: 'control',
     icon: { ios: 'hand.raised', android: 'front_hand', web: 'front_hand' },
     body:
-      'You’re in control. Block or report from the menu any time. Blocking is permanent — the conversation can’t be reopened.',
+      'You’re in control. Block or report from the menu any time. Blocking is permanent, the conversation can’t be reopened.',
   },
   {
     id: 'rating',
@@ -84,7 +84,7 @@ export function XolacerPrimerSheet({
             </View>
           </BottomSheetScrollView>
 
-          {onConfirm && <Button onPress={onConfirm}>I understand — send request</Button>}
+          {onConfirm && <Button onPress={onConfirm}>I understand, send request</Button>}
         </BottomSheet.Content>
       </BottomSheet.Portal>
     </BottomSheet>
