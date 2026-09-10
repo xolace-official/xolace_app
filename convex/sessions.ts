@@ -172,7 +172,7 @@ async function applyPostSessionFeedback(
 
 /**
  * Create a new session in "initiated" state.
- * Rate limited to 5 sessions per hour per profile.
+ * Rate limited to 2 sessions per hour per profile (10/hour on Plus).
  */
 export const initiate = mutation({
   args: {
@@ -183,8 +183,8 @@ export const initiate = mutation({
     const { profile } = await requireAuth(ctx);
     const now = Date.now();
 
-    // Rate limit: 5 sessions/hour per profile (token bucket with burst of 3),
-    // doubled for Plus.
+    // Rate limit: 2 sessions/hour per profile (token bucket, burst 2),
+    // 10/hour for Plus.
     const premium = await hasPremium(ctx, profile);
     await rateLimiter.limit(ctx, "sessionInitiate", {
       key: profile._id,

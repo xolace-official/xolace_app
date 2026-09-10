@@ -3,9 +3,10 @@ import { components } from "../_generated/api";
 
 const DAY = 24 * HOUR;
 
-// Plus overrides — 2x the free rate/capacity, same ratio, passed as an
-// inline `config` override at the call site (free-tier config above stays
-// the registered default). Easy to tune independently later.
+// Plus overrides — passed as an inline `config` override at the call site
+// (the free-tier config below stays the registered default). Session
+// initiation is deliberately NOT a fixed ratio: free is a 2/hour taste,
+// Plus is the "reflect whenever you need to" promise.
 export const SESSION_INITIATE_LIMITS_PLUS = {
   kind: "token bucket",
   rate: 10,
@@ -37,8 +38,10 @@ export const BRIDGE_DRAFT_LIMITS_PLUS = {
 } as const;
 
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
-  // Session creation — 5/hour with burst allowance of 3
-  sessionInitiate: { kind: "token bucket", rate: 5, period: HOUR, capacity: 3 },
+  // Session creation — free tier: 2/hour, burst 2. This is a product gate,
+  // not just cost control: Plus widens it 5x via SESSION_INITIATE_LIMITS_PLUS
+  // at the call site.
+  sessionInitiate: { kind: "token bucket", rate: 2, period: HOUR, capacity: 2 },
 
   // AI mirror generation — main cost control
   aiMirrorRequest: { kind: "token bucket", rate: 8, period: HOUR, capacity: 2 },

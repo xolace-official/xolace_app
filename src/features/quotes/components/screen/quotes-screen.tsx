@@ -53,6 +53,7 @@ export function QuotesScreen() {
     setSaved,
     completePreferences,
     savedCount,
+    saveLocked,
   } = useTodayQuote();
 
   const {
@@ -135,7 +136,20 @@ export function QuotesScreen() {
               hasQuote ? (
                 <StarButton
                   saved={quote.savedAt !== undefined}
-                  onToggle={(next) => void setSaved(next)}
+                  onToggle={(next) => {
+                    // The star still taps for a free user — it opens the door
+                    // rather than doing nothing.
+                    if (saveLocked) {
+                      posthog.capture("premium_gate_hit", {
+                        feature: "quote_save",
+                        hasData: true,
+                      });
+                      openPaywall("daily_quote");
+                      return;
+                    }
+                    void setSaved(next);
+                  }}
+                  locked={saveLocked}
                 />
               ) : null
             }
