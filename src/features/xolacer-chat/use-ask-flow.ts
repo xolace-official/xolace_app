@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useToast } from 'heroui-native';
 import { useMutation } from 'convex/react';
@@ -35,11 +35,18 @@ export function useAskFlow({
   const primerSeen = useAppStore((s) => s.xolacerPrimerSeen);
   const setPrimerSeen = useAppStore((s) => s.setXolacerPrimerSeen);
   const [primerMode, setPrimerMode] = useState<PrimerMode>(null);
+  // Ref guards the mutation (two taps in one frame both read stale state);
+  // the state drives the button's disabled look.
+  const inFlight = useRef(false);
+  const [sending, setSending] = useState(false);
 
   const openThread = (conversationId: string) =>
     router.replace(`/chat/${conversationId}`);
 
   const sendRequest = (fromGate: boolean) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setSending(true);
     requestConversation({ xolacerProfileId })
       .then((conversationId) => {
         // Only the success path acknowledges and closes — a limit error leaves
@@ -66,6 +73,10 @@ export function useAskFlow({
                   ? `You've got ${data.max ?? 3} conversations open. Let one rest before starting another.`
                   : `${displayName} isn't taking conversations right now.`,
         });
+      })
+      .finally(() => {
+        inFlight.current = false;
+        setSending(false);
       });
   };
 
@@ -85,8 +96,11 @@ export function useAskFlow({
   };
 
   // Dismissing a gate — swipe, backdrop or close button — is an abandonment
-  // whether or not a send was attempted first, and writes no flag.
+  // whether or not a send was attempted first, and writes no flag. A send
+  // already in flight owns the sheet: closing under it would strand the
+  // acknowledgment while the request still succeeds.
   const handlePrimerClose = () => {
+    if (inFlight.current) return;
     if (primerMode === 'gate')
       posthog.capture('xolacer_primer_resolved', { outcome: 'dismissed' });
     setPrimerMode(null);
@@ -99,6 +113,7 @@ export function useAskFlow({
 
   return {
     primerMode,
+    sending,
     openThread,
     handleAsk,
     handlePrimerConfirm,

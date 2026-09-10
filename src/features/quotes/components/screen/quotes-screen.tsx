@@ -138,8 +138,10 @@ export function QuotesScreen() {
                   saved={quote.savedAt !== undefined}
                   onToggle={(next) => {
                     // The star still taps for a free user — it opens the door
-                    // rather than doing nothing.
-                    if (saveLocked) {
+                    // rather than doing nothing. Unsaving is never gated
+                    // (`dailyQuotes.unsave`): a lapsed subscriber must still
+                    // be able to let go of what they kept.
+                    if (saveLocked && next) {
                       posthog.capture("premium_gate_hit", {
                         feature: "quote_save",
                         hasData: true,
@@ -149,7 +151,7 @@ export function QuotesScreen() {
                     }
                     void setSaved(next);
                   }}
-                  locked={saveLocked}
+                  locked={saveLocked && quote.savedAt === undefined}
                 />
               ) : null
             }

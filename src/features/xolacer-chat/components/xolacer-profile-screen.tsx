@@ -82,6 +82,7 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
   const insets = useSafeAreaInsets();
   const {
     primerMode,
+    sending,
     openThread,
     handleAsk,
     handlePrimerConfirm,
@@ -250,6 +251,7 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
         isOpen={primerMode !== null}
         onClose={handlePrimerClose}
         onConfirm={primerMode === 'gate' ? handlePrimerConfirm : undefined}
+        isConfirming={sending}
       />
     </View>
   );

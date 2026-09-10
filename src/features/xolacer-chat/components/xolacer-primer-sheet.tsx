@@ -48,10 +48,12 @@ export function XolacerPrimerSheet({
   isOpen,
   onClose,
   onConfirm,
+  isConfirming,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onConfirm?: () => void;
+  isConfirming?: boolean;
 }) {
   const { height: screenHeight } = useWindowDimensions();
 
@@ -84,7 +86,11 @@ export function XolacerPrimerSheet({
             </View>
           </BottomSheetScrollView>
 
-          {onConfirm && <Button onPress={onConfirm}>I understand, send request</Button>}
+          {onConfirm && (
+            <Button onPress={onConfirm} isDisabled={isConfirming}>
+              {isConfirming ? 'Sending…' : 'I understand, send request'}
+            </Button>
+          )}
         </BottomSheet.Content>
       </BottomSheet.Portal>
     </BottomSheet>
