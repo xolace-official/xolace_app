@@ -241,3 +241,18 @@ export const intakeAnswerValidators = {
   ),
   seriesWantInApp: v.optional(v.boolean()),
 };
+
+// --- Xolacer chat (#344) ---
+
+/** Which seat of a conversation a profile holds. */
+export const conversationRoleValidator = v.union(
+  v.literal("user"),
+  v.literal("xolacer"),
+);
+
+/** The non-crisis verdict categories the post-delivery lane flags for review. */
+export const chatModerationCategoryValidator = v.union(
+  v.literal("harassment"),
+  v.literal("spam"),
+  v.literal("contact"),
+);

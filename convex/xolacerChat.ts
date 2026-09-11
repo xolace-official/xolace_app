@@ -58,6 +58,7 @@ import {
   planBlock,
   presenceDisclosed,
 } from "./lib/conversationGating";
+import { conversationRoleValidator } from "./lib/validators";
 import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 
 const statusValidator = v.union(
@@ -1675,7 +1676,16 @@ export const notifyNewMessage = internalMutation({
     // the deploy that started sending it, still counts as before.
     webhookId: v.optional(v.string()),
   },
-  returns: v.null(),
+  // Non-null only for the first delivery of a message from someone on the
+  // row: what the webhook needs to schedule the post-delivery moderation lane
+  // (#344) after this mutation — and its push — are already committed.
+  returns: v.union(
+    v.null(),
+    v.object({
+      conversationId: v.id("xolacer_conversations"),
+      senderRole: conversationRoleValidator,
+    }),
+  ),
   handler: async (ctx, args) => {
     if (!chatEnabled()) return null;
 
@@ -1720,16 +1730,24 @@ export const notifyNewMessage = internalMutation({
       });
     }
 
+    const senderRole =
+      args.senderId === conversation.userProfileId
+        ? ("user" as const)
+        : args.senderId === conversation.xolacerProfileId
+          ? ("xolacer" as const)
+          : null;
+    const delivery = !alreadyCounted && senderRole ? { conversationId, senderRole } : null;
+
     // Stream cannot deliver into a channel we consider shut, but a resting or
     // blocked pair whose channel Stream has not frozen yet would still arrive
     // here — a closed conversation notifies nobody.
-    if (conversation.status !== "open") return null;
+    if (conversation.status !== "open") return delivery;
 
     const recipientProfileId = messageNotificationRecipient(
       conversation,
       args.senderId,
     );
-    if (!recipientProfileId) return null;
+    if (!recipientProfileId) return delivery;
 
     // The recipient's own stamp, never the row's: the reply to a message must
     // not land inside the window that message opened.
@@ -1751,7 +1769,7 @@ export const notifyNewMessage = internalMutation({
         q.eq("emotionalProfileId", recipientProfileId),
       )
       .unique();
-    if (!chatNotificationsAllowed(preferences?.notifications)) return null;
+    if (!chatNotificationsAllowed(preferences?.notifications)) return delivery;
 
     if (suppressed) {
       await ctx.scheduler.runAfter(0, internal.chatNotifications.sendMessagePush, {
@@ -1760,7 +1778,7 @@ export const notifyNewMessage = internalMutation({
         conversationId,
         silent: true,
       });
-      return null;
+      return delivery;
     }
 
     // Stamped before the send is scheduled, in the same transaction, so a
@@ -1783,7 +1801,7 @@ export const notifyNewMessage = internalMutation({
         : await ensureCamperName(ctx, conversation),
       conversationId,
     });
-    return null;
+    return delivery;
   },
 });
 

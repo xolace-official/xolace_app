@@ -3,6 +3,44 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Chat moderation lanes (2026-09-11)
+
+Two lanes, neither blocks delivery. **Pre-delivery** is Stream-native only:
+the `contact_leak` regex blocklist and Stream's `url_detection_v1`, attached
+to `messaging` with behavior `flag`. Automod stays disabled and the profanity
+list stays unattached — venting must reach the listener. The app config is
+code: `bun stream:setup` (`lib/streamSetup` plans, `streamSetup.setup` prints
+the diff and applies on `{"apply":true}`), run per environment, dev first.
+Link previews stay on (`url_enrichment` untouched, by ruling).
+
+**Post-delivery** is one Haiku call per qualifying message
+(`convex/ai/chat/`), scheduled by the `message.new` webhook *after*
+`notifyNewMessage` and its push have committed, so it can neither delay nor
+break a notification. Skip rule: under 3 words or nothing alphabetic. Dedupe
+rides the `x-webhook-id` guard (`notifyNewMessage` returns the delivery only
+once) with `chat_moderation_events.by_messageId` as the backstop. The
+*verdict* row holds category, level and confidence — **never the text**.
+
+**Crisis response is a reply, not a block.** `crisis` and `elevated` both send a
+`type: "system"` message with `kind: "crisis_resources"`, `silent`,
+`skip_push`, carrying the safeguard's resource set; the channel type's
+`skip_last_msg_update_for_system_msgs` keeps it off the list order, and the
+webhook ignores it by kind. The client's `MessageSystem` override renders it
+as *the app speaking*, worded per role. Ruling: a DM has no trigger concept,
+so every `elevated` verdict earns the support card — the reflect flow's
+"elevated with a trigger" gate does not carry over. Effects run before the
+verdict row is written, so a failed Stream call is retryable. Harassment / spam / contact call
+Stream's flag endpoint and nothing enters the thread; review is the Stream
+dashboard, only.
+
+**Understanding untouched.** Verdicts never write `emotional_metadata` or
+`semantic_profiles` and never feed Xolacer rating. A Xolacer recommending
+Xolace+ is not spam — the prompt says so and the eval anchors it.
+
+Rejected: a before-send hook (1.5–5 s fail-open window cannot host a model
+call; the product's answer to crisis is a reply). Glossary: *pre-delivery
+lane*, *post-delivery lane*, *verdict*, *resources card*.
+
 ## One unread number; flag vs. report (2026-09-11)
 
 **Unread has one owner: Stream's per-user `total_unread_count`.** It arrives

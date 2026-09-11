@@ -2,6 +2,8 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { vWorkflowId } from "@convex-dev/workflow";
 import {
+  chatModerationCategoryValidator,
+  conversationRoleValidator,
   insightFeatureValidator,
   intakeAnswerValidators,
   motionPreferenceValidator,
@@ -1980,4 +1982,27 @@ export default defineSchema({
   stream_webhook_events: defineTable({
     webhookId: v.string(),
   }).index("by_webhookId", ["webhookId"]),
+
+  // ===========================================================
+  // CHAT MODERATION VERDICTS (#344)
+  // ===========================================================
+  //
+  // One row per Xolacer DM the post-delivery lane classified. Category and
+  // confidence, never the message text — useful to the maintainer without
+  // becoming a transcript store. Never read by Understanding or Memory.
+  // `by_messageId` is the idempotency key: a redelivered webhook finds its
+  // row and neither spends a second model call nor sends a second card.
+  //
+  chat_moderation_events: defineTable({
+    conversationId: v.id("xolacer_conversations"),
+    streamMessageId: v.string(),
+    senderRole: conversationRoleValidator,
+    level: safeguardLevelValidator,
+    categories: v.array(chatModerationCategoryValidator),
+    confidence: v.number(),
+    modelVersion: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_messageId", ["streamMessageId"]),
 });

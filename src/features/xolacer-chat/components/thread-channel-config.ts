@@ -5,6 +5,7 @@ import type {
   MessageActionType,
   ReactionData,
 } from 'stream-chat-expo';
+import { ConversationMessageSystem } from './crisis-resources-card';
 import { ConversationMessageAuthor } from './message-author';
 import { ChannelErrorIndicator } from './offline-strip';
 import { ConversationReply } from './quoted-reply';
@@ -74,6 +75,9 @@ export const CHANNEL_ROOT_PROPS = { style: { flex: 1 } };
 export const COMPONENT_OVERRIDES = {
   NetworkDownIndicator: ChannelErrorIndicator,
   MessageAuthor: ConversationMessageAuthor,
+  // The resources card (#344): a system message the app sends, rendered by
+  // kind. Not an identity override — a system message has no author to leak.
+  MessageSystem: ConversationMessageSystem,
   TypingIndicator: ConversationTypingIndicator,
   Reply: ConversationReply,
 };

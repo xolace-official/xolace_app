@@ -13,8 +13,9 @@ const LIFERING_ICON = {
 
 /**
  * Persistent, non-dismissible link to crisis resources inside every thread.
- * Automated mid-conversation escalation detection is deferred to v2 — this is
- * the manual mitigation that covers the gap in the meantime.
+ * The post-delivery moderation lane (#344) sends a resources card when a
+ * message reads as a crisis; this is the always-there path for everything it
+ * misses.
  */
 export function SafetyStrip() {
   const router = useRouter();
