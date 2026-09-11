@@ -58,7 +58,8 @@ export function resetChatLocalData() {
   // `init()` re-run the sync manager instead of short-circuiting on the same
   // user id.
   const key = process.env.EXPO_PUBLIC_STREAM_API_KEY;
-  const offlineDb = key ? StreamChat.getInstance(key).offlineDb : undefined;
+  const client = key ? StreamChat.getInstance(key) : undefined;
+  const offlineDb = client?.offlineDb;
   offlineDb?.state.partialNext({ initialized: false, userId: undefined });
   // Chained onto the previous reset so two never drop tables at once.
   settled = settled
@@ -70,6 +71,13 @@ export function resetChatLocalData() {
       // chat.
       if (!SqliteClient.db) await SqliteClient.openDB();
       await (offlineDb?.resetDB() ?? SqliteClient.resetDB());
+      // Stream's documented sign-out order: `resetDB` first, then
+      // `disconnectUser`. The provider's cleanup also disconnects, but that
+      // is chained on its own connect and lands whenever it lands — this is
+      // the one that's ordered. `disconnectUser` never touches sqlite (its
+      // sole write goes through `executeQuerySafely`, a no-op under the flag
+      // above) and is harmless without a user, so calling it twice is fine.
+      await client?.disconnectUser();
     });
   return settled;
 }
