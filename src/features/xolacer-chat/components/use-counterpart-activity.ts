@@ -43,7 +43,10 @@ export function useCounterpartActivity(
   const { client } = useStreamStatus();
 
   useEffect(() => {
-    if (!client || !streamChannelId) return;
+    if (!client || !streamChannelId) {
+      setActivity(IDLE);
+      return;
+    }
     const channel = client.channel('messaging', streamChannelId);
 
     const read = () =>
