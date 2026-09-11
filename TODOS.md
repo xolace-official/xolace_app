@@ -57,6 +57,24 @@ Pre-existing on `dev`, unrelated to that branch.
 
 ---
 
+## P3 — Connect list: rows lag on foreground until the re-warm query returns
+
+**What:** After a background/foreground cycle, `useChatWarmup` re-runs `queryChannels` on `connection.changed { online }` (the SDK's `ChannelList` does this internally; we own the list, see CONTEXT.md "The Connect list is Convex-owned"). Row unread badges and thread messages received while backgrounded appear only once handshake + that round trip complete — correct, but a visible beat late.
+
+**How to fix (two cheap, independent wins):**
+1. Re-dispatch `channels.queried` from `client.offlineDb.syncManager.onSyncStatusChange(true)` so rows re-read `countUnread()` from the local DB (the SDK's `/sync` replay lands there first) before the network query returns.
+2. Drop `presence: true` on the re-warm call only (keep it on the mount-time call) — the reopened socket already carries presence, and the presence variant is the heavier query.
+
+**Key files:** `src/features/xolacer-chat/use-chat-warmup.ts` (`warm`, the `connection.changed` listener), `src/features/xolacer-chat/use-conversation-unread-count.ts` (rows re-read on any client event)
+
+**Verify:** background the app, send two messages from the other account, foreground → row badge and thread messages should land at or before the tab badge does.
+
+**Effort:** S
+**Priority:** P3 — cosmetic lag, data is correct
+**Depends on:** Nothing
+
+---
+
 ## P3 — Automated mid-conversation escalation detection (Listener Chat)
 
 **What:** Detect a crisis-adjacent moment happening *inside* a live Stream conversation
