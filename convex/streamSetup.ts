@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import {
   createStreamBlockList,
+  deleteStreamBlockList,
   getStreamChannelType,
   getStreamModerationPolicy,
   listStreamBlockLists,
@@ -49,7 +50,8 @@ export const setup = internalAction({
     if (listPlan) {
       changes.push(`blocklist ${CONTACT_LEAK_BLOCKLIST.name}: ${JSON.stringify(listPlan)}`);
       if (apply) {
-        if (listPlan.op === "create") await createStreamBlockList(CONTACT_LEAK_BLOCKLIST);
+        if (listPlan.op === "recreate") await deleteStreamBlockList(CONTACT_LEAK_BLOCKLIST.name);
+        if (listPlan.op !== "update") await createStreamBlockList(CONTACT_LEAK_BLOCKLIST);
         else await updateStreamBlockList(CONTACT_LEAK_BLOCKLIST.name, CONTACT_LEAK_BLOCKLIST.words);
       }
     }

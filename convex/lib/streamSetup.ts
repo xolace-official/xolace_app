@@ -132,13 +132,20 @@ export function planModerationPolicy(
   return { from: existing, body };
 }
 
-export type BlockListPlan = { op: "create" } | { op: "update"; from: string[] };
+export type BlockListPlan =
+  | { op: "create" }
+  | { op: "update"; from: string[] }
+  /** Stream's update endpoint cannot change `type`; delete and create instead. */
+  | { op: "recreate"; from: { type: string; words: string[] } };
 
 export function planBlockList(
   existing: BlockListConfig | undefined,
   desired: BlockListConfig,
 ): BlockListPlan | null {
   if (!existing) return { op: "create" };
+  if (existing.type !== desired.type) {
+    return { op: "recreate", from: { type: existing.type, words: existing.words } };
+  }
   const same =
     existing.words.length === desired.words.length &&
     existing.words.every((w, i) => w === desired.words[i]);

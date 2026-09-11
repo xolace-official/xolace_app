@@ -145,4 +145,14 @@ describe("moderateChatMessage", () => {
     expect(stub.calls).toBe(1);
     expect(stub.systemMessages).toHaveLength(1);
   });
+
+  it("account deletion takes the verdict rows down with the conversation", async () => {
+    stub.reply = verdict({ crisis: "crisis" });
+    const { user, args } = await moderate("i have the pills next to me");
+    // Loaded late: a static import would resolve before the aggregates mock above.
+    const { drainConversations } = await import("../jobs/accountDeletionFinalize");
+    await user.root.run((ctx) => drainConversations(ctx, user.profileId));
+    expect(await user.root.run((ctx) => ctx.db.get("xolacer_conversations", args.conversationId))).toBeNull();
+    expect(await user.root.run((ctx) => ctx.db.query("chat_moderation_events").collect())).toHaveLength(0);
+  });
 });

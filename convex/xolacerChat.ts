@@ -11,6 +11,7 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
+import { purgeModerationEvents } from "./lib/conversationErasure";
 import {
   camperName,
   camperTagOf,
@@ -1495,6 +1496,8 @@ export const deleteConversation = mutation({
     const mine =
       role === "user" ? { deletedByUser: true } : { deletedByXolacer: true };
     if (bothPartiesDeleted({ ...conversation, ...mine })) {
+      // `canDelete` rows never carried messages, so one verdict batch covers it.
+      await purgeModerationEvents(ctx, args.conversationId);
       await ctx.db.delete("xolacer_conversations", args.conversationId);
       return null;
     }

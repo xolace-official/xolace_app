@@ -87,6 +87,7 @@ import type * as lib_camperTag from "../lib/camperTag.js";
 import type * as lib_chatNotifications from "../lib/chatNotifications.js";
 import type * as lib_claimStrength from "../lib/claimStrength.js";
 import type * as lib_cohortCard from "../lib/cohortCard.js";
+import type * as lib_conversationErasure from "../lib/conversationErasure.js";
 import type * as lib_conversationGating from "../lib/conversationGating.js";
 import type * as lib_displayName from "../lib/displayName.js";
 import type * as lib_followUpCadence from "../lib/followUpCadence.js";
@@ -222,6 +223,7 @@ declare const fullApi: ApiFromModules<{
   "lib/chatNotifications": typeof lib_chatNotifications;
   "lib/claimStrength": typeof lib_claimStrength;
   "lib/cohortCard": typeof lib_cohortCard;
+  "lib/conversationErasure": typeof lib_conversationErasure;
   "lib/conversationGating": typeof lib_conversationGating;
   "lib/displayName": typeof lib_displayName;
   "lib/followUpCadence": typeof lib_followUpCadence;

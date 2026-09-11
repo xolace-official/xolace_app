@@ -136,6 +136,13 @@ describe("planBlockList", () => {
     });
   });
 
+  it("recreates when the words match but the type drifted", () => {
+    expect(planBlockList({ ...desired, type: "word" }, desired)).toEqual({
+      op: "recreate",
+      from: { type: "word", words: ["a", "b"] },
+    });
+  });
+
   it("is a no-op when identical", () => {
     expect(planBlockList({ ...desired }, desired)).toBeNull();
   });
