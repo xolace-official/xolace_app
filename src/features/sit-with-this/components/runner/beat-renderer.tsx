@@ -62,6 +62,7 @@ export function BeatRenderer({ step, slots, reducedMotion, onComplete }: Props) 
           content={content}
           fallbackContent={step.defaultContent}
           durationSeconds={step.durationSeconds ?? 6}
+          hapticIntensity={step.hapticIntensity}
           reducedMotion={reducedMotion}
           onComplete={onComplete}
         />

@@ -17,6 +17,9 @@ export type PaywallSurface =
   | "mirror_voice"
   | "daily_quote"
   | "bridge_draft"
+  // Hitting the hourly reflection/mirror cap — the one moment the free ceiling
+  // is unmissable. See reflect ErrorState.
+  | "rate_limit"
   // The three proactive moments (#220 §5). Distinct from the reactive surfaces
   // above so the funnel can tell an offer the app made from a door the user
   // opened; the `moment` id rides on the card's own events.

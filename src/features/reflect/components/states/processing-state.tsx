@@ -12,7 +12,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { ThinkingOrb } from "@/src/components/ui/thinking-orb";
 import Shimmer from "@/src/components/shared/shimmer";
 import { SparkleStars } from "@/src/components/shared/sparkle-stars";
-import { playProcessingBreath } from "@/src/lib/haptics";
+import { useProcessingBreathHaptic } from "@/src/lib/haptics";
 
 const PHRASES = [
   "Taking this in...",
@@ -43,9 +43,12 @@ export const ProcessingState = () => {
   const opacity = useSharedValue(1);
   const phraseIndexSV = useSharedValue(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const playBreath = useProcessingBreathHaptic();
 
   useEffect(() => {
-    playProcessingBreath();
+    playBreath();
+    // Mount-once: the breath marks arrival at the processing state, not each render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -15,6 +15,43 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-09-10 — Hitting the session rate limit hard-crashes the app instead of showing the rate-limit screen
+
+**Symptom**
+Submitting a reflection while over the `sessionInitiate` rate limit killed the app outright (SIGABRT) rather than rendering the "You've been reflecting a lot / Xolace+ raises the hourly limit" error screen. The only visible artifact was the Convex `ConvexError: {"kind":"RateLimited","name":"sessionInitiate","retryAfter":…}` log, which made it look like an unhandled promise rejection.
+
+**Where it appeared**
+iOS dev client (`com.xolaceincorg.xolace.dev`), New Architecture / Fabric, `react-native-reanimated` 4.5.1. The reflect flow: `src/features/reflect/components/states/processing-state.tsx` → `src/components/shared/sparkle-stars.tsx`.
+
+**Root cause**
+Not the Convex error — that is caught correctly all the way through (`use-reflection-machine.ts` → `extractErrorMessage`). The crash is a Fabric mounting bug the *fast* error exposes.
+
+`initiate` rejects almost instantly, so the screen goes `processing → error` within a couple of frames. `ProcessingState` renders `<SparkleStars />`, whose four stars were Reanimated-animated nodes reconciled *directly* as children of the sparkle wrapper. Unmounting that subtree while the animations were still in flight made `RCTMountingManager performTransaction:` call `-[RCTViewComponentView unmountChildComponentView:index:]` with a stale index:
+
+```
+Attempt to unmount a view which is mounted inside a different view.
+(parent: … tag = 1094 …, child: … alpha = 0; tag = 1092 …, index: 3, existing parent: 1094)
+```
+
+`index: 3` is the 4th star (`star-bottom-right`). That `NSInternalInconsistencyException` is raised on the CADisplayLink, so there is no JS frame to catch it — straight to SIGABRT. Note the stars never even became visible: their delays are 500–1500 ms and the processing state lived ~200 ms. Starting the animation was enough.
+
+**How we diagnosed it**
+1. Reproduced on device with argent (submit → crash), 3/3.
+2. `~/Library/Logs/DiagnosticReports/XolaceDev-*.ips` + `xcrun simctl spawn <udid> log stream` gave the exact `NSInternalInconsistencyException` text and the `lastExceptionBacktrace` through `RCTPerformMountInstructions`.
+3. First hypothesis — that `Animated.Text` / `RCTParagraphComponentView` was special — was **falsified**: swapping to `Animated.View` + `AppText` kept the crash, only the child class changed. Not text-specific.
+4. Second hypothesis — the Reanimated **CSS** animation API (`animationName` keyframes) — was also insufficient on its own; the surviving variable was the animated node's *position in the tree*.
+
+**Fix**
+`src/components/shared/sparkle-stars.tsx` rewritten: each star is a `Star` subcomponent using worklet animation (`useSharedValue` / `useAnimatedStyle` / `withRepeat`) instead of CSS keyframes, and — the load-bearing part — the animated node is nested one level down inside a plain `View`. The parent only ever reconciles static views, so Fabric never indexes into an animated child. Verified 4/4 clean rate-limit reproductions with no new `.ips` reports.
+
+**Prevention / future reference**
+- **A Reanimated-animated node should not be a directly-reconciled child of a list that can unmount mid-animation.** Wrap it in a plain `View`. This is the first thing to try for any "Attempt to unmount a view which is mounted inside a different view" crash.
+- A native SIGABRT during a state transition is **not** the JS error printed just before it. Convex logs every server error via `DefaultLogger#error` → `console.error` regardless of whether the promise rejection is handled, so a `ConvexError` in the console is not evidence of an unhandled rejection.
+- Related dev-only red herring: RN's LogBox host view (`RCTLogBoxView`) is a full-screen `userInteractionEnabled: true` overlay, so any `console.error` makes the *whole screen* untappable in dev even though only a small toast is drawn. Buttons that "do nothing" behind a LogBox toast are not broken. Not a production issue.
+- Verify animation-unmount crash fixes over **at least 3 consecutive runs** — one clean pass here was a false green.
+
+---
+
 ## 2026-08-31 — Clerk⇄Convex desync with a valid session hangs forever (the "keep the session" branch did nothing)
 
 **Symptom**

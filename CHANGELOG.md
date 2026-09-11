@@ -4,6 +4,29 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.10.0] - OTA Update (2026-09-11)
+
+### Changed
+
+- **Haptic feedback refined across app flows** — nudged intensity and removed stray buzzes across reflect, vent, quotes, and Connect so feedback tracks the action instead of firing on everything.
+- **Session rate-limit copy + upsell** — hitting the daily session cap now reads clearly and offers a Xolace+ upsell instead of a bare error.
+- **Quote saving is a Xolace+ feature** — keeping a quote is gated to Xolace+; unsave gating and ask-flow re-entry fixed alongside it.
+- **A seeker's first Xolacer request opens the primer** — the primer sheet shows once before the first request goes out.
+
+### Fixed
+
+- **Session rate-limit crash** — hitting the cap no longer crashes the flow.
+
+## [1.10.0] - OTA Update (2026-09-09)
+
+### Fixed
+
+- **Notification taps route where they should** — tapping a push notification now deep-links to the right screen, and a stale tap (an old notification response left in the native launch cache) no longer replays on remount or an auth-state flip to yank you somewhere unexpected. Intake still wins on a cold launch. Web guards the unsupported `getLast`/`clear` calls so they can't crash.
+- **The resting reflect card opens on tap again** — the tap target now sits above the readings it covers instead of below them, so a tap landing on the prompt line opens the composer rather than dying on the text. The discard control still sits on top.
+- **The vent screen stays awake** — the display no longer dims or sleeps mid-vent; the lock is released the moment the screen unmounts.
+- **The idle-menu scrim covers the whole window** — it now reaches back over the host screen's top-inset padding to dim the status-bar strip too.
+- **Android intake text no longer overflows its card** — `AppText` sets `includeFontPadding: false` on Android, so copy measures the same height it does on iOS and stops overflowing the fixed-height offer boxes.
+
 ## [1.10.0] - (2026-09-05)
 
 ### Added

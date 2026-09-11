@@ -201,7 +201,7 @@ export function PaywallScreen({ surface, onExit }: Props) {
               id="quotes"
               icon={QUOTES_ICON}
               title="Personalized quotes"
-              description="Your own words, handed back on a day you need them"
+              description="Your own words, handed back — and kept, in an archive that's yours"
               isHighlighted={highlightedFeature === "quotes"}
             />
           </PaywallFeatureSection>

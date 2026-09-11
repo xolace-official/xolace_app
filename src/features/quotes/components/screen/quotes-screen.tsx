@@ -53,6 +53,7 @@ export function QuotesScreen() {
     setSaved,
     completePreferences,
     savedCount,
+    saveLocked,
   } = useTodayQuote();
 
   const {
@@ -135,7 +136,22 @@ export function QuotesScreen() {
               hasQuote ? (
                 <StarButton
                   saved={quote.savedAt !== undefined}
-                  onToggle={(next) => void setSaved(next)}
+                  onToggle={(next) => {
+                    // The star still taps for a free user — it opens the door
+                    // rather than doing nothing. Unsaving is never gated
+                    // (`dailyQuotes.unsave`): a lapsed subscriber must still
+                    // be able to let go of what they kept.
+                    if (saveLocked && next) {
+                      posthog.capture("premium_gate_hit", {
+                        feature: "quote_save",
+                        hasData: true,
+                      });
+                      openPaywall("daily_quote");
+                      return;
+                    }
+                    void setSaved(next);
+                  }}
+                  locked={saveLocked && quote.savedAt === undefined}
                 />
               ) : null
             }

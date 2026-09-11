@@ -4,7 +4,7 @@ import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
-import { hasPremium } from "./lib/premium";
+import { hasPremium, requirePremium } from "./lib/premium";
 import { MODERATION_UNAVAILABLE, moderateInput } from "./ai/providers/moderation";
 import { internal } from "./_generated/api";
 
@@ -71,6 +71,11 @@ export const getToday = query({
       // The archive's count strip reads this — the profile row is already
       // loaded here, so it costs nothing over a second query.
       savedCount: profile.savedQuoteCount ?? 0,
+      // Keeping a quote is Xolace+ (#317). The star is still rendered for a
+      // free user — it opens the paywall instead of writing — so the archive
+      // reads as a place that exists, not one that was hidden from them.
+      // Unsaving stays free, so a downgrade never traps rows in the archive.
+      saveLocked: !isPremium,
       sessionLocked: !isPremium && (sessionQuote !== null || recentCompletedSession !== null),
       // Whether a reply written now would actually reach tomorrow's quote:
       // premium AND inside the same session window generation needs (#313).
@@ -140,11 +145,16 @@ export const clearReaction = mutation({
  * Keep a quote. Populates the archive; independent of `reaction` (#311).
  * Idempotent — saving an already-saved quote leaves the timestamp and the
  * count alone, so a double tap can't inflate `savedQuoteCount`.
+ *
+ * Xolace+ only (#317). The client mirrors the gate via `getToday.saveLocked`;
+ * this is the fence. `unsave` is deliberately NOT gated — a lapsed subscriber
+ * must still be able to let go of what they kept.
  */
 export const save = mutation({
   args: { quoteId: v.id("daily_quotes") },
   handler: async (ctx, args) => {
     const { profile, quote } = await requireOwnQuote(ctx, args.quoteId);
+    await requirePremium(ctx, profile, "saving quotes");
     if (quote.savedAt !== undefined) return null;
 
     await ctx.db.patch("daily_quotes", args.quoteId, { savedAt: Date.now() });

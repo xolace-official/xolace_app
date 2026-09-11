@@ -103,6 +103,19 @@ export function isMaxRefinementError(error: unknown): boolean {
 }
 
 /**
+ * True when a user-facing error message is a rate-limit rejection — either the
+ * session-initiate limit (extractErrorMessage above) or the AI-mirror limit the
+ * backend writes into the session via failSession (convex/ai/process.ts). Both
+ * are the free/Plus cap, so the error screen offers the upgrade.
+ */
+export function isRateLimitMessage(message: string): boolean {
+  return (
+    message.includes("You've been reflecting a lot") ||
+    message.includes('limit for reflections')
+  );
+}
+
+/**
  * Produce a user-facing message derived from an error value.
  *
  * @param error - The value to inspect for generating a friendly message
@@ -114,15 +127,27 @@ export function isMaxRefinementError(error: unknown): boolean {
  */
 export function extractErrorMessage(error: unknown): string {
   if (error instanceof Error) {
-    // ConvexError from @convex-dev/rate-limiter includes "RateLimited" in the message
-    if (error.message.includes('RateLimited')) {
-      const retryMinutes = parseRetryAfter(error.message);
+    // Production scrubs the error *message* to "Server Error" — only
+    // ConvexError `data` crosses the wire — so the typed data is the only
+    // reliable signal. The message check stays for dev and for a
+    // non-ConvexError rate-limit throw.
+    const raw = (error as { data?: unknown }).data;
+    const data: { kind?: string; retryAfter?: number; code?: string } =
+      typeof raw === 'object' && raw !== null ? raw : {};
+    if (data.kind === 'RateLimited' || error.message.includes('RateLimited')) {
+      const retryMinutes =
+        typeof data.retryAfter === 'number'
+          ? Math.ceil(data.retryAfter / 60000)
+          : parseRetryAfter(error.message);
       if (retryMinutes !== null && retryMinutes > 0) {
         return `You've been reflecting a lot. Come back in ${retryMinutes} ${retryMinutes === 1 ? 'minute' : 'minutes'}.`;
       }
       return "You've been reflecting a lot. Take a moment and come back soon.";
     }
-    if (error.message.includes('Not authenticated')) {
+    if (
+      data.code === 'not_authenticated' ||
+      error.message.includes('Not authenticated')
+    ) {
       return 'Your session expired. Please sign in again.';
     }
     return 'Something went wrong. You can try again when you are ready.';

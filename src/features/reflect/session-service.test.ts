@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  extractErrorMessage,
   isMaxRefinementError,
+  isRateLimitMessage,
   projectScreen,
   type ServerSessionState,
 } from './session-service';
@@ -83,5 +85,54 @@ describe('isMaxRefinementError', () => {
     ).toBe(false);
     expect(isMaxRefinementError('Maximum refinement turns')).toBe(false);
     expect(isMaxRefinementError(null)).toBe(false);
+  });
+});
+
+describe('extractErrorMessage — rate limit', () => {
+  // Production scrubs the error *message* ("Server Error"); only ConvexError
+  // `data` survives. Dev leaves the message intact, which is why this only
+  // ever broke in prod.
+  const prodRateLimitError = () =>
+    Object.assign(
+      new Error(
+        '[CONVEX M(sessions:initiate)] [Request ID: abc123] Server Error',
+      ),
+      { data: { kind: 'RateLimited', name: 'sessionInitiate', retryAfter: 120000 } },
+    );
+
+  it('reads the rate limit off ConvexError data when the message is scrubbed', () => {
+    const message = extractErrorMessage(prodRateLimitError());
+    expect(message).toBe("You've been reflecting a lot. Come back in 2 minutes.");
+    expect(isRateLimitMessage(message)).toBe(true);
+  });
+
+  it('reads the auth code off ConvexError data when the message is scrubbed', () => {
+    expect(
+      extractErrorMessage(
+        Object.assign(new Error('[Request ID: abc] Server Error'), {
+          data: { code: 'not_authenticated', message: 'Not authenticated' },
+        }),
+      ),
+    ).toBe('Your session expired. Please sign in again.');
+  });
+
+  it('still handles the dev-shaped message', () => {
+    expect(
+      isRateLimitMessage(
+        extractErrorMessage(new Error('RateLimited {"retryAfter":120000}')),
+      ),
+    ).toBe(true);
+  });
+});
+
+describe('isRateLimitMessage', () => {
+  it('matches both rate-limit paths and nothing else', () => {
+    expect(
+      isRateLimitMessage(extractErrorMessage(new Error('RateLimited {"retryAfter":120000}'))),
+    ).toBe(true);
+    expect(
+      isRateLimitMessage("You've reached the limit for reflections. Try again in 2 minutes."),
+    ).toBe(true);
+    expect(isRateLimitMessage(extractErrorMessage(new Error('boom')))).toBe(false);
   });
 });

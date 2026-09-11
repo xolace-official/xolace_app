@@ -1,6 +1,9 @@
 import { View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { PressableFeedback } from 'heroui-native';
 import { useChatContext } from 'stream-chat-expo';
 import { AppText } from '@/src/components/shared/app-text';
+import { playSoftPress } from '@/src/lib/haptics';
 import { formatLongAgo } from '../format-time';
 import { XolacerAvatar } from '@/src/features/xolacer-chat/components/xolacer-avatar';
 import { useCounterpartActivity, type CounterpartPresence } from './use-counterpart-activity';
@@ -57,6 +60,7 @@ function subtitleFor(conversation: ThreadConversation): string {
  */
 export function ThreadHeader({ conversation }: { conversation: ThreadConversation }) {
   const { client } = useChatContext();
+  const router = useRouter();
   const activity = useCounterpartActivity(
     client,
     conversation.status === 'open' ? conversation.streamChannelId : undefined,
@@ -66,7 +70,7 @@ export function ThreadHeader({ conversation }: { conversation: ThreadConversatio
   const subtitle =
     conversation.status === 'open' ? openSubtitle(conversation.role, activity) : subtitleFor(conversation);
 
-  return (
+  const identity = (
     <View className="flex-row items-center gap-2.5">
       <XolacerAvatar
         name={conversation.counterpartName}
@@ -83,5 +87,25 @@ export function ThreadHeader({ conversation }: { conversation: ThreadConversatio
         </AppText>
       </View>
     </View>
+  );
+
+  // Only the seeker's side is tappable: the counterpart there is a Xolacer with
+  // a public profile. A Xolacer looking at a seeker has nowhere to go.
+  if (conversation.role !== 'user') return identity;
+
+  return (
+    <PressableFeedback
+      onPress={() => {
+        playSoftPress();
+        router.push({
+          pathname: '/xolacer/[profileId]',
+          params: { profileId: conversation.counterpartProfileId },
+        });
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={`View ${conversation.counterpartName}'s profile`}
+    >
+      {identity}
+    </PressableFeedback>
   );
 }

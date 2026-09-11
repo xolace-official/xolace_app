@@ -1,11 +1,11 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { Button, PressableFeedback, Skeleton, useThemeColor, useToast } from 'heroui-native';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { Button, PressableFeedback, Skeleton, useThemeColor } from 'heroui-native';
+import { SymbolView } from 'expo-symbols';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EditIcon from '@expo/material-symbols/edit.xml';
-import { useMutation, useQuery } from 'convex/react';
+import { useQuery } from 'convex/react';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -13,24 +13,25 @@ import { isSpecialty, specialtyListensTo } from '@/convex/lib/specialties';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import {
-  chatLimitError,
   declineCooldownActive,
   declineCooldownNote,
   hasSpoken,
   rateCtaState,
 } from '@/src/features/xolacer-chat/utils';
 import { formatMonthYear } from '@/src/features/xolacer-chat/format-time';
+import { useAskFlow } from '@/src/features/xolacer-chat/use-ask-flow';
+import { Fact } from './fact-row';
 import { XolacerMenu } from './xolacer-menu';
 import { XolacerAvatar } from './xolacer-avatar';
 import { PresenceDot } from './presence-dot';
 import { NewXolacerChip, RatingStars } from './rating-stars';
 import { SpecialtyChips } from './specialty-chips';
+import { XolacerPrimerSheet } from './xolacer-primer-sheet';
 
 type Profile = NonNullable<FunctionReturnType<typeof api.xolacerChat.xolacerProfile>>;
 
 const styles = StyleSheet.create({
   borderCurve: { borderCurve: 'continuous' },
-  factIcon: { marginTop: 2 },
   rateMascot: { width: 56, height: 56 },
 });
 
@@ -79,36 +80,22 @@ export function XolacerProfileScreen({
 function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: string }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { toast } = useToast();
-  const requestConversation = useMutation(api.xolacerChat.requestConversation);
+  const {
+    primerMode,
+    sending,
+    openThread,
+    handleAsk,
+    handlePrimerConfirm,
+    handlePrimerClose,
+    openPrimerReference,
+  } = useAskFlow({
+    xolacerProfileId: profile.xolacerProfileId,
+    displayName: profile.displayName,
+  });
 
   const { conversation } = profile;
   const hasThread = conversation !== null && conversation.status !== 'closed';
   const coolingDown = declineCooldownActive(conversation?.retryAvailableAt);
-
-  const openThread = (conversationId: string) =>
-    router.replace(`/chat/${conversationId}`);
-
-  const handleAsk = () => {
-    playSoftPress();
-    requestConversation({ xolacerProfileId: profile.xolacerProfileId })
-      .then(openThread)
-      .catch((error: unknown) => {
-        const data = chatLimitError(error);
-        toast.show({
-          label:
-            // Only reachable from a screen that loaded before the decline —
-            // the CTA below replaces itself once the cooldown is in the query.
-            data?.code === 'decline_cooldown' && data.until
-              ? declineCooldownNote(profile.displayName, data.until)
-              : data?.code === 'pending_request_limit'
-                ? `You're already waiting on ${data.max ?? 2} Xolacers. Give them a moment to reply.`
-                : data?.code === 'open_conversation_limit'
-                  ? `You've got ${data.max ?? 3} conversations open. Let one rest before starting another.`
-                  : `${profile.displayName} isn't taking conversations right now.`,
-        });
-      });
-  };
 
   return (
     <View className="flex-1 bg-background">
@@ -213,7 +200,7 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
             </Block>
           )}
 
-          <Block title="What to expect">
+          <Block title="What to expect" onPress={openPrimerReference}>
             <Fact icon={PERSON_ICON}>
               {profile.displayName} is a trained peer Xolacer, not a therapist — no
               diagnoses, no clinical advice.
@@ -259,6 +246,13 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
           />
         )}
       </View>
+
+      <XolacerPrimerSheet
+        isOpen={primerMode !== null}
+        onClose={handlePrimerClose}
+        onConfirm={primerMode === 'gate' ? handlePrimerConfirm : undefined}
+        isConfirming={sending}
+      />
     </View>
   );
 }
@@ -473,12 +467,16 @@ function Note({ children }: { children: React.ReactNode }) {
 function Block({
   title,
   accent = false,
+  onPress,
   children,
 }: {
   title: string;
   accent?: boolean;
+  onPress?: () => void;
   children: React.ReactNode;
 }) {
+  const muted = useThemeColor('muted') as string;
+
   return (
     <View
       className={
@@ -488,27 +486,26 @@ function Block({
       }
       style={styles.borderCurve}
     >
-      <AppText className="mb-3.5 text-[10px] font-bold uppercase tracking-widest text-muted">
-        {title}
-      </AppText>
+      {onPress ? (
+        <PressableFeedback
+          onPress={onPress}
+          accessibilityRole="button"
+          accessibilityLabel={`${title} — read the full note`}
+          hitSlop={8}
+        >
+          <View className="mb-3.5 flex-row items-center gap-1.5">
+            <AppText className="text-[10px] font-bold uppercase tracking-widest text-muted">
+              {title}
+            </AppText>
+            <SymbolView name={CHEVRON_ICON} size={9} tintColor={muted} />
+          </View>
+        </PressableFeedback>
+      ) : (
+        <AppText className="mb-3.5 text-[10px] font-bold uppercase tracking-widest text-muted">
+          {title}
+        </AppText>
+      )}
       <View className="gap-3.5">{children}</View>
-    </View>
-  );
-}
-
-function Fact({
-  icon,
-  children,
-}: {
-  icon: SymbolViewProps['name'];
-  children: React.ReactNode;
-}) {
-  const muted = useThemeColor('muted') as string;
-
-  return (
-    <View className="flex-row gap-3">
-      <SymbolView name={icon} size={15} tintColor={muted} style={styles.factIcon} />
-      <AppText className="flex-1 text-[13px] leading-5 text-foreground/85">{children}</AppText>
     </View>
   );
 }

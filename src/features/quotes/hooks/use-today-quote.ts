@@ -252,6 +252,12 @@ export function useTodayQuote() {
     sendReply,
     /** The archive's count strip — rides on `getToday`, so a star moves it. */
     savedCount: todayQuotes?.savedCount ?? 0,
+    /**
+     * Keeping quotes is Xolace+ (#317). Defaults to locked while `getToday`
+     * loads so the first tap on a cold screen can never fire a write the
+     * server would reject.
+     */
+    saveLocked: todayQuotes?.saveLocked ?? true,
     isFirstVisit,
     isLoading,
     isColdStarting,

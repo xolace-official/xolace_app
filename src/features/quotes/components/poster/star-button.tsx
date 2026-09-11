@@ -26,9 +26,12 @@ const SPRING = { damping: 18, stiffness: 160, mass: 0.9 };
 export function StarButton({
   saved,
   onToggle,
+  locked = false,
 }: {
   saved: boolean;
   onToggle: (next: boolean) => void;
+  /** Xolace+ gate (#317) — the tap opens the paywall instead of saving. */
+  locked?: boolean;
 }) {
   const ink = useCSSVariable("--color-poster-ink") as string;
 
@@ -56,7 +59,9 @@ export function StarButton({
           onToggle(!saved);
         }}
         accessibilityRole="button"
-        accessibilityLabel={saved ? "Remove from saved" : "Save quote"}
+        accessibilityLabel={
+          locked ? "Save quote; Xolace+" : saved ? "Remove from saved" : "Save quote"
+        }
         accessibilityState={{ selected: saved }}
         hitSlop={12}
       >

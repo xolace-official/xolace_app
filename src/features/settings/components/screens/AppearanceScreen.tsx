@@ -129,8 +129,9 @@ export const AppearanceScreen = () => {
     setColorTheme(themeId);
   };
 
+  // No haptic here — SettingsRow's toggle variant now plays one, and firing
+  // both stacked two vibrations on a single flip.
   const handleNightModeToggle = (v: boolean) => {
-    Presets.snap();
     setNightModeEnabled(v);
   };
 

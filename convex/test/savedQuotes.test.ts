@@ -7,12 +7,20 @@
  * index range is what excludes them, not a filter), and one user reaching
  * another's quote.
  */
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
-import { aggregatesMock } from "./mocks.helpers";
+import { aggregatesMock, revenuecatMock } from "./mocks.helpers";
 import { asNewUser, type SeededUser } from "./harness.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
+// Saving is Xolace+ (#317). Default the suite to a subscriber so the count /
+// ordering / ownership cases still exercise the write path; the gate case
+// below flips it.
+let isPlus = true;
+vi.mock("../revenuecat", () => revenuecatMock(() => isPlus));
+beforeEach(() => {
+  isPlus = true;
+});
 
 async function seedQuote(user: SeededUser, date: string) {
   return await user.root.run(async (ctx) =>
@@ -87,6 +95,24 @@ describe("saved quotes", () => {
     const row = await user.root.run((ctx) => ctx.db.get("daily_quotes", quoteId));
     expect(row?.savedAt).toBeUndefined();
     expect(row?.reaction).toBe("resonates");
+  });
+
+  it("is Xolace+ only to save, but always free to unsave", async () => {
+    const user = await asNewUser();
+    const quoteId = await seedQuote(user, "2026-01-01");
+
+    isPlus = false;
+    await expect(
+      user.t.mutation(api.dailyQuotes.save, { quoteId }),
+    ).rejects.toThrow(/Xolace\+ required/);
+    expect(await savedCount(user)).toBe(0);
+
+    // Kept while subscribed, then lapsed: letting go must never be gated.
+    isPlus = true;
+    await user.t.mutation(api.dailyQuotes.save, { quoteId });
+    isPlus = false;
+    await user.t.mutation(api.dailyQuotes.unsave, { quoteId });
+    expect(await savedCount(user)).toBe(0);
   });
 
   it("refuses another user's quote", async () => {

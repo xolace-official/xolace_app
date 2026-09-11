@@ -43,6 +43,14 @@ export function playProcessingBreath(): void {
   play(processingBreath);
 }
 
+/**
+ * Platform-parity counterpart to the Android composer hook. iOS already has an
+ * amplitude-controlled envelope in `processingBreath`, so this just wraps it.
+ */
+export function useProcessingBreathHaptic(): () => void {
+  return playProcessingBreath;
+}
+
 export function playGentlePresence(): void {
   play(gentlePresence);
 }

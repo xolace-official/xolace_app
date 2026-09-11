@@ -10,7 +10,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { PressableFeedback } from 'heroui-native';
-import { playSoftPress } from '@/src/lib/haptics';
 
 const MIC_ICON = { ios: 'mic.fill', android: 'mic', web: 'mic' } as const;
 const STOP_ICON = { ios: 'stop.fill', android: 'stop', web: 'stop' } as const;
@@ -59,8 +58,9 @@ export function VentMicButton({ recording, onPress }: Props) {
     backgroundColor: recording ? RECORDING_AMBER : IDLE_RING,
   }));
 
+  // No haptic here — startVent/stopVent own it, so the feel can differ by
+  // direction and can report a failed mic permission instead of confirming it.
   const handlePress = () => {
-    playSoftPress();
     onPress();
   };
 

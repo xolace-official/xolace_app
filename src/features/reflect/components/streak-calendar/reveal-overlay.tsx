@@ -24,7 +24,7 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 
 import { AppText } from "@/src/components/shared/app-text";
-import { playResonanceToggle } from "@/src/lib/haptics";
+import { playSessionComplete } from "@/src/lib/haptics";
 import { getStreakCopy } from "@/src/features/reflect/streak-copy";
 import { BlastParticles, type BlastParticlesRef } from "./blast-particles";
 import {
@@ -111,7 +111,10 @@ export const RevealOverlay = ({ day, miniLayout, colors, onDismissed }: Props) =
   // Fire blast + haptic exactly once at the flip apex
   const handleApex = () => {
     blastRef.current?.blast(BLAST_SPRING);
-    playResonanceToggle();
+    // A streak reveal is the app's celebration moment — particle blast and all.
+    // It used to share resonanceToggle with starring a quote and toggling a peer
+    // resonance, so the milestone landed no heavier than a list tap.
+    playSessionComplete();
   };
 
   useAnimatedReaction(

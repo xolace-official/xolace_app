@@ -3,6 +3,99 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## The Xolacer primer (2026-09-10)
+
+A one-time bottom sheet, **"Before you ask,"** shown the first time a seeker
+taps to request a conversation with any Xolacer — the single call site is
+`handleAsk` in `xolacer-profile-screen.tsx`, ahead of
+`xolacerChat.requestConversation`. Four expectation-framed lines (a real
+person not a therapist; block/report are yours and block is permanent;
+rating comes later from the Xolacer's profile; it's one person listening to
+another, crisis resources are one tap away). The primary button
+**"I understand — send request"** is the acknowledgment *and* what fires the
+request — one deliberate tap after scrollable content, not a second modal.
+
+**Client-once, not consent-of-record.** Seen state is a persisted Zustand
+flag, `xolacerPrimerSeen`, in the `partialize` whitelist — the same shape as
+`bridgeIntroSeen` / `ventIntroSeen`. It is orientation, not a ticked-box
+legal acknowledgment, so there is deliberately **no** server field and no
+mutation-side enforcement: a reinstalled seeker seeing it once more is
+acceptable, and a schema field here would be a Store-Gap deprecation
+liability for no gain. Do not "fix" this into `emotional_profiles`.
+
+**Only the send tap sets the flag.** A swipe-down / backdrop dismiss cancels
+the request and leaves `xolacerPrimerSeen` false, so the next genuine "Ask
+to talk" re-opens it. Flag and request are written on one path; nothing
+half-commits. Never gates a `resting` resume or a re-request after the
+primer was already acknowledged.
+
+**Naming.** "primer" — component `XolacerPrimerSheet`, flag
+`xolacerPrimerSeen`, prose "the Xolacer primer." Rejected: "disclaimer"
+(legalistic, wrong register for a campfire app), "intro" (already overloaded
+— `bridgeIntroSeen`, `ventIntroSeen`, the `(onboarding)` Intro flow),
+"house rules" (punitive).
+
+**Not an ADR** — a gate is trivially reversible; two of the three ADR
+criteria fail. The profile's existing "What to expect" block stays as the
+returning-seeker reference and its header re-opens the same sheet; the
+primer copy is deduped against it. Funnel: `xolacer_primer_shown` /
+`xolacer_primer_resolved { outcome: "sent" | "dismissed" }`.
+
+## Paths: kindling naming (2026-09-08)
+
+The background-generated set of 2–3 support actions offered after a
+session the pipeline judges needs support (see the Paths map,
+[#268](https://github.com/xolace-official/xolace_app/issues/268)) is named
+**kindling**, not "path" — "path" is taken. One item within it is a
+**twig**. The route is `(protected)/kindling/`.
+
+**Kindling ≠ path-selection.** The existing post-mirror choice
+(`path-selection` screen, `selectPath`/`completePath` mutations, the
+`session.state` enum's `path_selected`/`path_in_progress` values) keeps its
+code names but is now called **next step** in prose — immediate, free,
+always offered, a single choice among solo/peers/exit. Kindling is
+Xolace+-only, generated in the background from the Understanding, 2–3
+items, any order, some skippable. Code for kindling lives under new
+`convex/ai/paths/` and `paths`/`path_steps` tables per the map; "path"
+survives there only as an internal/schema word, never in prose or UI copy.
+
+Kindling is deliberately warmer than next step's plain, functional register
+— it's the more considered, AI-curated offering and the Xolace+ upsell
+moment, so a bit of fire-metaphor texture earns its keep here in a way it
+doesn't for next step. "Ember," "hearth," "glow," and "flame" were
+considered and rejected — all four are already load-bearing (a CSS theme
+token, shipped onboarding components, and `flame` already means System-1/
+hot-path in `docs/cognition-layer-architecture.md`). "Kindling" was
+unclaimed and is inherently a *gathered bundle* — matching the any-order,
+skippable shape — rather than a sequence, which also rules it out as a
+name collision with the ordered-sounding "path."
+
+## Series, episode, standalone audio (2026-09-10)
+
+The kindling audio catalogue (`audio_tracks`, family `support`) has two
+shapes under a **topic**:
+
+- a **standalone audio** — a one-off support track, no ordering, no
+  grouping (the ElevenLabs support tracks shipped first); and
+- a **series** — an ordered set of **episodes** with emotional or
+  narrative continuity. The founder's *Xolace Podcast Roadmap* Track 1
+  ("The Spectrum", four acuity tiers) and Track 2 ("Reality, Not False
+  Hope", reframing) are the launch series. Any topic may carry more than
+  one.
+
+An **episode** is one audio inside a series, with a position in it.
+"Series" is the canonical term — not "podcast" (RSS-feed connotation) or
+"collection" (collides with playlists/favourites later); "Track 1/2" is
+founder-doc shorthand for the two launch series.
+
+**Narrator ≠ voice.** The `narrators` field on a catalogue row is a free
+display string ("Sage", or two names for a dialogue episode) — curated
+audio is a pre-rendered file, so the narrator is a production credit, not
+a runtime binding. The custom-voice cast (`VOICE_CATALOG`,
+`convex/lib/voices.ts`) is a separate thing: the Plus *picker* for the
+mirror and vent, where the slug is resolved to an ElevenLabs id for a
+per-request TTS call. Kindling audio never touches it.
+
 ## Quote prompt reads raw reply text (2026-09-04)
 
 The reply box on Today's Thought puts a user sentence into the quote

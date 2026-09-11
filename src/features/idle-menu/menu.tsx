@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { BlurView } from "expo-blur";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MenuTrigger } from "@/src/features/idle-menu/menu-trigger";
 import { MenuButtonsWrapper } from "@/src/features/idle-menu/menu-buttons-wrapper";
 import { useMenuState } from "@/src/features/idle-menu/hooks/use-menu-state";
@@ -18,6 +19,17 @@ const EASE_TRANSITION = {
 export const IdleMenu = () => {
   const { isOpen, isOpenJS, toggle, close } = useMenuState();
   const absoluteFillStyle = StyleSheet.absoluteFill;
+  // The host screen pads its root by the top inset, so an absoluteFill here
+  // stops short of the status bar. Reach back over that padding: the scrim
+  // dims the whole window, the way a scrim should.
+  const insets = useSafeAreaInsets();
+  const scrimStyle = {
+    position: "absolute" as const,
+    top: -insets.top,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  };
 
   return (
     <View style={absoluteFillStyle} pointerEvents="box-none">
@@ -26,7 +38,7 @@ export const IdleMenu = () => {
           initialAnimate={EASE_INITIAL}
           animate={EASE_ANIMATE}
           transition={EASE_TRANSITION}
-          style={absoluteFillStyle}
+          style={scrimStyle}
           pointerEvents="auto"
         >
           <BlurView intensity={20} tint="dark" style={absoluteFillStyle} />

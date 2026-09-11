@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { useKeepAwake } from 'expo-keep-awake';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SymbolView } from 'expo-symbols';
@@ -43,6 +44,9 @@ const STAGE_FOR_STATE: Record<string, ParticleStage> = {
 };
 
 export function VentScreen() {
+  // Released on unmount, so the lock never outlives the screen.
+  useKeepAwake();
+
   const posthog = usePostHog();
   const router = useRouter();
   const ventIntroSeen = useAppStore((s) => s.ventIntroSeen);
