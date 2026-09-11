@@ -5,6 +5,7 @@ import type {
   MessageActionType,
   ReactionData,
 } from 'stream-chat-expo';
+import { AppText } from '@/src/components/shared/app-text';
 import { ConversationMessageSystem } from './crisis-resources-card';
 import { ConversationMessageAuthor } from './message-author';
 import { ChannelErrorIndicator } from './offline-strip';
@@ -12,27 +13,39 @@ import { ConversationReply } from './quoted-reply';
 import { ConversationTypingIndicator } from './typing-indicator';
 
 // Everything that configures the Stream `<Channel>` in thread-messages.tsx.
-// The message surface is text only: no thread replies, no reactions. Stream
-// provides them — the constraint is the deliberate "small surface" posture,
-// not a capability gap. The typing indicator and quoted replies (via the SDK's
-// swipe gesture) are the live affordances added since.
-
-export const NO_REACTIONS: ReactionData[] = [];
+// The message surface is text plus a curated reaction set: no thread replies,
+// no attachments. Stream provides them — the constraint is the deliberate
+// "small surface" posture, not a capability gap.
 
 /**
- * Removes the two affordances v1 has no answer for.
- *
- * `supportedReactions: []` only empties the reaction *list* — the picker itself
- * renders on `own_capabilities.sendReaction`, so long-press still offered a bare
- * "+" that opened an emoji sheet. And the composer's "+" is an attachment
- * picker; we accept text only, so it opened a gallery whose result had nowhere
- * to go. Denying the capability is the single lever for both: the reaction
- * picker returns null on `sendReaction`, and the attach button on `uploadFile`.
- *
- * Capabilities are merged per-key, so naming these two leaves the rest of the
- * channel's real capabilities intact.
+ * The seven reactions (#345), in picker order. `isMain` puts each in the
+ * long-press row — the SDK filters on it — and the "+" that would open a
+ * second sheet of the same seven is hidden in `useStreamTheme`. Changing the
+ * set is this one edit; the server accepts any type string.
  */
-export const TEXT_ONLY_CAPABILITIES = { sendReaction: false, uploadFile: false };
+export const SUPPORTED_REACTIONS: ReactionData[] = (
+  [
+    ['hug', '🫂'],
+    ['love', '❤️'],
+    ['thanks', '🙏'],
+    ['growth', '🌱'],
+    ['fire', '🔥'],
+    ['smile', '😊'],
+    ['laugh', '😂'],
+  ] as const
+).map(([type, emoji]) => ({
+  type,
+  isMain: true,
+  Icon: ({ size = 24 }) => <AppText style={{ fontSize: size * 0.8, lineHeight: size }}>{emoji}</AppText>,
+}));
+
+/**
+ * The composer's "+" is an attachment picker; we accept text only, so it opened
+ * a gallery whose result had nowhere to go. Denying `uploadFile` removes the
+ * button. Capabilities are merged per-key, so naming one leaves the rest of
+ * the channel's real capabilities — `sendReaction` included — intact.
+ */
+export const TEXT_ONLY_CAPABILITIES = { uploadFile: false };
 
 /**
  * Bounds the channel's height so the composer stays on screen.
