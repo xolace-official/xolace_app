@@ -13,32 +13,51 @@ export function attachOfflineDb(client: StreamChat) {
 }
 
 /**
+ * The generation boundary between a reset and everything that opens or fills
+ * the database after it. A reset bumps the generation synchronously and
+ * publishes its own promise; the provider's `init` and the warmup's
+ * `queryChannels` await `chatLocalDataSettled()` before touching sqlite and
+ * drop what they were doing if `chatLocalDataGeneration()` moved meanwhile.
+ * Covers a reset for a switch that happened while the app was closed racing
+ * the new user's first open, and a sign-out within a beat of the Connect tab
+ * warming.
+ */
+let generation = 0;
+let settled: Promise<void> = Promise.resolve();
+
+export const chatLocalDataGeneration = () => generation;
+export const chatLocalDataSettled = () => settled;
+
+/**
  * The one place on-device chat data is wiped: the sqlite tables, the
  * credential, and the cached "chat is on" gate. Every sign-out and deletion
  * path routes through `ChatLocalDataGuard`, which calls this — no call site
  * resets anything itself.
  */
-export async function resetChatLocalData() {
+export function resetChatLocalData() {
+  generation += 1;
   clearStreamCredential();
   useAppStore.getState().setChatEnabledCached(false);
   // Marked uninitialised first: the SDK's event-driven writes all go through
   // `executeQuerySafely`, which no-ops on that flag, so a socket still closing
   // can't write the old account into the fresh tables. It also makes the next
   // `init()` re-run the sync manager instead of short-circuiting on the same
-  // user id. ponytail: a `queryChannels` already in flight writes directly and
-  // could still land — sign-out within a beat of the Connect tab warming.
+  // user id.
   const key = process.env.EXPO_PUBLIC_STREAM_API_KEY;
-  if (key) {
-    StreamChat.getInstance(key).offlineDb?.state.partialNext({
-      initialized: false,
-      userId: undefined,
+  const offlineDb = key ? StreamChat.getInstance(key).offlineDb : undefined;
+  offlineDb?.state.partialNext({ initialized: false, userId: undefined });
+  // Chained onto the previous reset so two never drop tables at once.
+  settled = settled
+    .catch(() => {})
+    .then(async () => {
+      // `resetDB` only drops tables through an open handle; a switch that
+      // happened while the app was closed arrives here with none, and would
+      // otherwise keep the previous owner's rows until the next user opened
+      // chat.
+      if (!SqliteClient.db) await SqliteClient.openDB();
+      await (offlineDb?.resetDB() ?? SqliteClient.resetDB());
     });
-  }
-  // `resetDB` only drops tables through an open handle; a switch that happened
-  // while the app was closed arrives here with none, and would otherwise keep
-  // the previous owner's rows until the next user opened chat.
-  if (!SqliteClient.db) await SqliteClient.openDB();
-  await SqliteClient.resetDB();
+  return settled;
 }
 
 /**

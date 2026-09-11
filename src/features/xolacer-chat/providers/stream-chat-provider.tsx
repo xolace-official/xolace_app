@@ -6,7 +6,11 @@ import { useAction, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useAppStore } from '@/src/store/store';
 import { connectPlan } from '@/src/features/xolacer-chat/connect-plan';
-import { attachOfflineDb } from '@/src/features/xolacer-chat/offline-db';
+import {
+  attachOfflineDb,
+  chatLocalDataGeneration,
+  chatLocalDataSettled,
+} from '@/src/features/xolacer-chat/offline-db';
 import {
   readStreamCredential,
   writeStreamCredential,
@@ -221,12 +225,18 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
     };
 
     const opening = streamOp.current.catch(() => {}).then(async () => {
+      // A reset still dropping the previous owner's tables must finish before
+      // this opens them; one that starts while `init` runs means this
+      // credential is already gone, so the handshake is skipped. See
+      // `chatLocalDataSettled`.
+      await chatLocalDataSettled();
+      const generation = chatLocalDataGeneration();
       // Opened before `connectUser` so `Chat` never sees a user without a
       // database — see the component comment. A database that fails to open
       // degrades to today's online-only chat rather than blocking it.
       await client.offlineDb?.init(credential.userId);
       const dbOpen = client.offlineDb?.shouldInitialize(credential.userId) ?? false;
-      if (!alive) return;
+      if (!alive || generation !== chatLocalDataGeneration()) return;
       setOfflineReady(dbOpen);
       // `Chat` sets this too, but in an effect that may land after a fast
       // failure. Without it a refused handshake wipes the user off the client

@@ -1,5 +1,9 @@
 import { useEffect } from 'react';
-import { hydrateChannelsFromCache } from '@/src/features/xolacer-chat/offline-db';
+import {
+  chatLocalDataGeneration,
+  chatLocalDataSettled,
+  hydrateChannelsFromCache,
+} from '@/src/features/xolacer-chat/offline-db';
 import { useStreamConnection } from './providers/stream-chat-provider';
 import type { ConversationList } from './components/chats-list';
 
@@ -68,16 +72,29 @@ export function useChatWarmup(
     const warm = () => {
       if (inFlight) return;
       inFlight = true;
-      hydrateChannelsFromCache(client, ids)
+      // `queryChannels` writes straight into the offline database, so it
+      // waits for any reset to finish and is skipped if one starts meanwhile
+      // — the rows would belong to the signed-out account. See
+      // `chatLocalDataSettled`.
+      let generation = chatLocalDataGeneration();
+      chatLocalDataSettled()
+        .then(() => {
+          generation = chatLocalDataGeneration();
+          return hydrateChannelsFromCache(client, ids);
+        })
         .catch((error) => console.error('[xolacer-chat] channel cache read failed', error))
-        .then(() =>
-          client.queryChannels(
+        .then(() => {
+          if (generation !== chatLocalDataGeneration()) return;
+          return client.queryChannels(
             { id: { $in: ids }, members: { $in: [client.userID as string] } },
             { last_message_at: -1 },
             { watch: true, presence: true, limit: MAX_PREFETCH },
-          ),
-        )
-        .then(() => client.dispatchEvent({ type: 'channels.queried' }))
+          );
+        })
+        .then(() => {
+          if (generation !== chatLocalDataGeneration()) return;
+          client.dispatchEvent({ type: 'channels.queried' });
+        })
         .catch((error) => console.warn('[xolacer-chat] channel prefetch failed', error))
         .finally(() => {
           inFlight = false;
