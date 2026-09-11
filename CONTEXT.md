@@ -23,6 +23,15 @@ in reverse.
 Rejected: a Convex counter or any persisted count (#140's option 3) — it
 reintroduces the stale badge #139 fixed.
 
+**The Connect list is Convex-owned; Stream is transport only.** Rows come
+from `myConversations` (requests without a channel, lifecycle status,
+per-role identity, archive), so the SDK's `ChannelList` is not used. That
+also opts out of what `ChannelList` does behind the scenes — the offline
+hydrate and the re-query on every socket reopen — and `useChatWarmup` owns
+both instead (the SDK sets `recoverStateOnReconnect = false`, and a
+background/foreground cycle is a fresh connect, not a `_reconnect`, so only
+`connection.changed { online }` announces it).
+
 **Glossary.** *Flag* = one message, from the thread's long-press menu,
 unbudgeted, `product_feedback.kind = "flag"` with `messageId` and empty
 `text`. *Report* = one person for one conversation, the existing concern
