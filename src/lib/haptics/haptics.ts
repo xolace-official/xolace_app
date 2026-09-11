@@ -1,5 +1,6 @@
 // Cross-platform haptics via react-native-pulsar (Android + web).
 // iOS uses CoreHaptics via haptics.ios.ts (Expo platform extension).
+import { useCallback } from 'react';
 import { Presets, usePatternComposer } from 'react-native-pulsar';
 import type { Pattern } from 'react-native-pulsar';
 import type { BreathPhase, HapticName } from './haptics.types';
@@ -65,8 +66,13 @@ const PROCESSING_BREATH_PATTERN: Pattern = {
  * stays exported for any non-component caller.
  */
 export function useProcessingBreathHaptic(): () => void {
-  const composer = usePatternComposer(PROCESSING_BREATH_PATTERN);
-  return () => run(() => composer.play());
+  // Passing `undefined` on web skips Pulsar's parse effect — there is no
+  // native module to parse against, and `run()` would no-op the playback anyway.
+  const composer = usePatternComposer(isWeb ? undefined : PROCESSING_BREATH_PATTERN);
+  // useCallback, not the compiler: the consumer holds this in a `deps: []`
+  // effect, so identity stability is correctness here, not an optimization.
+  // `composer.play` is itself a `useCallback(..., [])` inside Pulsar.
+  return useCallback(() => run(() => composer.play()), [composer.play]);
 }
 
 export function playGentlePresence(): void {

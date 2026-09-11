@@ -50,6 +50,8 @@ export function HapticBeat({
   const pulse = useSharedValue(reducedMotion ? 1 : 0.5);
 
   useEffect(() => {
+    const endsAt = Date.now() + durationSeconds * 1000;
+
     // Gate haptic on reducedMotion per plan §4.2 — dissociated states can be startled.
     if (!reducedMotion) {
       const playPulse = INTENSITY_HAPTIC[hapticIntensity];
@@ -58,7 +60,13 @@ export function HapticBeat({
       // whose whole point is touch went quiet first. Repeat on the dot's cycle
       // and stop with it.
       playPulse();
-      pulseIntervalRef.current = setInterval(playPulse, PULSE_CYCLE_MS);
+      // The cycle is the dot's, not the step's, so the last tick can land
+      // moments before the beat ends — a buzz that reads as the *next* beat
+      // starting. Drop any pulse with less than half a cycle left to breathe.
+      pulseIntervalRef.current = setInterval(() => {
+        if (endsAt - Date.now() < PULSE_CYCLE_MS / 2) return;
+        playPulse();
+      }, PULSE_CYCLE_MS);
 
       pulse.set(withRepeat(
         withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.quad) }),

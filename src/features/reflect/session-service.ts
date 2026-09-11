@@ -131,20 +131,13 @@ export function extractErrorMessage(error: unknown): string {
     // ConvexError `data` crosses the wire — so the typed data is the only
     // reliable signal. The message check stays for dev and for a
     // non-ConvexError rate-limit throw.
-    const data = (error as { data?: unknown }).data;
-    const rateLimited =
-      (typeof data === 'object' &&
-        data !== null &&
-        (data as { kind?: string }).kind === 'RateLimited') ||
-      error.message.includes('RateLimited');
-    if (rateLimited) {
-      const retryAfter =
-        typeof data === 'object' && data !== null
-          ? (data as { retryAfter?: number }).retryAfter
-          : undefined;
+    const raw = (error as { data?: unknown }).data;
+    const data: { kind?: string; retryAfter?: number; code?: string } =
+      typeof raw === 'object' && raw !== null ? raw : {};
+    if (data.kind === 'RateLimited' || error.message.includes('RateLimited')) {
       const retryMinutes =
-        typeof retryAfter === 'number'
-          ? Math.ceil(retryAfter / 60000)
+        typeof data.retryAfter === 'number'
+          ? Math.ceil(data.retryAfter / 60000)
           : parseRetryAfter(error.message);
       if (retryMinutes !== null && retryMinutes > 0) {
         return `You've been reflecting a lot. Come back in ${retryMinutes} ${retryMinutes === 1 ? 'minute' : 'minutes'}.`;
@@ -152,9 +145,7 @@ export function extractErrorMessage(error: unknown): string {
       return "You've been reflecting a lot. Take a moment and come back soon.";
     }
     if (
-      (typeof data === 'object' &&
-        data !== null &&
-        (data as { code?: string }).code === 'not_authenticated') ||
+      data.code === 'not_authenticated' ||
       error.message.includes('Not authenticated')
     ) {
       return 'Your session expired. Please sign in again.';
