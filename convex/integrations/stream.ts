@@ -4,7 +4,7 @@
  *
  * Endpoint and JWT shapes are mirrored from the installed `stream-chat`
  * package source (signing.ts / client.ts):
- *  - user token:   HS256 JWT, payload { user_id }, no iat
+ *  - user token:   HS256 JWT, payload { user_id, exp }, no iat
  *  - server token: HS256 JWT, payload { server: true }
  *  - auth:         ?api_key=<key> + Authorization: <jwt> + stream-auth-type: jwt
  *  - upsert users: POST /users            { users: { [id]: user } }
@@ -105,10 +105,19 @@ export function getStreamApiKey(): string {
   return getStreamEnv().apiKey;
 }
 
+/**
+ * The client persists this token on-device so a returning chat user skips the
+ * mint on cold start (#342). The `exp` is what bounds that: a lost phone's
+ * copy stops working on its own, and a live client refreshes silently through
+ * its `tokenProvider` when Stream rejects the stale one.
+ */
+export const USER_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
+
 /** Client-facing Stream user token. userId is always a pseudonymous profile id. */
 export async function mintUserToken(userId: string): Promise<string> {
   const { apiSecret } = getStreamEnv();
-  return signJwt({ user_id: userId }, apiSecret);
+  const exp = Math.floor(Date.now() / 1000) + USER_TOKEN_TTL_SECONDS;
+  return signJwt({ user_id: userId, exp }, apiSecret);
 }
 
 async function streamRequest(

@@ -30,11 +30,10 @@ const IDLE: CounterpartActivity = { typing: false, presence: null };
  * Typing takes the same treatment so the header can prefer it over the
  * online dot — the stronger signal wins.
  *
- * The client comes from `useStreamStatus`, which hands it out only once
- * connected: the header is mounted from the thread's first frame, before the
- * connection exists on a cold-start deep link, and `client.channel()` throws
- * on an unconnected client. Warm opens only survived because the Connect tab
- * had already connected.
+ * The client comes from `useStreamStatus`, which hands it out only once it
+ * has a user: the header is mounted from the thread's first frame, before
+ * that on a cold-start deep link, and `client.channel()` throws on a client
+ * with no user set.
  */
 export function useCounterpartActivity(
   streamChannelId: string | undefined,

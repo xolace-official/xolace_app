@@ -2,11 +2,17 @@ import { createContext, use, useCallback, useEffect, useMemo, useRef, useState }
 import { StreamChat } from 'stream-chat';
 import { Chat, OverlayProvider } from 'stream-chat-expo';
 import { useAuth } from '@clerk/expo';
-import { useAction } from 'convex/react';
+import { useAction, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { useAppStore } from '@/src/store/store';
+import { connectPlan } from '@/src/features/xolacer-chat/connect-plan';
+import { attachOfflineDb } from '@/src/features/xolacer-chat/offline-db';
+import {
+  readStreamCredential,
+  writeStreamCredential,
+  type StreamCredential,
+} from '@/src/features/xolacer-chat/stream-credential';
 import { useStreamTheme } from './stream-theme';
-
-type StreamSession = { apiKey: string; token: string; userId: string };
 
 /**
  * Public Stream key — the same one that ships inside every Stream client app.
@@ -21,22 +27,19 @@ type StreamSession = { apiKey: string; token: string; userId: string };
 const STREAM_API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY;
 
 /**
- * Outlives the thread screen that fetched it, so the second and later opens
- * skip the token round trip and go straight to connecting.
- *
- * Keyed by Clerk user id, never bare: module state survives a sign-out (no app
- * restart in between), and an unkeyed cache would hand the next signed-in
- * account the previous one's Stream identity. A stale-but-same-user token costs
- * one `tokenProvider` refresh, which is the path that already handles expiry.
+ * `ready` — the client is usable: its user is set and its offline database is
+ * open, whether or not the socket is up yet. Screens render from the local
+ * copy and the `OfflineStrip` reports the socket. `unavailable` — no client is
+ * possible: no key, a key the token wasn't signed for, or a token that could
+ * not be fetched and was not on the device. `connecting` is the few
+ * milliseconds between activation and the database opening, and no screen
+ * blocks on it for longer than that.
  */
-let cachedSession: { userId: string; session: StreamSession } | null = null;
-
-
 export type StreamStatus = 'connecting' | 'ready' | 'unavailable';
 
 type StreamStatusValue = {
   status: StreamStatus;
-  /** Non-null only at `ready`. Lets a screen warm the channel cache directly. */
+  /** Non-null only at `ready`. */
   client: StreamChat | null;
   /** Re-runs the token fetch after `unavailable`; a no-op otherwise. */
   retry: () => void;
@@ -60,14 +63,13 @@ export const useStreamStatus = () => use(StreamStatusContext);
  * Declares "this screen needs Stream", and returns the same value as
  * `useStreamStatus`.
  *
- * The provider sits at the protected layout but connects to nothing until a
- * chat surface calls this. Chat is server-gated (`chatEnabled()`), so an
- * unconditional connect would put a token action and a WS handshake on every
- * user's cold start — competing with Clerk and Convex on the reflect screen —
- * and would log a failed token fetch for everyone when the flag is off.
- *
- * Called from the Connect tab as well as the thread, so the handshake overlaps
- * with the user reading their conversation list instead of blocking the open.
+ * The provider connects to nothing on its own for a user who has never opened
+ * chat. Chat is server-gated (`chatEnabled()`), so an unconditional connect
+ * would put a token action and a WS handshake on every user's cold start —
+ * competing with Clerk and Convex on the reflect screen — and would log a
+ * failed token fetch for everyone when the flag is off. A returning chat user
+ * is the exception: their cached gate and credential let `connectPlan` start
+ * the connection at mount, before any surface asks.
  *
  * Pass `enabled: false` while a caller still doesn't know whether it needs chat
  * — the Connect tab holds it off until `xolacerChat.status` confirms the
@@ -95,47 +97,36 @@ export function StreamOverlayProvider({ children }: { children: React.ReactNode 
 }
 
 /**
- * `connectUser` rejects on a bad signature or a refused socket, but a socket
- * that opens and then never completes the handshake resolves neither way — and
- * the thread would sit on its skeleton forever with no retry affordance.
- *
- * ponytail: a watchdog, not a diagnosis — it can't say *why*. The `.catch`
- * below covers every failure that does report itself.
- */
-const CONNECT_TIMEOUT_MS = 20_000;
-
-/**
  * Connects the authenticated user to Stream. The Stream user id is minted
  * server-side from the authed profile; the client never names it.
- *
- * Scoping is temporal, not positional: nothing connects until
- * `useStreamConnection` asks, and the connection then lasts as long as the
- * protected group. Sign-out still tears it down for free — the `Stack.Protected`
- * guard unmounts this whole subtree.
  *
  * `Chat` is mounted unconditionally, from the first frame, and that is
  * load-bearing. It wraps the entire protected navigator, so a version of this
  * that only mounted it once a client existed changed the element type sitting
- * above `children` — which unmounts and rebuilds every screen in the app. That
- * fired twice per connect (once when the token landed, once when the socket
- * opened): screens replayed their entrance, images re-decoded, `useState` reset
- * mid-interaction. Keeping the shape fixed means only the context value moves.
+ * above `children` — which unmounts and rebuilds every screen in the app.
+ * Keeping the shape fixed means only the context value moves. The same
+ * concern is why the offline database is opened *before* `connectUser` sets
+ * `client.userID`: with offline support on, `Chat` renders nothing for a user
+ * whose database isn't open yet, and that gap would blank every screen.
  *
  * Mounting `Chat` early costs no network. `new StreamChat()` opens nothing —
  * `connectUser` is what does, and that still waits for `activate()`.
  */
 export function StreamChatProvider({ children }: { children: React.ReactNode }) {
   const getStreamToken = useAction(api.xolacerChat.getStreamToken);
-  const { userId } = useAuth();
-  const [session, setSession] = useState<StreamSession | null>(() =>
-    userId && cachedSession?.userId === userId ? cachedSession.session : null,
-  );
+  const { userId: clerkUserId } = useAuth();
+  const cachedEnabled = useAppStore((s) => s.chatEnabledCached);
+  const setChatEnabledCached = useAppStore((s) => s.setChatEnabledCached);
+  const [credential, setCredential] = useState<StreamCredential | null>(() => {
+    const stored = readStreamCredential();
+    return stored?.clerkUserId === clerkUserId ? stored : null;
+  });
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   // Stays false for users who never open a chat surface — see useStreamConnection.
-  const [active, setActive] = useState(false);
-  const [connected, setConnected] = useState(false);
-  const [timedOut, setTimedOut] = useState(false);
+  const [activated, setActivated] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [offlineReady, setOfflineReady] = useState(false);
   const streamTheme = useStreamTheme();
 
   // Serializes connect/disconnect. `disconnectUser` is async, so an unawaited
@@ -144,30 +135,50 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
   // onto the previous one instead.
   const streamOp = useRef<Promise<unknown>>(Promise.resolve());
 
-  // One instance for the life of the app. `getInstance` is idempotent per key,
-  // so a remount above this can never leave two sockets racing.
-  const client = useMemo(
-    () => (STREAM_API_KEY ? StreamChat.getInstance(STREAM_API_KEY) : null),
-    [],
-  );
+  // One instance for the life of the app. `getInstance` is idempotent per key
+  // and so is the attach, so a plain call each render is correct and a remount
+  // above this can never leave two sockets racing.
+  const client = STREAM_API_KEY ? StreamChat.getInstance(STREAM_API_KEY) : null;
+  if (client) attachOfflineDb(client);
+
+  // Only chat users pay for this subscription. It keeps the cached gate honest:
+  // a kill-switch flip lands here, the cache flips, and the next cold start
+  // stays quiet. The credential is kept — see `connectPlan`.
+  const liveStatus = useQuery(api.xolacerChat.status, activated || cachedEnabled ? {} : 'skip');
+  useEffect(() => {
+    if (liveStatus) setChatEnabledCached(liveStatus.enabled);
+  }, [liveStatus, setChatEnabledCached]);
+
+  const plan = connectPlan({
+    cachedEnabled,
+    cachedCredential: credential,
+    liveStatus: liveStatus?.enabled,
+    // Never `foreign` here: the credential was filtered to ours at init, and
+    // ChatLocalDataGuard above this provider owns the wipe on a switch.
+    clerkUserId: clerkUserId ?? null,
+  });
+  // The kill switch is the one live answer that overrides a surface asking:
+  // the server said no, so the client is `unavailable` and comes down.
+  const killed = liveStatus?.enabled === false;
+  const active = !killed && (activated || plan.activateNow);
 
   const retry = useCallback(() => {
     setError(false);
-    setTimedOut(false);
-    cachedSession = null;
-    setSession(null);
+    setCredential(null);
+    setActivated(true);
     setAttempt((n) => n + 1);
   }, []);
 
-  const activate = useCallback(() => setActive(true), []);
+  const activate = useCallback(() => setActivated(true), []);
 
   useEffect(() => {
-    if (!active || !userId || session) return;
+    if (!active || !clerkUserId || credential) return;
     let alive = true;
     getStreamToken()
       .then((result) => {
-        cachedSession = { userId, session: result };
-        if (alive) setSession(result);
+        const next = { clerkUserId, ...result };
+        writeStreamCredential(next);
+        if (alive) setCredential(next);
       })
       .catch((err) => {
         console.error('[xolacer-chat] Stream token fetch failed', err);
@@ -176,12 +187,12 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
     return () => {
       alive = false;
     };
-  }, [getStreamToken, userId, session, attempt, active]);
+  }, [getStreamToken, clerkUserId, credential, attempt, active]);
 
   // The token is signed for one Stream app. If the bundled key names a
   // different one the handshake fails with an opaque "signature is not valid",
   // so refuse to connect and say what actually went wrong instead.
-  const keyMismatch = !!session && session.apiKey !== STREAM_API_KEY;
+  const keyMismatch = !!credential && credential.apiKey !== STREAM_API_KEY;
   useEffect(() => {
     if (!keyMismatch) return;
     console.error(
@@ -190,54 +201,80 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
   }, [keyMismatch]);
 
   useEffect(() => {
-    if (!client || !active || !session || keyMismatch) return;
+    if (!client || !active || !credential || keyMismatch) return;
 
     let alive = true;
-    // Re-hits the authed Convex action on expiry and on every reconnect.
-    const tokenProvider = async () => (await getStreamToken()).token;
+    // The stored token first, so a cold start costs no round trip; Stream
+    // calls back in on expiry or rejection and the refreshed token is stored
+    // for the next launch. Offline, the refresh fails and so does the
+    // handshake — the client keeps its user and serves the local copy.
+    let storedToken: string | null = credential.token;
+    const tokenProvider = async () => {
+      if (storedToken) {
+        const token = storedToken;
+        storedToken = null;
+        return token;
+      }
+      const fresh = await getStreamToken();
+      writeStreamCredential({ clerkUserId: credential.clerkUserId, ...fresh });
+      return fresh.token;
+    };
 
-    const connecting = streamOp.current
-      .catch(() => {})
-      .then(() => client.connectUser({ id: session.userId }, tokenProvider));
-    streamOp.current = connecting;
-
-    connecting
-      .then(() => {
-        if (alive) setConnected(true);
-      })
-      .catch((err) => {
-        console.error('[xolacer-chat] Stream connect failed', err);
-        if (alive) setError(true);
-      });
+    const opening = streamOp.current.catch(() => {}).then(async () => {
+      // Opened before `connectUser` so `Chat` never sees a user without a
+      // database — see the component comment. A database that fails to open
+      // degrades to today's online-only chat rather than blocking it.
+      await client.offlineDb?.init(credential.userId);
+      const dbOpen = client.offlineDb?.shouldInitialize(credential.userId) ?? false;
+      if (!alive) return;
+      setOfflineReady(dbOpen);
+      // `Chat` sets this too, but in an effect that may land after a fast
+      // failure. Without it a refused handshake wipes the user off the client
+      // and the local copy is unreachable.
+      client.persistUserOnConnectionFailure = dbOpen;
+      // Not awaited here: `connectUser` sets the user synchronously and
+      // resolves only once the socket is up, which is exactly the wait the
+      // thread no longer pays. Failure isn't `unavailable` — the client is
+      // still usable against the local copy, and the SDK reconnects when the
+      // network is back. The handshake is still chained below so a teardown
+      // never lands mid-handshake.
+      const handshake = client
+        .connectUser({ id: credential.userId }, tokenProvider)
+        .catch((err) => {
+          console.warn('[xolacer-chat] Stream connect failed', err);
+          // Without a database the SDK drops the user on failure, and a
+          // client with no user throws from `channel()` — so it can't stay
+          // handed out. With one, the local copy is still readable.
+          if (!dbOpen && alive) {
+            setReady(false);
+            setError(true);
+          }
+        });
+      setReady(true);
+      return handshake;
+    });
+    streamOp.current = opening;
 
     return () => {
       alive = false;
-      setConnected(false);
-      streamOp.current = connecting.catch(() => {}).then(() => client.disconnectUser());
+      setReady(false);
+      setOfflineReady(false);
+      streamOp.current = opening.catch(() => {}).then(() => client.disconnectUser());
     };
-  }, [client, active, session, keyMismatch, getStreamToken]);
-
-  const pending = active && !!session && !connected && !error && !keyMismatch;
-  useEffect(() => {
-    if (!pending) return;
-    const timer = setTimeout(() => setTimedOut(true), CONNECT_TIMEOUT_MS);
-    return () => clearTimeout(timer);
-  }, [pending]);
+  }, [client, active, credential, keyMismatch, getStreamToken]);
 
   const value = useMemo(
     () => ({
-      status: (connected
+      status: (ready && !killed
         ? 'ready'
-        : error || timedOut || keyMismatch || !client
+        : error || killed || keyMismatch || !client
           ? 'unavailable'
           : 'connecting') as StreamStatus,
-      // Handed out only once the socket is up — `useChatWarmup` and the thread
-      // both assume a client they get from here can `queryChannels`.
-      client: connected ? client : null,
+      client: ready && !killed ? client : null,
       retry,
       activate,
     }),
-    [connected, error, timedOut, keyMismatch, client, retry, activate],
+    [ready, killed, error, keyMismatch, client, retry, activate],
   );
 
   // Build-time constant, so this branch never flips at runtime and cannot
@@ -249,7 +286,7 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
   // Theme applied here as well as on OverlayProvider — the overlay host reads
   // its own ThemeProvider, and this one covers everything under `Chat`.
   return (
-    <Chat client={client} style={streamTheme}>
+    <Chat client={client} style={streamTheme} enableOfflineSupport={offlineReady}>
       <StreamStatusContext value={value}>{children}</StreamStatusContext>
     </Chat>
   );

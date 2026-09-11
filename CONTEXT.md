@@ -3,6 +3,27 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Conversation, channel, thread (2026-09-11)
+
+One Xolacer chat has three names in code; only one is the domain term.
+
+- **Conversation** — the domain object. A seeker–Xolacer pair's chat, with
+  its lifecycle (requested → open → resting / closed), caps, pseudonym,
+  block and rating state. Lives in `xolacer_conversations`; it is the source
+  of truth for *whether* two people are talking. Prose and UI copy say
+  "conversation".
+- **Channel** — Stream's transport for the conversation's messages. One
+  channel per conversation, deterministic id derived from the conversation.
+  An implementation word: never appears in UI copy, and a conversation can
+  exist (requested, declined) with no channel yet.
+- **Thread** — the *screen* that shows a conversation's messages. A route
+  name only. Not Stream's "thread" (reply-to-message threads), which the
+  product does not use.
+
+Rejected: calling the domain object "chat" (too generic — the tab is
+"Connect", the feature is "Xolacer chat") or "channel" (leaks the vendor
+into the language).
+
 ## The Xolacer primer (2026-09-10)
 
 A one-time bottom sheet, **"Before you ask,"** shown the first time a seeker

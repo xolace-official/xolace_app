@@ -103,7 +103,9 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
     }
 
     // Chrome is Convex-driven and already loaded, so it stays put while the
-    // Stream connection opens underneath it. Only the message region waits.
+    // Stream client comes up underneath it. `ready` no longer waits on the
+    // socket — only on the offline database opening, milliseconds — so this
+    // skeleton is a flash, and `unavailable` is the one state that lingers.
     if (streamStatus !== 'ready') {
       return (
         <View className="flex-1 bg-background">

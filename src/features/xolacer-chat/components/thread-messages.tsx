@@ -23,16 +23,17 @@ import {
   minimalMessageActions,
 } from '@/src/features/xolacer-chat/components/thread-channel-config';
 import { ThreadSkeleton } from '@/src/features/xolacer-chat/components/thread-skeleton';
+import { hydrateChannelsFromCache } from '@/src/features/xolacer-chat/offline-db';
 import { ThreadStatusBar } from '@/src/features/xolacer-chat/components/thread-status-bar';
 import type { ThreadConversation } from '@/src/features/xolacer-chat/components/thread-screen';
 
 /**
- * The message surface, mounted only once `Chat` holds a connected client.
+ * The message surface, mounted once `Chat` holds a usable client — one with a
+ * user and an open offline database, online or not.
  *
  * Split out from the thread screen so the screen's Convex-driven chrome —
- * header, safety strip, status bar — can render while Stream is still
- * connecting. Everything here needs `ChatContext`, which only exists under a
- * connected `Chat`.
+ * header, safety strip, status bar — can render before that. Everything here
+ * needs `ChatContext`.
  */
 export function ThreadMessages({ conversation }: { conversation: ThreadConversation }) {
   const { client } = useChatContext();
@@ -59,17 +60,16 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
     [client, streamChannelId],
   );
 
-  const watched = useWatchedChannel(channel);
+  const hasLocalState = useLocalChannelState(channel);
   useTouchOnSend(channel, conversation, client.userID);
 
-  // `client.channel()` returns an *unwatched* handle: no messages, and no
+  // `client.channel()` returns an *empty* handle: no messages, and no
   // `own_capabilities`. `<Channel>` renders its children immediately and only
   // watches inside an effect, so mounting it now guarantees one paint of
   // "No chats here yet" over "You can't send messages in this channel" before
-  // the real state arrives. Watching first collapses that to the skeleton —
-  // and because Channel's effect skips the call when `channel.initialized` is
-  // already true, this replaces its watch rather than duplicating it.
-  if (!watched) {
+  // the real state arrives. The skeleton holds until the channel has state
+  // from somewhere — the warmup, the device, or a first-ever watch.
+  if (!hasLocalState) {
     return (
       <View className="flex-1 bg-background">
         <SafetyStrip />
@@ -126,38 +126,40 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
 }
 
 /**
- * Resolves once the channel holds real state, so `<Channel>` never mounts over
- * an empty one. Failure resolves too: Stream's own `LoadingErrorIndicator` is a
- * better place to land than a skeleton that never ends.
+ * Resolves once the channel holds state, so `<Channel>` never mounts over an
+ * empty one. Sources, in order of what's cheapest: already live (the warmup
+ * watched it), the offline database (the thread paints its last known
+ * messages instantly, offline included — `<Channel>` then reconciles with its
+ * own `watch()`), and finally a network watch for a conversation this device
+ * has never held. Failure resolves too: Stream's own `LoadingErrorIndicator`
+ * is a better place to land than a skeleton that never ends.
  */
-function useWatchedChannel(channel: StreamChannel) {
-  // Records only the failure case. Success needs no state of its own —
-  // `channel.initialized` already carries it — but it does need a re-render,
-  // which is the whole reason this lands in state at all. Stored with the cid
-  // so a channel swap re-gates instead of inheriting the previous verdict.
-  const [failedCid, setFailedCid] = useState<string | null>(null);
+function useLocalChannelState(channel: StreamChannel) {
+  // Records only the settled cid. Success needs no state of its own —
+  // `channel.initialized` / `offlineMode` already carry it — but it does need
+  // a re-render, which is the whole reason this lands in state at all. Stored
+  // with the cid so a channel swap re-gates instead of inheriting the verdict.
+  const [settledCid, setSettledCid] = useState<string | null>(null);
 
   useEffect(() => {
-    if (channel.initialized) return;
+    if (channel.initialized || channel.offlineMode) return;
     let alive = true;
-    channel
-      .watch({ presence: true })
+    const client = channel.getClient();
+    hydrateChannelsFromCache(client, [channel.id as string])
       .then(() => {
-        if (alive) setFailedCid(null);
+        if (channel.offlineMode) return;
+        return channel.watch({ presence: true });
       })
-      .catch((error) => {
-        console.error('[xolacer-chat] channel watch failed', error);
-        if (alive) setFailedCid(channel.cid);
+      .catch((error) => console.error('[xolacer-chat] channel load failed', error))
+      .finally(() => {
+        if (alive) setSettledCid(channel.cid);
       });
     return () => {
       alive = false;
     };
   }, [channel]);
 
-  // Derived from the channel rather than mirrored into state. A failed watch
-  // still opens the gate: Stream's own LoadingErrorIndicator, with its retry,
-  // is a better landing than a skeleton that never resolves.
-  return channel.initialized || failedCid === channel.cid;
+  return channel.initialized || channel.offlineMode || settledCid === channel.cid;
 }
 
 /**
