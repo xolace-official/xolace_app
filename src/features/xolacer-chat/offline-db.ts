@@ -17,16 +17,30 @@ export function attachOfflineDb(client: StreamChat) {
  * the database after it. A reset bumps the generation synchronously and
  * publishes its own promise; the provider's `init` and the warmup's
  * `queryChannels` await `chatLocalDataSettled()` before touching sqlite and
- * drop what they were doing if `chatLocalDataGeneration()` moved meanwhile.
- * Covers a reset for a switch that happened while the app was closed racing
- * the new user's first open, and a sign-out within a beat of the Connect tab
- * warming.
+ * drop what they were doing if `chatLocalDataGeneration()` moved past the
+ * generation it returned. Covers a reset for a switch that happened while the
+ * app was closed racing the new user's first open, and a sign-out within a
+ * beat of the Connect tab warming.
  */
 let generation = 0;
 let settled: Promise<void> = Promise.resolve();
 
 export const chatLocalDataGeneration = () => generation;
-export const chatLocalDataSettled = () => settled;
+
+/**
+ * Resolves once no reset is in flight, with the generation that then holds.
+ * Read before the wait, not after: a reset that starts between grabbing
+ * `settled` and its continuation has already bumped the generation and
+ * chained its own drop onto the same promise — a reader that sampled
+ * afterwards would capture the new number and run alongside the drop.
+ */
+export async function chatLocalDataSettled(): Promise<number> {
+  for (;;) {
+    const before = generation;
+    await settled;
+    if (before === generation) return before;
+  }
+}
 
 /**
  * The one place on-device chat data is wiped: the sqlite tables, the

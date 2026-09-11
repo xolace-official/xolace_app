@@ -229,8 +229,7 @@ export function StreamChatProvider({ children }: { children: React.ReactNode }) 
       // this opens them; one that starts while `init` runs means this
       // credential is already gone, so the handshake is skipped. See
       // `chatLocalDataSettled`.
-      await chatLocalDataSettled();
-      const generation = chatLocalDataGeneration();
+      const generation = await chatLocalDataSettled();
       // Opened before `connectUser` so `Chat` never sees a user without a
       // database — see the component comment. A database that fails to open
       // degrades to today's online-only chat rather than blocking it.

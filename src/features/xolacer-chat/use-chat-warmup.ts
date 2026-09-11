@@ -76,22 +76,17 @@ export function useChatWarmup(
       // waits for any reset to finish and is skipped if one starts meanwhile
       // — the rows would belong to the signed-out account. See
       // `chatLocalDataSettled`.
-      let generation = chatLocalDataGeneration();
       chatLocalDataSettled()
-        .then(() => {
-          generation = chatLocalDataGeneration();
-          return hydrateChannelsFromCache(client, ids);
-        })
-        .catch((error) => console.error('[xolacer-chat] channel cache read failed', error))
-        .then(() => {
+        .then(async (generation) => {
+          await hydrateChannelsFromCache(client, ids).catch((error) =>
+            console.error('[xolacer-chat] channel cache read failed', error),
+          );
           if (generation !== chatLocalDataGeneration()) return;
-          return client.queryChannels(
+          await client.queryChannels(
             { id: { $in: ids }, members: { $in: [client.userID as string] } },
             { last_message_at: -1 },
             { watch: true, presence: true, limit: MAX_PREFETCH },
           );
-        })
-        .then(() => {
           if (generation !== chatLocalDataGeneration()) return;
           client.dispatchEvent({ type: 'channels.queried' });
         })
