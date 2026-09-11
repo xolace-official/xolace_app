@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-import { StreamChat } from 'stream-chat';
 import { useCounterpartActivity } from './use-counterpart-activity';
 import { mountHook } from '@/src/lib/test/mount-hook';
 
@@ -11,12 +10,9 @@ vi.mock('../providers/stream-chat-provider', () => ({
 
 describe('useCounterpartActivity', () => {
   // Cold-start deep link into a thread: the native header mounts before
-  // anything has called `connectUser`, so `client.userID` is unset and
-  // `client.channel()` throws. Warm opens never hit this — Connect connected.
-  it('does not touch the channel before the client is connected', () => {
-    const client = StreamChat.getInstance('test-key-unconnected');
-    expect(client.userID).toBeUndefined();
-
-    expect(() => mountHook(() => useCounterpartActivity(client, 'conv_1', 'xolacer_1'))).not.toThrow();
+  // anything has called `connectUser`. The provider hands out `client: null`
+  // until then, and the hook has to idle on it rather than reach for a channel.
+  it('idles until the provider hands out a connected client', () => {
+    expect(() => mountHook(() => useCounterpartActivity('conv_1', 'xolacer_1'))).not.toThrow();
   });
 });

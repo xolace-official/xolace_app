@@ -1,7 +1,6 @@
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { PressableFeedback } from 'heroui-native';
-import { useChatContext } from 'stream-chat-expo';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { formatLongAgo } from '../format-time';
@@ -59,10 +58,8 @@ function subtitleFor(conversation: ThreadConversation): string {
  * Channel-scoped context for that reason.
  */
 export function ThreadHeader({ conversation }: { conversation: ThreadConversation }) {
-  const { client } = useChatContext();
   const router = useRouter();
   const activity = useCounterpartActivity(
-    client,
     conversation.status === 'open' ? conversation.streamChannelId : undefined,
     conversation.counterpartProfileId,
   );

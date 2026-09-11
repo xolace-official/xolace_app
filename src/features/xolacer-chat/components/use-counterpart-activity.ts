@@ -30,21 +30,21 @@ const IDLE: CounterpartActivity = { typing: false, presence: null };
  * Typing takes the same treatment so the header can prefer it over the
  * online dot — the stronger signal wins.
  *
- * Waits for `ready`: the header is mounted from the thread's first frame,
- * before the connection exists on a cold-start deep link, and
- * `client.channel()` throws on an unconnected client. Warm opens only
- * survived because the Connect tab had already connected.
+ * The client comes from `useStreamStatus`, which hands it out only once
+ * connected: the header is mounted from the thread's first frame, before the
+ * connection exists on a cold-start deep link, and `client.channel()` throws
+ * on an unconnected client. Warm opens only survived because the Connect tab
+ * had already connected.
  */
 export function useCounterpartActivity(
-  client: StreamChat,
   streamChannelId: string | undefined,
   counterpartUserId: string,
 ): CounterpartActivity {
   const [activity, setActivity] = useState<CounterpartActivity>(IDLE);
-  const ready = useStreamStatus().status === 'ready';
+  const { client } = useStreamStatus();
 
   useEffect(() => {
-    if (!ready || !streamChannelId) return;
+    if (!client || !streamChannelId) return;
     const channel = client.channel('messaging', streamChannelId);
 
     const read = () =>
@@ -62,7 +62,7 @@ export function useCounterpartActivity(
       }),
     ];
     return () => subs.forEach((sub) => sub.unsubscribe());
-  }, [ready, client, streamChannelId, counterpartUserId]);
+  }, [client, streamChannelId, counterpartUserId]);
 
   return activity;
 }
