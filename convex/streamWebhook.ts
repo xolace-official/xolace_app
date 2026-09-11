@@ -1,6 +1,8 @@
 import { v } from "convex/values";
 import { httpAction, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { shouldModerateChatMessage } from "./ai/chat/classify";
+import { CRISIS_RESOURCES_KIND } from "./ai/chat/moderate";
 import {
   listStreamEventHooks,
   setStreamEventHooks,
@@ -55,7 +57,12 @@ export const streamEvents = httpAction(async (ctx, request) => {
   // there is nothing to retry.
   if (!signed) return new Response("invalid signature", { status: 401 });
 
-  let event: { type?: unknown; channel_id?: unknown; user?: { id?: unknown } };
+  let event: {
+    type?: unknown;
+    channel_id?: unknown;
+    user?: { id?: unknown };
+    message?: { id?: unknown; text?: unknown; kind?: unknown };
+  };
   try {
     event = JSON.parse(rawBody);
   } catch {
@@ -73,11 +80,35 @@ export const streamEvents = httpAction(async (ctx, request) => {
   // or proxy that drops it) falls through to counting, as before.
   const webhookId = request.headers.get("x-webhook-id") ?? undefined;
 
-  await ctx.runMutation(internal.xolacerChat.notifyNewMessage, {
+  // Our own resources card comes back through here like any message. It is
+  // nobody's message: not counted, not notified, not moderated.
+  if (event.message?.kind === CRISIS_RESOURCES_KIND) {
+    return new Response(null, { status: 200 });
+  }
+
+  const delivery = await ctx.runMutation(internal.xolacerChat.notifyNewMessage, {
     channelId: event.channel_id,
     senderId,
     webhookId,
   });
+
+  // The post-delivery moderation lane (#344), queued after the mutation — and
+  // the push it scheduled — have committed, so it can neither delay nor break
+  // a notification. `delivery` is null on a redelivery, which is the dedupe.
+  const message = event.message;
+  if (
+    delivery &&
+    typeof message?.id === "string" &&
+    typeof message.text === "string" &&
+    shouldModerateChatMessage(message.text)
+  ) {
+    await ctx.scheduler.runAfter(0, internal.ai.chat.moderate.moderateChatMessage, {
+      ...delivery,
+      streamChannelId: event.channel_id,
+      streamMessageId: message.id,
+      text: message.text,
+    });
+  }
   return new Response(null, { status: 200 });
 });
 

@@ -24,6 +24,12 @@ export function ThreadStatusBar({ conversation }: { conversation: ThreadConversa
 
   const padBottom = Math.max(insets.bottom, 14);
 
+  // Open and requested read nothing the list didn't already carry. The rest
+  // hold an empty bar until the row lands — see `ThreadConversation.seeded`.
+  if (conversation.seeded && conversation.status !== 'requested') {
+    return <Bar padBottom={padBottom} />;
+  }
+
   const handleAccept = () => {
     playSoftPress();
     acceptRequest({ conversationId: conversation.id }).catch((error: unknown) =>
@@ -240,7 +246,7 @@ function RatePrompt({ conversation }: { conversation: ThreadConversation }) {
   );
 }
 
-function Bar({ children, padBottom }: { children: React.ReactNode; padBottom: number }) {
+function Bar({ children, padBottom }: { children?: React.ReactNode; padBottom: number }) {
   return (
     <View
       className="gap-2.5 border-t border-border/40 bg-background px-4 pt-3"

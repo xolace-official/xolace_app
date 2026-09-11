@@ -1,9 +1,11 @@
+import type { LocalMessage } from 'stream-chat';
 import { messageActions as defaultMessageActions } from 'stream-chat-expo';
 import type {
   MessageActionsParams,
   MessageActionType,
   ReactionData,
 } from 'stream-chat-expo';
+import { ConversationMessageSystem } from './crisis-resources-card';
 import { ConversationMessageAuthor } from './message-author';
 import { ChannelErrorIndicator } from './offline-strip';
 import { ConversationReply } from './quoted-reply';
@@ -73,6 +75,9 @@ export const CHANNEL_ROOT_PROPS = { style: { flex: 1 } };
 export const COMPONENT_OVERRIDES = {
   NetworkDownIndicator: ChannelErrorIndicator,
   MessageAuthor: ConversationMessageAuthor,
+  // The resources card (#344): a system message the app sends, rendered by
+  // kind. Not an identity override — a system message has no author to leak.
+  MessageSystem: ConversationMessageSystem,
   TypingIndicator: ConversationTypingIndicator,
   Reply: ConversationReply,
 };
@@ -113,11 +118,28 @@ const ALLOWED_ACTIONS = new Set([
  * If Edit ever regresses on iOS — keyboard flashing shut on open, or a JSI
  * abort (`Assertion failed: (isObject()), getObject`) from a focus command
  * reaching a shadow node mid-reparent — that delay is the thing to reinstate.
+ *
+ * `flagMessage` keeps the SDK's gating (never on your own message, only with
+ * the capability) but not its handler: Stream's default alerts and flags into
+ * a dashboard queue alone, while ours also writes the concern tray — see
+ * `useFlagMessage`. Same `actionType`, so the SDK's icon and ordering stay.
  */
 export function minimalMessageActions(
   params: MessageActionsParams,
+  onFlag: (message: LocalMessage) => void,
 ): MessageActionType[] {
-  return defaultMessageActions(params).filter((action) =>
-    ALLOWED_ACTIONS.has(action.actionType),
-  );
+  return defaultMessageActions(params)
+    .filter((action) => ALLOWED_ACTIONS.has(action.actionType))
+    .map((action) =>
+      action.actionType === 'flagMessage'
+        ? {
+            ...action,
+            title: 'Flag message',
+            action: () => {
+              params.dismissOverlay();
+              onFlag(params.message);
+            },
+          }
+        : action,
+    );
 }

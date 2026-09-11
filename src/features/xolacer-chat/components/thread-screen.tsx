@@ -27,7 +27,15 @@ import { ThreadStatusBar } from './thread-status-bar';
 export type ThreadConversation = Omit<
   NonNullable<FunctionReturnType<typeof api.xolacerChat.getConversation>>,
   'myStreamUserId'
->;
+> & {
+  /**
+   * Set only by `useThreadConversation`'s list seed: the per-conversation
+   * fields (`resumable`, `canRate`, `myRating`) are placeholders until the
+   * real row lands, so the status bar — the one surface that reads them —
+   * holds its space instead of committing to a CTA it may have to retract.
+   */
+  seeded?: true;
+};
 
 export function ThreadScreen({ conversationId }: { conversationId: string }) {
   const conversation = useThreadConversation(conversationId);
@@ -103,7 +111,9 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
     }
 
     // Chrome is Convex-driven and already loaded, so it stays put while the
-    // Stream connection opens underneath it. Only the message region waits.
+    // Stream client comes up underneath it. `ready` no longer waits on the
+    // socket — only on the offline database opening, milliseconds — so this
+    // skeleton is a flash, and `unavailable` is the one state that lingers.
     if (streamStatus !== 'ready') {
       return (
         <View className="flex-1 bg-background">

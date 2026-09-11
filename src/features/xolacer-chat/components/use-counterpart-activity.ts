@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { StreamChat } from 'stream-chat';
+import { useStreamStatus } from '../providers/stream-chat-provider';
 
 export type CounterpartPresence =
   | { online: true }
@@ -28,16 +29,21 @@ const IDLE: CounterpartActivity = { typing: false, presence: null };
  *
  * Typing takes the same treatment so the header can prefer it over the
  * online dot — the stronger signal wins.
+ *
+ * The client comes from `useStreamStatus`, which hands it out only once it
+ * has a user: the header is mounted from the thread's first frame, before
+ * that on a cold-start deep link, and `client.channel()` throws on a client
+ * with no user set.
  */
 export function useCounterpartActivity(
-  client: StreamChat,
   streamChannelId: string | undefined,
   counterpartUserId: string,
 ): CounterpartActivity {
   const [activity, setActivity] = useState<CounterpartActivity>(IDLE);
+  const { client } = useStreamStatus();
 
   useEffect(() => {
-    if (!streamChannelId) return;
+    if (!client || !streamChannelId) return;
     const channel = client.channel('messaging', streamChannelId);
 
     const read = () =>
@@ -57,7 +63,9 @@ export function useCounterpartActivity(
     return () => subs.forEach((sub) => sub.unsubscribe());
   }, [client, streamChannelId, counterpartUserId]);
 
-  return activity;
+  // Derived, not synced: no client/channel means IDLE regardless of what the
+  // last subscription left behind.
+  return client && streamChannelId ? activity : IDLE;
 }
 
 function readPresence(

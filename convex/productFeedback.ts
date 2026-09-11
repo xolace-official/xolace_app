@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { mutation, query, MutationCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
@@ -7,12 +8,20 @@ import { posthog } from "./posthog";
 
 const MAX_LENGTH = 1000;
 
+// "flag" is not here: it has its own mutation and no budget.
 const kindValidator = v.union(
   v.literal("bug"),
   v.literal("idea"),
   v.literal("concern"),
 );
 type Kind = "bug" | "idea" | "concern";
+
+export const contextValidator = v.object({
+  appVersion: v.string(),
+  route: v.string(),
+  themeName: v.string(),
+  platform: v.string(),
+});
 
 // A concern is metered on its own budget so an abuse report is never refused
 // because the reporter spent the day sending feature ideas.
@@ -60,12 +69,7 @@ export const submit = mutation({
   args: {
     kind: kindValidator,
     text: v.string(),
-    context: v.object({
-      appVersion: v.string(),
-      route: v.string(),
-      themeName: v.string(),
-      platform: v.string(),
-    }),
+    context: contextValidator,
     subjectProfileId: v.optional(v.id("emotional_profiles")),
     conversationId: v.optional(v.id("xolacer_conversations")),
   },
@@ -100,6 +104,15 @@ export const submit = mutation({
         profile._id,
         args.subjectProfileId !== undefined,
       );
+      // Also into Stream's moderation queue, so the maintainer reviews flags
+      // and reports in one place. Scheduled, not inline: a Stream outage must
+      // not lose the report the tray already has.
+      if (args.subjectProfileId) {
+        await ctx.scheduler.runAfter(0, internal.productFeedbackFlags.flagSubjectOnStream, {
+          subjectProfileId: args.subjectProfileId,
+          reporterProfileId: profile._id,
+        });
+      }
     }
 
     return null;

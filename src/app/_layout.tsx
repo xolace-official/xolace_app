@@ -32,6 +32,7 @@ import { api } from '@/convex/_generated/api';
 import { RootProvider } from '@/src/providers/root-provider';
 import { usePostHogIdentity } from '@/src/lib/use-posthog-identity';
 import { useAppStore } from '@/src/store/store';
+import { ChatLocalDataGuard } from '@/src/features/xolacer-chat/chat-local-data-guard';
 import { UpdateBottomSheet, type UpdateBottomSheetMode } from '@/src/components/shared/update-bottom-sheet';
 import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
 import { useVersionCheck } from '@/src/helpers/hooks/use-version-check';
@@ -167,24 +168,28 @@ const AppContent = () => {
   // (protected) optimistically and bouncing the user out of it a frame later.
   if (isAuthLoading || intakeGateLoading) return <FullRippleLoader />;
   return (
-    <Stack screenOptions={NO_HEADER}>
-      <Stack.Protected guard={!isAuthenticated && !introSeen}>
-        <Stack.Screen name="(onboarding)" options={NO_HEADER} />
-      </Stack.Protected>
-      <Stack.Protected guard={!isAuthenticated && introSeen}>
-        <Stack.Screen name="(auth)" options={NO_HEADER} />
-      </Stack.Protected>
-      <Stack.Protected guard={isAuthenticated && !onboardingComplete}>
-        <Stack.Screen name="(intake)" options={NO_HEADER} />
-      </Stack.Protected>
-      <Stack.Protected guard={isAuthenticated && onboardingComplete}>
-        <Stack.Screen name="(protected)" options={NO_HEADER} />
-        <Stack.Screen
-          name="(paywall)"
-          options={{ headerShown: false, presentation: "fullScreenModal" }}
-        />
-      </Stack.Protected>
-    </Stack>
+    <>
+      {/* Above every route group so it outlives (protected) — see the component. */}
+      <ChatLocalDataGuard />
+      <Stack screenOptions={NO_HEADER}>
+        <Stack.Protected guard={!isAuthenticated && !introSeen}>
+          <Stack.Screen name="(onboarding)" options={NO_HEADER} />
+        </Stack.Protected>
+        <Stack.Protected guard={!isAuthenticated && introSeen}>
+          <Stack.Screen name="(auth)" options={NO_HEADER} />
+        </Stack.Protected>
+        <Stack.Protected guard={isAuthenticated && !onboardingComplete}>
+          <Stack.Screen name="(intake)" options={NO_HEADER} />
+        </Stack.Protected>
+        <Stack.Protected guard={isAuthenticated && onboardingComplete}>
+          <Stack.Screen name="(protected)" options={NO_HEADER} />
+          <Stack.Screen
+            name="(paywall)"
+            options={{ headerShown: false, presentation: "fullScreenModal" }}
+          />
+        </Stack.Protected>
+      </Stack>
+    </>
   )
 }
 

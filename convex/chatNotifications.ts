@@ -1,5 +1,7 @@
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { internalAction, internalMutation } from "./_generated/server";
+import { getStreamUnreadCount } from "./integrations/stream";
 import {
   chatNotificationContent,
   chatNotificationsAllowed,
@@ -41,6 +43,16 @@ export const send = internalMutation({
     // own. Absent for a decline, which names nobody.
     counterpartName: v.optional(v.string()),
     conversationId: v.id("xolacer_conversations"),
+    // Stream's unread total for the recipient, set only by `sendMessagePush`.
+    // The lifecycle types never badge: the icon number means "messages" and
+    // only that, and it must equal what the Connect tab shows.
+    badge: v.optional(v.number()),
+    // No alert, sound, or list entry — only `badge`. Sent inside the 2-minute
+    // window when a second message arrives and nothing buzzes: the icon must
+    // still move to Stream's total or it would disagree with the Connect tab
+    // until the next launch. A push with no title/body is not displayed on
+    // either platform. Only ever true with `badge` set.
+    silent: v.optional(v.boolean()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -63,19 +75,60 @@ export const send = internalMutation({
     // platforms.
     const { sound, channelId } = chatNotificationSound(args.type);
 
+    const data = { type: args.type, conversationId: args.conversationId };
     // Shared with the nudge path so a multi-device fix can never land on one
     // of the two dispatch sites and not the other.
     await sendPushToProfile(ctx, {
       emotionalProfileId: args.emotionalProfileId,
-      notification: {
-        title,
-        body,
-        sound,
-        channelId,
-        data: { type: args.type, conversationId: args.conversationId },
-      },
+      notification: args.silent
+        ? // The component's wire validator has title/body optional; only its
+          // TS type insists. Cast rather than send an empty title, which
+          // Android would display as an empty notification.
+          ({ badge: args.badge, data } as unknown as { title: string; data: typeof data })
+        : { title, body, sound, channelId, badge: args.badge, data },
     });
 
     return null;
+  },
+});
+
+/**
+ * The `chat_message` dispatch, one hop ahead of `send`: asks Stream for the
+ * recipient's unread total so the push can set the icon badge to it. An action
+ * because that is a fetch, which `notifyNewMessage` (a mutation) cannot make.
+ *
+ * The count is best-effort. Stream down means a push with no badge — the
+ * client's mirror (`useUnreadBadge`) corrects the icon on the next handshake —
+ * never a message that doesn't arrive.
+ */
+export const sendMessagePush = internalAction({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+    counterpartName: v.string(),
+    conversationId: v.id("xolacer_conversations"),
+    // Badge-only: the recipient is inside the suppression window.
+    silent: v.optional(v.boolean()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    let badge: number | undefined;
+    try {
+      // The Stream user id is the profile id — see `upsertStreamUsers`.
+      badge = await getStreamUnreadCount(args.emotionalProfileId);
+    } catch (error) {
+      console.warn("[chat] unread count unavailable, sending without badge", error);
+    }
+    // A silent push exists only to carry the badge; without one it is nothing.
+    if (args.silent && badge === undefined) return null;
+    // Same-file call: annotated per the Convex guideline on circular inference.
+    const sent: null = await ctx.runMutation(internal.chatNotifications.send, {
+      emotionalProfileId: args.emotionalProfileId,
+      type: "chat_message",
+      counterpartName: args.counterpartName,
+      conversationId: args.conversationId,
+      badge,
+      silent: args.silent,
+    });
+    return sent;
   },
 });

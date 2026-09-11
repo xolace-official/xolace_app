@@ -76,14 +76,14 @@ const XOLACE_CONTACT: Resource = {
   description: "We're here - reach us any time",
 };
 
-const CRISIS_RESOURCES: Resource[] = [
+export const CRISIS_RESOURCES: Resource[] = [
   XOLACE_CONTACT,
   { type: "phone", source: "crisis_line", priority: 2, label: "Mental Health Authority (Ghana)", value: "0800 678 678", description: "Free, 24/7" },
   { type: "phone", source: "crisis_line", priority: 3, label: "Ghana Emergency Line", value: "112", description: "National emergency" },
   { type: "url", source: "online_resource", priority: 4, label: "Find a local crisis centre", value: "https://www.iasp.info/resources/Crisis_Centres/", description: "If outside Ghana" },
 ];
 
-const SUPPORT_RESOURCES: Resource[] = [
+export const SUPPORT_RESOURCES: Resource[] = [
   XOLACE_CONTACT,
   { type: "phone", source: "local_service", priority: 2, label: "Mental Health Authority (Ghana)", value: "0800 678 678" },
   { type: "text", source: "local_service", priority: 3, label: "MindFreedom Ghana", value: "Mental health advocacy & support" },

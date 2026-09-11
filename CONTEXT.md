@@ -3,6 +3,104 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Chat moderation lanes (2026-09-11)
+
+Two lanes, neither blocks delivery. **Pre-delivery** is Stream-native only:
+the `contact_leak` regex blocklist and Stream's `url_detection_v1`, attached
+to `messaging` with behavior `flag`. Automod stays disabled and the profanity
+list stays unattached — venting must reach the listener. The app config is
+code: `bun stream:setup` (`lib/streamSetup` plans, `streamSetup.setup` prints
+the diff and applies on `{"apply":true}`), run per environment, dev first.
+Link previews stay on (`url_enrichment` untouched, by ruling).
+
+**Post-delivery** is one Haiku call per qualifying message
+(`convex/ai/chat/`), scheduled by the `message.new` webhook *after*
+`notifyNewMessage` and its push have committed, so it can neither delay nor
+break a notification. Skip rule: under 3 words or nothing alphabetic. Dedupe
+rides the `x-webhook-id` guard (`notifyNewMessage` returns the delivery only
+once) with `chat_moderation_events.by_messageId` as the backstop. The
+*verdict* row holds category, level and confidence — **never the text**.
+
+**Crisis response is a reply, not a block.** `crisis` and `elevated` both send a
+`type: "system"` message with `kind: "crisis_resources"`, `silent`,
+`skip_push`, carrying the safeguard's resource set; the channel type's
+`skip_last_msg_update_for_system_msgs` keeps it off the list order, and the
+webhook ignores it by kind. The client's `MessageSystem` override renders it
+as *the app speaking*, worded per role. Ruling: a DM has no trigger concept,
+so every `elevated` verdict earns the support card — the reflect flow's
+"elevated with a trigger" gate does not carry over. Effects run before the
+verdict row is written, so a failed Stream call is retryable. Harassment / spam / contact call
+Stream's flag endpoint and nothing enters the thread; review is the Stream
+dashboard, only.
+
+**Understanding untouched.** Verdicts never write `emotional_metadata` or
+`semantic_profiles` and never feed Xolacer rating. A Xolacer recommending
+Xolace+ is not spam — the prompt says so and the eval anchors it.
+
+Rejected: a before-send hook (1.5–5 s fail-open window cannot host a model
+call; the product's answer to crisis is a reply). Glossary: *pre-delivery
+lane*, *post-delivery lane*, *verdict*, *resources card*.
+
+## One unread number; flag vs. report (2026-09-11)
+
+**Unread has one owner: Stream's per-user `total_unread_count`.** It arrives
+with the connect handshake and every event that changes it carries the new
+absolute value. The client folds those in `badgeFromEvents` (pure, tested)
+and `useUnreadBadge` feeds both the Connect tab badge and the app-icon badge
+(`UnreadIconBadge`, `setBadgeCountAsync`) from that one number, so the two
+can never disagree. A chat push sets the same number server-side
+(`chatNotifications.sendMessagePush` asks Stream `GET /unread` before
+dispatch); no other push type ever sets `badge`. Inside the 2-minute
+suppression window a second message sends a **badge-only** push (no
+title/body — not displayed on either platform) so the icon still follows
+Stream's total; the window and its stamp are untouched. The hook returns `null`
+until Stream has spoken and the icon sync skips `null` — clearing a
+push-set badge before the handshake would be the stale-badge defect (#139)
+in reverse.
+
+Rejected: a Convex counter or any persisted count (#140's option 3) — it
+reintroduces the stale badge #139 fixed.
+
+**The Connect list is Convex-owned; Stream is transport only.** Rows come
+from `myConversations` (requests without a channel, lifecycle status,
+per-role identity, archive), so the SDK's `ChannelList` is not used. That
+also opts out of what `ChannelList` does behind the scenes — the offline
+hydrate and the re-query on every socket reopen — and `useChatWarmup` owns
+both instead (the SDK sets `recoverStateOnReconnect = false`, and a
+background/foreground cycle is a fresh connect, not a `_reconnect`, so only
+`connection.changed { online }` announces it).
+
+**Glossary.** *Flag* = one message, from the thread's long-press menu,
+unbudgeted, `product_feedback.kind = "flag"` with `messageId` and empty
+`text`. *Report* = one person for one conversation, the existing concern
+tray path, 2/day. Both are *concerns* in the tray and both land in Stream's
+moderation queue: the client calls `flagMessage` with its own token so the
+queue names the flagger; `submit` schedules `flagSubjectOnStream` for a
+report. The SDK's own Flag handler is replaced, not wrapped — its `handleFlag`
+hook runs *in addition to* Stream's alert, so `minimalMessageActions` swaps
+the action body while keeping the SDK's gating (never your own message).
+
+## Conversation, channel, thread (2026-09-11)
+
+One Xolacer chat has three names in code; only one is the domain term.
+
+- **Conversation** — the domain object. A seeker–Xolacer pair's chat, with
+  its lifecycle (requested → open → resting / closed), caps, pseudonym,
+  block and rating state. Lives in `xolacer_conversations`; it is the source
+  of truth for *whether* two people are talking. Prose and UI copy say
+  "conversation".
+- **Channel** — Stream's transport for the conversation's messages. One
+  channel per conversation, deterministic id derived from the conversation.
+  An implementation word: never appears in UI copy, and a conversation can
+  exist (requested, declined) with no channel yet.
+- **Thread** — the *screen* that shows a conversation's messages. A route
+  name only. Not Stream's "thread" (reply-to-message threads), which the
+  product does not use.
+
+Rejected: calling the domain object "chat" (too generic — the tab is
+"Connect", the feature is "Xolacer chat") or "channel" (leaks the vendor
+into the language).
+
 ## The Xolacer primer (2026-09-10)
 
 A one-time bottom sheet, **"Before you ask,"** shown the first time a seeker

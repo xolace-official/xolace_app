@@ -35,7 +35,9 @@
     "test:coverage": "vitest run --coverage --exclude '**/*.eval.test.ts'",
     "test:evals": "vitest run --testTimeout 30000 convex/ai/prompts/__evals__",
     "stream:webhook": "convex run streamWebhook:registerWebhook",
-    "stream:webhook:prod": "convex run --prod streamWebhook:registerWebhook"
+    "stream:webhook:prod": "convex run --prod streamWebhook:registerWebhook",
+    "stream:setup": "convex run streamSetup:setup",
+    "stream:setup:prod": "convex run --prod streamSetup:setup"
   },
   "dependencies": {
     "@ai-sdk/openai": "3.0.80",
@@ -55,6 +57,7 @@
     "@expo/material-symbols": "^0.1.1",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@legendapp/list": "^3.3.9",
+    "@op-engineering/op-sqlite": "^17.2.0",
     "@posthog/convex": "^2.1.3",
     "@react-native-community/netinfo": "12.0.1",
     "@react-native-masked-view/masked-view": "0.3.2",

@@ -7,6 +7,7 @@ import {
   pushNotifications,
 } from "../lib/pushNotifications";
 import { rankDelete } from "../lib/aggregates";
+import { deleteConversationRow } from "../lib/conversationErasure";
 
 export const BATCH_SIZE = 100;
 
@@ -23,11 +24,15 @@ export type DrainStep = (
  * content is removed by the purgeStreamUser action in the final batch.
  */
 export const drainConversations: DrainStep = async (ctx, profileId) => {
+  // A conversation whose verdicts overflowed one batch stays for the next pass.
+  let deferred = false;
   const asUser = await ctx.db
     .query("xolacer_conversations")
     .withIndex("by_user_and_status", (q) => q.eq("userProfileId", profileId))
     .take(BATCH_SIZE);
-  for (const conversation of asUser) await ctx.db.delete("xolacer_conversations", conversation._id);
+  for (const conversation of asUser) {
+    if (!(await deleteConversationRow(ctx, conversation._id))) deferred = true;
+  }
 
   const asXolacer = await ctx.db
     .query("xolacer_conversations")
@@ -35,9 +40,11 @@ export const drainConversations: DrainStep = async (ctx, profileId) => {
       q.eq("xolacerProfileId", profileId)
     )
     .take(BATCH_SIZE);
-  for (const conversation of asXolacer) await ctx.db.delete("xolacer_conversations", conversation._id);
+  for (const conversation of asXolacer) {
+    if (!(await deleteConversationRow(ctx, conversation._id))) deferred = true;
+  }
 
-  return asUser.length === BATCH_SIZE || asXolacer.length === BATCH_SIZE;
+  return deferred || asUser.length === BATCH_SIZE || asXolacer.length === BATCH_SIZE;
 };
 
 /**

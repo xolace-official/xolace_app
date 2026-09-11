@@ -11,6 +11,7 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
+import { purgeModerationEvents } from "./lib/conversationErasure";
 import {
   camperName,
   camperTagOf,
@@ -58,6 +59,7 @@ import {
   planBlock,
   presenceDisclosed,
 } from "./lib/conversationGating";
+import { conversationRoleValidator } from "./lib/validators";
 import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 
 const statusValidator = v.union(
@@ -1494,6 +1496,8 @@ export const deleteConversation = mutation({
     const mine =
       role === "user" ? { deletedByUser: true } : { deletedByXolacer: true };
     if (bothPartiesDeleted({ ...conversation, ...mine })) {
+      // `canDelete` rows never carried messages, so one verdict batch covers it.
+      await purgeModerationEvents(ctx, args.conversationId);
       await ctx.db.delete("xolacer_conversations", args.conversationId);
       return null;
     }
@@ -1675,7 +1679,16 @@ export const notifyNewMessage = internalMutation({
     // the deploy that started sending it, still counts as before.
     webhookId: v.optional(v.string()),
   },
-  returns: v.null(),
+  // Non-null only for the first delivery of a message from someone on the
+  // row: what the webhook needs to schedule the post-delivery moderation lane
+  // (#344) after this mutation — and its push — are already committed.
+  returns: v.union(
+    v.null(),
+    v.object({
+      conversationId: v.id("xolacer_conversations"),
+      senderRole: conversationRoleValidator,
+    }),
+  ),
   handler: async (ctx, args) => {
     if (!chatEnabled()) return null;
 
@@ -1720,24 +1733,34 @@ export const notifyNewMessage = internalMutation({
       });
     }
 
+    const senderRole =
+      args.senderId === conversation.userProfileId
+        ? ("user" as const)
+        : args.senderId === conversation.xolacerProfileId
+          ? ("xolacer" as const)
+          : null;
+    const delivery = !alreadyCounted && senderRole ? { conversationId, senderRole } : null;
+
     // Stream cannot deliver into a channel we consider shut, but a resting or
     // blocked pair whose channel Stream has not frozen yet would still arrive
     // here — a closed conversation notifies nobody.
-    if (conversation.status !== "open") return null;
+    if (conversation.status !== "open") return delivery;
 
     const recipientProfileId = messageNotificationRecipient(
       conversation,
       args.senderId,
     );
-    if (!recipientProfileId) return null;
+    if (!recipientProfileId) return delivery;
 
     // The recipient's own stamp, never the row's: the reply to a message must
     // not land inside the window that message opened.
     const now = Date.now();
     const notifiedField = messageNotifiedField(conversation, recipientProfileId);
-    if (messageNotificationSuppressed(conversation[notifiedField], now)) {
-      return null;
-    }
+    // Suppressed means no buzz, not no badge: a second message inside the
+    // window still moves Stream's total, and the icon has to follow it or it
+    // disagrees with the Connect tab until the next launch. The stamp is left
+    // alone — the window is unchanged, only the badge rides through it.
+    const suppressed = messageNotificationSuppressed(conversation[notifiedField], now);
 
     // Asked here as well as in the dispatch itself, because the stamp has to
     // mean "this person was buzzed". Burning the window on a send that the
@@ -1749,7 +1772,17 @@ export const notifyNewMessage = internalMutation({
         q.eq("emotionalProfileId", recipientProfileId),
       )
       .unique();
-    if (!chatNotificationsAllowed(preferences?.notifications)) return null;
+    if (!chatNotificationsAllowed(preferences?.notifications)) return delivery;
+
+    if (suppressed) {
+      await ctx.scheduler.runAfter(0, internal.chatNotifications.sendMessagePush, {
+        emotionalProfileId: recipientProfileId,
+        counterpartName: "",
+        conversationId,
+        silent: true,
+      });
+      return delivery;
+    }
 
     // Stamped before the send is scheduled, in the same transaction, so a
     // burst arriving as separate webhook calls cannot each read a stale window.
@@ -1761,16 +1794,17 @@ export const notifyNewMessage = internalMutation({
     const xolacer = senderIsXolacer
       ? await getXolacerProfileByProfileId(ctx, conversation.xolacerProfileId)
       : null;
-    await notifyConversation(
-      ctx,
-      "chat_message",
-      conversationId,
-      recipientProfileId,
-      senderIsXolacer
+    // Through the badge-fetching action rather than `notifyConversation`: a
+    // message push carries Stream's unread total for the icon badge, and only
+    // an action can ask Stream for it.
+    await ctx.scheduler.runAfter(0, internal.chatNotifications.sendMessagePush, {
+      emotionalProfileId: recipientProfileId,
+      counterpartName: senderIsXolacer
         ? (xolacer?.displayName ?? "Xolacer")
         : await ensureCamperName(ctx, conversation),
-    );
-    return null;
+      conversationId,
+    });
+    return delivery;
   },
 });
 

@@ -5,6 +5,7 @@ import {
   StreamChatProvider,
   StreamOverlayProvider,
 } from "@/src/features/xolacer-chat/providers/stream-chat-provider";
+import { UnreadIconBadge } from "@/src/features/xolacer-chat/components/unread-icon-badge";
 
 /**
  * Provides the navigation layout used by protected routes.
@@ -60,6 +61,7 @@ export default function ProtectedLayout() {
         {/* Renders nothing — it is here, above the Stack, so presence keeps
             reporting whichever screen the user is on. */}
         <AppPresence />
+        <UnreadIconBadge />
         <Stack screenOptions={SCREEN_OPTIONS}>
           <Stack.Screen name="index" />
           <Stack.Screen name="(tabs)" options={NO_GESTURE} />

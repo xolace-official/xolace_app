@@ -26,7 +26,9 @@ Notifications.setNotificationHandler({
       shouldShowBanner: show,
       shouldShowList: show,
       shouldPlaySound: show,
-      shouldSetBadge: false,
+      // Only a chat push carries `badge` (Stream's unread total); the rest
+      // leave the icon alone whatever this says.
+      shouldSetBadge: show,
     };
   },
 });

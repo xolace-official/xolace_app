@@ -4,7 +4,7 @@
  *
  * Endpoint and JWT shapes are mirrored from the installed `stream-chat`
  * package source (signing.ts / client.ts):
- *  - user token:   HS256 JWT, payload { user_id }, no iat
+ *  - user token:   HS256 JWT, payload { user_id, exp }, no iat
  *  - server token: HS256 JWT, payload { server: true }
  *  - auth:         ?api_key=<key> + Authorization: <jwt> + stream-auth-type: jwt
  *  - upsert users: POST /users            { users: { [id]: user } }
@@ -12,6 +12,9 @@
  *  - freeze:       PATCH /channels/messaging/{id} { set: { frozen: true } }
  *  - delete user:  DELETE /users/{id}?mark_messages_deleted&hard_delete
  *  - app settings: GET /app, PATCH /app { event_hooks: [...] }
+ *  - channel type: GET/PUT /channeltypes/{name}; blocklists: GET/POST /blocklists, PUT /blocklists/{name}
+ *  - system msg:   POST /channels/messaging/{id}/message { message: { type: "system", ... }, skip_push }
+ *  - flag message: POST /moderation/flag { target_message_id }
  *  - webhook sig:  hex HMAC-SHA256 of the raw body, keyed by the API secret
  */
 
@@ -105,14 +108,23 @@ export function getStreamApiKey(): string {
   return getStreamEnv().apiKey;
 }
 
+/**
+ * The client persists this token on-device so a returning chat user skips the
+ * mint on cold start (#342). The `exp` is what bounds that: a lost phone's
+ * copy stops working on its own, and a live client refreshes silently through
+ * its `tokenProvider` when Stream rejects the stale one.
+ */
+export const USER_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
+
 /** Client-facing Stream user token. userId is always a pseudonymous profile id. */
 export async function mintUserToken(userId: string): Promise<string> {
   const { apiSecret } = getStreamEnv();
-  return signJwt({ user_id: userId }, apiSecret);
+  const exp = Math.floor(Date.now() / 1000) + USER_TOKEN_TTL_SECONDS;
+  return signJwt({ user_id: userId, exp }, apiSecret);
 }
 
 async function streamRequest(
-  method: "GET" | "POST" | "PATCH" | "DELETE",
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   path: string,
   options: { query?: Record<string, string>; body?: unknown } = {},
 ): Promise<Record<string, unknown>> {
@@ -229,4 +241,132 @@ export async function deleteStreamUser(userId: string): Promise<void> {
   await streamRequest("DELETE", `/users/${encodeURIComponent(userId)}`, {
     query: { mark_messages_deleted: "true", hard_delete: "true" },
   });
+}
+
+/**
+ * The user's unread total as Stream holds it — the same number the client
+ * derives from its event stream (`badgeFromEvents`), read here so a push can
+ * set the icon badge to it. GET /unread?user_id= is the server-side form of the
+ * client's `getUnreadCount`.
+ */
+export async function getStreamUnreadCount(userId: string): Promise<number> {
+  const response = await streamRequest("GET", "/unread", { query: { user_id: userId } });
+  const total = response.total_unread_count;
+  if (typeof total !== "number") throw new Error("Stream /unread returned no total");
+  return total;
+}
+
+/**
+ * Flag a user in Stream's moderation queue on the reporter's behalf, so a
+ * Report filed in the concern tray also shows in the dashboard the maintainer
+ * already watches for message flags. Mirrors the client's `flagUser` with the
+ * server-side `user_id` option naming who is flagging.
+ */
+export async function flagStreamUser(targetId: string, reporterId: string): Promise<void> {
+  await streamRequest("POST", "/moderation/flag", {
+    body: { target_user_id: targetId, user_id: reporterId },
+  });
+}
+
+// ============================================================
+// Moderation lanes (#344)
+// ============================================================
+
+/**
+ * The Stream user the resources card is sent as and the flag is filed by.
+ * Stream requires a user on both, and neither participant is the right one —
+ * it is the app speaking. Upserted before every use: cheap, idempotent, and
+ * it spares a one-time setup step per environment.
+ */
+export const XOLACE_SYSTEM_USER_ID = "xolace";
+
+async function ensureSystemUser(): Promise<void> {
+  await upsertStreamUsers([{ id: XOLACE_SYSTEM_USER_ID, name: "Xolace" }]);
+}
+
+/**
+ * Flag a message into the dashboard queue on the app's own behalf — the
+ * post-delivery lane's answer to harassment, spam and contact leaks. Same
+ * endpoint as `flagStreamUser`; the queue names the system user as flagger.
+ */
+export async function flagStreamMessage(messageId: string, reason: string): Promise<void> {
+  await ensureSystemUser();
+  await streamRequest("POST", "/moderation/flag", {
+    body: { target_message_id: messageId, reason, user_id: XOLACE_SYSTEM_USER_ID },
+  });
+}
+
+/**
+ * A `type: "system"` message from the app into a channel, marked `silent`
+ * (no unread increment, no `message.new` push) with `skip_push` (no push at
+ * all). The channel type's `skip_last_msg_update_for_system_msgs` (see
+ * `lib/streamSetup`) keeps it from bumping `last_message_at`. Custom fields
+ * ride at the top level of the message, where the client SDK reads them.
+ */
+export async function sendStreamSystemMessage(
+  channelId: string,
+  message: { text: string; id?: string } & Record<string, unknown>,
+): Promise<void> {
+  await ensureSystemUser();
+  try {
+    await streamRequest("POST", `/channels/messaging/${encodeURIComponent(channelId)}/message`, {
+      body: {
+        message: { ...message, type: "system", user_id: XOLACE_SYSTEM_USER_ID, silent: true },
+        skip_push: true,
+      },
+    });
+  } catch (error) {
+    // A caller-supplied `id` makes the send idempotent: Stream rejects a
+    // duplicate with 400 "message with ID … already exists", which means the
+    // earlier attempt landed — a retry treats that as delivered.
+    if (message.id && isStreamDuplicateMessage(error)) return;
+    throw error;
+  }
+}
+
+function isStreamDuplicateMessage(error: unknown): boolean {
+  return error instanceof Error && /\(400\).*already exists/i.test(error.message);
+}
+
+/** The `messaging` channel type as Stream holds it, every field. */
+export async function getStreamChannelType(name: string): Promise<Record<string, unknown>> {
+  return streamRequest("GET", `/channeltypes/${encodeURIComponent(name)}`);
+}
+
+/** Top-level scalars merge; nested arrays (`blocklists`) replace — submit them whole. */
+export async function updateStreamChannelType(
+  name: string,
+  body: Record<string, unknown>,
+): Promise<void> {
+  await streamRequest("PUT", `/channeltypes/${encodeURIComponent(name)}`, { body });
+}
+
+export type StreamBlockList = { name: string; type?: string; words: string[] };
+
+export async function listStreamBlockLists(): Promise<StreamBlockList[]> {
+  const response = await streamRequest("GET", "/blocklists");
+  return (response.blocklists as StreamBlockList[] | undefined) ?? [];
+}
+
+export async function createStreamBlockList(list: StreamBlockList): Promise<void> {
+  await streamRequest("POST", "/blocklists", { body: list });
+}
+
+export async function updateStreamBlockList(name: string, words: string[]): Promise<void> {
+  await streamRequest("PUT", `/blocklists/${encodeURIComponent(name)}`, { body: { words } });
+}
+
+export async function deleteStreamBlockList(name: string): Promise<void> {
+  await streamRequest("DELETE", `/blocklists/${encodeURIComponent(name)}`);
+}
+
+/** The Moderation v2 policy for a key such as `chat:messaging`, every field. */
+export async function getStreamModerationPolicy(key: string): Promise<Record<string, unknown>> {
+  const response = await streamRequest("GET", `/api/v2/moderation/config/${encodeURIComponent(key)}`);
+  return response.config as Record<string, unknown>;
+}
+
+/** Replaces the policy — submit it whole (see `lib/streamSetup.planModerationPolicy`). */
+export async function upsertStreamModerationPolicy(body: Record<string, unknown>): Promise<void> {
+  await streamRequest("POST", "/api/v2/moderation/config", { body });
 }
