@@ -101,6 +101,8 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
             additionalKeyboardAvoidingViewProps={CHANNEL_ROOT_PROPS}
             topInset={insets.top}
             supportedReactions={SUPPORTED_REACTIONS}
+            // One reaction per person per message; picking another swaps it.
+            enforceUniqueReaction
             overrideOwnCapabilities={TEXT_ONLY_CAPABILITIES}
             hasImagePicker={false}
             hasFilePicker={false}
