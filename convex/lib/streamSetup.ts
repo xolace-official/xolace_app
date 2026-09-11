@@ -9,9 +9,12 @@
  * without blocking or slowing a single message. Automod stays disabled and the
  * profanity list stays unattached — "I feel like shit" has to reach the person
  * listening.
+ *
+ * The lists attach through the Moderation v2 policy for the channel type
+ * (`chat:messaging`, `block_list_config`), not the channel type's legacy
+ * `blocklists` field — this app is on v2 and that field is inert here
+ * (verified: a bare phone number sailed through with it set).
  */
-
-export type BlockListAttachment = { blocklist: string; behavior: string };
 
 /** The fields of a channel type this plan reads or writes. Stream returns many
  * more; they are passed through untouched because the PUT only carries these. */
@@ -20,7 +23,16 @@ export type ChannelTypeConfig = {
   automod_behavior?: string;
   max_message_length?: number;
   skip_last_msg_update_for_system_msgs?: boolean;
-  blocklists?: BlockListAttachment[];
+  [key: string]: unknown;
+};
+
+export type BlockListRule = { name: string; action: string };
+export type BlockListPolicy = { enabled: boolean; rules: BlockListRule[] };
+
+/** The v2 moderation policy fields this plan reads or writes. */
+export type ModerationPolicy = {
+  key: string;
+  block_list_config?: BlockListPolicy | null;
   [key: string]: unknown;
 };
 
@@ -50,29 +62,27 @@ export const CONTACT_LEAK_BLOCKLIST: BlockListConfig = {
 export const DESIRED_MESSAGING = {
   // The resources card must not move the conversation up anyone's list.
   skip_last_msg_update_for_system_msgs: true,
-  blocklists: [
-    { blocklist: CONTACT_LEAK_BLOCKLIST.name, behavior: "flag" },
-    // Stream's built-in URL regex list.
-    { blocklist: "url_detection_v1", behavior: "flag" },
-  ] as BlockListAttachment[],
 };
 
 export type DesiredMessaging = typeof DESIRED_MESSAGING;
 
-export type ChannelTypePlan = {
-  changes: Record<string, { from: unknown; to: unknown }>;
-  /** The PUT body. Nested `blocklists` is resubmitted whole (Stream replaces,
-   * never merges); the three fields the API marks required ride along. */
-  body: ChannelTypeConfig;
+/** The v2 policy key for the `messaging` channel type. */
+export const MESSAGING_POLICY_KEY = "chat:messaging";
+
+export const DESIRED_BLOCK_LIST_POLICY: BlockListPolicy = {
+  enabled: true,
+  rules: [
+    { name: CONTACT_LEAK_BLOCKLIST.name, action: "flag" },
+    // Stream's built-in URL regex list.
+    { name: "url_detection_v1", action: "flag" },
+  ],
 };
 
-const attachmentKey = (a: BlockListAttachment) => `${a.blocklist}:${a.behavior}`;
-
-function sameAttachments(a: BlockListAttachment[], b: BlockListAttachment[]) {
-  const left = a.map(attachmentKey).sort();
-  const right = b.map(attachmentKey).sort();
-  return left.length === right.length && left.every((k, i) => k === right[i]);
-}
+export type ChannelTypePlan = {
+  changes: Record<string, { from: unknown; to: unknown }>;
+  /** The PUT body; the three fields the API marks required ride along. */
+  body: ChannelTypeConfig;
+};
 
 export function planChannelTypeUpdate(
   current: ChannelTypeConfig,
@@ -91,13 +101,35 @@ export function planChannelTypeUpdate(
     body[key] = desired[key];
   }
 
-  const currentLists = current.blocklists ?? [];
-  if (!sameAttachments(currentLists, desired.blocklists)) {
-    changes.blocklists = { from: currentLists, to: desired.blocklists };
-    body.blocklists = desired.blocklists;
-  }
-
   return Object.keys(changes).length === 0 ? null : { changes, body };
+}
+
+const ruleKey = (r: BlockListRule) => `${r.name}:${r.action}`;
+
+/**
+ * Order-insensitive compare of the policy's block-list rules. Returns the
+ * upsert body or null when converged. Upsert REPLACES the policy (docs:
+ * "If a configuration with the specified key already exists, it will be
+ * replaced"), so every other engine's `*_config` rides along unchanged;
+ * read-only fields (`created_at`, …) do not.
+ */
+export function planModerationPolicy(
+  current: ModerationPolicy,
+  desired: BlockListPolicy,
+): { from: BlockListPolicy | null; body: ModerationPolicy } | null {
+  const existing = current.block_list_config ?? null;
+  const left = (existing?.rules ?? []).map(ruleKey).sort();
+  const right = desired.rules.map(ruleKey).sort();
+  const same =
+    existing?.enabled === desired.enabled &&
+    left.length === right.length &&
+    left.every((k, i) => k === right[i]);
+  if (same) return null;
+  const body: ModerationPolicy = { key: current.key, block_list_config: desired };
+  for (const [k, val] of Object.entries(current)) {
+    if (k.endsWith("_config") && k !== "block_list_config" && val != null) body[k] = val;
+  }
+  return { from: existing, body };
 }
 
 export type BlockListPlan = { op: "create" } | { op: "update"; from: string[] };

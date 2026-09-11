@@ -343,3 +343,14 @@ export async function createStreamBlockList(list: StreamBlockList): Promise<void
 export async function updateStreamBlockList(name: string, words: string[]): Promise<void> {
   await streamRequest("PUT", `/blocklists/${encodeURIComponent(name)}`, { body: { words } });
 }
+
+/** The Moderation v2 policy for a key such as `chat:messaging`, every field. */
+export async function getStreamModerationPolicy(key: string): Promise<Record<string, unknown>> {
+  const response = await streamRequest("GET", `/api/v2/moderation/config/${encodeURIComponent(key)}`);
+  return response.config as Record<string, unknown>;
+}
+
+/** Replaces the policy — submit it whole (see `lib/streamSetup.planModerationPolicy`). */
+export async function upsertStreamModerationPolicy(body: Record<string, unknown>): Promise<void> {
+  await streamRequest("POST", "/api/v2/moderation/config", { body });
+}

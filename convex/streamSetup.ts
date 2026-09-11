@@ -3,16 +3,22 @@ import { internalAction } from "./_generated/server";
 import {
   createStreamBlockList,
   getStreamChannelType,
+  getStreamModerationPolicy,
   listStreamBlockLists,
   updateStreamBlockList,
   updateStreamChannelType,
+  upsertStreamModerationPolicy,
 } from "./integrations/stream";
 import {
   CONTACT_LEAK_BLOCKLIST,
+  DESIRED_BLOCK_LIST_POLICY,
   DESIRED_MESSAGING,
+  MESSAGING_POLICY_KEY,
   planBlockList,
   planChannelTypeUpdate,
+  planModerationPolicy,
   type ChannelTypeConfig,
+  type ModerationPolicy,
 } from "./lib/streamSetup";
 
 /**
@@ -54,8 +60,17 @@ export const setup = internalAction({
       for (const [key, diff] of Object.entries(plan.changes)) {
         changes.push(`messaging.${key}: ${JSON.stringify(diff.from)} → ${JSON.stringify(diff.to)}`);
       }
-      // After the blocklist exists — attaching a name Stream has never seen fails.
       if (apply) await updateStreamChannelType("messaging", plan.body);
+    }
+
+    const policy = (await getStreamModerationPolicy(MESSAGING_POLICY_KEY)) as ModerationPolicy;
+    const policyPlan = planModerationPolicy(policy, DESIRED_BLOCK_LIST_POLICY);
+    if (policyPlan) {
+      changes.push(
+        `${MESSAGING_POLICY_KEY}.block_list_config: ${JSON.stringify(policyPlan.from)} → ${JSON.stringify(DESIRED_BLOCK_LIST_POLICY)}`,
+      );
+      // After the blocklist exists — a name Stream has never seen is rejected.
+      if (apply) await upsertStreamModerationPolicy(policyPlan.body);
     }
 
     for (const line of changes) console.log(line);
