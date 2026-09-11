@@ -30,6 +30,23 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-09-ota-polish",
+    label: "OTA Update",
+    date: "September 2026",
+    highlights: [
+      {
+        icon: { ios: "hand.tap.fill", android: "touch_app" },
+        title: "Feedback that fits the moment",
+        body: "Taps and haptics across the app are tuned down and cleaned up, so your phone buzzes when it means something and stays quiet when it doesn't.",
+      },
+      {
+        icon: { ios: "wand.and.stars", android: "auto_fix_high" },
+        title: "Small fixes",
+        body: "Reaching your daily session limit no longer crashes and now explains itself clearly, and a few other rough edges are smoothed out.",
+      },
+    ],
+  },
+  {
     id: "2026-09-ota-minor-fixes",
     label: "OTA Update",
     date: "September 2026",
