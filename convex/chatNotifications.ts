@@ -1,5 +1,7 @@
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { internalAction, internalMutation } from "./_generated/server";
+import { getStreamUnreadCount } from "./integrations/stream";
 import {
   chatNotificationContent,
   chatNotificationsAllowed,
@@ -41,6 +43,10 @@ export const send = internalMutation({
     // own. Absent for a decline, which names nobody.
     counterpartName: v.optional(v.string()),
     conversationId: v.id("xolacer_conversations"),
+    // Stream's unread total for the recipient, set only by `sendMessagePush`.
+    // The lifecycle types never badge: the icon number means "messages" and
+    // only that, and it must equal what the Connect tab shows.
+    badge: v.optional(v.number()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -72,10 +78,46 @@ export const send = internalMutation({
         body,
         sound,
         channelId,
+        badge: args.badge,
         data: { type: args.type, conversationId: args.conversationId },
       },
     });
 
+    return null;
+  },
+});
+
+/**
+ * The `chat_message` dispatch, one hop ahead of `send`: asks Stream for the
+ * recipient's unread total so the push can set the icon badge to it. An action
+ * because that is a fetch, which `notifyNewMessage` (a mutation) cannot make.
+ *
+ * The count is best-effort. Stream down means a push with no badge — the
+ * client's mirror (`useUnreadBadge`) corrects the icon on the next handshake —
+ * never a message that doesn't arrive.
+ */
+export const sendMessagePush = internalAction({
+  args: {
+    emotionalProfileId: v.id("emotional_profiles"),
+    counterpartName: v.string(),
+    conversationId: v.id("xolacer_conversations"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    let badge: number | undefined;
+    try {
+      // The Stream user id is the profile id — see `upsertStreamUsers`.
+      badge = await getStreamUnreadCount(args.emotionalProfileId);
+    } catch (error) {
+      console.warn("[chat] unread count unavailable, sending without badge", error);
+    }
+    await ctx.runMutation(internal.chatNotifications.send, {
+      emotionalProfileId: args.emotionalProfileId,
+      type: "chat_message",
+      counterpartName: args.counterpartName,
+      conversationId: args.conversationId,
+      badge,
+    });
     return null;
   },
 });

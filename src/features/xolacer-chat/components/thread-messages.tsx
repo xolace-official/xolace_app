@@ -26,6 +26,7 @@ import { ThreadSkeleton } from '@/src/features/xolacer-chat/components/thread-sk
 import { hydrateChannelsFromCache } from '@/src/features/xolacer-chat/offline-db';
 import { ThreadStatusBar } from '@/src/features/xolacer-chat/components/thread-status-bar';
 import type { ThreadConversation } from '@/src/features/xolacer-chat/components/thread-screen';
+import { useFlagMessage } from '@/src/features/xolacer-chat/use-flag-message';
 
 /**
  * The message surface, mounted once `Chat` holds a usable client — one with a
@@ -62,6 +63,7 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
 
   const hasLocalState = useLocalChannelState(channel);
   useTouchOnSend(channel, conversation, client.userID);
+  const flagMessage = useFlagMessage(conversation.id);
 
   // `client.channel()` returns an *empty* handle: no messages, and no
   // `own_capabilities`. `<Channel>` renders its children immediately and only
@@ -106,7 +108,7 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
             // And the button survives on slash commands alone — a messaging
             // channel ships with giphy enabled by default.
             hasCommands={false}
-            messageActions={minimalMessageActions}
+            messageActions={(params) => minimalMessageActions(params, flagMessage)}
           >
             <SafetyStrip />
             <MessageList />

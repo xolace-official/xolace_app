@@ -1761,15 +1761,16 @@ export const notifyNewMessage = internalMutation({
     const xolacer = senderIsXolacer
       ? await getXolacerProfileByProfileId(ctx, conversation.xolacerProfileId)
       : null;
-    await notifyConversation(
-      ctx,
-      "chat_message",
-      conversationId,
-      recipientProfileId,
-      senderIsXolacer
+    // Through the badge-fetching action rather than `notifyConversation`: a
+    // message push carries Stream's unread total for the icon badge, and only
+    // an action can ask Stream for it.
+    await ctx.scheduler.runAfter(0, internal.chatNotifications.sendMessagePush, {
+      emotionalProfileId: recipientProfileId,
+      counterpartName: senderIsXolacer
         ? (xolacer?.displayName ?? "Xolacer")
         : await ensureCamperName(ctx, conversation),
-    );
+      conversationId,
+    });
     return null;
   },
 });

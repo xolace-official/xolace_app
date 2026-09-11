@@ -3,6 +3,33 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## One unread number; flag vs. report (2026-09-11)
+
+**Unread has one owner: Stream's per-user `total_unread_count`.** It arrives
+with the connect handshake and every event that changes it carries the new
+absolute value. The client folds those in `badgeFromEvents` (pure, tested)
+and `useUnreadBadge` feeds both the Connect tab badge and the app-icon badge
+(`UnreadIconBadge`, `setBadgeCountAsync`) from that one number, so the two
+can never disagree. A chat push sets the same number server-side
+(`chatNotifications.sendMessagePush` asks Stream `GET /unread` before
+dispatch); no other push type ever sets `badge`. The hook returns `null`
+until Stream has spoken and the icon sync skips `null` — clearing a
+push-set badge before the handshake would be the stale-badge defect (#139)
+in reverse.
+
+Rejected: a Convex counter or any persisted count (#140's option 3) — it
+reintroduces the stale badge #139 fixed.
+
+**Glossary.** *Flag* = one message, from the thread's long-press menu,
+unbudgeted, `product_feedback.kind = "flag"` with `messageId` and empty
+`text`. *Report* = one person for one conversation, the existing concern
+tray path, 2/day. Both are *concerns* in the tray and both land in Stream's
+moderation queue: the client calls `flagMessage` with its own token so the
+queue names the flagger; `submit` schedules `flagSubjectOnStream` for a
+report. The SDK's own Flag handler is replaced, not wrapped — its `handleFlag`
+hook runs *in addition to* Stream's alert, so `minimalMessageActions` swaps
+the action body while keeping the SDK's gating (never your own message).
+
 ## Conversation, channel, thread (2026-09-11)
 
 One Xolacer chat has three names in code; only one is the domain term.

@@ -1556,8 +1556,15 @@ export default defineSchema({
     emotionalProfileId: v.optional(v.id("emotional_profiles")),
     // "concern" is a safety report about a person, not a product complaint —
     // same table, but its own rate-limit bucket and its own moderation inbox
-    // filter. It is the only kind that carries the two fields below.
-    kind: v.union(v.literal("bug"), v.literal("idea"), v.literal("concern")),
+    // filter. "flag" is the lighter sibling: one message, pointed at from the
+    // thread, unbudgeted, with `text` empty and `messageId` set. Both land in
+    // Stream's moderation queue too. Only these two carry the fields below.
+    kind: v.union(
+      v.literal("bug"),
+      v.literal("idea"),
+      v.literal("concern"),
+      v.literal("flag"),
+    ),
     // Who the concern is about. Profile id ONLY — a display name is never
     // persisted, for the same reason the conversation roster matches on
     // profile id: names repeat and change, so a stored name is a stale label
@@ -1566,7 +1573,10 @@ export default defineSchema({
     // The thread the concern came from, when it came from one. Absent when the
     // report was raised from a profile rather than inside a conversation.
     conversationId: v.optional(v.id("xolacer_conversations")),
-    // 1..1000 chars, trimmed + validated server-side.
+    // The Stream message a "flag" points at. The content itself is never
+    // copied here — the dashboard has it, keyed by this id.
+    messageId: v.optional(v.string()),
+    // 1..1000 chars, trimmed + validated server-side ("" for a flag).
     // RETAINED past account deletion by policy (see CONTEXT.md "Feedback
     // retention"). Treat as potentially identifying: a bug report can name
     // a person or place. Never surface it in anything user-facing.

@@ -1,0 +1,64 @@
+// @vitest-environment edge-runtime
+/**
+ * The icon badge rides on the chat push (#343): `send` forwards whatever
+ * `badge` the message path fetched from Stream, and the lifecycle types —
+ * which never have one — leave the icon alone.
+ */
+import { describe, expect, it, vi } from "vitest";
+import { internal } from "../_generated/api";
+import { seedConversation } from "./fixtures.helpers";
+import { asNewUser } from "./harness.helpers";
+import { aggregatesMock } from "./mocks.helpers";
+
+vi.mock("../lib/aggregates", () => aggregatesMock());
+
+const sent = vi.hoisted(() => [] as { notification: { badge?: number } }[]);
+vi.mock("../lib/pushNotifications", () => ({
+  sendPushToProfile: async (_ctx: unknown, args: { notification: { badge?: number } }) => {
+    sent.push(args);
+  },
+}));
+
+async function recipient() {
+  const user = await asNewUser();
+  await user.root.run(async (ctx) => {
+    const prefs = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", user.profileId))
+      .unique();
+    await ctx.db.patch("preferences", prefs!._id, {
+      notifications: { ...prefs!.notifications, enabled: true },
+    });
+  });
+  const conversationId = await seedConversation(user.root, user.profileId);
+  return { user, conversationId };
+}
+
+describe("chatNotifications.send", () => {
+  it("a message push carries Stream's unread total as the badge", async () => {
+    sent.length = 0;
+    const { user, conversationId } = await recipient();
+    await user.root.mutation(internal.chatNotifications.send, {
+      emotionalProfileId: user.profileId,
+      type: "chat_message",
+      counterpartName: "Camper",
+      conversationId,
+      badge: 3,
+    });
+    expect(sent).toHaveLength(1);
+    expect(sent[0].notification.badge).toBe(3);
+  });
+
+  it("a lifecycle push has no badge", async () => {
+    sent.length = 0;
+    const { user, conversationId } = await recipient();
+    await user.root.mutation(internal.chatNotifications.send, {
+      emotionalProfileId: user.profileId,
+      type: "chat_request",
+      counterpartName: "Camper",
+      conversationId,
+    });
+    expect(sent).toHaveLength(1);
+    expect(sent[0].notification.badge).toBeUndefined();
+  });
+});

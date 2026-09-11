@@ -239,3 +239,28 @@ export async function deleteStreamUser(userId: string): Promise<void> {
     query: { mark_messages_deleted: "true", hard_delete: "true" },
   });
 }
+
+/**
+ * The user's unread total as Stream holds it — the same number the client
+ * derives from its event stream (`badgeFromEvents`), read here so a push can
+ * set the icon badge to it. GET /unread?user_id= is the server-side form of the
+ * client's `getUnreadCount`.
+ */
+export async function getStreamUnreadCount(userId: string): Promise<number> {
+  const response = await streamRequest("GET", "/unread", { query: { user_id: userId } });
+  const total = response.total_unread_count;
+  if (typeof total !== "number") throw new Error("Stream /unread returned no total");
+  return total;
+}
+
+/**
+ * Flag a user in Stream's moderation queue on the reporter's behalf, so a
+ * Report filed in the concern tray also shows in the dashboard the maintainer
+ * already watches for message flags. Mirrors the client's `flagUser` with the
+ * server-side `user_id` option naming who is flagging.
+ */
+export async function flagStreamUser(targetId: string, reporterId: string): Promise<void> {
+  await streamRequest("POST", "/moderation/flag", {
+    body: { target_user_id: targetId, user_id: reporterId },
+  });
+}
