@@ -1,17 +1,15 @@
 import { useState } from "react";
 import { View } from "react-native";
 import { Button, TextArea, PressableFeedback, useToast } from "heroui-native";
-import { usePathname } from "expo-router";
-import Constants from "expo-constants";
 import { useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
-import { useAppTheme } from "@/src/context/app-theme-context";
 import { cn } from "@/src/lib/utils";
 import { useStableQuery } from "@/src/lib/convex/use-stable-query";
 import { useTray } from "../engine/tray-provider";
+import { useFeedbackContext } from "../use-feedback-context";
 
 const MAX_LENGTH = 1000;
 type Kind = "bug" | "idea" | "concern";
@@ -78,8 +76,7 @@ export const ReportForm = ({
   const { dismiss } = useTray();
   const { toast } = useToast();
   const posthog = usePostHog();
-  const pathname = usePathname();
-  const { currentTheme } = useAppTheme();
+  const context = useFeedbackContext();
 
   const submit = useMutation(api.productFeedback.submit);
   // Stable: `kind` changes on a Bug/Idea tap, and a plain `useQuery` returns
@@ -98,12 +95,7 @@ export const ReportForm = ({
       await submit({
         kind,
         text: text.trim(),
-        context: {
-          appVersion: Constants.expoConfig?.version ?? "",
-          route: pathname,
-          themeName: currentTheme,
-          platform: process.env.EXPO_OS ?? "",
-        },
+        context,
         subjectProfileId: subject?.profileId,
         conversationId: subject?.conversationId,
       });

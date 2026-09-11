@@ -12,6 +12,15 @@ import { aggregatesMock } from "./mocks.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 
+const unread = vi.hoisted(() => ({ value: 0 as number | Error }));
+vi.mock("../integrations/stream", async (orig) => ({
+  ...(await orig<typeof import("../integrations/stream")>()),
+  getStreamUnreadCount: async () => {
+    if (unread.value instanceof Error) throw unread.value;
+    return unread.value;
+  },
+}));
+
 const sent = vi.hoisted(() => [] as { notification: { badge?: number } }[]);
 vi.mock("../lib/pushNotifications", () => ({
   sendPushToProfile: async (_ctx: unknown, args: { notification: { badge?: number } }) => {
@@ -55,6 +64,34 @@ describe("chatNotifications.send", () => {
     await user.root.mutation(internal.chatNotifications.send, {
       emotionalProfileId: user.profileId,
       type: "chat_request",
+      counterpartName: "Camper",
+      conversationId,
+    });
+    expect(sent).toHaveLength(1);
+    expect(sent[0].notification.badge).toBeUndefined();
+  });
+});
+
+describe("chatNotifications.sendMessagePush", () => {
+  it("asks Stream for the recipient's total and sends it as the badge", async () => {
+    sent.length = 0;
+    unread.value = 5;
+    const { user, conversationId } = await recipient();
+    await user.root.action(internal.chatNotifications.sendMessagePush, {
+      emotionalProfileId: user.profileId,
+      counterpartName: "Camper",
+      conversationId,
+    });
+    expect(sent).toHaveLength(1);
+    expect(sent[0].notification.badge).toBe(5);
+  });
+
+  it("Stream down: the push still goes, without a badge", async () => {
+    sent.length = 0;
+    unread.value = new Error("stream 503");
+    const { user, conversationId } = await recipient();
+    await user.root.action(internal.chatNotifications.sendMessagePush, {
+      emotionalProfileId: user.profileId,
       counterpartName: "Camper",
       conversationId,
     });

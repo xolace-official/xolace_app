@@ -1,12 +1,10 @@
-import Constants from 'expo-constants';
-import { usePathname } from 'expo-router';
 import { useMutation } from 'convex/react';
 import { useToast } from 'heroui-native';
 import type { LocalMessage } from 'stream-chat';
 import { useChatContext } from 'stream-chat-expo';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import { useAppTheme } from '@/src/context/app-theme-context';
+import { useFeedbackContext } from '@/src/features/feedback-tray/use-feedback-context';
 
 /**
  * Flag one message — the long-press action that replaces the SDK's own. Two
@@ -18,10 +16,9 @@ import { useAppTheme } from '@/src/context/app-theme-context';
  */
 export function useFlagMessage(conversationId: Id<'xolacer_conversations'>) {
   const { client } = useChatContext();
-  const flag = useMutation(api.productFeedback.flagMessage);
+  const flag = useMutation(api.productFeedbackFlags.flagMessage);
   const { toast } = useToast();
-  const pathname = usePathname();
-  const { currentTheme } = useAppTheme();
+  const context = useFeedbackContext();
 
   return (message: LocalMessage) => {
     if (!message.id) return;
@@ -30,12 +27,7 @@ export function useFlagMessage(conversationId: Id<'xolacer_conversations'>) {
       flag({
         conversationId,
         messageId: message.id,
-        context: {
-          appVersion: Constants.expoConfig?.version ?? '',
-          route: pathname,
-          themeName: currentTheme,
-          platform: process.env.EXPO_OS ?? '',
-        },
+        context,
       }),
     ]).then((results) => {
       const landed = results.some((r) => r.status === 'fulfilled');

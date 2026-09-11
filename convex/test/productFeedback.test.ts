@@ -20,8 +20,8 @@ vi.mock("../lib/rateLimits", async (orig) => ({
 
 // Asserted at the enqueue boundary (house style, see `scheduledCalls`); the
 // action itself is one try/catch around `flagStreamUser`.
-vi.mock("../productFeedback", async (orig) => ({
-  ...(await orig<typeof import("../productFeedback")>()),
+vi.mock("../productFeedbackFlags", async (orig) => ({
+  ...(await orig<typeof import("../productFeedbackFlags")>()),
   flagSubjectOnStream: noopJob(),
 }));
 
@@ -40,7 +40,7 @@ describe("productFeedback.flagMessage", () => {
       }),
     );
 
-    await seeker.t.mutation(api.productFeedback.flagMessage, {
+    await seeker.t.mutation(api.productFeedbackFlags.flagMessage, {
       conversationId,
       messageId: "msg_1",
       context: CONTEXT,
@@ -63,7 +63,7 @@ describe("productFeedback.flagMessage", () => {
     const stranger = await asNewUser(2, owner.root);
     const conversationId = await seedConversation(owner.root, owner.profileId);
     await expect(
-      stranger.t.mutation(api.productFeedback.flagMessage, {
+      stranger.t.mutation(api.productFeedbackFlags.flagMessage, {
         conversationId,
         messageId: "msg_1",
         context: CONTEXT,

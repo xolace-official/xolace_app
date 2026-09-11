@@ -111,13 +111,14 @@ export const sendMessagePush = internalAction({
     } catch (error) {
       console.warn("[chat] unread count unavailable, sending without badge", error);
     }
-    await ctx.runMutation(internal.chatNotifications.send, {
+    // Same-file call: annotated per the Convex guideline on circular inference.
+    const sent: null = await ctx.runMutation(internal.chatNotifications.send, {
       emotionalProfileId: args.emotionalProfileId,
       type: "chat_message",
       counterpartName: args.counterpartName,
       conversationId: args.conversationId,
       badge,
     });
-    return null;
+    return sent;
   },
 });

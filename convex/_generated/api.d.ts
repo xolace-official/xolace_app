@@ -114,6 +114,7 @@ import type * as preferences from "../preferences.js";
 import type * as premium from "../premium.js";
 import type * as presence from "../presence.js";
 import type * as productFeedback from "../productFeedback.js";
+import type * as productFeedbackFlags from "../productFeedbackFlags.js";
 import type * as profile from "../profile.js";
 import type * as quotes from "../quotes.js";
 import type * as rag from "../rag.js";
@@ -244,6 +245,7 @@ declare const fullApi: ApiFromModules<{
   premium: typeof premium;
   presence: typeof presence;
   productFeedback: typeof productFeedback;
+  productFeedbackFlags: typeof productFeedbackFlags;
   profile: typeof profile;
   quotes: typeof quotes;
   rag: typeof rag;
