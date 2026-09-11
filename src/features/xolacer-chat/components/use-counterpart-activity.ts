@@ -43,10 +43,7 @@ export function useCounterpartActivity(
   const { client } = useStreamStatus();
 
   useEffect(() => {
-    if (!client || !streamChannelId) {
-      setActivity(IDLE);
-      return;
-    }
+    if (!client || !streamChannelId) return;
     const channel = client.channel('messaging', streamChannelId);
 
     const read = () =>
@@ -66,7 +63,9 @@ export function useCounterpartActivity(
     return () => subs.forEach((sub) => sub.unsubscribe());
   }, [client, streamChannelId, counterpartUserId]);
 
-  return activity;
+  // Derived, not synced: no client/channel means IDLE regardless of what the
+  // last subscription left behind.
+  return client && streamChannelId ? activity : IDLE;
 }
 
 function readPresence(
