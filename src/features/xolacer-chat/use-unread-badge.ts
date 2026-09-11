@@ -7,13 +7,24 @@ import { badgeFromEvents } from '@/src/features/xolacer-chat/unread-badge';
  * Held beside the client rather than read off `client.user`: the SDK only
  * writes `total_unread_count` there on the handshake, not on later events.
  * One entry per client instance, so every hook instance folds the same stream
- * once and reads one number. `null` until Stream has said one.
+ * once and reads one number. `null` until Stream has said one. The client is
+ * an app-lifetime singleton, so the entry also remembers which user it was
+ * folded for — a sign-out/sign-in reconnects the same instance as someone
+ * else, whose count must not start from the previous user's total.
  */
-const totals = new WeakMap<StreamChat, number | null>();
+const totals = new WeakMap<StreamChat, { userId: string | undefined; total: number | null }>();
 
 function seed(client: StreamChat): number | null {
   const me = client.user;
   return me && 'total_unread_count' in me ? (me.total_unread_count ?? null) : null;
+}
+
+function totalFor(client: StreamChat): number | null {
+  const entry = totals.get(client);
+  if (entry && entry.userId === client.userID) return entry.total;
+  const total = seed(client);
+  totals.set(client, { userId: client.userID, total });
+  return total;
 }
 
 /**
@@ -34,14 +45,17 @@ export function useUnreadBadge(): number | null {
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
       if (!connected) return () => {};
-      if (!totals.has(connected)) totals.set(connected, seed(connected));
+      totalFor(connected);
       // Every subscriber writes the shared total and always notifies. Skipping
       // "unchanged" here is wrong: the first listener to run has already
       // updated the map, so every later one would see no change and never
       // re-render — the tab badge froze while the icon badge moved. React
       // bails out itself when the snapshot is equal.
       const { unsubscribe } = connected.on((event) => {
-        totals.set(connected, badgeFromEvents(totals.get(connected) ?? 0, event));
+        totals.set(connected, {
+          userId: connected.userID,
+          total: badgeFromEvents(totalFor(connected) ?? 0, event),
+        });
         onStoreChange();
       });
       return unsubscribe;
@@ -49,7 +63,5 @@ export function useUnreadBadge(): number | null {
     [connected],
   );
 
-  return useSyncExternalStore(subscribe, () =>
-    connected ? (totals.get(connected) ?? seed(connected)) : null,
-  );
+  return useSyncExternalStore(subscribe, () => (connected ? totalFor(connected) : null));
 }
