@@ -27,7 +27,15 @@ import { ThreadStatusBar } from './thread-status-bar';
 export type ThreadConversation = Omit<
   NonNullable<FunctionReturnType<typeof api.xolacerChat.getConversation>>,
   'myStreamUserId'
->;
+> & {
+  /**
+   * Set only by `useThreadConversation`'s list seed: the per-conversation
+   * fields (`resumable`, `canRate`, `myRating`) are placeholders until the
+   * real row lands, so the status bar — the one surface that reads them —
+   * holds its space instead of committing to a CTA it may have to retract.
+   */
+  seeded?: true;
+};
 
 export function ThreadScreen({ conversationId }: { conversationId: string }) {
   const conversation = useThreadConversation(conversationId);

@@ -25,13 +25,13 @@ export function useThreadConversation(
   if (conversation !== undefined) return conversation;
 
   const row = rows?.find((candidate) => candidate.id === conversationId);
-  // `resumable`, `canRate` and `myRating` are per-conversation reads the list
-  // doesn't make, so seeding is limited to the two states that never look at
-  // them. A resting or closed thread would otherwise show one frame of "find
-  // another xolacer" before flipping to "pick this back up" — a worse artifact
-  // than the skeleton it replaced.
-  if (!row || (row.status !== 'open' && row.status !== 'requested')) return undefined;
+  if (!row) return undefined;
 
+  // `resumable`, `canRate` and `myRating` are per-conversation reads the list
+  // doesn't make. Rather than gate the whole thread on them, the seed is
+  // marked and the status bar alone waits — every resting or closed
+  // conversation used to sit on the skeleton for the round trip, and the
+  // messages never needed it (#342).
   return {
     ...row,
     // Not redundant with the spread: `...row` leaves `origin` optional, and
@@ -41,5 +41,6 @@ export function useThreadConversation(
     resumable: false,
     canRate: false,
     myRating: undefined,
+    seeded: true,
   };
 }
