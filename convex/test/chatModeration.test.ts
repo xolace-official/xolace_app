@@ -16,6 +16,7 @@ const stub = vi.hoisted(() => ({
   calls: 0,
   systemMessages: [] as { channelId: string; message: Record<string, unknown> }[],
   flags: [] as { messageId: string; reason: string }[],
+  sendFailures: 0,
 }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -29,6 +30,10 @@ vi.mock("../ai/providers/anthropic", async (orig) => ({
 vi.mock("../integrations/stream", async (orig) => ({
   ...(await orig<typeof import("../integrations/stream")>()),
   sendStreamSystemMessage: async (channelId: string, message: Record<string, unknown>) => {
+    if (stub.sendFailures > 0) {
+      stub.sendFailures--;
+      throw new Error("Stream POST /message failed (503): down");
+    }
     stub.systemMessages.push({ channelId, message });
   },
   flagStreamMessage: async (messageId: string, reason: string) => {
@@ -59,6 +64,7 @@ beforeEach(() => {
   stub.calls = 0;
   stub.systemMessages.length = 0;
   stub.flags.length = 0;
+  stub.sendFailures = 0;
 });
 
 describe("moderateChatMessage", () => {
@@ -89,6 +95,32 @@ describe("moderateChatMessage", () => {
       resources: CRISIS_RESOURCES,
     });
     expect(stub.flags).toHaveLength(0);
+    // Deterministic id: a retried send is a Stream duplicate, not a second card.
+    expect(stub.systemMessages[0].message.id).toBe("crisis_resources_msg_1");
+  });
+
+  it("a Stream failure records no verdict and hands the delivery to a retry", async () => {
+    stub.reply = verdict({ crisis: "crisis" });
+    stub.sendFailures = 1;
+    const { user, args, rows } = await moderate("i don't want to be here anymore");
+    expect(rows).toHaveLength(0);
+    expect(stub.systemMessages).toHaveLength(0);
+
+    // The scheduled retry, run by hand.
+    await user.root.action(internal.ai.chat.moderate.retryDelivery, {
+      conversationId: args.conversationId,
+      streamMessageId: args.streamMessageId,
+      streamChannelId: args.streamChannelId,
+      senderRole: args.senderRole,
+      level: "crisis",
+      categories: [],
+      confidence: 0.9,
+      attempt: 1,
+    });
+    expect(stub.systemMessages).toHaveLength(1);
+    const after = await user.root.run((ctx) => ctx.db.query("chat_moderation_events").collect());
+    expect(after).toHaveLength(1);
+    expect(stub.calls).toBe(1);
   });
 
   it("elevated → the support set", async () => {

@@ -39,9 +39,15 @@ export const MIN_WORDS = 2;
  * handle — is skipped. Phone numbers and handles are the pre-delivery regex
  * lane's job (`lib/streamSetup`), so the model never needs the short ones.
  */
+const wordSegmenter = new Intl.Segmenter(undefined, { granularity: "word" });
+
 export function shouldModerateChatMessage(text: string): boolean {
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  if (words.length < MIN_WORDS) return false;
+  // Unicode-aware so no-space scripts (Chinese, Japanese, Thai) count words.
+  let words = 0;
+  for (const s of wordSegmenter.segment(text)) {
+    if (s.isWordLike && ++words >= MIN_WORDS) break;
+  }
+  if (words < MIN_WORDS) return false;
   return /\p{L}/u.test(text);
 }
 

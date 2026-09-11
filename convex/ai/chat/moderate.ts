@@ -1,6 +1,11 @@
-import { v } from "convex/values";
+import { type ObjectType, v } from "convex/values";
 import { internal } from "../../_generated/api";
-import { internalAction, internalMutation, internalQuery } from "../../_generated/server";
+import {
+  type ActionCtx,
+  internalAction,
+  internalMutation,
+  internalQuery,
+} from "../../_generated/server";
 import { flagStreamMessage, sendStreamSystemMessage } from "../../integrations/stream";
 import {
   chatModerationCategoryValidator,
@@ -61,33 +66,81 @@ export const moderateChatMessage = internalAction({
 
     const categories = (["harassment", "spam", "contact"] as const).filter((c) => verdict[c]);
 
-    // Effects before the row: a Stream call that fails leaves no verdict, so
-    // a retry (Stream's, or a manual re-run) gets another go instead of finding
-    // a row that says "done" over a card that never arrived. ponytail: two
-    // copies racing past `hasVerdict` could both send; the webhook-id guard
-    // makes that a dropped-header edge, not the normal path.
-    const resources = crisisResourcesFor(verdict.crisis);
-    if (resources) {
-      await sendStreamSystemMessage(args.streamChannelId, {
-        // Fallback for a client without the card override.
-        text: "Support is available — see the resources below.",
-        kind: CRISIS_RESOURCES_KIND,
-        level: verdict.crisis,
-        resources,
-      });
-    }
-    if (categories.length > 0) {
-      await flagStreamMessage(args.streamMessageId, categories.join(","));
-    }
-
-    await ctx.runMutation(internal.ai.chat.moderate.recordVerdict, {
+    await deliverVerdict(ctx, {
       conversationId: args.conversationId,
       streamMessageId: args.streamMessageId,
+      streamChannelId: args.streamChannelId,
       senderRole: args.senderRole,
       level: verdict.crisis,
       categories,
       confidence: verdict.confidence,
+      attempt: 0,
     });
+    return null;
+  },
+});
+
+const deliveryArgs = {
+  conversationId: v.id("xolacer_conversations"),
+  streamMessageId: v.string(),
+  streamChannelId: v.string(),
+  senderRole: conversationRoleValidator,
+  level: safeguardLevelValidator,
+  categories: v.array(chatModerationCategoryValidator),
+  confidence: v.number(),
+  attempt: v.number(),
+};
+type DeliveryArgs = ObjectType<typeof deliveryArgs>;
+
+/** Attempts 0..MAX-1; backoff doubles from this base between them. */
+const MAX_DELIVERY_ATTEMPTS = 5;
+const DELIVERY_BACKOFF_MS = 30_000;
+
+/**
+ * Effects before the row: the verdict is recorded only once the card and the
+ * flag have landed, so a Stream outage never leaves a row that says "done"
+ * over a card that never arrived. A failed attempt reschedules itself through
+ * the scheduler (durable) a bounded number of times; the card carries a
+ * message id derived from the moderated message, so a retry that lands twice
+ * is a Stream duplicate — accepted as delivered — not a second card.
+ */
+async function deliverVerdict(ctx: ActionCtx, args: DeliveryArgs): Promise<void> {
+  try {
+    const resources = crisisResourcesFor(args.level);
+    if (resources) {
+      await sendStreamSystemMessage(args.streamChannelId, {
+        id: `${CRISIS_RESOURCES_KIND}_${args.streamMessageId}`,
+        // Fallback for a client without the card override.
+        text: "Support is available — see the resources below.",
+        kind: CRISIS_RESOURCES_KIND,
+        level: args.level,
+        resources,
+      });
+    }
+    if (args.categories.length > 0) {
+      await flagStreamMessage(args.streamMessageId, args.categories.join(","));
+    }
+  } catch (error) {
+    const next = args.attempt + 1;
+    if (next >= MAX_DELIVERY_ATTEMPTS) throw error;
+    console.warn(`chat moderation delivery attempt ${next} failed, retrying`, error);
+    await ctx.scheduler.runAfter(
+      DELIVERY_BACKOFF_MS * 2 ** args.attempt,
+      internal.ai.chat.moderate.retryDelivery,
+      { ...args, attempt: next },
+    );
+    return;
+  }
+
+  const { attempt: _attempt, streamChannelId: _channel, ...verdict } = args;
+  await ctx.runMutation(internal.ai.chat.moderate.recordVerdict, verdict);
+}
+
+export const retryDelivery = internalAction({
+  args: deliveryArgs,
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await deliverVerdict(ctx, args);
     return null;
   },
 });

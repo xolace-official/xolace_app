@@ -16,6 +16,11 @@ describe("shouldModerateChatMessage", () => {
     expect(shouldModerateChatMessage("i don't want to be here anymore")).toBe(true);
   });
 
+  it("counts words in scripts without spaces", () => {
+    expect(shouldModerateChatMessage("我不想活了")).toBe(true);
+    expect(shouldModerateChatMessage("好")).toBe(false);
+  });
+
   it("a short contact leak is the regex lane's job, not the model's", () => {
     expect(shouldModerateChatMessage("@nate.ig")).toBe(false);
   });

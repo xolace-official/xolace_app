@@ -305,15 +305,27 @@ export async function flagStreamMessage(messageId: string, reason: string): Prom
  */
 export async function sendStreamSystemMessage(
   channelId: string,
-  message: { text: string } & Record<string, unknown>,
+  message: { text: string; id?: string } & Record<string, unknown>,
 ): Promise<void> {
   await ensureSystemUser();
-  await streamRequest("POST", `/channels/messaging/${encodeURIComponent(channelId)}/message`, {
-    body: {
-      message: { ...message, type: "system", user_id: XOLACE_SYSTEM_USER_ID, silent: true },
-      skip_push: true,
-    },
-  });
+  try {
+    await streamRequest("POST", `/channels/messaging/${encodeURIComponent(channelId)}/message`, {
+      body: {
+        message: { ...message, type: "system", user_id: XOLACE_SYSTEM_USER_ID, silent: true },
+        skip_push: true,
+      },
+    });
+  } catch (error) {
+    // A caller-supplied `id` makes the send idempotent: Stream rejects a
+    // duplicate with 400 "message with ID … already exists", which means the
+    // earlier attempt landed — a retry treats that as delivered.
+    if (message.id && isStreamDuplicateMessage(error)) return;
+    throw error;
+  }
+}
+
+function isStreamDuplicateMessage(error: unknown): boolean {
+  return error instanceof Error && /\(400\).*already exists/i.test(error.message);
 }
 
 /** The `messaging` channel type as Stream holds it, every field. */
