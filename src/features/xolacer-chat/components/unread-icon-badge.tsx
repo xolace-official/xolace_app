@@ -18,9 +18,13 @@ export function UnreadIconBadge() {
   const count = useUnreadBadge();
   useEffect(() => {
     if (count === null) return;
-    Notifications.setBadgeCountAsync(count).catch((error) =>
-      console.warn('[xolacer-chat] icon badge update failed', error),
-    );
+    Notifications.setBadgeCountAsync(count).catch(warn);
   }, [count]);
+  // Unmount means the protected layout is gone (sign-out): a badge for the
+  // account that just left is stale, and queuing the clear after any in-flight
+  // write above keeps a late count from landing on the signed-out icon.
+  useEffect(() => () => void Notifications.setBadgeCountAsync(0).catch(warn), []);
   return null;
 }
+
+const warn = (error: unknown) => console.warn('[xolacer-chat] icon badge update failed', error);
