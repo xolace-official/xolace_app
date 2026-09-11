@@ -21,9 +21,10 @@ vi.mock("../integrations/stream", async (orig) => ({
   },
 }));
 
-const sent = vi.hoisted(() => [] as { notification: { badge?: number } }[]);
+type Sent = { notification: { badge?: number; title?: string; body?: string } };
+const sent = vi.hoisted(() => [] as Sent[]);
 vi.mock("../lib/pushNotifications", () => ({
-  sendPushToProfile: async (_ctx: unknown, args: { notification: { badge?: number } }) => {
+  sendPushToProfile: async (_ctx: unknown, args: Sent) => {
     sent.push(args);
   },
 }));
@@ -97,5 +98,34 @@ describe("chatNotifications.sendMessagePush", () => {
     });
     expect(sent).toHaveLength(1);
     expect(sent[0].notification.badge).toBeUndefined();
+  });
+
+  it("silent (inside the suppression window): badge only, nothing to display", async () => {
+    sent.length = 0;
+    unread.value = 2;
+    const { user, conversationId } = await recipient();
+    await user.root.action(internal.chatNotifications.sendMessagePush, {
+      emotionalProfileId: user.profileId,
+      counterpartName: "",
+      conversationId,
+      silent: true,
+    });
+    expect(sent).toHaveLength(1);
+    expect(sent[0].notification).toMatchObject({ badge: 2 });
+    expect(sent[0].notification.title).toBeUndefined();
+    expect(sent[0].notification.body).toBeUndefined();
+  });
+
+  it("silent with Stream down sends nothing at all", async () => {
+    sent.length = 0;
+    unread.value = new Error("stream 503");
+    const { user, conversationId } = await recipient();
+    await user.root.action(internal.chatNotifications.sendMessagePush, {
+      emotionalProfileId: user.profileId,
+      counterpartName: "",
+      conversationId,
+      silent: true,
+    });
+    expect(sent).toHaveLength(0);
   });
 });

@@ -47,6 +47,12 @@ export const send = internalMutation({
     // The lifecycle types never badge: the icon number means "messages" and
     // only that, and it must equal what the Connect tab shows.
     badge: v.optional(v.number()),
+    // No alert, sound, or list entry — only `badge`. Sent inside the 2-minute
+    // window when a second message arrives and nothing buzzes: the icon must
+    // still move to Stream's total or it would disagree with the Connect tab
+    // until the next launch. A push with no title/body is not displayed on
+    // either platform. Only ever true with `badge` set.
+    silent: v.optional(v.boolean()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -69,18 +75,17 @@ export const send = internalMutation({
     // platforms.
     const { sound, channelId } = chatNotificationSound(args.type);
 
+    const data = { type: args.type, conversationId: args.conversationId };
     // Shared with the nudge path so a multi-device fix can never land on one
     // of the two dispatch sites and not the other.
     await sendPushToProfile(ctx, {
       emotionalProfileId: args.emotionalProfileId,
-      notification: {
-        title,
-        body,
-        sound,
-        channelId,
-        badge: args.badge,
-        data: { type: args.type, conversationId: args.conversationId },
-      },
+      notification: args.silent
+        ? // The component's wire validator has title/body optional; only its
+          // TS type insists. Cast rather than send an empty title, which
+          // Android would display as an empty notification.
+          ({ badge: args.badge, data } as unknown as { title: string; data: typeof data })
+        : { title, body, sound, channelId, badge: args.badge, data },
     });
 
     return null;
@@ -101,6 +106,8 @@ export const sendMessagePush = internalAction({
     emotionalProfileId: v.id("emotional_profiles"),
     counterpartName: v.string(),
     conversationId: v.id("xolacer_conversations"),
+    // Badge-only: the recipient is inside the suppression window.
+    silent: v.optional(v.boolean()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -111,6 +118,8 @@ export const sendMessagePush = internalAction({
     } catch (error) {
       console.warn("[chat] unread count unavailable, sending without badge", error);
     }
+    // A silent push exists only to carry the badge; without one it is nothing.
+    if (args.silent && badge === undefined) return null;
     // Same-file call: annotated per the Convex guideline on circular inference.
     const sent: null = await ctx.runMutation(internal.chatNotifications.send, {
       emotionalProfileId: args.emotionalProfileId,
@@ -118,6 +127,7 @@ export const sendMessagePush = internalAction({
       counterpartName: args.counterpartName,
       conversationId: args.conversationId,
       badge,
+      silent: args.silent,
     });
     return sent;
   },

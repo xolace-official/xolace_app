@@ -1735,9 +1735,11 @@ export const notifyNewMessage = internalMutation({
     // not land inside the window that message opened.
     const now = Date.now();
     const notifiedField = messageNotifiedField(conversation, recipientProfileId);
-    if (messageNotificationSuppressed(conversation[notifiedField], now)) {
-      return null;
-    }
+    // Suppressed means no buzz, not no badge: a second message inside the
+    // window still moves Stream's total, and the icon has to follow it or it
+    // disagrees with the Connect tab until the next launch. The stamp is left
+    // alone — the window is unchanged, only the badge rides through it.
+    const suppressed = messageNotificationSuppressed(conversation[notifiedField], now);
 
     // Asked here as well as in the dispatch itself, because the stamp has to
     // mean "this person was buzzed". Burning the window on a send that the
@@ -1750,6 +1752,16 @@ export const notifyNewMessage = internalMutation({
       )
       .unique();
     if (!chatNotificationsAllowed(preferences?.notifications)) return null;
+
+    if (suppressed) {
+      await ctx.scheduler.runAfter(0, internal.chatNotifications.sendMessagePush, {
+        emotionalProfileId: recipientProfileId,
+        counterpartName: "",
+        conversationId,
+        silent: true,
+      });
+      return null;
+    }
 
     // Stamped before the send is scheduled, in the same transaction, so a
     // burst arriving as separate webhook calls cannot each read a stale window.

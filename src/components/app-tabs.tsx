@@ -45,7 +45,10 @@ export default function AppTabs() {
           md="forum"
         />
         <NativeTabs.Trigger.Label>Connect</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Badge hidden={!unread}>{String(unread ?? '')}</NativeTabs.Trigger.Badge>
+        {/* No children at zero: `hidden` alone still painted a "0". */}
+        <NativeTabs.Trigger.Badge hidden={!unread}>
+          {unread ? String(unread) : undefined}
+        </NativeTabs.Trigger.Badge>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

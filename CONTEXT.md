@@ -12,7 +12,10 @@ and `useUnreadBadge` feeds both the Connect tab badge and the app-icon badge
 (`UnreadIconBadge`, `setBadgeCountAsync`) from that one number, so the two
 can never disagree. A chat push sets the same number server-side
 (`chatNotifications.sendMessagePush` asks Stream `GET /unread` before
-dispatch); no other push type ever sets `badge`. The hook returns `null`
+dispatch); no other push type ever sets `badge`. Inside the 2-minute
+suppression window a second message sends a **badge-only** push (no
+title/body — not displayed on either platform) so the icon still follows
+Stream's total; the window and its stamp are untouched. The hook returns `null`
 until Stream has spoken and the icon sync skips `null` — clearing a
 push-set badge before the handshake would be the stale-badge defect (#139)
 in reverse.

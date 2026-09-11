@@ -35,10 +35,13 @@ export function useUnreadBadge(): number | null {
     (onStoreChange: () => void) => {
       if (!connected) return () => {};
       if (!totals.has(connected)) totals.set(connected, seed(connected));
+      // Every subscriber writes the shared total and always notifies. Skipping
+      // "unchanged" here is wrong: the first listener to run has already
+      // updated the map, so every later one would see no change and never
+      // re-render — the tab badge froze while the icon badge moved. React
+      // bails out itself when the snapshot is equal.
       const { unsubscribe } = connected.on((event) => {
-        const next = badgeFromEvents(totals.get(connected) ?? 0, event);
-        if (next === totals.get(connected)) return;
-        totals.set(connected, next);
+        totals.set(connected, badgeFromEvents(totals.get(connected) ?? 0, event));
         onStoreChange();
       });
       return unsubscribe;
