@@ -58,6 +58,9 @@ export function useStreamTheme(): DeepPartial<Theme> {
   const base = mergeThemes({ scheme: isDark ? 'dark' : 'light' });
 
   return {
+    // The reaction picker is the seven curated reactions and nothing else
+    // (#345); Stream's "+" opens a second sheet of the same set.
+    messageMenu: { reactionPicker: { emojiViewerButton: { display: 'none' } } },
     semantics: {
       ...base.semantics,
 

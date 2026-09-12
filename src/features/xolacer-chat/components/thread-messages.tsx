@@ -18,7 +18,7 @@ import { SafetyStrip } from '@/src/features/xolacer-chat/components/safety-strip
 import {
   CHANNEL_ROOT_PROPS,
   COMPONENT_OVERRIDES,
-  NO_REACTIONS,
+  SUPPORTED_REACTIONS,
   TEXT_ONLY_CAPABILITIES,
   minimalMessageActions,
 } from '@/src/features/xolacer-chat/components/thread-channel-config';
@@ -100,7 +100,9 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
             keyboardVerticalOffset={headerOffset}
             additionalKeyboardAvoidingViewProps={CHANNEL_ROOT_PROPS}
             topInset={insets.top}
-            supportedReactions={NO_REACTIONS}
+            supportedReactions={SUPPORTED_REACTIONS}
+            // One reaction per person per message; picking another swaps it.
+            enforceUniqueReaction
             overrideOwnCapabilities={TEXT_ONLY_CAPABILITIES}
             hasImagePicker={false}
             hasFilePicker={false}
