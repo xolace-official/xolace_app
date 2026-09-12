@@ -353,3 +353,84 @@ describe("cascade", () => {
     expect(await readSteps(user, path._id)).toEqual([]);
   });
 });
+
+describe("the active-kindling screen API (#333)", () => {
+  /** A Plus user with one active kindling of [breathing, xolacer]. */
+  async function withKindling() {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    await generate(user, sessionId);
+    const active = await user.t.query(api.paths.getActive, {});
+    if (!active) throw new Error("expected an active kindling");
+    return { user, sessionId, active };
+  }
+
+  it("getActive returns the twigs in suggested order, and null when there is none", async () => {
+    const user = await asNewUser();
+    expect(await user.t.query(api.paths.getActive, {})).toBeNull();
+
+    const sessionId = await seedQualifying(user);
+    await generate(user, sessionId);
+
+    const active = await user.t.query(api.paths.getActive, {});
+    expect(active?.sessionId).toBe(sessionId);
+    expect(active?.twigs.map((t) => [t.order, t.kind, t.state])).toEqual([
+      [1, "breathing", "pending"],
+      [2, "xolacer", "pending"],
+    ]);
+  });
+
+  it("getActive is null for a free user even when a kindling row exists", async () => {
+    const { user } = await withKindling();
+    stub.isPlus = false;
+    expect(await user.t.query(api.paths.getActive, {})).toBeNull();
+  });
+
+  it("resolves a bound track's title onto an audio twig", async () => {
+    stub.reply = JSON.stringify([twig("audio_topic_anxiety", 1), twig("breathing", 2)]);
+    const user = await asNewUser();
+    await seedCatalogue(user);
+    await generate(user, await seedQualifying(user));
+
+    const active = await user.t.query(api.paths.getActive, {});
+    const audio = active?.twigs.find((t) => t.kind === "audio");
+    expect(audio?.title).toBe(
+      manifest.find((t) => t.slug === (audio?.params as { slug: string }).slug)?.title,
+    );
+  });
+
+  it("skipStep and completeStep are independent of order and close the kindling once nothing is pending", async () => {
+    const { user, active } = await withKindling();
+    const [breathing, xolacer] = active.twigs;
+
+    await user.t.mutation(api.paths.skipStep, { stepId: xolacer._id });
+    let now = await user.t.query(api.paths.getActive, {});
+    expect(now?.twigs.map((t) => t.state)).toEqual(["pending", "skipped"]);
+
+    await user.t.mutation(api.paths.completeStep, { stepId: breathing._id });
+    now = await user.t.query(api.paths.getActive, {});
+    expect(now).toBeNull();
+    const [path] = await readPaths(user);
+    expect(path.status).toBe("completed");
+  });
+
+  it("dismiss closes the kindling and leaves the twigs as they were", async () => {
+    const { user, active } = await withKindling();
+    await user.t.mutation(api.paths.dismiss, { pathId: active._id });
+
+    expect(await user.t.query(api.paths.getActive, {})).toBeNull();
+    const [path] = await readPaths(user);
+    expect(path.status).toBe("dismissed");
+    expect((await readSteps(user, path._id)).every((s) => s.state === "pending")).toBe(true);
+  });
+
+  it("another user cannot touch my twigs", async () => {
+    const { user, active } = await withKindling();
+    const other = await asNewUser(2, user.root);
+
+    await expect(
+      other.t.mutation(api.paths.skipStep, { stepId: active.twigs[0]._id }),
+    ).rejects.toThrow();
+    await expect(other.t.mutation(api.paths.dismiss, { pathId: active._id })).rejects.toThrow();
+  });
+});

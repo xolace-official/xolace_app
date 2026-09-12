@@ -76,6 +76,7 @@ export default function ProtectedLayout() {
           />
           <Stack.Screen name="quotes/index" />
           <Stack.Screen name="quotes/archive" />
+          <Stack.Screen name="kindling/index" />
 
           
           <Stack.Screen name="chat/[conversationId]" options={CHAT_OPTIONS} />

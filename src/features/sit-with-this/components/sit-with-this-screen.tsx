@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useMutation } from "convex/react";
 import { useToast } from "heroui-native";
 import { api } from "@/convex/_generated/api";
@@ -29,7 +29,16 @@ export function SitWithThisScreen() {
     { paddingTop: insets.top, paddingBottom: insets.bottom },
   ];
 
-  const { sessionId, session, startPath, completePath } = usePathSession();
+  // A kindling twig (#333) replays a *completed* session's exercise: the
+  // session id rides in on the route, no session state moves, and finishing
+  // returns to the kindling instead of session-end.
+  const params = useLocalSearchParams<{ from?: string; sessionId?: string }>();
+  const standalone = params.from === "kindling";
+  const pathSession = usePathSession();
+  const sessionId = standalone
+    ? ((params.sessionId as Id<"sessions"> | undefined) ?? null)
+    : pathSession.sessionId;
+  const { session, startPath, completePath } = pathSession;
   const posthog = usePostHog();
   const exerciseResult = useQuery(
     api.exercises.getForSession,
@@ -44,7 +53,7 @@ export function SitWithThisScreen() {
   const recordSwapMutation = useMutation(api.exercises.recordSwap);
 
   useEffect(() => {
-    if (startedRef.current || !sessionId || !session) return;
+    if (standalone || startedRef.current || !sessionId || !session) return;
     if (session.state === "path_selected") {
       const go = async () => {
         const ok = await startPath();
@@ -54,13 +63,17 @@ export function SitWithThisScreen() {
     } else if (session.state === "path_in_progress") {
       startedRef.current = true;
     }
-  }, [sessionId, session, startPath]);
+  }, [standalone, sessionId, session, startPath]);
 
   // Complete the session the moment the exercise ends — before navigating — so
   // it's durably terminal even if the user closes the app on session-end.
   // session-end fetches the session by id (not getActive), so it renders fine
   // on a completed session and only records optional post-session feedback.
   const goToSessionEnd = async (pathCompleted: boolean) => {
+    if (standalone) {
+      router.back();
+      return;
+    }
     await completePath(pathCompleted);
     router.replace(
       sessionId
@@ -118,7 +131,11 @@ export function SitWithThisScreen() {
     slots: exerciseResult.slots,
   };
 
-  if (exerciseResult === undefined || !session || preferences === undefined) {
+  if (
+    exerciseResult === undefined ||
+    (!standalone && !session) ||
+    preferences === undefined
+  ) {
     return (
       <View
         className="flex-1 items-center justify-center bg-background"
@@ -150,7 +167,7 @@ export function SitWithThisScreen() {
     );
   }
 
-  const swapsUsed = session.swappedExerciseIds?.length ?? 0;
+  const swapsUsed = session?.swappedExerciseIds?.length ?? 0;
   // Derive from session: if any swaps have happened, skip pre-roll on remount.
   const hasSwapped = swapsUsed > 0;
 
@@ -163,7 +180,7 @@ export function SitWithThisScreen() {
         showPreRoll={!hasSwapped}
         onComplete={handleComplete}
         onExitEarly={handleExitEarly}
-        onSwap={swapsUsed < 2 ? handleOpenSwapSheet : undefined}
+        onSwap={!standalone && swapsUsed < 2 ? handleOpenSwapSheet : undefined}
       />
 
       <SwapSheet

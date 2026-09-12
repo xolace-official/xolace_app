@@ -118,6 +118,7 @@ import type * as lib_xolacerSuggestion from "../lib/xolacerSuggestion.js";
 import type * as migrations from "../migrations.js";
 import type * as monthlyEvents from "../monthlyEvents.js";
 import type * as notifications from "../notifications.js";
+import type * as paths from "../paths.js";
 import type * as plusOffers from "../plusOffers.js";
 import type * as posthog from "../posthog.js";
 import type * as preferences from "../preferences.js";
@@ -260,6 +261,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   monthlyEvents: typeof monthlyEvents;
   notifications: typeof notifications;
+  paths: typeof paths;
   plusOffers: typeof plusOffers;
   posthog: typeof posthog;
   preferences: typeof preferences;
