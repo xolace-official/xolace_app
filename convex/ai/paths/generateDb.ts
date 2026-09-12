@@ -51,8 +51,8 @@ export const getContext = internalQuery({
 
     const tracks = (await ctx.db.query("audio_tracks").take(MAX_TRACKS))
       .filter((t) => t.active)
-      .map(({ slug, family, topic, tags, active, series, tier }) => ({
-        slug, family, topic, tags, active, series, tier,
+      .map(({ slug, family, topic, tags, active, series }) => ({
+        slug, family, topic, tags, active, series,
       }));
 
     return {
@@ -70,8 +70,6 @@ export const getContext = internalQuery({
       profile: semantic ? renderSemanticProfile(semantic) : null,
       semanticProfileId: profile.currentSemanticProfileId,
       binding: {
-        supportNeed,
-        intensity: u.intensity,
         primaryEmotion: u.primaryEmotion,
         secondaryEmotion: u.secondaryEmotion,
         thematicTags: u.thematicTags,

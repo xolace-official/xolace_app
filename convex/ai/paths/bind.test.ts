@@ -10,8 +10,6 @@ const track = (over: Partial<BindTrack> & { slug: string }): BindTrack => ({
 });
 
 const u = (over: Partial<BindUnderstanding> = {}): BindUnderstanding => ({
-  supportNeed: "light",
-  intensity: 5,
   primaryEmotion: "anxiety",
   thematicTags: [],
   suggestedSpecialty: undefined,
@@ -56,39 +54,20 @@ describe("bindTwig", () => {
 
   it("episode_reframe binds only to reframe-series rows, across topics", () => {
     const tracks = [
-      track({ slug: "spectrum", series: "the-spectrum", tier: 1 }),
+      track({ slug: "spectrum", series: "the-spectrum" }),
       track({ slug: "plain" }),
-      track({ slug: "reframe", topic: "audio_topic_shame", series: "reality-not-false-hope", tier: 1 }),
+      track({ slug: "reframe", topic: "audio_topic_shame", series: "reality-not-false-hope" }),
     ];
     expect(bind("episode_reframe", tracks)).toEqual({ slug: "reframe" });
     expect(bind("episode_reframe", tracks.slice(0, 2))).toBeNull();
   });
 
-  it("tier eligibility: light → 1–2, active → 2–3", () => {
-    const tracks = [1, 2, 3].map((tier) => track({ slug: `t${tier}`, series: "the-spectrum", tier }));
-    expect(bind("audio_topic_anxiety", [tracks[2]], { supportNeed: "light" })).toBeNull();
-    expect(bind("audio_topic_anxiety", [tracks[0]], { supportNeed: "active" })).toBeNull();
-    expect(bind("audio_topic_anxiety", [tracks[1]], { supportNeed: "light" })).toEqual({ slug: "t2" });
-    expect(bind("audio_topic_anxiety", [tracks[1]], { supportNeed: "active" })).toEqual({ slug: "t2" });
-  });
-
-  it("intensity breaks a tag-score tie toward the higher tier", () => {
-    const tracks = [
-      track({ slug: "standalone" }),
-      track({ slug: "t1", series: "the-spectrum", tier: 1 }),
-      track({ slug: "t2", series: "the-spectrum", tier: 2 }),
-    ];
-    expect(bind("audio_topic_anxiety", tracks, { intensity: 9 })).toEqual({ slug: "t2" });
-    expect(bind("audio_topic_anxiety", tracks, { intensity: 2 })).toEqual({ slug: "standalone" });
-  });
-
-  it("never returns a tier 4 row under any input", () => {
-    const t4 = track({ slug: "t4", series: "the-spectrum", tier: 4, tags: ["anxiety"] });
-    for (const supportNeed of ["light", "active"] as const) {
-      for (const intensity of [1, 5, 10]) {
-        expect(bind("audio_topic_anxiety", [t4], { supportNeed, intensity })).toBeNull();
-      }
-    }
+  it("tier never gates: episodes of any tier and standalones compete on tags only", () => {
+    const t4 = track({ slug: "t4", series: "the-spectrum", tags: ["anxiety", "racing-thoughts"] });
+    const standalone = track({ slug: "standalone", tags: ["anxiety"] });
+    expect(bind("audio_topic_anxiety", [standalone, t4], { thematicTags: ["racing-thoughts"] })).toEqual({ slug: "t4" });
+    const t4Tied = track({ slug: "t4", series: "the-spectrum", tags: ["anxiety"] });
+    expect(bind("audio_topic_anxiety", [t4Tied, standalone])).toEqual({ slug: "standalone" });
   });
 
   it("skips inactive rows and unknown action types", () => {

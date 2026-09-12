@@ -12,12 +12,10 @@ import { CATALOG_BY_KEY } from "./catalog";
 
 export type BindTrack = Pick<
   Doc<"audio_tracks">,
-  "slug" | "family" | "topic" | "tags" | "active" | "series" | "tier"
+  "slug" | "family" | "topic" | "tags" | "active" | "series"
 >;
 
 export interface BindUnderstanding {
-  supportNeed: "light" | "active";
-  intensity: number;
   primaryEmotion: string;
   secondaryEmotion?: string;
   thematicTags: string[];
@@ -28,15 +26,6 @@ export type BoundParams = { slug: string } | { exercise: string } | { specialty:
 
 /** Track 2 "Reality, Not False Hope" — the one cross-topic series (§3.1). */
 export const REFRAME_SERIES = "reality-not-false-hope";
-
-/** Tier 4 "Misunderstood" is browse-only, permanently (§8). */
-const ELIGIBLE_TIERS: Record<BindUnderstanding["supportNeed"], readonly number[]> = {
-  light: [1, 2],
-  active: [2, 3],
-};
-
-/** At or above this, a tag-score tie resolves to the higher tier (§8). */
-const HIGH_INTENSITY = 6;
 
 export function bindTwig(
   actionType: string,
@@ -63,14 +52,14 @@ function bindTrack(
   const entry = CATALOG_BY_KEY.get(actionType);
   if (!entry) return null;
 
+  // Acuity `tier` is editorial (tone, review process, Browse grouping) — it
+  // never gates binding. Standalones and episodes of a topic compete on tags.
   const family = actionType.startsWith("music_topic_") ? "music" : "support";
-  const tiers = ELIGIBLE_TIERS[u.supportNeed];
   const candidates = tracks.filter(
     (t) =>
       t.active &&
       t.family === family &&
-      (actionType === "episode_reframe" ? t.series === REFRAME_SERIES : t.topic === actionType) &&
-      (t.tier === undefined || tiers.includes(t.tier)),
+      (actionType === "episode_reframe" ? t.series === REFRAME_SERIES : t.topic === actionType),
   );
   if (candidates.length === 0) return null;
 
@@ -82,13 +71,9 @@ function bindTrack(
     ...entry.themes,
   ]);
   const score = (t: BindTrack) => t.tags.filter((tag) => wanted.has(tag)).length;
-  const tierDir = u.intensity >= HIGH_INTENSITY ? -1 : 1;
 
   const best = [...candidates].sort(
-    (a, b) =>
-      score(b) - score(a) ||
-      ((a.tier ?? 0) - (b.tier ?? 0)) * tierDir ||
-      (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0),
+    (a, b) => score(b) - score(a) || (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0),
   )[0];
   return { slug: best.slug };
 }

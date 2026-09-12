@@ -7,9 +7,9 @@ import type { SupportNeed } from "../providers/anthropic";
  *
  * Audio and music are FAMILIES: one entry per topic, never per track. The
  * `topic` on each entry matches `audio_tracks.topic` — it is the join key the
- * binder uses. "The Spectrum" episodes ride the `audio_topic_*` entries (tier
- * picks episode-vs-standalone at bind time); only Track 2 gets its own
- * cross-topic key, `episode_reframe`.
+ * binder uses. "The Spectrum" episodes ride the `audio_topic_*` entries and
+ * compete with standalones on tags — `tier` is editorial, never a binding
+ * gate; only Track 2 gets its own cross-topic key, `episode_reframe`.
  */
 export interface CatalogEntry {
   actionType: string;
