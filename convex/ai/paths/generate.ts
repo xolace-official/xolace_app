@@ -1,138 +1,167 @@
 import { v } from "convex/values";
-import { internalMutation, type MutationCtx } from "../../_generated/server";
-import type { Doc, Id } from "../../_generated/dataModel";
-import { hasPremium } from "../../lib/premium";
+import { internalAction, type ActionCtx } from "../../_generated/server";
+import { internal } from "../../_generated/api";
+import type { Id } from "../../_generated/dataModel";
+import { rateLimiter } from "../../lib/rateLimits";
 import { posthog } from "../../posthog";
+import {
+  getAnthropicClient,
+  extractTextFromResponse,
+  PATHS_MODEL,
+  PATHS_VERSION,
+} from "../providers/anthropic";
+import { CATALOG } from "./catalog";
+import type { GenerateContext } from "./generateDb";
+import {
+  buildPathsPrompt,
+  parsePathsResponse,
+  MIN_TWIGS,
+  type Dropped,
+} from "./prompt";
 
 /**
- * Kindling generation entry point (docs/paths-v1.md §2.1, §5, §6; #330).
+ * Kindling generation entry point (docs/paths-v1.md §2.2, §5; ADR 0010; #331).
  *
  * Scheduled as a sibling from `finalizeCompletion` on the genuine
  * `completeSession` route only. Off the critical path and best-effort: every
  * failure is logged, nothing is thrown, the session never waits on it.
  *
- * The premium gate lives HERE, not at the call site (ADR 0009): a free user
- * is a silent no-op — no log noise, no compute.
+ * One standalone Haiku call, no tool loop: the model picks 2–3 action TYPES
+ * from the catalog and writes a `why` line each. Twigs that fail validation
+ * or binding are dropped, never retried; fewer than MIN_TWIGS survivors means
+ * no `paths` row at all — never a synthetic default.
  *
- * This slice is deterministic and content-free: the always-available
- * breathing twig plus the xolacer ranker's stored verdict. The model call
- * (§2.2) and the catalog binder (§2.3) replace `buildTwigs` in a later slice;
- * the trigger, gate, lifecycle and cascade are what this file proves.
+ * The premium gate and the `supportNeed` gate live in `generateDb.getContext`
+ * (a null context is a silent no-op — no log noise, no compute, ADR 0009).
+ *
+ * No "use node": the Anthropic SDK is fetch-based.
  */
 
-const MODEL = "none";
-const MODEL_VERSION = "deterministic-v0";
-const MIN_TWIGS = 2;
+const MAX_TOKENS = 512;
 
-type Twig = Pick<Doc<"path_steps">, "actionType" | "order" | "why" | "params">;
+type Args = { sessionId: Id<"sessions">; emotionalProfileId: Id<"emotional_profiles"> };
 
-function buildTwigs(understanding: Doc<"emotional_metadata">): Twig[] {
-  const twigs: Twig[] = [
-    {
-      actionType: "breathing",
-      order: 1,
-      why: "A minute of slow breathing, right here, before you move on.",
-      params: { exercise: "sit-with-this" },
-    },
-  ];
-  // The person is chosen at read time by `xolacerChat.sessionSuggestion` and
-  // never stored — only the specialty the ranker resolved travels with the twig.
-  if (understanding.suggestedSpecialty) {
-    twigs.push({
-      actionType: "xolacer",
-      order: 2,
-      why: "Someone here has sat with this too, if you'd rather not carry it alone.",
-      params: { specialty: understanding.suggestedSpecialty },
-    });
+/**
+ * Bind an action type to concrete params. Null = unbindable: the type is
+ * neither offered to the model nor persisted. Only the two content-free
+ * types bind here; the catalog binder (§2.3, #332) extends this for audio,
+ * music and episodes — until then those entries are simply not offered, so
+ * no `path_steps` row ever lands that a reader cannot resolve.
+ */
+function bind(actionType: string, ctx: GenerateContext): Record<string, unknown> | null {
+  switch (actionType) {
+    case "breathing":
+      return { exercise: "sit-with-this" };
+    case "xolacer":
+      // The person is chosen at read time by `xolacerChat.sessionSuggestion`
+      // and never stored — only the ranker's resolved specialty travels.
+      return ctx.suggestedSpecialty ? { specialty: ctx.suggestedSpecialty } : null;
+    default:
+      return null;
   }
-  return twigs;
 }
 
-async function generate(
-  ctx: MutationCtx,
-  args: {
-    sessionId: Id<"sessions">;
-    emotionalProfileId: Id<"emotional_profiles">;
-  },
-): Promise<void> {
-  const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
-  if (!profile || !(await hasPremium(ctx, profile))) return;
-
-  const understanding = await ctx.db
-    .query("emotional_metadata")
-    .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-    .unique();
-  // Absent (pre-classifier rows) reads as "none" — §1.
-  const supportNeed = understanding?.supportNeed ?? "none";
-  if (!understanding || supportNeed === "none") return;
-
-  const twigs = buildTwigs(understanding);
-  if (twigs.length < MIN_TWIGS) {
-    console.error("kindling: no-ship, fewer than 2 twigs", {
-      sessionId: args.sessionId,
-      twigs: twigs.length,
+async function logDrops(ctx: ActionCtx, args: Args, dropped: Dropped[]) {
+  for (const drop of dropped) {
+    console.error("kindling: twig dropped", { sessionId: args.sessionId, ...drop });
+    await posthog.capture(ctx, {
+      distinctId: args.emotionalProfileId,
+      event: "path_twig_dropped",
+      properties: { sessionId: args.sessionId, ...drop },
     });
+  }
+}
+
+async function logNoShip(ctx: ActionCtx, args: Args, reason: string, surviving: number) {
+  console.error("kindling: no-ship", { sessionId: args.sessionId, reason, surviving });
+  await posthog.capture(ctx, {
+    distinctId: args.emotionalProfileId,
+    event: "path_no_ship",
+    properties: { sessionId: args.sessionId, reason, surviving },
+  });
+}
+
+async function generate(ctx: ActionCtx, args: Args): Promise<void> {
+  const context = await ctx.runQuery(internal.ai.paths.generateDb.getContext, args);
+  if (!context) return;
+
+  // One kindling per profile per day. `check` here so a spent slot skips
+  // the model call; the slot is only consumed (`limit`) once there is
+  // something to write — a provider error or a no-ship must not burn the
+  // day's single chance.
+  const limitKey = { key: args.emotionalProfileId };
+  if (!(await rateLimiter.check(ctx, "pathsGenerate", limitKey)).ok) {
+    await logNoShip(ctx, args, "rate_limited", 0);
     return;
   }
 
-  // One active kindling per user: archive, never delete (§6).
-  const previous = await ctx.db
-    .query("paths")
-    .withIndex("by_profile_and_status", (q) =>
-      q.eq("emotionalProfileId", args.emotionalProfileId).eq("status", "active"),
-    )
-    .take(10);
-  for (const path of previous) {
-    await ctx.db.patch("paths", path._id, { status: "replaced" });
-  }
-
-  const pathId = await ctx.db.insert("paths", {
-    emotionalProfileId: args.emotionalProfileId,
-    sessionId: args.sessionId,
-    // Soft reference: dataRetention prunes old semantic_profiles versions
-    // independently, so readers must tolerate a dangling id.
-    emotionalProfileVersionId: profile.currentSemanticProfileId,
-    status: "active",
-    model: MODEL,
-    modelVersion: MODEL_VERSION,
-    generatedAt: Date.now(),
+  // Offer only what fits this grade and can bind for this session.
+  const catalog = CATALOG.filter(
+    (c) =>
+      c.supportNeedFit.includes(context.understanding.supportNeed as "light" | "active") &&
+      bind(c.actionType, context) !== null,
+  );
+  const prompt = buildPathsPrompt({
+    understanding: context.understanding,
+    profile: context.profile,
+    catalog,
+    tier: "plus",
   });
-  for (const twig of twigs) {
-    await ctx.db.insert("path_steps", { pathId, ...twig, state: "pending" });
+  const response = await getAnthropicClient().messages.create({
+    model: PATHS_MODEL,
+    max_tokens: MAX_TOKENS,
+    system: prompt.system,
+    messages: [{ role: "user", content: prompt.user }],
+  });
+
+  const { twigs: picked, dropped } = parsePathsResponse(
+    extractTextFromResponse(response),
+    catalog,
+  );
+  const twigs = [];
+  for (const twig of picked) {
+    const params = bind(twig.actionType, context);
+    if (params) twigs.push({ ...twig, params });
+    else dropped.push({ actionType: twig.actionType, reason: "unbindable" });
+  }
+  await logDrops(ctx, args, dropped);
+
+  if (twigs.length < MIN_TWIGS) {
+    await logNoShip(ctx, args, "fewer_than_min_twigs", twigs.length);
+    return;
+  }
+  if (!(await rateLimiter.limit(ctx, "pathsGenerate", limitKey)).ok) {
+    await logNoShip(ctx, args, "rate_limited", twigs.length);
+    return;
   }
 
-  // Analytics only after the last write: a throw here is swallowed by `run`
-  // and the mutation commits, so nothing may sit between the writes.
-  for (const path of previous) {
-    await posthog.capture(ctx, {
-      distinctId: args.emotionalProfileId,
-      event: "path_replaced",
-      properties: { pathId: path._id, replacedBySessionId: args.sessionId },
-    });
-  }
-  await posthog.capture(ctx, {
-    distinctId: args.emotionalProfileId,
-    event: "path_generated",
-    properties: { pathId, sessionId: args.sessionId, twigs: twigs.length },
+  await ctx.runMutation(internal.ai.paths.generateDb.write, {
+    ...args,
+    semanticProfileId: context.semanticProfileId,
+    model: PATHS_MODEL,
+    modelVersion: PATHS_VERSION,
+    promptTokens: response.usage.input_tokens,
+    completionTokens: response.usage.output_tokens,
+    twigs: twigs.map((t, i) => ({ ...t, order: i + 1 })),
   });
 }
 
-export const run = internalMutation({
+export const run = internalAction({
   args: {
     sessionId: v.id("sessions"),
     emotionalProfileId: v.id("emotional_profiles"),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Every read, gate and external call sits outside the write span, so a
-    // caught throw leaves either a whole kindling or none — never a
+    // Every read, gate and model call sits before the single write mutation,
+    // so a caught throw leaves either a whole kindling or none — never a
     // replaced previous with no successor.
     try {
       await generate(ctx, args);
     } catch (error) {
       console.error("kindling: generation failed", {
         sessionId: args.sessionId,
-        error,
+        message: error instanceof Error ? error.message : String(error),
       });
     }
     return null;

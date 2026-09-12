@@ -2084,6 +2084,9 @@ export default defineSchema({
     ),
     model: v.string(),
     modelVersion: v.string(),
+    // Generation refs for eval (§2.2) — cheap to capture off the response.
+    promptTokens: v.optional(v.number()),
+    completionTokens: v.optional(v.number()),
     generatedAt: v.number(),
   })
     .index("by_profile_and_status", ["emotionalProfileId", "status"])

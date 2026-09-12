@@ -40,6 +40,11 @@ export const REFLECTION_CONSOLIDATION_MODEL = "claude-sonnet-4-6";
 export const REFLECTION_CONSOLIDATION_VERSION =
   "reflect-consolidation-v1-sonnet-4.6";
 
+// Kindling generation (docs/paths-v1.md §2.2, ADR 0010). One standalone
+// Haiku call that picks 2–3 action types and writes a `why` line each.
+export const PATHS_MODEL = "claude-haiku-4-5-20251001";
+export const PATHS_VERSION = "paths-v1-haiku-4.5";
+
 // --- Types ---
 
 export interface ClassificationResult {

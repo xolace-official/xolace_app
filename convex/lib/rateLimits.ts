@@ -105,4 +105,15 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // the per-user token budget (doc §3): ~4/day per profile. A global
   // pool-ceiling bucket is a noted hardening TODO.
   reflectionConsolidation: { kind: "fixed window", rate: 4, period: DAY },
+
+  // Kindling generation (docs/paths-v1.md §2.2), Plus only. One kindling per
+  // profile per day: the first qualifying session of the day generates, every
+  // later session that day is a no-ship (logged `rate_limited`). A user gets
+  // at most one bundle to tend before the next day brings another.
+  // `KINDLING_DEV_UNLIMITED=true` on the dev deployment lifts it (same
+  // shape as PREMIUM_DEV_OVERRIDE) so every test session generates.
+  pathsGenerate:
+    process.env.KINDLING_DEV_UNLIMITED === "true"
+      ? { kind: "fixed window", rate: 1000, period: DAY }
+      : { kind: "fixed window", rate: 1, period: DAY },
 });
