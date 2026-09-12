@@ -9,6 +9,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { ConversationMessageSystem } from './crisis-resources-card';
 import { ConversationMessageAuthor } from './message-author';
 import { ChannelErrorIndicator } from './offline-strip';
+import { ConversationReactionSheet } from './reaction-sheet';
 import { ConversationReactionUser } from './reaction-user';
 import { ConversationReply } from './quoted-reply';
 import { ConversationTypingIndicator } from './typing-indicator';
@@ -97,6 +98,9 @@ export const COMPONENT_OVERRIDES = {
   // The "who reacted" sheet behind a reaction chip (#345): a name-and-avatar
   // row, so an identity override like MessageAuthor.
   MessageUserReactionsItem: ConversationReactionUser,
+  // The sheet itself, rebuilt without the SDK's "more emojis" button — the
+  // second way past the curated set, with no theme key to hide it.
+  MessageUserReactions: ConversationReactionSheet,
 };
 
 /**
