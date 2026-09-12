@@ -15,13 +15,29 @@ import { SESSION_CASCADE_TABLES, SESSION_ID_EXEMPT } from "./sessionCascade";
  * dataRetention, leaving orphan cards pointing at deleted sessions.
  */
 function tablesWithSessionId(): string[] {
-  const found: string[] = [];
-  for (const [name, table] of Object.entries(schema.tables)) {
-    // validator.fields is the object validator's field map for a defineTable.
-    const fields = (table as any).validator?.fields;
-    if (fields && "sessionId" in fields) found.push(name);
+  const found = new Set<string>();
+  // Direct: a `sessionId` field. Transitive: a `v.id()` field pointing at a
+  // table already in the set (`path_steps.pathId` → `paths.sessionId`).
+  // Iterate to a fixpoint so a chain of any depth is caught.
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const [name, table] of Object.entries(schema.tables)) {
+      if (found.has(name)) continue;
+      // validator.fields is the object validator's field map for a defineTable.
+      const fields: Record<string, any> = (table as any).validator?.fields ?? {};
+      const references =
+        "sessionId" in fields ||
+        Object.values(fields).some(
+          (f) => f?.kind === "id" && found.has(f.tableName),
+        );
+      if (references) {
+        found.add(name);
+        grew = true;
+      }
+    }
   }
-  return found.sort();
+  return [...found].sort();
 }
 
 describe("session cascade reference graph", () => {

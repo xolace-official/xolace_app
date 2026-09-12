@@ -22,6 +22,7 @@ import type * as ai_helpers_episodicSearch from "../ai/helpers/episodicSearch.js
 import type * as ai_helpers_patternSummary from "../ai/helpers/patternSummary.js";
 import type * as ai_mirrorPlan from "../ai/mirrorPlan.js";
 import type * as ai_paths_audioTracks from "../ai/paths/audioTracks.js";
+import type * as ai_paths_generate from "../ai/paths/generate.js";
 import type * as ai_process from "../ai/process.js";
 import type * as ai_prompts_accumulatedInput from "../ai/prompts/accumulatedInput.js";
 import type * as ai_prompts_articulator from "../ai/prompts/articulator.js";
@@ -159,6 +160,7 @@ declare const fullApi: ApiFromModules<{
   "ai/helpers/patternSummary": typeof ai_helpers_patternSummary;
   "ai/mirrorPlan": typeof ai_mirrorPlan;
   "ai/paths/audioTracks": typeof ai_paths_audioTracks;
+  "ai/paths/generate": typeof ai_paths_generate;
   "ai/process": typeof ai_process;
   "ai/prompts/accumulatedInput": typeof ai_prompts_accumulatedInput;
   "ai/prompts/articulator": typeof ai_prompts_articulator;

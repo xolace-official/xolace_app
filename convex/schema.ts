@@ -2058,4 +2058,48 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_family_and_topic", ["family", "topic"]),
+
+  // ===========================================================
+  // KINDLING — paths + path_steps (#330, docs/paths-v1.md §7)
+  // ===========================================================
+  //
+  // A kindling (`paths` row) is the Plus-only bundle of 2-3 twigs
+  // (`path_steps`) generated in the background after a qualifying session.
+  // Unrelated to the free post-mirror "next step" (`session.pathChosen`,
+  // `completePath`) — ADR 0008. Both tables are in SESSION_CASCADE_TABLES:
+  // `paths` carries the sessionId directly, `path_steps` transitively via
+  // `pathId`.
+  //
+  paths: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    sessionId: v.id("sessions"), // the session that generated it
+    emotionalProfileVersionId: v.optional(v.id("semantic_profiles")), // profile version in context
+    // One `active` per profile; a new kindling flips the previous one to
+    // `replaced` (archived, never deleted).
+    status: v.union(
+      v.literal("active"),
+      v.literal("replaced"),
+      v.literal("dismissed"),
+      v.literal("completed"),
+    ),
+    model: v.string(),
+    modelVersion: v.string(),
+    generatedAt: v.number(),
+  })
+    .index("by_profile_and_status", ["emotionalProfileId", "status"])
+    .index("by_session", ["sessionId"]),
+
+  path_steps: defineTable({
+    pathId: v.id("paths"),
+    actionType: v.string(), // catalog key
+    order: v.number(), // model's suggested sequence, 1-based
+    why: v.string(),
+    params: v.any(), // binding output: { slug } | exerciseId | xolacerRef
+    state: v.union(
+      v.literal("pending"),
+      v.literal("done"),
+      v.literal("skipped"),
+    ),
+    why_: v.optional(v.string()), // (reserved) tuning notes
+  }).index("by_path", ["pathId"]),
 });
