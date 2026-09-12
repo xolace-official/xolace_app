@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluateSafeguard } from "./safeguard";
+import { evaluateSafeguard, resolveSupportNeed } from "./safeguard";
 import type { ClassificationResult } from "./providers/anthropic";
 import {
   MODERATION_UNAVAILABLE,
@@ -16,6 +16,7 @@ const classification = (
   thematicTags: [],
   userLanguageTags: [],
   requiresFollowUp: false,
+  supportNeed: "none",
   ...overrides,
 });
 
@@ -91,5 +92,26 @@ describe("evaluateSafeguard consequence flags", () => {
     expect(result.isEscalation).toBe(true);
     expect(result.riskFlag).toBe(false);
     expect(result.isCrisis).toBe(false);
+  });
+});
+
+describe("resolveSupportNeed", () => {
+  it("passes the classifier's grade through at safeguard level none", () => {
+    expect(resolveSupportNeed("active", "none")).toBe("active");
+    expect(resolveSupportNeed("light", "none")).toBe("light");
+    expect(resolveSupportNeed("none", "none")).toBe("none");
+  });
+
+  it("passes the classifier's grade through at gentle", () => {
+    expect(resolveSupportNeed("active", "gentle")).toBe("active");
+  });
+
+  it("forces none at elevated regardless of the classifier's grade", () => {
+    expect(resolveSupportNeed("active", "elevated")).toBe("none");
+    expect(resolveSupportNeed("light", "elevated")).toBe("none");
+  });
+
+  it("forces none at crisis regardless of the classifier's grade", () => {
+    expect(resolveSupportNeed("active", "crisis")).toBe("none");
   });
 });

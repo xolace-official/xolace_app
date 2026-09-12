@@ -10,6 +10,7 @@ import {
   motionPreferenceValidator,
   resourceValidator,
   safeguardLevelValidator,
+  supportNeedValidator,
   triggerTypeValidator,
 } from "./lib/validators";
 import { voiceSlugValidator } from "./lib/voices";
@@ -801,6 +802,13 @@ export default defineSchema({
     // here so the Understanding is complete in one row.
     safeguardLevel: v.optional(safeguardLevelValidator),
     safeguardTrigger: v.optional(triggerTypeValidator),
+
+    // Kindling trigger (docs/paths-v1.md §1). Graded by the classifier on
+    // the same call — never a second model call (Constitution Rule).
+    // Optional for rollout: absent (pre-bump rows) reads as "none" at every
+    // consumer, no backfill. Forced to "none" server-side whenever
+    // safeguard escalates (crisis/elevated), regardless of prompt output.
+    supportNeed: v.optional(supportNeedValidator),
 
     // RAG keys (= sessionIds) of the episodic memories that informed this
     // mirror. Required by the Phase 4 relevance loop (confirmed mirrors

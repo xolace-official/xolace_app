@@ -3,6 +3,7 @@ import { query, internalMutation, internalQuery } from "./_generated/server";
 import { requireSessionOwnership } from "./lib/auth";
 import {
   safeguardLevelValidator,
+  supportNeedValidator,
   triggerTypeValidator,
 } from "./lib/validators";
 import { adjustImportance, DEFAULT_IMPORTANCE } from "./episodicImportance";
@@ -103,6 +104,10 @@ export const store = internalMutation({
     // verdict, episodic memories in context, semantic profile version.
     safeguardLevel: v.optional(safeguardLevelValidator),
     safeguardTrigger: v.optional(triggerTypeValidator),
+    // Kindling trigger (docs/paths-v1.md §1). Already forced to "none" by
+    // the caller when safeguard escalates — this mutation stores the
+    // resolved value, it does not re-derive it.
+    supportNeed: v.optional(supportNeedValidator),
     episodicMatchKeys: v.optional(v.array(v.string())),
     // As returned by rag.search. Omitted (never 0) when no search ran or
     // nothing was retrieved.
@@ -205,6 +210,11 @@ export const replaceForRefinement = internalMutation({
     episodicMatchKeys: v.optional(v.array(v.string())),
     episodicTopScore: v.optional(v.number()),
     followUpReason: v.optional(v.string()),
+    // Kindling trigger (docs/paths-v1.md §1). Refreshed here too — this
+    // write is the final read of the moment, and a turn can move the grade
+    // just as it moves emotion/intensity. Already forced to "none" by the
+    // caller when safeguard was escalated; this mutation stores, not derives.
+    supportNeed: v.optional(supportNeedValidator),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -227,6 +237,9 @@ export const replaceForRefinement = internalMutation({
       thematicTags: args.thematicTags,
       userLanguageTags: args.userLanguageTags,
       temporalContext: args.temporalContext,
+      ...(args.supportNeed !== undefined
+        ? { supportNeed: args.supportNeed }
+        : {}),
       ...(args.episodicMatchKeys !== undefined
         ? {
             episodicMatchKeys: args.episodicMatchKeys,

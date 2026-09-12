@@ -56,7 +56,13 @@ export interface ClassificationResult {
   // false. followUpReason is a brief internal sentence (never shown to user).
   requiresFollowUp: boolean;
   followUpReason?: string;
+  // Kindling trigger (docs/paths-v1.md §1). Graded, defaults to "none" when
+  // the model omits it or returns an invalid value. Escalation forces this
+  // to "none" server-side (process.ts) — never trust the prompt alone.
+  supportNeed: SupportNeed;
 }
+
+export type SupportNeed = "none" | "light" | "active";
 
 // --- Valid primary emotions (must match the classifier prompt enum) ---
 
@@ -64,6 +70,8 @@ const VALID_PRIMARY_EMOTIONS = new Set([
   "anger", "sadness", "grief", "fear", "anxiety", "joy", "love",
   "surprise", "disgust", "shame", "guilt", "confusion", "numbness",
 ]);
+
+const VALID_SUPPORT_NEEDS = new Set(["none", "light", "active"]);
 
 // --- Helpers ---
 
@@ -137,6 +145,10 @@ export function parseClassificationResponse(
       : [],
     // Default false — follow-up is the exception, never assume it.
     requiresFollowUp: parsed.requiresFollowUp === true,
+    // Default "none" — an invalid/missing grade must never trigger kindling.
+    supportNeed: VALID_SUPPORT_NEEDS.has(parsed.supportNeed)
+      ? (parsed.supportNeed as SupportNeed)
+      : "none",
   };
 
   // Optional fields

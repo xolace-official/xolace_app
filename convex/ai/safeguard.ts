@@ -4,7 +4,7 @@
  * to determine risk level and appropriate response.
  */
 
-import type { ClassificationResult } from "./providers/anthropic";
+import type { ClassificationResult, SupportNeed } from "./providers/anthropic";
 import type { ModerationResult } from "./providers/moderation";
 
 // --- Types ---
@@ -166,6 +166,23 @@ export function evaluateSafeguard(
     riskFlag: escalatable && base.triggerType !== "pattern_escalation",
     isCrisis: base.level === "crisis",
   };
+}
+
+/**
+ * Kindling trigger (docs/paths-v1.md §1). The classifier's graded
+ * `supportNeed` stands unless safeguard is above the escalation threshold
+ * (crisis or elevated) — safeguard owns that person, and kindling must
+ * never compete with a safety response. Enforced here, server-side, not by
+ * prompt instruction alone.
+ */
+export function resolveSupportNeed(
+  classifierSupportNeed: SupportNeed,
+  safeguardLevel: SafeguardLevel
+): SupportNeed {
+  if (safeguardLevel === "crisis" || safeguardLevel === "elevated") {
+    return "none";
+  }
+  return classifierSupportNeed;
 }
 
 /**

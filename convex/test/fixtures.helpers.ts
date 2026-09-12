@@ -80,6 +80,7 @@ export function classificationResult(
     thematicTags: ["work"],
     userLanguageTags: ["stretched thin"],
     requiresFollowUp: false,
+    supportNeed: "none",
     ...overrides,
   };
 }

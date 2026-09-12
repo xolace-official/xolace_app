@@ -22,6 +22,7 @@ const build = (claimStrength?: "reaching" | "holding" | "measured") =>
       thematicTags: [],
       userLanguageTags: ["heavy", "tight", "blank"],
       requiresFollowUp: false,
+      supportNeed: "none",
     },
     patternSummary: "(none)",
     safeguardLevel: "none",

@@ -20,6 +20,7 @@ import {
   type EpisodicSearch,
 } from "./helpers/episodicSearch";
 import { applyAudioFence } from "./prompts/mirrorAudioTags";
+import { resolveSupportNeed } from "./safeguard";
 import { resolveMirrorTone } from "./mirrorPlan";
 import { scheduleMirrorAudio } from "./tts";
 import { routeClaimStrength } from "./routing";
@@ -99,6 +100,8 @@ export const handleClarification = internalAction({
         temporalContext?: "past_focused" | "present_focused" | "future_focused";
         episodicMatchKeys?: string[];
         episodicTopScore?: number;
+        supportNeed?: "none" | "light" | "active";
+        safeguardLevel?: "none" | "gentle" | "elevated" | "crisis";
       } | null;
 
       const metadata: MetadataType = await ctx.runQuery(
@@ -200,6 +203,7 @@ export const handleClarification = internalAction({
         temporalContext: metadata.temporalContext,
         requiresFollowUp: false,
         followUpReason: undefined,
+        supportNeed: metadata.supportNeed ?? "none",
       };
 
       // 5. Build the articulator prompt with refinement context.
@@ -364,6 +368,19 @@ export const handleClarification = internalAction({
             }),
         ...(reclassified?.followUpReason
           ? { followUpReason: reclassified.followUpReason }
+          : {}),
+        // Refreshed only when this turn actually reclassified — zero-added-
+        // text turns reuse the existing classification (§4 above) and must
+        // not re-force a grade that already reflects the current safeguard
+        // level. Safeguard itself isn't re-run here (§ "Already evaluated on
+        // initial pass"), so the force uses the level already on the row.
+        ...(reclassified
+          ? {
+              supportNeed: resolveSupportNeed(
+                reclassified.supportNeed,
+                metadata.safeguardLevel ?? "none",
+              ),
+            }
           : {}),
       });
 

@@ -13,6 +13,7 @@ const classification = (
   thematicTags: [],
   userLanguageTags: [],
   requiresFollowUp: false,
+  supportNeed: "none",
   ...overrides,
 });
 

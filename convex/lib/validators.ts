@@ -89,6 +89,15 @@ export const safeguardLevelValidator = v.union(
   v.literal("crisis")
 );
 
+// Kindling trigger (docs/paths-v1.md §1). Graded from the classifier;
+// forced to "none" server-side whenever safeguard escalates (crisis/elevated)
+// regardless of what the model said.
+export const supportNeedValidator = v.union(
+  v.literal("none"),
+  v.literal("light"),
+  v.literal("active")
+);
+
 export const triggerTypeValidator = v.union(
   v.literal("explicit_crisis_language"),
   v.literal("implicit_risk_language"),
