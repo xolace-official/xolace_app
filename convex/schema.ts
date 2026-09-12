@@ -2057,7 +2057,8 @@ export default defineSchema({
     licence: v.optional(licenceValidator), // required at write for family="music"
   })
     .index("by_slug", ["slug"])
-    .index("by_family_and_topic", ["family", "topic"]),
+    .index("by_family_and_topic", ["family", "topic"])
+    .index("by_thumbKey", ["thumbKey"]),
 
   // ===========================================================
   // KINDLING — paths + path_steps (#330, docs/paths-v1.md §7)

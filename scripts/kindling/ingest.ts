@@ -93,18 +93,29 @@ async function ingestOne(track: ManifestTrack): Promise<void> {
   // Thumb before audio (docs/paths-v1.md §3.4 step 2): if the run dies
   // mid-track, a row is never created pointing at a missing thumbnail.
   const thumbKey = `thumb/${track.thumbSha256}.${ext(track.thumbPath)}`;
-  const thumbUpload = convexRun("ai/paths/audioTracks:mintUploadUrl", { key: thumbKey });
-  await putFile(thumbUpload.url, path.resolve(mediaDir, track.thumbPath));
-
   const audioKey = `${track.family}/${track.slug}/${randomUUID()}.${ext(track.audioPath)}`;
-  const audioUpload = convexRun("ai/paths/audioTracks:mintUploadUrl", { key: audioKey });
-  await putFile(audioUpload.url, path.resolve(mediaDir, track.audioPath));
+  try {
+    const thumbUpload = convexRun("ai/paths/audioTracks:mintUploadUrl", { key: thumbKey });
+    await putFile(thumbUpload.url, path.resolve(mediaDir, track.thumbPath));
 
-  const { audioPath: _audioPath, thumbPath: _thumbPath, ...rest } = track;
-  const result = convexRun("ai/paths/audioTracks:upsertTrack", {
-    track: { ...rest, key: audioUpload.key, thumbKey: thumbUpload.key },
-  });
-  console.log(`${track.slug}: ${result.action}`);
+    const audioUpload = convexRun("ai/paths/audioTracks:mintUploadUrl", { key: audioKey });
+    await putFile(audioUpload.url, path.resolve(mediaDir, track.audioPath));
+
+    const { audioPath: _audioPath, thumbPath: _thumbPath, ...rest } = track;
+    const result = convexRun("ai/paths/audioTracks:upsertTrack", {
+      track: { ...rest, key: audioUpload.key, thumbKey: thumbUpload.key },
+    });
+    console.log(`${track.slug}: ${result.action}`);
+  } catch (err) {
+    // Blobs from this attempt are orphans; deleting a key that was never
+    // uploaded is a no-op, and the thumb survives if a live row shares it.
+    try {
+      convexRun("ai/paths/audioTracks:discardUpload", { audioKey, thumbKey });
+    } catch (cleanupErr) {
+      console.error(`${track.slug}: cleanup failed — ${(cleanupErr as Error).message}`);
+    }
+    throw err;
+  }
 }
 
 async function pool<T>(items: T[], limit: number, worker: (item: T) => Promise<void>): Promise<void> {

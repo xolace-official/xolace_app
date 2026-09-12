@@ -59,6 +59,28 @@ export const mintUploadUrl = internalMutation({
 });
 
 /**
+ * Ingest-failure cleanup: drop blobs a failed `ingestOne` attempt left behind.
+ * The audio key is unique per attempt, so it always goes; the thumb key is
+ * content-addressed and may be shared, so it goes only when no row points at
+ * it. Same trust model as `mintUploadUrl` (script-only).
+ */
+export const discardUpload = internalMutation({
+  args: { audioKey: v.optional(v.string()), thumbKey: v.optional(v.string()) },
+  returns: v.null(),
+  handler: async (ctx, { audioKey, thumbKey }) => {
+    if (audioKey) await r2.deleteObject(ctx, audioKey);
+    if (thumbKey) {
+      const referenced = await ctx.db
+        .query("audio_tracks")
+        .withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
+        .first();
+      if (!referenced) await r2.deleteObject(ctx, thumbKey);
+    }
+    return null;
+  },
+});
+
+/**
  * Idempotent upsert keyed on `slug`, per docs/paths-v1.md §3.4:
  * - unchanged `sha256` → delete the freshly-uploaded audio blob, no-op the row
  * - changed `sha256` → replace the row, delete the *old* audio blob
