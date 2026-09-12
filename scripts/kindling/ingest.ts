@@ -51,6 +51,7 @@ const updateHashes = args.includes("--update-hashes");
 const manifestPath = path.resolve(flag("manifest", "scripts/kindling/manifest.json"));
 const mediaDir = path.resolve(flag("media", "scripts/kindling/media"));
 const CONCURRENCY = 5;
+const UPLOAD_TIMEOUT_MS = 10 * 60_000; // audio files can be tens of MB
 
 function sha256File(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -76,7 +77,11 @@ function ext(filePath: string): string {
 }
 
 async function putFile(url: string, filePath: string): Promise<void> {
-  const res = await fetch(url, { method: "PUT", body: readFileSync(filePath) });
+  const res = await fetch(url, {
+    method: "PUT",
+    body: readFileSync(filePath),
+    signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+  });
   if (!res.ok) throw new Error(`upload failed (${res.status}): ${filePath}`);
 }
 

@@ -118,12 +118,11 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     await logNoShip(ctx, args, "fewer_than_min_twigs", twigs.length);
     return;
   }
-  if (!(await rateLimiter.limit(ctx, "pathsGenerate", limitKey)).ok) {
-    await logNoShip(ctx, args, "rate_limited", twigs.length);
-    return;
-  }
 
-  await ctx.runMutation(internal.ai.paths.generateDb.write, {
+  // The slot is consumed inside `write`, in the same transaction as the
+  // rows: a failed write rolls the limit back too, so the day's chance is
+  // never burned on a kindling that did not land.
+  const pathId = await ctx.runMutation(internal.ai.paths.generateDb.write, {
     ...args,
     semanticProfileId: context.semanticProfileId,
     model: PATHS_MODEL,
@@ -132,6 +131,7 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     completionTokens: response.usage.output_tokens,
     twigs: twigs.map((t, i) => ({ ...t, order: i + 1 })),
   });
+  if (pathId === null) await logNoShip(ctx, args, "rate_limited", twigs.length);
 }
 
 export const run = internalAction({

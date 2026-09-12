@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalMutation, internalQuery } from "../../_generated/server";
 import type { Doc } from "../../_generated/dataModel";
 import { hasPremium } from "../../lib/premium";
+import { rateLimiter } from "../../lib/rateLimits";
 import { renderSemanticProfile } from "../../semanticProfiles";
 import { posthog } from "../../posthog";
 import type { PathsPromptUnderstanding } from "./prompt";
@@ -88,9 +89,10 @@ const twigValidator = v.object({
 });
 
 /**
- * Archive the previous active kindling (never delete, §6) and write the new
- * one. Analytics only after the last write: a throw there is swallowed by
- * the caller and the mutation still commits.
+ * Consume the day's kindling slot, archive the previous active kindling
+ * (never delete, §6) and write the new one — one transaction, so a throw
+ * anywhere rolls the slot back with the rows and a retry is still allowed.
+ * Null = slot already spent; nothing written.
  */
 export const write = internalMutation({
   args: {
@@ -103,8 +105,11 @@ export const write = internalMutation({
     completionTokens: v.optional(v.number()),
     twigs: v.array(twigValidator),
   },
-  returns: v.id("paths"),
+  returns: v.union(v.id("paths"), v.null()),
   handler: async (ctx, args) => {
+    const slot = await rateLimiter.limit(ctx, "pathsGenerate", { key: args.emotionalProfileId });
+    if (!slot.ok) return null;
+
     const previous = await ctx.db
       .query("paths")
       .withIndex("by_profile_and_status", (q) =>

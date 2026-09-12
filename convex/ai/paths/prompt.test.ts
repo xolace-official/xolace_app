@@ -56,6 +56,25 @@ describe("parsePathsResponse", () => {
     expect(dropped[0].reason).toBe("why_vocabulary");
   });
 
+  it.each([
+    "You said the mornings are hardest, and this one slow minute will help before the day starts.",
+    "You said the mornings are hardest, so take one slow minute and you'll feel calmer after.",
+    "You said the mornings are hardest, so here is one slow minute you will feel better for.",
+    "You said the mornings are hardest, so this is one slow minute proven to settle a rough start.",
+    "You said the mornings are hardest, so this is one slow minute guaranteed to soften the start.",
+  ])("drops a why that promises an outcome: %s", (why) => {
+    const { dropped } = parsePathsResponse(JSON.stringify([entry("breathing", 1, why)]), CATALOG);
+    expect(dropped[0].reason).toBe("why_promise");
+  });
+
+  it("keeps a why that quotes the person's own feeling", () => {
+    const { dropped } = parsePathsResponse(
+      JSON.stringify([entry("breathing", 1, "You said you feel heaviest in the mornings, so this is one slow minute before the day.")]),
+      CATALOG,
+    );
+    expect(dropped).toEqual([]);
+  });
+
   it("drops a why that is too short or too long", () => {
     const short = "Breathe now.";
     const long = Array.from({ length: 30 }, () => "word").join(" ") + ".";

@@ -49,6 +49,7 @@ export type DropReason =
   | "why_sentences"
   | "why_person"
   | "why_vocabulary"
+  | "why_promise"
   | "over_max"
   | "unbindable";
 
@@ -65,6 +66,12 @@ const WHY_MAX_WORDS = 24;
 // The banned clinical register (§2.2), matched on stems so "anxious",
 // "coping", "regulation", "grounded", "managing" all fail too.
 const BANNED_WHY = /\b(anxi|symptom|cop(e|es|ed|ing)\b|regulat|ground(ing|ed)\b|manag)/i;
+
+// Outcome promises (§2.2 "Do NOT promise an outcome"): "this will help",
+// "you'll feel calmer", "proven to", "guaranteed". Modal forms only — a bare
+// "you feel" is usually the person's own words being quoted back.
+const PROMISE_WHY =
+  /\b(will|would|going to) (help|calm|ease|make|feel|work)\b|\byou('ll| will|'d| would) feel\b|\b(proven|guaranteed)\b/i;
 
 export function buildPathsPrompt(ctx: PathsPromptContext): {
   system: string;
@@ -132,6 +139,7 @@ function validateWhy(why: unknown): DropReason | null {
   if (/[.!?]\s+[A-Z]/.test(text)) return "why_sentences";
   if (!/\byou(r|'re|'ve|'d)?\b/i.test(text)) return "why_person";
   if (BANNED_WHY.test(text)) return "why_vocabulary";
+  if (PROMISE_WHY.test(text)) return "why_promise";
   return null;
 }
 
