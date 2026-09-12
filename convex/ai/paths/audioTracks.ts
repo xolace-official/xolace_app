@@ -100,14 +100,16 @@ export const upsertTrack = internalMutation({
 
     if (existing.sha256 === track.sha256) {
       await r2.deleteObject(ctx, track.key);
-      if (existing.thumbSha256 === track.thumbSha256) {
-        return { action: "unchanged" as const, trackId: existing._id };
-      }
-      await ctx.db.patch("audio_tracks", existing._id, {
-        thumbKey: track.thumbKey,
-        thumbSha256: track.thumbSha256,
+      // Audio blob unchanged: keep the live key, but persist every other
+      // field (title, tags, thumb, licence, ...) — metadata edits must land.
+      await ctx.db.replace("audio_tracks", existing._id, {
+        ...track,
+        key: existing.key,
+        active: existing.active,
       });
-      return { action: "updated" as const, trackId: existing._id };
+      const action =
+        existing.thumbSha256 === track.thumbSha256 ? ("unchanged" as const) : ("updated" as const);
+      return { action, trackId: existing._id };
     }
 
     const oldKey = existing.key;

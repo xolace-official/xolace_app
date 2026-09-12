@@ -8,7 +8,8 @@ import {
   ARTICULATOR_VERSION,
   CLASSIFIER_VERSION,
 } from "./providers/anthropic";
-import { classifierCache } from "./cached";
+import { classifierCache, moderationCache } from "./cached";
+import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildArticulatorPrompt, hasMetaNarration } from "./prompts/articulator";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import {
@@ -20,7 +21,7 @@ import {
   type EpisodicSearch,
 } from "./helpers/episodicSearch";
 import { applyAudioFence } from "./prompts/mirrorAudioTags";
-import { resolveSupportNeed } from "./safeguard";
+import { evaluateSafeguard, resolveSupportNeed } from "./safeguard";
 import { resolveMirrorTone } from "./mirrorPlan";
 import { scheduleMirrorAudio } from "./tts";
 import { routeClaimStrength } from "./routing";
@@ -44,13 +45,9 @@ const FALLBACK_MIRROR =
  * that accumulated input; and the Understanding row is replaced with the
  * final read.
  *
- * KNOWN GAP: moderation and safeguard stay off this path — they ran on the
- * initial pass only — so text added on a refinement turn now drives the stored
- * classification while `riskFlag` / `safeguardLevel` keep the verdict derived
- * from the original words. That is why the metadata write goes through a
- * mutation that cannot express a safety field rather than through `store`:
- * clarify has no safety verdict to write. Re-running safeguard on the
- * accumulated input (and the escalation path that implies) is its own ticket.
+ * Text added on a refinement turn re-runs moderation + safeguard on the
+ * accumulated input with the same rejection / escalation consequences as the
+ * initial pass. A zero-added-text turn keeps the verdict already on the row.
  */
 export const handleClarification = internalAction({
   args: {
@@ -170,7 +167,7 @@ export const handleClarification = internalAction({
             )
           : null;
 
-      const [reclassified, episodic] = await Promise.all([
+      const [reclassified, episodic, moderationResult] = await Promise.all([
         classifierPrompt
           ? classifierCache
               .fetch(ctx, {
@@ -189,6 +186,11 @@ export const handleClarification = internalAction({
               args.sessionId,
               accumulatedInput,
             ),
+        addedText.length > 0
+          ? moderationCache
+              .fetch(ctx, { text: accumulatedInput })
+              .catch(() => MODERATION_UNAVAILABLE)
+          : Promise.resolve(null),
       ]);
 
       const classification = reclassified ?? {
@@ -205,6 +207,41 @@ export const handleClarification = internalAction({
         followUpReason: undefined,
         supportNeed: metadata.supportNeed ?? "none",
       };
+
+      // 4.1. Safeguard on the accumulated input (same rule engine as
+      // process.ts). Only when this turn added words — the initial verdict
+      // already covers the unchanged input.
+      const safeguard = moderationResult
+        ? evaluateSafeguard(
+            classification,
+            moderationResult,
+            context.recentMetadata,
+          )
+        : null;
+      const safeguardLevel =
+        safeguard?.level ?? metadata.safeguardLevel ?? "none";
+
+      if (safeguard?.shouldReject) {
+        await ctx.runMutation(internal.sessions.failSession, {
+          sessionId: args.sessionId,
+          errorMessage: safeguard.rejectionReason ?? "content_policy_violation",
+        });
+        await posthog.capture(ctx, {
+          distinctId: session.emotionalProfileId,
+          event: "mirror_content_rejected",
+          properties: {
+            rejectionReason:
+              safeguard.rejectionReason ?? "content_policy_violation",
+            turnNumber: args.turnNumber,
+          },
+        });
+        return;
+      }
+
+      // Escalation is sticky: a session that escalated on the initial pass
+      // stays escalated, and this turn can only add to that.
+      const isEscalation =
+        session.escalationTriggered === true || safeguard?.isEscalation === true;
 
       // 5. Build the articulator prompt with refinement context.
       // Clarify only re-articulates, so it uses the slim articulator variant.
@@ -249,7 +286,7 @@ export const handleClarification = internalAction({
         specificity: classification.specificity,
         episodicTopScore,
         entryType: session.entryType ?? "open_prompt",
-        isEscalation: session.escalationTriggered === true,
+        isEscalation,
         profileReachedToday: context.profileReachedToday,
         gapNamedThisSession: session.gapNamed === true,
         atCap: args.turnNumber >= MAX_TURNS,
@@ -265,7 +302,7 @@ export const handleClarification = internalAction({
           requiresFollowUp: false,
         },
         patternSummary,
-        safeguardLevel: "none", // Already evaluated on initial pass
+        safeguardLevel,
         mirrorTone,
         entryType: session.entryType ?? "open_prompt",
         isFirstSession: context.isFirstSession,
@@ -326,6 +363,13 @@ export const handleClarification = internalAction({
         mirrorText: revisedMirrorText,
         mirrorModelVersion: ARTICULATOR_VERSION,
         toneUsed: mirrorTone,
+        ...(safeguard ? { safeguardLevel: safeguard.level } : {}),
+        ...(safeguard?.isEscalation
+          ? {
+              escalationTriggered: true,
+              escalationResources: safeguard.resourcesPresented,
+            }
+          : {}),
         // Same fence as the initial mirror: a fallback named no gap.
         ...(claimStrength === "reaching" && !isFallback
           ? { gapNamed: true }
@@ -372,17 +416,43 @@ export const handleClarification = internalAction({
         // Refreshed only when this turn actually reclassified — zero-added-
         // text turns reuse the existing classification (§4 above) and must
         // not re-force a grade that already reflects the current safeguard
-        // level. Safeguard itself isn't re-run here (§ "Already evaluated on
-        // initial pass"), so the force uses the level already on the row.
+        // level.
         ...(reclassified
           ? {
               supportNeed: resolveSupportNeed(
                 reclassified.supportNeed,
-                metadata.safeguardLevel ?? "none",
+                safeguardLevel,
               ),
             }
           : {}),
+        ...(safeguard
+          ? {
+              riskFlag: safeguard.riskFlag,
+              safeguardLevel: safeguard.level,
+              safeguardTrigger: safeguard.triggerType,
+            }
+          : {}),
       });
+
+      // First escalation on this session lands the event; a session that
+      // already escalated keeps the one it has.
+      if (
+        safeguard?.isEscalation &&
+        safeguard.triggerType &&
+        session.escalationTriggered !== true
+      ) {
+        await ctx.runMutation(internal.escalation.create, {
+          emotionalProfileId: session.emotionalProfileId as ReturnType<
+            typeof v.id<"emotional_profiles">
+          >["type"],
+          sessionId: args.sessionId,
+          triggerType: safeguard.triggerType,
+          triggerConfidence: safeguard.triggerConfidence,
+          triggerEvidence: safeguard.triggerEvidence,
+          actionTaken: safeguard.actionTaken,
+          resourcesPresented: safeguard.resourcesPresented,
+        });
+      }
 
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,
@@ -402,6 +472,8 @@ export const handleClarification = internalAction({
           hadAdditionalText: addedText.length > 0,
           reclassified: reclassified !== null,
           claimStrength,
+          safeguardLevel,
+          escalationTriggered: isEscalation,
           usedFallback: revisedMirrorText === FALLBACK_MIRROR,
           userFeedback: userFeedback ?? "not_quite",
         },

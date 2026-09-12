@@ -215,6 +215,12 @@ export const replaceForRefinement = internalMutation({
     // just as it moves emotion/intensity. Already forced to "none" by the
     // caller when safeguard was escalated; this mutation stores, not derives.
     supportNeed: v.optional(supportNeedValidator),
+    // Safety verdict re-evaluated on the accumulated input. The trio moves
+    // together and only when the turn actually re-ran safeguard (added text);
+    // a zero-added-text turn leaves the initial-pass verdict alone.
+    riskFlag: v.optional(v.boolean()),
+    safeguardLevel: v.optional(safeguardLevelValidator),
+    safeguardTrigger: v.optional(triggerTypeValidator),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -227,6 +233,13 @@ export const replaceForRefinement = internalMutation({
     if (!existing) return null;
 
     await ctx.db.patch("emotional_metadata", existing._id, {
+      ...(args.safeguardLevel !== undefined
+        ? {
+            safeguardLevel: args.safeguardLevel,
+            riskFlag: args.riskFlag ?? existing.riskFlag,
+            safeguardTrigger: args.safeguardTrigger,
+          }
+        : {}),
       classifierVersion: args.classifierVersion,
       primaryEmotion: args.primaryEmotion,
       primaryEmotionConfidence: args.primaryEmotionConfidence,
