@@ -1,0 +1,54 @@
+[
+  {
+    "slug": "audio-anxiety-01",
+    "family": "support",
+    "title": "Settling the Static",
+    "topic": "audio_topic_anxiety",
+    "tags": ["anxiety", "racing-thoughts"],
+    "audioPath": "support/audio-anxiety-01.m4a",
+    "thumbPath": "thumbs/campfire-blue.webp",
+    "durationSec": 312,
+    "sha256": "",
+    "thumbSha256": "",
+    "narrators": ["Sage"]
+  },
+  {
+    "slug": "the-spectrum-ep01",
+    "family": "support",
+    "title": "Everyday Mind — Episode 1",
+    "topic": "audio_topic_anxiety",
+    "tags": ["anxiety", "awareness"],
+    "audioPath": "episodes/the-spectrum-ep01.m4a",
+    "thumbPath": "thumbs/the-spectrum.webp",
+    "durationSec": 540,
+    "sha256": "",
+    "thumbSha256": "",
+    "narrators": ["Sage", "Ash"],
+    "series": "the-spectrum",
+    "seriesTitle": "The Spectrum",
+    "episodeNumber": 1,
+    "tier": 1
+  },
+  {
+    "slug": "music-calm-lofi-01",
+    "family": "music",
+    "title": "Low Ember",
+    "topic": "music_topic_calm",
+    "tags": ["calm", "instrumental"],
+    "audioPath": "music/music-calm-lofi-01.mp3",
+    "thumbPath": "thumbs/low-ember.webp",
+    "durationSec": 184,
+    "sha256": "",
+    "thumbSha256": "",
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/REPLACE",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "REPLACE_ARTIST_NAME",
+      "attributionRequired": false,
+      "attributionText": "Music by REPLACE_ARTIST_NAME from Pixabay",
+      "acquiredAt": 1757650000000
+    }
+  }
+]

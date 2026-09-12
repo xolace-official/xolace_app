@@ -146,6 +146,28 @@ export const insightFeatureValidator = v.union(
  */
 export const INTAKE_VERSION = 1;
 
+// ===========================================================
+// KINDLING — audio_tracks (#328, spec docs/paths-v1.md §3.2)
+// ===========================================================
+
+/**
+ * Music-family licence terms. `attributionText` is stored verbatim (not
+ * derived from the other fields at read time) so the credit shown to users
+ * can never drift from what was captured at curation.
+ */
+export const licenceValidator = v.object({
+  source: v.string(),
+  sourceUrl: v.string(),
+  licenceName: v.string(),
+  licenceUrl: v.string(),
+  artist: v.string(),
+  attributionRequired: v.boolean(),
+  attributionText: v.string(),
+  acquiredAt: v.number(),
+  licenceRef: v.optional(v.string()),
+  licenceProofStorageId: v.optional(v.id("_storage")),
+});
+
 //
 // The answer columns of `intake_responses`, shared by the schema and by the
 // `intake.complete` mutation args so the two can never drift.

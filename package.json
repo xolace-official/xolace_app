@@ -37,7 +37,10 @@
     "stream:webhook": "convex run streamWebhook:registerWebhook",
     "stream:webhook:prod": "convex run --prod streamWebhook:registerWebhook",
     "stream:setup": "convex run streamSetup:setup",
-    "stream:setup:prod": "convex run --prod streamSetup:setup"
+    "stream:setup:prod": "convex run --prod streamSetup:setup",
+    "kindling:hashes": "node scripts/kindling/ingest.ts --update-hashes",
+    "kindling:ingest": "node scripts/kindling/ingest.ts",
+    "kindling:ingest:prod": "node scripts/kindling/ingest.ts --prod"
   },
   "dependencies": {
     "@ai-sdk/openai": "3.0.80",
