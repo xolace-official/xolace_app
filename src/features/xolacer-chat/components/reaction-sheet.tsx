@@ -23,6 +23,7 @@ type Reaction = NonNullable<MessageUserReactionsProps['reactions']>[number];
  */
 export function ConversationReactionSheet({
   message,
+  reactions: propReactions,
   selectedReaction: initial,
 }: MessageUserReactionsProps) {
   const { supportedReactions } = useMessagesContext();
@@ -46,14 +47,17 @@ export function ConversationReactionSheet({
     reactionType: selectedReaction,
     sort: { created_at: -1 },
   });
-  // Same shape and cast as the SDK's own sheet: `Reaction.id` is typed as
-  // required though a reaction's user is optional on the wire.
-  const rows = reactions.map((r) => ({
-    id: r.user?.id,
-    image: r.user?.image,
-    name: r.user?.name,
-    type: r.type,
-  })) as Reaction[];
+  // Caller-supplied rows win over the fetch, as in the SDK's own sheet. Same
+  // shape and cast too: `Reaction.id` is typed as required though a reaction's
+  // user is optional on the wire.
+  const rows =
+    propReactions ??
+    (reactions.map((r) => ({
+      id: r.user?.id,
+      image: r.user?.image,
+      name: r.user?.name,
+      type: r.type,
+    })) as Reaction[]);
 
   return (
     <View className="flex-1">
