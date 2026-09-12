@@ -18,6 +18,12 @@ import {
   rateLimiterMock,
   revenuecatMock,
 } from "./mocks.helpers";
+import manifest from "../../scripts/kindling/manifest.json";
+
+type ManifestTrack = Omit<Doc<"audio_tracks">, "_id" | "_creationTime" | "key" | "thumbKey" | "active"> & {
+  audioPath: string;
+  thumbPath: string;
+};
 
 const WHY = "You said the mornings are the hardest, so this is one slow minute before the day starts.";
 const twig = (actionType: string, order: number, why = WHY) => ({ actionType, order, why });
@@ -28,6 +34,7 @@ const stub = vi.hoisted(() => ({
   entitlementThrows: false,
   reply: "" as string,
   limit: { ok: true } as { ok: boolean; retryAfter?: number },
+  requests: [] as { messages: { content: unknown }[] }[],
 }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -37,10 +44,20 @@ vi.mock("../lib/rateLimits", async (orig) => ({
   ...(await orig<typeof import("../lib/rateLimits")>()),
   ...rateLimiterMock(() => stub.limit),
 }));
-vi.mock("../ai/providers/anthropic", async (orig) => ({
-  ...(await orig<typeof import("../ai/providers/anthropic")>()),
-  ...anthropicMock(() => stub.reply),
-}));
+vi.mock("../ai/providers/anthropic", async (orig) => {
+  const mock = anthropicMock(() => stub.reply);
+  return {
+    ...(await orig<typeof import("../ai/providers/anthropic")>()),
+    getAnthropicClient: () => ({
+      messages: {
+        create: async (req: { messages: { content: unknown }[] }) => {
+          stub.requests.push(req);
+          return mock.getAnthropicClient().messages.create();
+        },
+      },
+    }),
+  };
+});
 vi.mock("../revenuecat", () =>
   revenuecatMock(() => {
     if (stub.entitlementThrows) throw new Error("RC down");
@@ -62,6 +79,7 @@ beforeEach(() => {
   stub.entitlementThrows = false;
   stub.reply = goodReply;
   stub.limit = { ok: true };
+  stub.requests = [];
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -95,6 +113,20 @@ const readPaths = (user: SeededUser) =>
       )
       .collect(),
   );
+
+/** The checked-in dev catalogue, as `ingest.ts` would have upserted it. */
+async function seedCatalogue(user: SeededUser) {
+  await user.root.run(async (ctx) => {
+    for (const { audioPath, thumbPath, ...t } of manifest as ManifestTrack[]) {
+      await ctx.db.insert("audio_tracks", {
+        ...t,
+        key: audioPath,
+        thumbKey: thumbPath,
+        active: true,
+      } as Doc<"audio_tracks">);
+    }
+  });
+}
 
 const readSteps = (user: SeededUser, pathId: Id<"paths">) =>
   user.root.run((ctx) =>
@@ -215,6 +247,53 @@ describe("ai/paths/generate.run", () => {
 
     expect(error).toHaveBeenCalled();
     expect(await readPaths(user)).toEqual([]);
+  });
+
+  it("binds an audio_topic_* twig to a real slug from the dev catalogue", async () => {
+    stub.reply = JSON.stringify([twig("audio_topic_anxiety", 1), twig("breathing", 2)]);
+    const user = await asNewUser();
+    await seedCatalogue(user);
+    const sessionId = await seedQualifying(user);
+
+    await generate(user, sessionId);
+
+    const [path] = await readPaths(user);
+    const audio = (await readSteps(user, path._id)).find((s) => s.actionType === "audio_topic_anxiety");
+    const slugs = manifest.map((t) => t.slug);
+    expect(slugs).toContain((audio?.params as { slug: string }).slug);
+  });
+
+  it("offers the model only action types that can bind for this session", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+
+    await generate(user, sessionId);
+
+    const offered = String(stub.requests[0].messages[0].content);
+    expect(offered).toContain("- breathing:");
+    expect(offered).toContain("- xolacer:");
+    expect(offered).not.toContain("audio_topic_");
+    expect(offered).not.toContain("music_topic_");
+  });
+
+  it("writes no kindling and no notification when every twig is unbindable", async () => {
+    // No catalogue rows and no specialty: only breathing can bind, and the
+    // model returns two content twigs anyway.
+    stub.reply = JSON.stringify([twig("audio_topic_grief", 1), twig("music_topic_sadness", 2)]);
+    const user = await asNewUser();
+    const sessionId = await seedSession(user.root, user.profileId, { state: "confirmed" });
+    await seedMetadata(user.root, sessionId, user.profileId, { supportNeed: "light" });
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await generate(user, sessionId);
+
+    expect(await readPaths(user)).toEqual([]);
+    const notifications = await user.root.run((ctx) => ctx.db.query("notification_log").take(10));
+    expect(notifications).toEqual([]);
+    expect(error).toHaveBeenCalledWith(
+      "kindling: no-ship",
+      expect.objectContaining({ reason: "fewer_than_min_twigs", surviving: 0 }),
+    );
   });
 
   it("flips the previous active kindling to replaced, keeping its row", async () => {

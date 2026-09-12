@@ -5,6 +5,7 @@ import { hasPremium } from "../../lib/premium";
 import { renderSemanticProfile } from "../../semanticProfiles";
 import { posthog } from "../../posthog";
 import type { PathsPromptUnderstanding } from "./prompt";
+import type { BindTrack, BindUnderstanding } from "./bind";
 
 /**
  * Kindling generation — the DB halves of `generate.ts` (#331): the context
@@ -16,8 +17,13 @@ export interface GenerateContext {
   understanding: PathsPromptUnderstanding;
   profile: string | null;
   semanticProfileId: Doc<"emotional_profiles">["currentSemanticProfileId"];
-  suggestedSpecialty: Doc<"emotional_metadata">["suggestedSpecialty"];
+  binding: BindUnderstanding;
+  tracks: BindTrack[];
 }
+
+// ponytail: the whole active catalogue in one read (~200–400 rows, six small
+// fields). Per-topic index reads if the catalogue outgrows a single query.
+const MAX_TRACKS = 2000;
 
 /**
  * Null means "do nothing, silently": free user (ADR 0009), no Understanding
@@ -43,6 +49,12 @@ export const getContext = internalQuery({
       ? await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId)
       : null;
 
+    const tracks = (await ctx.db.query("audio_tracks").take(MAX_TRACKS))
+      .filter((t) => t.active)
+      .map(({ slug, family, topic, tags, active, series, tier }) => ({
+        slug, family, topic, tags, active, series, tier,
+      }));
+
     return {
       understanding: {
         primaryEmotion: u.primaryEmotion,
@@ -57,7 +69,15 @@ export const getContext = internalQuery({
       },
       profile: semantic ? renderSemanticProfile(semantic) : null,
       semanticProfileId: profile.currentSemanticProfileId,
-      suggestedSpecialty: u.suggestedSpecialty,
+      binding: {
+        supportNeed,
+        intensity: u.intensity,
+        primaryEmotion: u.primaryEmotion,
+        secondaryEmotion: u.secondaryEmotion,
+        thematicTags: u.thematicTags,
+        suggestedSpecialty: u.suggestedSpecialty,
+      },
+      tracks,
     };
   },
 });

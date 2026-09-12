@@ -10,6 +10,7 @@ import {
   PATHS_MODEL,
   PATHS_VERSION,
 } from "../providers/anthropic";
+import { bindTwig } from "./bind";
 import { CATALOG } from "./catalog";
 import type { GenerateContext } from "./generateDb";
 import {
@@ -42,24 +43,11 @@ const MAX_TOKENS = 512;
 type Args = { sessionId: Id<"sessions">; emotionalProfileId: Id<"emotional_profiles"> };
 
 /**
- * Bind an action type to concrete params. Null = unbindable: the type is
- * neither offered to the model nor persisted. Only the two content-free
- * types bind here; the catalog binder (§2.3, #332) extends this for audio,
- * music and episodes — until then those entries are simply not offered, so
- * no `path_steps` row ever lands that a reader cannot resolve.
+ * Null = unbindable: the type is neither offered to the model nor persisted,
+ * so no `path_steps` row ever lands that a reader cannot resolve.
  */
-function bind(actionType: string, ctx: GenerateContext): Record<string, unknown> | null {
-  switch (actionType) {
-    case "breathing":
-      return { exercise: "sit-with-this" };
-    case "xolacer":
-      // The person is chosen at read time by `xolacerChat.sessionSuggestion`
-      // and never stored — only the ranker's resolved specialty travels.
-      return ctx.suggestedSpecialty ? { specialty: ctx.suggestedSpecialty } : null;
-    default:
-      return null;
-  }
-}
+const bind = (actionType: string, ctx: GenerateContext) =>
+  bindTwig(actionType, ctx.binding, ctx.tracks);
 
 async function logDrops(ctx: ActionCtx, args: Args, dropped: Dropped[]) {
   for (const drop of dropped) {
