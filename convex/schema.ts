@@ -6,9 +6,11 @@ import {
   conversationRoleValidator,
   insightFeatureValidator,
   intakeAnswerValidators,
+  licenceValidator,
   motionPreferenceValidator,
   resourceValidator,
   safeguardLevelValidator,
+  supportNeedValidator,
   triggerTypeValidator,
 } from "./lib/validators";
 import { voiceSlugValidator } from "./lib/voices";
@@ -800,6 +802,13 @@ export default defineSchema({
     // here so the Understanding is complete in one row.
     safeguardLevel: v.optional(safeguardLevelValidator),
     safeguardTrigger: v.optional(triggerTypeValidator),
+
+    // Kindling trigger (docs/paths-v1.md §1). Graded by the classifier on
+    // the same call — never a second model call (Constitution Rule).
+    // Optional for rollout: absent (pre-bump rows) reads as "none" at every
+    // consumer, no backfill. Forced to "none" server-side whenever
+    // safeguard escalates (crisis/elevated), regardless of prompt output.
+    supportNeed: v.optional(supportNeedValidator),
 
     // RAG keys (= sessionIds) of the episodic memories that informed this
     // mirror. Required by the Phase 4 relevance loop (confirmed mirrors
@@ -2005,4 +2014,96 @@ export default defineSchema({
   })
     .index("by_conversation", ["conversationId"])
     .index("by_messageId", ["streamMessageId"]),
+
+  // ===========================================================
+  // KINDLING CATALOGUE — audio_tracks (#328)
+  // ===========================================================
+  //
+  // One table, two families (`support` / `music`); an episode is a support
+  // row with `series` set — no third family arm. Cascade-exempt by
+  // construction: no sessionId/profileId, so sessionCascade.test.ts's schema
+  // walk never sees it — these rows are shared across every user and must
+  // survive session cascade, data wipe, and account deletion.
+  //
+  // Blobs (`key`, `thumbKey`) live in Cloudflare R2 via @convex-dev/r2
+  // (docs/paths-v1.md §3.2, map decision — issue #321); everything else
+  // stays on Convex. See docs/paths-v1.md §3 for the full spec.
+  //
+  audio_tracks: defineTable({
+    slug: v.string(), // stable id: binding + idempotent re-ingest
+    family: v.union(v.literal("support"), v.literal("music")),
+    title: v.string(),
+    topic: v.string(), // the audio_topic_* / music_topic_* catalog entry
+    tags: v.array(v.string()), // shared emotion/theme vocab, both families
+    key: v.string(), // R2 object key, e.g. `${family}/${slug}.m4a`
+    thumbKey: v.string(), // R2 key, content-addressed: `thumb/${thumbSha256}.webp`
+    durationSec: v.number(),
+    sha256: v.string(), // audio re-ingest idempotency
+    thumbSha256: v.string(), // thumbnail idempotency, independent of audio
+    active: v.boolean(), // retire (licence lapse) without deleting
+    newUntil: v.optional(v.number()), // ms epoch; in the Browse "New" shelf while > now
+
+    // support-family
+    narrators: v.optional(v.array(v.string())), // display strings: ["Sage"], ["Sage","Ash"]
+
+    // episode (support-family with a series) — Track 1 "The Spectrum" / Track 2
+    series: v.optional(v.string()), // series slug
+    seriesTitle: v.optional(v.string()), // denormalised for browse tiles
+    episodeNumber: v.optional(v.number()),
+    tier: v.optional(v.number()), // acuity 1-4; tier >= 3 requires safetyReviewedAt
+    safetyReviewedAt: v.optional(v.number()),
+
+    // music-family
+    licence: v.optional(licenceValidator), // required at write for family="music"
+  })
+    .index("by_slug", ["slug"])
+    .index("by_family_and_topic", ["family", "topic"])
+    .index("by_thumbKey", ["thumbKey"]),
+
+  // ===========================================================
+  // KINDLING — paths + path_steps (#330, docs/paths-v1.md §7)
+  // ===========================================================
+  //
+  // A kindling (`paths` row) is the Plus-only bundle of 2-3 twigs
+  // (`path_steps`) generated in the background after a qualifying session.
+  // Unrelated to the free post-mirror "next step" (`session.pathChosen`,
+  // `completePath`) — ADR 0008. Both tables are in SESSION_CASCADE_TABLES:
+  // `paths` carries the sessionId directly, `path_steps` transitively via
+  // `pathId`.
+  //
+  paths: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    sessionId: v.id("sessions"), // the session that generated it
+    emotionalProfileVersionId: v.optional(v.id("semantic_profiles")), // profile version in context
+    // One `active` per profile; a new kindling flips the previous one to
+    // `replaced` (archived, never deleted).
+    status: v.union(
+      v.literal("active"),
+      v.literal("replaced"),
+      v.literal("dismissed"),
+      v.literal("completed"),
+    ),
+    model: v.string(),
+    modelVersion: v.string(),
+    // Generation refs for eval (§2.2) — cheap to capture off the response.
+    promptTokens: v.optional(v.number()),
+    completionTokens: v.optional(v.number()),
+    generatedAt: v.number(),
+  })
+    .index("by_profile_and_status", ["emotionalProfileId", "status"])
+    .index("by_session", ["sessionId"]),
+
+  path_steps: defineTable({
+    pathId: v.id("paths"),
+    actionType: v.string(), // catalog key
+    order: v.number(), // model's suggested sequence, 1-based
+    why: v.string(),
+    params: v.any(), // binding output: { slug } | exerciseId | xolacerRef
+    state: v.union(
+      v.literal("pending"),
+      v.literal("done"),
+      v.literal("skipped"),
+    ),
+    why_: v.optional(v.string()), // (reserved) tuning notes
+  }).index("by_path", ["pathId"]),
 });

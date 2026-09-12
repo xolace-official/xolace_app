@@ -38,6 +38,7 @@ const classification: ClassificationResult = {
   thematicTags: [],
   userLanguageTags: ["heavy"],
   requiresFollowUp: false,
+  supportNeed: "none",
 };
 
 /**

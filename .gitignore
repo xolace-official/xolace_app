@@ -56,3 +56,6 @@ google-services-preview/
 .env.local
 .stream/
 .gstack/
+
+# Kindling ingestion — local media, never the manifest (#328)
+/scripts/kindling/media/

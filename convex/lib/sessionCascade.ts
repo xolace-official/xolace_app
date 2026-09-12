@@ -6,10 +6,12 @@ import { ACTIVE_STATUSES, cancelFollowUpWorkflow } from "../followUps";
 /**
  * The reference graph for "what dies when a session dies."
  *
- * INVARIANT: every table with a `sessionId` field is either purged here or
- * listed in SESSION_ID_EXEMPT with a reason. `sessionCascade.test.ts` walks
- * the schema and fails if a new one appears in neither — the miss that left
- * `follow_up_cards` orphaned by dataRetention for three jobs' worth of drift.
+ * INVARIANT: every table with a `sessionId` field — or a `v.id()` pointing at
+ * a table in this list (transitive: `path_steps` → `paths` → session) — is
+ * either purged here or listed in SESSION_ID_EXEMPT with a reason.
+ * `sessionCascade.test.ts` walks the schema and fails if a new one appears in
+ * neither — the miss that left `follow_up_cards` orphaned by dataRetention
+ * for three jobs' worth of drift.
  *
  * Callers: jobs/dataWipe, jobs/accountDeletion, jobs/dataRetention. Each used
  * to hand-roll this list; two of the three forgot follow-up cards.
@@ -18,6 +20,8 @@ export const SESSION_CASCADE_TABLES = [
   "session_turns",
   "emotional_metadata",
   "follow_up_cards",
+  "paths",
+  "path_steps",
 ] as const;
 
 /** Tables carrying a sessionId that intentionally outlive their session. */
@@ -84,6 +88,21 @@ export async function purgeSessions(
         await cancelFollowUpWorkflow(ctx, card.workflowId);
       }
       await ctx.db.delete("follow_up_cards", card._id);
+    }
+
+    // Kindling: twigs by pathId, then the paths row (docs/paths-v1.md §7).
+    // One kindling per generating session; 2-3 twigs each.
+    const paths = await ctx.db
+      .query("paths")
+      .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+      .take(10);
+    for (const path of paths) {
+      const steps = await ctx.db
+        .query("path_steps")
+        .withIndex("by_path", (q) => q.eq("pathId", path._id))
+        .take(10);
+      for (const step of steps) await ctx.db.delete("path_steps", step._id);
+      await ctx.db.delete("paths", path._id);
     }
 
     await ctx.db.delete("sessions", session._id);

@@ -89,6 +89,15 @@ export const safeguardLevelValidator = v.union(
   v.literal("crisis")
 );
 
+// Kindling trigger (docs/paths-v1.md §1). Graded from the classifier;
+// forced to "none" server-side whenever safeguard escalates (crisis/elevated)
+// regardless of what the model said.
+export const supportNeedValidator = v.union(
+  v.literal("none"),
+  v.literal("light"),
+  v.literal("active")
+);
+
 export const triggerTypeValidator = v.union(
   v.literal("explicit_crisis_language"),
   v.literal("implicit_risk_language"),
@@ -145,6 +154,28 @@ export const insightFeatureValidator = v.union(
  * importing a server module.
  */
 export const INTAKE_VERSION = 1;
+
+// ===========================================================
+// KINDLING — audio_tracks (#328, spec docs/paths-v1.md §3.2)
+// ===========================================================
+
+/**
+ * Music-family licence terms. `attributionText` is stored verbatim (not
+ * derived from the other fields at read time) so the credit shown to users
+ * can never drift from what was captured at curation.
+ */
+export const licenceValidator = v.object({
+  source: v.string(),
+  sourceUrl: v.string(),
+  licenceName: v.string(),
+  licenceUrl: v.string(),
+  artist: v.string(),
+  attributionRequired: v.boolean(),
+  attributionText: v.string(),
+  acquiredAt: v.number(),
+  licenceRef: v.optional(v.string()),
+  licenceProofStorageId: v.optional(v.id("_storage")),
+});
 
 //
 // The answer columns of `intake_responses`, shared by the schema and by the

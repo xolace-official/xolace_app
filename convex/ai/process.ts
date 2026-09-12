@@ -13,7 +13,7 @@ import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt, hasMetaNarration } from "./prompts/articulator";
 import { applyAudioFence } from "./prompts/mirrorAudioTags";
-import { evaluateSafeguard } from "./safeguard";
+import { evaluateSafeguard, resolveSupportNeed } from "./safeguard";
 import { decideMirrorOutcome, resolveMirrorTone } from "./mirrorPlan";
 import { EPISODIC_CONNECT_FLOOR } from "./routing";
 import { scheduleMirrorAudio } from "./tts";
@@ -337,6 +337,10 @@ export const generateMirror = internalAction({
         ...(classification.followUpReason
           ? { followUpReason: classification.followUpReason }
           : {}),
+        supportNeed: resolveSupportNeed(
+          classification.supportNeed,
+          safeguard.level,
+        ),
       });
 
       // Look up the exercise the plan matched.

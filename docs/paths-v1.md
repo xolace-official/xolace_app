@@ -143,9 +143,9 @@ The model picks *action types*; a pure function binds each to a concrete target.
 
 | `actionType` family | Binding rule |
 |---|---|
-| `audio_topic_*` | `audio_tracks` where `family="support"` (§4) `.eq("topic", <the entry's topic>)`, tag-match `emotions`/`themes` against the twig's emotion/theme set in memory, **stable sort on `slug`** to break ties, take the top. Episode-vs-standalone chosen by acuity `tier` (§8). |
+| `audio_topic_*` | `audio_tracks` where `family="support"` (§4) `.eq("topic", <the entry's topic>)`, tag-match `emotions`/`themes` against the twig's emotion/theme set in memory, **stable sort on `slug`** to break ties, take the top. Episodes and standalones of the topic compete in the same pool — `tier` never filters (§8). |
 | `music_topic_*` | same rule, `family="music"`. |
-| `episode_reframe` | `audio_tracks` where `family="support"` **and `series` set** for the "reality-not-false-hope" series, tag-match, tier filter per §8. |
+| `episode_reframe` | `audio_tracks` where `family="support"` **and `series` set** for the "reality-not-false-hope" series, tag-match, slug tiebreak. |
 | `breathing` | the existing **sit-with-this** exercise (no new content). |
 | `xolacer` | the existing `sessionSuggestion` ranker (no new content). |
 
@@ -179,8 +179,7 @@ Action **types**, in code, not a table. Extensible shape:
   `premium: true`, `humanContact: false`, `modelDescription` pointed at
   self-invalidation / toxic positivity / "I should be over this". Track 1
   ("The Spectrum") gets **no** new entry — it rides the existing `audio_topic_*`
-  entries, with the tier filter (§8) choosing an episode vs a standalone track at
-  bind time.
+  entries; its episodes compete with standalone tracks on tags (§8).
 - Music is a **standalone action type** the model may pick as one of the 2–3
   twigs (decision 16), not an ambient bed under other actions.
 
@@ -273,7 +272,12 @@ audio_tracks: defineTable({
 `paths.getBoundAudioTrack({ sessionId })` (or the twig's `slug`): `requireAuth` +
 `requirePremium` → load `by_family_and_topic` candidates → deterministic pick
 (§2.3) → return `{ slug, title, durationSec, narrators?, url, thumbUrl,
-attributionText? }`, URLs minted per request via `r2.getUrl(key)`.
+attributionText?, tier?, showCrisisLine }`, URLs minted per request via
+`r2.getUrl(key)`. `showCrisisLine = tier === 4` is derived server-side so the
+client never re-derives the safety rule from raw metadata (§8). The binder
+stores only `{ slug }` in `path_steps.params`; `tier` is read off the resolved
+`audio_tracks` row here, so the safety metadata survives binding without
+being copied into the step.
 
 **R2 URLs expire** (component default 15 min). The client audio hook (shaped like
 `use-mirror-audio.ts`) needs a **refetch-on-expiry** path — a track paused and
@@ -408,21 +412,23 @@ in v1.**
   `family`** — the #272 union is untouched. A standalone support track leaves all
   five fields null. `by_family_and_topic` is unchanged; Browse groups by `series`
   client-side.
-- **Binder axis (extends §2.3):**
-  - `supportNeed: "light"` → eligible `tier` **1–2**;
-  - `supportNeed: "active"` → eligible `tier` **2–3**;
-  - `intensity` breaks ties **toward the higher tier**;
-  - **`tier: 4` (Misunderstood) never auto-binds — browse-only.** It is
-    identity/validation content, not a "do this now" action; auto-serving it to
-    someone flagged `active` risks reading as dismissal of an acute state.
-    (Crisis already forces `supportNeed: "none"` — those users get no kindling
-    regardless.)
-  - Track 1 episodes bind through the existing `audio_topic_*` entries; the tier
-    filter picks episode vs standalone at bind time.
+- **Binder axis (extends §2.3):** `tier` is **editorial** — it sets production
+  tone, the review process, and Browse grouping. It **never gates binding**:
+  every tier, including tier 4 (Misunderstood), binds like any other row.
+  Tier 4's awareness/understanding framing is what makes it safe to auto-serve
+  — **conditional on** the player contract below: tier-4 auto-binding is only
+  enabled once every bound-track player renders the crisis-resource line from
+  `showCrisisLine` (§3.3). Until then the ingest manifest ships no tier-4 rows.
+  Track 1 episodes bind through the existing `audio_topic_*` entries and compete
+  with the topic's standalone tracks on tag score, slug tiebreak. (Crisis forces
+  `supportNeed: "none"` — those users get no kindling regardless.)
 - **Track 2** = the cross-topic `episode_reframe` action type (§3.1).
 - **Editorial safeguards — curation playbook + two code touches:**
   - ingest **rejects `tier >= 3` without `safetyReviewedAt`** (§3.4);
-  - the player renders a **standing crisis-resource line whenever `tier === 4`**;
+  - **every** bound-track player (kindling twig, Browse, any future surface)
+    renders a **standing crisis-resource line whenever `showCrisisLine` is
+    true** on the `getBoundAudioTrack` response — the flag is the contract, the
+    player never inspects `tier` itself;
   - the *When It's Heavy* (tier 3) safety-review pass is **human**, not
     code-enforceable beyond the assertion.
 - **Multi-voice dialogue episodes ARE v1** — as **pre-produced two-voice MP3s**
@@ -622,7 +628,9 @@ topic | discovery-strip | twig-more-like-this`, `browse_paywall_shown` /
    user gets none.
 4. **Fallback:** force all twigs unbindable → no `paths` row, no notification.
 5. **Binding:** an `audio_topic_*` twig resolves to a real `audio_tracks` slug;
-   a `tier: 4` episode never auto-binds.
+   a bound `tier: 4` episode comes back from `getBoundAudioTrack` with
+   `showCrisisLine: true` and the kindling player renders the crisis-resource
+   line; every other tier returns `showCrisisLine: false`.
 6. **R2:** `r2.getUrl` mints a playable URL; the audio hook refetches after the
    15-min expiry on resume.
 7. **Notification:** `kindling_ready` row written after generation, deep-link

@@ -115,6 +115,15 @@ async function finalizeCompletion(
       sessionId: session._id,
     },
   );
+  // Kindling (docs/paths-v1.md §2.1): genuine completion only — never on
+  // `completePath`, the free next-step, which is a different concept (ADR
+  // 0008). Premium gate lives inside `generate.run`; off the critical path.
+  if (opts.pathChosen === "exit") {
+    await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
+      sessionId: session._id,
+      emotionalProfileId: session.emotionalProfileId,
+    });
+  }
 
   // Finalize follow-up gate + maybe start the check-in workflow.
   await finalizeFollowUp(

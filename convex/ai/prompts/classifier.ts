@@ -48,7 +48,8 @@ The JSON must have this exact shape:
   "userLanguageTags": string[],
   "temporalContext": "past_focused" | "present_focused" | "future_focused" | null,
   "requiresFollowUp": boolean,
-  "followUpReason": string | null
+  "followUpReason": string | null,
+  "supportNeed": "none" | "light" | "active"
 }
 
 ## Field Definitions
@@ -130,6 +131,12 @@ false when:
 - General stress without acute personal distress
 
 **followUpReason**: One short sentence explaining why requiresFollowUp is true. null when requiresFollowUp is false. Internal only — never shown to the user.
+
+**supportNeed**: Does this person's emotional content suggest they'd benefit from a small follow-up action (a track, an exercise, a peer listener) beyond the mirror they're about to get? Graded, not binary.
+- "none": the moment is discharged, low-stakes, or positive. Most sessions. Also use "none" for any crisis or high-risk content — that is handled by safety response, never by a support suggestion, regardless of how you'd otherwise grade it.
+- "light": a real feeling worth sitting with a little longer, but not urgent or stuck. Mild-to-moderate intensity, some ambivalence, the person seems to be processing okay on their own.
+- "active": the person is visibly carrying something and staying with it would help — unresolved and heavy (but not crisis-level), a theme they keep circling, intensity clearly above baseline with no sign of release.
+Default to "none" when unsure. This is a suggestion trigger, not a severity score — do not let it duplicate requiresFollowUp's job.
 
 ## Guidelines
 - Classify THIS input on its own merit. The pattern summary below is background context, not a prediction.

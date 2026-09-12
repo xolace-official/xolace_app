@@ -150,7 +150,10 @@ export const anthropicMock = (reply: Lazy<string | Error>) => ({
       create: async () => {
         const value = unwrap(reply);
         if (value instanceof Error) throw value;
-        return { content: [{ type: "text", text: value }] };
+        return {
+          content: [{ type: "text", text: value }],
+          usage: { input_tokens: 0, output_tokens: 0 },
+        };
       },
     },
   }),
