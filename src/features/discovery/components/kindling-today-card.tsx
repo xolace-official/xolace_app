@@ -35,12 +35,12 @@ export function KindlingTodayCard() {
       accessibilityRole="button"
       accessibilityLabel="Open your kindling"
     >
-      <View className="flex-row items-center gap-4 overflow-hidden rounded-3xl border border-border/60 bg-surface px-5 py-6">
+      <View className="flex-row items-center gap-4 overflow-hidden rounded-3xl border border-border/65 bg-surface px-5 py-6">
         <SymbolView name={{ ios: "leaf", android: "eco", web: "eco" }} size={28} tintColor={accent} />
         <View className="flex-1">
           <AppText className="text-lg font-semibold text-foreground">Your kindling</AppText>
           <AppText className="mt-1.5 text-sm leading-5 text-muted">
-            {tended} of {kindling.twigs.length} tended — a few things from your last session.
+            {tended} of {kindling.twigs.length} tended; a few things from your last session.
           </AppText>
         </View>
       </View>
