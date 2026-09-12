@@ -310,5 +310,6 @@ export declare const components: {
   revenuecat: import("convex-revenuecat/_generated/component.js").ComponentApi<"revenuecat">;
   presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
   reflectionRank: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"reflectionRank">;
+  r2: import("@convex-dev/r2/_generated/component.js").ComponentApi<"r2">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
 };

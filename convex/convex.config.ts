@@ -10,6 +10,7 @@ import workflow from "@convex-dev/workflow/convex.config.js";
 import rag from "@convex-dev/rag/convex.config.js";
 import revenuecat from "convex-revenuecat/convex.config.js";
 import aggregate from "@convex-dev/aggregate/convex.config.js";
+import r2 from "@convex-dev/r2/convex.config.js";
 
 const app = defineApp({
   env: {
@@ -30,6 +31,7 @@ app.use(presence);
 // Named so future aggregates (e.g. streak distribution) can be mounted
 // alongside this one instead of overloading a single unnamed instance.
 app.use(aggregate, { name: "reflectionRank" });
+app.use(r2);
 app.use(posthog, {
   env: {
     POSTHOG_PROJECT_TOKEN: app.env.POSTHOG_PROJECT_TOKEN,
