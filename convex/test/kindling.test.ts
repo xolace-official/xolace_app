@@ -19,6 +19,7 @@ import {
   revenuecatMock,
 } from "./mocks.helpers";
 import manifest from "../../scripts/kindling/manifest.json";
+import type { WorkflowId } from "@convex-dev/workflow";
 
 type ManifestTrack = Omit<Doc<"audio_tracks">, "_id" | "_creationTime" | "key" | "thumbKey" | "active"> & {
   audioPath: string;
@@ -73,6 +74,13 @@ vi.mock("../followUps", async (orig) => ({
   startFollowUpWorkflow: noopJob(),
   purgeForProfile: noopJob(),
 }));
+type Sent = { notification: { title?: string; body?: string; data?: unknown } };
+const sentPushes = vi.hoisted(() => [] as Sent[]);
+vi.mock("../lib/pushNotifications", () => ({
+  sendPushToProfile: async (_ctx: unknown, args: Sent) => {
+    sentPushes.push(args);
+  },
+}));
 
 beforeEach(() => {
   stub.isPlus = true;
@@ -80,6 +88,7 @@ beforeEach(() => {
   stub.reply = goodReply;
   stub.limit = { ok: true };
   stub.requests = [];
+  sentPushes.length = 0;
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -312,6 +321,124 @@ describe("ai/paths/generate.run", () => {
       ]),
     );
     expect(paths.filter((p) => p.status === "active")).toHaveLength(1);
+  });
+});
+
+const readNotifications = (user: SeededUser) =>
+  user.root.run((ctx) => ctx.db.query("notification_log").take(10));
+
+describe("the kindling_ready notification (#335)", () => {
+  it("fires only after the kindling is written, deep-linking via type alone", async () => {
+    const user = await asNewUser();
+    await generate(user, await seedQualifying(user));
+
+    const [log] = await readNotifications(user);
+    expect(log).toMatchObject({ type: "kindling_ready", delivered: true });
+    expect(sentPushes).toHaveLength(1);
+    expect(sentPushes[0].notification.data).toMatchObject({ type: "kindling_ready" });
+  });
+
+  it("sends nothing when generation no-ships", async () => {
+    stub.reply = JSON.stringify([twig("breathing", 1)]);
+    const user = await asNewUser();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await generate(user, await seedQualifying(user));
+
+    expect(await readNotifications(user)).toEqual([]);
+    expect(sentPushes).toEqual([]);
+  });
+
+  it("suppresses for a user dormant 30+ days, logging the existing reason", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    await user.root.run(async (ctx) => {
+      await ctx.db.patch("emotional_profiles", user.profileId, {
+        lastSessionAt: Date.now() - 31 * 24 * 60 * 60 * 1000,
+      });
+    });
+
+    await generate(user, sessionId);
+
+    const [log] = await readNotifications(user);
+    expect(log).toMatchObject({
+      type: "kindling_ready",
+      delivered: false,
+      suppressedReason: "user_inactive",
+    });
+    expect(sentPushes).toEqual([]);
+  });
+
+  it("suppresses while an escalation-derived follow-up is active", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    await user.root.run(async (ctx) => {
+      await ctx.db.insert("follow_up_cards", {
+        emotionalProfileId: user.profileId,
+        sessionId,
+        workflowId: "wf1" as WorkflowId,
+        tier: "acute",
+        cardText: "still here",
+        escalationDerived: true,
+        status: "ready",
+        createdAt: Date.now(),
+      });
+    });
+
+    await generate(user, sessionId);
+
+    const [log] = await readNotifications(user);
+    expect(log).toMatchObject({
+      type: "kindling_ready",
+      delivered: false,
+      suppressedReason: "escalation_active",
+    });
+    expect(sentPushes).toEqual([]);
+  });
+
+  it("is not starved by the shared notification bucket already being spent today", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    // Spend the shared `notification` bucket, as a gentle_return/pattern_nudge/
+    // milestone push earlier the same day would.
+    await user.root.mutation(internal.notifications.schedule, {
+      emotionalProfileId: user.profileId,
+      type: "milestone",
+      content: "30 days",
+      triggerReason: "test",
+      scheduledFor: Date.now(),
+    });
+    sentPushes.length = 0;
+
+    await generate(user, sessionId);
+
+    const logs = await readNotifications(user);
+    const kindlingLog = logs.find((l) => l.type === "kindling_ready");
+    expect(kindlingLog).toMatchObject({ delivered: true });
+    expect(sentPushes).toHaveLength(1);
+  });
+
+  it("does not suppress for a resolved (non-active) follow-up card", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    await user.root.run(async (ctx) => {
+      await ctx.db.insert("follow_up_cards", {
+        emotionalProfileId: user.profileId,
+        sessionId,
+        workflowId: "wf2" as WorkflowId,
+        tier: "acute",
+        cardText: "still here",
+        escalationDerived: true,
+        status: "resolved",
+        createdAt: Date.now(),
+        resolvedAt: Date.now(),
+      });
+    });
+
+    await generate(user, sessionId);
+
+    const [log] = await readNotifications(user);
+    expect(log).toMatchObject({ type: "kindling_ready", delivered: true });
   });
 });
 

@@ -26,6 +26,7 @@ import type * as ai_paths_bind from "../ai/paths/bind.js";
 import type * as ai_paths_catalog from "../ai/paths/catalog.js";
 import type * as ai_paths_generate from "../ai/paths/generate.js";
 import type * as ai_paths_generateDb from "../ai/paths/generateDb.js";
+import type * as ai_paths_notify from "../ai/paths/notify.js";
 import type * as ai_paths_prompt from "../ai/paths/prompt.js";
 import type * as ai_process from "../ai/process.js";
 import type * as ai_prompts_accumulatedInput from "../ai/prompts/accumulatedInput.js";
@@ -169,6 +170,7 @@ declare const fullApi: ApiFromModules<{
   "ai/paths/catalog": typeof ai_paths_catalog;
   "ai/paths/generate": typeof ai_paths_generate;
   "ai/paths/generateDb": typeof ai_paths_generateDb;
+  "ai/paths/notify": typeof ai_paths_notify;
   "ai/paths/prompt": typeof ai_paths_prompt;
   "ai/process": typeof ai_process;
   "ai/prompts/accumulatedInput": typeof ai_prompts_accumulatedInput;

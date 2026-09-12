@@ -131,7 +131,17 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     completionTokens: response.usage.output_tokens,
     twigs: twigs.map((t, i) => ({ ...t, order: i + 1 })),
   });
-  if (pathId === null) await logNoShip(ctx, args, "rate_limited", twigs.length);
+  if (pathId === null) {
+    await logNoShip(ctx, args, "rate_limited", twigs.length);
+    return;
+  }
+
+  // Fires only now — after the kindling is written (docs/paths-v1.md §10).
+  // There is no "your kindling is being generated" notification.
+  await ctx.runMutation(internal.ai.paths.notify.notifyReady, {
+    emotionalProfileId: args.emotionalProfileId,
+    pathId,
+  });
 }
 
 export const run = internalAction({

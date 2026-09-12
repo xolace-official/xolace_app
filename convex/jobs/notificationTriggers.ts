@@ -3,7 +3,8 @@ import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 
 const GENTLE_RETURN_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
-const INACTIVE_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+// 30-day dormancy suppression, shared with kindling_ready (docs/paths-v1.md §10).
+export const INACTIVE_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000;
 
 /**
  * Returns the local hour (0–23) for a given IANA timezone using Intl.
