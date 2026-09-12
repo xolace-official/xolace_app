@@ -114,6 +114,11 @@ async function ownedStep(
   if (!step || !path || path.emotionalProfileId !== profile._id) {
     throw new ConvexError({ code: "step_not_found", message: "Twig not found" });
   }
+  // A stale screen (dismissed elsewhere, or replaced by a fresh generation)
+  // must not write state or events onto an archived kindling.
+  if (path.status !== "active") {
+    throw new ConvexError({ code: "path_not_active", message: "Kindling is no longer active" });
+  }
   return { profile, step, path };
 }
 

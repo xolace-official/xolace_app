@@ -167,7 +167,7 @@ export function SitWithThisScreen() {
     );
   }
 
-  const swapsUsed = session?.swappedExerciseIds?.length ?? 0;
+  const swapsUsed = standalone ? 0 : (session?.swappedExerciseIds?.length ?? 0);
   // Derive from session: if any swaps have happened, skip pre-roll on remount.
   const hasSwapped = swapsUsed > 0;
 

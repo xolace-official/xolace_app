@@ -434,3 +434,17 @@ describe("the active-kindling screen API (#333)", () => {
     await expect(other.t.mutation(api.paths.dismiss, { pathId: active._id })).rejects.toThrow();
   });
 });
+
+describe("stale kindling screens", () => {
+  it("refuses twig writes once the kindling is dismissed", async () => {
+    const user = await asNewUser();
+    await generate(user, await seedQualifying(user));
+    const active = await user.t.query(api.paths.getActive, {});
+    if (!active) throw new Error("expected an active kindling");
+    await user.t.mutation(api.paths.dismiss, { pathId: active._id });
+
+    await expect(
+      user.t.mutation(api.paths.skipStep, { stepId: active.twigs[0]._id }),
+    ).rejects.toThrow();
+  });
+});

@@ -58,7 +58,11 @@ export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | n
       // `xolacerChat.sessionSuggestion`). The roster filtered to it is where
       // the person gets picked.
       const specialty = (twig.params as { specialty?: string } | null)?.specialty;
-      return { pathname: "/connect", params: specialty ? { specialty } : {} };
+      // `t` makes a repeat tap re-apply the filter even when nothing else changed.
+      return {
+        pathname: "/connect",
+        params: { t: String(Date.now()), ...(specialty ? { specialty } : {}) },
+      };
     }
     default:
       return null;

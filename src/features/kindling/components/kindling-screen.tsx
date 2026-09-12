@@ -48,10 +48,13 @@ export function KindlingScreen() {
   const handleBegin = (twig: Twig) => {
     if (!kindling) return;
     playSoftPress();
-    posthog.capture("step_started", { pathId: kindling._id, actionType: twig.actionType });
     const href = twigHref(twig, kindling.sessionId);
-    if (href) router.push(href);
-    else toast.show({ label: "Not quite ready", description: "Playback is on its way." });
+    if (!href) {
+      toast.show({ label: "Not quite ready", description: "Playback is on its way." });
+      return;
+    }
+    posthog.capture("step_started", { pathId: kindling._id, actionType: twig.actionType });
+    router.push(href);
   };
 
   const handleSkip = (twig: Twig) => {
@@ -61,9 +64,14 @@ export function KindlingScreen() {
 
   const handleDismiss = async () => {
     if (!kindling) return;
-    await dismiss({ pathId: kindling._id });
     setConfirmDismiss(false);
+    // Pop before the subscription flips to null, or the empty state flashes.
     router.back();
+    try {
+      await dismiss({ pathId: kindling._id });
+    } catch {
+      toast.show({ label: "Couldn't put it out", description: "Try again in a moment." });
+    }
   };
 
   if (kindling === undefined) {
