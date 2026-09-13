@@ -66,7 +66,11 @@ export function BrowseHubScreen() {
   const featured = shelf?.[0];
 
   return (
-    <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView
+      className="flex-1 bg-background"
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={{ paddingBottom: 40 }}
+    >
       <View className="flex-row justify-around px-4 pt-6">
         {ENTRIES.map((entry) => (
           <EntryButton key={entry.id} entry={entry} />
