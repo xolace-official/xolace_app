@@ -151,7 +151,9 @@ const setState = (event: "step_completed" | "step_skipped", state: "done" | "ski
     returns: v.null(),
     handler: async (ctx, args) => {
       const { profile, step, path } = await ownedStep(ctx, args.stepId);
-      if (step.state === state) return null;
+      // Only a pending twig can change; same-state retry and any other
+      // settled state are no-ops so a late tap can't flip done <-> skipped.
+      if (step.state !== "pending") return null;
       await ctx.db.patch("path_steps", step._id, { state });
       await posthog.capture(ctx, {
         distinctId: profile._id,
