@@ -147,10 +147,6 @@ const readPaths = (user: SeededUser) =>
   );
 
 /** The checked-in dev catalogue, as `ingest.ts` would have upserted it. */
-/** A topic the dev catalogue can actually bind — the manifest's contents move. */
-const CATALOGUE_TOPIC = (manifest as ManifestTrack[])[0].topic;
-const CATALOGUE_KIND = CATALOGUE_TOPIC.startsWith("music_topic_") ? "music" : "audio";
-
 async function seedCatalogue(user: SeededUser) {
   await user.root.run(async (ctx) => {
     for (const { audioPath, thumbPath, ...t } of manifest as ManifestTrack[]) {
@@ -163,6 +159,10 @@ async function seedCatalogue(user: SeededUser) {
     }
   });
 }
+
+/** A topic the dev catalogue can actually bind — the manifest's contents move. */
+const CATALOGUE_TOPIC = (manifest as ManifestTrack[])[0].topic;
+const CATALOGUE_KIND = CATALOGUE_TOPIC.startsWith("music_topic_") ? "music" : "audio";
 
 const readSteps = (user: SeededUser, pathId: Id<"paths">) =>
   user.root.run((ctx) =>

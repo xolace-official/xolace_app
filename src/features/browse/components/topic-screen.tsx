@@ -14,6 +14,7 @@ import { FAMILY_LABEL, TrackRow, type BrowseFrom, type TrackItem } from './track
 
 type Row = TopicRow<TrackItem>;
 type Params = { slug: string; family?: Segment; from?: BrowseFrom };
+const FROM_VALUES = new Set<string>(['topic', 'twig-more-like-this']);
 const keyExtractor = (row: Row) => row.key;
 const getItemType = (row: Row) => row.type;
 
@@ -33,7 +34,10 @@ const titleFor = (slug: string) => {
  * (§9.6) and its plays read `twig-more-like-this` in analytics.
  */
 export function TopicScreen() {
-  const { slug, family, from = 'topic' } = useLocalSearchParams<Params>();
+  const params = useLocalSearchParams<Params>();
+  const { slug, family } = params;
+  // URL params are untyped strings; only the two values that can land here are trusted.
+  const from: BrowseFrom = params.from && FROM_VALUES.has(params.from) ? params.from : 'topic';
   const posthog = usePostHog();
   const tracks = useQuery(api.browse.getTopic, { slug });
   const [segment, setSegment] = useState<Segment>(family === 'music' || family === 'support' ? family : 'all');

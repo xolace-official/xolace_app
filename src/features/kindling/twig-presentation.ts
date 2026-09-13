@@ -42,15 +42,6 @@ export const TWIG_PRESENTATION: Record<
 };
 
 /**
- * Where the primary action goes. Every twig hands off to a screen of its own
- * (the person is chosen there, the exercise runs there); this screen never
- * plays or runs anything inline.
- *
- * Audio and music go to the one player (#340, `/browse-player`). `stepId`
- * rides along so `useTrackPlayback` tends the twig on a natural finish —
- * a Browse play carries no `stepId` and never completes anything (§9.6).
- */
-/**
  * "Browse more like this" (§9.6): a bound audio/music twig's topic in Browse,
  * filtered to its family. One-off listening — nothing here carries `stepId`,
  * so plays from it can't tend the twig, and the stored binding is never
@@ -69,6 +60,15 @@ export function twigBrowseHref(twig: Twig): Href | null {
   };
 }
 
+/**
+ * Where the primary action goes. Every twig hands off to a screen of its own
+ * (the person is chosen there, the exercise runs there); this screen never
+ * plays or runs anything inline.
+ *
+ * Audio and music go to the one player (#340, `/browse-player`). `stepId`
+ * rides along so `useTrackPlayback` tends the twig on a natural finish —
+ * a Browse play carries no `stepId` and never completes anything (§9.6).
+ */
 export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | null {
   switch (twig.kind) {
     case "audio":
