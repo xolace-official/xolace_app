@@ -18,6 +18,9 @@ type UseTrackPlaybackReturn = {
   duration: number;
   toggle: () => void;
   seekTo: (seconds: number) => void;
+  /** 0–1. Survives a re-mint: the rebuilt player is set to it on load. */
+  volume: number;
+  setVolume: (volume: number) => void;
 };
 
 /**
@@ -43,6 +46,7 @@ export function useTrackPlayback(
   // whether the user had asked to play.
   const pending = useRef<{ seek: number; play: boolean } | null>(null);
   const completed = useRef(false);
+  const [volume, setVolumeState] = useState(1);
 
   // One-shot mint, not a subscription: a signed URL never changes reactively,
   // and a fresh one is fetched on demand below.
@@ -76,6 +80,13 @@ export function useTrackPlayback(
       }
     })().catch((e) => console.error('[useTrackPlayback] resume failed:', e));
   }, [status.isLoaded, player]);
+
+  // On the player, not the status: the status only reports what the player
+  // was told, and a re-minted player starts back at 1.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.volume is a documented mutable setter
+    player.volume = volume;
+  }, [player, volume]);
 
   useEffect(() => {
     if (!status.didJustFinish || completed.current || !options.stepId) return;
@@ -139,5 +150,7 @@ export function useTrackPlayback(
     duration: status.duration || track?.durationSec || 0,
     toggle,
     seekTo,
+    volume,
+    setVolume: (v) => setVolumeState(Math.max(0, Math.min(1, v))),
   };
 }

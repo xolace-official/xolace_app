@@ -1,0 +1,157 @@
+import { useEffect, useRef, useState } from "react";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useLocalSearchParams } from "expo-router";
+import { SymbolView } from "expo-symbols";
+import { usePostHog } from "posthog-react-native";
+import { Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCSSVariable } from "uniwind";
+
+import type { Id } from "@/convex/_generated/dataModel";
+import { AppText } from "@/src/components/shared/app-text";
+import { type BrowseFrom, FAMILY_LABEL } from "@/src/features/browse/components/track-row";
+import { useTrackPlayback } from "@/src/features/browse/use-track-playback";
+import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+import { playSoftPress } from "@/src/lib/haptics";
+import { formatTime } from "./format-time";
+import { CrisisLine, GlyphButton, VolumeRow, usePlayerInk } from "./player-controls";
+import { PLAYER_SCRIM } from "./player-palette";
+
+type Params = { slug: string; from?: BrowseFrom; stepId?: Id<"path_steps"> };
+
+const ABSOLUTE_FILL = { position: "absolute", inset: 0 } as const;
+const TILE = 72;
+
+/**
+ * The Browse player (#340, §9.3) — and the second half of the free-user gate
+ * (§9.4). The row tap already intercepts a free user before navigation; this
+ * catches every other way in (deep link, a kindling twig, a lapsed
+ * entitlement) and swaps to the paywall without mounting the player, so no
+ * half-loaded player ever sits behind a sheet.
+ */
+export function PlayerScreen() {
+  const { slug, from } = useLocalSearchParams<Params>();
+  const { isPlus, isLoading } = usePlusEntitlement();
+  const posthog = usePostHog();
+  const gated = !isLoading && !isPlus;
+
+  useEffect(() => {
+    if (!gated) return;
+    posthog.capture("browse_paywall_shown", { slug, from: from ?? null });
+    // Replace, not push: the paywall's close pops back to wherever the player
+    // was opened from, and the player never re-enters the stack.
+    router.replace({ pathname: "/(paywall)", params: { surface: "browse" satisfies PaywallSurface } });
+  }, [gated, slug, from, posthog]);
+
+  if (!isPlus) return <View className="flex-1 bg-player-scrim" />;
+  return <Player />;
+}
+
+function Player() {
+  const { slug, from, stepId } = useLocalSearchParams<Params>();
+  const p = useTrackPlayback(slug, { stepId });
+  const insets = useSafeAreaInsets();
+  const posthog = usePostHog();
+  const { ink } = usePlayerInk();
+  const scrim = String(useCSSVariable("--color-player-scrim"));
+  const [barWidth, setBarWidth] = useState(0);
+  const played = useRef(false);
+
+  const track = p.track;
+  const progress = p.duration ? p.currentTime / p.duration : 0;
+
+  const toggle = () => {
+    playSoftPress();
+    if (!p.isPlaying && !played.current && track && from) {
+      played.current = true;
+      posthog.capture("browse_track_played", { slug, family: track.family, from });
+    }
+    p.toggle();
+  };
+
+  return (
+    <View className="flex-1 bg-player-scrim">
+      {track && (
+        <Image source={{ uri: track.thumbUrl }} style={ABSOLUTE_FILL} contentFit="cover" blurRadius={40} />
+      )}
+      <LinearGradient colors={PLAYER_SCRIM.colors} locations={PLAYER_SCRIM.locations} style={ABSOLUTE_FILL} />
+
+      <Pressable
+        onPress={() => router.back()}
+        hitSlop={12}
+        accessibilityRole="button"
+        accessibilityLabel="Close player"
+        className="absolute left-5 h-9 w-9 items-center justify-center rounded-full bg-player-ink/15 active:opacity-60"
+        style={{ top: insets.top + 8 }}
+      >
+        <SymbolView name="chevron.down" size={16} weight="semibold" tintColor={ink} />
+      </Pressable>
+
+      {track === null ? (
+        <View className="flex-1 items-center justify-center px-8">
+          <AppText className="text-center text-[15px] text-player-ink/70">This one has left the library.</AppText>
+        </View>
+      ) : (
+        <View className="flex-1 justify-end px-6 pb-30">
+          <View className="flex-row items-center gap-4">
+            <View className="overflow-hidden rounded-lg bg-player-ink/10" style={{ width: TILE, height: TILE }}>
+              {track && <Image source={{ uri: track.thumbUrl }} style={{ width: TILE, height: TILE }} />}
+            </View>
+            <View className="flex-1">
+              <AppText className="text-[11px] font-semibold uppercase tracking-wider text-player-ink/50">
+                {track ? FAMILY_LABEL[track.family] : " "}
+              </AppText>
+              <AppText className="mt-0.5 text-[20px] font-semibold text-player-ink" numberOfLines={2}>
+                {track?.title ?? " "}
+              </AppText>
+            </View>
+          </View>
+
+          <View className="mt-7">
+            <Pressable
+              className="h-[4px] w-full overflow-hidden rounded-full bg-player-ink/25"
+              hitSlop={{ top: 16, bottom: 16 }}
+              onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
+              onPress={(e) => barWidth && p.seekTo((e.nativeEvent.locationX / barWidth) * p.duration)}
+              accessibilityRole="adjustable"
+              accessibilityLabel="Progress"
+              accessibilityValue={{ min: 0, max: 100, now: Math.round(progress * 100) }}
+            >
+              <View className="h-full rounded-full bg-player-ink" style={{ width: `${Math.max(1, progress * 100)}%` }} />
+            </Pressable>
+            <View className="mt-2 flex-row justify-between">
+              <AppText className="text-[12px] text-player-ink/60 tabular-nums">{formatTime(p.currentTime)}</AppText>
+              <AppText className="text-[12px] text-player-ink/60 tabular-nums">{formatTime(p.duration)}</AppText>
+            </View>
+          </View>
+
+          <View className="mt-6 flex-row items-center justify-center gap-10">
+            <GlyphButton name="gobackward.15" size={28} label="Back 15 seconds" onPress={() => p.seekTo(p.currentTime - 15)} />
+            <Pressable
+              onPress={toggle}
+              disabled={!track}
+              accessibilityRole="button"
+              accessibilityLabel={p.isPlaying ? "Pause" : "Play"}
+              className="h-[76px] w-[76px] items-center justify-center rounded-full bg-player-ink active:opacity-80 disabled:opacity-40"
+            >
+              <SymbolView name={p.isPlaying ? "pause.fill" : "play.fill"} size={32} tintColor={scrim} />
+            </Pressable>
+            <GlyphButton name="goforward.15" size={28} label="Forward 15 seconds" onPress={() => p.seekTo(p.currentTime + 15)} />
+          </View>
+
+          <View className="mt-8 items-center gap-10">
+            <VolumeRow value={p.volume} onChange={p.setVolume} />
+            {track?.attributionText && (
+              <AppText numberOfLines={2} className="text-[12px] text-player-ink/50">
+                {track.attributionText}
+              </AppText>
+            )}
+            {track?.showCrisisLine && <CrisisLine />}
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}

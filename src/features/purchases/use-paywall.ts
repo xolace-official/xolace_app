@@ -28,7 +28,11 @@ export type PaywallSurface =
   | "profile_insight"
   // Post-signup intake, session 0 (#266). Its own offer screen fires
   // paywall_opened; the plans step under `(intake)/plans` reuses this surface.
-  | "intake";
+  | "intake"
+  // A free user's tap on a Browse track row (#340, §9.4) — the tap opens the
+  // paywall instead of the player. The track's slug rides on the
+  // browse_paywall_* events, not here.
+  | "browse";
 
 type PaywallState = {
   open: (surface: PaywallSurface) => void;
