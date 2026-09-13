@@ -10,7 +10,7 @@ import { useCSSVariable } from 'uniwind';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
-import { ShelfTile } from './shelf-tile';
+import { ShelfTile } from '@/src/features/browse/components/shelf-tile';
 
 type Entry = {
   id: 'support' | 'music' | 'topics';

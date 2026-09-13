@@ -6,7 +6,7 @@ import { useCSSVariable } from 'uniwind';
 import type { FunctionReturnType } from 'convex/server';
 import type { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
-import { useOpenTrack, type BrowseFrom } from '../use-open-track';
+import { useOpenTrack, type BrowseFrom } from '@/src/features/browse/use-open-track';
 
 export type { BrowseFrom };
 export type TrackItem = FunctionReturnType<typeof api.browse.getTopic>[number];
