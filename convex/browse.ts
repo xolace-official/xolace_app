@@ -19,6 +19,15 @@ const shelfItemValidator = v.object({
   attribution: v.optional(v.string()),
 });
 
+/**
+ * Thumbnails are public catalogue art, so sign for the R2 maximum (7 days)
+ * rather than the 900s default — a mounted browse view would otherwise show
+ * broken images after 15 minutes without a data change to re-run the query.
+ * A relaunch or any catalogue write re-signs well inside the window.
+ */
+const THUMB_URL_TTL_SEC = 604800;
+const thumbUrlFor = (thumbKey: string) => r2.getUrl(thumbKey, { expiresIn: THUMB_URL_TTL_SEC });
+
 function attributionFor(track: { family: "support" | "music"; narrators?: string[]; licence?: { attributionRequired: boolean; attributionText: string } }) {
   if (track.family === "music") {
     return track.licence?.attributionRequired ? track.licence.attributionText : undefined;
@@ -52,7 +61,7 @@ export const getNewShelf = query({
         _id: t._id,
         slug: t.slug,
         title: t.title,
-        thumbUrl: await r2.getUrl(t.thumbKey),
+        thumbUrl: await thumbUrlFor(t.thumbKey),
         attribution: attributionFor(t),
       })),
     );
@@ -84,7 +93,7 @@ async function toTrackItem(t: Doc<"audio_tracks">) {
     slug: t.slug,
     family: t.family,
     title: t.title,
-    thumbUrl: await r2.getUrl(t.thumbKey),
+    thumbUrl: await thumbUrlFor(t.thumbKey),
     attribution: attributionFor(t),
     durationSec: t.durationSec,
     series: t.series,
@@ -157,7 +166,7 @@ export const getTopics = query({
         .map(async ([slug, entry]) => ({
           slug,
           title: topicTitle(slug),
-          thumbUrl: await r2.getUrl(entry.thumbKey),
+          thumbUrl: await thumbUrlFor(entry.thumbKey),
           supportCount: entry.supportCount,
           musicCount: entry.musicCount,
         })),
