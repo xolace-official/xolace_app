@@ -6,11 +6,12 @@ import { useCSSVariable } from "uniwind";
 
 import { AppText } from "@/src/components/shared/app-text";
 
-/** The player's ink at the opacities the glyphs use. */
 export function usePlayerInk() {
-  const ink = String(useCSSVariable("--color-player-ink"));
-  return { ink, dim: `${ink}99` };
+  return String(useCSSVariable("--color-player-ink"));
 }
+
+/** Secondary (speaker) glyphs — `text-player-ink/60`'s twin for a tintColor. */
+const DIM = { opacity: 0.6 };
 
 export function GlyphButton({
   name,
@@ -23,7 +24,7 @@ export function GlyphButton({
   label: string;
   onPress: () => void;
 }) {
-  const { ink } = usePlayerInk();
+  const ink = usePlayerInk();
   return (
     <Pressable
       onPress={onPress}
@@ -39,10 +40,10 @@ export function GlyphButton({
 }
 
 export function VolumeRow({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const { dim } = usePlayerInk();
+  const ink = usePlayerInk();
   return (
     <View className="w-full flex-row items-center gap-3">
-      <SymbolView name="speaker.fill" size={13} tintColor={dim} />
+      <SymbolView name="speaker.fill" size={13} tintColor={ink} style={DIM} />
       <Slider
         value={value}
         onChange={(v) => onChange(typeof v === "number" ? v : v[0])}
@@ -57,7 +58,7 @@ export function VolumeRow({ value, onChange }: { value: number; onChange: (v: nu
           <Slider.Thumb className="h-4 w-4 bg-player-ink" />
         </Slider.Track>
       </Slider>
-      <SymbolView name="speaker.wave.3.fill" size={13} tintColor={dim} />
+      <SymbolView name="speaker.wave.3.fill" size={13} tintColor={ink} style={DIM} />
     </View>
   );
 }
