@@ -19,11 +19,13 @@ export default function ConnectRoute() {
   // Optional: `specialty` lands on the roster pre-filtered to that tag, `view`
   // picks a segment outright (a notification tap, which cannot be left to the
   // tab's remembered one), and `t` is the tap's timestamp — without it a second
-  // tap carries identical params and reads as no navigation at all.
-  const { specialty, view, t } = useLocalSearchParams<{
+  // tap carries identical params and reads as no navigation at all. `stepId`
+  // is the kindling twig that sent us, completed once a request is sent.
+  const { specialty, view, t, stepId } = useLocalSearchParams<{
     specialty?: string;
     view?: string;
     t?: string;
+    stepId?: string;
   }>();
   // Latched during render rather than in an effect, so the first focused frame
   // already renders the screen instead of a blank one.
@@ -31,5 +33,5 @@ export default function ConnectRoute() {
   if (isFocused && !everFocused) setEverFocused(true);
 
   if (!everFocused) return <View className="flex-1 bg-background" />;
-  return <ConnectScreen specialty={specialty} view={view} navToken={t} />;
+  return <ConnectScreen specialty={specialty} view={view} navToken={t} stepId={stepId} />;
 }

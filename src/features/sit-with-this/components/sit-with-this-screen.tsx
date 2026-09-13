@@ -32,8 +32,13 @@ export function SitWithThisScreen() {
   // A kindling twig (#333) replays a *completed* session's exercise: the
   // session id rides in on the route, no session state moves, and finishing
   // returns to the kindling instead of session-end.
-  const params = useLocalSearchParams<{ from?: string; sessionId?: string }>();
+  const params = useLocalSearchParams<{
+    from?: string;
+    sessionId?: string;
+    stepId?: string;
+  }>();
   const standalone = params.from === "kindling";
+  const stepId = params.stepId as Id<"path_steps"> | undefined;
   const pathSession = usePathSession();
   const sessionId = standalone
     ? ((params.sessionId as Id<"sessions"> | undefined) ?? null)
@@ -51,6 +56,7 @@ export function SitWithThisScreen() {
   const preferences = useQuery(api.preferences.get);
   const reducedMotion = useEffectiveReducedMotion();
   const recordSwapMutation = useMutation(api.exercises.recordSwap);
+  const completeStep = useMutation(api.paths.completeStep);
 
   useEffect(() => {
     if (standalone || startedRef.current || !sessionId || !session) return;
@@ -71,6 +77,8 @@ export function SitWithThisScreen() {
   // on a completed session and only records optional post-session feedback.
   const goToSessionEnd = async (pathCompleted: boolean) => {
     if (standalone) {
+      // Finishing tends the kindling twig; bailing early leaves it untouched.
+      if (pathCompleted && stepId) await completeStep({ stepId }).catch(() => {});
       router.back();
       return;
     }

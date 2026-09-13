@@ -52,16 +52,21 @@ export const TWIG_PRESENTATION: Record<
 export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | null {
   switch (twig.kind) {
     case "breathing":
-      return { pathname: "/sit-with-this", params: { from: "kindling", sessionId } };
+      // `stepId` rides along so finishing the exercise tends the twig.
+      return {
+        pathname: "/sit-with-this",
+        params: { from: "kindling", sessionId, stepId: twig._id },
+      };
     case "xolacer": {
       // Only the ranker's specialty is stored — never a person (privacy, see
       // `xolacerChat.sessionSuggestion`). The roster filtered to it is where
       // the person gets picked.
       const specialty = (twig.params as { specialty?: string } | null)?.specialty;
       // `t` makes a repeat tap re-apply the filter even when nothing else changed.
+      // `stepId` rides along to the profile so a sent request tends the twig.
       return {
         pathname: "/connect",
-        params: { t: String(Date.now()), ...(specialty ? { specialty } : {}) },
+        params: { t: String(Date.now()), stepId: twig._id, ...(specialty ? { specialty } : {}) },
       };
     }
     default:

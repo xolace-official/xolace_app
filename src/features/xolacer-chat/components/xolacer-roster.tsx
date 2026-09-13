@@ -32,11 +32,14 @@ export function XolacerRoster({
   conversations,
   filter,
   onFilterChange,
+  stepId,
 }: {
   conversations: ConversationList;
   /** Owned by the Connect screen so a routed specialty can preset it. */
   filter: string | null;
   onFilterChange: (slug: string | null) => void;
+  /** Kindling twig that sent us — forwarded to the profile. */
+  stepId?: string;
 }) {
   const router = useRouter();
   const directory = useQuery(api.xolacerChat.directory);
@@ -106,7 +109,7 @@ export function XolacerRoster({
               playSoftPress();
               router.push({
                 pathname: '/xolacer/[profileId]',
-                params: { profileId: xolacer.xolacerProfileId },
+                params: { profileId: xolacer.xolacerProfileId, ...(stepId ? { stepId } : {}) },
               });
             }}
             accessibilityRole="button"
