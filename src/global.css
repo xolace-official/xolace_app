@@ -161,12 +161,12 @@
     /* Browse hub entry icons (#338) — fixed per-entry hues, same across
      * every theme (like --tone-*), so Support audio / Music / Topics stay
      * visually distinct without borrowing --accent. */
-    --browse-audio: oklch(70% 0.14 40 / 16%);
-    --browse-audio-foreground: oklch(70% 0.14 40);
-    --browse-music: oklch(68% 0.13 260 / 16%);
-    --browse-music-foreground: oklch(68% 0.13 260);
-    --browse-topics: oklch(72% 0.13 110 / 16%);
-    --browse-topics-foreground: oklch(72% 0.13 110);
+    --browse-audio: oklch(70% 0.15 25 / 16%);
+    --browse-audio-foreground: oklch(70% 0.15 25);
+    --browse-music: oklch(68% 0.12 200 / 16%);
+    --browse-music-foreground: oklch(68% 0.12 200);
+    --browse-topics: oklch(72% 0.13 130 / 16%);
+    --browse-topics-foreground: oklch(72% 0.13 130);
 
     /* Event — monthly awareness marker */
     --event: oklch(60% 0.15 350);
@@ -303,12 +303,12 @@
     --tone-witnessed: oklch(76% 0.15 75);
 
     /* Browse hub entry icons (#338) — same hues as light, bumped for dark */
-    --browse-audio: oklch(74% 0.14 40 / 14%);
-    --browse-audio-foreground: oklch(74% 0.14 40);
-    --browse-music: oklch(72% 0.13 260 / 14%);
-    --browse-music-foreground: oklch(72% 0.13 260);
-    --browse-topics: oklch(76% 0.13 110 / 14%);
-    --browse-topics-foreground: oklch(76% 0.13 110);
+    --browse-audio: oklch(74% 0.15 25 / 14%);
+    --browse-audio-foreground: oklch(74% 0.15 25);
+    --browse-music: oklch(72% 0.12 200 / 14%);
+    --browse-music-foreground: oklch(72% 0.12 200);
+    --browse-topics: oklch(76% 0.13 130 / 14%);
+    --browse-topics-foreground: oklch(76% 0.13 130);
 
     /* Event — monthly awareness marker */
     --event: oklch(76% 0.12 350);
