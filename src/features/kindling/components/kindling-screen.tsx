@@ -57,9 +57,13 @@ export function KindlingScreen() {
     router.push(href);
   };
 
-  const handleSkip = (twig: Twig) => {
+  const handleSkip = async (twig: Twig) => {
     playSoftPress();
-    void skipStep({ stepId: twig._id });
+    try {
+      await skipStep({ stepId: twig._id });
+    } catch {
+      toast.show({ label: "Couldn't skip that", description: "Try again in a moment." });
+    }
   };
 
   const handleDismiss = async () => {
