@@ -27,7 +27,8 @@ export const schedule = internalMutation({
       v.literal("pattern_nudge"),
       v.literal("milestone"),
       v.literal("affirmation"),
-      v.literal("follow_up")
+      v.literal("follow_up"),
+      v.literal("kindling_ready")
     ),
     content: v.string(),
     triggerReason: v.string(),
@@ -57,7 +58,9 @@ export const schedule = internalMutation({
         ? args.followUpTier === "acute"
           ? "followUpAcute"
           : "followUpNudge"
-        : "notification";
+        : args.type === "kindling_ready"
+          ? "kindlingReady"
+          : "notification";
     const { ok } = await rateLimiter.limit(ctx, bucket, {
       key: args.emotionalProfileId,
     });

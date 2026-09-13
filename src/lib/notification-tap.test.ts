@@ -166,6 +166,13 @@ describe('notificationTapPlan', () => {
     }
   });
 
+  it('routes kindling_ready to the active-kindling screen', () => {
+    expect(notificationTapPlan({ type: 'kindling_ready' }, null, 1).navigation).toEqual({
+      action: 'push',
+      href: '/(protected)/kindling',
+    });
+  });
+
   it('carries the banner only when there is both a log id and a body', () => {
     expect(notificationTapPlan({ logId: 'l1', type: 'milestone' }, 'Ten days', 1)).toMatchObject({
       logId: 'l1',

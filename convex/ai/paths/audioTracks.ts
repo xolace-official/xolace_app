@@ -99,6 +99,17 @@ export const upsertTrack = internalMutation({
     trackId: v.id("audio_tracks"),
   }),
   handler: async (ctx, { track }) => {
+    // Browse (#339) derives the shared topic slug by stripping this prefix and
+    // rebuilds it per family — a mismatch would count on a grid tile but never
+    // list on the topic screen.
+    const prefix = track.family === "music" ? "music_topic_" : "audio_topic_";
+    if (!track.topic.startsWith(prefix)) {
+      await r2.deleteObject(ctx, track.key);
+      throw new ConvexError(
+        `audio_tracks upsert rejected: slug "${track.slug}" topic "${track.topic}" must start with "${prefix}"`,
+      );
+    }
+
     // Editorial safeguard (§8): a tier >= 3 support row must be human-reviewed.
     // Enforced here too, not just in the script — this mutation is the real
     // trust boundary. Only the audio blob is ever cleaned up on rejection;

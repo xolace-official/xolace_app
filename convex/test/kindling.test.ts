@@ -19,6 +19,7 @@ import {
   revenuecatMock,
 } from "./mocks.helpers";
 import manifest from "../../scripts/kindling/manifest.json";
+import type { WorkflowId } from "@convex-dev/workflow";
 
 type ManifestTrack = Omit<Doc<"audio_tracks">, "_id" | "_creationTime" | "key" | "thumbKey" | "active"> & {
   audioPath: string;
@@ -73,6 +74,13 @@ vi.mock("../followUps", async (orig) => ({
   startFollowUpWorkflow: noopJob(),
   purgeForProfile: noopJob(),
 }));
+type Sent = { notification: { title?: string; body?: string; data?: unknown } };
+const sentPushes = vi.hoisted(() => [] as Sent[]);
+vi.mock("../lib/pushNotifications", () => ({
+  sendPushToProfile: async (_ctx: unknown, args: Sent) => {
+    sentPushes.push(args);
+  },
+}));
 
 beforeEach(() => {
   stub.isPlus = true;
@@ -80,6 +88,7 @@ beforeEach(() => {
   stub.reply = goodReply;
   stub.limit = { ok: true };
   stub.requests = [];
+  sentPushes.length = 0;
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -315,6 +324,124 @@ describe("ai/paths/generate.run", () => {
   });
 });
 
+const readNotifications = (user: SeededUser) =>
+  user.root.run((ctx) => ctx.db.query("notification_log").take(10));
+
+describe("the kindling_ready notification (#335)", () => {
+  it("fires only after the kindling is written, deep-linking via type alone", async () => {
+    const user = await asNewUser();
+    await generate(user, await seedQualifying(user));
+
+    const [log] = await readNotifications(user);
+    expect(log).toMatchObject({ type: "kindling_ready", delivered: true });
+    expect(sentPushes).toHaveLength(1);
+    expect(sentPushes[0].notification.data).toMatchObject({ type: "kindling_ready" });
+  });
+
+  it("sends nothing when generation no-ships", async () => {
+    stub.reply = JSON.stringify([twig("breathing", 1)]);
+    const user = await asNewUser();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await generate(user, await seedQualifying(user));
+
+    expect(await readNotifications(user)).toEqual([]);
+    expect(sentPushes).toEqual([]);
+  });
+
+  it("suppresses for a user dormant 30+ days, logging the existing reason", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    await user.root.run(async (ctx) => {
+      await ctx.db.patch("emotional_profiles", user.profileId, {
+        lastSessionAt: Date.now() - 31 * 24 * 60 * 60 * 1000,
+      });
+    });
+
+    await generate(user, sessionId);
+
+    const [log] = await readNotifications(user);
+    expect(log).toMatchObject({
+      type: "kindling_ready",
+      delivered: false,
+      suppressedReason: "user_inactive",
+    });
+    expect(sentPushes).toEqual([]);
+  });
+
+  it("suppresses while an escalation-derived follow-up is active", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    await user.root.run(async (ctx) => {
+      await ctx.db.insert("follow_up_cards", {
+        emotionalProfileId: user.profileId,
+        sessionId,
+        workflowId: "wf1" as WorkflowId,
+        tier: "acute",
+        cardText: "still here",
+        escalationDerived: true,
+        status: "ready",
+        createdAt: Date.now(),
+      });
+    });
+
+    await generate(user, sessionId);
+
+    const [log] = await readNotifications(user);
+    expect(log).toMatchObject({
+      type: "kindling_ready",
+      delivered: false,
+      suppressedReason: "escalation_active",
+    });
+    expect(sentPushes).toEqual([]);
+  });
+
+  it("is not starved by the shared notification bucket already being spent today", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    // Spend the shared `notification` bucket, as a gentle_return/pattern_nudge/
+    // milestone push earlier the same day would.
+    await user.root.mutation(internal.notifications.schedule, {
+      emotionalProfileId: user.profileId,
+      type: "milestone",
+      content: "30 days",
+      triggerReason: "test",
+      scheduledFor: Date.now(),
+    });
+    sentPushes.length = 0;
+
+    await generate(user, sessionId);
+
+    const logs = await readNotifications(user);
+    const kindlingLog = logs.find((l) => l.type === "kindling_ready");
+    expect(kindlingLog).toMatchObject({ delivered: true });
+    expect(sentPushes).toHaveLength(1);
+  });
+
+  it("does not suppress for a resolved (non-active) follow-up card", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    await user.root.run(async (ctx) => {
+      await ctx.db.insert("follow_up_cards", {
+        emotionalProfileId: user.profileId,
+        sessionId,
+        workflowId: "wf2" as WorkflowId,
+        tier: "acute",
+        cardText: "still here",
+        escalationDerived: true,
+        status: "resolved",
+        createdAt: Date.now(),
+        resolvedAt: Date.now(),
+      });
+    });
+
+    await generate(user, sessionId);
+
+    const [log] = await readNotifications(user);
+    expect(log).toMatchObject({ type: "kindling_ready", delivered: true });
+  });
+});
+
 describe("the completion hook", () => {
   it("fires from completeSession", async () => {
     const user = await asNewUser();
@@ -351,5 +478,100 @@ describe("cascade", () => {
 
     expect(await readPaths(user)).toEqual([]);
     expect(await readSteps(user, path._id)).toEqual([]);
+  });
+});
+
+describe("the active-kindling screen API (#333)", () => {
+  /** A Plus user with one active kindling of [breathing, xolacer]. */
+  async function withKindling() {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    await generate(user, sessionId);
+    const active = await user.t.query(api.paths.getActive, {});
+    if (!active) throw new Error("expected an active kindling");
+    return { user, sessionId, active };
+  }
+
+  it("getActive returns the twigs in suggested order, and null when there is none", async () => {
+    const user = await asNewUser();
+    expect(await user.t.query(api.paths.getActive, {})).toBeNull();
+
+    const sessionId = await seedQualifying(user);
+    await generate(user, sessionId);
+
+    const active = await user.t.query(api.paths.getActive, {});
+    expect(active?.sessionId).toBe(sessionId);
+    expect(active?.twigs.map((t) => [t.order, t.kind, t.state])).toEqual([
+      [1, "breathing", "pending"],
+      [2, "xolacer", "pending"],
+    ]);
+  });
+
+  it("getActive is null for a free user even when a kindling row exists", async () => {
+    const { user } = await withKindling();
+    stub.isPlus = false;
+    expect(await user.t.query(api.paths.getActive, {})).toBeNull();
+  });
+
+  it("resolves a bound track's title onto an audio twig", async () => {
+    stub.reply = JSON.stringify([twig("audio_topic_anxiety", 1), twig("breathing", 2)]);
+    const user = await asNewUser();
+    await seedCatalogue(user);
+    await generate(user, await seedQualifying(user));
+
+    const active = await user.t.query(api.paths.getActive, {});
+    const audio = active?.twigs.find((t) => t.kind === "audio");
+    expect(audio?.title).toBe(
+      manifest.find((t) => t.slug === (audio?.params as { slug: string }).slug)?.title,
+    );
+  });
+
+  it("skipStep and completeStep are independent of order and close the kindling once nothing is pending", async () => {
+    const { user, active } = await withKindling();
+    const [breathing, xolacer] = active.twigs;
+
+    await user.t.mutation(api.paths.skipStep, { stepId: xolacer._id });
+    let now = await user.t.query(api.paths.getActive, {});
+    expect(now?.twigs.map((t) => t.state)).toEqual(["pending", "skipped"]);
+
+    await user.t.mutation(api.paths.completeStep, { stepId: breathing._id });
+    now = await user.t.query(api.paths.getActive, {});
+    expect(now).toBeNull();
+    const [path] = await readPaths(user);
+    expect(path.status).toBe("completed");
+  });
+
+  it("dismiss closes the kindling and leaves the twigs as they were", async () => {
+    const { user, active } = await withKindling();
+    await user.t.mutation(api.paths.dismiss, { pathId: active._id });
+
+    expect(await user.t.query(api.paths.getActive, {})).toBeNull();
+    const [path] = await readPaths(user);
+    expect(path.status).toBe("dismissed");
+    expect((await readSteps(user, path._id)).every((s) => s.state === "pending")).toBe(true);
+  });
+
+  it("another user cannot touch my twigs", async () => {
+    const { user, active } = await withKindling();
+    const other = await asNewUser(2, user.root);
+
+    await expect(
+      other.t.mutation(api.paths.skipStep, { stepId: active.twigs[0]._id }),
+    ).rejects.toThrow();
+    await expect(other.t.mutation(api.paths.dismiss, { pathId: active._id })).rejects.toThrow();
+  });
+});
+
+describe("stale kindling screens", () => {
+  it("refuses twig writes once the kindling is dismissed", async () => {
+    const user = await asNewUser();
+    await generate(user, await seedQualifying(user));
+    const active = await user.t.query(api.paths.getActive, {});
+    if (!active) throw new Error("expected an active kindling");
+    await user.t.mutation(api.paths.dismiss, { pathId: active._id });
+
+    await expect(
+      user.t.mutation(api.paths.skipStep, { stepId: active.twigs[0]._id }),
+    ).rejects.toThrow();
   });
 });

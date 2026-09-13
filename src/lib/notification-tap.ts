@@ -80,7 +80,10 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
 /** Where a tap navigates. Chat routes carry params, so they differ in kind. */
 export type TapNavigation =
   | { action: "navigate"; href: ReturnType<typeof chatNotificationRoute> }
-  | { action: "push"; href: "/(protected)/quotes" | "/(protected)" };
+  | {
+      action: "push";
+      href: "/(protected)/quotes" | "/(protected)" | "/(protected)/kindling";
+    };
 
 export type NotificationTapPlan = {
   /** Present when the tap has an analytics row to attribute a session to. */
@@ -125,6 +128,8 @@ export function notificationTapPlan(
     }
   } else if (data?.screen === "quotes") {
     plan.navigation = { action: "push", href: "/(protected)/quotes" };
+  } else if (data?.type === "kindling_ready") {
+    plan.navigation = { action: "push", href: "/(protected)/kindling" };
   } else if (
     data?.type === "gentle_return" ||
     data?.type === "pattern_nudge" ||
