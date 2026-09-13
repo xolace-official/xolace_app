@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { LegendList } from '@legendapp/list/react-native';
+import { Skeleton } from 'heroui-native';
 import { usePostHog } from 'posthog-react-native';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
@@ -55,19 +56,33 @@ export function FamilyListScreen() {
       <Stack.Screen options={{ title: FAMILY_LABEL[family] }} />
       <BrowseFilterMenu title="Family" value={family} options={FAMILY_OPTIONS} onChange={setFamily} />
 
-      <LegendList
-        data={results}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        estimatedItemSize={68}
-        recycleItems
-        onEndReached={status === 'CanLoadMore' ? () => loadMore(PAGE_SIZE) : undefined}
-        onEndReachedThreshold={0.4}
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ paddingBottom: 40 }}
-        ListEmptyComponent={status === 'LoadingFirstPage' ? null : Empty}
-        ListFooterComponent={isLoading && results.length > 0 ? <ActivityIndicator className="py-4" /> : null}
-      />
+      {status === 'LoadingFirstPage' ? (
+        <ScrollView
+          className="flex-1"
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={{ paddingTop: 8 }}
+        >
+          <View className="gap-3 px-4">
+            <Skeleton className="h-[68px] rounded-none" />
+            <Skeleton className="h-[68px] rounded-none" />
+            <Skeleton className="h-[68px] rounded-none" />
+          </View>
+        </ScrollView>
+      ) : (
+        <LegendList
+          data={results}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          estimatedItemSize={68}
+          recycleItems
+          onEndReached={status === 'CanLoadMore' ? () => loadMore(PAGE_SIZE) : undefined}
+          onEndReachedThreshold={0.4}
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={{ paddingBottom: 40 }}
+          ListEmptyComponent={Empty}
+          ListFooterComponent={isLoading && results.length > 0 ? <ActivityIndicator className="py-4" /> : null}
+        />
+      )}
     </>
   );
 }

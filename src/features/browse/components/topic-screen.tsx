@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { LegendList } from '@legendapp/list/react-native';
 import { useQuery } from 'convex/react';
+import { Skeleton } from 'heroui-native';
 import { usePostHog } from 'posthog-react-native';
+import { ScrollView, View } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
@@ -59,16 +61,30 @@ export function TopicScreen() {
     <>
       <Stack.Screen options={{ title: titleFor(slug) }} />
       <BrowseFilterMenu title="Show" value={segment} options={options} onChange={setSegment} />
-      <LegendList
-        data={topicRows(tracks ?? [], segment)}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        getItemType={getItemType}
-        estimatedItemSize={68}
-        recycleItems
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 }}
-      />
+      {tracks === undefined ? (
+        <ScrollView
+          className="flex-1"
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={{ paddingTop: 8 }}
+        >
+          <View className="gap-3 px-4">
+            <Skeleton className="h-[68px] rounded-none" />
+            <Skeleton className="h-[68px] rounded-none" />
+            <Skeleton className="h-[68px] rounded-none" />
+          </View>
+        </ScrollView>
+      ) : (
+        <LegendList
+          data={topicRows(tracks, segment)}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          getItemType={getItemType}
+          estimatedItemSize={68}
+          recycleItems
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 }}
+        />
+      )}
     </>
   );
 }

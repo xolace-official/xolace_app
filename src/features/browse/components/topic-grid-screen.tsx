@@ -3,8 +3,9 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { LegendList } from '@legendapp/list/react-native';
 import { useQuery } from 'convex/react';
+import { Skeleton } from 'heroui-native';
 import { usePostHog } from 'posthog-react-native';
-import { Pressable, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
@@ -40,9 +41,31 @@ export function TopicGridScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  if (topics === undefined) {
+    return (
+      <ScrollView
+        className="flex-1"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ paddingHorizontal: GUTTER - GAP / 2, paddingTop: 8 }}
+      >
+        <View className="flex-row flex-wrap">
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={{ width: tile, marginHorizontal: GAP / 2, marginBottom: GAP + 4 }}>
+              <Skeleton className="rounded-xl" style={{ width: tile, height: tile }} />
+              <View className="mt-2 gap-1.5">
+                <Skeleton className="h-[15px] w-3/4 rounded" />
+                <Skeleton className="h-[13px] w-1/2 rounded" />
+              </View>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    );
+  }
+
   return (
     <LegendList
-      data={topics ?? []}
+      data={topics}
       numColumns={2}
       recycleItems
       keyExtractor={keyExtractor}
