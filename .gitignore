@@ -59,3 +59,4 @@ google-services-preview/
 
 # Kindling ingestion — local media, never the manifest (#328)
 /scripts/kindling/media/
+/scripts/kindling/tmp/

@@ -1,53 +1,108 @@
 [
   {
-    "slug": "audio-anxiety-01",
-    "family": "support",
-    "title": "Settling the Static",
-    "topic": "audio_topic_anxiety",
-    "tags": ["anxiety", "racing-thoughts"],
-    "audioPath": "support/audio-anxiety-01.m4a",
-    "thumbPath": "thumbs/campfire-blue.webp",
-    "durationSec": 312,
-    "sha256": "",
-    "thumbSha256": "",
-    "narrators": ["Sage"]
-  },
-  {
-    "slug": "the-spectrum-ep01",
-    "family": "support",
-    "title": "Everyday Mind — Episode 1",
-    "topic": "audio_topic_anxiety",
-    "tags": ["anxiety", "awareness"],
-    "audioPath": "episodes/the-spectrum-ep01.m4a",
-    "thumbPath": "thumbs/the-spectrum.webp",
-    "durationSec": 540,
-    "sha256": "",
-    "thumbSha256": "",
-    "narrators": ["Sage", "Ash"],
-    "series": "the-spectrum",
-    "seriesTitle": "The Spectrum",
-    "episodeNumber": 1,
-    "tier": 1
-  },
-  {
-    "slug": "music-calm-lofi-01",
+    "slug": "music-mindfulness-01",
     "family": "music",
-    "title": "Low Ember",
-    "topic": "music_topic_calm_peace",
-    "tags": ["calm", "instrumental"],
-    "audioPath": "music/music-calm-lofi-01.mp3",
-    "thumbPath": "thumbs/low-ember.webp",
-    "durationSec": 184,
-    "sha256": "",
-    "thumbSha256": "",
+    "title": "Meditation Mindfulness Ambient",
+    "topic": "music_topic_mindfulness",
+    "tags": [
+      "ambient",
+      "meditation",
+      "instrumental"
+    ],
+    "audioPath": "support/databend-meditation-mindfulness-ambient-546937.mp3",
+    "thumbPath": "thumbs/mindfullness-01.jpg",
+    "durationSec": 118,
+    "sha256": "785cb074777a9991c529abfae4ddb7abcb3a651c8303d2851c78db07d05dee1f",
+    "thumbSha256": "669906241acf4d8cf79a6bcd3b210d864a19d9323910fe5f57a16078a724bc1b",
+    "newUntil": 1789922819372,
     "licence": {
       "source": "Pixabay Music",
       "sourceUrl": "https://pixabay.com/music/REPLACE",
       "licenceName": "Pixabay Content License",
       "licenceUrl": "https://pixabay.com/service/license-summary/",
-      "artist": "REPLACE_ARTIST_NAME",
+      "artist": "Databend",
       "attributionRequired": false,
-      "attributionText": "Music by REPLACE_ARTIST_NAME from Pixabay",
+      "attributionText": "Music by Databend from Pixabay",
+      "acquiredAt": 1757650000000
+    }
+  },
+  {
+    "slug": "music-mindfulness-02",
+    "family": "music",
+    "title": "Sacred Fire of Mindfulness",
+    "topic": "music_topic_mindfulness",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "instrumental"
+    ],
+    "audioPath": "support/meditativecalmbuddha-sacred-fire-of-mindfulness-389028.mp3",
+    "thumbPath": "thumbs/mindfullness-02.jpg",
+    "durationSec": 272,
+    "sha256": "193ced66362c9975c328de95f9fe33874e829b4eed6c6df71cf52d976605967b",
+    "thumbSha256": "1d1b54c3e3bcaa7a8a88c0959fc05b15439c60d0823cef3e6f368caf48896de9",
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/REPLACE",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MeditativeCalmBuddha",
+      "attributionRequired": false,
+      "attributionText": "Music by MeditativeCalmBuddha from Pixabay",
+      "acquiredAt": 1757650000000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-01",
+    "family": "music",
+    "title": "LoFi Sleep",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "lofi",
+      "beats",
+      "sleep"
+    ],
+    "audioPath": "support/the_mountain-lofi-sleep-lofi-sleep-music-587590.mp3",
+    "thumbPath": "thumbs/sleep-rest-01.jpg",
+    "durationSec": 70,
+    "sha256": "c6966df703bb0012077378b3f38d1f080c090e36a136b7a6d28ba7a81004e285",
+    "thumbSha256": "acce7f837065af010718a9f85cb6d248ef0436534a219b30718f8fa57b389d10",
+    "newUntil": 1789836419372,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/REPLACE",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1757650000000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-02",
+    "family": "music",
+    "title": "Deep Sleep",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "lullaby",
+      "sleep",
+      "instrumental"
+    ],
+    "audioPath": "support/the_mountain-deep-sleep-deep-sleep-music-587578.mp3",
+    "thumbPath": "thumbs/sleep-rest-02.jpg",
+    "durationSec": 135,
+    "sha256": "2202614a83de97d060c40356315a419895d74c56dcbad0c7cb0df141377f82eb",
+    "thumbSha256": "08c74f2dedf48408663a11700650da6c453028e2fff9b9b56c3b86eef6a36ce6",
+    "newUntil": 1789750019372,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/REPLACE",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
       "acquiredAt": 1757650000000
     }
   }
