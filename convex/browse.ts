@@ -14,6 +14,7 @@ import { r2 } from "./ai/paths/audioTracks";
 const shelfItemValidator = v.object({
   _id: v.id("audio_tracks"),
   slug: v.string(),
+  family: v.union(v.literal("support"), v.literal("music")),
   title: v.string(),
   thumbUrl: v.string(),
   attribution: v.optional(v.string()),
@@ -60,6 +61,7 @@ export const getNewShelf = query({
       shelf.map(async (t) => ({
         _id: t._id,
         slug: t.slug,
+        family: t.family,
         title: t.title,
         thumbUrl: await thumbUrlFor(t.thumbKey),
         attribution: attributionFor(t),

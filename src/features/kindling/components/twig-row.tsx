@@ -2,7 +2,7 @@ import { Pressable, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { TWIG_PRESENTATION, type Twig } from "../twig-presentation";
+import { TWIG_PRESENTATION, twigBrowseHref, type Twig } from "../twig-presentation";
 
 /**
  * One twig: a rail node straddling the continuous line, and a full-width card
@@ -15,11 +15,13 @@ export function TwigRow({
   last,
   onBegin,
   onSkip,
+  onBrowseMore,
 }: {
   twig: Twig;
   last: boolean;
   onBegin: () => void;
   onSkip: () => void;
+  onBrowseMore: () => void;
 }) {
   const accentForeground = useThemeColor("accent-foreground") as string;
   const foreground = useThemeColor("foreground") as string;
@@ -27,6 +29,7 @@ export function TwigRow({
   const title = twig.title ?? look.title;
   const done = twig.state === "done";
   const skipped = twig.state === "skipped";
+  const browsable = twigBrowseHref(twig) !== null;
 
   return (
     <View className="flex-row">
@@ -79,6 +82,17 @@ export function TwigRow({
             </AppText>
             <AppText className="mt-1 text-lg font-semibold text-foreground">{title}</AppText>
             <AppText className="mt-2 text-[15px] leading-relaxed text-muted">{twig.why}</AppText>
+            {browsable && !done && (
+              <Pressable
+                onPress={onBrowseMore}
+                hitSlop={8}
+                accessibilityRole="link"
+                accessibilityLabel="Browse more like this"
+                className="mt-3 self-start"
+              >
+                <AppText className="text-sm text-muted underline">Browse more like this</AppText>
+              </Pressable>
+            )}
 
             {done ? (
               <AppText className="mt-4 text-sm font-medium text-accent">Tended</AppText>

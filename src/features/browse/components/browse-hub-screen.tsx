@@ -10,6 +10,7 @@ import { useCSSVariable } from 'uniwind';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
+import { ShelfTile } from './shelf-tile';
 
 type Entry = {
   id: 'support' | 'music' | 'topics';
@@ -100,17 +101,7 @@ export function BrowseHubScreen() {
             contentContainerStyle={{ gap: 14, paddingHorizontal: 16 }}
           >
             {shelf.map((item) => (
-              <View key={item._id} style={{ width: 170 }}>
-                <Image source={{ uri: item.thumbUrl }} style={{ width: 170, height: 170, borderRadius: 10 }} />
-                <AppText className="mt-1.5 text-[13px] font-medium" numberOfLines={1}>
-                  {item.title}
-                </AppText>
-                {item.attribution && (
-                  <AppText className="text-muted text-xs" numberOfLines={1}>
-                    {item.attribution}
-                  </AppText>
-                )}
-              </View>
+              <ShelfTile key={item._id} item={item} from="hub-new" />
             ))}
           </ScrollView>
         </>

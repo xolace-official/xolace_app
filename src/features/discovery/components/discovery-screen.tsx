@@ -5,6 +5,7 @@ import { DiscoveryHeader } from './discovery-header';
 import { DailyQuotesCard } from './daily-quotes-card';
 import { DiscoveryTimelineSection } from './discovery-timeline-section';
 import { KindlingTodayCard } from './kindling-today-card';
+import { LibraryStrip } from './library-strip';
 import { DOCK_CLEARANCE, ReflectDock } from './reflect-dock';
 
 /**
@@ -31,6 +32,7 @@ export function DiscoveryScreen() {
           <DailyQuotesCard />
         </View>
 
+        <LibraryStrip />
         <DiscoveryTimelineSection />
       </ScrollView>
 

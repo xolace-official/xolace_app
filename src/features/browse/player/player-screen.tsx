@@ -54,7 +54,7 @@ function Player() {
   const p = useTrackPlayback(slug, { stepId });
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();
-  const { ink } = usePlayerInk();
+  const ink = usePlayerInk();
   const scrim = String(useCSSVariable("--color-player-scrim"));
   const [barWidth, setBarWidth] = useState(0);
   const played = useRef(false);
@@ -111,7 +111,7 @@ function Player() {
 
           <View className="mt-7">
             <Pressable
-              className="h-[4px] w-full overflow-hidden rounded-full bg-player-ink/25"
+              className="h-1 w-full overflow-hidden rounded-full bg-player-ink/25"
               hitSlop={{ top: 16, bottom: 16 }}
               onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
               onPress={(e) => barWidth && p.seekTo((e.nativeEvent.locationX / barWidth) * p.duration)}
@@ -134,7 +134,7 @@ function Player() {
               disabled={!track}
               accessibilityRole="button"
               accessibilityLabel={p.isPlaying ? "Pause" : "Play"}
-              className="h-[76px] w-[76px] items-center justify-center rounded-full bg-player-ink active:opacity-80 disabled:opacity-40"
+              className="h-19 w-19 items-center justify-center rounded-full bg-player-ink active:opacity-80 disabled:opacity-40"
             >
               <SymbolView name={p.isPlaying ? "pause.fill" : "play.fill"} size={32} tintColor={scrim} />
             </Pressable>

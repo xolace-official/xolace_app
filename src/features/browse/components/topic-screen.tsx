@@ -10,22 +10,12 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { topicRows, type Segment, type TopicRow } from '../topic-sections';
 import { BrowseFilterMenu, type FilterOption } from './browse-filter-menu';
-import { FAMILY_LABEL, TrackRow, type TrackItem } from './track-row';
+import { FAMILY_LABEL, TrackRow, type BrowseFrom, type TrackItem } from './track-row';
 
 type Row = TopicRow<TrackItem>;
+type Params = { slug: string; family?: Segment; from?: BrowseFrom };
 const keyExtractor = (row: Row) => row.key;
 const getItemType = (row: Row) => row.type;
-
-function renderItem({ item }: { item: Row }) {
-  if (item.type === 'header') {
-    return (
-      <AppText className="text-muted px-4 pb-1 pt-6 text-[13px] font-semibold uppercase tracking-wide">
-        {item.title}
-      </AppText>
-    );
-  }
-  return <TrackRow track={item.track} from="topic" glyph />;
-}
 
 const titleFor = (slug: string) => {
   const words = slug.replace(/_/g, ' ');
@@ -37,12 +27,27 @@ const titleFor = (slug: string) => {
  * an All / Music / Support audio header filter; a zero-count option is
  * disabled, not empty. The only list both families share, so rows carry the
  * family glyph. Episodes group under their series client-side.
+ *
+ * `?family=` preselects a segment and `?from=` tags the plays — this is how a
+ * twig's "Browse more like this" lands on its topic filtered to its family
+ * (§9.6) and its plays read `twig-more-like-this` in analytics.
  */
 export function TopicScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { slug, family, from = 'topic' } = useLocalSearchParams<Params>();
   const posthog = usePostHog();
   const tracks = useQuery(api.browse.getTopic, { slug });
-  const [segment, setSegment] = useState<Segment>('all');
+  const [segment, setSegment] = useState<Segment>(family === 'music' || family === 'support' ? family : 'all');
+
+  const renderItem = ({ item }: { item: Row }) => {
+    if (item.type === 'header') {
+      return (
+        <AppText className="text-muted px-4 pb-1 pt-6 text-[13px] font-semibold uppercase tracking-wide">
+          {item.title}
+        </AppText>
+      );
+    }
+    return <TrackRow track={item.track} from={from} glyph />;
+  };
 
   useEffect(() => {
     posthog.capture('browse_topic_opened', { topic: slug });
@@ -68,9 +73,9 @@ export function TopicScreen() {
           contentContainerStyle={{ paddingTop: 8 }}
         >
           <View className="gap-3 px-4">
-            <Skeleton className="h-[68px] rounded-none" />
-            <Skeleton className="h-[68px] rounded-none" />
-            <Skeleton className="h-[68px] rounded-none" />
+            <Skeleton className="h-17 rounded-none" />
+            <Skeleton className="h-17 rounded-none" />
+            <Skeleton className="h-17 rounded-none" />
           </View>
         </ScrollView>
       ) : (

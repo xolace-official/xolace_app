@@ -147,6 +147,10 @@ const readPaths = (user: SeededUser) =>
   );
 
 /** The checked-in dev catalogue, as `ingest.ts` would have upserted it. */
+/** A topic the dev catalogue can actually bind — the manifest's contents move. */
+const CATALOGUE_TOPIC = (manifest as ManifestTrack[])[0].topic;
+const CATALOGUE_KIND = CATALOGUE_TOPIC.startsWith("music_topic_") ? "music" : "audio";
+
 async function seedCatalogue(user: SeededUser) {
   await user.root.run(async (ctx) => {
     for (const { audioPath, thumbPath, ...t } of manifest as ManifestTrack[]) {
@@ -281,8 +285,8 @@ describe("ai/paths/generate.run", () => {
     expect(await readPaths(user)).toEqual([]);
   });
 
-  it("binds an audio_topic_* twig to a real slug from the dev catalogue", async () => {
-    stub.reply = JSON.stringify([twig("audio_topic_anxiety", 1), twig("breathing", 2)]);
+  it("binds a *_topic_* twig to a real slug from the dev catalogue", async () => {
+    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2)]);
     const user = await asNewUser();
     await seedCatalogue(user);
     const sessionId = await seedQualifying(user);
@@ -290,7 +294,7 @@ describe("ai/paths/generate.run", () => {
     await generate(user, sessionId);
 
     const [path] = await readPaths(user);
-    const audio = (await readSteps(user, path._id)).find((s) => s.actionType === "audio_topic_anxiety");
+    const audio = (await readSteps(user, path._id)).find((s) => s.actionType === CATALOGUE_TOPIC);
     const slugs = manifest.map((t) => t.slug);
     expect(slugs).toContain((audio?.params as { slug: string }).slug);
   });
@@ -574,14 +578,14 @@ describe("the active-kindling screen API (#333)", () => {
     expect(await user.t.query(api.paths.getActive, {})).toBeNull();
   });
 
-  it("resolves a bound track's title onto an audio twig", async () => {
-    stub.reply = JSON.stringify([twig("audio_topic_anxiety", 1), twig("breathing", 2)]);
+  it("resolves a bound track's title onto an audio/music twig", async () => {
+    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2)]);
     const user = await asNewUser();
     await seedCatalogue(user);
     await generate(user, await seedQualifying(user));
 
     const active = await user.t.query(api.paths.getActive, {});
-    const audio = active?.twigs.find((t) => t.kind === "audio");
+    const audio = active?.twigs.find((t) => t.kind === CATALOGUE_KIND);
     expect(audio?.title).toBe(
       manifest.find((t) => t.slug === (audio?.params as { slug: string }).slug)?.title,
     );
@@ -634,6 +638,35 @@ describe("stale kindling screens", () => {
     await expect(
       user.t.mutation(api.paths.skipStep, { stepId: active.twigs[0]._id }),
     ).rejects.toThrow();
+  });
+});
+
+describe("a browse play beside a bound twig (§9.6, #341)", () => {
+  it("leaves the twig's binding byte-identical, never tends it, and never moves profile stats", async () => {
+    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2)]);
+    const user = await asNewUser();
+    await seedCatalogue(user);
+    await generate(user, await seedQualifying(user));
+
+    const active = await user.t.query(api.paths.getActive, {});
+    const audio = active?.twigs.find((t) => t.kind === CATALOGUE_KIND);
+    if (!active || !audio) throw new Error("expected a bound twig");
+    const snapshot = async () => ({
+      step: await user.root.run((ctx) => ctx.db.get("path_steps", audio._id)),
+      profile: await user.root.run((ctx) => ctx.db.get("emotional_profiles", user.profileId)),
+    });
+    const before = await snapshot();
+
+    // Everything "Browse more like this" and the strip can reach: the topic
+    // list, and the player's mint for a *different* track in that topic.
+    const topic = await user.t.query(api.browse.getTopic, {
+      slug: CATALOGUE_TOPIC.replace(/^(audio|music)_topic_/, ""),
+    });
+    const other = topic.find((t) => t.slug !== (audio.params as { slug: string }).slug) ?? topic[0];
+    expect(await user.t.query(api.paths.getBoundAudioTrack, { slug: other.slug })).not.toBeNull();
+
+    expect(await snapshot()).toEqual(before);
+    expect(before.step?.state).toBe("pending");
   });
 });
 

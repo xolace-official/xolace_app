@@ -50,6 +50,25 @@ export const TWIG_PRESENTATION: Record<
  * rides along so `useTrackPlayback` tends the twig on a natural finish —
  * a Browse play carries no `stepId` and never completes anything (§9.6).
  */
+/**
+ * "Browse more like this" (§9.6): a bound audio/music twig's topic in Browse,
+ * filtered to its family. One-off listening — nothing here carries `stepId`,
+ * so plays from it can't tend the twig, and the stored binding is never
+ * touched. If the bound track is wrong, "Not for me" is the correction.
+ */
+export function twigBrowseHref(twig: Twig): Href | null {
+  const match = /^(audio|music)_topic_(.+)$/.exec(twig.actionType);
+  if (!match) return null;
+  return {
+    pathname: "/browse/topic/[slug]",
+    params: {
+      slug: match[2],
+      family: match[1] === "music" ? "music" : "support",
+      from: "twig-more-like-this",
+    },
+  };
+}
+
 export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | null {
   switch (twig.kind) {
     case "audio":
