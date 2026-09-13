@@ -189,7 +189,7 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
                 >
                   <Animated.View style={flameStyles[i]}>
                     <SymbolView
-                      name="flame.fill"
+                      name={{ ios: "flame.fill", android: "local_fire_department", web: "local_fire_department" }}
                       size={26}
                       tintColor={foreground}
                       resizeMode="scaleAspectFit"

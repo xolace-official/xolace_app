@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useQuery } from 'convex/react';
 import { usePostHog } from 'posthog-react-native';
 import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
@@ -15,16 +15,16 @@ import { ShelfTile } from '@/src/features/browse/components/shelf-tile';
 type Entry = {
   id: 'support' | 'music' | 'topics';
   label: string;
-  icon: string;
+  icon: SymbolViewProps['name'];
   bg: string;
   fg: '--color-browse-audio-foreground' | '--color-browse-music-foreground' | '--color-browse-topics-foreground';
   href: string;
 };
 
 const ENTRIES: Entry[] = [
-  { id: 'support', label: 'Support audio', icon: 'waveform', bg: 'bg-browse-audio', fg: '--color-browse-audio-foreground', href: '/browse/list?family=support' },
-  { id: 'music', label: 'Music', icon: 'music.note', bg: 'bg-browse-music', fg: '--color-browse-music-foreground', href: '/browse/list?family=music' },
-  { id: 'topics', label: 'Topics', icon: 'square.grid.2x2', bg: 'bg-browse-topics', fg: '--color-browse-topics-foreground', href: '/browse/topics' },
+  { id: 'support', label: 'Support audio', icon: { ios: 'waveform', android: 'graphic_eq', web: 'graphic_eq' }, bg: 'bg-browse-audio', fg: '--color-browse-audio-foreground', href: '/browse/list?family=support' },
+  { id: 'music', label: 'Music', icon: { ios: 'music.note', android: 'music_note', web: 'music_note' }, bg: 'bg-browse-music', fg: '--color-browse-music-foreground', href: '/browse/list?family=music' },
+  { id: 'topics', label: 'Topics', icon: { ios: 'square.grid.2x2', android: 'grid_view', web: 'grid_view' }, bg: 'bg-browse-topics', fg: '--color-browse-topics-foreground', href: '/browse/topics' },
 ];
 
 function EntryButton({ entry }: { entry: Entry }) {
@@ -43,7 +43,7 @@ function EntryButton({ entry }: { entry: Entry }) {
       }}
     >
       <View className={`h-16 w-16 items-center justify-center rounded-full ${entry.bg}`}>
-        <SymbolView name={entry.icon as never} size={26} tintColor={String(tint)} />
+        <SymbolView name={entry.icon} size={26} tintColor={String(tint)} />
       </View>
       <AppText className="text-xs font-medium">{entry.label}</AppText>
     </Pressable>

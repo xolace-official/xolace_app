@@ -33,7 +33,7 @@ export function ShelfTile({ item, from, size = TILE }: { item: ShelfItem; from: 
         <Image source={{ uri: item.thumbUrl }} style={{ width: size, height: size }} />
         {locked && (
           <View className="bg-background/85 absolute bottom-1.5 right-1.5 h-5 w-5 items-center justify-center rounded-full">
-            <SymbolView name="lock.fill" size={10} tintColor={String(lockTint)} accessibilityLabel="Xolace+" />
+            <SymbolView name={{ ios: "lock.fill", android: "lock", web: "lock" }} size={10} tintColor={String(lockTint)} accessibilityLabel="Xolace+" />
           </View>
         )}
       </View>

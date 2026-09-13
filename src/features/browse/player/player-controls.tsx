@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { SymbolView, type SFSymbol } from "expo-symbols";
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Slider } from "heroui-native";
 import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
@@ -19,7 +19,7 @@ export function GlyphButton({
   label,
   onPress,
 }: {
-  name: SFSymbol;
+  name: SymbolViewProps["name"];
   size: number;
   label: string;
   onPress: () => void;
@@ -43,7 +43,7 @@ export function VolumeRow({ value, onChange }: { value: number; onChange: (v: nu
   const ink = usePlayerInk();
   return (
     <View className="w-full flex-row items-center gap-3">
-      <SymbolView name="speaker.fill" size={13} tintColor={ink} style={DIM} />
+      <SymbolView name={{ ios: "speaker.fill", android: "volume_mute", web: "volume_mute" }} size={13} tintColor={ink} style={DIM} />
       <Slider
         value={value}
         onChange={(v) => onChange(typeof v === "number" ? v : v[0])}
@@ -58,7 +58,7 @@ export function VolumeRow({ value, onChange }: { value: number; onChange: (v: nu
           <Slider.Thumb className="h-4 w-4 bg-player-ink" />
         </Slider.Track>
       </Slider>
-      <SymbolView name="speaker.wave.3.fill" size={13} tintColor={ink} style={DIM} />
+      <SymbolView name={{ ios: "speaker.wave.3.fill", android: "volume_up", web: "volume_up" }} size={13} tintColor={ink} style={DIM} />
     </View>
   );
 }

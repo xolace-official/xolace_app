@@ -86,7 +86,7 @@ function Player() {
         className="absolute left-5 h-9 w-9 items-center justify-center rounded-full bg-player-ink/15 active:opacity-60"
         style={{ top: insets.top + 8 }}
       >
-        <SymbolView name="chevron.down" size={16} weight="semibold" tintColor={ink} />
+        <SymbolView name={{ ios: "chevron.down", android: "keyboard_arrow_down", web: "keyboard_arrow_down" }} size={16} weight="semibold" tintColor={ink} />
       </Pressable>
 
       {track === null ? (
@@ -128,7 +128,7 @@ function Player() {
           </View>
 
           <View className="mt-6 flex-row items-center justify-center gap-10">
-            <GlyphButton name="gobackward.15" size={28} label="Back 15 seconds" onPress={() => p.seekTo(p.currentTime - 15)} />
+            <GlyphButton name={{ ios: "gobackward.15", android: "fast_rewind", web: "fast_rewind" }} size={28} label="Back 15 seconds" onPress={() => p.seekTo(p.currentTime - 15)} />
             <Pressable
               onPress={toggle}
               disabled={!track}
@@ -136,9 +136,13 @@ function Player() {
               accessibilityLabel={p.isPlaying ? "Pause" : "Play"}
               className="h-19 w-19 items-center justify-center rounded-full bg-player-ink active:opacity-80 disabled:opacity-40"
             >
-              <SymbolView name={p.isPlaying ? "pause.fill" : "play.fill"} size={32} tintColor={scrim} />
+              <SymbolView name={
+                  p.isPlaying
+                    ? { ios: "pause.fill", android: "pause", web: "pause" }
+                    : { ios: "play.fill", android: "play_arrow", web: "play_arrow" }
+                } size={32} tintColor={scrim} />
             </Pressable>
-            <GlyphButton name="goforward.15" size={28} label="Forward 15 seconds" onPress={() => p.seekTo(p.currentTime + 15)} />
+            <GlyphButton name={{ ios: "goforward.15", android: "fast_forward", web: "fast_forward" }} size={28} label="Forward 15 seconds" onPress={() => p.seekTo(p.currentTime + 15)} />
           </View>
 
           <View className="mt-8 items-center gap-10">

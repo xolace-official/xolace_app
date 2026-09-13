@@ -47,7 +47,7 @@ export function TrackRow({ track, from, glyph = false }: { track: TrackItem; fro
         <Image source={{ uri: track.thumbUrl }} style={{ width: THUMB, height: THUMB }} />
         {locked && (
           <View className="bg-background/85 absolute bottom-1 right-1 h-5 w-5 items-center justify-center rounded-full">
-            <SymbolView name="lock.fill" size={10} tintColor={String(lockTint)} accessibilityLabel="Xolace+" />
+            <SymbolView name={{ ios: "lock.fill", android: "lock", web: "lock" }} size={10} tintColor={String(lockTint)} accessibilityLabel="Xolace+" />
           </View>
         )}
       </View>
@@ -64,7 +64,11 @@ export function TrackRow({ track, from, glyph = false }: { track: TrackItem; fro
         </View>
         {glyph && (
           <SymbolView
-            name={track.family === 'music' ? 'music.note' : 'waveform'}
+            name={
+              track.family === 'music'
+                ? { ios: 'music.note', android: 'music_note', web: 'music_note' }
+                : { ios: 'waveform', android: 'graphic_eq', web: 'graphic_eq' }
+            }
             size={16}
             tintColor={String(tint)}
             accessibilityLabel={track.family === 'music' ? 'Music' : 'Spoken'}
