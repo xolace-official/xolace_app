@@ -46,11 +46,19 @@ export const TWIG_PRESENTATION: Record<
  * (the person is chosen there, the exercise runs there); this screen never
  * plays or runs anything inline.
  *
- * Returns null while the destination does not exist yet — audio lands with
- * the Browse player (#340) at `/browse/player?slug=…`.
+ * Audio and music go to the one player (#340, `/browse/player`). `stepId`
+ * rides along so `useTrackPlayback` tends the twig on a natural finish —
+ * a Browse play carries no `stepId` and never completes anything (§9.6).
  */
 export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | null {
   switch (twig.kind) {
+    case "audio":
+    case "music": {
+      const slug = (twig.params as { slug?: string } | null)?.slug;
+      if (!slug) return null;
+      // Same cast Browse's track rows use until the route lands in #340.
+      return `/browse/player?slug=${slug}&stepId=${twig._id}` as Href;
+    }
     case "breathing":
       // `stepId` rides along so finishing the exercise tends the twig.
       return {

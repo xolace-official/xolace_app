@@ -41,6 +41,9 @@ const stub = vi.hoisted(() => ({
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../posthog", () => posthogMock());
 vi.mock("../rag", () => ragMock());
+vi.mock("../ai/paths/audioTracks", () => ({
+  r2: { getUrl: async (key: string) => `https://r2.test/${key}` },
+}));
 vi.mock("../lib/rateLimits", async (orig) => ({
   ...(await orig<typeof import("../lib/rateLimits")>()),
   ...rateLimiterMock(() => stub.limit),
@@ -631,5 +634,92 @@ describe("stale kindling screens", () => {
     await expect(
       user.t.mutation(api.paths.skipStep, { stepId: active.twigs[0]._id }),
     ).rejects.toThrow();
+  });
+});
+
+describe("paths.getBoundAudioTrack (#334)", () => {
+  const licence = {
+    source: "Pixabay",
+    sourceUrl: "https://pixabay.com",
+    licenceName: "Pixabay",
+    licenceUrl: "https://pixabay.com/service/license-summary/",
+    artist: "Artist",
+    attributionRequired: true,
+    attributionText: "Music by Artist — Pixabay",
+    acquiredAt: 0,
+  };
+  const row = (extra: Partial<Doc<"audio_tracks">>): Omit<Doc<"audio_tracks">, "_id" | "_creationTime"> => ({
+    slug: "s",
+    family: "support",
+    topic: "audio_topic_anxiety",
+    title: "Track",
+    tags: [],
+    key: "audio/s.m4a",
+    thumbKey: "thumb/s.webp",
+    durationSec: 300,
+    sha256: "s",
+    thumbSha256: "s",
+    active: true,
+    ...extra,
+  });
+  const seedRow = (user: SeededUser, extra: Partial<Doc<"audio_tracks">>) =>
+    user.root.run((ctx) => ctx.db.insert("audio_tracks", row(extra) as Doc<"audio_tracks">));
+
+  it("returns the playable shape with per-request URLs for a Plus user", async () => {
+    const user = await asNewUser();
+    await seedRow(user, { slug: "voice", narrators: ["Sage", "Wren"] });
+    const before = Date.now();
+
+    const track = await user.t.query(api.paths.getBoundAudioTrack, { slug: "voice" });
+    expect(track).toMatchObject({
+      slug: "voice",
+      title: "Track",
+      durationSec: 300,
+      narrators: ["Sage", "Wren"],
+      url: "https://r2.test/audio/s.m4a",
+      thumbUrl: "https://r2.test/thumb/s.webp",
+      showCrisisLine: false,
+    });
+    expect(track?.attributionText).toBeUndefined();
+    expect(track?.expiresAt).toBeGreaterThan(before);
+  });
+
+  it("carries verbatim attributionText only when the licence requires it", async () => {
+    const user = await asNewUser();
+    await seedRow(user, { slug: "m1", family: "music", topic: "music_topic_calm", licence });
+    await seedRow(user, {
+      slug: "m2",
+      family: "music",
+      topic: "music_topic_calm",
+      licence: { ...licence, attributionRequired: false },
+    });
+
+    expect((await user.t.query(api.paths.getBoundAudioTrack, { slug: "m1" }))?.attributionText).toBe(
+      "Music by Artist — Pixabay",
+    );
+    expect((await user.t.query(api.paths.getBoundAudioTrack, { slug: "m2" }))?.attributionText).toBeUndefined();
+  });
+
+  it("derives showCrisisLine from tier 4 server-side", async () => {
+    const user = await asNewUser();
+    await seedRow(user, { slug: "t4", tier: 4, safetyReviewedAt: 1 });
+    await seedRow(user, { slug: "t3", tier: 3, safetyReviewedAt: 1 });
+
+    expect((await user.t.query(api.paths.getBoundAudioTrack, { slug: "t4" }))?.showCrisisLine).toBe(true);
+    expect((await user.t.query(api.paths.getBoundAudioTrack, { slug: "t3" }))?.showCrisisLine).toBe(false);
+  });
+
+  it("is null for a retired or unknown slug", async () => {
+    const user = await asNewUser();
+    await seedRow(user, { slug: "gone", active: false });
+    expect(await user.t.query(api.paths.getBoundAudioTrack, { slug: "gone" })).toBeNull();
+    expect(await user.t.query(api.paths.getBoundAudioTrack, { slug: "nope" })).toBeNull();
+  });
+
+  it("never hands a free user a URL", async () => {
+    const user = await asNewUser();
+    await seedRow(user, { slug: "voice" });
+    stub.isPlus = false;
+    await expect(user.t.query(api.paths.getBoundAudioTrack, { slug: "voice" })).rejects.toThrow(/Xolace\+/);
   });
 });

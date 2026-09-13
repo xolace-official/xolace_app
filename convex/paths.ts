@@ -3,8 +3,9 @@ import { mutation, query } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
-import { hasPremium } from "./lib/premium";
+import { hasPremium, requirePremium } from "./lib/premium";
 import { posthog } from "./posthog";
+import { r2 } from "./ai/paths/audioTracks";
 
 /**
  * Kindling reads + twig state for the active-kindling screen
@@ -99,6 +100,67 @@ export const getActive = query({
       sessionId: path.sessionId,
       generatedAt: path.generatedAt,
       twigs,
+    };
+  },
+});
+
+/**
+ * One hour. A URL is only ever minted for a premium user already on the
+ * player, so a longer window costs nothing in exposure and covers a whole
+ * listen plus a pause; the client re-mints on resume past this
+ * (`useTrackPlayback`).
+ */
+const AUDIO_URL_TTL_SEC = 3600;
+
+/**
+ * A bound track's playable shape (docs/paths-v1.md §3.3) — the one read every
+ * player goes through, kindling twig or Browse. Premium-gated: a free user
+ * never receives a URL (§9.4). URLs are minted per request and `expiresAt`
+ * tells the client when to come back for a fresh one. `showCrisisLine` is
+ * derived here so no player re-derives the safety rule from `tier` (§8).
+ */
+export const getBoundAudioTrack = query({
+  args: { slug: v.string() },
+  returns: v.union(
+    v.null(),
+    v.object({
+      slug: v.string(),
+      family: v.union(v.literal("support"), v.literal("music")),
+      title: v.string(),
+      durationSec: v.number(),
+      narrators: v.optional(v.array(v.string())),
+      url: v.string(),
+      thumbUrl: v.string(),
+      expiresAt: v.number(),
+      attributionText: v.optional(v.string()),
+      showCrisisLine: v.boolean(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+    await requirePremium(ctx, profile, "audio playback");
+
+    const track = await ctx.db
+      .query("audio_tracks")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .unique();
+    if (!track || !track.active) return null;
+
+    const [url, thumbUrl] = await Promise.all([
+      r2.getUrl(track.key, { expiresIn: AUDIO_URL_TTL_SEC }),
+      r2.getUrl(track.thumbKey, { expiresIn: AUDIO_URL_TTL_SEC }),
+    ]);
+    return {
+      slug: track.slug,
+      family: track.family,
+      title: track.title,
+      durationSec: track.durationSec,
+      narrators: track.narrators,
+      url,
+      thumbUrl,
+      expiresAt: Date.now() + AUDIO_URL_TTL_SEC * 1000,
+      attributionText: track.licence?.attributionRequired ? track.licence.attributionText : undefined,
+      showCrisisLine: track.tier === 4,
     };
   },
 });
