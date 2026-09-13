@@ -4,6 +4,7 @@ import { CohortCard } from './cohort-card';
 import { DiscoveryHeader } from './discovery-header';
 import { DailyQuotesCard } from './daily-quotes-card';
 import { DiscoveryTimelineSection } from './discovery-timeline-section';
+import { KindlingTodayCard } from './kindling-today-card';
 import { DOCK_CLEARANCE, ReflectDock } from './reflect-dock';
 
 /**
@@ -26,6 +27,7 @@ export function DiscoveryScreen() {
           * so gap-3 read as almost nothing under him. */}
         <View className="gap-10 px-4 pt-10">
           <CohortCard />
+          <KindlingTodayCard />
           <DailyQuotesCard />
         </View>
 

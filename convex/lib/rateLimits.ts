@@ -70,6 +70,14 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // for both nudges plus a little headroom for a same-day supersede re-trigger.
   followUpAcute: { kind: "fixed window", rate: 3, period: DAY },
 
+  // kindling_ready (docs/paths-v1.md §10) — SEPARATE bucket for the same
+  // reason as followUpNudge: generation itself is already capped to one
+  // kindling per profile per day (pathsGenerate), so this only needs to
+  // survive the day's slot without being silently dropped by an unrelated
+  // gentle_return / pattern_nudge / milestone that already spent the shared
+  // `notification` bucket.
+  kindlingReady: { kind: "fixed window", rate: 1, period: DAY },
+
   // Resonance toggle abuse prevention
   resonanceToggle: { kind: "token bucket", rate: 20, period: MINUTE, capacity: 5 },
 

@@ -25,13 +25,17 @@ export type PrimerMode = 'gate' | 'reference' | null;
 export function useAskFlow({
   xolacerProfileId,
   displayName,
+  stepId,
 }: {
   xolacerProfileId: Id<'emotional_profiles'>;
   displayName: string;
+  /** Kindling twig that led here; tended once a request is actually sent. */
+  stepId?: Id<'path_steps'>;
 }) {
   const router = useRouter();
   const { toast } = useToast();
   const requestConversation = useMutation(api.xolacerChat.requestConversation);
+  const completeStep = useMutation(api.paths.completeStep);
   const primerSeen = useAppStore((s) => s.xolacerPrimerSeen);
   const setPrimerSeen = useAppStore((s) => s.setXolacerPrimerSeen);
   const [primerMode, setPrimerMode] = useState<PrimerMode>(null);
@@ -57,6 +61,9 @@ export function useAskFlow({
           posthog.capture('xolacer_primer_resolved', { outcome: 'sent' });
         }
         setPrimerMode(null);
+        // The conversation exists either way — a failed tend is not a failed
+        // ask, so it never surfaces. Server no-ops on an already-settled twig.
+        if (stepId) completeStep({ stepId }).catch(() => {});
         openThread(conversationId);
       })
       .catch((error: unknown) => {

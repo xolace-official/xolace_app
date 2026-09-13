@@ -12,10 +12,7 @@ export default function DiscoveryLayout() {
   return (
     <View className="flex-1 bg-background">
       <Stack
-        screenOptions={{
-          ...largeHeaderOptions,
-          contentStyle: { backgroundColor: 'transparent' },
-        }}
+        screenOptions={largeHeaderOptions}
       >
         <Stack.Screen name="index" options={DISCOVERY_OPTIONS} />
       </Stack>

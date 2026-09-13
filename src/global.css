@@ -158,6 +158,16 @@
     --tone-direct: oklch(68% 0.15 225);
     --tone-witnessed: oklch(72% 0.15 75);
 
+    /* Browse hub entry icons (#338) — fixed per-entry hues, same across
+     * every theme (like --tone-*), so Support audio / Music / Topics stay
+     * visually distinct without borrowing --accent. */
+    --browse-audio: oklch(70% 0.15 25 / 16%);
+    --browse-audio-foreground: oklch(70% 0.15 25);
+    --browse-music: oklch(68% 0.12 200 / 16%);
+    --browse-music-foreground: oklch(68% 0.12 200);
+    --browse-topics: oklch(72% 0.13 130 / 16%);
+    --browse-topics-foreground: oklch(72% 0.13 130);
+
     /* Event — monthly awareness marker */
     --event: oklch(60% 0.15 350);
     --event-foreground: oklch(99% 0.005 350);
@@ -292,6 +302,14 @@
     --tone-direct: oklch(72% 0.15 225);
     --tone-witnessed: oklch(76% 0.15 75);
 
+    /* Browse hub entry icons (#338) — same hues as light, bumped for dark */
+    --browse-audio: oklch(74% 0.15 25 / 14%);
+    --browse-audio-foreground: oklch(74% 0.15 25);
+    --browse-music: oklch(72% 0.12 200 / 14%);
+    --browse-music-foreground: oklch(72% 0.12 200);
+    --browse-topics: oklch(76% 0.13 130 / 14%);
+    --browse-topics-foreground: oklch(76% 0.13 130);
+
     /* Event — monthly awareness marker */
     --event: oklch(76% 0.12 350);
     --event-foreground: oklch(15% 0.01 350);
@@ -343,6 +361,13 @@
 @theme inline {
   --color-resonance: var(--resonance);
   --color-resonance-foreground: var(--resonance-foreground);
+
+  --color-browse-audio: var(--browse-audio);
+  --color-browse-audio-foreground: var(--browse-audio-foreground);
+  --color-browse-music: var(--browse-music);
+  --color-browse-music-foreground: var(--browse-music-foreground);
+  --color-browse-topics: var(--browse-topics);
+  --color-browse-topics-foreground: var(--browse-topics-foreground);
 
   --color-event: var(--event);
   --color-event-foreground: var(--event-foreground);

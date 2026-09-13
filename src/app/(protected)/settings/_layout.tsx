@@ -34,7 +34,6 @@ export default function SettingsLayout() {
   const screenOptions = {
     ...largeHeaderOptions,
     headerLeft: renderBackButton,
-    contentStyle: { backgroundColor: "transparent" },
   };
 
   return (

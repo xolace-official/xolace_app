@@ -55,5 +55,7 @@ export const useStablePaginatedQuery = ((name, ...args) => {
     stored.current = result;
   }
 
-  return stored.current;
+  // `isLoading` stays live: the held page/status masks the in-flight fetch,
+  // and a list still needs to know when to show its footer spinner.
+  return { ...stored.current, isLoading: result.isLoading };
 }) as typeof usePaginatedQuery;

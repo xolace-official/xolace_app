@@ -252,3 +252,64 @@ export const resetIntake = mutation({
     return null;
   },
 });
+
+/**
+ * Seed an active kindling on a completed session so the kindling screen
+ * (#333) can be exercised without a qualifying Plus session. Archives any
+ * active one first, like the real writer does.
+ *   bunx convex run devTools:seedKindling '{"sessionId":"..."}'
+ */
+export const seedKindling = internalMutation({
+  args: { sessionId: v.id("sessions") },
+  returns: v.id("paths"),
+  handler: async (ctx, args) => {
+    assertDevToolsEnabled();
+    const session = await ctx.db.get("sessions", args.sessionId);
+    if (!session) throw new Error("No such session");
+    const emotionalProfileId = session.emotionalProfileId;
+
+    const previous = await ctx.db
+      .query("paths")
+      .withIndex("by_profile_and_status", (q) =>
+        q.eq("emotionalProfileId", emotionalProfileId).eq("status", "active"),
+      )
+      .take(10);
+    for (const p of previous) await ctx.db.patch("paths", p._id, { status: "replaced" });
+
+    const pathId = await ctx.db.insert("paths", {
+      emotionalProfileId,
+      sessionId: session._id,
+      status: "active",
+      model: "qa-seed",
+      modelVersion: "qa-seed",
+      generatedAt: Date.now(),
+    });
+    const track = await ctx.db.query("audio_tracks").first();
+    const twigs = [
+      {
+        actionType: "breathing",
+        order: 1,
+        why: "You said it was hard to catch your breath. Take a few slow rounds here.",
+        params: { exercise: "sit-with-this" },
+      },
+      ...(track
+        ? [{
+            actionType: track.topic,
+            order: 2,
+            why: "The quiet came up more than once. Here's something soft to fill it.",
+            params: { slug: track.slug },
+          }]
+        : []),
+      {
+        actionType: "xolacer",
+        order: 3,
+        why: "Feeling alone kept coming up. A xolacer who's felt the same is around.",
+        params: { specialty: "burnout" },
+      },
+    ];
+    for (const t of twigs) {
+      await ctx.db.insert("path_steps", { pathId, ...t, state: "pending" });
+    }
+    return pathId;
+  },
+});

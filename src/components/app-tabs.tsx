@@ -39,6 +39,15 @@ export default function AppTabs() {
         />
         <NativeTabs.Trigger.Label>Discovery</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
+      {/* Catalogue browse (#338, docs/paths-v1.md §9.3) — the one override of
+        * the no-new-tab map rule (map decision 19), and only for this tab. */}
+      <NativeTabs.Trigger name="browse">
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' }}
+          md="grid_view"
+        />
+        <NativeTabs.Trigger.Label>Browse</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="connect">
         <NativeTabs.Trigger.Icon
           sf={{ default: 'bubble.left.and.bubble.right', selected: 'bubble.left.and.bubble.right.fill' }}

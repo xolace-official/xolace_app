@@ -15,6 +15,35 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-09-13 — iOS 18: pushed Stack screens look "laggy" — the previous screen ghosts through them for the whole transition
+
+**Symptom**
+On an iPhone XR (iOS 18.6, dev build) every push inside the Browse tab — Music / Support audio / Topics / a topic — felt laggy: the incoming list sat at its final position while the hub's entry icons and "FEATURED THIS WEEK" text were visible *through* it, and the hub stayed parked at its −30 % parallax spot for a beat before vanishing. Other screens the reporter tried (quotes archive) were fine.
+
+**Where it appeared**
+iOS 18 only. Never reproduced on the iOS 26 simulator, light or dark theme, which is where all the initial profiling happened. Reproduced 1/1 on an iPhone 16 Pro / iOS 18.6 simulator running the same dev `.app`.
+
+**Root cause**
+Every Stack layout that spreads `useLargeHeaderOptions()` also set `contentStyle: { backgroundColor: 'transparent' }` (six layouts + the root protected Stack), relying on the wrapping `<View className="bg-background">` to paint. On iOS 26 react-native-screens paints a pushed screen opaque regardless; on iOS 18 it honours the transparent content style literally, so during a push the *outgoing* screen shows through the incoming one until UIKit finishes the transition (~470 ms of ghost frames at 30 fps on the sim, longer on an XR). The quotes archive was immune because it lives under the root Stack with `headerShown: false` and its own opaque surface.
+
+**How we diagnosed it**
+1. React profiler (argent) on the iOS 26 sim across three Browse → Music pushes: ~35–96 ms nav-tree commit + ~40 ms `TrackRow` mount per push, identical every time — real, but not device- or screen-specific, so not this bug.
+2. 30 fps screen recording of the push on iOS 26, frames tiled with ffmpeg: clean opaque slide. No repro.
+3. Reporter's answers re-ranked the list: dev build, *every* time, every Browse sub-screen, XR / iOS 18.6, archive fine → ruled out lazy bundles and the generic nav-tree cost; pointed at the iOS-18-only header path (`headerBlurEffect`, no liquid glass) or the transparent content style.
+4. Booted an iOS 18.6 simulator, installed the DerivedData dev `.app`, reporter signed in, re-recorded the same push: 14 ghost frames matching the phone screenshot exactly.
+5. Set `contentStyle` to the theme background on the Browse Stack only, re-recorded: clean slide, ghost gone. Then generalised to the shared hook.
+
+**Fix**
+`src/lib/navigation-options.tsx` — `useLargeHeaderOptions()` now returns `contentStyle: { backgroundColor }` (theme background) on both platforms, and the six layouts that spread it no longer override it with `transparent`. Side fix: `topic-grid-screen.tsx` was the one LegendList without `recycleItems` (the console warning).
+
+**Prevention / future reference**
+- **A pushed native-stack screen must have an opaque `contentStyle` on iOS 18.** A `bg-background` wrapper View around the Stack does not paint the screen itself. If a push "lags" or shows the previous screen through the new one, check `contentStyle` before profiling JS.
+- Anything header/transition-related must be verified on an **iOS 18 simulator** as well as 26 — `isLiquidGlassAvailable()` forks the header config, and RNS paints screens differently between the two.
+- Cheapest loop for transition bugs: `screen-recording-start` (trimStatic off) → push → stop → `ffmpeg -ss <tap offset> fps=30` → tile the frames. One picture beats twenty screenshots.
+- Still open, separate: the list's first Convex page lands ~250 ms after mount, so on a slow link the screen slides in empty and the rows pop. Not this bug; a skeleton or warm-up subscription would hide it.
+
+---
+
 ## 2026-09-10 — Hitting the session rate limit hard-crashes the app instead of showing the rate-limit screen
 
 **Symptom**

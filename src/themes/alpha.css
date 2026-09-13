@@ -50,6 +50,12 @@
       --tone-gentle: oklch(68% 0.17 15);
       --tone-direct: oklch(68% 0.15 225);
       --tone-witnessed: oklch(72% 0.15 75);
+      --browse-audio: oklch(70% 0.17 35 / 16%);
+      --browse-audio-foreground: oklch(70% 0.17 35);
+      --browse-music: oklch(68% 0.15 245 / 16%);
+      --browse-music-foreground: oklch(68% 0.15 245);
+      --browse-topics: oklch(72% 0.15 120 / 16%);
+      --browse-topics-foreground: oklch(72% 0.15 120);
 
       /* Event — monthly awareness marker */
       --event: oklch(60% 0.15 350);
@@ -140,6 +146,12 @@
       --tone-gentle: oklch(72% 0.17 15);
       --tone-direct: oklch(72% 0.15 225);
       --tone-witnessed: oklch(76% 0.15 75);
+      --browse-audio: oklch(74% 0.17 35 / 14%);
+      --browse-audio-foreground: oklch(74% 0.17 35);
+      --browse-music: oklch(72% 0.15 245 / 14%);
+      --browse-music-foreground: oklch(72% 0.15 245);
+      --browse-topics: oklch(76% 0.15 120 / 14%);
+      --browse-topics-foreground: oklch(76% 0.15 120);
 
       /* Event — monthly awareness marker */
       --event: oklch(76% 0.12 350);

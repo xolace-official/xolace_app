@@ -53,7 +53,11 @@ const userResponseValidator = v.union(
 
 // Active = a card whose lifecycle is still owned by a live workflow.
 // Exported for lib/sessionCascade, which purges cards per-session.
-export const ACTIVE_STATUSES = new Set(["pending", "ready", "shown"]);
+export const ACTIVE_STATUSES = new Set<Doc<"follow_up_cards">["status"]>([
+  "pending",
+  "ready",
+  "shown",
+]);
 
 /**
  * Cancel a card's workflow, tolerating an already-terminal one.

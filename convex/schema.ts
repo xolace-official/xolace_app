@@ -1147,6 +1147,10 @@ export default defineSchema({
       v.literal("milestone"), // "30 days of showing up"
       v.literal("affirmation"), // "Being tired doesn't mean you're failing."
       v.literal("follow_up"), // Follow-up nudge for a specific unresolved session.
+      // Kindling is ready (docs/paths-v1.md §10). Deliberately not a
+      // `reachUsed` value — kindling is its own notification type, not a
+      // Reach variant, and always sends in one voice.
+      v.literal("kindling_ready"),
     ),
 
     // AI-generated, contextual notification text.
@@ -2058,6 +2062,7 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_family_and_topic", ["family", "topic"])
+    .index("by_family_and_active", ["family", "active"]) // Browse per-family list (#339)
     .index("by_thumbKey", ["thumbKey"]),
 
   // ===========================================================

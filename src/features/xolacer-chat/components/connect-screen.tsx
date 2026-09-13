@@ -47,10 +47,13 @@ export function ConnectScreen({
   specialty,
   view,
   navToken,
+  stepId,
 }: {
   specialty?: string;
   view?: string;
   navToken?: string;
+  /** Kindling twig that sent us — carried to the profile, tended on request. */
+  stepId?: string;
 }) {
   const router = useRouter();
   const status = useQuery(api.xolacerChat.status);
@@ -218,6 +221,7 @@ export function ConnectScreen({
                 conversations={conversations ?? []}
                 filter={filter}
                 onFilterChange={setFilter}
+                stepId={stepId}
               />
             )}
           </>

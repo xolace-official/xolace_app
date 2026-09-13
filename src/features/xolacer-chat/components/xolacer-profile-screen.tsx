@@ -64,9 +64,12 @@ const CHEVRON_ICON = {
 export function XolacerProfileScreen({
   profileId,
   specialty,
+  stepId,
 }: {
   profileId: string;
   specialty?: string;
+  /** Kindling twig that led here — tended once a request is sent. */
+  stepId?: string;
 }) {
   const profile = useQuery(api.xolacerChat.xolacerProfile, {
     xolacerProfileId: profileId as Id<'emotional_profiles'>,
@@ -74,10 +77,18 @@ export function XolacerProfileScreen({
 
   if (profile === undefined) return <ProfileSkeleton />;
   if (profile === null) return <ProfileUnavailable />;
-  return <ProfileBody profile={profile} specialty={specialty} />;
+  return <ProfileBody profile={profile} specialty={specialty} stepId={stepId} />;
 }
 
-function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: string }) {
+function ProfileBody({
+  profile,
+  specialty,
+  stepId,
+}: {
+  profile: Profile;
+  specialty?: string;
+  stepId?: string;
+}) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
@@ -91,6 +102,7 @@ function ProfileBody({ profile, specialty }: { profile: Profile; specialty?: str
   } = useAskFlow({
     xolacerProfileId: profile.xolacerProfileId,
     displayName: profile.displayName,
+    stepId: stepId as Id<'path_steps'> | undefined,
   });
 
   const { conversation } = profile;
