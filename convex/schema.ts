@@ -2062,6 +2062,7 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_family_and_topic", ["family", "topic"])
+    .index("by_family_and_active", ["family", "active"]) // Browse per-family list (#339)
     .index("by_thumbKey", ["thumbKey"]),
 
   // ===========================================================

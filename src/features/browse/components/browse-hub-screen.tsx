@@ -80,12 +80,12 @@ export function BrowseHubScreen() {
       {featured && shelf && shelf.length > 0 && (
         <>
           <View className="px-4 pt-8">
-            <AppText className="text-muted-foreground text-[13px] font-semibold uppercase tracking-wide">
+            <AppText className="text-muted text-[13px] font-semibold uppercase tracking-wide">
               Featured this week
             </AppText>
             <AppText className="mt-0.5 text-2xl font-bold">{featured.title}</AppText>
             {featured.attribution && (
-              <AppText className="text-muted-foreground mb-3 text-[15px]">{featured.attribution}</AppText>
+              <AppText className="text-muted mb-3 text-[15px]">{featured.attribution}</AppText>
             )}
             <Image
               source={{ uri: featured.thumbUrl }}
@@ -106,7 +106,7 @@ export function BrowseHubScreen() {
                   {item.title}
                 </AppText>
                 {item.attribution && (
-                  <AppText className="text-muted-foreground text-xs" numberOfLines={1}>
+                  <AppText className="text-muted text-xs" numberOfLines={1}>
                     {item.attribution}
                   </AppText>
                 )}
