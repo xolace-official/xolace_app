@@ -58,6 +58,7 @@ import type * as ai_slotFill from "../ai/slotFill.js";
 import type * as ai_tts from "../ai/tts.js";
 import type * as ai_ventAcknowledge from "../ai/ventAcknowledge.js";
 import type * as avatars from "../avatars.js";
+import type * as browse from "../browse.js";
 import type * as chatNotifications from "../chatNotifications.js";
 import type * as cohort from "../cohort.js";
 import type * as consent from "../consent.js";
@@ -202,6 +203,7 @@ declare const fullApi: ApiFromModules<{
   "ai/tts": typeof ai_tts;
   "ai/ventAcknowledge": typeof ai_ventAcknowledge;
   avatars: typeof avatars;
+  browse: typeof browse;
   chatNotifications: typeof chatNotifications;
   cohort: typeof cohort;
   consent: typeof consent;
