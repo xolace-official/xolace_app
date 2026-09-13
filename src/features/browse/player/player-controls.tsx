@@ -53,7 +53,7 @@ export function VolumeRow({ value, onChange }: { value: number; onChange: (v: nu
         className="flex-1"
         accessibilityLabel="Volume"
       >
-        <Slider.Track className="h-2.5 rounded-full bg-player-ink/25">
+        <Slider.Track className="h-1.25 rounded-full bg-player-ink/25">
           <Slider.Fill className="rounded-full bg-player-ink" />
           <Slider.Thumb className="h-4 w-4 bg-player-ink" />
         </Slider.Track>
