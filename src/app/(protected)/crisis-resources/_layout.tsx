@@ -25,7 +25,6 @@ export default function CrisisResourcesLayout() {
   const screenOptions = {
     ...largeHeaderOptions,
     headerLeft: renderBackButton,
-    contentStyle: { backgroundColor: 'transparent' },
   };
 
   return (

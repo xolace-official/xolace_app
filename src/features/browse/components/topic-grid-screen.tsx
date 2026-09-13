@@ -44,6 +44,7 @@ export function TopicGridScreen() {
     <LegendList
       data={topics ?? []}
       numColumns={2}
+      recycleItems
       keyExtractor={keyExtractor}
       estimatedItemSize={tile + 48}
       contentInsetAdjustmentBehavior="automatic"

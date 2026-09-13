@@ -11,10 +11,7 @@ export default function ConnectLayout() {
   return (
     <View className="flex-1 bg-background">
       <Stack
-        screenOptions={{
-          ...largeHeaderOptions,
-          contentStyle: { backgroundColor: 'transparent' },
-        }}
+        screenOptions={largeHeaderOptions}
       >
         <Stack.Screen name="index" options={CONNECT_OPTIONS} />
         <Stack.Screen name="archived" options={ARCHIVED_OPTIONS} />

@@ -19,6 +19,7 @@ export function useLargeHeaderOptions(): NativeStackNavigationOptions {
       headerTintColor,
       headerStyle: { backgroundColor },
       headerShadowVisible: false,
+      contentStyle: { backgroundColor },
     };
   }
 
@@ -26,6 +27,11 @@ export function useLargeHeaderOptions(): NativeStackNavigationOptions {
 
   return {
     headerTintColor,
+    // Opaque, not transparent: on iOS 18 (no liquid glass) react-native-screens
+    // honours a transparent contentStyle literally, so the outgoing screen
+    // bleeds through the pushed one for the whole transition — it reads as a
+    // laggy/ghosted push on an iPhone XR. iOS 26 paints it opaque regardless.
+    contentStyle: { backgroundColor },
     headerTransparent: true,
     headerBlurEffect: !isGlassAvailable
       ? isDark

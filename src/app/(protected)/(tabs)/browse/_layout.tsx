@@ -12,10 +12,7 @@ export default function BrowseLayout() {
   return (
     <View className="flex-1 bg-background">
       <Stack
-        screenOptions={{
-          ...largeHeaderOptions,
-          contentStyle: { backgroundColor: 'transparent' },
-        }}
+        screenOptions={largeHeaderOptions}
       >
         <Stack.Screen name="index" options={BROWSE_OPTIONS} />
         <Stack.Screen name="list" options={SUB_OPTIONS} />
