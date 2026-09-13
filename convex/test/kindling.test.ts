@@ -107,6 +107,26 @@ async function seedQualifying(
   return sessionId;
 }
 
+/** Flip the notifications master switch, as token registration does. */
+async function setNotifications(user: SeededUser, enabled: boolean) {
+  await user.root.run(async (ctx) => {
+    const prefs = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", user.profileId))
+      .unique();
+    await ctx.db.patch("preferences", prefs!._id, {
+      notifications: { ...prefs!.notifications, enabled },
+    });
+  });
+}
+
+/** A new user's master switch is off until a push token registers. */
+async function asNotifiableUser() {
+  const user = await asNewUser();
+  await setNotifications(user, true);
+  return user;
+}
+
 const generate = (user: SeededUser, sessionId: Id<"sessions">) =>
   user.root.action(internal.ai.paths.generate.run, {
     sessionId,
@@ -329,7 +349,7 @@ const readNotifications = (user: SeededUser) =>
 
 describe("the kindling_ready notification (#335)", () => {
   it("fires only after the kindling is written, deep-linking via type alone", async () => {
-    const user = await asNewUser();
+    const user = await asNotifiableUser();
     await generate(user, await seedQualifying(user));
 
     const [log] = await readNotifications(user);
@@ -340,7 +360,7 @@ describe("the kindling_ready notification (#335)", () => {
 
   it("sends nothing when generation no-ships", async () => {
     stub.reply = JSON.stringify([twig("breathing", 1)]);
-    const user = await asNewUser();
+    const user = await asNotifiableUser();
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     await generate(user, await seedQualifying(user));
@@ -349,8 +369,19 @@ describe("the kindling_ready notification (#335)", () => {
     expect(sentPushes).toEqual([]);
   });
 
+  it("sends nothing when the user has notifications disabled", async () => {
+    const user = await asNotifiableUser();
+    const sessionId = await seedQualifying(user);
+    await setNotifications(user, false);
+
+    await generate(user, sessionId);
+
+    expect(await readNotifications(user)).toEqual([]);
+    expect(sentPushes).toEqual([]);
+  });
+
   it("suppresses for a user dormant 30+ days, logging the existing reason", async () => {
-    const user = await asNewUser();
+    const user = await asNotifiableUser();
     const sessionId = await seedQualifying(user);
     await user.root.run(async (ctx) => {
       await ctx.db.patch("emotional_profiles", user.profileId, {
@@ -370,7 +401,7 @@ describe("the kindling_ready notification (#335)", () => {
   });
 
   it("suppresses while an escalation-derived follow-up is active", async () => {
-    const user = await asNewUser();
+    const user = await asNotifiableUser();
     const sessionId = await seedQualifying(user);
     await user.root.run(async (ctx) => {
       await ctx.db.insert("follow_up_cards", {
@@ -396,8 +427,35 @@ describe("the kindling_ready notification (#335)", () => {
     expect(sentPushes).toEqual([]);
   });
 
+  it("suppresses while a superseded escalation-derived follow-up is unresolved", async () => {
+    const user = await asNotifiableUser();
+    const sessionId = await seedQualifying(user);
+    await user.root.run(async (ctx) => {
+      await ctx.db.insert("follow_up_cards", {
+        emotionalProfileId: user.profileId,
+        sessionId,
+        workflowId: "wf1" as WorkflowId,
+        tier: "acute",
+        cardText: "still here",
+        escalationDerived: true,
+        status: "superseded",
+        createdAt: Date.now(),
+      });
+    });
+
+    await generate(user, sessionId);
+
+    const [log] = await readNotifications(user);
+    expect(log).toMatchObject({
+      type: "kindling_ready",
+      delivered: false,
+      suppressedReason: "escalation_active",
+    });
+    expect(sentPushes).toEqual([]);
+  });
+
   it("is not starved by the shared notification bucket already being spent today", async () => {
-    const user = await asNewUser();
+    const user = await asNotifiableUser();
     const sessionId = await seedQualifying(user);
     // Spend the shared `notification` bucket, as a gentle_return/pattern_nudge/
     // milestone push earlier the same day would.
@@ -419,7 +477,7 @@ describe("the kindling_ready notification (#335)", () => {
   });
 
   it("does not suppress for a resolved (non-active) follow-up card", async () => {
-    const user = await asNewUser();
+    const user = await asNotifiableUser();
     const sessionId = await seedQualifying(user);
     await user.root.run(async (ctx) => {
       await ctx.db.insert("follow_up_cards", {

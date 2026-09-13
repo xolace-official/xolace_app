@@ -32,12 +32,24 @@ export const notifyReady = internalMutation({
     const now = Date.now();
     const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
 
+    // Master switch off: skip silently, the same way the cron nudges and
+    // follow-ups do — a disabled preference is not a suppression to log.
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", args.emotionalProfileId))
+      .unique();
+    if (!preferences?.notifications.enabled) return null;
+
     const dormant =
       !!profile?.lastSessionAt && now - profile.lastSessionAt > INACTIVE_THRESHOLD_MS;
 
+    // A superseded card stays visible until the user dismisses it (schema),
+    // so it still counts as an unresolved escalation here.
+    const UNRESOLVED_STATUSES = [...ACTIVE_STATUSES, "superseded" as const];
+
     let escalationActive = false;
     if (!dormant) {
-      for (const status of ACTIVE_STATUSES) {
+      for (const status of UNRESOLVED_STATUSES) {
         const card = await ctx.db
           .query("follow_up_cards")
           .withIndex("by_profile_status", (q) =>
