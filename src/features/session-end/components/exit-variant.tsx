@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { Button, LinkButton } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { CloseOffer } from "@/src/features/session-end/components/close-offer";
+import { KindlingCloseSlot } from "@/src/features/session-end/components/kindling-close-slot";
 import type { Id } from "@/convex/_generated/dataModel";
 import { NIGHT_SESSION_END_EXIT } from "@/src/features/reflect/night-copy";
 
@@ -112,6 +113,7 @@ export const ExitVariant = ({
               onBridge={onCompleteAndBridge}
               variant="exit"
             />
+            <KindlingCloseSlot sessionId={sessionId} />
 
             <Button
               variant="ghost"

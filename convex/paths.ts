@@ -1,11 +1,13 @@
 import { ConvexError, v } from "convex/values";
+import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { requireAuth } from "./lib/auth";
+import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { hasPremium, requirePremium } from "./lib/premium";
 import { posthog } from "./posthog";
 import { r2 } from "./ai/paths/audioTracks";
+import type { Understanding } from "./understanding";
 
 /**
  * Kindling reads + twig state for the active-kindling screen
@@ -101,6 +103,27 @@ export const getActive = query({
       generatedAt: path.generatedAt,
       twigs,
     };
+  },
+});
+
+/**
+ * Whether this session's `supportNeed` is light/active — the same grade
+ * `generate.run` gates on (§1), read here so session-end's slot only fires on
+ * a genuine trigger moment. Deliberately tier-blind: ADR 0009's free-user
+ * upsell is scoped to "a qualifying session," not every session-end, so both
+ * the premium pending beat and the free upsell read this one flag and the
+ * caller picks the copy from its own premium status.
+ */
+export const isKindlingQualifyingSession = query({
+  args: { sessionId: v.id("sessions") },
+  returns: v.boolean(),
+  handler: async (ctx, args): Promise<boolean> => {
+    const { session } = await requireSessionOwnership(ctx, args.sessionId);
+    const understanding: Understanding | null = await ctx.runQuery(
+      internal.understanding.getUnderstanding,
+      { sessionId: session._id },
+    );
+    return understanding?.supportNeed === "light" || understanding?.supportNeed === "active";
   },
 });
 

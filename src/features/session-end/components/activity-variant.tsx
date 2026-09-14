@@ -10,6 +10,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { CloseOffer } from "@/src/features/session-end/components/close-offer";
+import { KindlingCloseSlot } from "@/src/features/session-end/components/kindling-close-slot";
 import { Presets } from "react-native-pulsar";
 import { ContributedConfirmation } from "@/src/features/session-end/components/contributed-confirmation";
 import { HeavierFeedbackPrompt } from "@/src/features/session-end/components/heavier-feedback-prompt";
@@ -337,6 +338,7 @@ export const ActivityVariant = ({
               }
               variant="activity"
             />
+            <KindlingCloseSlot sessionId={sessionId} />
             <Button
               variant="ghost"
               size="lg"

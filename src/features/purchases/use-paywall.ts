@@ -32,7 +32,11 @@ export type PaywallSurface =
   // A free user's tap on a Browse track row (#340, §9.4) — the tap opens the
   // paywall instead of the player. The track's slug rides on the
   // browse_paywall_* events, not here.
-  | "browse";
+  | "browse"
+  // Session-end's free-user upsell line (docs/paths-v1.md §12, #337). Fixed
+  // contract slot, not one of the five ranked proactive moments — no cooldown,
+  // shown every qualifying session.
+  | "kindling";
 
 type PaywallState = {
   open: (surface: PaywallSurface) => void;

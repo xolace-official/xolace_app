@@ -42,4 +42,6 @@ export const PAYWALL_SURFACE_FEATURE: Record<PaywallSurface, PaywallFeatureId | 
   mirror_landed: "insights",
   profile_insight: "insights",
   browse: "audio",
+  // Kindling binds to curated audio/music twigs (docs/paths-v1.md §0).
+  kindling: "audio",
 };
