@@ -117,9 +117,11 @@ export function useTrackPlayback(
   useEffect(() => {
     if (!status.didJustFinish || completed.current || !options.stepId) return;
     completed.current = true;
-    completeStep({ stepId: options.stepId }).catch((e) =>
-      console.error('[useTrackPlayback] completeStep failed:', e),
-    );
+    completeStep({ stepId: options.stepId }).catch((e) => {
+      // Let the next natural finish retry; a successful tend stays latched.
+      completed.current = false;
+      console.error('[useTrackPlayback] completeStep failed:', e);
+    });
   }, [status.didJustFinish, options.stepId, completeStep]);
 
   /**
