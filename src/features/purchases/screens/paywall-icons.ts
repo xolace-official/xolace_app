@@ -39,3 +39,8 @@ export const CAPS_ICON: CrossPlatformSymbol = {
   android: "bolt",
   web: "bolt",
 };
+export const AUDIO_ICON: CrossPlatformSymbol = {
+  ios: "headphones",
+  android: "headphones",
+  web: "headphones",
+};

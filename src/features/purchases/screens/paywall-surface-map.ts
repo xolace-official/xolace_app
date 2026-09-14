@@ -8,7 +8,8 @@ export type PaywallFeatureId =
   | "timeline"
   | "mirror_tone"
   | "quotes"
-  | "caps";
+  | "caps"
+  | "audio";
 
 /**
  * Which feature row to visually highlight, keyed by the surface that opened
@@ -40,6 +41,5 @@ export const PAYWALL_SURFACE_FEATURE: Record<PaywallSurface, PaywallFeatureId | 
   session_close: "insights",
   mirror_landed: "insights",
   profile_insight: "insights",
-  // Kindling audio has no feature row yet — the locked track is its own pitch.
-  browse: null,
+  browse: "audio",
 };

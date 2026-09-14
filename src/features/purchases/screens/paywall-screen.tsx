@@ -29,6 +29,7 @@ import {
   AVATARS_ICON,
   TIMELINE_ICON,
   CAPS_ICON,
+  AUDIO_ICON,
 } from "./paywall-icons";
 
 // Fallback display prices while offerings are unavailable
@@ -203,6 +204,13 @@ export function PaywallScreen({ surface, onExit }: Props) {
               title="Personalized quotes"
               description="Your own words, handed back — and kept, in an archive that's yours"
               isHighlighted={highlightedFeature === "quotes"}
+            />
+            <PaywallFeatureItem
+              id="audio"
+              icon={AUDIO_ICON}
+              title="Full audio catalog"
+              description="Every guided track and song in the library, unlocked"
+              isHighlighted={highlightedFeature === "audio"}
             />
           </PaywallFeatureSection>
 
