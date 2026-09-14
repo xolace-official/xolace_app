@@ -100,6 +100,28 @@ describe("browse.getTopics", () => {
     expect(topics[0].title).toBe("Calm peace");
     expect(topics[1].thumbUrl).toBe("https://r2.test/thumb/s1.webp");
   });
+
+  it("uses a topic row's cover and title when present, first-track fallback otherwise (#353)", async () => {
+    const user = await asNewUser();
+    await seed(user, [
+      base("s1", "support", "audio_topic_sadness"),
+      base("m3", "music", "music_topic_calm_peace"),
+      base("s5", "support", "audio_topic_anxiety"),
+      base("s9", "support", "audio_topic_grief", { active: false }),
+    ]);
+    await user.root.run(async (ctx) => {
+      await ctx.db.insert("topics", { slug: "sadness", title: "Feeling low", thumbKey: "thumb/sad.webp", thumbSha256: "sad" });
+      await ctx.db.insert("topics", { slug: "calm_peace", thumbKey: "thumb/calm.webp", thumbSha256: "calm" });
+      await ctx.db.insert("topics", { slug: "grief", thumbKey: "thumb/grief.webp", thumbSha256: "grief" });
+    });
+
+    const topics = await user.t.query(api.browse.getTopics, {});
+    expect(topics.map((t) => [t.slug, t.title, t.thumbUrl])).toEqual([
+      ["anxiety", "Anxiety", "https://r2.test/thumb/s5.webp"],
+      ["calm_peace", "Calm peace", "https://r2.test/thumb/calm.webp"],
+      ["sadness", "Feeling low", "https://r2.test/thumb/sad.webp"],
+    ]);
+  });
 });
 
 describe("browse.getTopic", () => {

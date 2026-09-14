@@ -40,4 +40,6 @@ export const PAYWALL_SURFACE_FEATURE: Record<PaywallSurface, PaywallFeatureId | 
   session_close: "insights",
   mirror_landed: "insights",
   profile_insight: "insights",
+  // Kindling audio has no feature row yet — the locked track is its own pitch.
+  browse: null,
 };

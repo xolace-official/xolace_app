@@ -3,11 +3,19 @@
 // Uploads local audio + thumbnail files to R2 and upserts their rows into
 // `audio_tracks`. Idempotent — safe to re-run the whole manifest.
 //
+// Topic art (#354): `topics.json` beside the manifest holds
+// `[{ slug, title?, thumbPath, thumbSha256 }]` and is ingested as a first
+// pass into `topics` via `upsertTopic`. Covers follow the track-thumbnail
+// spec — square ~600×600, ≤ 80 KB WebP/JPEG — and share the content-addressed
+// `thumb/<sha>.<ext>` key space. A cover whose key already backs the slug's
+// row is not re-uploaded, so a title-only edit is cheap; an unknown slug is
+// rejected by the mutation and leaves no row or blob behind.
+//
 // Usage:
 //   bun scripts/kindling/ingest.ts --update-hashes   # fill in sha256 fields from local files
 //   bun scripts/kindling/ingest.ts                    # upload + upsert
 //   bun scripts/kindling/ingest.ts --prod             # target the prod deployment/bucket
-//   bun scripts/kindling/ingest.ts --manifest scripts/kindling/dev-manifest.json
+//   bun scripts/kindling/ingest.ts --manifest scripts/kindling/dev-manifest.json   # topics.json is read from the same dir
 //
 // Drives Convex via the local `convex` CLI (reuses your existing CLI login — no new secret).
 
@@ -40,6 +48,7 @@ type SupportTrack = SharedFields & {
 };
 type MusicTrack = SharedFields & { family: "music"; licence: Record<string, unknown> };
 type ManifestTrack = SupportTrack | MusicTrack;
+type ManifestTopic = { slug: string; title?: string; thumbPath: string; thumbSha256: string };
 
 const args = process.argv.slice(2);
 const flag = (name: string, fallback: string) => {
@@ -49,6 +58,7 @@ const flag = (name: string, fallback: string) => {
 const prod = args.includes("--prod");
 const updateHashes = args.includes("--update-hashes");
 const manifestPath = path.resolve(flag("manifest", "scripts/kindling/manifest.json"));
+const topicsPath = path.join(path.dirname(manifestPath), "topics.json");
 const mediaDir = path.resolve(flag("media", "scripts/kindling/media"));
 const CONCURRENCY = 5;
 const UPLOAD_TIMEOUT_MS = 10 * 60_000; // audio files can be tens of MB
@@ -85,7 +95,7 @@ async function putFile(url: string, filePath: string): Promise<void> {
   if (!res.ok) throw new Error(`upload failed (${res.status}): ${filePath}`);
 }
 
-async function ingestOne(track: ManifestTrack): Promise<void> {
+async function ingestOne(track: ManifestTrack, sharedThumbKeys: Set<string>): Promise<void> {
   if (track.family === "support" && (track.tier ?? 0) >= 3 && !track.safetyReviewedAt) {
     throw new Error(`tier ${track.tier} requires safetyReviewedAt`);
   }
@@ -108,11 +118,47 @@ async function ingestOne(track: ManifestTrack): Promise<void> {
     console.log(`${track.slug}: ${result.action}`);
   } catch (err) {
     // Blobs from this attempt are orphans; deleting a key that was never
-    // uploaded is a no-op, and the thumb survives if a live row shares it.
+    // uploaded is a no-op. A thumbKey shared with another manifest entry is
+    // left alone — a concurrent worker may be mid-upload to it and not yet
+    // have a row referencing it, so deleting here would race it (#354);
+    // an unreferenced shared blob is a harmless orphan for GC, not a bug.
     try {
-      convexRun("ai/paths/audioTracks:discardUpload", { audioKey, thumbKey });
+      convexRun("ai/paths/audioTracks:discardUpload", {
+        audioKey,
+        thumbKey: sharedThumbKeys.has(thumbKey) ? undefined : thumbKey,
+      });
     } catch (cleanupErr) {
       console.error(`${track.slug}: cleanup failed — ${(cleanupErr as Error).message}`);
+    }
+    throw err;
+  }
+}
+
+async function ingestTopic(
+  topic: ManifestTopic,
+  liveThumbKeys: Record<string, string>,
+  sharedThumbKeys: Set<string>,
+): Promise<void> {
+  const thumbKey = `thumb/${topic.thumbSha256}.${ext(topic.thumbPath)}`;
+  const uploaded = liveThumbKeys[topic.slug] !== thumbKey;
+  try {
+    if (uploaded) {
+      const upload = convexRun("ai/paths/audioTracks:mintUploadUrl", { key: thumbKey });
+      await putFile(upload.url, path.resolve(mediaDir, topic.thumbPath));
+    }
+    const { thumbPath: _thumbPath, ...rest } = topic;
+    const result = convexRun("ai/paths/audioTracks:upsertTopic", { topic: { ...rest, thumbKey } });
+    console.log(`topic ${topic.slug}: ${result.action}`);
+  } catch (err) {
+    if (!uploaded) throw err;
+    // See the matching comment in ingestOne — don't race a concurrent
+    // worker uploading to the same content-addressed key.
+    if (!sharedThumbKeys.has(thumbKey)) {
+      try {
+        convexRun("ai/paths/audioTracks:discardUpload", { thumbKey });
+      } catch (cleanupErr) {
+        console.error(`topic ${topic.slug}: cleanup failed — ${(cleanupErr as Error).message}`);
+      }
     }
     throw err;
   }
@@ -130,6 +176,7 @@ async function pool<T>(items: T[], limit: number, worker: (item: T) => Promise<v
 
 async function main() {
   const manifest: ManifestTrack[] = JSON.parse(readFileSync(manifestPath, "utf8"));
+  const topics: ManifestTopic[] = JSON.parse(readFileSync(topicsPath, "utf8"));
 
   if (updateHashes) {
     for (const track of manifest) {
@@ -137,16 +184,41 @@ async function main() {
       track.thumbSha256 = await sha256File(path.resolve(mediaDir, track.thumbPath));
     }
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
-    console.log(`Updated hashes for ${manifest.length} tracks in ${manifestPath}`);
+    for (const topic of topics) {
+      topic.thumbSha256 = await sha256File(path.resolve(mediaDir, topic.thumbPath));
+    }
+    writeFileSync(topicsPath, JSON.stringify(topics, null, 2) + "\n");
+    console.log(`Updated hashes for ${manifest.length} tracks and ${topics.length} topics`);
     return;
   }
 
   if (!prod) execFileSync("npx", ["convex", "dev", "--once"], { stdio: "inherit" });
 
+  // A thumbKey used by >1 manifest/topic entry may have concurrent workers
+  // uploading to it at once; cleanup must never delete those (#354 race).
+  const thumbKeyOf = (t: ManifestTrack | ManifestTopic) => `thumb/${t.thumbSha256}.${ext(t.thumbPath)}`;
+  const thumbKeyCounts = new Map<string, number>();
+  for (const entry of [...manifest, ...topics]) {
+    const key = thumbKeyOf(entry);
+    thumbKeyCounts.set(key, (thumbKeyCounts.get(key) ?? 0) + 1);
+  }
+  const sharedThumbKeys = new Set(
+    [...thumbKeyCounts].filter(([, count]) => count > 1).map(([key]) => key),
+  );
+
   let failures = 0;
+  const liveThumbKeys = convexRun("ai/paths/audioTracks:listTopicThumbKeys", {});
+  await pool(topics, CONCURRENCY, async (topic) => {
+    try {
+      await ingestTopic(topic, liveThumbKeys, sharedThumbKeys);
+    } catch (err) {
+      failures++;
+      console.error(`topic ${topic.slug}: FAILED — ${(err as Error).message}`);
+    }
+  });
   await pool(manifest, CONCURRENCY, async (track) => {
     try {
-      await ingestOne(track);
+      await ingestOne(track, sharedThumbKeys);
     } catch (err) {
       failures++;
       console.error(`${track.slug}: FAILED — ${(err as Error).message}`);

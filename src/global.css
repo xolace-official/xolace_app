@@ -73,6 +73,14 @@
      * own yellow rather than the accent (#305/#313). */
     --color-poster-field: #e4e2de;
     --color-poster-send: #f0e94d;
+
+    /* Player — the Browse player (#340) is lit by the track's own artwork,
+     * blurred into the backdrop, so its ink is fixed white-on-black whatever
+     * the theme. Fixed on purpose; see the fixed-palette convention in
+     * CLAUDE.md. The scrim gradient stops live in
+     * src/features/browse/player/player-palette.ts. */
+    --color-player-ink: #ffffff;
+    --color-player-scrim: #000000;
     /* The archive card's chip fill — ink at 7%, so one value sits on every tint */
     --color-poster-chip: rgba(20, 20, 20, 0.07);
     /* The archive card tints, cycled by item index (#296). Fixed objects inside

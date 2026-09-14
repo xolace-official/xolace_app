@@ -2065,6 +2065,19 @@ export default defineSchema({
     .index("by_family_and_active", ["family", "active"]) // Browse per-family list (#339)
     .index("by_thumbKey", ["thumbKey"]),
 
+  // Topic decoration (#353): a shared topic suffix (`sadness`) may carry its
+  // own cover and display title for the Browse topic grid. One row per slug
+  // across both families; membership stays "≥ 1 active track" — a row here
+  // never adds a tile. Cascade-exempt for the same reason as `audio_tracks`.
+  topics: defineTable({
+    slug: v.string(), // the shared suffix, validated against the model catalogue at write
+    title: v.optional(v.string()), // curated display title; else derived from the slug
+    thumbKey: v.string(), // R2 key, content-addressed: `thumb/${thumbSha256}.<ext>`
+    thumbSha256: v.string(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_thumbKey", ["thumbKey"]), // discardUpload: is this blob still referenced?
+
   // ===========================================================
   // KINDLING — paths + path_steps (#330, docs/paths-v1.md §7)
   // ===========================================================

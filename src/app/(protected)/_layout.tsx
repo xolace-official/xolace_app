@@ -37,6 +37,8 @@ const EDIT_PROFILE_OPTIONS = {
 };
 
 
+const PLAYER_OPTIONS = { presentation: "fullScreenModal", animation: "slide_from_bottom" } as const;
+
 const CHAT_OPTIONS = {
   headerShown: true,
   title: "",
@@ -77,6 +79,8 @@ export default function ProtectedLayout() {
           <Stack.Screen name="quotes/index" />
           <Stack.Screen name="quotes/archive" />
           <Stack.Screen name="kindling/index" />
+          {/* Outside `(tabs)` on purpose: the player is full-bleed, no tab bar. */}
+          <Stack.Screen name="browse-player" options={PLAYER_OPTIONS} />
 
           
           <Stack.Screen name="chat/[conversationId]" options={CHAT_OPTIONS} />

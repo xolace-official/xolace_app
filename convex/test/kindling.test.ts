@@ -41,6 +41,10 @@ const stub = vi.hoisted(() => ({
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../posthog", () => posthogMock());
 vi.mock("../rag", () => ragMock());
+vi.mock("../ai/paths/audioTracks", async (orig) => ({
+  ...(await orig<typeof import("../ai/paths/audioTracks")>()),
+  r2: { getUrl: async (key: string) => `https://r2.test/${key}` },
+}));
 vi.mock("../lib/rateLimits", async (orig) => ({
   ...(await orig<typeof import("../lib/rateLimits")>()),
   ...rateLimiterMock(() => stub.limit),
@@ -156,6 +160,10 @@ async function seedCatalogue(user: SeededUser) {
     }
   });
 }
+
+/** A topic the dev catalogue can actually bind — the manifest's contents move. */
+const CATALOGUE_TOPIC = (manifest as ManifestTrack[])[0].topic;
+const CATALOGUE_KIND = CATALOGUE_TOPIC.startsWith("music_topic_") ? "music" : "audio";
 
 const readSteps = (user: SeededUser, pathId: Id<"paths">) =>
   user.root.run((ctx) =>
@@ -278,8 +286,8 @@ describe("ai/paths/generate.run", () => {
     expect(await readPaths(user)).toEqual([]);
   });
 
-  it("binds an audio_topic_* twig to a real slug from the dev catalogue", async () => {
-    stub.reply = JSON.stringify([twig("audio_topic_anxiety", 1), twig("breathing", 2)]);
+  it("binds a *_topic_* twig to a real slug from the dev catalogue", async () => {
+    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2)]);
     const user = await asNewUser();
     await seedCatalogue(user);
     const sessionId = await seedQualifying(user);
@@ -287,7 +295,7 @@ describe("ai/paths/generate.run", () => {
     await generate(user, sessionId);
 
     const [path] = await readPaths(user);
-    const audio = (await readSteps(user, path._id)).find((s) => s.actionType === "audio_topic_anxiety");
+    const audio = (await readSteps(user, path._id)).find((s) => s.actionType === CATALOGUE_TOPIC);
     const slugs = manifest.map((t) => t.slug);
     expect(slugs).toContain((audio?.params as { slug: string }).slug);
   });
@@ -571,14 +579,14 @@ describe("the active-kindling screen API (#333)", () => {
     expect(await user.t.query(api.paths.getActive, {})).toBeNull();
   });
 
-  it("resolves a bound track's title onto an audio twig", async () => {
-    stub.reply = JSON.stringify([twig("audio_topic_anxiety", 1), twig("breathing", 2)]);
+  it("resolves a bound track's title onto an audio/music twig", async () => {
+    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2)]);
     const user = await asNewUser();
     await seedCatalogue(user);
     await generate(user, await seedQualifying(user));
 
     const active = await user.t.query(api.paths.getActive, {});
-    const audio = active?.twigs.find((t) => t.kind === "audio");
+    const audio = active?.twigs.find((t) => t.kind === CATALOGUE_KIND);
     expect(audio?.title).toBe(
       manifest.find((t) => t.slug === (audio?.params as { slug: string }).slug)?.title,
     );
@@ -631,5 +639,175 @@ describe("stale kindling screens", () => {
     await expect(
       user.t.mutation(api.paths.skipStep, { stepId: active.twigs[0]._id }),
     ).rejects.toThrow();
+  });
+});
+
+describe("a browse play beside a bound twig (§9.6, #341)", () => {
+  it("leaves the twig's binding byte-identical, never tends it, and never moves profile stats", async () => {
+    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2)]);
+    const user = await asNewUser();
+    await seedCatalogue(user);
+    await generate(user, await seedQualifying(user));
+
+    const active = await user.t.query(api.paths.getActive, {});
+    const audio = active?.twigs.find((t) => t.kind === CATALOGUE_KIND);
+    if (!active || !audio) throw new Error("expected a bound twig");
+    const snapshot = async () => ({
+      step: await user.root.run((ctx) => ctx.db.get("path_steps", audio._id)),
+      profile: await user.root.run((ctx) => ctx.db.get("emotional_profiles", user.profileId)),
+    });
+    const before = await snapshot();
+
+    // Everything "Browse more like this" and the strip can reach: the topic
+    // list, and the player's mint for a *different* track in that topic.
+    const topic = await user.t.query(api.browse.getTopic, {
+      slug: CATALOGUE_TOPIC.replace(/^(audio|music)_topic_/, ""),
+    });
+    const other = topic.find((t) => t.slug !== (audio.params as { slug: string }).slug) ?? topic[0];
+    expect(await user.t.query(api.paths.getBoundAudioTrack, { slug: other.slug })).not.toBeNull();
+
+    expect(await snapshot()).toEqual(before);
+    expect(before.step?.state).toBe("pending");
+  });
+});
+
+describe("paths.getBoundAudioTrack (#334)", () => {
+  const licence = {
+    source: "Pixabay",
+    sourceUrl: "https://pixabay.com",
+    licenceName: "Pixabay",
+    licenceUrl: "https://pixabay.com/service/license-summary/",
+    artist: "Artist",
+    attributionRequired: true,
+    attributionText: "Music by Artist — Pixabay",
+    acquiredAt: 0,
+  };
+  const row = (extra: Partial<Doc<"audio_tracks">>): Omit<Doc<"audio_tracks">, "_id" | "_creationTime"> => ({
+    slug: "s",
+    family: "support",
+    topic: "audio_topic_anxiety",
+    title: "Track",
+    tags: [],
+    key: "audio/s.m4a",
+    thumbKey: "thumb/s.webp",
+    durationSec: 300,
+    sha256: "s",
+    thumbSha256: "s",
+    active: true,
+    ...extra,
+  });
+  const seedRow = (user: SeededUser, extra: Partial<Doc<"audio_tracks">>) =>
+    user.root.run((ctx) => ctx.db.insert("audio_tracks", row(extra) as Doc<"audio_tracks">));
+
+  it("returns the playable shape with per-request URLs for a Plus user", async () => {
+    const user = await asNewUser();
+    await seedRow(user, { slug: "voice", narrators: ["Sage", "Wren"] });
+    const before = Date.now();
+
+    const track = await user.t.query(api.paths.getBoundAudioTrack, { slug: "voice" });
+    expect(track).toMatchObject({
+      slug: "voice",
+      title: "Track",
+      durationSec: 300,
+      narrators: ["Sage", "Wren"],
+      url: "https://r2.test/audio/s.m4a",
+      thumbUrl: "https://r2.test/thumb/s.webp",
+      showCrisisLine: false,
+    });
+    expect(track?.attributionText).toBeUndefined();
+    expect(track?.expiresAt).toBeGreaterThan(before);
+  });
+
+  it("carries verbatim attributionText only when the licence requires it", async () => {
+    const user = await asNewUser();
+    await seedRow(user, { slug: "m1", family: "music", topic: "music_topic_calm", licence });
+    await seedRow(user, {
+      slug: "m2",
+      family: "music",
+      topic: "music_topic_calm",
+      licence: { ...licence, attributionRequired: false },
+    });
+
+    expect((await user.t.query(api.paths.getBoundAudioTrack, { slug: "m1" }))?.attributionText).toBe(
+      "Music by Artist — Pixabay",
+    );
+    expect((await user.t.query(api.paths.getBoundAudioTrack, { slug: "m2" }))?.attributionText).toBeUndefined();
+  });
+
+  it("derives showCrisisLine from tier 4 server-side", async () => {
+    const user = await asNewUser();
+    await seedRow(user, { slug: "t4", tier: 4, safetyReviewedAt: 1 });
+    await seedRow(user, { slug: "t3", tier: 3, safetyReviewedAt: 1 });
+
+    expect((await user.t.query(api.paths.getBoundAudioTrack, { slug: "t4" }))?.showCrisisLine).toBe(true);
+    expect((await user.t.query(api.paths.getBoundAudioTrack, { slug: "t3" }))?.showCrisisLine).toBe(false);
+  });
+
+  it("is null for a retired or unknown slug", async () => {
+    const user = await asNewUser();
+    await seedRow(user, { slug: "gone", active: false });
+    expect(await user.t.query(api.paths.getBoundAudioTrack, { slug: "gone" })).toBeNull();
+    expect(await user.t.query(api.paths.getBoundAudioTrack, { slug: "nope" })).toBeNull();
+  });
+
+  it("never hands a free user a URL", async () => {
+    const user = await asNewUser();
+    await seedRow(user, { slug: "voice" });
+    stub.isPlus = false;
+    await expect(user.t.query(api.paths.getBoundAudioTrack, { slug: "voice" })).rejects.toThrow(/Xolace\+/);
+  });
+});
+
+describe("ai/paths/audioTracks.upsertTopic (#353)", () => {
+  const topic = (slug: string, extra: Partial<{ title: string; thumbKey: string; thumbSha256: string }> = {}) => ({
+    slug,
+    thumbKey: "thumb/aaa.webp",
+    thumbSha256: "aaa",
+    ...extra,
+  });
+
+  it("inserts a row for a catalogued slug and a title-only update keeps the key", async () => {
+    const user = await asNewUser();
+    const inserted = await user.root.mutation(internal.ai.paths.audioTracks.upsertTopic, {
+      topic: topic("sadness", { title: "Sadness" }),
+    });
+    expect(inserted.action).toBe("inserted");
+
+    const updated = await user.root.mutation(internal.ai.paths.audioTracks.upsertTopic, {
+      topic: topic("sadness", { title: "Feeling low" }),
+    });
+    expect(updated).toEqual({ action: "updated", topicId: inserted.topicId });
+
+    const rows = await user.root.run((ctx) => ctx.db.query("topics").collect());
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ slug: "sadness", title: "Feeling low", thumbKey: "thumb/aaa.webp" });
+  });
+
+  it("rejects a slug that is not a topic suffix in the catalogue", async () => {
+    const user = await asNewUser();
+    await expect(
+      user.root.mutation(internal.ai.paths.audioTracks.upsertTopic, { topic: topic("sadnes") }),
+    ).rejects.toThrow(/not a catalogued topic/);
+    expect(await user.root.run((ctx) => ctx.db.query("topics").collect())).toEqual([]);
+  });
+});
+
+describe("ai/paths/audioTracks.discardUpload (#354)", () => {
+  it("keeps a thumb blob referenced by a topics row, deletes an unreferenced one", async () => {
+    // The mutation uses the module-local `r2`, untouched by the `vi.mock` above.
+    const actual = await vi.importActual<typeof import("../ai/paths/audioTracks")>("../ai/paths/audioTracks");
+    const deleteObject = vi.spyOn(actual.r2, "deleteObject").mockResolvedValue(undefined);
+
+    const user = await asNewUser();
+    await user.root.mutation(internal.ai.paths.audioTracks.upsertTopic, {
+      topic: { slug: "sadness", thumbKey: "thumb/shared.webp", thumbSha256: "shared" },
+    });
+    await user.root.mutation(internal.ai.paths.audioTracks.discardUpload, { thumbKey: "thumb/shared.webp" });
+    expect(deleteObject).not.toHaveBeenCalled();
+
+    await user.root.mutation(internal.ai.paths.audioTracks.discardUpload, { thumbKey: "thumb/orphan.webp" });
+    expect(deleteObject).toHaveBeenCalledTimes(1);
+    expect(deleteObject.mock.calls[0][1]).toBe("thumb/orphan.webp");
+    deleteObject.mockRestore();
   });
 });

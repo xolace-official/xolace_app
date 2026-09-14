@@ -3,6 +3,21 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Topic (2026-09-14)
+
+A **topic** is the shared emotional axis under which kindling audio is
+catalogued — `sadness`, `loneliness`, `sleep_rest`. Both families sit on
+it: a support track and a music track can share a topic, and the Browse
+topic grid and topic screen treat that slug as one thing.
+
+A topic is its own thing, not a by-product of its tracks. It carries its
+own **cover** (square artwork) and, optionally, a curated **display
+title** — neither belongs to any track. A topic with no cover falls back
+to the artwork of whichever track was catalogued first; a topic with no
+active track is not shown anywhere, cover or not. The set of valid topics
+is the catalogue the model chooses from; art and title decorate that set,
+they never extend it.
+
 ## Chat moderation lanes (2026-09-11)
 
 Two lanes, neither blocks delivery. **Pre-delivery** is Stream-native only:

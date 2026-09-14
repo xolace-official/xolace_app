@@ -1,8 +1,9 @@
 import { ConvexError, v } from "convex/values";
 import { R2 } from "@convex-dev/r2";
 import { components } from "../../_generated/api";
-import { internalMutation } from "../../_generated/server";
+import { internalMutation, internalQuery } from "../../_generated/server";
 import { licenceValidator } from "../../lib/validators";
+import { TOPIC_SLUGS } from "./catalog";
 
 /**
  * Kindling audio/music catalogue (#328, docs/paths-v1.md §3.2). Blobs live in
@@ -61,8 +62,9 @@ export const mintUploadUrl = internalMutation({
 /**
  * Ingest-failure cleanup: drop blobs a failed `ingestOne` attempt left behind.
  * The audio key is unique per attempt, so it always goes; the thumb key is
- * content-addressed and may be shared, so it goes only when no row points at
- * it. Same trust model as `mintUploadUrl` (script-only).
+ * content-addressed and may be shared, so it goes only when no `audio_tracks`
+ * or `topics` row points at it. Same trust model as `mintUploadUrl`
+ * (script-only).
  */
 export const discardUpload = internalMutation({
   args: { audioKey: v.optional(v.string()), thumbKey: v.optional(v.string()) },
@@ -70,13 +72,33 @@ export const discardUpload = internalMutation({
   handler: async (ctx, { audioKey, thumbKey }) => {
     if (audioKey) await r2.deleteObject(ctx, audioKey);
     if (thumbKey) {
-      const referenced = await ctx.db
-        .query("audio_tracks")
-        .withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
-        .first();
+      const referenced =
+        (await ctx.db
+          .query("audio_tracks")
+          .withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
+          .first()) ??
+        (await ctx.db
+          .query("topics")
+          .withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
+          .first());
       if (!referenced) await r2.deleteObject(ctx, thumbKey);
     }
     return null;
+  },
+});
+
+/**
+ * `slug → thumbKey` for every topic row, so the ingest script can skip the
+ * cover upload when only the title changed (#354). Bounded by the catalogue
+ * (one row per topic suffix), so reading every row is fine. Script-only.
+ */
+export const listTopicThumbKeys = internalQuery({
+  args: {},
+  returns: v.record(v.string(), v.string()),
+  handler: async (ctx) => {
+    const keys: Record<string, string> = {};
+    for await (const row of ctx.db.query("topics")) keys[row.slug] = row.thumbKey;
+    return keys;
   },
 });
 
@@ -149,5 +171,42 @@ export const upsertTrack = internalMutation({
     await ctx.db.replace("audio_tracks", existing._id, { ...track, active: existing.active });
     await r2.deleteObject(ctx, oldKey);
     return { action: "updated" as const, trackId: existing._id };
+  },
+});
+
+/**
+ * Topic decoration (#353): the shared suffix's cover + display title for the
+ * Browse topic grid. The model catalogue stays the only source of valid
+ * topics — an unknown slug is rejected so presentation data can never invent
+ * one. Keyed on `slug`: insert when absent, replace otherwise. Thumb blobs are
+ * content-addressed and possibly shared with `audio_tracks`, so none is ever
+ * deleted here; a changed cover just repoints `thumbKey`.
+ */
+export const upsertTopic = internalMutation({
+  args: {
+    topic: v.object({
+      slug: v.string(),
+      title: v.optional(v.string()),
+      thumbKey: v.string(),
+      thumbSha256: v.string(),
+    }),
+  },
+  returns: v.object({
+    action: v.union(v.literal("inserted"), v.literal("updated")),
+    topicId: v.id("topics"),
+  }),
+  handler: async (ctx, { topic }) => {
+    if (!TOPIC_SLUGS.has(topic.slug)) {
+      throw new ConvexError(`topics upsert rejected: slug "${topic.slug}" is not a catalogued topic`);
+    }
+    const existing = await ctx.db
+      .query("topics")
+      .withIndex("by_slug", (q) => q.eq("slug", topic.slug))
+      .unique();
+    if (!existing) {
+      return { action: "inserted" as const, topicId: await ctx.db.insert("topics", topic) };
+    }
+    await ctx.db.replace("topics", existing._id, topic);
+    return { action: "updated" as const, topicId: existing._id };
   },
 });

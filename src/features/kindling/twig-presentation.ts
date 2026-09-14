@@ -42,15 +42,41 @@ export const TWIG_PRESENTATION: Record<
 };
 
 /**
+ * "Browse more like this" (§9.6): a bound audio/music twig's topic in Browse,
+ * filtered to its family. One-off listening — nothing here carries `stepId`,
+ * so plays from it can't tend the twig, and the stored binding is never
+ * touched. If the bound track is wrong, "Not for me" is the correction.
+ */
+export function twigBrowseHref(twig: Twig): Href | null {
+  const match = /^(audio|music)_topic_(.+)$/.exec(twig.actionType);
+  if (!match) return null;
+  return {
+    pathname: "/browse/topic/[slug]",
+    params: {
+      slug: match[2],
+      family: match[1] === "music" ? "music" : "support",
+      from: "twig-more-like-this",
+    },
+  };
+}
+
+/**
  * Where the primary action goes. Every twig hands off to a screen of its own
  * (the person is chosen there, the exercise runs there); this screen never
  * plays or runs anything inline.
  *
- * Returns null while the destination does not exist yet — audio lands with
- * the Browse player (#340) at `/browse/player?slug=…`.
+ * Audio and music go to the one player (#340, `/browse-player`). `stepId`
+ * rides along so `useTrackPlayback` tends the twig on a natural finish —
+ * a Browse play carries no `stepId` and never completes anything (§9.6).
  */
 export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | null {
   switch (twig.kind) {
+    case "audio":
+    case "music": {
+      const slug = (twig.params as { slug?: string } | null)?.slug;
+      if (!slug) return null;
+      return { pathname: "/browse-player", params: { slug, stepId: twig._id } };
+    }
     case "breathing":
       // `stepId` rides along so finishing the exercise tends the twig.
       return {

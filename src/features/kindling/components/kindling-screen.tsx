@@ -11,7 +11,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { playSoftPress } from "@/src/lib/haptics";
-import { twigHref, type Twig } from "../twig-presentation";
+import { twigBrowseHref, twigHref, type Twig } from "../twig-presentation";
 import { TwigRow } from "./twig-row";
 
 const HEADER_OPTIONS = {
@@ -54,6 +54,15 @@ export function KindlingScreen() {
       return;
     }
     posthog.capture("step_started", { pathId: kindling._id, actionType: twig.actionType });
+    router.push(href);
+  };
+
+  // One-off listening (§9.6): no `step_started`, no `stepId` — the binding
+  // stays as it is and only "Not for me" says the track was wrong.
+  const handleBrowseMore = (twig: Twig) => {
+    const href = twigBrowseHref(twig);
+    if (!href) return;
+    playSoftPress();
     router.push(href);
   };
 
@@ -155,6 +164,7 @@ export function KindlingScreen() {
               last={i === kindling.twigs.length - 1}
               onBegin={() => handleBegin(twig)}
               onSkip={() => handleSkip(twig)}
+              onBrowseMore={() => handleBrowseMore(twig)}
             />
           ))}
         </View>
