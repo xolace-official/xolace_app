@@ -5,8 +5,8 @@ import { normalizeScreen } from '@/src/features/reflect/reflect-transitions';
 
 type TransitionState = {
   current: ReflectionStateName;
-  previous: ReflectionStateName | null;
-  isTransitioning: boolean;
+  /** Screens still fading out, oldest first. */
+  outgoing: ReflectionStateName[];
 };
 
 /**
@@ -14,14 +14,15 @@ type TransitionState = {
  *
  * When the screen changes, the old screen is kept mounted (fading out)
  * while the new screen mounts and fades in. Once the outgoing fade
- * completes, the old screen is unmounted.
+ * completes, the old screen is unmounted. A screen that changes again
+ * mid-fade (processing → error on a rate limit) joins the outgoing list
+ * rather than cutting the earlier fade short.
  */
 export function useScreenTransition(screen: ReflectionStateName) {
   const normalized = normalizeScreen(screen);
   const [state, setState] = useState<TransitionState>({
     current: normalized,
-    previous: null,
-    isTransitioning: false,
+    outgoing: [],
   });
 
   // Mirror the latest committed state into a ref so the screen-change effect
@@ -40,23 +41,22 @@ export function useScreenTransition(screen: ReflectionStateName) {
     Keyboard.dismiss();
     setState({
       current: next,
-      previous: prev.current,
-      isTransitioning: true,
+      // A screen coming back while it is still fading out reverses in place.
+      outgoing: [...prev.outgoing.filter((s) => s !== next), prev.current],
     });
   }, [screen]);
 
-  const onOutgoingComplete = () => {
+  const onOutgoingComplete = (done: ReflectionStateName) => {
     setState((prev) => ({
       ...prev,
-      previous: null,
-      isTransitioning: false,
+      outgoing: prev.outgoing.filter((s) => s !== done),
     }));
   };
 
   return {
     current: state.current,
-    previous: state.previous,
-    isTransitioning: state.isTransitioning,
+    outgoing: state.outgoing,
+    isTransitioning: state.outgoing.length > 0,
     onOutgoingComplete,
   };
 }

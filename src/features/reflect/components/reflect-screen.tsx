@@ -37,15 +37,12 @@ import { ClarifyFeedbackSheet } from "@/src/features/reflect/components/states/c
 import { useFeedbackShake } from "@/src/features/feedback-tray/feedback-tray-provider";
 import { useAppStore } from "@/src/store/store";
 
-// EaseView only runs a transition — and only then emits onTransitionEnd — when
-// initialAnimate differs from animate. Without an explicit opacity: 1 start the
-// outgoing screen mounts already at opacity 0, no animation runs, and
-// onOutgoingComplete never fires, leaving it mounted forever.
-const EASE_ANIMATE_OUT_INITIAL = { opacity: 1 };
 const EASE_ANIMATE_OUT = { opacity: 0 };
 
 const WASH_FADE_IN = FadeIn.duration(300);
-const WASH_FADE_OUT = FadeOut.duration(300);
+// Matches the compose screen's exit (SCREEN_TRANSITIONS.typing.exit) so the
+// wash leaves with the card instead of as a second darkening after it.
+const WASH_FADE_OUT = FadeOut.duration(500);
 
 const WASH_SCREENS: ReflectionStateName[] = ["idle", "typing", "typing-nudge"];
 const isWashScreen = (screen: ReflectionStateName) =>
@@ -105,7 +102,7 @@ export const ReflectScreen = () => {
 
   const context = useQuery(api.users.getFullContext);
   const updatePreferences = useMutation(api.preferences.update);
-  const { current, previous, isTransitioning, onOutgoingComplete } =
+  const { current, outgoing, isTransitioning, onOutgoingComplete } =
     useScreenTransition(state.screen);
 
   const [showSpaceNameDialog, setShowSpaceNameDialog] = useState(false);
@@ -124,8 +121,20 @@ export const ReflectScreen = () => {
 
 
   const [prevScreen, setPrevScreen] = useState(state.screen);
+  // The last idle/typing/typing-nudge screen the reducer was on. Once it has
+  // moved on (processing, error, ...) the compose screen is only ever the
+  // outgoing copy, and it must keep reading as the screen the user actually
+  // left — not as `state.screen`, which no longer names a compose screen and
+  // would flip a collapsed idle card to fully expanded for its fade-out.
+  const [lastComposeScreen, setLastComposeScreen] = useState<ReflectionStateName>(
+    isWashScreen(state.screen) ? state.screen : "idle",
+  );
+  const composeScreen = isWashScreen(state.screen)
+    ? state.screen
+    : lastComposeScreen;
   if (state.screen !== prevScreen) {
     setPrevScreen(state.screen);
+    if (isWashScreen(state.screen)) setLastComposeScreen(state.screen);
     if (mirrorFeedbackTurn !== null && state.screen !== "clarify") {
       setMirrorFeedbackTurn(null);
     }
@@ -181,7 +190,7 @@ export const ReflectScreen = () => {
       case "typing-nudge":
         return (
           <ComposeScreen
-            screen={state.screen}
+            screen={composeScreen}
             // The outgoing copy is a fading picture of the screen being left;
             // it must not pull focus from the one arriving.
             focusOnExpand={!isOutgoing}
@@ -279,29 +288,32 @@ export const ReflectScreen = () => {
     }
   };
 
-  const currentConfig =
-    SCREEN_TRANSITIONS[current] ?? DEFAULT_SCREEN_TRANSITION;
-  const previousConfig = previous
-    ? (SCREEN_TRANSITIONS[previous] ?? DEFAULT_SCREEN_TRANSITION)
-    : null;
+  // Outgoing screens first so the arriving one paints on top of them. Keyed
+  // by screen name: a screen that turns outgoing keeps its React instance —
+  // and with it everything it settled at mount (the frozen header height,
+  // Flux's perch, the morph's progress) — instead of being re-mounted as a
+  // fresh copy that lays itself out differently while it fades.
+  const screens = [...outgoing, current];
 
-  const absoluteWithInsets: ViewStyle = {
+  // The same box the settled screen fills — `bottom: 0`, not the bottom
+  // inset, because the host only pads the top and each screen handles its own
+  // bottom. Any difference here reflows the outgoing screen at t=0.
+  const absoluteFill: ViewStyle = {
     position: "absolute",
     top: insets.top,
     left: 0,
     right: 0,
-    bottom: insets.bottom,
+    bottom: 0,
   };
 
   // The settled screen name is `typing` for both idle and composing since #256,
   // so the header follows the reducer's own state: it belongs to the resting
   // card, and it gets out of the way the moment the composer opens.
   const isIdle = state.screen === "idle";
-  // The wash belongs to the idle/typing canvas. It stays mounted while an
-  // outgoing idle/typing screen is still fading, so it leaves with that screen
-  // rather than popping out from under the one replacing it.
-  const showWash =
-    isWashScreen(current) || (previous !== null && isWashScreen(previous));
+  // The wash belongs to the idle/typing canvas and fades out on the same
+  // clock as the outgoing compose screen. Keeping it until that screen had
+  // unmounted made it a second, later darkening behind the arriving state.
+  const showWash = isWashScreen(current);
   const stackScreenOptions = {
     headerShown: isIdle,
     headerTransparent: true,
@@ -362,29 +374,34 @@ export const ReflectScreen = () => {
           </Stack.Toolbar>
         </>
       )}
-      {/* Outgoing screen — fades out then unmounts */}
-      {previous && previousConfig && (
-        <EaseView
-          initialAnimate={EASE_ANIMATE_OUT_INITIAL}
-          animate={EASE_ANIMATE_OUT}
-          transition={previousConfig.exit.transition}
-          onTransitionEnd={onOutgoingComplete}
-          style={absoluteWithInsets}
-        >
-          {renderScreen(previous, true)}
-        </EaseView>
-      )}
-
-      {/* Current screen — fades/springs in */}
-      <EaseView
-        key={current}
-        initialAnimate={currentConfig.enter.initialAnimate}
-        animate={currentConfig.enter.animate}
-        transition={currentConfig.enter.transition}
-        style={isTransitioning ? absoluteWithInsets : styles.fill}
-      >
-        {renderScreen(current)}
-      </EaseView>
+      {screens.map((screen) => {
+        const isOutgoing = screen !== current;
+        const config = SCREEN_TRANSITIONS[screen] ?? DEFAULT_SCREEN_TRANSITION;
+        return (
+          // On mount EaseView runs initialAnimate → animate (the enter). When
+          // `animate` later flips to the exit values it animates the change
+          // on the same native view and emits onTransitionEnd once settled,
+          // so the exit is a prop change, not a remount.
+          <EaseView
+            key={screen}
+            initialAnimate={config.enter.initialAnimate}
+            animate={isOutgoing ? EASE_ANIMATE_OUT : config.enter.animate}
+            transition={
+              isOutgoing ? config.exit.transition : config.enter.transition
+            }
+            onTransitionEnd={
+              isOutgoing
+                ? // A batch cut short by a newer one reports finished: false;
+                  // only a fade that ran to the end releases the screen.
+                  (e) => e.finished && onOutgoingComplete(screen)
+                : undefined
+            }
+            style={isTransitioning ? absoluteFill : styles.fill}
+          >
+            {renderScreen(screen, isOutgoing)}
+          </EaseView>
+        );
+      })}
 
       {/* Mirror feedback — fires when user rejects a mirror, persists through screen transition */}
       <ClarifyFeedbackSheet
