@@ -95,7 +95,7 @@ async function putFile(url: string, filePath: string): Promise<void> {
   if (!res.ok) throw new Error(`upload failed (${res.status}): ${filePath}`);
 }
 
-async function ingestOne(track: ManifestTrack): Promise<void> {
+async function ingestOne(track: ManifestTrack, sharedThumbKeys: Set<string>): Promise<void> {
   if (track.family === "support" && (track.tier ?? 0) >= 3 && !track.safetyReviewedAt) {
     throw new Error(`tier ${track.tier} requires safetyReviewedAt`);
   }
@@ -118,9 +118,15 @@ async function ingestOne(track: ManifestTrack): Promise<void> {
     console.log(`${track.slug}: ${result.action}`);
   } catch (err) {
     // Blobs from this attempt are orphans; deleting a key that was never
-    // uploaded is a no-op, and the thumb survives if a live row shares it.
+    // uploaded is a no-op. A thumbKey shared with another manifest entry is
+    // left alone — a concurrent worker may be mid-upload to it and not yet
+    // have a row referencing it, so deleting here would race it (#354);
+    // an unreferenced shared blob is a harmless orphan for GC, not a bug.
     try {
-      convexRun("ai/paths/audioTracks:discardUpload", { audioKey, thumbKey });
+      convexRun("ai/paths/audioTracks:discardUpload", {
+        audioKey,
+        thumbKey: sharedThumbKeys.has(thumbKey) ? undefined : thumbKey,
+      });
     } catch (cleanupErr) {
       console.error(`${track.slug}: cleanup failed — ${(cleanupErr as Error).message}`);
     }
@@ -128,7 +134,11 @@ async function ingestOne(track: ManifestTrack): Promise<void> {
   }
 }
 
-async function ingestTopic(topic: ManifestTopic, liveThumbKeys: Record<string, string>): Promise<void> {
+async function ingestTopic(
+  topic: ManifestTopic,
+  liveThumbKeys: Record<string, string>,
+  sharedThumbKeys: Set<string>,
+): Promise<void> {
   const thumbKey = `thumb/${topic.thumbSha256}.${ext(topic.thumbPath)}`;
   const uploaded = liveThumbKeys[topic.slug] !== thumbKey;
   try {
@@ -141,10 +151,14 @@ async function ingestTopic(topic: ManifestTopic, liveThumbKeys: Record<string, s
     console.log(`topic ${topic.slug}: ${result.action}`);
   } catch (err) {
     if (!uploaded) throw err;
-    try {
-      convexRun("ai/paths/audioTracks:discardUpload", { thumbKey });
-    } catch (cleanupErr) {
-      console.error(`topic ${topic.slug}: cleanup failed — ${(cleanupErr as Error).message}`);
+    // See the matching comment in ingestOne — don't race a concurrent
+    // worker uploading to the same content-addressed key.
+    if (!sharedThumbKeys.has(thumbKey)) {
+      try {
+        convexRun("ai/paths/audioTracks:discardUpload", { thumbKey });
+      } catch (cleanupErr) {
+        console.error(`topic ${topic.slug}: cleanup failed — ${(cleanupErr as Error).message}`);
+      }
     }
     throw err;
   }
@@ -180,11 +194,23 @@ async function main() {
 
   if (!prod) execFileSync("npx", ["convex", "dev", "--once"], { stdio: "inherit" });
 
+  // A thumbKey used by >1 manifest/topic entry may have concurrent workers
+  // uploading to it at once; cleanup must never delete those (#354 race).
+  const thumbKeyOf = (t: ManifestTrack | ManifestTopic) => `thumb/${t.thumbSha256}.${ext(t.thumbPath)}`;
+  const thumbKeyCounts = new Map<string, number>();
+  for (const entry of [...manifest, ...topics]) {
+    const key = thumbKeyOf(entry);
+    thumbKeyCounts.set(key, (thumbKeyCounts.get(key) ?? 0) + 1);
+  }
+  const sharedThumbKeys = new Set(
+    [...thumbKeyCounts].filter(([, count]) => count > 1).map(([key]) => key),
+  );
+
   let failures = 0;
   const liveThumbKeys = convexRun("ai/paths/audioTracks:listTopicThumbKeys", {});
   await pool(topics, CONCURRENCY, async (topic) => {
     try {
-      await ingestTopic(topic, liveThumbKeys);
+      await ingestTopic(topic, liveThumbKeys, sharedThumbKeys);
     } catch (err) {
       failures++;
       console.error(`topic ${topic.slug}: FAILED — ${(err as Error).message}`);
@@ -192,7 +218,7 @@ async function main() {
   });
   await pool(manifest, CONCURRENCY, async (track) => {
     try {
-      await ingestOne(track);
+      await ingestOne(track, sharedThumbKeys);
     } catch (err) {
       failures++;
       console.error(`${track.slug}: FAILED — ${(err as Error).message}`);
