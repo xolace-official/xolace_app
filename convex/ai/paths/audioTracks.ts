@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { R2 } from "@convex-dev/r2";
 import { components } from "../../_generated/api";
-import { internalMutation } from "../../_generated/server";
+import { internalMutation, internalQuery } from "../../_generated/server";
 import { licenceValidator } from "../../lib/validators";
 import { TOPIC_SLUGS } from "./catalog";
 
@@ -62,8 +62,9 @@ export const mintUploadUrl = internalMutation({
 /**
  * Ingest-failure cleanup: drop blobs a failed `ingestOne` attempt left behind.
  * The audio key is unique per attempt, so it always goes; the thumb key is
- * content-addressed and may be shared, so it goes only when no row points at
- * it. Same trust model as `mintUploadUrl` (script-only).
+ * content-addressed and may be shared, so it goes only when no `audio_tracks`
+ * or `topics` row points at it. Same trust model as `mintUploadUrl`
+ * (script-only).
  */
 export const discardUpload = internalMutation({
   args: { audioKey: v.optional(v.string()), thumbKey: v.optional(v.string()) },
@@ -71,13 +72,33 @@ export const discardUpload = internalMutation({
   handler: async (ctx, { audioKey, thumbKey }) => {
     if (audioKey) await r2.deleteObject(ctx, audioKey);
     if (thumbKey) {
-      const referenced = await ctx.db
-        .query("audio_tracks")
-        .withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
-        .first();
+      const referenced =
+        (await ctx.db
+          .query("audio_tracks")
+          .withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
+          .first()) ??
+        (await ctx.db
+          .query("topics")
+          .withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
+          .first());
       if (!referenced) await r2.deleteObject(ctx, thumbKey);
     }
     return null;
+  },
+});
+
+/**
+ * `slug → thumbKey` for every topic row, so the ingest script can skip the
+ * cover upload when only the title changed (#354). Bounded by the catalogue
+ * (one row per topic suffix), so reading every row is fine. Script-only.
+ */
+export const listTopicThumbKeys = internalQuery({
+  args: {},
+  returns: v.record(v.string(), v.string()),
+  handler: async (ctx) => {
+    const keys: Record<string, string> = {};
+    for await (const row of ctx.db.query("topics")) keys[row.slug] = row.thumbKey;
+    return keys;
   },
 });
 

@@ -2074,7 +2074,9 @@ export default defineSchema({
     title: v.optional(v.string()), // curated display title; else derived from the slug
     thumbKey: v.string(), // R2 key, content-addressed: `thumb/${thumbSha256}.<ext>`
     thumbSha256: v.string(),
-  }).index("by_slug", ["slug"]),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_thumbKey", ["thumbKey"]), // discardUpload: is this blob still referenced?
 
   // ===========================================================
   // KINDLING — paths + path_steps (#330, docs/paths-v1.md §7)

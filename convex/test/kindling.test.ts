@@ -791,3 +791,23 @@ describe("ai/paths/audioTracks.upsertTopic (#353)", () => {
     expect(await user.root.run((ctx) => ctx.db.query("topics").collect())).toEqual([]);
   });
 });
+
+describe("ai/paths/audioTracks.discardUpload (#354)", () => {
+  it("keeps a thumb blob referenced by a topics row, deletes an unreferenced one", async () => {
+    // The mutation uses the module-local `r2`, untouched by the `vi.mock` above.
+    const actual = await vi.importActual<typeof import("../ai/paths/audioTracks")>("../ai/paths/audioTracks");
+    const deleteObject = vi.spyOn(actual.r2, "deleteObject").mockResolvedValue(undefined);
+
+    const user = await asNewUser();
+    await user.root.mutation(internal.ai.paths.audioTracks.upsertTopic, {
+      topic: { slug: "sadness", thumbKey: "thumb/shared.webp", thumbSha256: "shared" },
+    });
+    await user.root.mutation(internal.ai.paths.audioTracks.discardUpload, { thumbKey: "thumb/shared.webp" });
+    expect(deleteObject).not.toHaveBeenCalled();
+
+    await user.root.mutation(internal.ai.paths.audioTracks.discardUpload, { thumbKey: "thumb/orphan.webp" });
+    expect(deleteObject).toHaveBeenCalledTimes(1);
+    expect(deleteObject.mock.calls[0][1]).toBe("thumb/orphan.webp");
+    deleteObject.mockRestore();
+  });
+});
