@@ -2,16 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useConvex, useMutation } from 'convex/react';
 import type { FunctionReturnType } from 'convex/server';
+import { ConvexError } from 'convex/values';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 
 export type BoundTrack = NonNullable<FunctionReturnType<typeof api.paths.getBoundAudioTrack>>;
 
 const EXPIRY_MARGIN_MS = 5 * 60 * 1000;
+const MINT_RETRIES = 3;
+const MINT_BACKOFF_MS = 500;
 
 type UseTrackPlaybackReturn = {
   /** undefined while minting, null when the slug is retired/unknown. */
   track: BoundTrack | null | undefined;
+  /** Terminal: retries exhausted or the server refused. `track` stays undefined. */
+  error: Error | null;
   isLoaded: boolean;
   isPlaying: boolean;
   currentTime: number;
@@ -42,24 +47,45 @@ export function useTrackPlayback(
   const convex = useConvex();
   const completeStep = useMutation(api.paths.completeStep);
   const [track, setTrack] = useState<BoundTrack | null | undefined>(undefined);
+  const [error, setError] = useState<Error | null>(null);
   // Applied once the (re)built player reports loaded: where to resume, and
   // whether the user had asked to play.
   const pending = useRef<{ seek: number; play: boolean } | null>(null);
   const completed = useRef(false);
   const [volume, setVolumeState] = useState(1);
 
+  // Transient (network) failures retry with bounded backoff; a ConvexError is
+  // the server refusing on purpose, so it surfaces at once.
+  const mint = async (): Promise<BoundTrack | null> => {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await convex.query(api.paths.getBoundAudioTrack, { slug });
+      } catch (e) {
+        if (e instanceof ConvexError || attempt >= MINT_RETRIES) throw e;
+        await new Promise((r) => setTimeout(r, MINT_BACKOFF_MS * 2 ** attempt));
+      }
+    }
+  };
+
   // One-shot mint, not a subscription: a signed URL never changes reactively,
   // and a fresh one is fetched on demand below.
   useEffect(() => {
     let cancelled = false;
     completed.current = false;
-    convex
-      .query(api.paths.getBoundAudioTrack, { slug })
-      .then((t) => !cancelled && setTrack(t))
-      .catch((e) => console.error('[useTrackPlayback] mint failed:', e));
+    mint()
+      .then((t) => {
+        if (cancelled) return;
+        setTrack(t);
+        setError(null);
+      })
+      .catch((e) => {
+        console.error('[useTrackPlayback] mint failed:', e);
+        if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)));
+      });
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mint closes over exactly convex + slug
   }, [convex, slug]);
 
   const player = useAudioPlayer(track?.url ?? null);
@@ -104,8 +130,7 @@ export function useTrackPlayback(
     // `expiresAt` is server time; the margin absorbs a slow device clock.
     if (!track || Date.now() + EXPIRY_MARGIN_MS < track.expiresAt) return false;
     pending.current = { seek, play };
-    const fresh = await convex.query(api.paths.getBoundAudioTrack, { slug });
-    setTrack(fresh);
+    setTrack(await mint());
     return true;
   };
 
@@ -144,6 +169,7 @@ export function useTrackPlayback(
 
   return {
     track,
+    error,
     isLoaded: status.isLoaded,
     isPlaying: status.playing,
     currentTime: status.currentTime,

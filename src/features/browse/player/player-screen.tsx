@@ -89,9 +89,11 @@ function Player() {
         <SymbolView name={{ ios: "chevron.down", android: "keyboard_arrow_down", web: "keyboard_arrow_down" }} size={16} weight="semibold" tintColor={ink} />
       </Pressable>
 
-      {track === null ? (
+      {track === null || p.error ? (
         <View className="flex-1 items-center justify-center px-8">
-          <AppText className="text-center text-[15px] text-player-ink/70">This one has left the library.</AppText>
+          <AppText className="text-center text-[15px] text-player-ink/70">
+            {p.error ? "Couldn't reach this one right now." : "This one has left the library."}
+          </AppText>
         </View>
       ) : (
         <View className="flex-1 justify-end px-6 pb-30">
