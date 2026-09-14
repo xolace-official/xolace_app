@@ -24,6 +24,13 @@ export interface CatalogEntry {
 
 const BOTH: Exclude<SupportNeed, "none">[] = ["light", "active"];
 
+/**
+ * `audio_topic_<slug>` / `music_topic_<slug>` — the suffix is the axis both
+ * families share; Browse tiles and `topic/[slug]` route on it (#339, #353).
+ */
+export const TOPIC_PREFIX = /^(audio|music)_topic_/;
+export const topicSlug = (topic: string) => topic.replace(TOPIC_PREFIX, "");
+
 function audioTopic(
   topic: string,
   emotions: string[],
@@ -187,4 +194,9 @@ export const CATALOG: readonly CatalogEntry[] = [
 
 export const CATALOG_BY_KEY: ReadonlyMap<string, CatalogEntry> = new Map(
   CATALOG.map((entry) => [entry.actionType, entry]),
+);
+
+/** Every shared topic suffix the catalogue knows — the only valid `topics.slug` values. */
+export const TOPIC_SLUGS: ReadonlySet<string> = new Set(
+  CATALOG.filter((e) => TOPIC_PREFIX.test(e.actionType)).map((e) => topicSlug(e.actionType)),
 );

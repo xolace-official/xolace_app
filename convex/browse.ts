@@ -4,6 +4,7 @@ import { query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import { r2 } from "./ai/paths/audioTracks";
+import { topicSlug } from "./ai/paths/catalog";
 
 /**
  * Browse hub reads (#338, docs/paths-v1.md §9.3). Open to every signed-in
@@ -104,13 +105,6 @@ async function toTrackItem(t: Doc<"audio_tracks">) {
   };
 }
 
-/**
- * `audio_tracks.topic` is the catalog key (`audio_topic_sadness` /
- * `music_topic_sadness`); the suffix is the axis both families share and is
- * what the topic grid tiles and `topic/[slug]` routes on.
- */
-const TOPIC_PREFIX = /^(audio|music)_topic_/;
-const topicSlug = (topic: string) => topic.replace(TOPIC_PREFIX, "");
 const topicTitle = (slug: string) => {
   const words = slug.replace(/_/g, " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
@@ -162,16 +156,22 @@ export const getTopics = query({
       byTopic.set(slug, entry);
     }
 
+    // A `topics` row (#353) decorates a tile — cover + curated title — but
+    // never adds one: membership is the active-track grouping above.
+    const rows = new Map((await ctx.db.query("topics").take(1000)).map((r) => [r.slug, r]));
     return await Promise.all(
       [...byTopic.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(async ([slug, entry]) => ({
-          slug,
-          title: topicTitle(slug),
-          thumbUrl: await thumbUrlFor(entry.thumbKey),
-          supportCount: entry.supportCount,
-          musicCount: entry.musicCount,
-        })),
+        .map(async ([slug, entry]) => {
+          const row = rows.get(slug);
+          return {
+            slug,
+            title: row?.title || topicTitle(slug),
+            thumbUrl: await thumbUrlFor(row?.thumbKey ?? entry.thumbKey),
+            supportCount: entry.supportCount,
+            musicCount: entry.musicCount,
+          };
+        }),
     );
   },
 });

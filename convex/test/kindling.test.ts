@@ -41,7 +41,8 @@ const stub = vi.hoisted(() => ({
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../posthog", () => posthogMock());
 vi.mock("../rag", () => ragMock());
-vi.mock("../ai/paths/audioTracks", () => ({
+vi.mock("../ai/paths/audioTracks", async (orig) => ({
+  ...(await orig<typeof import("../ai/paths/audioTracks")>()),
   r2: { getUrl: async (key: string) => `https://r2.test/${key}` },
 }));
 vi.mock("../lib/rateLimits", async (orig) => ({
@@ -754,5 +755,39 @@ describe("paths.getBoundAudioTrack (#334)", () => {
     await seedRow(user, { slug: "voice" });
     stub.isPlus = false;
     await expect(user.t.query(api.paths.getBoundAudioTrack, { slug: "voice" })).rejects.toThrow(/Xolace\+/);
+  });
+});
+
+describe("ai/paths/audioTracks.upsertTopic (#353)", () => {
+  const topic = (slug: string, extra: Partial<{ title: string; thumbKey: string; thumbSha256: string }> = {}) => ({
+    slug,
+    thumbKey: "thumb/aaa.webp",
+    thumbSha256: "aaa",
+    ...extra,
+  });
+
+  it("inserts a row for a catalogued slug and a title-only update keeps the key", async () => {
+    const user = await asNewUser();
+    const inserted = await user.root.mutation(internal.ai.paths.audioTracks.upsertTopic, {
+      topic: topic("sadness", { title: "Sadness" }),
+    });
+    expect(inserted.action).toBe("inserted");
+
+    const updated = await user.root.mutation(internal.ai.paths.audioTracks.upsertTopic, {
+      topic: topic("sadness", { title: "Feeling low" }),
+    });
+    expect(updated).toEqual({ action: "updated", topicId: inserted.topicId });
+
+    const rows = await user.root.run((ctx) => ctx.db.query("topics").collect());
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ slug: "sadness", title: "Feeling low", thumbKey: "thumb/aaa.webp" });
+  });
+
+  it("rejects a slug that is not a topic suffix in the catalogue", async () => {
+    const user = await asNewUser();
+    await expect(
+      user.root.mutation(internal.ai.paths.audioTracks.upsertTopic, { topic: topic("sadnes") }),
+    ).rejects.toThrow(/not a catalogued topic/);
+    expect(await user.root.run((ctx) => ctx.db.query("topics").collect())).toEqual([]);
   });
 });

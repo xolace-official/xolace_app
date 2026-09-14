@@ -3,6 +3,7 @@ import { R2 } from "@convex-dev/r2";
 import { components } from "../../_generated/api";
 import { internalMutation } from "../../_generated/server";
 import { licenceValidator } from "../../lib/validators";
+import { TOPIC_SLUGS } from "./catalog";
 
 /**
  * Kindling audio/music catalogue (#328, docs/paths-v1.md §3.2). Blobs live in
@@ -149,5 +150,42 @@ export const upsertTrack = internalMutation({
     await ctx.db.replace("audio_tracks", existing._id, { ...track, active: existing.active });
     await r2.deleteObject(ctx, oldKey);
     return { action: "updated" as const, trackId: existing._id };
+  },
+});
+
+/**
+ * Topic decoration (#353): the shared suffix's cover + display title for the
+ * Browse topic grid. The model catalogue stays the only source of valid
+ * topics — an unknown slug is rejected so presentation data can never invent
+ * one. Keyed on `slug`: insert when absent, replace otherwise. Thumb blobs are
+ * content-addressed and possibly shared with `audio_tracks`, so none is ever
+ * deleted here; a changed cover just repoints `thumbKey`.
+ */
+export const upsertTopic = internalMutation({
+  args: {
+    topic: v.object({
+      slug: v.string(),
+      title: v.optional(v.string()),
+      thumbKey: v.string(),
+      thumbSha256: v.string(),
+    }),
+  },
+  returns: v.object({
+    action: v.union(v.literal("inserted"), v.literal("updated")),
+    topicId: v.id("topics"),
+  }),
+  handler: async (ctx, { topic }) => {
+    if (!TOPIC_SLUGS.has(topic.slug)) {
+      throw new ConvexError(`topics upsert rejected: slug "${topic.slug}" is not a catalogued topic`);
+    }
+    const existing = await ctx.db
+      .query("topics")
+      .withIndex("by_slug", (q) => q.eq("slug", topic.slug))
+      .unique();
+    if (!existing) {
+      return { action: "inserted" as const, topicId: await ctx.db.insert("topics", topic) };
+    }
+    await ctx.db.replace("topics", existing._id, topic);
+    return { action: "updated" as const, topicId: existing._id };
   },
 });
