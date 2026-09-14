@@ -18,7 +18,7 @@ import {
   rateLimiterMock,
   revenuecatMock,
 } from "./mocks.helpers";
-import manifest from "../../scripts/kindling/manifest.json";
+import manifest from "../../scripts/kindling/dev/manifest.json";
 import type { WorkflowId } from "@convex-dev/workflow";
 
 type ManifestTrack = Omit<Doc<"audio_tracks">, "_id" | "_creationTime" | "key" | "thumbKey" | "active"> & {
