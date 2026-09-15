@@ -3,6 +3,31 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Trusted Bridge folds into kindling (2026-09-15)
+
+**Trusted Bridge is now a twig, not a standalone entry point.** It becomes
+one of kindling's 2–3 model-selected `actionType`s and inherits both of
+kindling's gates as-is: **Xolace+ only** (ADR 0009) and the
+`supportNeed ∈ {light, active}` trigger (`docs/paths-v1.md` §1). The old
+unconditional session-end offer (`completeAndBridge` in
+`use-session-end.ts`, free, fired on every session regardless of content) is
+retired — tending the twig is the only remaining way to reach it.
+
+A twig can be a whole sub-flow, not just bound content. Every other twig
+resolves deterministically to something that already exists (a track, the
+breathing exercise); the bridge twig has nothing to bind — its model call
+drafts a new message and the user edits/shares it. It skips the §2.3 binder
+and opens the existing Trusted Bridge flow directly. The existing
+`bridgeIntroSeen` consent gate is unchanged and still fires on first tend.
+
+Xolacer chat, notification content, and the "next step" concept are
+untouched — this only affects Trusted Bridge's shape and reachability.
+
+See [ADR 0012](docs/adr/0012-trusted-bridge-becomes-a-kindling-twig.md). The
+launch doc's "free, organic growth loop" framing
+(`docs/launch-1.4.0.0-trusted-bridge.md`) is now historical, not current
+behavior — `docs/paths-v1.md` is the live spec.
+
 ## Kindling catalogue: dev fixtures vs prod catalogue (2026-09-14)
 
 The kindling ingest source (`scripts/kindling/`) splits into two disjoint,
