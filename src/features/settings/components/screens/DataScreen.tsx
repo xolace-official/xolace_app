@@ -44,12 +44,6 @@ const RETENTION_OPTIONS: {
   },
 ];
 
-const BRIDGE_ICON = {
-  ios: "flame",
-  android: "local_fire_department",
-  web: "local_fire_department",
-} as const;
-
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
 const styles = StyleSheet.create({
@@ -63,8 +57,6 @@ export const DataScreen = () => {
     setContributeAnonymously,
     personalMemory,
     setPersonalMemory,
-    bridgeEnabled,
-    setBridgeEnabled,
     retention,
     setRetention,
     performDeleteData,
@@ -106,13 +98,6 @@ export const DataScreen = () => {
               label="Share by default"
               isSelected={contributeAnonymously}
               onToggle={setContributeAnonymously}
-            />
-            <SettingsRow
-              variant="toggle"
-              icon={settingIcon(BRIDGE_ICON)}
-              label="Show bridge at session end"
-              isSelected={bridgeEnabled}
-              onToggle={setBridgeEnabled}
               isLast
             />
           </SettingsSection>

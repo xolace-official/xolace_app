@@ -53,9 +53,6 @@ type TogglesSlice = {
   /** Version of the reflect tour this device last finished. `0` means none. */
   reflectTourVersion: number;
   setReflectTourVersion: (v: number) => void;
-  /** Feature flag — when false, bridge card is hidden and route is inaccessible. */
-  bridgeEnabled: boolean;
-  setBridgeEnabled: (v: boolean) => void;
   /** One-time flag — once true, bridge first-run intro modal never shows again. */
   bridgeIntroSeen: boolean;
   setBridgeIntroSeen: (v: boolean) => void;
@@ -160,8 +157,6 @@ export const useAppStore = create<AppState>()(
         reflectTourVersion: 0,
         setReflectTourVersion: (v) => set({ reflectTourVersion: v }),
 
-        bridgeEnabled: true,
-        setBridgeEnabled: (v) => set({ bridgeEnabled: v }),
         bridgeIntroSeen: false,
         setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
         ventIntroSeen: false,
@@ -241,7 +236,6 @@ export const useAppStore = create<AppState>()(
           toneTipSeen: s.toneTipSeen,
           notifNudgeDismissed: s.notifNudgeDismissed,
           reflectTourVersion: s.reflectTourVersion,
-          bridgeEnabled: s.bridgeEnabled,
           bridgeIntroSeen: s.bridgeIntroSeen,
           ventIntroSeen: s.ventIntroSeen,
           xolacerPrimerSeen: s.xolacerPrimerSeen,
