@@ -511,5 +511,545 @@
       "attributionText": "Music by Allicante from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-sleep-rest-01",
+    "family": "music",
+    "title": "LoFi Sleep",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "lofi",
+      "beats",
+      "sleep"
+    ],
+    "audioPath": "support/Sleep & Rest/the_mountain-lofi-sleep-lofi-sleep-music-587590.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/LoFi Sleep.jpg",
+    "durationSec": 71,
+    "sha256": "c6966df703bb0012077378b3f38d1f080c090e36a136b7a6d28ba7a81004e285",
+    "thumbSha256": "40960931ed83227ee2fe007a10dff6c5baddfbf8e116a87a9b018e07b51030b3",
+    "newUntil": 1792065344308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-02",
+    "family": "music",
+    "title": "Deep Sleep",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "lullaby",
+      "sleep",
+      "instrumental"
+    ],
+    "audioPath": "support/Sleep & Rest/the_mountain-deep-sleep-deep-sleep-music-587578.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Deep Sleep.jpg",
+    "durationSec": 135,
+    "sha256": "2202614a83de97d060c40356315a419895d74c56dcbad0c7cb0df141377f82eb",
+    "thumbSha256": "77bda7f06eb45347586281bb46bc09a9f277220601ebe6ff58a1426e845c5f4a",
+    "newUntil": 1791978944308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-03",
+    "family": "music",
+    "title": "Sleep Sounds",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "sleep",
+      "ambient"
+    ],
+    "audioPath": "support/Sleep & Rest/marlowemusic-sleep-sounds-588918.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep Sounds.jpg",
+    "durationSec": 218,
+    "sha256": "85954bec669227c6178a07961bc751fad08f5970bc7dd401ac1f05f6462772a4",
+    "thumbSha256": "2402b132050d9255522caa22517ee78b44d7ef26f56234f302ecfd07f4211f25",
+    "newUntil": 1791892544308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MarloweMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by MarloweMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-04",
+    "family": "music",
+    "title": "Sleep Music - Velario",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "ambient",
+      "sleep",
+      "instrumental"
+    ],
+    "audioPath": "support/Sleep & Rest/velariomusic-sleep-music-583326.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep Music - Velario.jpg",
+    "durationSec": 182,
+    "sha256": "8bcd08047a53ce5c1c9ceb47b5207948dfe37f1a18abc779337255caf8a5d886",
+    "thumbSha256": "7cf94683077a1e5ff0120492f0615019a2b6fe46b8d6b8eb9b467b0797910f8a",
+    "newUntil": 1791806144308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "VelarioMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by VelarioMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-05",
+    "family": "music",
+    "title": "Sleep Music - AtlasAudio",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "sleep"
+    ],
+    "audioPath": "support/Sleep & Rest/atlasaudio-sleep-music-562633.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep Music - AtlasAudio.jpg",
+    "durationSec": 265,
+    "sha256": "e500197f988815bc436b94ba092675f3bd6288c86b7d46bf690dd13f5dccdbfb",
+    "thumbSha256": "25c096e67490115a012d49233150e9b3e35aadd19a2d9d6b96203f10521935fe",
+    "newUntil": 1791719744308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-06",
+    "family": "music",
+    "title": "Sink Into Sleep",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "deep-sleep",
+      "ambient"
+    ],
+    "audioPath": "support/Sleep & Rest/marlowemusic-meditation-sleep-580201.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sink Into Sleep.jpg",
+    "durationSec": 287,
+    "sha256": "c14b24c17a85f3883bd81ae83ebc01e5feaae67eb16b853136df46c106021f10",
+    "thumbSha256": "033956d1e92f32db180e43d7ef5cac423cebe44930e5010d6c96ae07323e384a",
+    "newUntil": 1791633344308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MarloweMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by MarloweMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-07",
+    "family": "music",
+    "title": "Sleep Music (14m)",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "sleep",
+      "ambient"
+    ],
+    "audioPath": "support/Sleep & Rest/leberch-sleep-music-587996.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep Music-14m.jpg",
+    "durationSec": 894,
+    "sha256": "a1caaaa3c544995b19fb3430cbede8fb943a8cfbd3f429d5700efe42a6630b0a",
+    "thumbSha256": "3bfd671e93d0b8b0340df32aad42e8611e1db3bf1470211be1414995cf00a7bb",
+    "newUntil": 1791546944308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-08",
+    "family": "music",
+    "title": "Sleep Music (9m)",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "sleep",
+      "instrumental"
+    ],
+    "audioPath": "support/Sleep & Rest/atlasaudio-sleep-music-586396.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep Music-9m.jpg",
+    "durationSec": 590,
+    "sha256": "864cb3463d9d0a0b9c3923991d158f5bb31f09fcf1e1ca67b6f5a4eeec123157",
+    "thumbSha256": "3bfd671e93d0b8b0340df32aad42e8611e1db3bf1470211be1414995cf00a7bb",
+    "newUntil": 1791460544308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-09",
+    "family": "music",
+    "title": "Relaxing Sleep",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "classical",
+      "relaxation",
+      "sleep"
+    ],
+    "audioPath": "support/Sleep & Rest/atlasaudio-relaxing-sleep-583152.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Relaxing Sleep.jpg",
+    "durationSec": 584,
+    "sha256": "b097aeb39e6797bea650614c4bb66f685effb3bc5d53f81235e2729498e4100f",
+    "thumbSha256": "40c8f98b5b060e637515bd5fb1f47cc2e1aeb8225fc87c8a082808d93bc489aa",
+    "newUntil": 1791374144308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-10",
+    "family": "music",
+    "title": "Piano For Sleep",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "piano",
+      "sleep",
+      "instrumental"
+    ],
+    "audioPath": "support/Sleep & Rest/leberch-piano-for-sleep-587330.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Piano For Sleep.jpg",
+    "durationSec": 112,
+    "sha256": "9286741f65b2e318b39f950a1ddff0c4d8fa009c6331e9355d6563ee77ee2688",
+    "thumbSha256": "48e8e7995f1d70e7c2538537286141b7bf4c07bf8cd2bef4a8cf2e17f6bcbeb8",
+    "newUntil": 1791287744308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-11",
+    "family": "music",
+    "title": "Sleep",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "sleep",
+      "ambient"
+    ],
+    "audioPath": "support/Sleep & Rest/marlowemusic-sleep-577897.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep.jpg",
+    "durationSec": 164,
+    "sha256": "4b1de64fba0f8601eae75dd1fe87c5f6e7341a9dbf75be4d79eacda372512522",
+    "thumbSha256": "450b52d25135fd10903a3596f1efcce8857f8ffd105ffc1f18eca86b587d3dfa",
+    "newUntil": 1791201344308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MarloweMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by MarloweMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-12",
+    "family": "music",
+    "title": "Sleep Music - Verclub",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "sleep",
+      "instrumental"
+    ],
+    "audioPath": "support/Sleep & Rest/verclub_music-sleep-music-571041.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep Music - Verclub.jpg",
+    "durationSec": 532,
+    "sha256": "95a4cb02c6b426dabb8818eea791a9cb0f6ab64ab71aaa05362ff1bb296fcd43",
+    "thumbSha256": "c0b7d291438d8ddc29817f162128a54235cba2d829d1ca9f4d5b6fcbd3a1f594",
+    "newUntil": 1791114944308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Verclub_Music",
+      "attributionRequired": false,
+      "attributionText": "Music by Verclub_Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-13",
+    "family": "music",
+    "title": "Sleep Hypnosis",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "hypnosis",
+      "meditation",
+      "sleep"
+    ],
+    "audioPath": "support/Sleep & Rest/leberch-sleep-hypnosis-586804.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep Hypnosis.jpg",
+    "durationSec": 498,
+    "sha256": "bc03a5b620d1934c15b306d2d38505bfc24890b413300f03a8470b36d7a22a08",
+    "thumbSha256": "121f5cf7dfc05664e371ece5ad130c61e7ac5278266b13f5c0d975ed5295afa5",
+    "newUntil": 1791028544308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-14",
+    "family": "music",
+    "title": "Rest (7m)",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "rest",
+      "ambient"
+    ],
+    "audioPath": "support/Sleep & Rest/atlasaudio-rest-586393.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Rest-7m.jpg",
+    "durationSec": 430,
+    "sha256": "557ac5c4d0f0e61b69a8e20492f12e95dcd101a2d595b68498fc4dd8215bc232",
+    "thumbSha256": "3c4285a3d5653560a08f7e2e2eb0d59e93239787237b50cd9b68ecbd6817f1c2",
+    "newUntil": 1790942144308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-15",
+    "family": "music",
+    "title": "Rest (1m)",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "rest",
+      "instrumental"
+    ],
+    "audioPath": "support/Sleep & Rest/atlasaudio-rest-587602.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Rest-1m.jpg",
+    "durationSec": 102,
+    "sha256": "d9b2fd412e54ffa9c193d48486d0f34fd2582e3903aadff7f72c4c7a50c98a2d",
+    "thumbSha256": "5841431ad18cd6d37e1cc4f714d5e6d730ff4ecf5625f0e608a3c50e5a91c208",
+    "newUntil": 1790855744308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-16",
+    "family": "music",
+    "title": "Sleep (5m)",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "sleep",
+      "ambient"
+    ],
+    "audioPath": "support/Sleep & Rest/leberch-sleep-583079.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep-5m.jpg",
+    "durationSec": 352,
+    "sha256": "335b3473af35c60068d0b21182fb885f16bda0901ca11dc11ef7065c716c2289",
+    "thumbSha256": "cd85978f09bed3c54b5c9ab3a13fb0ed8ae33ecc560c268ead060cd42297ce66",
+    "newUntil": 1790769344308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-17",
+    "family": "music",
+    "title": "Relaxing Sleep - leberch",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "ambient",
+      "relaxation",
+      "sleep"
+    ],
+    "audioPath": "support/Sleep & Rest/leberch-relaxing-sleep-586414.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Relaxing Sleep - leberch.jpg",
+    "durationSec": 326,
+    "sha256": "45669c8ce87ae1de3eaec926d3cf937d71be25a40f55977dce85a45a06ff5903",
+    "thumbSha256": "6746efcb56412c464418eeff81d94b7a7bebb19ac2a1f35014d2486b482157b2",
+    "newUntil": 1790682944308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-18",
+    "family": "music",
+    "title": "Sleep Music (6m)",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "meditation",
+      "sleep",
+      "instrumental"
+    ],
+    "audioPath": "support/Sleep & Rest/atlasaudio-sleep-music-583148.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep Music-6m.jpg",
+    "durationSec": 412,
+    "sha256": "344d14155539cc754597dabf15256dd0c0c66e08a99170155e396d1e1685b77b",
+    "thumbSha256": "7e9d2e1035c05c4fb57a1aa8e7a2610b7808a116971bcde63822a41ebfeb9042",
+    "newUntil": 1790596544308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-19",
+    "family": "music",
+    "title": "Sleep Music - Luceris",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "ambient",
+      "sleep",
+      "instrumental"
+    ],
+    "audioPath": "support/Sleep & Rest/luceris-sleep-music-590396.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep Music - Luceris.jpg",
+    "durationSec": 415,
+    "sha256": "490a7f2c711e8434f888143ed4506575217c4446f6fd40a5d3b8899c0cbc7633",
+    "thumbSha256": "9a4394efb9018052e2dec38d562fb3a54b936d6265b018e229e74d9061144e5d",
+    "newUntil": 1790510144308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Luceris",
+      "attributionRequired": false,
+      "attributionText": "Music by Luceris from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sleep-rest-20",
+    "family": "music",
+    "title": "Sleep Music (7m)",
+    "topic": "music_topic_sleep_rest",
+    "tags": [
+      "ambient",
+      "sleep",
+      "instrumental"
+    ],
+    "audioPath": "support/Sleep & Rest/leberch-sleep-music-586417.mp3",
+    "thumbPath": "thumbs/Sleep & Rest/Sleep Music-7m.jpg",
+    "durationSec": 434,
+    "sha256": "67be20be75e82f60c4e33899c11d4d3dc7e4e811714797ef1e6b72262cb36cc3",
+    "thumbSha256": "2d10972b2a19b4aba7fa1f58a5085f45df673dce3c061dfe322926caffcfdfd5",
+    "newUntil": 1790423744308,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/sleep/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

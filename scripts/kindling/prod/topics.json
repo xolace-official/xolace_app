@@ -4,5 +4,11 @@
     "title": "Mindfulness",
     "thumbPath": "thumbs/mindfulness/mindfulness-cover.jpg",
     "thumbSha256": "a9cf80510fd21d9632a5d79bc03870e8715c7f2e2f5e33b7b1570d4ede438646"
+  },
+  {
+    "slug": "sleep_rest",
+    "title": "Sleep & Rest",
+    "thumbPath": "thumbs/Sleep & Rest/Album-sleep-rest-cover.jpg",
+    "thumbSha256": "6d4a85a4d9e7fe375c41f4825d035d3e60005a989c86a4c6302982d746dea59d"
   }
 ]
