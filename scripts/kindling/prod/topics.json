@@ -16,5 +16,11 @@
     "title": "Self-Love",
     "thumbPath": "thumbs/Self-Love/allbum-self-love-cover.jpg",
     "thumbSha256": "f20fcd4396251b428ffac3386a83588ee85bef748dc8d1a255bdc1968f146548"
+  },
+  {
+    "slug": "motivation",
+    "title": "Motivation",
+    "thumbPath": "thumbs/Motivation/Album-motivation-cover.jpg",
+    "thumbSha256": "7804c73264537abcef3883a4b31ebc063aa569c9438fe89490bd009ba710a0af"
   }
 ]

@@ -45,6 +45,21 @@ Format: `slug — what's wrong — what to verify`.
 - Verify: confirm the thumbnail's content actually matches a "path of
   mindfulness" theme and not something else entirely.
 
+## music-motivation-03 — "Motivation (2:36)"
+- Source table said artist leberch, duration 2:36 (156s) — this was the 4th
+  of 4 leberch rows in the table, but only 3 leberch-prefixed audio files
+  exist in the folder (the other 3 matched their leberch rows by exact
+  ffprobe duration: 126s/132s/166s, all dead-on).
+- The only leftover audio file is `tape-echo-motivation-567717.mp3` — a
+  different artist (Tape_Echo), and it only runs 52.7s, nowhere near the
+  table's 156s. This is a forced pairing (leftover thumb ↔ leftover audio),
+  not a real match — the biggest duration gap of any pairing made so far.
+- `licence.artist` set to Tape_Echo (the real audio's artist) for
+  attribution accuracy; `title`/thumb still say "Motivation (2:36)" from
+  the table/thumbnail.
+- Verify: listen and confirm — this is likely the wrong audio entirely for
+  this thumbnail/title, more than the other forced pairings in this log.
+
 ## General note — licence.sourceUrl
 Every track's `licence.sourceUrl` is currently set to the category search
 page on Pixabay (e.g. `https://pixabay.com/music/search/mindfulness/`,
