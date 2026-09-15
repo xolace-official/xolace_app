@@ -10,5 +10,11 @@
     "title": "Sleep & Rest",
     "thumbPath": "thumbs/Sleep & Rest/Album-sleep-rest-cover.jpg",
     "thumbSha256": "6d4a85a4d9e7fe375c41f4825d035d3e60005a989c86a4c6302982d746dea59d"
+  },
+  {
+    "slug": "self_love",
+    "title": "Self-Love",
+    "thumbPath": "thumbs/Self-Love/allbum-self-love-cover.jpg",
+    "thumbSha256": "f20fcd4396251b428ffac3386a83588ee85bef748dc8d1a255bdc1968f146548"
   }
 ]

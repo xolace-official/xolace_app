@@ -135,6 +135,33 @@
     }
   },
   {
+    "slug": "music-mindfulness-06",
+    "family": "music",
+    "title": "Path of Mindfulness (Short)",
+    "topic": "music_topic_mindfulness",
+    "tags": [
+      "ambient",
+      "meditation",
+      "instrumental"
+    ],
+    "audioPath": "support/mindfulness/meditativetiger-mindfulness-chimes-being-present-489163.mp3",
+    "thumbPath": "thumbs/mindfulness/Path of Mindfulness (Short).jpg",
+    "durationSec": 140,
+    "sha256": "7b9e852fb39ca9c3d8a7fcbd33db86714db8db4471237dad9d1afcab974a6935",
+    "thumbSha256": "50014f8cd760abeb3bb912032baf58591e52e30b980850161abaf7a4aa2bc448",
+    "newUntil": 1791648427442,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MeditativeTiger",
+      "attributionRequired": false,
+      "attributionText": "Music by MeditativeTiger from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
     "slug": "music-mindfulness-07",
     "family": "music",
     "title": "River of Mindfulness",
@@ -1049,6 +1076,546 @@
       "artist": "leberch",
       "attributionRequired": false,
       "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-01",
+    "family": "music",
+    "title": "Old Photo Album",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "modern-classical",
+      "piano",
+      "instrumental"
+    ],
+    "audioPath": "support/Self-Love/konstantinpazuzustudio-old-photo-album-neoclassical-piano-514667.mp3",
+    "thumbPath": "thumbs/Self-Love/Old Photo Album.jpg",
+    "durationSec": 161,
+    "sha256": "809b261171d912e4239e51d59be55820e4c26b9f8643571a689385460c3f169e",
+    "thumbSha256": "e8479bbdbf7ce546edfcb97640e7d09c1c0d05341cd393c7efe63038257322ae",
+    "newUntil": 1792079171788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "KonstantinPazuzuStudio",
+      "attributionRequired": false,
+      "attributionText": "Music by KonstantinPazuzuStudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-02",
+    "family": "music",
+    "title": "Liebe in mir, Liebe in dir",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "reggae",
+      "affirmation",
+      "self-love"
+    ],
+    "audioPath": "support/Self-Love/lavillia-liebe-in-mir-liebe-in-dir-413451.mp3",
+    "thumbPath": "thumbs/Self-Love/Liebe in mir, Liebe in dir.jpg",
+    "durationSec": 170,
+    "sha256": "405faec03ba020e199862a3bf37bf8dda5878ac8bb752aa05861434b2b10e5c4",
+    "thumbSha256": "418171a44d2106c2c83de5253537ae06b3670d42e23b9e7aaefab55f95b53510",
+    "newUntil": 1791992771788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Lavillia",
+      "attributionRequired": false,
+      "attributionText": "Music by Lavillia from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-03",
+    "family": "music",
+    "title": "Love Song",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "wedding",
+      "acoustic",
+      "romantic"
+    ],
+    "audioPath": "support/Self-Love/leberch-love-song-590429.mp3",
+    "thumbPath": "thumbs/Self-Love/Love Song.jpg",
+    "durationSec": 246,
+    "sha256": "313bb024e416606f8846140f15d8374717ac2672027b2fce91a6f6d840fd7cb8",
+    "thumbSha256": "e52fb0b29403d796bc9f19d89955c7a084ab9d3954877342911805601eb24677",
+    "newUntil": 1791906371788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-04",
+    "family": "music",
+    "title": "Love Background",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "wedding",
+      "instrumental",
+      "ambient"
+    ],
+    "audioPath": "support/Self-Love/atlasaudio-love-background-594868.mp3",
+    "thumbPath": "thumbs/Self-Love/Love Background.jpg",
+    "durationSec": 130,
+    "sha256": "445b8b75007cbeaa03b78cf30538f4b92341e3b60d55e4ebbc106cd588926673",
+    "thumbSha256": "ef64848403e43e739d341087b4ffe9b757c50d617225c432b4f168adca5e9ab2",
+    "newUntil": 1791819971788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-05",
+    "family": "music",
+    "title": "Love - Acoustic (3m)",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "cinematic",
+      "acoustic",
+      "romantic"
+    ],
+    "audioPath": "support/Self-Love/atlasaudio-love-522433.mp3",
+    "thumbPath": "thumbs/Self-Love/Love - Acoustic-3m.jpg",
+    "durationSec": 188,
+    "sha256": "66648cd0dda95c1c6760f49a94123f0e6d66c2ef89f1cba9a2b0dd7a0b901962",
+    "thumbSha256": "09ab894167023b9a895d37c628356636524ce15411b019684cc5bbfa540d15df",
+    "newUntil": 1791733571788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-06",
+    "family": "music",
+    "title": "Love - The Mountain",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "modern-classical",
+      "instrumental",
+      "love"
+    ],
+    "audioPath": "support/Self-Love/the_mountain-love-591389.mp3",
+    "thumbPath": "thumbs/Self-Love/Love - The Mountain.jpg",
+    "durationSec": 158,
+    "sha256": "ed97bb4d813ca18d42cc3567227e1098f6b2e094bd1fc35c0a7bedda4539746f",
+    "thumbSha256": "e83fb62b3f57d9d66a47da2284786954c00477a63a8987907d9ccb524f11d86d",
+    "newUntil": 1791647171788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-07",
+    "family": "music",
+    "title": "Love - PaulYudin",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "soft-piano",
+      "romantic",
+      "instrumental"
+    ],
+    "audioPath": "support/Self-Love/paulyudin-love-love-music-573988.mp3",
+    "thumbPath": "thumbs/Self-Love/Love - PaulYudin.jpg",
+    "durationSec": 71,
+    "sha256": "bfb4fa915d96171b62b6daf18021e1068b64030fcda5f8e8cfb10dfa5b35bc3e",
+    "thumbSha256": "92f580d6d94b66838576326d4798133f88c915e3ca46241936e3fa003f220d10",
+    "newUntil": 1791560771788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "PaulYudin",
+      "attributionRequired": false,
+      "attributionText": "Music by PaulYudin from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-08",
+    "family": "music",
+    "title": "Love - Modern Jazz (1m)",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "modern-jazz",
+      "romantic",
+      "instrumental"
+    ],
+    "audioPath": "support/Self-Love/leberch-love-love-music-583085.mp3",
+    "thumbPath": "thumbs/Self-Love/Love - Modern Jazz-1m.jpg",
+    "durationSec": 100,
+    "sha256": "19564b53e8f9beec36a6d34c81564f3170e4548da5dd855614a35f78e7679d53",
+    "thumbSha256": "b8f66c49e212636d1b49c6ed01712de37d9fbebfc0ef4ee81eb35d5a5501b62b",
+    "newUntil": 1791474371788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-09",
+    "family": "music",
+    "title": "Love - Wedding",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "wedding",
+      "romantic",
+      "instrumental"
+    ],
+    "audioPath": "support/Self-Love/atlasaudio-love-love-music-576644.mp3",
+    "thumbPath": "thumbs/Self-Love/Love - Wedding.jpg",
+    "durationSec": 97,
+    "sha256": "7ea149632959d63da74a1e51e52bd0821f046817afe200633ae45533d3817b5e",
+    "thumbSha256": "2bdab8dc0bc1fee947f76609156db6d00663652b8e45edc62aad7288733977cb",
+    "newUntil": 1791387971788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-10",
+    "family": "music",
+    "title": "It is just me, simply me",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "pop",
+      "acoustic",
+      "self-love"
+    ],
+    "audioPath": "support/Self-Love/lilex-it-is-just-me-simply-me-415669.mp3",
+    "thumbPath": "thumbs/Self-Love/It is just me, simply me.jpg",
+    "durationSec": 180,
+    "sha256": "3a22cda6ed35e90a37c2e70f8dd792efbb559b91c9933e139427b62d857a72ec",
+    "thumbSha256": "59c7b7dab832968d63b5afdd14d70066f49446f461f52d2d090b5bf9122f8d4f",
+    "newUntil": 1791301571788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "lilex",
+      "attributionRequired": false,
+      "attributionText": "Music by lilex from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-11",
+    "family": "music",
+    "title": "Love - MaksymMalko",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "modern-classical",
+      "romantic",
+      "instrumental"
+    ],
+    "audioPath": "support/Self-Love/maksymmalko-love-love-music-590406.mp3",
+    "thumbPath": "thumbs/Self-Love/Love - MaksymMalko.jpg",
+    "durationSec": 144,
+    "sha256": "8b4a4342430735313eb7acfd75e7fd26e5b3bc63a764969cbdd99a7f12dfc6ec",
+    "thumbSha256": "c0bc60a76ae87b4b6ac07a2c757c2528e851e4ceafd6a996b88d9105cc69a29c",
+    "newUntil": 1791215171788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MaksymMalko",
+      "attributionRequired": false,
+      "attributionText": "Music by MaksymMalko from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-12",
+    "family": "music",
+    "title": "Awaken Within",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "pop",
+      "energy",
+      "empowerment"
+    ],
+    "audioPath": "support/Self-Love/dascent-awaken-within-atanata-389095.mp3",
+    "thumbPath": "thumbs/Self-Love/Awaken Within.jpg",
+    "durationSec": 220,
+    "sha256": "3dbbae4590763cf8589f3148ff6f77081188d65c6e368b82da6e95243b11d643",
+    "thumbSha256": "019a0ca75157eb03fce5c94e1aa8ba15684f46308b0bd8c13393c6c0c9be4577",
+    "newUntil": 1791128771788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Dascent",
+      "attributionRequired": false,
+      "attributionText": "Music by Dascent from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-13",
+    "family": "music",
+    "title": "Meditation Bowl for Self Love",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "meditation",
+      "bowls",
+      "self-love"
+    ],
+    "audioPath": "support/Self-Love/meditativetiger-meditation-bowl-for-self-love-388612.mp3",
+    "thumbPath": "thumbs/Self-Love/Meditation Bowl for Self Love.jpg",
+    "durationSec": 141,
+    "sha256": "4537e163aeb52f50ef12f5d504778804c28b37052edb565860a03bd623856876",
+    "thumbSha256": "b1ec199a65f3a6127d5095544a672f6a5ebd85844ee4ec7ec43bf6a81209319a",
+    "newUntil": 1791042371788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MeditativeTiger",
+      "attributionRequired": false,
+      "attributionText": "Music by MeditativeTiger from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-14",
+    "family": "music",
+    "title": "Self Healing",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "ambient",
+      "healing",
+      "meditation"
+    ],
+    "audioPath": "support/Self-Love/leberch-self-healing-262607.mp3",
+    "thumbPath": "thumbs/Self-Love/Self Healing.jpg",
+    "durationSec": 382,
+    "sha256": "cf2b56c7402fcc3d4dd82e3686ca95f04f77b6b942797b8e20486ab3fefc0410",
+    "thumbSha256": "eeece1e0026b539136de002b5abc66af16757b568774fb5b226fe52d4b36e898",
+    "newUntil": 1790955971788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-15",
+    "family": "music",
+    "title": "Self Love Meditation",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "meditation",
+      "beats",
+      "self-love"
+    ],
+    "audioPath": "support/Self-Love/theorienvibes-self-love-meditation-371136.mp3",
+    "thumbPath": "thumbs/Self-Love/Self Love Meditation.jpg",
+    "durationSec": 240,
+    "sha256": "615b48aafff36d587c56edab2270fecdd0bf18b2a1f0e128a810c0ec36d7b7aa",
+    "thumbSha256": "373867f6ced15da46fa56960b1d53573a94b9ad51c136ce45c8c21b1a5056247",
+    "newUntil": 1790869571788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "theorienvibes",
+      "attributionRequired": false,
+      "attributionText": "Music by theorienvibes from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-16",
+    "family": "music",
+    "title": "Love - Wedding (2m)",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "wedding",
+      "romantic",
+      "instrumental"
+    ],
+    "audioPath": "support/Self-Love/atlasaudio-love-594867.mp3",
+    "thumbPath": "thumbs/Self-Love/Love - Wedding-2m.jpg",
+    "durationSec": 130,
+    "sha256": "4bead174f40c43ad3cb1bfb71a578a831b1b5b65ca2aa212f752c0c532f8a6fa",
+    "thumbSha256": "fa6794d7f2d5017b41bd2aed5382f7840f33515ca53f03ced0ab1f5318ea4479",
+    "newUntil": 1790783171788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-17",
+    "family": "music",
+    "title": "Love - Acoustic (2m)",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "wedding",
+      "acoustic",
+      "romantic"
+    ],
+    "audioPath": "support/Self-Love/leberch-love-595796.mp3",
+    "thumbPath": "thumbs/Self-Love/Love - Acoustic-2m.jpg",
+    "durationSec": 154,
+    "sha256": "460810e4897d256321f43f995a342c387883feecaafb1d1e13cfb8b7a1646842",
+    "thumbSha256": "c0cbfc967e93f973af68e93b03fec303b0fb3380f359383bf61200a7f57a4622",
+    "newUntil": 1790696771788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-18",
+    "family": "music",
+    "title": "Self Reflection",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "soft-house",
+      "reflection",
+      "instrumental"
+    ],
+    "audioPath": "support/Self-Love/the_mountain-self-reflection-131418.mp3",
+    "thumbPath": "thumbs/Self-Love/Self Reflection.jpg",
+    "durationSec": 101,
+    "sha256": "65e22a7c46a45fa41d314ecc6a9c828bce7d3f09fa78f1a0a51f6abe7674cb13",
+    "thumbSha256": "6cac965053d1773e69267b84e73d987f52a4bd45d093503d1594a9ee4b3cef65",
+    "newUntil": 1790610371788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-19",
+    "family": "music",
+    "title": "Love - Modern Jazz (2m)",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "modern-jazz",
+      "romantic",
+      "instrumental"
+    ],
+    "audioPath": "support/Self-Love/leberch-love-love-music-583383.mp3",
+    "thumbPath": "thumbs/Self-Love/Love - Modern Jazz-2m.jpg",
+    "durationSec": 114,
+    "sha256": "9397980aa93904059c99740784acf2f9c479ac58cb19cfdd73a2b8aa0586ce6c",
+    "thumbSha256": "08d4c25eb95c618f2770bdbd354409bdedc48b5e364d4fe5f1c76a947a5688e5",
+    "newUntil": 1790523971788,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-self-love-20",
+    "family": "music",
+    "title": "Love - Acoustic (1m)",
+    "topic": "music_topic_self_love",
+    "tags": [
+      "acoustic",
+      "romantic",
+      "instrumental"
+    ],
+    "audioPath": "support/Self-Love/theorienvibes-once-more-one-life-233087.mp3",
+    "thumbPath": "thumbs/Self-Love/Love - Acoustic-1m.jpg",
+    "durationSec": 240,
+    "sha256": "31a4c3248d6d5d4449b8799165c6935279d5381d3ea0a4eac78f96510990f1d8",
+    "thumbSha256": "db1a5d7f77984855009d7ba1f6b2b45e073934731a1592b691afe6d5838f6b78",
+    "newUntil": 1790438745732,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/self-love/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "theorienvibes",
+      "attributionRequired": false,
+      "attributionText": "Music by theorienvibes from Pixabay",
       "acquiredAt": 1789087800000
     }
   }
