@@ -22,12 +22,10 @@ type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
  * - `sessionId` — the current session identifier, if any
  * - `isLoading` — `true` while session data is loading
  * - `distilledText` — the session's distilled text, or `null` if unavailable
- * - `mirrorText` — the session's mirror text, or `null` if unavailable
  * - `contributeByDefault` — whether contributions are enabled by default (defaults to `false`)
  * - `sessionCount` — the user's completed-session count
  * - `dismiss` — record feedback and navigate home
  * - `haveMore` — record feedback and navigate home
- * - `completeAndBridge` — record feedback and navigate to the trusted bridge
  */
 export function useSessionEnd(sessionId: Id<"sessions"> | null) {
   const router = useRouter();
@@ -117,37 +115,8 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
     navigateHome();
   };
 
-  const completeAndBridge = async (
-    contributedReflection: boolean | null = null,
-    postSessionMood?: PostSessionMood,
-  ) => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    await record(contributedReflection, postSessionMood).finally(() => {
-      busyRef.current = false;
-    });
-    setPendingEventPrompt(null);
-    posthog.capture("session_completed", {
-      post_session_mood: postSessionMood ?? null,
-      contributed_reflection: contributedReflection,
-      action: "bridge",
-    });
-    // Claim navigation so the "no session" guard doesn't race us to home.
-    navigatedRef.current = true;
-    router.push({
-      pathname: "/(protected)/trusted-bridge",
-      // The bridge re-derives mirror text (and the rest of the emotional
-      // context) server-side from the session, so only the id needs to ride along.
-      params: { sessionId: sessionId as Id<"sessions"> },
-    });
-  };
-
-  const sessionData = session as
-    | { distilledText?: string; mirrorText?: string }
-    | null
-    | undefined;
+  const sessionData = session as { distilledText?: string } | null | undefined;
   const distilledText = sessionData?.distilledText ?? null;
-  const mirrorText = sessionData?.mirrorText ?? null;
   const contributeByDefault = contributeByDefaultQuery ?? false;
   const sessionCount = sessionCountQuery ?? 0;
 
@@ -155,11 +124,9 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
     sessionId,
     isLoading,
     distilledText,
-    mirrorText,
     contributeByDefault,
     sessionCount,
     dismiss,
     haveMore,
-    completeAndBridge,
   };
 }

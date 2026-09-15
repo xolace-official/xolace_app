@@ -23,17 +23,12 @@ type Phase = "acknowledge" | "mood" | "offer" | "close" | "contributed";
 type Props = {
   sessionId?: Id<"sessions">;
   distilledText: string | null;
-  mirrorText: string | null;
   contributeByDefault: boolean;
   onDismiss: (
     contributedReflection: boolean | null,
     mood?: PostSessionMood,
   ) => void;
   onHaveMore: (
-    contributedReflection: boolean | null,
-    mood?: PostSessionMood,
-  ) => void;
-  onCompleteAndBridge: (
     contributedReflection: boolean | null,
     mood?: PostSessionMood,
   ) => void;
@@ -81,11 +76,9 @@ const styles = StyleSheet.create({
 export const ActivityVariant = ({
   sessionId,
   distilledText,
-  mirrorText,
   contributeByDefault,
   onDismiss,
   onHaveMore,
-  onCompleteAndBridge,
   isNight = false,
 }: Props) => {
   const [phase, setPhase] = useState<Phase>("acknowledge");
@@ -330,14 +323,7 @@ export const ActivityVariant = ({
             transition={EASE_IN}
             className="w-full items-center gap-5"
           >
-            <CloseOffer
-              sessionId={sessionId}
-              mirrorText={mirrorText}
-              onBridge={() =>
-                onCompleteAndBridge(contributed, selectedMood ?? undefined)
-              }
-              variant="activity"
-            />
+            <CloseOffer sessionId={sessionId} variant="activity" />
             <KindlingCloseSlot sessionId={sessionId} />
             <Button
               variant="ghost"

@@ -16,8 +16,6 @@ type Props = {
   onHaveMore: () => void;
   isNight?: boolean;
   sessionId?: Id<"sessions">;
-  mirrorText: string | null;
-  onCompleteAndBridge: () => void;
 };
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -44,8 +42,6 @@ export const ExitVariant = ({
   onHaveMore,
   isNight = false,
   sessionId,
-  mirrorText,
-  onCompleteAndBridge,
 }: Props) => {
   const [phase, setPhase] = useState<Phase>("acknowledge");
   const router = useRouter();
@@ -107,12 +103,7 @@ export const ExitVariant = ({
             transition={EASE_IN}
             className="w-full items-center gap-4"
           >
-            <CloseOffer
-              sessionId={sessionId}
-              mirrorText={mirrorText}
-              onBridge={onCompleteAndBridge}
-              variant="exit"
-            />
+            <CloseOffer sessionId={sessionId} variant="exit" />
             <KindlingCloseSlot sessionId={sessionId} />
 
             <Button

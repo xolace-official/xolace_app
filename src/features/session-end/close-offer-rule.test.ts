@@ -4,27 +4,24 @@ import { chooseCloseOffer } from "./close-offer-rule";
 const person = { displayName: "Maya" };
 
 describe("chooseCloseOffer", () => {
-  it("gives the slot to the suggestion even when the Bridge gate also passes", () => {
-    // The whole point: Bridge must not win ties, or the suggestion never ships.
+  it("gives the slot to the suggestion even when Plus also qualifies", () => {
+    // The whole point: a suggestion always wins.
     expect(
       chooseCloseOffer({
         hasSession: true,
         suggestion: person,
-        bridgeEnabled: true,
-        hasMirrorText: true,
+        plusOffer: true,
       }),
     ).toBe("suggestion");
   });
 
-  it("falls back to the Bridge card when there is no suggestion", () => {
+  it("falls back to none when there is no suggestion", () => {
     expect(
       chooseCloseOffer({
         hasSession: true,
         suggestion: null,
-        bridgeEnabled: true,
-        hasMirrorText: true,
       }),
-    ).toBe("bridge");
+    ).toBe("none");
   });
 
   it("shows nothing while the suggestion query is still in flight", () => {
@@ -32,35 +29,19 @@ describe("chooseCloseOffer", () => {
       chooseCloseOffer({
         hasSession: true,
         suggestion: undefined,
-        bridgeEnabled: true,
-        hasMirrorText: true,
       }),
     ).toBe("pending");
   });
 
   // Offline, or auth not yet hydrated: the query never resolves. Holding the
-  // slot forever would offer the user nothing at all, which is worse than the
-  // Bridge card the wait was protecting.
-  it("falls back to Bridge once the wait is out", () => {
+  // slot forever would offer the user nothing at all, and once waited out
+  // there is no fallback left but none.
+  it("falls back to none once the wait is out", () => {
     expect(
       chooseCloseOffer({
         hasSession: true,
         suggestion: undefined,
         waitedOut: true,
-        bridgeEnabled: true,
-        hasMirrorText: true,
-      }),
-    ).toBe("bridge");
-  });
-
-  it("shows nothing once the wait is out if Bridge is unavailable too", () => {
-    expect(
-      chooseCloseOffer({
-        hasSession: true,
-        suggestion: undefined,
-        waitedOut: true,
-        bridgeEnabled: false,
-        hasMirrorText: true,
       }),
     ).toBe("none");
   });
@@ -73,8 +54,6 @@ describe("chooseCloseOffer", () => {
         hasSession: true,
         suggestion: person,
         waitedOut: true,
-        bridgeEnabled: true,
-        hasMirrorText: true,
       }),
     ).toBe("suggestion");
   });
@@ -84,52 +63,27 @@ describe("chooseCloseOffer", () => {
       chooseCloseOffer({
         hasSession: false,
         suggestion: undefined,
-        bridgeEnabled: true,
-        hasMirrorText: true,
-      }),
-    ).toBe("bridge");
-  });
-
-  it("offers nothing when neither gate passes", () => {
-    expect(
-      chooseCloseOffer({
-        hasSession: true,
-        suggestion: null,
-        bridgeEnabled: false,
-        hasMirrorText: true,
-      }),
-    ).toBe("none");
-    expect(
-      chooseCloseOffer({
-        hasSession: true,
-        suggestion: null,
-        bridgeEnabled: true,
-        hasMirrorText: false,
       }),
     ).toBe("none");
   });
 
-  it("still offers the suggestion when Bridge is switched off", () => {
+  it("offers nothing when there is no suggestion and no Plus moment", () => {
     expect(
       chooseCloseOffer({
         hasSession: true,
-        suggestion: person,
-        bridgeEnabled: false,
-        hasMirrorText: false,
+        suggestion: null,
       }),
-    ).toBe("suggestion");
+    ).toBe("none");
   });
 });
 
 describe("chooseCloseOffer — the Plus moment", () => {
-  it("takes the slot from the Bridge card", () => {
+  it("takes the slot when there is no suggestion", () => {
     expect(
       chooseCloseOffer({
         hasSession: true,
         suggestion: null,
         plusOffer: true,
-        bridgeEnabled: true,
-        hasMirrorText: true,
       }),
     ).toBe("plus");
   });
@@ -142,8 +96,6 @@ describe("chooseCloseOffer — the Plus moment", () => {
         hasSession: true,
         suggestion: person,
         plusOffer: true,
-        bridgeEnabled: true,
-        hasMirrorText: true,
       }),
     ).toBe("suggestion");
   });
@@ -154,20 +106,17 @@ describe("chooseCloseOffer — the Plus moment", () => {
         hasSession: true,
         suggestion: undefined,
         plusOffer: true,
-        bridgeEnabled: true,
-        hasMirrorText: true,
       }),
     ).toBe("pending");
   });
 
-  it("is the only offer when Bridge has nothing to show either", () => {
+  it("is the only offer once the wait is out", () => {
     expect(
       chooseCloseOffer({
         hasSession: true,
-        suggestion: null,
+        suggestion: undefined,
+        waitedOut: true,
         plusOffer: true,
-        bridgeEnabled: false,
-        hasMirrorText: false,
       }),
     ).toBe("plus");
   });
