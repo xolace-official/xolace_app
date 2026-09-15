@@ -261,6 +261,33 @@ export const completeStep = setState("step_completed", "done");
 export const skipStep = setState("step_skipped", "skipped");
 
 /** Close the whole kindling without tending the rest (§6). */
+/**
+ * Fulfil the kindling a free user just bought Plus for (docs/paths-v1.md
+ * §12). Completion-time `generate.run` silently no-oped on the free tier, so
+ * the purchased session has to be re-queued. The webhook that flips
+ * `hasPremium` may lag the client's purchase confirmation, so scheduling now
+ * would no-op again: when Plus is already visible server-side, schedule; else
+ * park the session on the profile and let `onEntitlementActivated` run it.
+ */
+export const requestKindling = mutation({
+  args: { sessionId: v.id("sessions") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { profile, session } = await requireSessionOwnership(ctx, args.sessionId);
+    if (await hasPremium(ctx, profile)) {
+      await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
+        sessionId: session._id,
+        emotionalProfileId: profile._id,
+      });
+    } else {
+      await ctx.db.patch("emotional_profiles", profile._id, {
+        pendingKindlingSessionId: session._id,
+      });
+    }
+    return null;
+  },
+});
+
 export const dismiss = mutation({
   args: { pathId: v.id("paths") },
   returns: v.null(),

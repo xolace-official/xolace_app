@@ -134,6 +134,12 @@ export default defineSchema({
     // this field existed; backfilled to currentStreak by migration.
     longestStreak: v.optional(v.number()),
 
+    // Session a free user bought Plus from at session-end's kindling upsell
+    // (`paths.requestKindling`). The completion-time `generate.run` no-oped
+    // on the free tier; `premium.onEntitlementActivated` re-queues it once
+    // the webhook lands, then clears this. One slot — the latest wins.
+    pendingKindlingSessionId: v.optional(v.id("sessions")),
+
     // --- Learned Patterns ---
 
     // Top 3-5 recurring emotion tags across sessions.

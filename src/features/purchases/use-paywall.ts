@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { create } from "zustand";
+import type { Id } from "@/convex/_generated/dataModel";
 
 /**
  * Which locked surface opened the paywall — carried into the
@@ -38,8 +39,12 @@ export type PaywallSurface =
   // shown every qualifying session.
   | "kindling";
 
+/**
+ * `sessionId` rides only with the `kindling` surface: the just-completed
+ * session a purchase should fulfil kindling for (`paths.requestKindling`).
+ */
 type PaywallState = {
-  open: (surface: PaywallSurface) => void;
+  open: (surface: PaywallSurface, params?: { sessionId?: Id<"sessions"> }) => void;
   close: () => void;
 };
 
@@ -60,6 +65,7 @@ type PaywallState = {
  * paywall.
  */
 export const usePaywall = create<PaywallState>(() => ({
-  open: (surface) => router.push({ pathname: "/(paywall)", params: { surface } }),
+  open: (surface, params) =>
+    router.push({ pathname: "/(paywall)", params: { surface, ...params } }),
   close: () => (router.canGoBack() ? router.back() : router.replace("/(protected)")),
 }));

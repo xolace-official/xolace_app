@@ -58,7 +58,7 @@ export const KindlingCloseSlot = ({ sessionId }: Props) => {
       onPress={() => {
         playSoftPress();
         posthog.capture("plus_upsell_tapped", { surface: "kindling" });
-        openPaywall("kindling");
+        openPaywall("kindling", { sessionId });
       }}
       accessibilityRole="button"
       accessibilityLabel="See what Xolace+ sets up"

@@ -3,10 +3,11 @@ import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { appConfig } from "@/src/config/app";
 import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
@@ -45,6 +46,12 @@ export type PaywallExitReason = "purchased" | "dismissed";
 type Props = {
   surface?: PaywallSurface;
   /**
+   * The just-completed session a purchase should fulfil kindling for
+   * (session-end's `kindling` surface, docs/paths-v1.md §12). Sent to
+   * `paths.requestKindling` once the purchase confirms.
+   */
+  sessionId?: Id<"sessions">;
+  /**
    * Where a dismiss or a completed purchase goes. Defaults to closing the
    * paywall route; intake overrides it to run its terminal step, since it has
    * no back edge to pop to.
@@ -56,7 +63,7 @@ type Props = {
   onExit?: (reason: PaywallExitReason) => void | Promise<boolean>;
 };
 
-export function PaywallScreen({ surface, onExit }: Props) {
+export function PaywallScreen({ surface, sessionId, onExit }: Props) {
   const posthog = usePostHog();
   const defaultClose = usePaywall((s) => s.close);
   const closePaywall = onExit ?? (() => defaultClose());
@@ -64,6 +71,7 @@ export function PaywallScreen({ surface, onExit }: Props) {
   const headerHeight = useHeaderHeight();
   const { offerings, purchase, isLoading, refreshOfferings } = useRevenueCat();
   const { isPlus } = usePlusEntitlement();
+  const requestKindling = useMutation(api.paths.requestKindling);
   const { isAuthenticated } = useConvexAuth();
   const summary = useQuery(api.profile.getSummary, isAuthenticated ? {} : "skip");
   const [selected, setSelected] = useState<PlanId>("annual");
@@ -143,7 +151,11 @@ export function PaywallScreen({ surface, onExit }: Props) {
     setBusy(true);
     purchase(selectedPkg, surface ?? undefined)
       .then((ok) => {
-        if (ok) exit("purchased"); // server entitlement query flips reactively
+        if (!ok) return;
+        // Best-effort: the server parks it until the webhook lands, so a
+        // failure here only costs this one kindling, never the purchase.
+        if (sessionId) requestKindling({ sessionId }).catch(console.error);
+        exit("purchased"); // server entitlement query flips reactively
       })
       .finally(() => setBusy(false));
   };

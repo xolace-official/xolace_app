@@ -530,6 +530,40 @@ describe("the completion hook", () => {
   });
 });
 
+describe("requestKindling (free → Plus at session-end)", () => {
+  const activate = (user: SeededUser) =>
+    user.root.mutation(internal.premium.onEntitlementActivated, {
+      appUserId: user.profileId,
+      entitlementId: "xolace-plus",
+      isSandbox: true,
+      sourceEventType: "INITIAL_PURCHASE",
+    });
+
+  it("parks the session while free, re-queues once the webhook lands, and only once", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    stub.isPlus = false;
+
+    await user.t.mutation(api.paths.requestKindling, { sessionId });
+    expect(scheduled(await scheduledCalls(user.root), "ai/paths/generate:run")).toBeUndefined();
+
+    stub.isPlus = true;
+    await activate(user);
+    await activate(user); // hook retry — idempotent
+    const runs = (await scheduledCalls(user.root)).filter((c) => c.name.endsWith("ai/paths/generate:run"));
+    expect(runs.map((c) => c.args)).toEqual([{ sessionId, emotionalProfileId: user.profileId }]);
+  });
+
+  it("schedules immediately when Plus is already visible server-side", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+
+    await user.t.mutation(api.paths.requestKindling, { sessionId });
+    const call = scheduled(await scheduledCalls(user.root), "ai/paths/generate:run");
+    expect(call?.args).toEqual({ sessionId, emotionalProfileId: user.profileId });
+  });
+});
+
 describe("cascade", () => {
   it("dataWipe deletes path_steps by path, then the paths row", async () => {
     const user = await asNewUser();

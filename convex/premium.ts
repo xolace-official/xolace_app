@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, internalQuery, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 import { hasPremium, PLUS_ENTITLEMENT_ID } from "./lib/premium";
 import { posthog } from "./posthog";
@@ -68,12 +69,14 @@ export const checkPremiumForProfile = internalQuery({
 
 // Hook payloads carry appUserId = emotionalProfileId = PostHog distinctId,
 // so entitlement funnels stitch with zero aliasing. Hooks retry on failure,
-// so these must be idempotent — a duplicate capture is harmless, and no DB
-// state is mutated here.
+// so these must be idempotent — a duplicate capture is harmless, and the one
+// DB write (clearing `pendingKindlingSessionId`) happens in the same
+// transaction as the schedule it fulfils, so a retry finds nothing to do.
 
 /**
  * Fired when the component marks an entitlement active (purchase, renewal,
- * trial start, uncancel). Server-side PostHog signal only.
+ * trial start, uncancel). Server-side PostHog signal, plus fulfilment of a
+ * kindling bought at session-end (`paths.requestKindling`).
  */
 export const onEntitlementActivated = internalMutation({
   args: {
@@ -101,6 +104,15 @@ export const onEntitlementActivated = internalMutation({
         sourceEventType: args.sourceEventType,
         expiresAtMs: args.expiresAtMs,
       },
+    });
+
+    const profileId = ctx.db.normalizeId("emotional_profiles", args.appUserId);
+    const profile = profileId ? await ctx.db.get("emotional_profiles", profileId) : null;
+    if (!profile?.pendingKindlingSessionId) return;
+    await ctx.db.patch("emotional_profiles", profile._id, { pendingKindlingSessionId: undefined });
+    await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
+      sessionId: profile.pendingKindlingSessionId,
+      emotionalProfileId: profile._id,
     });
   },
 });
