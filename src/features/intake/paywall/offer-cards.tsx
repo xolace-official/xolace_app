@@ -1,17 +1,103 @@
 /**
- * Three of the four offers on the intake deck, each drawn as the thing itself
+ * Four of the five offers on the intake deck, each drawn as the thing itself
  * rather than as an illustration of it — miniatures of the surfaces they
- * unlock. The fourth, the voice card, is interactive and lives in
+ * unlock. The fifth, the voice card, is interactive and lives in
  * `voice-offer-card.tsx`.
  *
- * Four is the cap. A fifth card is a fifth thing to weigh at the exact moment
+ * Five is the cap. A sixth card is a sixth thing to weigh at the exact moment
  * the user is deciding whether any of it is for them.
  */
 import { View } from 'react-native';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { OFFER_MASCOT, OfferCard, OfferMock, OfferPill } from '@/src/features/intake/paywall/offer-card';
+import { useTokenColor } from '@/src/features/profile/hooks/use-token-color';
 import { cn } from '@/src/lib/utils';
+
+const MUSIC_NOTE = { ios: 'music.note', android: 'music_note', web: 'music_note' } as const;
+const WIND = { ios: 'wind', android: 'air', web: 'air' } as const;
+const PEOPLE = { ios: 'person.2.fill', android: 'group', web: 'group' } as const;
+const CHECK = { ios: 'checkmark', android: 'check', web: 'check' } as const;
+const kindlingMascot = require('@/assets/images/flux/flux-curiosity.png');
+
+// Real twig copy (kindling/twig-presentation.ts), not placeholder text — the
+// first is always the just-finished breathing step, done; the next two are
+// what a path actually hands off to next.
+const KINDLING_STEPS = [
+  { symbol: WIND, title: 'Sit with this', done: true },
+  { symbol: MUSIC_NOTE, title: 'Low sound for the quiet', done: false },
+  { symbol: PEOPLE, title: 'Someone who has been here', done: false },
+] as const;
+
+/** A step row inside the mini rail — done steps get a filled check, the rest a plain glyph. */
+function KindlingStepRow({ symbol, title, done }: { symbol: SymbolViewProps['name']; title: string; done: boolean }) {
+  // `--offer-ink` is deliberately theme-invariant and always dark (see
+  // offer-card.tsx) — a done step's check always needs a light glyph on it.
+  const ink = useTokenColor('offer-ink');
+  return (
+    <View className="flex-row items-center gap-2.5">
+      <View
+        className={`h-7 w-7 items-center justify-center rounded-full ${done ? 'bg-offer-ink' : 'bg-offer-ink/12'}`}
+      >
+        <SymbolView name={done ? CHECK : symbol} size={12} tintColor={done ? '#fff' : ink} />
+      </View>
+      <AppText
+        className={`flex-1 text-[13.5px] font-[Poppins-Medium] ${done ? 'text-offer-ink/45 line-through' : 'text-offer-ink'}`}
+      >
+        {title}
+      </AppText>
+    </View>
+  );
+}
+
+/**
+ * Card 5 — Kindling & Browse. Two distinct panels in one card: Kindling's
+ * step rail (checkmark/step circles) and Browse's playback rows, each
+ * keeping its own icon language so the panel boundary reads as "these are
+ * two things," not just a gap between them.
+ */
+export function KindlingBrowseOfferCard({ width }: { width: number }) {
+  const ink = useTokenColor('offer-ink');
+  return (
+    <OfferCard tag="Kindling & Browse" title="What next, after clarity?" tint="topics" width={width} mascot={kindlingMascot}>
+      <View className="flex-1 justify-center gap-4">
+        <OfferMock className="gap-2.5">
+          <AppText className="text-[11px] uppercase tracking-widest text-offer-ink/50 font-[Poppins-Medium]">
+            Kindling · next up
+          </AppText>
+          {KINDLING_STEPS.map((s) => (
+            <KindlingStepRow key={s.title} {...s} />
+          ))}
+        </OfferMock>
+        <OfferMock className="gap-3">
+          <AppText className="text-[11px] uppercase tracking-widest text-offer-ink/50 font-[Poppins-Medium]">
+            Browse
+          </AppText>
+          <View className="flex-row items-center gap-3">
+            <View className="h-9 w-9 items-center justify-center rounded-full bg-offer-ink/15">
+              <SymbolView name={{ ios: 'pause.fill', android: 'pause', web: 'pause' }} size={12} tintColor={ink} />
+            </View>
+            <View className="flex-1">
+              <AppText className="text-[14px] text-offer-ink font-[Poppins-Medium]">Low sound for the quiet</AppText>
+              <AppText className="text-[12px] text-offer-ink/60 font-[Poppins-Regular]">Music · looping</AppText>
+            </View>
+          </View>
+          <View className="h-px bg-offer-ink/12" />
+          <View className="flex-row items-center gap-3">
+            <View className="h-9 w-9 items-center justify-center rounded-full bg-offer-ink/15">
+              <SymbolView name={{ ios: 'play.fill', android: 'play_arrow', web: 'play_arrow' }} size={12} tintColor={ink} />
+            </View>
+            <View className="flex-1">
+              <AppText className="text-[14px] text-offer-ink font-[Poppins-Medium]">A voice for this</AppText>
+              <AppText className="text-[12px] text-offer-ink/60 font-[Poppins-Regular]">Support audio · 8 min</AppText>
+            </View>
+          </View>
+        </OfferMock>
+      </View>
+    </OfferCard>
+  );
+}
 
 
 /** Card 2 — Xolacers. Two bubbles is the product; anything more is decoration. */
