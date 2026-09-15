@@ -11,19 +11,27 @@
 // row is not re-uploaded, so a title-only edit is cheap; an unknown slug is
 // rejected by the mutation and leaves no row or blob behind.
 //
+// Dev fixtures (scripts/kindling/dev/) and the real curated catalogue
+// (scripts/kindling/prod/, ~400 tracks) are separate manifest+topics+media
+// trees — never one set uploaded to two deployments. `--prod` targets the
+// prod Convex deployment/bucket AND defaults manifest/media to the prod/
+// tree, so a bare `--prod` can't accidentally push the tiny dev fixture set
+// as if it were the real catalogue. Pass `--manifest`/`--media` explicitly
+// to override either side independently.
+//
 // Usage:
 //   bun scripts/kindling/ingest.ts --update-hashes   # fill in sha256 fields from local files
-//   bun scripts/kindling/ingest.ts                    # upload + upsert
-//   bun scripts/kindling/ingest.ts --prod             # target the prod deployment/bucket
-//   bun scripts/kindling/ingest.ts --manifest scripts/kindling/dev-manifest.json   # topics.json is read from the same dir
+//   bun scripts/kindling/ingest.ts --update-hashes --prod (or --manifest scripts/kindling/prod/manifest.json explicitly)
+//   bun scripts/kindling/ingest.ts                    # dev deployment + dev/ fixtures
+//   bun scripts/kindling/ingest.ts --prod             # prod deployment + prod/ curated catalogue
+//   bun scripts/kindling/ingest.ts --manifest scripts/kindling/dev/manifest.json   # topics.json is read from the same dir
 //
 // Drives Convex via the local `convex` CLI (reuses your existing CLI login — no new secret).
 
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { createReadStream, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { randomUUID } from "node:crypto";
 
 type SharedFields = {
   slug: string;
@@ -57,9 +65,10 @@ const flag = (name: string, fallback: string) => {
 };
 const prod = args.includes("--prod");
 const updateHashes = args.includes("--update-hashes");
-const manifestPath = path.resolve(flag("manifest", "scripts/kindling/manifest.json"));
+const catalogueDir = prod ? "prod" : "dev";
+const manifestPath = path.resolve(flag("manifest", `scripts/kindling/${catalogueDir}/manifest.json`));
 const topicsPath = path.join(path.dirname(manifestPath), "topics.json");
-const mediaDir = path.resolve(flag("media", "scripts/kindling/media"));
+const mediaDir = path.resolve(flag("media", `scripts/kindling/${catalogueDir}/media`));
 const CONCURRENCY = 5;
 const UPLOAD_TIMEOUT_MS = 10 * 60_000; // audio files can be tens of MB
 

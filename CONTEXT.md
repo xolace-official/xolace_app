@@ -3,6 +3,40 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Kindling catalogue: dev fixtures vs prod catalogue (2026-09-14)
+
+The kindling ingest source (`scripts/kindling/`) splits into two disjoint,
+permanent trees, each a self-contained `manifest.json` + `topics.json` +
+`media/`: **`dev/`**, a small fixed fixture set for local testing, and
+**`prod/`**, the real curated catalogue (~400 tracks at launch). Neither is
+a subset or superset of the other — dev is not "the first N of prod," it's
+its own stable set that exists purely to exercise the ingest pipeline and
+the app locally without depending on the real catalogue being present or
+current.
+
+This is a **source-tree split, not a runtime one.** Dev and prod Convex
+deployments already have separate `audio_tracks`/`topics` tables and (via
+per-deployment `@convex-dev/r2` env vars) separate buckets, so a track slug
+was never at risk of colliding across environments at write time — `--prod`
+already picked the deployment. What `--prod` did *not* do was pick the
+*content*: before this split, a bare `ingest.ts` invocation and a
+`--prod` invocation read the same `manifest.json`, so the only thing
+standing between "testing locally" and "pushing the real catalogue" was
+remembering to swap `--manifest`/`--media` by hand — exactly the mistake
+that pollutes a deployment with the wrong set. `--prod` now defaults
+`--manifest`/`--media` to the `prod/` tree (still overridable), so the flag
+that picks the deployment also picks the matching catalogue.
+
+Track slugs are not required to be globally unique across the two trees —
+there is no shared index — but by convention dev fixtures use obviously-test
+slugs (`music-mindfulness-01`) that never appear in the real catalogue,
+purely so a stray slug in a log or bug report is legible at a glance. This
+is unrelated to **topic** slugs (`sadness`, `loneliness`, `sleep_rest`,
+…), which are a single fixed enum in `convex/ai/paths/catalog.ts` shared
+by every environment and every kindling family — both `dev/topics.json`
+and `prod/topics.json` may only reference that one catalogue, enforced at
+write time by `upsertTopic`.
+
 ## Topic (2026-09-14)
 
 A **topic** is the shared emotional axis under which kindling audio is

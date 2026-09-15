@@ -18,7 +18,7 @@ import {
   rateLimiterMock,
   revenuecatMock,
 } from "./mocks.helpers";
-import manifest from "../../scripts/kindling/manifest.json";
+import manifest from "../../scripts/kindling/dev/manifest.json";
 import type { WorkflowId } from "@convex-dev/workflow";
 
 type ManifestTrack = Omit<Doc<"audio_tracks">, "_id" | "_creationTime" | "key" | "thumbKey" | "active"> & {
@@ -527,6 +527,40 @@ describe("the completion hook", () => {
 
     const call = scheduled(await scheduledCalls(user.root), "ai/paths/generate:run");
     expect(call).toBeUndefined();
+  });
+});
+
+describe("requestKindling (free → Plus at session-end)", () => {
+  const activate = (user: SeededUser) =>
+    user.root.mutation(internal.premium.onEntitlementActivated, {
+      appUserId: user.profileId,
+      entitlementId: "xolace-plus",
+      isSandbox: true,
+      sourceEventType: "INITIAL_PURCHASE",
+    });
+
+  it("parks the session while free, re-queues once the webhook lands, and only once", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+    stub.isPlus = false;
+
+    await user.t.mutation(api.paths.requestKindling, { sessionId });
+    expect(scheduled(await scheduledCalls(user.root), "ai/paths/generate:run")).toBeUndefined();
+
+    stub.isPlus = true;
+    await activate(user);
+    await activate(user); // hook retry — idempotent
+    const runs = (await scheduledCalls(user.root)).filter((c) => c.name.endsWith("ai/paths/generate:run"));
+    expect(runs.map((c) => c.args)).toEqual([{ sessionId, emotionalProfileId: user.profileId }]);
+  });
+
+  it("schedules immediately when Plus is already visible server-side", async () => {
+    const user = await asNewUser();
+    const sessionId = await seedQualifying(user);
+
+    await user.t.mutation(api.paths.requestKindling, { sessionId });
+    const call = scheduled(await scheduledCalls(user.root), "ai/paths/generate:run");
+    expect(call?.args).toEqual({ sessionId, emotionalProfileId: user.profileId });
   });
 });
 

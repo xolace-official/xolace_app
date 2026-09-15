@@ -66,9 +66,10 @@ supportNeed: v.optional(
 
 ### 2.1 Hook
 
-A sibling `scheduler.runAfter(0, …)` fired from the **`completeSession` path
-only** — genuine session completion (`pathChosen: "exit"`), not `completePath`
-(the free next-step). Placed alongside the existing
+A sibling `scheduler.runAfter(0, …)` fired from `finalizeCompletion` on any
+**genuine completion** — `pathCompleted: true` with a `pathChosen` set (solo,
+peers, or exit) — never on the abandoned-session cron's stranded
+reconciliation (`pathCompleted: false`, no real finish). Placed alongside the existing
 `profileStats.updateAfterSession` / `reflectionAgent.trigger.onSessionComplete`
 siblings in `finalizeCompletion` (`convex/sessions.ts` ~L100–115), gated so it
 does not fire on the `completePath` route.

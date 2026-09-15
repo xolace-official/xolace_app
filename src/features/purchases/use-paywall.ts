@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { create } from "zustand";
+import type { Id } from "@/convex/_generated/dataModel";
 
 /**
  * Which locked surface opened the paywall — carried into the
@@ -32,10 +33,18 @@ export type PaywallSurface =
   // A free user's tap on a Browse track row (#340, §9.4) — the tap opens the
   // paywall instead of the player. The track's slug rides on the
   // browse_paywall_* events, not here.
-  | "browse";
+  | "browse"
+  // Session-end's free-user upsell line (docs/paths-v1.md §12, #337). Fixed
+  // contract slot, not one of the five ranked proactive moments — no cooldown,
+  // shown every qualifying session.
+  | "kindling";
 
+/**
+ * `sessionId` rides only with the `kindling` surface: the just-completed
+ * session a purchase should fulfil kindling for (`paths.requestKindling`).
+ */
 type PaywallState = {
-  open: (surface: PaywallSurface) => void;
+  open: (surface: PaywallSurface, params?: { sessionId?: Id<"sessions"> }) => void;
   close: () => void;
 };
 
@@ -56,6 +65,7 @@ type PaywallState = {
  * paywall.
  */
 export const usePaywall = create<PaywallState>(() => ({
-  open: (surface) => router.push({ pathname: "/(paywall)", params: { surface } }),
+  open: (surface, params) =>
+    router.push({ pathname: "/(paywall)", params: { surface, ...params } }),
   close: () => (router.canGoBack() ? router.back() : router.replace("/(protected)")),
 }));

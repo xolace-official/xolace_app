@@ -349,6 +349,9 @@ export function routeClaimStrength(input: {
 2. **At cap and `gapNamedThisSession`** → `holding`.
 3. **Gate fires** (`sp <= 2 && !memoryConnected`):
    - `gapNamedThisSession` → `holding`
+   - `atCap` (and never reached this session) → falls through to step 5. A new
+     reach never opens at the cap — `Say more` never renders there (§6), so a
+     question with no way to answer it is a dead end, not a reach.
    - otherwise → `reaching`
 4. *(falls through)*
 5. `confidence >= 0.75 && specificity >= 6` → `confident`, else `measured`.
@@ -998,6 +1001,14 @@ ruling and with `holding` being defined as *what follows an unanswered reach* �
 an articulate `sp 6` session that simply used both turns should not emit it. Flagged
 rather than assumed: it is the one place this document resolves an ambiguity between
 two tickets rather than transcribing a settled decision.
+
+A session that never reached and then hits the cap with the gate still firing
+(low specificity, memory unconnected) does **not** get `reaching` either — that
+was a bug in the first cut of this rule (routeClaimStrength fell through to the
+gate check unconditionally at the cap). `Say more` never renders at the cap
+(§6), so a `reaching` mirror there would ask a question the user has no button
+left to answer. Such a session falls through to the normal poles (`measured` /
+`confident`) and gets its best-effort read instead.
 
 ---
 

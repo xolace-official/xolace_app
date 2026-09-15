@@ -95,6 +95,7 @@ Pick ${MIN_TWIGS} or ${MAX_TWIGS} actions from the catalog below that fit this p
 - Do NOT invent details they did not say.
 - Do NOT write more than one sentence, and do NOT stack clauses to smuggle a second one in.
 - Do NOT pick the same action twice, and do NOT pick an action that is not in the catalog.
+- Do NOT pick two spoken support-audio actions (\`audio_topic_*\`) together, and do NOT pick two instrumental music actions (\`music_topic_*\`) together — vary it: one spoken and one music is good, or pair either with breathing or xolacer.
 - Do NOT pick "xolacer" unless they seem to want a person rather than a tool.
 - Do NOT mention Xolace, the app, the model, or the catalog in the why line.
 
