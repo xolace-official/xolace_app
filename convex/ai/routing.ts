@@ -109,12 +109,17 @@ export function routeClaimStrength(input: ClaimStrengthSignal): ClaimStrength {
     // 2. At the cap, a session that reached stops reaching and holds.
     if (input.atCap && input.gapNamedThisSession) return "holding";
 
-    // 3. The gate itself.
+    // 3. The gate itself. A NEW reach never opens at the cap: "Say more"
+    // never renders there (§6), so a question with no way to answer it is a
+    // dead end, not a reach. A session that already reached still holds;
+    // one that never reached falls through to the normal poles and answers
+    // with its best read instead of a question nobody can respond to.
     const memoryConnected =
       input.episodicTopScore !== undefined &&
       input.episodicTopScore >= EPISODIC_CONNECT_FLOOR;
     if (input.specificity < LOW_SPECIFICITY && !memoryConnected) {
-      return input.gapNamedThisSession ? "holding" : "reaching";
+      if (input.gapNamedThisSession) return "holding";
+      if (!input.atCap) return "reaching";
     }
   }
 

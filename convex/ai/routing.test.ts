@@ -119,6 +119,15 @@ describe("routeClaimStrength — holding", () => {
       "confident",
     );
   });
+
+  it("never opens a NEW reach at the cap, even inside the gate", () => {
+    // Faint, eligible, unsuppressed, never reached this session — the exact
+    // shape the gate reaches on at turn 1. At the cap there is no "Say more"
+    // left to answer a question with, so this must NOT be "reaching".
+    expect(route({ atCap: true })).not.toBe("reaching");
+    // Falls through to the normal poles for its best-effort read instead.
+    expect(route({ atCap: true })).toBe("measured");
+  });
 });
 
 describe("routeClaimStrength — the normal poles", () => {
