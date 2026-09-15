@@ -26,6 +26,10 @@ describe("bindTwig", () => {
     expect(bind("xolacer", [], { suggestedSpecialty: "burnout" })).toEqual({ specialty: "burnout" });
   });
 
+  it("bridge binds without content", () => {
+    expect(bind("bridge", [])).toEqual({ exercise: "trusted-bridge" });
+  });
+
   it("binds audio_topic_* to the best tag match in its own family and topic", () => {
     const tracks = [
       track({ slug: "b", tags: ["anxiety", "racing-thoughts"] }),
