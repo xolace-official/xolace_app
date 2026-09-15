@@ -39,6 +39,12 @@ export const TWIG_PRESENTATION: Record<
     title: "Someone who has been here",
     actionLabel: "See who",
   },
+  bridge: {
+    symbol: { ios: "envelope", android: "mail", web: "mail" },
+    eyebrow: "When you're ready",
+    title: "Tell someone you trust",
+    actionLabel: "Write",
+  },
 };
 
 /**
@@ -82,6 +88,12 @@ export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | n
       return {
         pathname: "/sit-with-this",
         params: { from: "kindling", sessionId, stepId: twig._id },
+      };
+    case "bridge":
+      // `stepId` rides along so a completed share tends the twig.
+      return {
+        pathname: "/trusted-bridge",
+        params: { sessionId, stepId: twig._id },
       };
     case "xolacer": {
       // Only the ranker's specialty is stored — never a person (privacy, see

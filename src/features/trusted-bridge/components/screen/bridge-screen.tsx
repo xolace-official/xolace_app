@@ -18,6 +18,8 @@ import {
 } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { usePostHog } from "posthog-react-native";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { useAppStore } from "@/src/store/store";
 import { useBridgeDraft } from "@/src/features/trusted-bridge/hooks/use-bridge-draft";
@@ -64,13 +66,15 @@ const FADE_IN = { opacity: 1 };
 
 type Props = {
   sessionId: Id<"sessions">;
+  stepId?: Id<"path_steps">;
 };
 
-export function BridgeScreen({ sessionId }: Props) {
+export function BridgeScreen({ sessionId, stepId }: Props) {
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();
+  const completeStep = useMutation(api.paths.completeStep);
   const mutedColor = (useThemeColor("foreground") as string) + "55";
 
   const bridgeIntroSeen = useAppStore((s) => s.bridgeIntroSeen);
@@ -140,6 +144,7 @@ export function BridgeScreen({ sessionId }: Props) {
         posthog.capture("bridge_shared", {
           recipient_relationship: relationship,
         });
+        if (stepId) await completeStep({ stepId }).catch(() => {});
       }
     } catch {
       // share sheet cancelled
