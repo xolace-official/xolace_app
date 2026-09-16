@@ -2698,5 +2698,545 @@
       "attributionText": "Music by alanajordan from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-nature-mindfulness-01",
+    "family": "music",
+    "title": "Gentle Ambient Texture",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "ambient",
+      "light",
+      "instrumental"
+    ],
+    "audioPath": "support/Nature & Mindfulness/allicante-gentle-ambient-texture-for-mindfulness-332295.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Gentle Ambient Texture.jpg",
+    "durationSec": 262,
+    "sha256": "da9a793aae0e56b4cb826644ff7d8714ada2ea0ef382b0748b8a26ed46b3a2c9",
+    "thumbSha256": "79f28d6876d6d228c14a7b23ddb679b519eb1b99e65c1276f0158d7a1c05be58",
+    "newUntil": 1792145772708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "allicante",
+      "attributionRequired": false,
+      "attributionText": "Music by allicante from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-02",
+    "family": "music",
+    "title": "Nature - Nature Music",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "classical",
+      "nature",
+      "instrumental"
+    ],
+    "audioPath": "support/Nature & Mindfulness/paulyudin-nature-nature-music-573985.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Nature - Nature Music.jpg",
+    "durationSec": 70,
+    "sha256": "fac1670ddf9d41ce57324de1ce40d91465724c713f2f6661b2212d92fb3f940f",
+    "thumbSha256": "578b2e74563ee36f9d93c9f8e71b8fb06be7e12c564c651a15b3127ec7934c29",
+    "newUntil": 1792059372708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "paulyudin",
+      "attributionRequired": false,
+      "attributionText": "Music by paulyudin from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-03",
+    "family": "music",
+    "title": "Nature Meditation",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "meditation",
+      "nature",
+      "432hz"
+    ],
+    "audioPath": "support/Nature & Mindfulness/danamusic-nature-meditation-399558.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Nature Meditation.jpg",
+    "durationSec": 550,
+    "sha256": "caa01928c03511e9a9c57d8d7af5ef247fdadfea22898062d3941955075b674d",
+    "thumbSha256": "28bfed425fd3404e91dc133f7d3c29cf5d51d7130bd70df63ab1180d38d0526b",
+    "newUntil": 1791972972708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "danamusic",
+      "attributionRequired": false,
+      "attributionText": "Music by danamusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-04",
+    "family": "music",
+    "title": "Nature - AtlasAudio",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "meditation",
+      "nature",
+      "ambient"
+    ],
+    "audioPath": "support/Nature & Mindfulness/atlasaudio-nature-nature-music-576648.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Nature - AtlasAudio.jpg",
+    "durationSec": 156,
+    "sha256": "16ebf19c872980d63e91faf2353f1da950d3128e3d5d8248183250707a4a8026",
+    "thumbSha256": "eebf3fb960fe1889b398b840eebc1210980a4218b6f340c31ef25d48f84bc235",
+    "newUntil": 1791886572708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "atlasaudio",
+      "attributionRequired": false,
+      "attributionText": "Music by atlasaudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-05",
+    "family": "music",
+    "title": "Nature Meditation - Megisss",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "ambient",
+      "nature",
+      "meditation"
+    ],
+    "audioPath": "support/Nature & Mindfulness/megisss-nature-meditation-457984.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Nature Meditation - Megisss.jpg",
+    "durationSec": 212,
+    "sha256": "8d1e99c97d3a1874b13f0dfc368e9355fb567d277adce3ca342f9c1897a206f2",
+    "thumbSha256": "b8bbfbf7b66a5704d0537342f93b4d7091f178e252a1224a946fd07bb8926b7e",
+    "newUntil": 1791800172708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "megisss",
+      "attributionRequired": false,
+      "attributionText": "Music by megisss from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-06",
+    "family": "music",
+    "title": "Nature Sounds Slow Meditation",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "yoga",
+      "nature",
+      "meditation"
+    ],
+    "audioPath": "support/Nature & Mindfulness/wings_of_freedom-nature-sounds-slow-meditation-healing-frequency-432hz-368787.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Nature Sounds Slow Meditation.jpg",
+    "durationSec": 240,
+    "sha256": "1669ebbc697ff94b4cdd14e5a1849ecb661189f5ebcfeee3c165f9aaa506c35d",
+    "thumbSha256": "17745b8cb127f1c14f67bee785d64721f1aeb27f61e983e4877e3d57b41c1b06",
+    "newUntil": 1791713772708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "wings_of_freedom",
+      "attributionRequired": false,
+      "attributionText": "Music by wings_of_freedom from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-07",
+    "family": "music",
+    "title": "Ambient Nature",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "ambient",
+      "nature",
+      "instrumental"
+    ],
+    "audioPath": "support/Nature & Mindfulness/atlasaudio-ambient-nature-518687.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Ambient Nature.jpg",
+    "durationSec": 208,
+    "sha256": "ae6a0d591d247fa2a3edcc4635c5de64597905904749f5934e5c4caed07016cb",
+    "thumbSha256": "347fb5021802b79b3bb61412d0658f69399586fa37378d1de07b59eefb0a2e8f",
+    "newUntil": 1791627372708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "atlasaudio",
+      "attributionRequired": false,
+      "attributionText": "Music by atlasaudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-08",
+    "family": "music",
+    "title": "Mindfulness Meditation",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "mindfulness"
+    ],
+    "audioPath": "support/Nature & Mindfulness/pavetraxx-mindfulness-meditation-268622.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Mindfulness Meditation.jpg",
+    "durationSec": 160,
+    "sha256": "d4d5f1a8f297bd4889d0c65a39480d984cd7e0b4ef448b27cf2254e83de3b3e6",
+    "thumbSha256": "8f730270b65abf20608e866af39bbfe73efe171524817ebb2bc96230a624742e",
+    "newUntil": 1791540972708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "pavetraxx",
+      "attributionRequired": false,
+      "attributionText": "Music by pavetraxx from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-09",
+    "family": "music",
+    "title": "Mindfulness Meditation - Yoga",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "meditation",
+      "yoga",
+      "spiritual"
+    ],
+    "audioPath": "support/Nature & Mindfulness/higheruniversalman-mindfulness-meditation-180198.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Mindfulness Meditation - Yoga.jpg",
+    "durationSec": 274,
+    "sha256": "172b2822208ea71b16908e45bd1d36968028335226d837e185bf37a88eeb58f5",
+    "thumbSha256": "a3e29c936416603470a8cb299683c1f42185a94023192231064b8adcf4a4cb7f",
+    "newUntil": 1791454572708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "higheruniversalman",
+      "attributionRequired": false,
+      "attributionText": "Music by higheruniversalman from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-10",
+    "family": "music",
+    "title": "Radiant Mindfulness",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "piano",
+      "mindfulness",
+      "instrumental"
+    ],
+    "audioPath": "support/Nature & Mindfulness/breakzstudios-radiant-mindfulness-165866.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Radiant Mindfulness.jpg",
+    "durationSec": 160,
+    "sha256": "85be6a49de0e603231de1de5f77af852012bfa6203963b6b574cd0a2c8bdf27a",
+    "thumbSha256": "26a4028209d75a22535a8b871706dec90c4b8faa8cdb580b7eaa8026cf2bdd0e",
+    "newUntil": 1791368172708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "breakzstudios",
+      "attributionRequired": false,
+      "attributionText": "Music by breakzstudios from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-11",
+    "family": "music",
+    "title": "River of Mindfulness",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "ambient",
+      "water",
+      "meditation"
+    ],
+    "audioPath": "support/Nature & Mindfulness/meditativecalmbuddha-river-of-mindfulness-490264.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/River of Mindfulness.jpg",
+    "durationSec": 181,
+    "sha256": "3b6048b2e7e294bddf12b98c0f5ae88c5ee92dd80f43b94a5e3aa88afe0640e3",
+    "thumbSha256": "d1839dd73cd4acee3b57dee29c4832d551e0e3d0066dc8ffd763d512b74b0f4f",
+    "newUntil": 1791281772708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "meditativecalmbuddha",
+      "attributionRequired": false,
+      "attributionText": "Music by meditativecalmbuddha from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-12",
+    "family": "music",
+    "title": "Meditation Mindfulness Ambient",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "electronic",
+      "ambient",
+      "meditation"
+    ],
+    "audioPath": "support/Nature & Mindfulness/databend-meditation-mindfulness-ambient-546937.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Meditation Mindfulness Ambient.jpg",
+    "durationSec": 119,
+    "sha256": "785cb074777a9991c529abfae4ddb7abcb3a651c8303d2851c78db07d05dee1f",
+    "thumbSha256": "f075ae2477b7fe35b654286667b5537c6ca396fdaaa93981c3f79112049fc539",
+    "newUntil": 1791195372708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "databend",
+      "attributionRequired": false,
+      "attributionText": "Music by databend from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-13",
+    "family": "music",
+    "title": "Morning Mindfulness Reset",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "morning"
+    ],
+    "audioPath": "support/Nature & Mindfulness/meditativetiger-morning-mindfulness-reset-meditation-511822.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Morning Mindfulness Reset.jpg",
+    "durationSec": 136,
+    "sha256": "5bd2adefbc8a0e39e22b18bdfba6525abe9c07a51cc63e2ad775fcbc97ac338d",
+    "thumbSha256": "2d1d138d65b41759b458992d94077eeeee7b7ced77935c10ad644669aef80961",
+    "newUntil": 1791108972708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "meditativetiger",
+      "attributionRequired": false,
+      "attributionText": "Music by meditativetiger from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-14",
+    "family": "music",
+    "title": "Mindfulness",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "classical",
+      "mindfulness",
+      "instrumental"
+    ],
+    "audioPath": "support/Nature & Mindfulness/the_mountain-mindfulness-149939.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Mindfulness.jpg",
+    "durationSec": 90,
+    "sha256": "83144b3a2345695590055e2cf229d914616b92ee68d2904533dad4cf0c683ee9",
+    "thumbSha256": "c608b8a9451557bab0ef1f699f5915d0dff25b6d695e0ebd8bc75bd0de179e45",
+    "newUntil": 1791022572708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "the_mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by the_mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-15",
+    "family": "music",
+    "title": "Nature",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "ambient",
+      "nature",
+      "instrumental"
+    ],
+    "audioPath": "support/Nature & Mindfulness/leberch-nature-584950.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Nature.jpg",
+    "durationSec": 138,
+    "sha256": "5df32511ba74a4314c9c19321cb7ee00f73b7faec656df3ec922a96092a6747f",
+    "thumbSha256": "2e79e2aacbfa4df2ae802d2f3a990a4b598afe45a60a4c12b69b23624b51c270",
+    "newUntil": 1790936172708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-16",
+    "family": "music",
+    "title": "Mindfulness Relaxation",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "ambient",
+      "relaxation",
+      "meditation"
+    ],
+    "audioPath": "support/Nature & Mindfulness/john_kensy_music-mindfulness-relaxation-amp-meditation-music-22174.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Mindfulness Relaxation.jpg",
+    "durationSec": 241,
+    "sha256": "f271e246edb0530a388c52e063d230517b5d9a81e1a8ed8f15bb6d35e317a3b1",
+    "thumbSha256": "52b8f6838e6b365aa216f41369ef8be7c94e5b6506e82c6e6c8a502ee534770a",
+    "newUntil": 1790849772708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "john_kensy_music",
+      "attributionRequired": false,
+      "attributionText": "Music by john_kensy_music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-17",
+    "family": "music",
+    "title": "Mindfulness",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "ambient",
+      "mindfulness",
+      "instrumental"
+    ],
+    "audioPath": "support/Nature & Mindfulness/mindfulnessyt-mindfulness-443486.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Mindfulness - Mindfulness.jpg",
+    "durationSec": 555,
+    "sha256": "46b9df823bbc13a21957bb48a6e526c0df7e75286236b4764c3225e5a83d8d32",
+    "thumbSha256": "781afe4fb8ce9fd88854b7e7f9d4a1a73e6c227f03300b70029fc7de761da881",
+    "newUntil": 1790763372708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "mindfulnessyt",
+      "attributionRequired": false,
+      "attributionText": "Music by mindfulnessyt from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-18",
+    "family": "music",
+    "title": "Hatha Meditation",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "meditation",
+      "hatha",
+      "spiritual"
+    ],
+    "audioPath": "support/Nature & Mindfulness/natureseye-hatha-meditation-for-mindfulness-9798.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Hatha Meditation.jpg",
+    "durationSec": 1023,
+    "sha256": "81d25e35e5b4cb484f5f6bb84256c2fd266173d990057d1861f13453c2105014",
+    "thumbSha256": "9654d1ea4bfdd6eb868e0a180f066ddd3edc4ef318d6e41470efd969a7b1c812",
+    "newUntil": 1790676972708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "natureseye",
+      "attributionRequired": false,
+      "attributionText": "Music by natureseye from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-19",
+    "family": "music",
+    "title": "Zen Garden Ambience",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "classical",
+      "zen",
+      "ambient"
+    ],
+    "audioPath": "support/Nature & Mindfulness/vividillustrate-zen-garden-ambience-japanese-flute-amp-waterfall-mindfulness-361112.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Zen Garden Ambience-2.jpg",
+    "durationSec": 115,
+    "sha256": "092925f97eda8157caded7bd00dee2ae1368ecd388c13127966cb4caf9f3adb2",
+    "thumbSha256": "fb9d380e04c2254d4bdb93e87e228a2723784fe6b10e3cece930aff951c6de6e",
+    "newUntil": 1790590572708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "vividillustrate",
+      "attributionRequired": false,
+      "attributionText": "Music by vividillustrate from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-nature-mindfulness-20",
+    "family": "music",
+    "title": "Cultivation | Music for Growth",
+    "topic": "music_topic_nature_mindfulness",
+    "tags": [
+      "acoustic",
+      "growth",
+      "instrumental"
+    ],
+    "audioPath": "support/Nature & Mindfulness/higheruniversalman-cultivation-music-for-growth-mindfulness-amp-nature-videos-291781.mp3",
+    "thumbPath": "thumbs/Nature & Mindfulness/Cultivation - Music for Growth.jpg",
+    "durationSec": 60,
+    "sha256": "c47a448dcb7acc94136a5eb32e3aeb4e2bec2e638028c677a1c2d4f0ff31f5c3",
+    "thumbSha256": "4adca299482500590619c5f4a5bb802a26fd459a42a7aa2eecf686b59ca02377",
+    "newUntil": 1790504172708,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/nature-mindfulness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "higheruniversalman",
+      "attributionRequired": false,
+      "attributionText": "Music by higheruniversalman from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

@@ -28,5 +28,11 @@
     "title": "Emotional Release",
     "thumbPath": "thumbs/Emotional-release/Album-emotional-release-cover.jpg",
     "thumbSha256": "2082356be1b6a1a98fb51ac911acf6e5a83fda930bf6b53d7732c7c432066146"
+  },
+  {
+    "slug": "nature_mindfulness",
+    "title": "Nature & Mindfulness",
+    "thumbPath": "thumbs/Nature & Mindfulness/Album-nature-mindfulness-Cover.jpg",
+    "thumbSha256": "22cfa5688373b90f6b81e4c5890b946674591428f986d0b1728465a1f2dd895c"
   }
 ]
