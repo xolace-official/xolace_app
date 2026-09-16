@@ -5371,5 +5371,302 @@
       "attributionText": "Music by alanajordan from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-anxiety-relief-01",
+    "family": "music",
+    "title": "Golden Dawn Sitar & Sacred Chant - Anxiety Relief Music",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "sitar",
+      "chant",
+      "mantra",
+      "calm mind"
+    ],
+    "audioPath": "support/Anxiety Relief/boopul-golden-dawn-sitar-amp-sacred-chant-anxiety-relief-music-538720.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 479,
+    "sha256": "d65301928a49692b45d6c9f4aed5b6cea30f664732afcee916f5aa744b73f531",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1792193013560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "boopul",
+      "attributionRequired": false,
+      "attributionText": "Music by boopul from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-anxiety-relief-02",
+    "family": "music",
+    "title": "Dream",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "electronic",
+      "dream",
+      "ambient"
+    ],
+    "audioPath": "support/Anxiety Relief/electroanimals-dream-588266.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 143,
+    "sha256": "0821031b52a92fbd889a871d46f97b748ef521106988d139e777548e85889c62",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1792106613560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "electroanimals",
+      "attributionRequired": false,
+      "attributionText": "Music by electroanimals from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-anxiety-relief-03",
+    "family": "music",
+    "title": "You're Here",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "yoga",
+      "relaxation",
+      "mindfulness"
+    ],
+    "audioPath": "support/Anxiety Relief/inhaleexhalestudio-youx27re-here-583965.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 270,
+    "sha256": "380c334d80a17869f07069dd03527683dd4ecce3dff9940d59f07c985d04274d",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1792020213560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "inhaleexhalestudio",
+      "attributionRequired": false,
+      "attributionText": "Music by inhaleexhalestudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-anxiety-relief-04",
+    "family": "music",
+    "title": "Track 3 - Do One Thing Well",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "mental health",
+      "wellbeing",
+      "emotional support"
+    ],
+    "audioPath": "support/Anxiety Relief/innovations4u-track-3-do-one-thing-well-by-christian-scholl-aka-tangere-mundi-541043.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 83,
+    "sha256": "698e62c53d20baf443aab93e3a8500864f30de575cef8d4f1072906c5529d8ca",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1791933813560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Innovations4u",
+      "attributionRequired": false,
+      "attributionText": "Music by Innovations4u from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-anxiety-relief-05",
+    "family": "music",
+    "title": "Track 7 - Say It Out Loud",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "mental health",
+      "anxiety relief",
+      "support"
+    ],
+    "audioPath": "support/Anxiety Relief/innovations4u-track-7-say-it-out-loud-by-christian-scholl-aka-tangere-mundi-541050.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 129,
+    "sha256": "29e1f08f0f347fbaf8ecc04f3cb5f3a26a93fd53662f705f58a4b2791ea12f2b",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1791847413560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Innovations4u",
+      "attributionRequired": false,
+      "attributionText": "Music by Innovations4u from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-anxiety-relief-06",
+    "family": "music",
+    "title": "Track 11 - Ask for Help Early",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "mental health",
+      "emotional regulation"
+    ],
+    "audioPath": "support/Anxiety Relief/innovations4u-track-11-ask-for-help-early-by-christian-scholl-aka-tangere-mundi-541051.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 119,
+    "sha256": "75fb2c5e886f1bf6c680180ed19e11593dd7334e253c3ddf2eb721dbf62f33cf",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1791761013560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Innovations4u",
+      "attributionRequired": false,
+      "attributionText": "Music by Innovations4u from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-anxiety-relief-07",
+    "family": "music",
+    "title": "The Meditative Tiger 963Hz Pineal Gland Activator Soundbath",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "soundbath",
+      "963hz",
+      "pineal gland"
+    ],
+    "audioPath": "support/Anxiety Relief/meditativetiger-the-meditative-tiger-963hz-pineal-gland-activator-soundbath-535932.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 163,
+    "sha256": "7fa70e41201fd99fac506bb29e588e093cfba8300bc4ea2fc024fa0dc8f318e6",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1791674613560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MeditativeTiger",
+      "attributionRequired": false,
+      "attributionText": "Music by MeditativeTiger from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-anxiety-relief-08",
+    "family": "music",
+    "title": "Anxiety Relief Music",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "anxiety relief",
+      "stress relief",
+      "calming"
+    ],
+    "audioPath": "support/Anxiety Relief/petrushkasound-anxiety-relief-music-438225.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 467,
+    "sha256": "0187b3c611052e19b3678ec4c1f5b91215607480e6265ac6aefb7c11ac0bfe21",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1791588213560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "petrushkasound",
+      "attributionRequired": false,
+      "attributionText": "Music by petrushkasound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-anxiety-relief-09",
+    "family": "music",
+    "title": "A Relaxing Flute to Lower Your Heartbeat",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "flute",
+      "relaxing",
+      "heartbeat"
+    ],
+    "audioPath": "support/Anxiety Relief/poorartistt-a-relaxing-flute-to-lower-your-heartbeat-567227.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 196,
+    "sha256": "2f427371ca22ac2b701dc530be101ea75c10fd7b8df3cdd977bb67eca4280fca",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1791501813560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "poorartistt",
+      "attributionRequired": false,
+      "attributionText": "Music by poorartistt from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-anxiety-relief-10",
+    "family": "music",
+    "title": "Sunset Between Us",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "mellow",
+      "neo soul",
+      "sunset"
+    ],
+    "audioPath": "support/Anxiety Relief/tideblue-sunset-between-us-solo-ver-mellow-neo-soul-rampb-520359.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 185,
+    "sha256": "f5e2319a34a15d32ccd38801195069583b83ba1e114415de2ed15b02ccd77b97",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1791415413560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "tideblue",
+      "attributionRequired": false,
+      "attributionText": "Music by tideblue from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-anxiety-relief-11",
+    "family": "music",
+    "title": "Ending Yoga Practice",
+    "topic": "music_topic_anxiety_relief",
+    "tags": [
+      "yoga",
+      "ending yoga practice",
+      "yoga practice"
+    ],
+    "audioPath": "support/Anxiety Relief/bearstockmusic-ending-yoga-practice-586684.mp3",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "durationSec": 128,
+    "sha256": "73ce703a3dbe15020668dba4f28b8d89fe7afceec99b22f6977809b31cd3dc5f",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283",
+    "newUntil": 1791329013560,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/anxiety-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "BearStockMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by BearStockMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

@@ -58,5 +58,11 @@
     "title": "Confidence & Empowerment",
     "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
     "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76"
+  },
+  {
+    "slug": "anxiety_relief",
+    "title": "Anxiety Relief",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283"
   }
 ]
