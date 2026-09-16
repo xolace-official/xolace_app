@@ -326,24 +326,25 @@ export const ActivityVariant = ({
             <CloseOffer sessionId={sessionId} variant="activity" />
             <KindlingCloseSlot sessionId={sessionId} />
             <Button
-              variant="ghost"
+              variant="primary"
               size="lg"
               onPress={() => onHaveMore(contributed, selectedMood ?? undefined)}
-              accessibilityLabel="Have more? I'm here."
-              className="w-full"
+              accessibilityLabel="Start another session"
+              className="w-full rounded-2xl"
             >
-              <Button.Label className="font-light text-foreground/65">
-                Have more? I&apos;m here.
-              </Button.Label>
+              <Button.Label>Start another session</Button.Label>
             </Button>
 
             <Button
+              variant="outline"
+              size="lg"
               onPress={() => onDismiss(contributed, selectedMood ?? undefined)}
-              accessibilityLabel="Done"
-              variant="ghost"
-              size="sm"
+              accessibilityLabel="I'm done for now"
+              className="w-full rounded-2xl"
             >
-              <Button.Label className="text-sm text-foreground/30">Done</Button.Label>
+              <Button.Label className="text-foreground/70">
+                I&apos;m done for now
+              </Button.Label>
             </Button>
           </EaseView>
         </View>

@@ -107,15 +107,13 @@ export const ExitVariant = ({
             <KindlingCloseSlot sessionId={sessionId} />
 
             <Button
-              variant="ghost"
+              variant="primary"
               size="lg"
               onPress={onHaveMore}
-              accessibilityLabel="Have more? I'm here."
-              className="w-full"
+              accessibilityLabel="Start another session"
+              className="w-full rounded-2xl"
             >
-              <Button.Label className="font-light text-foreground/55">
-                Have more? I&apos;m here.
-              </Button.Label>
+              <Button.Label>Start another session</Button.Label>
             </Button>
           </EaseView>
         </View>
