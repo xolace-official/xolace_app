@@ -34,5 +34,11 @@
     "title": "Nature & Mindfulness",
     "thumbPath": "thumbs/Nature & Mindfulness/Album-nature-mindfulness-Cover.jpg",
     "thumbSha256": "22cfa5688373b90f6b81e4c5890b946674591428f986d0b1728465a1f2dd895c"
+  },
+  {
+    "slug": "stress_relief",
+    "title": "Stress Relief",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132"
   }
 ]

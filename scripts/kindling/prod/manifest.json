@@ -3238,5 +3238,545 @@
       "attributionText": "Music by higheruniversalman from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-stress-relief-01",
+    "family": "music",
+    "title": "Rain Sounds for Stress & Anxiety Relief",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "ambient",
+      "rain",
+      "relaxation"
+    ],
+    "audioPath": "support/Stress Relief/celeronbeats-rain-sounds-for-stress-amp-anxiety-relief-574996.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 122,
+    "sha256": "d7de5ed4ab369d009bca562e8d05e09574d6c720fbb42d2687c6fac7a3e0737b",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1792159117388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "CeleronBeats",
+      "attributionRequired": false,
+      "attributionText": "Music by CeleronBeats from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-02",
+    "family": "music",
+    "title": "Stress-Relief Background Music Track",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "classical",
+      "ambient",
+      "instrumental"
+    ],
+    "audioPath": "support/Stress Relief/crystaleyeofficial-stress-relief-background-music-track-312874.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 144,
+    "sha256": "e3c5feca3e6c3b9683429a50661c70a1620b812ee4ae78e0fe25f0d502319e9a",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1792072717388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "CrystalEyeOfficial",
+      "attributionRequired": false,
+      "attributionText": "Music by CrystalEyeOfficial from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-03",
+    "family": "music",
+    "title": "Stress-Relief Background Music Track",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "beats",
+      "ambient",
+      "instrumental"
+    ],
+    "audioPath": "support/Stress Relief/crystaleyeofficial-stress-relief-background-music-track-312875.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 150,
+    "sha256": "922e3828cfb78812a49efdc55d712a0211a99558da3f6d629301761392ec5c58",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791986317388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "CrystalEyeOfficial",
+      "attributionRequired": false,
+      "attributionText": "Music by CrystalEyeOfficial from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-04",
+    "family": "music",
+    "title": "Instant Stress Relief: Nature Sounds & Tibetan Singing Bowls",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "classical",
+      "nature",
+      "meditation"
+    ],
+    "audioPath": "support/Stress Relief/vividillustrate-instant-stress-relief-nature-sounds-amp-tibetan-singing-bowls-361111.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 93,
+    "sha256": "5bc6e4b7a36220868de0a3b26501d33861575befae96f1a2d5932fbd72feeca3",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791899917388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "vividillustrate",
+      "attributionRequired": false,
+      "attributionText": "Music by vividillustrate from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-05",
+    "family": "music",
+    "title": "Soul - For Stress Relief",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "alternative",
+      "motivation",
+      "soul"
+    ],
+    "audioPath": "support/Stress Relief/musicalmix2020-soul-for-stress-relief-8956.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 242,
+    "sha256": "fb553734f74aca0fef8662cebbadebb2bba34ffc2734cdc6adc4c5a3e80ee0c7",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791813517388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Musicalmix2020",
+      "attributionRequired": false,
+      "attributionText": "Music by Musicalmix2020 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-06",
+    "family": "music",
+    "title": "Stress Relief | Meditation",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "ambient"
+    ],
+    "audioPath": "support/Stress Relief/music-for-videos-stress-relief-meditation-187695.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 190,
+    "sha256": "9d1844b07a977cb8cd39e47c6c3bb17a541a7292aa7587da0c62779deaeccb32",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791727117388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Music-for-Videos",
+      "attributionRequired": false,
+      "attributionText": "Music by Music-for-Videos from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-07",
+    "family": "music",
+    "title": "Stress Relief Music",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "ambient"
+    ],
+    "audioPath": "support/Stress Relief/rockot-stress-relief-music-184577.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 544,
+    "sha256": "2b6340687b51fdb58be5eaa34e181e93639ce478be0482cfbe8369dbc5d8321c",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791640717388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Rockot",
+      "attributionRequired": false,
+      "attributionText": "Music by Rockot from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-08",
+    "family": "music",
+    "title": "Stress Relief",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "ambient"
+    ],
+    "audioPath": "support/Stress Relief/atlasaudio-stress-relief-587612.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 158,
+    "sha256": "4761574eeb5b348d711298a670d22f1f2ac0f3836627bb213a7144a580b98fc9",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791554317388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-09",
+    "family": "music",
+    "title": "Stress Relief",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "ambient"
+    ],
+    "audioPath": "support/Stress Relief/leberch-stress-relief-262609.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 376,
+    "sha256": "8c67baf70be9333fea39a134c5274268c3751fe0a6861b520a3f9517c2801d66",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791467917388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-10",
+    "family": "music",
+    "title": "Stress Relief",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "ambient",
+      "relaxation",
+      "instrumental"
+    ],
+    "audioPath": "support/Stress Relief/leberch-stress-relief-586402.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 448,
+    "sha256": "15e8c74b052782657027ec2650c95b0b2df913780f55ad7a6cdb48333e44a7af",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791381517388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-11",
+    "family": "music",
+    "title": "Stress Relief",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "ambient",
+      "relaxation",
+      "meditation"
+    ],
+    "audioPath": "support/Stress Relief/leberch-stress-relief-586415.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 404,
+    "sha256": "833b0bc981ab022771955b28a574d840eb1a9db919062f3a6c8941a9f18ac463",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791295117388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-12",
+    "family": "music",
+    "title": "Stress Relief",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "ambient"
+    ],
+    "audioPath": "support/Stress Relief/marlowemusic-stress-relief-596434.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 135,
+    "sha256": "b01edd0a47d9a79bda11bbd1184a4c8fdd4fafc83e72310aa91cd9004d55f186",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791208717388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MarloweMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by MarloweMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-13",
+    "family": "music",
+    "title": "Anxiety Relief",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "beats",
+      "anxiety",
+      "instrumental"
+    ],
+    "audioPath": "support/Stress Relief/the_mountain-anxiety-relief-587570.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 213,
+    "sha256": "f93c08982c75bb9496410db67329cbcd48108fbb5de2c52b3911be58377730ca",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791122317388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-14",
+    "family": "music",
+    "title": "Insomnia Relief",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "beats",
+      "sleep",
+      "instrumental"
+    ],
+    "audioPath": "support/Stress Relief/the_mountain-insomnia-relief-587588.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 143,
+    "sha256": "7f63defb6a063576281ac0826befdec360ea3d9d4ee484b01c2cf05f3c997b84",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1791035917388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-15",
+    "family": "music",
+    "title": "Meditation Bells for Anxiety Relief (Echoes)",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "meditation",
+      "bells",
+      "spiritual"
+    ],
+    "audioPath": "support/Stress Relief/meditativetiger-meditation-bells-for-anxiety-relief-echoes-388624.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 145,
+    "sha256": "15e66f26b41a04efa8ddb8b08bf3b3ce3afc90cdf3ed71e632b81ee5759ce788",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1790949517388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MeditativeTiger",
+      "attributionRequired": false,
+      "attributionText": "Music by MeditativeTiger from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-16",
+    "family": "music",
+    "title": "Stress-Relief Background Music Track",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "classical",
+      "ambient",
+      "instrumental"
+    ],
+    "audioPath": "support/Stress Relief/crystaleyeofficial-stress-relief-background-music-track-312876.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 150,
+    "sha256": "c5bfa2f01eba2815f4fc935576b51aa0f8ead41f237d46e143b409b5451cdb93",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1790863117388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "CrystalEyeOfficial",
+      "attributionRequired": false,
+      "attributionText": "Music by CrystalEyeOfficial from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-17",
+    "family": "music",
+    "title": "Stress Relief - Water World",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "ambient",
+      "nature",
+      "water"
+    ],
+    "audioPath": "support/Stress Relief/bouncyrunner-stress-relief-water-world-398622.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 226,
+    "sha256": "4d573f85303d26e658acb417108e7891a69020f3a639a662b0ea145294acf8fb",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1790776717388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "BouncyRunner",
+      "attributionRequired": false,
+      "attributionText": "Music by BouncyRunner from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-18",
+    "family": "music",
+    "title": "Stress-Relief Background Music Track",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "classical",
+      "relax",
+      "ambient"
+    ],
+    "audioPath": "support/Stress Relief/crystaleyeofficial-stress-relief-background-music-track-309939.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 240,
+    "sha256": "2477fb6f3c417cb04fd82e31c36b0207c943eaf3c94ae836c4c92e8cb83622e6",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1790690317388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "CrystalEyeOfficial",
+      "attributionRequired": false,
+      "attributionText": "Music by CrystalEyeOfficial from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-19",
+    "family": "music",
+    "title": "Stress-Relief Background Music Track",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "classical",
+      "ambient",
+      "instrumental"
+    ],
+    "audioPath": "support/Stress Relief/crystaleyeofficial-stress-relief-background-music-track-309940.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 240,
+    "sha256": "87a8c52c6ec53205248053c6fadc0c291bb1ba469fee32d7875c8f2f46f90641",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1790603917388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "CrystalEyeOfficial",
+      "attributionRequired": false,
+      "attributionText": "Music by CrystalEyeOfficial from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-stress-relief-20",
+    "family": "music",
+    "title": "MyWillowCare",
+    "topic": "music_topic_stress_relief",
+    "tags": [
+      "calm",
+      "piano",
+      "instrumental"
+    ],
+    "audioPath": "support/Stress Relief/paccagnellastudios-mywillowcare-144243.mp3",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "durationSec": 224,
+    "sha256": "6d98e9665d23c4ed04f7b6dd484e90725f976664a3c5102b5bddbf3d27edf4f6",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132",
+    "newUntil": 1790517517388,
+    "licence": {
+      "source": "Pixabay Music",
+      "sourceUrl": "https://pixabay.com/music/search/stress-relief/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "PaccagnellaStudios",
+      "attributionRequired": false,
+      "attributionText": "Music by PaccagnellaStudios from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]
