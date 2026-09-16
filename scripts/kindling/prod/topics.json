@@ -22,5 +22,11 @@
     "title": "Motivation",
     "thumbPath": "thumbs/Motivation/Album-motivation-cover.jpg",
     "thumbSha256": "7804c73264537abcef3883a4b31ebc063aa569c9438fe89490bd009ba710a0af"
+  },
+  {
+    "slug": "emotional_release",
+    "title": "Emotional Release",
+    "thumbPath": "thumbs/Emotional-release/Album-emotional-release-cover.jpg",
+    "thumbSha256": "2082356be1b6a1a98fb51ac911acf6e5a83fda930bf6b53d7732c7c432066146"
   }
 ]
