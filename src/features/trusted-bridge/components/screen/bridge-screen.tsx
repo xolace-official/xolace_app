@@ -15,6 +15,7 @@ import {
   TextArea,
   Input,
   useThemeColor,
+  useToast,
 } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { usePostHog } from "posthog-react-native";
@@ -75,6 +76,7 @@ export function BridgeScreen({ sessionId, stepId }: Props) {
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();
   const completeStep = useMutation(api.paths.completeStep);
+  const { toast } = useToast();
   const mutedColor = (useThemeColor("foreground") as string) + "55";
 
   const bridgeIntroSeen = useAppStore((s) => s.bridgeIntroSeen);
@@ -140,11 +142,21 @@ export function BridgeScreen({ sessionId, stepId }: Props) {
       // Only treat it as shared when the sheet actually completed — this is what
       // reveals the "Done" affordance. (Android always reports sharedAction.)
       if (result.action === Share.sharedAction) {
-        setHasShared(true);
         posthog.capture("bridge_shared", {
           recipient_relationship: relationship,
         });
-        if (stepId) await completeStep({ stepId }).catch(() => {});
+        if (stepId) {
+          try {
+            await completeStep({ stepId });
+          } catch {
+            toast.show({
+              label: "Couldn't save your progress. Try sharing again.",
+              variant: "default",
+            });
+            return;
+          }
+        }
+        setHasShared(true);
       }
     } catch {
       // share sheet cancelled
