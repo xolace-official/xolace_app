@@ -3778,5 +3778,518 @@
       "attributionText": "Music by PaccagnellaStudios from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-loneliness-01",
+    "family": "music",
+    "title": "Loneliness",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "piano",
+      "sad",
+      "sorrow"
+    ],
+    "audioPath": "support/Loneliness/harumachimusic-loneliness-156734.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 150,
+    "sha256": "f3b427ae6cf9877419ca91fe92a341a4e5429084d6cab5774922fce041fc9a5e",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1792161724911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "HarumachiMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by HarumachiMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-02",
+    "family": "music",
+    "title": "Loneliness",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "nostalgia",
+      "loneliness",
+      "sad"
+    ],
+    "audioPath": "support/Loneliness/soulprodmusic-loneliness-155854.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 158,
+    "sha256": "e62f69eb4ead32c3f7826d734da1f654208d4249b2dd661c35dadc0f6ccdb95b",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1792075324911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "SoulProdMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by SoulProdMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-03",
+    "family": "music",
+    "title": "Urban Loneliness",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "chillhop",
+      "lofi",
+      "sad"
+    ],
+    "audioPath": "support/Loneliness/soulprodmusic-urban-loneliness-216682.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 134,
+    "sha256": "450800d03fe4383685d6af1fcaad86bb472120c0fd749370afdca7f625406403",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791988924911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "SoulProdMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by SoulProdMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-04",
+    "family": "music",
+    "title": "No Place To Go",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "beats",
+      "cinematic",
+      "contemplative"
+    ],
+    "audioPath": "support/Loneliness/sergepavkinmusic-no-place-to-go-216744.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 338,
+    "sha256": "49fc9d48d05b76ce30af1fc4a7603a9ffb1cbf66ab7f4c860f3b3bf50df22c95",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791902524911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "SergePavkinMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by SergePavkinMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-05",
+    "family": "music",
+    "title": "180106 - Sad Scene Emotional Piano",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "piano",
+      "sad",
+      "emotional"
+    ],
+    "audioPath": "support/Loneliness/welc0mei0-180106-sad-scene-emotional-piano-20560.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 135,
+    "sha256": "ef167fa52336adf633a446eababc50daf256bf6cce75fe22e482462500004e4e",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791816124911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "WELCOME10",
+      "attributionRequired": false,
+      "attributionText": "Music by WELCOME10 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-06",
+    "family": "music",
+    "title": "Loneliness / Emotional Piano and Strings Music",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "classical",
+      "loneliness",
+      "autumn"
+    ],
+    "audioPath": "support/Loneliness/twotwice-loneliness-emotional-piano-and-strings-music-172242.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 178,
+    "sha256": "d3648ee0a568999c9c94981ddd7717cc1fc2b97be1e89b7ec8475a722a5f01bb",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791729724911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "TwoTwice",
+      "attributionRequired": false,
+      "attributionText": "Music by TwoTwice from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-07",
+    "family": "music",
+    "title": "Sadness",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "classical",
+      "piano",
+      "sadness"
+    ],
+    "audioPath": "support/Loneliness/junseolim-sadness-491794.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 277,
+    "sha256": "60b0b20c925f1660ca4e4bca7072269365899aa798a1c0bfdc73e358dbfbeed3",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791643324911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "junseolim",
+      "attributionRequired": false,
+      "attributionText": "Music by junseolim from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-08",
+    "family": "music",
+    "title": "Can't Start My Day Without You",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "pop",
+      "loneliness",
+      "alone"
+    ],
+    "audioPath": "support/Loneliness/u_zykznjgzya-canx27t-start-my-day-without-you-244731.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 187,
+    "sha256": "77dba18c9dad65b10e512cf73aa9d7bbd6b24c0b79729b0614ed5a88eae826f3",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791556924911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "u_zykznjgzya",
+      "attributionRequired": false,
+      "attributionText": "Music by u_zykznjgzya from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-09",
+    "family": "music",
+    "title": "improvisation_215",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "classical",
+      "piano",
+      "sad"
+    ],
+    "audioPath": "support/Loneliness/tomomi_kato-improvisation_215-543421.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 128,
+    "sha256": "f81fa160effdf8c5ef49be5801074117a22ce264ed26f26e5d64f75498fe8f7e",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791470524911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Tomomi_Kato",
+      "attributionRequired": false,
+      "attributionText": "Music by Tomomi_Kato from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-10",
+    "family": "music",
+    "title": "Smoke",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "classical",
+      "sorrow",
+      "loneliness"
+    ],
+    "audioPath": "support/Loneliness/tomomi_kato-smoke-282291.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 172,
+    "sha256": "fecefb5b75a76d0d14cc6e1682d49dff275c95d5e4a7e415276b05306493bbf7",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791384124911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Tomomi_Kato",
+      "attributionRequired": false,
+      "attributionText": "Music by Tomomi_Kato from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-11",
+    "family": "music",
+    "title": "Spiral",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "classical",
+      "piano",
+      "spiral"
+    ],
+    "audioPath": "support/Loneliness/tomomi_kato-spiral-256792.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 239,
+    "sha256": "eddbfd23a885f25550825b3ff1700b8d06b73caa6fcbd8cbad6bf16aa61acdc6",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791297724911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Tomomi_Kato",
+      "attributionRequired": false,
+      "attributionText": "Music by Tomomi_Kato from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-12",
+    "family": "music",
+    "title": "Alone",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "classical",
+      "piano",
+      "alone"
+    ],
+    "audioPath": "support/Loneliness/tomomi_kato-alone-238544.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 308,
+    "sha256": "8a3526f506b5e6c9c4ae311e74c2fbf71a51a7c3bc43a457b28f22cfb062779b",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791211324911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Tomomi_Kato",
+      "attributionRequired": false,
+      "attributionText": "Music by Tomomi_Kato from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-13",
+    "family": "music",
+    "title": "Destiny",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "classical",
+      "piano",
+      "quiet"
+    ],
+    "audioPath": "support/Loneliness/loveforest3167-destiny-311930.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 178,
+    "sha256": "b74650d4bb7cd2c342f1c95fa0e84a68d7d7977aae73b2018046f549ca98406a",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791124924911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "LoveForest3167",
+      "attributionRequired": false,
+      "attributionText": "Music by LoveForest3167 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-14",
+    "family": "music",
+    "title": "Quiet Perseverance",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "acoustic",
+      "calm",
+      "longing"
+    ],
+    "audioPath": "support/Loneliness/u_dpvlweewdw-quiet-perseverance-206907.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 303,
+    "sha256": "32c79308b80f8fa1b77ed5a36f9faa809f9094580243992702e7e623576c7721",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1791038524911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "u_dpvlweewdw",
+      "attributionRequired": false,
+      "attributionText": "Music by u_dpvlweewdw from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-15",
+    "family": "music",
+    "title": "Living In Solitude",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "pop",
+      "grief",
+      "lonely"
+    ],
+    "audioPath": "support/Loneliness/starlight_music-living-in-solitude-474828.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 244,
+    "sha256": "fc936dd900ab562a341db16ffcad40cabd36f394ba286bc87fa678798d9825d3",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1790952124911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Starlight_Music",
+      "attributionRequired": false,
+      "attributionText": "Music by Starlight_Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-16",
+    "family": "music",
+    "title": "Lost Here",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "upbeat",
+      "sad",
+      "affliction"
+    ],
+    "audioPath": "support/Loneliness/elijah_k-lost-here-374334.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 78,
+    "sha256": "af6e8d188808d186d5b2056667180b09487cc4285c2673094248fbe1dc045c26",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1790865724911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Elijah_K",
+      "attributionRequired": false,
+      "attributionText": "Music by Elijah_K from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-17",
+    "family": "music",
+    "title": "A Time Of Fall",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "ambient",
+      "sad",
+      "melancholy"
+    ],
+    "audioPath": "support/Loneliness/softsuicide-a-time-of-fall-149809.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 138,
+    "sha256": "df6e556ecb112fad7ce1c472253e2b67f0e9a41a7d3c7f037c47f69d516c9225",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1790779324911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "softsuicide",
+      "attributionRequired": false,
+      "attributionText": "Music by softsuicide from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-18",
+    "family": "music",
+    "title": "Barcarolle",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "classical",
+      "piano",
+      "barcarolle"
+    ],
+    "audioPath": "support/Loneliness/tomomi_kato-barcarolle-285211.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 140,
+    "sha256": "bf42ac800cede32eabb3b491e5213e84f33342897287c62a5ce71593a87549cc",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1790692924911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Tomomi_Kato",
+      "attributionRequired": false,
+      "attributionText": "Music by Tomomi_Kato from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-loneliness-19",
+    "family": "music",
+    "title": "Mistery, Dark Mellow Melody, Voice and Sound (Female Voice)",
+    "topic": "music_topic_loneliness",
+    "tags": [
+      "ambient",
+      "mysterious",
+      "dark"
+    ],
+    "audioPath": "support/Loneliness/fidelfortune-mistery-dark-mellow-melody-voice-and-sound-female-voice-228191.mp3",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "durationSec": 240,
+    "sha256": "c531ee8057e929b8849b05e7d97c520d28a6ff9d34b8f68b85c57ce44b86bac3",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a",
+    "newUntil": 1790606524911,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/loneliness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "fidelfortune",
+      "attributionRequired": false,
+      "attributionText": "Music by fidelfortune from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

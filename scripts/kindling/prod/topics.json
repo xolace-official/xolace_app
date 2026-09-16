@@ -40,5 +40,11 @@
     "title": "Stress Relief",
     "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
     "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132"
+  },
+  {
+    "slug": "loneliness",
+    "title": "Loneliness",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a"
   }
 ]
