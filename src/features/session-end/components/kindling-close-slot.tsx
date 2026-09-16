@@ -77,8 +77,8 @@ export const KindlingCloseSlot = ({ sessionId }: Props) => {
           <AppText className="text-base font-medium text-foreground">
             Setting up your kindling…
           </AppText>
-          <AppText className="mt-0.5 text-xs font-light text-foreground/50">
-            We&apos;re turning this into something for next time.
+          <AppText className="mt-0.5 text-xs font-light text-foreground/55">
+            What next? Check back soon on the discovery screen for the curated support actions for you .
           </AppText>
         </View>
       </View>
@@ -101,7 +101,7 @@ export const KindlingCloseSlot = ({ sessionId }: Props) => {
         <AppText className="text-base font-medium text-accent">
           Turn this into kindling
         </AppText>
-        <AppText className="mt-0.5 text-xs font-light text-foreground/50">
+        <AppText className="mt-0.5 text-xs font-light text-foreground/55">
           Xolace+ carries today into what&apos;s next. Tap to see how.
         </AppText>
       </View>
