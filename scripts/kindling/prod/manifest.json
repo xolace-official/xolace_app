@@ -4831,5 +4831,545 @@
       "attributionText": "Music by andrig from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-confidence-empowerment-01",
+    "family": "music",
+    "title": "Let It Be Enough",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "indie",
+      "pop",
+      "self-worth"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-let-it-be-enough-455294.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 196,
+    "sha256": "50c22fbffa8a1457186dfe87dde4856cd9e4eed5e7ff3b6e112a1fba08617907",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1792164363762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-02",
+    "family": "music",
+    "title": "Emotional Female Song on Feminism",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "pop",
+      "feminism",
+      "empowerment"
+    ],
+    "audioPath": "support/Confidence & Empowerment/poorartistt-emotional-female-song-on-feminism-no-copyright-578973.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 221,
+    "sha256": "b611120e8fe129d931bbc652d8dfcf835f8677298cf130eb220fa2923cf9858f",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1792077963762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "PoorArtistt",
+      "attributionRequired": false,
+      "attributionText": "Music by PoorArtistt from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-03",
+    "family": "music",
+    "title": "The Way You Stare",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "dance",
+      "pop",
+      "confidence"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-the-way-you-stare-488741.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 188,
+    "sha256": "c3419924ed52fd01c902c224e4bca447ff01fea086d5736fda6c18e412d47d75",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791991563762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-04",
+    "family": "music",
+    "title": "High Class Heart",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "glamour",
+      "pop",
+      "confidence"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-high-class-heart-431333.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 140,
+    "sha256": "370d65507b349f742bc9f98c1adccdeabc716f5468b170583f43bd813cba8298",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791905163762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-05",
+    "family": "music",
+    "title": "The Words Are Mine",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "power",
+      "pop",
+      "voice"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-the-words-are-mine-443092.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 173,
+    "sha256": "5d11dbc9426d0b042dff0163476a5aacb3be22d4570dde9b0565bb7d1628bcc3",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791818763762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-06",
+    "family": "music",
+    "title": "Karma's Got Receipts",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "dark pop",
+      "vocals",
+      "attitude"
+    ],
+    "audioPath": "support/Confidence & Empowerment/moonpetalmedia-karmas-got-receipts-dark-pop-female-vocals-attitude-527656.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 210,
+    "sha256": "8329fe5f7485a7db0e38ec183769313fa7aeefe5b6061013fab43d5a6823b274",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791732363762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MoonpetalMedia",
+      "attributionRequired": false,
+      "attributionText": "Music by MoonpetalMedia from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-07",
+    "family": "music",
+    "title": "Love Yourself First",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "self-love",
+      "pop",
+      "affirmation"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-love-yourself-first-497413.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 181,
+    "sha256": "9a5a2c59e18013510b4ae5ee79ac8630a774f8c8db1f4e06f0391b8a15e26d1e",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791645963762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-08",
+    "family": "music",
+    "title": "Female Empowerment Dancehall",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "dancehall",
+      "dance",
+      "empowerment"
+    ],
+    "audioPath": "support/Confidence & Empowerment/openmindaudio-female-empowerment-dancehall-music-she-rules-551620.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 114,
+    "sha256": "180180efcfef59e6c89ff3b3828f1188a74514d8551f58be7c24e435c3bf0e35",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791559563762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "OpenMindAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by OpenMindAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-09",
+    "family": "music",
+    "title": "Quiet Wars - Emotional Empowerment",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "pop",
+      "soul",
+      "female vocals"
+    ],
+    "audioPath": "support/Confidence & Empowerment/moonpetalmedia-quiet-wars-emotional-empowerment-pop-soul-female-vocals-500233.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 204,
+    "sha256": "cbeaf813d7b8134b3a57e587f6c96d8e27507c48f10f7ab7073d2c09eac2ffa2",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791473163762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MoonpetalMedia",
+      "attributionRequired": false,
+      "attributionText": "Music by MoonpetalMedia from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-10",
+    "family": "music",
+    "title": "Don't Mess With Magic",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "empowerment",
+      "pop",
+      "confidence"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-donx27t-mess-with-magic-425109.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 206,
+    "sha256": "19f57352dd5818ddded4047b83b91ef1aeaabe713f5faea69451cc4d3965e0a7",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791386763762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-11",
+    "family": "music",
+    "title": "Kick Up A Fuss",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "hard rock",
+      "riot",
+      "defiance"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-kick-up-a-fuss-495783.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 60,
+    "sha256": "95b54b90d3862f8c5240d803a2a6ad9eb6fb527c99852b685670442bf30bb029",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791300363762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-12",
+    "family": "music",
+    "title": "Let Me Out",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "dark",
+      "seductive",
+      "pop"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-let-me-out-434430.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 187,
+    "sha256": "533ceade5393a595ae05398bb15536bb6a58fc7149c09190e7a99aea83d9b057",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791213963762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-13",
+    "family": "music",
+    "title": "Busy Being Free",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "freedom",
+      "pop",
+      "independence"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-busy-being-free-496720.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 180,
+    "sha256": "3c64a5ef715ac9045203b0baccbef0ea2a260d0ba546eba7362efcf90da4875e",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791127563762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-14",
+    "family": "music",
+    "title": "Solar Plexus Empowerment: 528Hz",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "ambient",
+      "solar plexus",
+      "confidence"
+    ],
+    "audioPath": "support/Confidence & Empowerment/meditativetiger-solar-plexus-empowerment-528-hz-confidence-489174.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 139,
+    "sha256": "a22349339efdda83257f358fab42b7cb580be7ab992c86bfe13a6796929a4588",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1791041163762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MeditativeTiger",
+      "attributionRequired": false,
+      "attributionText": "Music by MeditativeTiger from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-15",
+    "family": "music",
+    "title": "Iron in Heels - Aggressive Rap",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "beats",
+      "rap",
+      "female empowerment"
+    ],
+    "audioPath": "support/Confidence & Empowerment/musicmeowwdotcom-iron-in-heels-aggresive-female-rap-on-women-empowerment-589080.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 138,
+    "sha256": "a01401d223c438b4b8f9f0819f637436e79c75603b7ab05ef398e0cdcf2b348f",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1790954763762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "musicmeowwdotcom",
+      "attributionRequired": false,
+      "attributionText": "Music by musicmeowwdotcom from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-16",
+    "family": "music",
+    "title": "Enough of That",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "boundaries",
+      "pop",
+      "confidence"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-enough-of-that-547696.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 211,
+    "sha256": "9715b5d7e8c3566fe79f60538a065348a711a447a5dff6e2727209e3fcb9c4bb",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1790868363762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-17",
+    "family": "music",
+    "title": "Burning Bridges - Empowering Breakup Anthem",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "breakup",
+      "pop",
+      "empowerment"
+    ],
+    "audioPath": "support/Confidence & Empowerment/nickpanek-burning-bridges-empowering-breakup-anthem-306116.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 76,
+    "sha256": "c414d6de493af0ad5ad6968f01e664a0068dfcabceee4716c26374742a07a41a",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1790781963762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "NickPanek",
+      "attributionRequired": false,
+      "attributionText": "Music by NickPanek from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-18",
+    "family": "music",
+    "title": "Not Today",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "soul",
+      "motown",
+      "pop"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-not-today-498132.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 223,
+    "sha256": "864420cbb0e75f3c211107cad289f4b47db895c41fb06dc127c7d411b4b49394",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1790695563762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-19",
+    "family": "music",
+    "title": "No Apologies",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "reggaeton",
+      "latin",
+      "pop"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-no-apologies-342500.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 171,
+    "sha256": "0c8503a5ccc17e7d449f2ec8027c2b3d12d50bd2b1aed2e8de4e290c1ba0f144",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1790609163762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-confidence-empowerment-20",
+    "family": "music",
+    "title": "Middle Finger",
+    "topic": "music_topic_confidence_empowerment",
+    "tags": [
+      "rebellion",
+      "pop",
+      "defiance"
+    ],
+    "audioPath": "support/Confidence & Empowerment/alanajordan-middle-finger-483444.mp3",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "durationSec": 205,
+    "sha256": "410385ceee66fb5c73bfc7691c6d12290a59d91997f2489cefd71f19110ff83d",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76",
+    "newUntil": 1790522763762,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/confidence-empowerment/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

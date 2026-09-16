@@ -52,5 +52,11 @@
     "title": "Calm & Peace",
     "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
     "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae"
+  },
+  {
+    "slug": "confidence_empowerment",
+    "title": "Confidence & Empowerment",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76"
   }
 ]
