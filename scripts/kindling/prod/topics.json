@@ -1,1 +1,62 @@
-[]
+[
+  {
+    "slug": "mindfulness",
+    "title": "Mindfulness",
+    "thumbPath": "thumbs/mindfulness/mindfulness-cover.jpg",
+    "thumbSha256": "a9cf80510fd21d9632a5d79bc03870e8715c7f2e2f5e33b7b1570d4ede438646"
+  },
+  {
+    "slug": "sleep_rest",
+    "title": "Sleep & Rest",
+    "thumbPath": "thumbs/Sleep & Rest/Album-sleep-rest-cover.jpg",
+    "thumbSha256": "6d4a85a4d9e7fe375c41f4825d035d3e60005a989c86a4c6302982d746dea59d"
+  },
+  {
+    "slug": "self_love",
+    "title": "Self-Love",
+    "thumbPath": "thumbs/Self-Love/allbum-self-love-cover.jpg",
+    "thumbSha256": "f20fcd4396251b428ffac3386a83588ee85bef748dc8d1a255bdc1968f146548"
+  },
+  {
+    "slug": "motivation",
+    "title": "Motivation",
+    "thumbPath": "thumbs/Motivation/Album-motivation-cover.jpg",
+    "thumbSha256": "7804c73264537abcef3883a4b31ebc063aa569c9438fe89490bd009ba710a0af"
+  },
+  {
+    "slug": "emotional_release",
+    "title": "Emotional Release",
+    "thumbPath": "thumbs/Emotional-release/Album-emotional-release-cover.jpg",
+    "thumbSha256": "2082356be1b6a1a98fb51ac911acf6e5a83fda930bf6b53d7732c7c432066146"
+  },
+  {
+    "slug": "nature_mindfulness",
+    "title": "Nature & Mindfulness",
+    "thumbPath": "thumbs/Nature & Mindfulness/Album-nature-mindfulness-Cover.jpg",
+    "thumbSha256": "22cfa5688373b90f6b81e4c5890b946674591428f986d0b1728465a1f2dd895c"
+  },
+  {
+    "slug": "stress_relief",
+    "title": "Stress Relief",
+    "thumbPath": "thumbs/Stress Relief/Stress Relief-Album-Cover.jpg",
+    "thumbSha256": "02bbc8f0814fd1dffa19cb9c008f4a94fb22f82362ede69d1cb073e900bdd132"
+  },
+  {
+    "slug": "loneliness",
+    "title": "Loneliness",
+    "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
+    "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a"
+  },
+  {
+    "slug": "calm_peace",
+    "title": "Calm & Peace",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae"
+  },
+  {
+    "slug": "confidence_empowerment",
+    "title": "Confidence & Empowerment",
+    "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
+    "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76"
+  }
+]

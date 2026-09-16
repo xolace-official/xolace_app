@@ -19,10 +19,11 @@ import type { Understanding } from "./understanding";
  */
 
 /** Display family for a twig — what the card and the rail node render as. */
-export type TwigKind = "breathing" | "xolacer" | "audio" | "music";
+export type TwigKind = "breathing" | "bridge" | "xolacer" | "audio" | "music";
 
 function twigKind(actionType: string): TwigKind {
   if (actionType === "breathing") return "breathing";
+  if (actionType === "bridge") return "bridge";
   if (actionType === "xolacer") return "xolacer";
   return actionType.startsWith("music_topic_") ? "music" : "audio";
 }
@@ -32,6 +33,7 @@ const twigValidator = v.object({
   actionType: v.string(),
   kind: v.union(
     v.literal("breathing"),
+    v.literal("bridge"),
     v.literal("xolacer"),
     v.literal("audio"),
     v.literal("music"),

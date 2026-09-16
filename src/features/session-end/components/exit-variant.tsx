@@ -16,8 +16,6 @@ type Props = {
   onHaveMore: () => void;
   isNight?: boolean;
   sessionId?: Id<"sessions">;
-  mirrorText: string | null;
-  onCompleteAndBridge: () => void;
 };
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -44,8 +42,6 @@ export const ExitVariant = ({
   onHaveMore,
   isNight = false,
   sessionId,
-  mirrorText,
-  onCompleteAndBridge,
 }: Props) => {
   const [phase, setPhase] = useState<Phase>("acknowledge");
   const router = useRouter();
@@ -107,24 +103,17 @@ export const ExitVariant = ({
             transition={EASE_IN}
             className="w-full items-center gap-4"
           >
-            <CloseOffer
-              sessionId={sessionId}
-              mirrorText={mirrorText}
-              onBridge={onCompleteAndBridge}
-              variant="exit"
-            />
+            <CloseOffer sessionId={sessionId} variant="exit" />
             <KindlingCloseSlot sessionId={sessionId} />
 
             <Button
-              variant="ghost"
+              variant="primary"
               size="lg"
               onPress={onHaveMore}
-              accessibilityLabel="Have more? I'm here."
-              className="w-full"
+              accessibilityLabel="Start another session"
+              className="w-full rounded-2xl"
             >
-              <Button.Label className="font-light text-foreground/55">
-                Have more? I&apos;m here.
-              </Button.Label>
+              <Button.Label>Start another session</Button.Label>
             </Button>
           </EaseView>
         </View>

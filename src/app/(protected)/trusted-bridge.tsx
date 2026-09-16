@@ -4,10 +4,11 @@ import type { Id } from "@/convex/_generated/dataModel";
 
 type Params = {
   sessionId: string;
+  stepId?: string;
 };
 
 export default function TrustedBridge() {
-  const { sessionId } = useLocalSearchParams<Params>();
+  const { sessionId, stepId } = useLocalSearchParams<Params>();
 
   // Guard the route boundary: a deep link or malformed navigation can arrive
   // with no id. Bail home rather than cast undefined into requestBridgeDraft.
@@ -15,5 +16,10 @@ export default function TrustedBridge() {
     return <Redirect href="/" />;
   }
 
-  return <BridgeScreen sessionId={sessionId as Id<"sessions">} />;
+  return (
+    <BridgeScreen
+      sessionId={sessionId as Id<"sessions">}
+      stepId={stepId as Id<"path_steps"> | undefined}
+    />
+  );
 }

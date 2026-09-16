@@ -2,7 +2,6 @@ import { useRef } from "react";
 import { useAuth } from "@clerk/expo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useAppStore } from "@/src/store/store";
 import { usePreferenceMutation } from "./use-preference-mutation";
 
 export type RetentionOption = "indefinite" | "6_months" | "1_year";
@@ -14,8 +13,6 @@ export const useDataSettings = () => {
   const requestDeletion = useMutation(api.users.requestDeletion);
   const { signOut } = useAuth();
   const deletionRequested = useRef(false);
-  const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
-  const setBridgeEnabled = useAppStore((s) => s.setBridgeEnabled);
 
   const contributeAnonymously = preferences?.contributeByDefault ?? false;
   // On by default (undefined = true) — see Cognition Layer §1.1b.
@@ -63,8 +60,6 @@ export const useDataSettings = () => {
     setContributeAnonymously,
     personalMemory,
     setPersonalMemory,
-    bridgeEnabled,
-    setBridgeEnabled,
     retention,
     retentionDisplay,
     setRetention,

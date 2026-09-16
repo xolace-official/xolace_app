@@ -24,13 +24,16 @@ export const OFFER_MASCOT = {
   limits: require('@/assets/images/flux/flux-campfire.png'),
 } as const;
 
-export type OfferTint = 'poetic' | 'gentle' | 'direct' | 'witnessed';
+export type OfferTint = 'poetic' | 'gentle' | 'direct' | 'witnessed' | 'topics';
 
 const TINT: Record<OfferTint, string> = {
   poetic: 'bg-tone-poetic',
   gentle: 'bg-tone-gentle',
   direct: 'bg-tone-direct',
   witnessed: 'bg-tone-witnessed',
+  // Reuses browse hub's fixed green hue (#338) — not a mirror `--tone-*`, so
+  // Kindling & Browse can stand apart from the deck's other four tones.
+  topics: 'bg-browse-topics-foreground',
 };
 
 interface OfferCardProps {
@@ -53,6 +56,7 @@ const CHIP: Record<OfferTint, string> = {
   gentle: TINT.witnessed,
   direct: TINT.witnessed,
   witnessed: TINT.gentle,
+  topics: TINT.witnessed,
 };
 
 export function OfferCard({ tag, title, tint, width, mascot, children }: OfferCardProps) {
@@ -82,7 +86,12 @@ export function OfferCard({ tag, title, tint, width, mascot, children }: OfferCa
       />
       <OfferPill className={CHIP[tint]}>{tag}</OfferPill>
       <AppText
-        style={{ paddingRight: mascotSize * 0.5 }}
+        // The mascot's visible left edge sits at `width - mascotSize + 14` (its
+        // own -14 bleed pulls it back toward the card). Reserving only half its
+        // width left the title free to wrap under it — Xolacers' longer title
+        // was the one that actually reached that far. Subtracting the card's
+        // own 20px edge padding (p-5) gives the real clearance the text needs.
+        style={{ paddingRight: mascotSize - 34 }}
         className="text-[22px] leading-7 text-offer-ink font-[Poppins-SemiBold]"
       >
         {title}

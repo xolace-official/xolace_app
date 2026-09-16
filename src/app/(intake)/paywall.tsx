@@ -25,6 +25,7 @@ import { trackStepViewed } from '@/src/features/intake/analytics';
 import { intentLine } from '@/src/features/intake/paywall/intent-line';
 import {
   InsightsOfferCard,
+  KindlingBrowseOfferCard,
   LimitsOfferCard,
   XolacersOfferCard,
 } from '@/src/features/intake/paywall/offer-cards';
@@ -229,6 +230,7 @@ export default function IntakeOffer() {
           contentContainerStyle={styles.deck}
         >
           <VoiceOfferCard width={cardWidth} />
+          <KindlingBrowseOfferCard width={cardWidth} />
           <XolacersOfferCard width={cardWidth} />
           <InsightsOfferCard width={cardWidth} />
           <LimitsOfferCard width={cardWidth} />

@@ -1,20 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { EaseView } from "react-native-ease/uniwind";
 import { useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { AppText } from "@/src/components/shared/app-text";
-import { BridgeCard } from "@/src/features/session-end/components/bridge-card";
 import { SuggestionCard } from "@/src/features/session-end/components/suggestion-card";
 import { chooseCloseOffer } from "@/src/features/session-end/close-offer-rule";
 import { PlusOfferCard } from "@/src/features/purchases/components/plus-offer-card";
 import { usePlusOffer } from "@/src/features/purchases/use-plus-offer";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { playSoftPress } from "@/src/lib/haptics";
-import { useAppStore } from "@/src/store/store";
 
 /**
  * How long the close slot stays empty waiting for a suggestion. Long enough
@@ -30,8 +26,6 @@ const CARD_ARRIVAL = { type: "timing" as const, duration: 320 };
 
 type Props = {
   sessionId?: Id<"sessions">;
-  mirrorText: string | null;
-  onBridge: () => void;
   /** Structural only — which session-end variant showed the offer. */
   variant: "exit" | "activity";
 };
@@ -39,25 +33,14 @@ type Props = {
 /**
  * The one offer the close phase makes, shared by both session-end variants.
  *
- * Never both cards. A suggestion and the Bridge card together would offer two
- * different humans in one breath — someone in the user's life and a stranger —
- * at the moment they have least capacity to weigh it. The suggestion wins when
- * it fires because it is the rarer offer: it has already survived a mapped
- * theme, an intensity floor, a safeguard gate, a live-conversation check and a
- * weekly cooldown. The Bridge card holds the slot otherwise. ("Bridge wins
- * ties" would mean the suggestion never appears — its gate passes on nearly
- * every session.)
+ * Never both cards. The suggestion wins when it fires because it is the
+ * rarer offer: it has already survived a mapped theme, an intensity floor, a
+ * safeguard gate, a live-conversation check and a weekly cooldown. Plus
+ * competes for the same slot rather than stacking on top of it.
  */
-export const CloseOffer = ({
-  sessionId,
-  mirrorText,
-  onBridge,
-  variant,
-}: Props) => {
+export const CloseOffer = ({ sessionId, variant }: Props) => {
   const router = useRouter();
   const posthog = usePostHog();
-  const bridgeEnabled = useAppStore((s) => s.bridgeEnabled);
-  const setBridgeIntroSeen = useAppStore((s) => s.setBridgeIntroSeen);
   const suggestion = useQuery(
     api.xolacerChat.sessionSuggestion,
     sessionId ? { sessionId } : "skip",
@@ -77,9 +60,9 @@ export const CloseOffer = ({
   }, [suggestion, posthog, variant]);
 
   // Bounds the hold. The slot stays empty while the suggestion query is in
-  // flight so a Bridge card never swaps for a stranger mid-fade, but an
-  // unresolved query — offline, or auth not yet hydrated — would otherwise
-  // hold it empty forever and the user would be offered nothing at all.
+  // flight, but an unresolved query — offline, or auth not yet hydrated —
+  // would otherwise hold it empty forever and the user would be offered
+  // nothing at all.
   const [waitedOut, setWaitedOut] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setWaitedOut(true), SUGGESTION_WAIT_MS);
@@ -91,8 +74,6 @@ export const CloseOffer = ({
     suggestion,
     waitedOut,
     plusOffer: plusOffer !== null,
-    bridgeEnabled,
-    hasMirrorText: mirrorText != null,
   });
 
   if (offer === "pending" || offer === "none") return null;
@@ -152,21 +133,5 @@ export const CloseOffer = ({
     );
   }
 
-  return (
-    <>
-      <BridgeCard onPress={onBridge} />
-      {__DEV__ && (
-        <Pressable
-          onPress={() => setBridgeIntroSeen(false)}
-          accessibilityLabel="Reset bridge intro"
-          hitSlop={8}
-          className="px-3 py-1"
-        >
-          <AppText className="text-xs text-foreground/25">
-            ↺ bridge intro
-          </AppText>
-        </Pressable>
-      )}
-    </>
-  );
+  return null;
 };

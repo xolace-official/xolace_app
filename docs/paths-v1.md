@@ -148,7 +148,14 @@ The model picks *action types*; a pure function binds each to a concrete target.
 | `music_topic_*` | same rule, `family="music"`. |
 | `episode_reframe` | `audio_tracks` where `family="support"` **and `series` set** for the "reality-not-false-hope" series, tag-match, slug tiebreak. |
 | `breathing` | the existing **sit-with-this** exercise (no new content). |
+| `bridge` | `{ exercise: "trusted-bridge" }` — the existing Trusted Bridge flow (no new content). |
 | `xolacer` | the existing `sessionSuggestion` ranker (no new content). |
+
+`breathing` and `bridge` both bind to a fixed non-content marker rather than a
+database row — the same trivial always-succeeds binder `breathing` already
+used (ADR 0012's "skips the binder entirely" wording for bridge is corrected
+by this: it goes through `bindTwig` like everything else, it just never
+misses).
 
 Binding produces `path_steps.params` (e.g. `{ slug }` for audio, exercise id for
 breathing, a xolacer ref). **Unbindable twigs are dropped** (§6).

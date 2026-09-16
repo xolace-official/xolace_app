@@ -91,6 +91,17 @@ export const CATALOG: readonly CatalogEntry[] = [
       "A quiet conversation with a peer listener — another person who has sat with something similar. The only action involving a real human. Fits when they seem to want company, not tools.",
   },
   {
+    actionType: "bridge",
+    emotions: [],
+    themes: [],
+    supportNeedFit: BOTH,
+    premium: true,
+    humanContact: false,
+    alwaysAvailable: true,
+    modelDescription:
+      "Draft a short message to send someone the user already knows outside the app — a partner, friend, or family member — to open up about what they're carrying. Fits when the gap is not inside Xolace but with a real person in their life who doesn't know yet.",
+  },
+  {
     actionType: "episode_reframe",
     emotions: ["shame", "guilt", "sadness", "numbness"],
     themes: ["self-criticism", "toxic-positivity", "should-be-over-this"],

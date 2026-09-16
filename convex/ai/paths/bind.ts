@@ -35,6 +35,8 @@ export function bindTwig(
   switch (actionType) {
     case "breathing":
       return { exercise: "sit-with-this" };
+    case "bridge":
+      return { exercise: "trusted-bridge" };
     case "xolacer":
       // The person is chosen at read time by `xolacerChat.sessionSuggestion`
       // and never stored — only the ranker's resolved specialty travels.

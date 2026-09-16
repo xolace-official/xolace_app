@@ -33,12 +33,10 @@ export const SessionEndScreen = ({ path, sessionId: routeSessionId }: Props) => 
     sessionId,
     isLoading,
     distilledText,
-    mirrorText,
     contributeByDefault,
     sessionCount,
     dismiss,
     haveMore,
-    completeAndBridge,
   } = useSessionEnd(routeSessionId);
   const { isNight } = useSessionMode();
   const insetsStyle = [
@@ -70,14 +68,11 @@ export const SessionEndScreen = ({ path, sessionId: routeSessionId }: Props) => 
           onHaveMore={() => haveMore()}
           isNight={isNight}
           sessionId={sessionId ?? undefined}
-          mirrorText={mirrorText}
-          onCompleteAndBridge={() => completeAndBridge()}
         />
       ) : (
         <ActivityVariant
           sessionId={sessionId ?? undefined}
           distilledText={distilledText}
-          mirrorText={mirrorText}
           contributeByDefault={contributeByDefault}
           onDismiss={(contributed: boolean | null, mood?: PostSessionMood) =>
             dismiss(contributed, mood)
@@ -85,10 +80,6 @@ export const SessionEndScreen = ({ path, sessionId: routeSessionId }: Props) => 
           onHaveMore={(contributed: boolean | null, mood?: PostSessionMood) =>
             haveMore(contributed, mood)
           }
-          onCompleteAndBridge={(
-            contributed: boolean | null,
-            mood?: PostSessionMood,
-          ) => completeAndBridge(contributed, mood)}
           isNight={isNight}
         />
       )}
