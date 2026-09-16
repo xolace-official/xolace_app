@@ -26,11 +26,13 @@ deterministically to *existing* content (§2.3's binder — an `audio_tracks`
 row, the sit-with-this exercise). The bridge twig has nothing to bind to: its
 own model call drafts a *new* message from session content, and the user
 edits it inline before sharing. It is catalogued with `alwaysAvailable: false`
-like the content-bound entries, but skips the §2.3 binder entirely — tending
-it opens the existing Trusted Bridge sub-flow (intro sheet if `bridgeIntroSeen`
-is unset, then compose → edit → native share sheet) rather than resolving to a
-track id. `docs/paths-v1.md` §2.3's binding table needs a row for this
-actionType noting "no binder — opens its own flow."
+like the content-bound entries, but it does not bind database content —
+`bindTwig` (§2.3) returns the fixed `{ exercise: "trusted-bridge" }` for it,
+independent of session content. Tending it opens the existing Trusted Bridge
+sub-flow (intro sheet if `bridgeIntroSeen` is unset, then compose → edit →
+native share sheet) rather than resolving to a track id. `docs/paths-v1.md`
+§2.3's binding table needs a row for this actionType noting "fixed binder —
+opens its own flow."
 
 **Consent gate is unchanged and still gates on first tend, not first
 generation.** `bridgeIntroSeen` (the existing Zustand flag, same

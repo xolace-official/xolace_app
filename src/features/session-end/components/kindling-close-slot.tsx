@@ -78,7 +78,7 @@ export const KindlingCloseSlot = ({ sessionId }: Props) => {
             Setting up your kindling…
           </AppText>
           <AppText className="mt-0.5 text-xs font-light text-foreground/55">
-            What next? Check back soon on the discovery screen for the curated support actions for you .
+            What next? Check back soon on the discovery screen for the curated support actions for you.
           </AppText>
         </View>
       </View>
