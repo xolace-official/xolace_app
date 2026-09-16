@@ -4291,5 +4291,545 @@
       "attributionText": "Music by fidelfortune from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-calm-peace-01",
+    "family": "music",
+    "title": "Calm",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "quiet"
+    ],
+    "audioPath": "support/Calm & Peace/leberch-calm-509384.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 210,
+    "sha256": "8de1cfbd869fa3e5cfe5f505698fbb8f94859dbf1b3f08da2b11292ec8dc144d",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1792162766943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-02",
+    "family": "music",
+    "title": "Inner Peace",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "piano",
+      "peace",
+      "calm"
+    ],
+    "audioPath": "support/Calm & Peace/the_mountain-inner-peace-587587.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 144,
+    "sha256": "2e2c204ab3763463e3e326f8b74f1fc0cb9094287f7dcd5a6a6b9b9e6c8da708",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1792076366943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-03",
+    "family": "music",
+    "title": "Calm",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "instrumental"
+    ],
+    "audioPath": "support/Calm & Peace/leberch-calm-589817.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 104,
+    "sha256": "0919e231f2eba96106d62904350b3b3d08f16ccc5cd22156a02d0c8220bbc4a3",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791989966943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-04",
+    "family": "music",
+    "title": "Calm - Calm Music",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "classical",
+      "calm",
+      "instrumental"
+    ],
+    "audioPath": "support/Calm & Peace/paulyudin-calm-calm-music-573990.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 72,
+    "sha256": "a5a44753827f16729b1c73bda253924f463afa7df4edda4dd92e7aa7e5b263d3",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791903566943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "PaulYudin",
+      "attributionRequired": false,
+      "attributionText": "Music by PaulYudin from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-05",
+    "family": "music",
+    "title": "Calm - Calm Music",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "instrumental"
+    ],
+    "audioPath": "support/Calm & Peace/leberch-calm-595679.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 136,
+    "sha256": "742092c8393c13e2211e5d3012c0c89639b643b3a2adfe2e456034813dce4829",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791817166943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-06",
+    "family": "music",
+    "title": "Calm",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "ambient"
+    ],
+    "audioPath": "support/Calm & Peace/leberch-calm-583078.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 344,
+    "sha256": "e6af380ea9dfa0a39eab1d4e523f96cf9b7ddcd831751ef5bde516e8f9e159fa",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791730766943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-07",
+    "family": "music",
+    "title": "Calm",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "relaxation"
+    ],
+    "audioPath": "support/Calm & Peace/atlasaudio-calm-583147.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 262,
+    "sha256": "454d53f2d2e7027f4dfa145a39cc8e779fc965dc2cbcddbcbc69d83ad0227e0a",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791644366943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-08",
+    "family": "music",
+    "title": "Calm",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "meditation"
+    ],
+    "audioPath": "support/Calm & Peace/leberch-calm-589656.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 184,
+    "sha256": "573c049ef32eedf575a3b02bd5e2e006f442d3ebc87ffc10484312b44cd5c7de",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791557966943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-09",
+    "family": "music",
+    "title": "Calm - Calm Music",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "instrumental"
+    ],
+    "audioPath": "support/Calm & Peace/atlasaudio-calm-calm-music-576616.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 120,
+    "sha256": "141929a4d25b43ca69b6f8c0f70b33aee460ae5ccf11e77784530f341d0aa9be",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791471566943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-10",
+    "family": "music",
+    "title": "Calm - Calm Music",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "ambient"
+    ],
+    "audioPath": "support/Calm & Peace/leberch-calm-calm-music-580525.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 140,
+    "sha256": "435d7edac8e49c85561597021d1b3c84027f9357abbc77243d43217f3a3fda35",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791385166943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-11",
+    "family": "music",
+    "title": "Calm - Calm Music",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "relaxation"
+    ],
+    "audioPath": "support/Calm & Peace/andriig-calm-calm-music-566899.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 134,
+    "sha256": "37b0fbad534fa707ea2d5c05e60ce6b98eed3a702f47951d42970bb904ad7a3e",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791298766943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "andrig",
+      "attributionRequired": false,
+      "attributionText": "Music by andrig from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-12",
+    "family": "music",
+    "title": "Calm Piano",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "piano",
+      "calm",
+      "pop"
+    ],
+    "audioPath": "support/Calm & Peace/leberch-calm-piano-589818.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 129,
+    "sha256": "4dd1a1d75f905a6f21dde25f5ac88f6c8f89da1f054e87c79170799643bf3c99",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791212366943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-13",
+    "family": "music",
+    "title": "Calm - Calm Music",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "folk",
+      "calm",
+      "acoustic"
+    ],
+    "audioPath": "support/Calm & Peace/andriig-calm-calm-music-572282.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 129,
+    "sha256": "5fd169c379c688a97741c82ad2a0946c65951a5012cec32fba7c33d6ab58417a",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791125966943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "andrig",
+      "attributionRequired": false,
+      "attributionText": "Music by andrig from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-14",
+    "family": "music",
+    "title": "Calm",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "instrumental"
+    ],
+    "audioPath": "support/Calm & Peace/sub_clair-calm-587830.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 151,
+    "sha256": "0306b2db49d37e4a717f2d77459536b238623e20c51ebb1825a17c256a1ca34c",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1791039566943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Sub_Clair",
+      "attributionRequired": false,
+      "attributionText": "Music by Sub_Clair from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-15",
+    "family": "music",
+    "title": "Calm",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "ambient"
+    ],
+    "audioPath": "support/Calm & Peace/sub_clair-calm-585426.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 161,
+    "sha256": "ee505d4fdfd6e0b57b3ec627b08a05d59785ea027e1aa8a5de77457bc5cbf47a",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1790953166943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Sub_Clair",
+      "attributionRequired": false,
+      "attributionText": "Music by Sub_Clair from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-16",
+    "family": "music",
+    "title": "Calm",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "calm"
+    ],
+    "audioPath": "support/Calm & Peace/prettyjohn1-calm-537656.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 136,
+    "sha256": "69c2a620de349cb2ea7aa7db6cb2890fa3aa6958dffd59ce192b46b226c1ade3",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1790866766943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-17",
+    "family": "music",
+    "title": "Calm",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "house",
+      "calm",
+      "background"
+    ],
+    "audioPath": "support/Calm & Peace/sub_clair-calm-591733.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 149,
+    "sha256": "6de690a16999ced2f3790162a13004b760ed4440a7069f2607d945b7535eeeff",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1790780366943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Sub_Clair",
+      "attributionRequired": false,
+      "attributionText": "Music by Sub_Clair from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-18",
+    "family": "music",
+    "title": "Calm Still Water Breathing",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "water"
+    ],
+    "audioPath": "support/Calm & Peace/alex-morgan-calm-still-water-breathing-578483.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 122,
+    "sha256": "2fe0f5ac074cf84b60e45d514976c9f2939c84793b20dcfb7a7f8d8fc100af51",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1790693966943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alex-morgan",
+      "attributionRequired": false,
+      "attributionText": "Music by alex-morgan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-19",
+    "family": "music",
+    "title": "Concentration Peace",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "ambient",
+      "concentration",
+      "peace"
+    ],
+    "audioPath": "support/Calm & Peace/the_mountain-concentration-peace-380686.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 402,
+    "sha256": "2c78d4984b62bdc36a5e8af7f1c3a5f15f4d11ada862feed23a6b42bea140d09",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1790607566943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-calm-peace-20",
+    "family": "music",
+    "title": "Calm - Calm Music",
+    "topic": "music_topic_calm_peace",
+    "tags": [
+      "pop",
+      "calm",
+      "meditation"
+    ],
+    "audioPath": "support/Calm & Peace/andriig-calm-calm-music-581022.mp3",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "durationSec": 130,
+    "sha256": "368178a85afd4dc402e7114a9ce6237af5c8c0f402831234ee1246638987a0d4",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae",
+    "newUntil": 1790521166943,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/calm-peace/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "andrig",
+      "attributionRequired": false,
+      "attributionText": "Music by andrig from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

@@ -46,5 +46,11 @@
     "title": "Loneliness",
     "thumbPath": "thumbs/Loneliness/loneliness-ablum-cover.png",
     "thumbSha256": "d920ce16ea57ddd9bc03cb5469c8190bdbb2e4667876656f7938930242a2fd1a"
+  },
+  {
+    "slug": "calm_peace",
+    "title": "Calm & Peace",
+    "thumbPath": "thumbs/Calm & Peace/calm-peace-cover-album.png",
+    "thumbSha256": "295608bd8b3902915240fbc48dce253d0f20df8026548d23a7973e8761353aae"
   }
 ]
