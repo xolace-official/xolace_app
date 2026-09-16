@@ -5668,5 +5668,375 @@
       "attributionText": "Music by BearStockMusic from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-overthinking-01",
+    "family": "music",
+    "title": "Accidental Text",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "darkpop",
+      "minimal",
+      "confessional"
+    ],
+    "audioPath": "support/Overthinking/alanajordan-accidental-text-488723.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 153,
+    "sha256": "74873742f3aec8c6f270d42f674f95e37b1a09bc890153e96c0f1f756a58cfa3",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1792193592085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-02",
+    "family": "music",
+    "title": "Everything is Under Control",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "alt-rock",
+      "emotional",
+      "burnout"
+    ],
+    "audioPath": "support/Overthinking/alanajordan-everything-is-under-control-378204.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 193,
+    "sha256": "dc92b2e8568cc56be33acd3b89f2b7c8a9e3c917c7f51b71490ce0bf20358258",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1792107192085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-03",
+    "family": "music",
+    "title": "Overthinking Reflections",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "lofi",
+      "chill",
+      "reflection"
+    ],
+    "audioPath": "support/Overthinking/alanajordan-overthinking-373465.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 187,
+    "sha256": "d0058ad7bcedfcabeee0c35bf9c3666813fabd550be835172038c00b59b99155",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1792020792085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-04",
+    "family": "music",
+    "title": "Worries",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "lofi",
+      "indie",
+      "acoustic"
+    ],
+    "audioPath": "support/Overthinking/alanajordan-worries-372746.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 135,
+    "sha256": "43e1103534282efa19289936b3df7e3637396f27e02986e58055f176f87bce14",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791934392085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alanajordan",
+      "attributionRequired": false,
+      "attributionText": "Music by alanajordan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-05",
+    "family": "music",
+    "title": "Overthinking Dance Mix",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "electronic music",
+      "dance"
+    ],
+    "audioPath": "support/Overthinking/crimsonaudio-overthinking-446950.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 191,
+    "sha256": "5d4bf2cf7c469b33d163c15c009d6e8edff8f96a29b9aab42ff70681e095fa76",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791847992085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "CrimsonAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by CrimsonAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-06",
+    "family": "music",
+    "title": "Sunset Dreams - Real Evolution",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "evolution",
+      "real evolution"
+    ],
+    "audioPath": "support/Overthinking/evolutionguru-sunset-dreams-real-evolution-255234.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 240,
+    "sha256": "b12a00d806fcb246318e1c1eb8c46a6a7f5754e83f4be5c2ee778ed58b31e707",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791761592085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "EvolutionGuru",
+      "attributionRequired": false,
+      "attributionText": "Music by EvolutionGuru from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-07",
+    "family": "music",
+    "title": "Stop Overthinking. Meditate",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "meditation",
+      "spiritual background"
+    ],
+    "audioPath": "support/Overthinking/freemusiclab-stop-overthinking-meditate-i-free-background-music-i-free-music-lab-release-357503 (2).mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 726,
+    "sha256": "66ab887564c553e3f15c3cca56acd2baae1b6346e92cc4c5943fa9454a4af383",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791675192085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "FreeMusicLab",
+      "attributionRequired": false,
+      "attributionText": "Music by FreeMusicLab from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-08",
+    "family": "music",
+    "title": "Chill Emo Rock Song - Stay Awake",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "emo rock",
+      "emo music"
+    ],
+    "audioPath": "support/Overthinking/openmindaudio-chill-emo-rock-song-stay-awake-580669 (1).mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 180,
+    "sha256": "c832d454552ce46c36170e3626904110e1558682351ca77623dce3a48f1d29e2",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791588792085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "OpenMindAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by OpenMindAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-09",
+    "family": "music",
+    "title": "Surreal downtempo song about overthinking everything",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "surreal",
+      "downtempo",
+      "overthinking"
+    ],
+    "audioPath": "support/Overthinking/poorartistt-surreal-downtempo-song-about-overthinking-everything-441232.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 263,
+    "sha256": "771436ae25b5e5cd5e19c531cffca3455b16a8aebb3820b743683c1f8cf9e6dd",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791502392085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "PoorArtistt",
+      "attributionRequired": false,
+      "attributionText": "Music by PoorArtistt from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-10",
+    "family": "music",
+    "title": "Stop Overthinking - Calming Meditation",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "adhd relax",
+      "spa"
+    ],
+    "audioPath": "support/Overthinking/saavane-stop-overthinking-calming-meditation-231869 (1).mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 554,
+    "sha256": "315171a68cca5d644431df4793e7879a2b14fecd1530bb942351f04dcd748393",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791415992085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "saavane",
+      "attributionRequired": false,
+      "attributionText": "Music by saavane from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-11",
+    "family": "music",
+    "title": "Stop Overthinking (Short)",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "ambient background",
+      "calm"
+    ],
+    "audioPath": "support/Overthinking/siarhei_korbut-stop-overthinking-short-387150.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 120,
+    "sha256": "c69888e686bf19b4a2d1e8851a2b005d7fad4f6bd2c72b34386e4656030e1a46",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791329592085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Siarhei_Korbut",
+      "attributionRequired": false,
+      "attributionText": "Music by Siarhei_Korbut from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-12",
+    "family": "music",
+    "title": "Midnight Overthinking",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "vlog music",
+      "late night"
+    ],
+    "audioPath": "support/Overthinking/sunnyscy-midnight-overthinking-138937.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 196,
+    "sha256": "7575040e8cbe1d980baed1f2d60906b4b49811790c2022ccbdafccc926f7076a",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791243192085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "SunnyScy",
+      "attributionRequired": false,
+      "attributionText": "Music by SunnyScy from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-13",
+    "family": "music",
+    "title": "I'm overthinking (140 BPM) Instrumental",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "instrumental",
+      "beats",
+      "140 bpm"
+    ],
+    "audioPath": "support/Overthinking/thisisbeatkitchen-ix27m-overthinking-140-bpm-instrumental-235161.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 183,
+    "sha256": "d8b0015a448d84d84963f68ed424468e72cfe6e63f0bee244533cba60f4c295b",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791156792085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "ThisIsBeatKitchen",
+      "attributionRequired": false,
+      "attributionText": "Music by ThisIsBeatKitchen from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-overthinking-14",
+    "family": "music",
+    "title": "Stop Overthinking It",
+    "topic": "music_topic_overthinking",
+    "tags": [
+      "timkulig",
+      "late night"
+    ],
+    "audioPath": "support/Overthinking/tim_kulig_free_music-stop-overthinking-it-206250.mp3",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "durationSec": 323,
+    "sha256": "eeb4b84bbfd1883b1999f856acdd43cf1c40943989fdabd2d5d24193ad38fed1",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c",
+    "newUntil": 1791070392085,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/overthinking/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Tim_Kulig_Free_Music",
+      "attributionRequired": false,
+      "attributionText": "Music by Tim_Kulig_Free_Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

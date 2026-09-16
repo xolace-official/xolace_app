@@ -64,5 +64,11 @@
     "title": "Anxiety Relief",
     "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
     "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283"
+  },
+  {
+    "slug": "overthinking",
+    "title": "Overthinking",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c"
   }
 ]
