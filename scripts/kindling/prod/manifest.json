@@ -8478,5 +8478,777 @@
       "attributionText": "Music by The_Mountain from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-healing-recovery-01",
+    "family": "music",
+    "title": "Harp",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "modern classical",
+      "harp",
+      "dreamy",
+      "scotland harp",
+      "elegant"
+    ],
+    "audioPath": "support/Healing & Recovery/atlasaudio-harp-587446.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 68,
+    "sha256": "218271fbfdbb4a632d37212944da3e1f8ea076f284fa48415300be3bb01c0421",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1792208023331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-02",
+    "family": "music",
+    "title": "Healing Frequency",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "healing frequency",
+      "well-being",
+      "sound therapy"
+    ],
+    "audioPath": "support/Healing & Recovery/atlasaudio-health-522424.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 105,
+    "sha256": "53036e7525417ad9f107f237dfabfdaa15fd291a41c50d4c0bf56aa987560f38",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1792121623331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-03",
+    "family": "music",
+    "title": "Hopeful Atmosphere",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "hopeful",
+      "uplifting atmosphere",
+      "light textures"
+    ],
+    "audioPath": "support/Healing & Recovery/atlasaudio-hope-590153.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 120,
+    "sha256": "51d6f52eb6a9191da1c2b214ca4a27e3e199b6ece3843ae0a261ebff44e62cdc",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1792035223331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-04",
+    "family": "music",
+    "title": "Soft Strings Reflection",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "cinematic",
+      "soft strings",
+      "positivity",
+      "inward reflection"
+    ],
+    "audioPath": "support/Healing & Recovery/atlasaudio-hopeful-590152.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 102,
+    "sha256": "6d491e67ae0cfd59df5cee388490429fa9365252e0f0024aa291cf1be6c54687",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791948823331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-05",
+    "family": "music",
+    "title": "Restful Drone",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "calm mind",
+      "restful sleep",
+      "peaceful drone"
+    ],
+    "audioPath": "support/Healing & Recovery/atlasaudio-rest-587602.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 102,
+    "sha256": "d9b2fd412e54ffa9c193d48486d0f34fd2582e3903aadff7f72c4c7a50c98a2d",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791862423331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-06",
+    "family": "music",
+    "title": "Serenity",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "meditation",
+      "spa background",
+      "deep calm",
+      "tranquility"
+    ],
+    "audioPath": "support/Healing & Recovery/atlasaudio-serenity-587605.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 115,
+    "sha256": "4fcf3552434d32b10ec33f5c0d625d43397d9dc371752c25974cce2bb18c59fc",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791776023331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-07",
+    "family": "music",
+    "title": "Minimalist Soundscape",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "minimalist soundscape",
+      "slow tempo",
+      "cinematic"
+    ],
+    "audioPath": "support/Healing & Recovery/atlasaudio-slow-music-587606.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 65,
+    "sha256": "905b849d1bb3eb5177575d6e97424938d31452eb72621f36a66dba7fc0f3637c",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791689623331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-08",
+    "family": "music",
+    "title": "Drum and Bass",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "drum n bass",
+      "electronic",
+      "dnb beat",
+      "breakbeat",
+      "high energy",
+      "action promo"
+    ],
+    "audioPath": "support/Healing & Recovery/kulakovka-drum-and-bass-277921.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 94,
+    "sha256": "21710117d369870b33fb5755a59d4d1197c886fbcaf8d955d8d2ab35e9b2220f",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791603223331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-09",
+    "family": "music",
+    "title": "Mindful Calm",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "soft background",
+      "mindfulness",
+      "deep relaxation"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-calm-589817.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 104,
+    "sha256": "0919e231f2eba96106d62904350b3b3d08f16ccc5cd22156a02d0c8220bbc4a3",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791516823331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-10",
+    "family": "music",
+    "title": "Calm Piano",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "solo piano",
+      "gentle melodies",
+      "introspective",
+      "emotional"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-calm-piano-586711.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 112,
+    "sha256": "41d3fde8587ba1a4b3e49ab9c7e1379b9e7f017403667c17ffd8f2ef874681e0",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791430423331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-11",
+    "family": "music",
+    "title": "Fresh Start Optimism",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "acoustic",
+      "corporate",
+      "optimistic",
+      "corporate storytelling",
+      "fresh starts"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-calm-uplifting-313610.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 102,
+    "sha256": "468c9819b48cd92689686424085d0240eab0d1015908c2f57765b3c0d8f4e688",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791344023331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-12",
+    "family": "music",
+    "title": "Worship and Faith",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "spiritual",
+      "orchestral",
+      "worship",
+      "faith",
+      "devotional background"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-christian-439968.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 86,
+    "sha256": "a0e55a1ce44fb3a2f56933fbadfb6281004abcb86df2f0cc08cf285d145327ab",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791257623331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-13",
+    "family": "music",
+    "title": "Uplifting Gospel Choir",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "spiritual",
+      "inspirational choir",
+      "uplifting gospel",
+      "hope"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-gospel-590160.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 118,
+    "sha256": "8545e7fa9d14fa03c1e38643dc1ef7a64016e7ef88965bf1c30ec081a518c842",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791171223331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-14",
+    "family": "music",
+    "title": "Gentle Motivation",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "pop",
+      "motivational intro",
+      "gentle progression",
+      "success"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-inspirational-calm-375197.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 92,
+    "sha256": "fb2531febfd7e0ee64945804518021c1cc1e37162ac1f811d35eda07baa62493",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1791084823331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-15",
+    "family": "music",
+    "title": "Playful Kalimba",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "modern classical",
+      "kalimba music",
+      "playful",
+      "cute",
+      "organic elements"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-kalimba-587280.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 102,
+    "sha256": "e0d3db198748803bb497d7191675c08e1e6c35dee76b5efdf949887d3c68e96f",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790998423331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-16",
+    "family": "music",
+    "title": "Piano for Sleep",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "piano",
+      "lullaby",
+      "deep sleep",
+      "insomnia relief"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-piano-for-sleep-587330.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 112,
+    "sha256": "9286741f65b2e318b39f950a1ddff0c4d8fa009c6331e9355d6563ee77ee2688",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790912023331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-17",
+    "family": "music",
+    "title": "Shamanic Drumming",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "shamanic drumming",
+      "tribal rhythm",
+      "deep trance"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-shamanic-587282.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 118,
+    "sha256": "2570bb338ccc068244b35c46a9d7a7fb84e5531b8e631696fdcd69464d272458",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790825623331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-18",
+    "family": "music",
+    "title": "Sound Bath Healing",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "sound bath",
+      "clinical therapy",
+      "anxiety relief"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-therapy-525090.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 100,
+    "sha256": "a1238602171fbb86c6f98bc8174895dfad13c945df5a6afd05d04c3e2badeada",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790739223331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-19",
+    "family": "music",
+    "title": "Inspiring Business Journey",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "cinematic",
+      "corporate",
+      "bright guitar",
+      "inspiring journey",
+      "business growth"
+    ],
+    "audioPath": "support/Healing & Recovery/leberch-uplifting-inspirational-262900.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 111,
+    "sha256": "41e9e308a5000228438f6669f6428a195328006c8ad2a515f84c414de3c3790a",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790652823331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-20",
+    "family": "music",
+    "title": "Christmas Lullaby",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "holiday",
+      "acoustic",
+      "festive cozy",
+      "gentle strings",
+      "winter night"
+    ],
+    "audioPath": "support/Healing & Recovery/marlowemusic-christmas-lullaby-582292.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 119,
+    "sha256": "23c33d3eb62a0fd7bb8cd58c46d067fa3d69fef88880628c155bf161bd26f465",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790566423331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "marlowemusic",
+      "attributionRequired": false,
+      "attributionText": "Music by marlowemusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-21",
+    "family": "music",
+    "title": "Zen Yoga Meditation",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "zen yoga",
+      "mindfulness practice",
+      "deep calm"
+    ],
+    "audioPath": "support/Healing & Recovery/monume-meditation-music-577979.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 110,
+    "sha256": "14644a96b59a2b3dbf10dbbbd8801370571f44565c0615c581d80632b7ddae1f",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790480023331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "monume",
+      "attributionRequired": false,
+      "attributionText": "Music by monume from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-22",
+    "family": "music",
+    "title": "Forest Atmosphere",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "forest atmosphere",
+      "organic textures",
+      "earthy"
+    ],
+    "audioPath": "support/Healing & Recovery/prettyjohn1-nature-486809.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 61,
+    "sha256": "4165bbf0476d70da31a5d99031947ddb776711035364190bcbd8e56830363d5b",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790393623331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-23",
+    "family": "music",
+    "title": "Dreamy Guitar Reverie",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "orchestral",
+      "ambient",
+      "dreamy guitar",
+      "atmospheric",
+      "nostalgic short cut"
+    ],
+    "audioPath": "support/Healing & Recovery/tape-echo-dream-dreaming_36sec-567735.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 36,
+    "sha256": "7391bbf9a0ab62893e4484f4c5b503a1cb19bbb1c31f74df7312881fc030055a",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790307223331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "tape-echo",
+      "attributionRequired": false,
+      "attributionText": "Music by tape-echo from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-24",
+    "family": "music",
+    "title": "Peaceful Quiet Room",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "relaxing pad",
+      "peaceful sky",
+      "quiet room"
+    ],
+    "audioPath": "support/Healing & Recovery/the_mountain-calm-507994.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 101,
+    "sha256": "ea920d29f5953e9a4397cf11a9932d73861b96a0f828683347cdcb018d2b92d7",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790220823331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-25",
+    "family": "music",
+    "title": "Mindful Healing",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "stress relief",
+      "mindful healing",
+      "gentle breathing"
+    ],
+    "audioPath": "support/Healing & Recovery/the_mountain-mental-health-587593.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 96,
+    "sha256": "9c20a32dd699d477b629a6014fc248d3ebf3b9990c1af3f45a77301677193391",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790134423331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-26",
+    "family": "music",
+    "title": "Serene Horizon",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "serene horizon",
+      "gentle flow",
+      "sleep aid"
+    ],
+    "audioPath": "support/Healing & Recovery/the_mountain-peaceful-587597.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 121,
+    "sha256": "768a03debf84cff89bc5be108d057c896a6c68f0e5c0b304e4817d32d0ed2be5",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1790048023331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-healing-recovery-27",
+    "family": "music",
+    "title": "Cozy Chillout",
+    "topic": "music_topic_healing_recovery",
+    "tags": [
+      "ambient",
+      "cozy background",
+      "soft chords",
+      "chillout"
+    ],
+    "audioPath": "support/Healing & Recovery/the_mountain-relax-relax-music-587598.mp3",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "durationSec": 90,
+    "sha256": "1f57c3866dadc11f3a08a9134190b086bdda62e758bb170cb4598c8400f0288c",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724",
+    "newUntil": 1789961623331,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/healing-recovery/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

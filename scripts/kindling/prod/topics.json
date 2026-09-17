@@ -94,5 +94,11 @@
     "title": "Deep Relaxation",
     "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
     "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563"
+  },
+  {
+    "slug": "healing_recovery",
+    "title": "Healing & Recovery",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724"
   }
 ]
