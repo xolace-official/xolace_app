@@ -76,5 +76,11 @@
     "title": "Focus & Concentration",
     "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
     "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53"
+  },
+  {
+    "slug": "happiness_joy",
+    "title": "Happiness & Joy",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2"
   }
 ]

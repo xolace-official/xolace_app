@@ -6553,5 +6553,595 @@
       "attributionText": "Music by tape-echo from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-happiness-joy-01",
+    "family": "music",
+    "title": "Dance",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "electro",
+      "house",
+      "edm",
+      "dance beat",
+      "bounce",
+      "driving"
+    ],
+    "audioPath": "support/Happiness & Joy/atlasaudio-dance-518070.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 86,
+    "sha256": "6c9f70e554262f62337ca3472ae9730f8ef2dfd3ddb3e9b22e3d5ed333cbae79",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1792202733430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-02",
+    "family": "music",
+    "title": "Elevator Music Elevator Background",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "adventure",
+      "jazz",
+      "elevator",
+      "background music",
+      "hold music"
+    ],
+    "audioPath": "support/Happiness & Joy/audiodollar-elevator-music-elevator-background-532033.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 88,
+    "sha256": "17f361bd7dec79e434bfbaac1b37c294e81a0e76c60e640d562129e31e9640ad",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1792116333430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AudioDollar",
+      "attributionRequired": false,
+      "attributionText": "Music by AudioDollar from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-03",
+    "family": "music",
+    "title": "Kids Happy Background Music 89 Second",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "beats",
+      "children's",
+      "festival party",
+      "happy pop",
+      "celebration"
+    ],
+    "audioPath": "support/Happiness & Joy/bombinsound-kids-happy-background-music-89-second-495404.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 89,
+    "sha256": "f28f054bc4f0dcbbf437228658a18e88a4f7d945a805934accc12432c1be37d2",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1792029933430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "BombinSound",
+      "attributionRequired": false,
+      "attributionText": "Music by BombinSound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-04",
+    "family": "music",
+    "title": "Summer Motivation Version 3",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "future bass",
+      "summer",
+      "uplifting",
+      "energetic",
+      "travel vlog"
+    ],
+    "audioPath": "support/Happiness & Joy/bombinsound-summer-motivation-version-3-554575.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 57,
+    "sha256": "36ac17151fffe045f3341f903221d7c9023e73b7f412ab8201465ecdaa1ca723",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791943533430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "BombinSound",
+      "attributionRequired": false,
+      "attributionText": "Music by BombinSound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-05",
+    "family": "music",
+    "title": "Summer Version 4 With You",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "future bass",
+      "summer vibe",
+      "catchy",
+      "tropical house",
+      "chill"
+    ],
+    "audioPath": "support/Happiness & Joy/bombinsound-summer-version-4-with-you-564679.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 45,
+    "sha256": "92a6d75bd734cba8a129842b2f7f4297cbc09c6ddfded9cbcb22cd97de6a8c9e",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791857133430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "BombinSound",
+      "attributionRequired": false,
+      "attributionText": "Music by BombinSound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-06",
+    "family": "music",
+    "title": "The Mother's Day",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "pop",
+      "acoustic",
+      "mother's day",
+      "family",
+      "love",
+      "heartwarming"
+    ],
+    "audioPath": "support/Happiness & Joy/bombinsound-the-motherx27s-day-491968.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 115,
+    "sha256": "408e9b25445cb28a5a261dc9df9c3da6b3f453c0b25edc3865edd302a714c8f9",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791770733430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "BombinSound",
+      "attributionRequired": false,
+      "attributionText": "Music by BombinSound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-07",
+    "family": "music",
+    "title": "Vlog Future Bass",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "future bass",
+      "modern vlog",
+      "electronic",
+      "dynamic",
+      "review"
+    ],
+    "audioPath": "support/Happiness & Joy/bombinsound-vlog-future-bass-547231.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 97,
+    "sha256": "c07fc6c6496a0bf3817a96ccabadaf145a7ca54e69c8241dc1095d1863413dfd",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791684333430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "BombinSound",
+      "attributionRequired": false,
+      "attributionText": "Music by BombinSound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-08",
+    "family": "music",
+    "title": "Uplifting Christmas Background Orchestra No Jingle",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "cinematic",
+      "orchestral",
+      "christmas",
+      "holiday",
+      "festive",
+      "inspiring"
+    ],
+    "audioPath": "support/Happiness & Joy/good_b_music-uplifting-christmas-background-orchestra-no-jingle-128844.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 102,
+    "sha256": "484ac0fcb822304d9a287520cc4791144f11f1af8d09d9696855bc0e48aaec85",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791597933430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "good_b_music",
+      "attributionRequired": false,
+      "attributionText": "Music by good_b_music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-09",
+    "family": "music",
+    "title": "Weakness for Sweets",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "pop",
+      "beats",
+      "playful",
+      "cute",
+      "cooking vlog",
+      "upbeat"
+    ],
+    "audioPath": "support/Happiness & Joy/jonasblakewood-weakness-for-sweets-300526.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 116,
+    "sha256": "4be42c8d31ab8fe17d8cc7fa1f10ce92978825779e26337375b8e7b7f4d57e2e",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791511533430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "jonasblakewood",
+      "attributionRequired": false,
+      "attributionText": "Music by jonasblakewood from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-10",
+    "family": "music",
+    "title": "Birthday",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "pop",
+      "upbeat",
+      "happy birthday",
+      "party",
+      "celebration",
+      "fun"
+    ],
+    "audioPath": "support/Happiness & Joy/joyinsound-birthday-398319.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 71,
+    "sha256": "7d589be68f5b69d2025c13a4014fa3bd7260db75739284b71e594723402d0808",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791425133430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "joyinsound",
+      "attributionRequired": false,
+      "attributionText": "Music by joyinsound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-11",
+    "family": "music",
+    "title": "Pop Paradise",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "pop",
+      "commercial",
+      "bright",
+      "energetic",
+      "summer"
+    ],
+    "audioPath": "support/Happiness & Joy/joyinsound-pop-paradise-389316.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 109,
+    "sha256": "525c292549e5975666d9cd5dc7dadab794dcb1a6d14790971e136691c814f6ea",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791338733430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "joyinsound",
+      "attributionRequired": false,
+      "attributionText": "Music by joyinsound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-12",
+    "family": "music",
+    "title": "Theme of Pure Joy",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "cinematic",
+      "inspiring",
+      "joyful",
+      "cinematic intro",
+      "hopeful"
+    ],
+    "audioPath": "support/Happiness & Joy/joyinsound-theme-of-pure-joy-387946.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 69,
+    "sha256": "f8a6d659a919222b27b1ee54dc9903ce757606a2c405c4d9ecfaebfaec0cd1b3",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791252333430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "joyinsound",
+      "attributionRequired": false,
+      "attributionText": "Music by joyinsound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-13",
+    "family": "music",
+    "title": "Pop Positive",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "pop",
+      "corporate",
+      "uplifting",
+      "commercial background"
+    ],
+    "audioPath": "support/Happiness & Joy/kulakovka-pop-positive-268399.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 96,
+    "sha256": "e339f55aac925fc7d27a399153f0ea854526b3dd0d80b4deb3584b4eecd2bfde",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791165933430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-14",
+    "family": "music",
+    "title": "Vlog Background Music",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "beats",
+      "vlog music",
+      "daily vlog",
+      "chill hip hop",
+      "lifestyle"
+    ],
+    "audioPath": "support/Happiness & Joy/monume-vlog-vlogs-background-music-570686.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 108,
+    "sha256": "9f08403b1de2a7d504a73c7b4c18300b7c68d89cd052ecbd9ea29e533f610d9b",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1791079533430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "monume",
+      "attributionRequired": false,
+      "attributionText": "Music by monume from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-15",
+    "family": "music",
+    "title": "Hope That Always Remains",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "cinematic",
+      "piano",
+      "melancholic",
+      "emotional",
+      "hopeful",
+      "reflection"
+    ],
+    "audioPath": "support/Happiness & Joy/musicword-hope-that-always-remains-515620.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 82,
+    "sha256": "853d87425d1b51578bb99db262a26b75645a0c7400e11028b3117df48d21bc79",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1790993133430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "musicword",
+      "attributionRequired": false,
+      "attributionText": "Music by musicword from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-16",
+    "family": "music",
+    "title": "Happy Whistling Ukulele",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "upbeat",
+      "pop",
+      "cheerful",
+      "playful",
+      "whistling",
+      "ukulele"
+    ],
+    "audioPath": "support/Happiness & Joy/paulyudin-happy-happy-music-477929.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 120,
+    "sha256": "a2734ea606908f000d5d836befeae6409b776e086bfb3b4bec942a35483f9295",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1790906733430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "paulyudin",
+      "attributionRequired": false,
+      "attributionText": "Music by paulyudin from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-17",
+    "family": "music",
+    "title": "Bright Happy Kids Tune",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "upbeat",
+      "pop",
+      "bright",
+      "fun background",
+      "children",
+      "positive"
+    ],
+    "audioPath": "support/Happiness & Joy/paulyudin-happy-happy-music-513014.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 93,
+    "sha256": "0c684d5e3a4a7748660321e8ad62d8cab0a8a9b9564464294428048ae85ddd6f",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1790820333430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "paulyudin",
+      "attributionRequired": false,
+      "attributionText": "Music by paulyudin from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-18",
+    "family": "music",
+    "title": "Spring",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "ambient",
+      "pop",
+      "fresh",
+      "acoustic",
+      "warm",
+      "gentle background"
+    ],
+    "audioPath": "support/Happiness & Joy/prettyjohn1-spring-508139.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 83,
+    "sha256": "cba49b87c9a721099bfb34fb3e5344ee275f4120db9ff4142cb0d1ed9e0eddae",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1790733933430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-19",
+    "family": "music",
+    "title": "Energetic Sport Music Loop",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "rock",
+      "electronic",
+      "workout",
+      "action",
+      "sport",
+      "high energy loop"
+    ],
+    "audioPath": "support/Happiness & Joy/sonican-energetic-sport-music-loop-545752.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 40,
+    "sha256": "b1ce0a50a3bf19ca15ead59e0a30637a835a4c6a79b2ffddfc71a0bf24d6693c",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1790647533430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "sonican",
+      "attributionRequired": false,
+      "attributionText": "Music by sonican from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-happiness-joy-20",
+    "family": "music",
+    "title": "Happy Violins",
+    "topic": "music_topic_happiness_joy",
+    "tags": [
+      "cinematic",
+      "orchestral",
+      "violins",
+      "upbeat classical",
+      "strings",
+      "inspiring"
+    ],
+    "audioPath": "support/Happiness & Joy/the_mountain-happy-violins-167606.mp3",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "durationSec": 88,
+    "sha256": "987a0a01878946c4d6ef26a7814056b7e0099266cd9c5af8562ca0d4e74a766c",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2",
+    "newUntil": 1790561133430,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/happiness-joy/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]
