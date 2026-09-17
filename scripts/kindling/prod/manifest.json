@@ -10235,5 +10235,819 @@
       "attributionText": "Music by ZephiraMusic from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-meditation-01",
+    "family": "music",
+    "title": "Relaxing Piano",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "modern classical",
+      "relaxing piano",
+      "peaceful",
+      "soft melody",
+      "calm"
+    ],
+    "audioPath": "support/Meditation/29605581-relaxing-piano-1-118623.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 188,
+    "sha256": "82bb189e25ccd35353d7fe5f2eb61d55d7f7ce0b23b61d6143c37fcb9d4fc006",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1792241443261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "29605581",
+      "attributionRequired": false,
+      "attributionText": "Music by 29605581 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-02",
+    "family": "music",
+    "title": "Zen Calm Deep Sleep",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "meditation",
+      "ambient",
+      "zen calm",
+      "deep sleep",
+      "healing soundscape"
+    ],
+    "audioPath": "support/Meditation/34910776-free-royalty-zen-calm-deep-meditation-and-sleep-music-191592.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 183,
+    "sha256": "7bba54494b6d12155573b7a8b9668f3e6e3da0d53513fc112d303935fc21fa57",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1792155043261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "34910776",
+      "attributionRequired": false,
+      "attributionText": "Music by 34910776 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-03",
+    "family": "music",
+    "title": "Forest Heart Flow",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "meditation",
+      "ambient",
+      "nature sounds",
+      "mental health",
+      "forest therapy"
+    ],
+    "audioPath": "support/Meditation/alan_frijns-cooper-creek-flowing-heart-of-the-forest-meditation-for-mental-health-409967.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 621,
+    "sha256": "c866886aa52b2060a517bc3aca36c9f74c119c601de22f916da6078f39499bd3",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1792068643261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alan_frijns",
+      "attributionRequired": false,
+      "attributionText": "Music by alan_frijns from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-04",
+    "family": "music",
+    "title": "Shrouded Summit Flute",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "spiritual",
+      "world",
+      "zen garden",
+      "mystic flute",
+      "healing",
+      "shrouded summit"
+    ],
+    "audioPath": "support/Meditation/alan_frijns-thornton-peak-the-shrouded-summit-zen-garden-mystic-flute-409963.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 459,
+    "sha256": "5daeffd392a5826299536523d3beb0777fe2b8456788411dc739f655e0b64ab6",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791982243261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alan_frijns",
+      "attributionRequired": false,
+      "attributionText": "Music by alan_frijns from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-05",
+    "family": "music",
+    "title": "Skyroom Meditation",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "electronic",
+      "ambient",
+      "skyroom",
+      "chill",
+      "trippy beats",
+      "relaxing drone"
+    ],
+    "audioPath": "support/Meditation/deltax-music-breakers-skyroom-meditation-music-413831.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 229,
+    "sha256": "719d1a4ca539b14b0109bd9aad40f724734fe87ee5ec0b850970bc61b03657d3",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791895843261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DeltaX-Music",
+      "attributionRequired": false,
+      "attributionText": "Music by DeltaX-Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-06",
+    "family": "music",
+    "title": "Destiny Meditation",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "electronic",
+      "ambient",
+      "destiny",
+      "spiritual journey",
+      "inner peace"
+    ],
+    "audioPath": "support/Meditation/deltax-music-destiny-meditation-music-413829.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 203,
+    "sha256": "50fa1c308035e7a04e824b8dfb946eed637f6236d8288f07f1638424b6a6b846",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791809443261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DeltaX-Music",
+      "attributionRequired": false,
+      "attributionText": "Music by DeltaX-Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-07",
+    "family": "music",
+    "title": "Laid Back Meditation",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "electronic",
+      "ambient",
+      "laid back",
+      "modern melodic",
+      "focus background"
+    ],
+    "audioPath": "support/Meditation/deltax-music-hella-bands-meditation-music-413813.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 178,
+    "sha256": "12ecddd10c92b6f508ecc5229237ac43c130c807f364002c728940cad3c906dd",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791723043261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DeltaX-Music",
+      "attributionRequired": false,
+      "attributionText": "Music by DeltaX-Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-08",
+    "family": "music",
+    "title": "Kundalini Awakening",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "electronic",
+      "spiritual",
+      "kundalini",
+      "tantric flow",
+      "ethereal",
+      "deep transmutation"
+    ],
+    "audioPath": "support/Meditation/deltax-music-kundalini-s3x-magik-meditation-music-413834.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 298,
+    "sha256": "28ad49877d08afb0c357a514604526f4448860b5d414e69464bcef18d90eeda4",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791636643261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DeltaX-Music",
+      "attributionRequired": false,
+      "attributionText": "Music by DeltaX-Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-09",
+    "family": "music",
+    "title": "Abundance Meditation",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "electronic",
+      "ambient",
+      "manifestation",
+      "abundance",
+      "positive frequency"
+    ],
+    "audioPath": "support/Meditation/deltax-music-lottery-meditation-music-413860.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 181,
+    "sha256": "9e10ce89be0679fb3f7bf13201dc9ba9ba3d0b4778b39f4402896a5996781f24",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791550243261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DeltaX-Music",
+      "attributionRequired": false,
+      "attributionText": "Music by DeltaX-Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-10",
+    "family": "music",
+    "title": "Prophetic Dream",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "electronic",
+      "spiritual",
+      "prophetic dream",
+      "visionary",
+      "sound bath atmosphere"
+    ],
+    "audioPath": "support/Meditation/deltax-music-prophetic-meditation-music-413830.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 280,
+    "sha256": "37fca123f8a8fad085c83a3808d6a4b8a92328a21e5ba3eb31ff0a390cf82f11",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791463843261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DeltaX-Music",
+      "attributionRequired": false,
+      "attributionText": "Music by DeltaX-Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-11",
+    "family": "music",
+    "title": "Moody Night Drone",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "electronic",
+      "ambient",
+      "dark ambient",
+      "moody chill",
+      "night textures"
+    ],
+    "audioPath": "support/Meditation/deltax-music-red-light-district-meditation-music-413862.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 286,
+    "sha256": "d564f1cf1e73e2a7a412cbc537c7c255b4eccd5732723f480590532ecbb17931",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791377443261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DeltaX-Music",
+      "attributionRequired": false,
+      "attributionText": "Music by DeltaX-Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-12",
+    "family": "music",
+    "title": "Root Chakra Meditation",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "electronic",
+      "ambient",
+      "root chakra",
+      "grounding frequency",
+      "stabilization"
+    ],
+    "audioPath": "support/Meditation/deltax-music-root-meditation-music-413814.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 165,
+    "sha256": "efabdb9cee4fb44fc8d6b8fda04e12062efd0d4e1e5e69886b59b166cc777cdf",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791291043261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DeltaX-Music",
+      "attributionRequired": false,
+      "attributionText": "Music by DeltaX-Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-13",
+    "family": "music",
+    "title": "Silent Meditation",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "meditation",
+      "ambient",
+      "pure silence",
+      "deep void",
+      "zen minimalist"
+    ],
+    "audioPath": "support/Meditation/deltax-music-silence-meditation-music-413865.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 243,
+    "sha256": "aae3042cadc80a7d5741b099a89337d0f2d0d9b69365c21c2defaaabb79c0379",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791204643261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DeltaX-Music",
+      "attributionRequired": false,
+      "attributionText": "Music by DeltaX-Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-14",
+    "family": "music",
+    "title": "Island Chill Meditation",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "electronic",
+      "ambient",
+      "wandering",
+      "island chill",
+      "ethereal destination"
+    ],
+    "audioPath": "support/Meditation/deltax-music-somewhere-foreign-meditation-music-413823.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 344,
+    "sha256": "6c83d0672a104ddfe98b96b03e097899d1e914bf0f38aa389125325678d4de6f",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791118243261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DeltaX-Music",
+      "attributionRequired": false,
+      "attributionText": "Music by DeltaX-Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-15",
+    "family": "music",
+    "title": "Soul Core Restoration",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "soul core",
+      "energy healing",
+      "restorative flow"
+    ],
+    "audioPath": "support/Meditation/drmekhan-soft-background-soul_core-energy-restoration-279981.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 60,
+    "sha256": "118c34e735ddb9dc4a818eb355cfcee35bfcb449a51a81c00a7d0f22587a74ad",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1791031843261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DRMEKHAN",
+      "attributionRequired": false,
+      "attributionText": "Music by DRMEKHAN from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-16",
+    "family": "music",
+    "title": "Deep Study Focus",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "ambient",
+      "beats",
+      "deep focus",
+      "study aid",
+      "cognitive enhancement"
+    ],
+    "audioPath": "support/Meditation/drmekhan-soft-study-focus-deep-266120.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 120,
+    "sha256": "23a635e8196853302f2a3fa06c338e6dab424b496127f3e82f0a38df15745e62",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790945443261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DRMEKHAN",
+      "attributionRequired": false,
+      "attributionText": "Music by DRMEKHAN from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-17",
+    "family": "music",
+    "title": "Crystal Tides",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "ambient",
+      "crystal",
+      "ocean waves",
+      "soothing tides",
+      "spa"
+    ],
+    "audioPath": "support/Meditation/drmseq-crystal-tides-562217.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 127,
+    "sha256": "5d0929526c8ba2597c4e09456baa65e2dd49aaec42271e105280984a786293af",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790859043261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DrmSeq",
+      "attributionRequired": false,
+      "attributionText": "Music by DrmSeq from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-18",
+    "family": "music",
+    "title": "Dreamcatcher",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "ambient",
+      "cinematic",
+      "dreamy",
+      "native ambient",
+      "soft flight",
+      "ethereal"
+    ],
+    "audioPath": "support/Meditation/drmseq-dreamcatcher-544492.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 253,
+    "sha256": "a405604c02044e46c1c15522a5a82b6d0e3f76bf04cd631daae2204d3c22b83c",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790772643261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DrmSeq",
+      "attributionRequired": false,
+      "attributionText": "Music by DrmSeq from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-19",
+    "family": "music",
+    "title": "Face the Endless",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "ambient",
+      "electronic",
+      "cosmic void",
+      "space textures",
+      "cinematic deep pass"
+    ],
+    "audioPath": "support/Meditation/drmseq-face-the-endless-574458.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 193,
+    "sha256": "2069cb76fe88f37b8396590004ce4c218f85b9c3871e21e4188f5387adf9a5ea",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790686243261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DrmSeq",
+      "attributionRequired": false,
+      "attributionText": "Music by DrmSeq from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-20",
+    "family": "music",
+    "title": "Rebirth",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "ambient",
+      "spiritual dawn",
+      "renewal",
+      "gentle drone",
+      "calm"
+    ],
+    "audioPath": "support/Meditation/drmseq-rebirth-569959.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 121,
+    "sha256": "19083949a4c70ba13de58f47b983a296da4b18880032136041e5132cc2574b65",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790599843261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DrmSeq",
+      "attributionRequired": false,
+      "attributionText": "Music by DrmSeq from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-21",
+    "family": "music",
+    "title": "The Rockpool",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "modern classical",
+      "ambient piano",
+      "warm cinematic",
+      "introspection"
+    ],
+    "audioPath": "support/Meditation/geoffharvey-the-rockpool-162588.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 133,
+    "sha256": "9d4887e1ac1c163de73d587a97749ba24ab95524e92c050a82828ecf225c57d0",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790513443261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "GeoffHarvey",
+      "attributionRequired": false,
+      "attributionText": "Music by GeoffHarvey from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-22",
+    "family": "music",
+    "title": "Hydro Relaxation",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "meditation",
+      "ambient",
+      "sound therapy",
+      "hydro relaxation",
+      "deep mindfulness"
+    ],
+    "audioPath": "support/Meditation/healthydesires-water-focused-159500.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 90,
+    "sha256": "917329bbc3e626cebda9fd5184c89317edba7d700e5893b5a3c95af5aff707c6",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790427043261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "HealthyDesires",
+      "attributionRequired": false,
+      "attributionText": "Music by HealthyDesires from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-23",
+    "family": "music",
+    "title": "Shiva's Blossom",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "spiritual",
+      "world",
+      "shiva mantra",
+      "indian flute",
+      "spiritual rebirth"
+    ],
+    "audioPath": "support/Meditation/koi-discovery-koi-discovery-shiva-s-blossom-156871.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 259,
+    "sha256": "353633b1dc98c0333e739b0cdfbfbcfaaa4525925713224be3032cd46482b731",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790340643261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Koi Discovery",
+      "attributionRequired": false,
+      "attributionText": "Music by Koi Discovery from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-24",
+    "family": "music",
+    "title": "Polar Mystery",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "ambient",
+      "cinematic",
+      "mysterious",
+      "shrouded",
+      "cold drone",
+      "polar soundscape"
+    ],
+    "audioPath": "support/Meditation/mysticbloom-what-did-byrd-find-in-antarctica-302092.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 105,
+    "sha256": "ae97d2da7cecff43c84d79d2876f16b5e5292594d095c48468f1621eaaab8c64",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790254243261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MysticBloom",
+      "attributionRequired": false,
+      "attributionText": "Music by MysticBloom from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-25",
+    "family": "music",
+    "title": "Sunrise Meditation",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "ambient",
+      "cinematic",
+      "morning glow",
+      "fresh horizon",
+      "inspirational strings"
+    ],
+    "audioPath": "support/Meditation/premiummusicodyssey-sunrise-231181.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 240,
+    "sha256": "184f390216296b652d7201dd202bb9125c2db4824eac055746e13fb5bc9173ef",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790167843261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "PremiumMusicOdyssey",
+      "attributionRequired": false,
+      "attributionText": "Music by PremiumMusicOdyssey from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-26",
+    "family": "music",
+    "title": "Calm Instrumental Atmosphere",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "ambient",
+      "gentle pad",
+      "minimal backdrop",
+      "presentation comfort"
+    ],
+    "audioPath": "support/Meditation/samsabt-calm-instrumental-atmosphere-478781.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 183,
+    "sha256": "aa1465030494373cd41347dfea8b626d6812713004227d49fe60c9c2cce9397d",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1790081443261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "samsabt",
+      "attributionRequired": false,
+      "attributionText": "Music by samsabt from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-27",
+    "family": "music",
+    "title": "Nature & Universe",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "earth and stars",
+      "cosmic resonance",
+      "deep healing"
+    ],
+    "audioPath": "support/Meditation/tabbiesmanz-nature-amp-universe-188689.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 160,
+    "sha256": "bc6ace0bda960b30d9fc696e7753b3092c33b21882841250ef2c2ad0c200c29a",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1789995043261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "TabbiesManz",
+      "attributionRequired": false,
+      "attributionText": "Music by TabbiesManz from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-meditation-28",
+    "family": "music",
+    "title": "Seeing the Light",
+    "topic": "music_topic_meditation",
+    "tags": [
+      "ambient",
+      "emotional awakening",
+      "cinematic softness",
+      "hopeful"
+    ],
+    "audioPath": "support/Meditation/tim_kulig_free_music-seeing-the-light-132426.mp3",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "durationSec": 473,
+    "sha256": "1ab7878e0524079877852bd10f9633863faaac4bdd22ebce2e4822efeee75b3f",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7",
+    "newUntil": 1789908643261,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Tim_Kulig_Free_Music",
+      "attributionRequired": false,
+      "attributionText": "Music by Tim_Kulig_Free_Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

@@ -106,5 +106,11 @@
     "title": "Hope & Positivity",
     "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
     "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719"
+  },
+  {
+    "slug": "meditation",
+    "title": "Meditation",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7"
   }
 ]
