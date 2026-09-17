@@ -112,5 +112,11 @@
     "title": "Meditation",
     "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
     "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7"
+  },
+  {
+    "slug": "sadness",
+    "title": "Sadness",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700"
   }
 ]

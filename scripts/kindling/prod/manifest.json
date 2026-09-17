@@ -11049,5 +11049,1004 @@
       "attributionText": "Music by Tim_Kulig_Free_Music from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-sadness-01",
+    "family": "music",
+    "title": "Anime Opening Journey",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "rock",
+      "j-rock",
+      "anime",
+      "anime opening",
+      "small emotions"
+    ],
+    "audioPath": "support/Sadness/alex-morgan-anime-opening-emotional-journey-573645.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 104,
+    "sha256": "57c0d731e135b0e85e51f2be5a6f0bd1c315e12222d6be0f0a9489280fc6df40",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1792244372414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alex-morgan",
+      "attributionRequired": false,
+      "attributionText": "Music by alex-morgan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-02",
+    "family": "music",
+    "title": "Calm Piano",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "modern classical",
+      "piano cinematic",
+      "soft piano music",
+      "peaceful"
+    ],
+    "audioPath": "support/Sadness/alex-morgan-calm-piano-541028.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 118,
+    "sha256": "bef26af34faf3cf7a778a170fe9b4414fa961af168a85c2d449c75257670ff99",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1792157972414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alex-morgan",
+      "attributionRequired": false,
+      "attributionText": "Music by alex-morgan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-03",
+    "family": "music",
+    "title": "Rainy Night Lofi Study",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "beats",
+      "lofi",
+      "rainy night",
+      "study beat",
+      "relaxing",
+      "chillhop"
+    ],
+    "audioPath": "support/Sadness/alex-morgan-lofi-study-rainy-night-568166.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 143,
+    "sha256": "bdbb906e7c381f35e84ab87fb606c1ae7057d44ff2c41696a2040d0609cdd640",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1792071572414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alex-morgan",
+      "attributionRequired": false,
+      "attributionText": "Music by alex-morgan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-04",
+    "family": "music",
+    "title": "Melancholic Instrumental",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "ambient",
+      "sad instrumental",
+      "melancholic",
+      "emotional background"
+    ],
+    "audioPath": "support/Sadness/alex-morgan-sad-instrumental-music-579473.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 149,
+    "sha256": "efda6aacb09f2641d30950f808174c53da2eb4fe09f9c48c8085e11f9c6b60ef",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791985172414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alex-morgan",
+      "attributionRequired": false,
+      "attributionText": "Music by alex-morgan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-05",
+    "family": "music",
+    "title": "Rainy Piano Story",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "modern classical",
+      "sad piano rain",
+      "emotional story",
+      "cinematic piano"
+    ],
+    "audioPath": "support/Sadness/alex-morgan-sad-piano-emotional-rain-story-575883.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 199,
+    "sha256": "8029e4b2b0cdf72a10760a84a66d1ccc29c50d169d271e7dc8d182086c532811",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791898772414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alex-morgan",
+      "attributionRequired": false,
+      "attributionText": "Music by alex-morgan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-06",
+    "family": "music",
+    "title": "Quiet Goodbye Letter",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "modern classical",
+      "farewell",
+      "melancholy",
+      "soft piano",
+      "quiet goodbye"
+    ],
+    "audioPath": "support/Sadness/alex-morgan-sad-quiet-goodbye-letter-578495.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 168,
+    "sha256": "e9cef8b727ed29578d57b8f455f0bc58ee96a200760b14fbd1218f4d85642821",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791812372414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alex-morgan",
+      "attributionRequired": false,
+      "attributionText": "Music by alex-morgan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-07",
+    "family": "music",
+    "title": "Sentimental Poetry Backdrop",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "ambient",
+      "poetry backdrop",
+      "sentimental piano",
+      "cinematic",
+      "soft"
+    ],
+    "audioPath": "support/Sadness/alex-morgan-sentimental-poetry-background-music-583286.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 193,
+    "sha256": "fea014dcb513bf8f39c78774b4012db0d669d5a352b01f48257d18d253ae3891",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791725972414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alex-morgan",
+      "attributionRequired": false,
+      "attributionText": "Music by alex-morgan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-08",
+    "family": "music",
+    "title": "Slow Motion Emotional Beat",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "beats",
+      "slow motion",
+      "down-tempo",
+      "emotional beat",
+      "reflection"
+    ],
+    "audioPath": "support/Sadness/alex-morgan-slow-motion-emotional-beat-583273.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 152,
+    "sha256": "c627b4eb88a84788ce943761d4a0d44ce9274ca346e16f9031f7ff38df72e0f0",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791639572414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alex-morgan",
+      "attributionRequired": false,
+      "attributionText": "Music by alex-morgan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-09",
+    "family": "music",
+    "title": "Cinematic Strings Epic",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "orchestral",
+      "cinematic strings",
+      "dynamic",
+      "epic",
+      "video background"
+    ],
+    "audioPath": "support/Sadness/andriig-no-copyright-music-568209.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 144,
+    "sha256": "4219afd3747a8949946ba7df4a53e297073f134b1a404c9d59faa94b3d7837ef",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791553172414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "andriig",
+      "attributionRequired": false,
+      "attributionText": "Music by andriig from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-10",
+    "family": "music",
+    "title": "Traditional Solo Piano",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "classical",
+      "solo piano",
+      "traditional classical",
+      "introspective"
+    ],
+    "audioPath": "support/Sadness/andriih-classical-classical-piano-590653.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 138,
+    "sha256": "44dd8c1afc2c3d5cf4164721ba90df544b6cebcc86c8fcb90c370253aaf14b8d",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791466772414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "andriih",
+      "attributionRequired": false,
+      "attributionText": "Music by andriih from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-11",
+    "family": "music",
+    "title": "Minimalist Instrumental",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "ambient",
+      "pure instrumental",
+      "minimalist backdrop",
+      "calm pad"
+    ],
+    "audioPath": "support/Sadness/andriih-instrumental-instrumental-music-585963.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 137,
+    "sha256": "a0f4272e22eb595935db4be305f7cc6c9e6f330fac47a573ca53aa83c62f689d",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791380372414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "andriih",
+      "attributionRequired": false,
+      "attributionText": "Music by andriih from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-12",
+    "family": "music",
+    "title": "Soft Piano Backdrop",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "modern classical",
+      "piano background",
+      "soft backdrop",
+      "peaceful melodies"
+    ],
+    "audioPath": "support/Sadness/arpmedia-piano-background-music-577850.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 103,
+    "sha256": "44cd9d485b1453c0f2498f64f51efbb00ab177c63031a40d428c7a59faf0276a",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791293972414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "arpmedia",
+      "attributionRequired": false,
+      "attributionText": "Music by arpmedia from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-13",
+    "family": "music",
+    "title": "Sorrowful Melodies",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "ambient",
+      "sad melodies",
+      "cinematic sorrow",
+      "emotional background"
+    ],
+    "audioPath": "support/Sadness/arpmedia-sad-sad-music-577848.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 150,
+    "sha256": "6c907cb0276e75d9aa70942685224894666b1365c58a018f6b53237c2c54c927",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791207572414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "arpmedia",
+      "attributionRequired": false,
+      "attributionText": "Music by arpmedia from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-14",
+    "family": "music",
+    "title": "Inspiring Emotional Drama",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "cinematic",
+      "ambient",
+      "emotional journey",
+      "soft strings",
+      "inspiring drama"
+    ],
+    "audioPath": "support/Sadness/atlasaudio-emotional-583306.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 170,
+    "sha256": "22dee1e8ddbc2be25e0895a53343ee362e7e4e7488149149564ce93b2eacbab5",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791121172414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-15",
+    "family": "music",
+    "title": "Tearjerker Piano",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "modern classical",
+      "tender piano",
+      "tear-jerker",
+      "heartfelt",
+      "cinematic"
+    ],
+    "audioPath": "support/Sadness/atlasaudio-emotional-piano-510218.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 108,
+    "sha256": "0311084316b7d3f587de3daa14dc09197e89bc5e3ff8ef8f7a0a90fe64f99df4",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1791034772414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-16",
+    "family": "music",
+    "title": "Nostalgic Piano",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "modern classical",
+      "retro echoes",
+      "memories",
+      "melancholic piano",
+      "soft"
+    ],
+    "audioPath": "support/Sadness/atlasaudio-nostalgic-piano-520047.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 120,
+    "sha256": "f7f0461d55ab2aa21b48f9a4b341dcf886f4826de776b0607223f2b94e2f0101",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790948372414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-17",
+    "family": "music",
+    "title": "Tragic Strings Drama",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "cinematic",
+      "orchestral",
+      "heavy drama",
+      "deep melancholy",
+      "tragic strings"
+    ],
+    "audioPath": "support/Sadness/atlasaudio-sad-dramatic-519649.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 140,
+    "sha256": "79816d7c007dd32f2da0d850b7c15d0fc2e63c20e7f939186c2dde2d5c147e46",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790861972414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-18",
+    "family": "music",
+    "title": "Tearful Storytelling",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "cinematic",
+      "moving chord progression",
+      "storytelling",
+      "tearful"
+    ],
+    "audioPath": "support/Sadness/leberch-emotional-584027.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 140,
+    "sha256": "9f5fed5ca3be89c59a99d1cbeafbac30a140bba3ee4e46979b6caf25cb0027a3",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790775572414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-19",
+    "family": "music",
+    "title": "Heartwarming Tender Orchestral",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "cinematic",
+      "heartwarming",
+      "melancholy",
+      "tender orchestral"
+    ],
+    "audioPath": "support/Sadness/leberch-emotional-emotional-music-584028.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 160,
+    "sha256": "f0f823337996dae3a9bafb6787de176598d7ff262cab339ab0afbc61066db05f",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790689172414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-20",
+    "family": "music",
+    "title": "Quiet Room Melancholy",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "ambient",
+      "introspective",
+      "pensive",
+      "quiet room drone"
+    ],
+    "audioPath": "support/Sadness/leberch-melancholy-595794.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 116,
+    "sha256": "e5124b0cc7a32d4bc0a9d7d152634787de4425655324b788c3fad76e175b4d34",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790602772414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-21",
+    "family": "music",
+    "title": "Sad Chords Solitude",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "solo piano",
+      "sad chords",
+      "solitude",
+      "deep grief",
+      "minimal piano"
+    ],
+    "audioPath": "support/Sadness/leberch-sad-509532.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 116,
+    "sha256": "9e3c57a50cca32fd7a5f0d247f4123fc3ed2f4f98aeea59f4aa5755ae868a66c",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790516372414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-22",
+    "family": "music",
+    "title": "Dark Room Heartbreak",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "solo piano",
+      "dark room piano",
+      "heartbreak",
+      "heavy sorrow"
+    ],
+    "audioPath": "support/Sadness/leberch-sad-510083.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 122,
+    "sha256": "118e7d402810b6844a467b4fc61436bd40dc5688dfbd994fce836470a1410989",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790429972414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-23",
+    "family": "music",
+    "title": "Mournful Strings",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "cinematic",
+      "soft piano and strings",
+      "mournful",
+      "nostalgia"
+    ],
+    "audioPath": "support/Sadness/leberch-sad-emotional-509537.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 110,
+    "sha256": "fd4bb29bdff4ccdf2fe1bf03a89f5035197f20381fd2e5ca70a8d176dfc39a38",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790343572414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-24",
+    "family": "music",
+    "title": "Piano Triste",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "solo piano",
+      "sad piano music",
+      "piano triste",
+      "pure solitude"
+    ],
+    "audioPath": "support/Sadness/leberch-sad-piano-578733.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 160,
+    "sha256": "88900d24818c72924cf769a62398daa49995f70b9d3b1e533b7db765647fb02b",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790257172414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-25",
+    "family": "music",
+    "title": "Inspiring Cinematic Ambient",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "cinematic",
+      "beautiful plays",
+      "aleksey chistilin",
+      "melancholy",
+      "dreamy",
+      "catastrophe"
+    ],
+    "audioPath": "support/Sadness/lexin_music-inspiring-cinematic-ambient-116199.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 190,
+    "sha256": "f8e11d58d7e62755421b9c8744fca39f43f4aa66eaf65acbdaab6145cb05d127",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790170772414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Lexin_Music",
+      "attributionRequired": false,
+      "attributionText": "Music by Lexin_Music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-26",
+    "family": "music",
+    "title": "Epic Film Score Tension",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "cinematic",
+      "orchestral",
+      "film score",
+      "high drama",
+      "suspense",
+      "epic tension"
+    ],
+    "audioPath": "support/Sadness/music_for_creators-best-dramatic-music-136824.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 181,
+    "sha256": "4174d80f4596ba81f136be9bc867c42eb95e3186fdf03796323cffb6ece58c26",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1790084372414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "music_for_creators",
+      "attributionRequired": false,
+      "attributionText": "Music by music_for_creators from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-27",
+    "family": "music",
+    "title": "Calming Sadness",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "ambient",
+      "calming sadness",
+      "soft backdrop",
+      "minimal elements"
+    ],
+    "audioPath": "support/Sadness/paulyudin-sad-sad-music-508961.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 75,
+    "sha256": "08f5d5087c4de9a1bf4c6602d1c9db2d651e6d4229e37999739d0eb470672812",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1789997972414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "paulyudin",
+      "attributionRequired": false,
+      "attributionText": "Music by paulyudin from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-28",
+    "family": "music",
+    "title": "Vlog Background Ease",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "pop",
+      "ambient",
+      "vlog background",
+      "clean sound",
+      "easy listening"
+    ],
+    "audioPath": "support/Sadness/prettyjohn1-background-music-537170-1.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 62,
+    "sha256": "60e3dc83ab6e29a96267eba1f3b033b9c43b9f11107a45234af84fd14034cf75",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1789911572414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-29",
+    "family": "music",
+    "title": "Modern Presentation Intro",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "pop",
+      "electronic",
+      "business intro",
+      "modern presentation backdrop"
+    ],
+    "audioPath": "support/Sadness/prettyjohn1-background-music-591305.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 39,
+    "sha256": "14f448c2a583de77ba596ee8ea94dacfb3fe5e4d2c341e9ee55a5881499ee4b2",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1789825172414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-30",
+    "family": "music",
+    "title": "Brief Emotional Transition",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "ambient",
+      "short cut",
+      "emotional transition",
+      "brief sorrow"
+    ],
+    "audioPath": "support/Sadness/prettyjohn1-sad-background-music_48sec-489883.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 48,
+    "sha256": "4b59074e2702b4cecd046f9b9605fb2d16b05ef4d154ec81102bf78a750422f9",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1789738772414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-31",
+    "family": "music",
+    "title": "Rainy Nostalgic Lofi",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "beats",
+      "lofi",
+      "chill sadness",
+      "rainy study",
+      "nostalgic hip hop"
+    ],
+    "audioPath": "support/Sadness/prettyjohn1-sad-lofi-533422.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 83,
+    "sha256": "517f560ae2a860c8942d08990adc13e4989c2641cae02d23633f3cfc72f99e00",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1789652372414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-32",
+    "family": "music",
+    "title": "Documentary Ambient Flow",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "ambient",
+      "neutral backdrop",
+      "textural flow",
+      "documentary pad"
+    ],
+    "audioPath": "support/Sadness/sub_clair-background-music-550483.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 131,
+    "sha256": "7f4cfb3ebcb6a8252e3a87962135d4ebdc31b2bc25cf700ff839336ba5584aca",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1789565972414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "sub_clair",
+      "attributionRequired": false,
+      "attributionText": "Music by sub_clair from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-33",
+    "family": "music",
+    "title": "Vintage Tape Warmth",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "ambient",
+      "vintage tape texture",
+      "analog warmth",
+      "nostalgic"
+    ],
+    "audioPath": "support/Sadness/tape-echo-background-music-567733.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 81,
+    "sha256": "9f3b49b28555fecf172102c42368f8906879e682de9817ddd1a2356a01713d1b",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1789479572414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "tape-echo",
+      "attributionRequired": false,
+      "attributionText": "Music by tape-echo from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-34",
+    "family": "music",
+    "title": "Somber Zen Skies",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "ambient",
+      "somber skies",
+      "heavy heart",
+      "zen melancholy"
+    ],
+    "audioPath": "support/Sadness/the_mountain-sad-490012.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 134,
+    "sha256": "eb5574d36dbd4f7bf459303847f5697a93d8e965db73e83db895959e078a5439",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1789393172414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-sadness-35",
+    "family": "music",
+    "title": "Smooth Minimal Loop",
+    "topic": "music_topic_sadness",
+    "tags": [
+      "electronic",
+      "ambient",
+      "smooth loop",
+      "minimal accent",
+      "content creation"
+    ],
+    "audioPath": "support/Sadness/vibemode-background-music-581673.mp3",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "durationSec": 52,
+    "sha256": "6ca7133603eb804c2ea2d06e03b087d023785b2f58fdf49d8c680b26353ec670",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700",
+    "newUntil": 1789306772414,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/sadness/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "vibemode",
+      "attributionRequired": false,
+      "attributionText": "Music by vibemode from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]
