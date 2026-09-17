@@ -6038,5 +6038,520 @@
       "attributionText": "Music by Tim_Kulig_Free_Music from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-focus-concentration-01",
+    "family": "music",
+    "title": "Relaxing Relaxing Music",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "ambient",
+      "relaxing",
+      "calm",
+      "peaceful background"
+    ],
+    "audioPath": "support/Focus & Concentration/arpmedia-relaxing-relaxing-music-577813.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 115,
+    "sha256": "ece0b179e4a0c5c3f3cdba79b5da74e1020efc01daa8e7aaf58c735a89517aea",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1792197361153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "arpmedia",
+      "attributionRequired": false,
+      "attributionText": "Music by arpmedia from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-02",
+    "family": "music",
+    "title": "Atmospheric Ambient",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "ambient",
+      "cinematic",
+      "space",
+      "deep soundscape"
+    ],
+    "audioPath": "support/Focus & Concentration/jonasblakewood-atmospheric-ambient-546970.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 58,
+    "sha256": "d07b30e7ee05222437dfb2adcbb9710f9f51ce35566dcc1755b41daeb2bafd38",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1792110961153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "jonasblakewood",
+      "attributionRequired": false,
+      "attributionText": "Music by jonasblakewood from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-03",
+    "family": "music",
+    "title": "Atmospheric Chill",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "electronic",
+      "chillout",
+      "atmospheric",
+      "smooth beat"
+    ],
+    "audioPath": "support/Focus & Concentration/jonasblakewood-atmospheric-chill-546969.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 43,
+    "sha256": "38bb5a62db69ddecda5dd5db093a3c4fb02599bcd8c0cd99892c31ce3d7affd4",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1792024561153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "jonasblakewood",
+      "attributionRequired": false,
+      "attributionText": "Music by jonasblakewood from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-04",
+    "family": "music",
+    "title": "Chill Vibe",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "beats",
+      "chill",
+      "relaxed vibe",
+      "smooth groove"
+    ],
+    "audioPath": "support/Focus & Concentration/jonasblakewood-chill-vibe-573480.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 48,
+    "sha256": "433cc8716ef97ae8ab34fe5bee9af465e1678ad970e68dae21cebf0bdbae3458",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791938161153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "jonasblakewood",
+      "attributionRequired": false,
+      "attributionText": "Music by jonasblakewood from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-05",
+    "family": "music",
+    "title": "Lofi Background Music",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "beats",
+      "lofi",
+      "study music",
+      "chill hop",
+      "relaxing beat"
+    ],
+    "audioPath": "support/Focus & Concentration/joyinsound-lofi-background-music-391712.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 90,
+    "sha256": "0649fdb38422056a4d028de4d40892c10b72344ba4070c2c05bf1e58c1358801",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791851761153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "joyinsound",
+      "attributionRequired": false,
+      "attributionText": "Music by joyinsound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-06",
+    "family": "music",
+    "title": "Hypnotic",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "electronic",
+      "deep",
+      "hypnotic",
+      "trance",
+      "background"
+    ],
+    "audioPath": "support/Focus & Concentration/kulakovka-hypnotic-295873.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 116,
+    "sha256": "1791d9e33592ed6624a503fc7ae1ba88034963984c67c875b5fca6ff6e303d26",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791765361153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-07",
+    "family": "music",
+    "title": "Lofi",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "beats",
+      "lofi",
+      "chill hop",
+      "aesthetic",
+      "relaxing"
+    ],
+    "audioPath": "support/Focus & Concentration/kulakovka-lofi-295911.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 97,
+    "sha256": "e3aa3b73d966d37b1cbbb42af4b87158403d56d77f93ddb54be22015927d041f",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791678961153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-08",
+    "family": "music",
+    "title": "Study",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "beats",
+      "lofi",
+      "focus",
+      "homework",
+      "chill hop"
+    ],
+    "audioPath": "support/Focus & Concentration/leberch-study-580088.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 116,
+    "sha256": "b724ddd31216c28e1deb917a753e9725a54fa38688cba65bc3a7bc6e2c568bc7",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791592561153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-09",
+    "family": "music",
+    "title": "Calm",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "ambient",
+      "soft background",
+      "peaceful",
+      "calming"
+    ],
+    "audioPath": "support/Focus & Concentration/prettyjohn1-calm-495675.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 57,
+    "sha256": "c6ed0480972f6d8593e90b2cffbbcf1bde8df172859853d9a2d69bcc57dc03f8",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791506161153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-10",
+    "family": "music",
+    "title": "Lofi Lofi Music (35sec)",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "beats",
+      "lofi",
+      "short edit",
+      "chill hip hop",
+      "intros"
+    ],
+    "audioPath": "support/Focus & Concentration/prettyjohn1-lofi-lofi-music_35sec-587183.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 35,
+    "sha256": "55b07617be4d470f371fd997c42f37cbe19dfbb91a32b7d3559fbbb3932d3497",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791419761153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-11",
+    "family": "music",
+    "title": "Lofi Lofi Music",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "beats",
+      "lofi",
+      "relaxed beat",
+      "vlog music",
+      "background"
+    ],
+    "audioPath": "support/Focus & Concentration/prettyjohn1-lofi-lofi-music-587176.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 76,
+    "sha256": "a28a93cc264010781e99d4b88fbd53a3071bf05518abfb8a2181f87ca42b69d0",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791333361153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-12",
+    "family": "music",
+    "title": "Motivational (47sec)",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "cinematic",
+      "corporate",
+      "short version",
+      "inspiring",
+      "corporate video"
+    ],
+    "audioPath": "support/Focus & Concentration/prettyjohn1-motivational_47sec-530635.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 47,
+    "sha256": "f08911402aa1c177104d0ba85ecd5bef48d967c5d3eecd4135b9cadac9e79a6a",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791246961153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-13",
+    "family": "music",
+    "title": "Motivational (54sec)",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "cinematic",
+      "corporate",
+      "short edit",
+      "uplifting",
+      "business intro"
+    ],
+    "audioPath": "support/Focus & Concentration/prettyjohn1-motivational_54sec-530634.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 54,
+    "sha256": "e550a36bf645c2d15ee4f3c0f6ae7614fedada6a27b98203f6adbc33840bc024",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791160561153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-14",
+    "family": "music",
+    "title": "Motivational",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "pop",
+      "electronic",
+      "inspiring",
+      "energetic",
+      "success"
+    ],
+    "audioPath": "support/Focus & Concentration/prettyjohn1-motivational-526517.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 84,
+    "sha256": "a200f86df0acd1d69d8b9400df2563ffa9599908f17385921e369f5a5d375cce",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1791074161153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-15",
+    "family": "music",
+    "title": "Motivational",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "pop",
+      "electronic",
+      "business",
+      "corporate",
+      "uplifting background"
+    ],
+    "audioPath": "support/Focus & Concentration/prettyjohn1-motivational-530632.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 99,
+    "sha256": "e5bc69bacff5f28e4803bb420ad93e1670fa7b694a8ad5628c632eab2aee9d36",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1790987761153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-16",
+    "family": "music",
+    "title": "Relaxing",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "ambient",
+      "calm piano",
+      "chill background",
+      "soothing"
+    ],
+    "audioPath": "support/Focus & Concentration/prettyjohn1-relaxing-537660.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 47,
+    "sha256": "13188a047df005b64ce300bf2203c2302d11c4d9b76ffe395292d89f1e0e4243",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1790901361153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-17",
+    "family": "music",
+    "title": "Reflection Reflections (58sec)",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "ambient",
+      "tape echo",
+      "dreamy",
+      "nostalgic",
+      "short cut"
+    ],
+    "audioPath": "support/Focus & Concentration/tape-echo-reflection-reflections_58sec-567726.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 58,
+    "sha256": "905b687fcc7ea0da11b12384fe98eeef6ae46ae13907ddf70768fe5b2d7f56bf",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1790814961153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "tape-echo",
+      "attributionRequired": false,
+      "attributionText": "Music by tape-echo from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-focus-concentration-18",
+    "family": "music",
+    "title": "Reflection Reflections (75sec)",
+    "topic": "music_topic_focus_concentration",
+    "tags": [
+      "ambient",
+      "dreamy",
+      "slow-paced",
+      "textural reflection"
+    ],
+    "audioPath": "support/Focus & Concentration/tape-echo-reflection-reflections_75sec-567724.mp3",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "durationSec": 75,
+    "sha256": "1c75e9bc783230fedcca71e5d064bca2f70f35c40d391a2f1a988396cfa5a44c",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53",
+    "newUntil": 1790728561153,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/focus-concentration/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "tape-echo",
+      "attributionRequired": false,
+      "attributionText": "Music by tape-echo from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]
