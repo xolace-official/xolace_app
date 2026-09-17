@@ -7779,5 +7779,704 @@
       "attributionText": "Music by ViraMiller from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-deep-relaxation-01",
+    "family": "music",
+    "title": "Emotional Piano",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "solo piano",
+      "emotional piano",
+      "dramatic",
+      "instrumental",
+      "reflection"
+    ],
+    "audioPath": "support/Deep Relaxation/delosound-emotional-piano-480198.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 59,
+    "sha256": "c7734c671ba06e2fdb647167d9780641afb49a6bac610d36b406208c14eda259",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1792206418828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "DELOSound",
+      "attributionRequired": false,
+      "attributionText": "Music by DELOSound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-02",
+    "family": "music",
+    "title": "Chasing Sunshine",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "upbeat",
+      "house",
+      "chill house",
+      "summer energy",
+      "positive",
+      "short cut"
+    ],
+    "audioPath": "support/Deep Relaxation/grand_project-chasing-sunshine_short-1-378266.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 67,
+    "sha256": "7bbe9793a0461ee97a0bef643ae88206983be7a3a5e8e558275fa92cb6925946",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1792120018828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Grand_Project",
+      "attributionRequired": false,
+      "attributionText": "Music by Grand_Project from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-03",
+    "family": "music",
+    "title": "Tropical Lounge",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "tropical house",
+      "lounge",
+      "chillout",
+      "summer vibe"
+    ],
+    "audioPath": "support/Deep Relaxation/jonasblakewood-tropical-lounge-533860.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 46,
+    "sha256": "33b75b14927d4a898f23429a21666a4bd18f7040ef515edc540b725e26b5e5fc",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1792033618828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "jonasblakewood",
+      "attributionRequired": false,
+      "attributionText": "Music by jonasblakewood from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-04",
+    "family": "music",
+    "title": "Dream State Echoes",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "ambient",
+      "ethereal",
+      "deep sleep",
+      "textural space",
+      "peaceful"
+    ],
+    "audioPath": "support/Deep Relaxation/joyinsound-dream-state-echoes-385090.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 96,
+    "sha256": "b29a4a65438817809e61ff09f793847a73b9fd5222d9c6fd9922f2f19cbd0135",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791947218828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "joyinsound",
+      "attributionRequired": false,
+      "attributionText": "Music by joyinsound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-05",
+    "family": "music",
+    "title": "Chill Deep House",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "house",
+      "deep house",
+      "chillout",
+      "smooth rhythm",
+      "background"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-chill-deep-house-295875.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 118,
+    "sha256": "be644e75fabe89f33c21161655c4c2040d032f647346430392893d1592e5f50b",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791860818828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-06",
+    "family": "music",
+    "title": "Modern Dance Deep House",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "house",
+      "deep house",
+      "modern dance",
+      "lounge",
+      "club beat"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-deep-house-277109.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 93,
+    "sha256": "aeba18fa92ddf79463b85d316cd997ca5b0e06f20dac299aa259e03bb076fa0b",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791774418828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-07",
+    "family": "music",
+    "title": "Fashion Vlog Deep House",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "house",
+      "club",
+      "electronic dance",
+      "upbeat groove",
+      "fashion vlog"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-deep-house-283180.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 116,
+    "sha256": "970f5ed68c9d32e2362b0039966e697b34b571a8cd0dd684faff43dae7e278d0",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791688018828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-08",
+    "family": "music",
+    "title": "Atmospheric Corporate House",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "house",
+      "atmospheric house",
+      "melodic electronic",
+      "corporate tech"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-deep-house-291446.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 99,
+    "sha256": "41b7766e0d784d3020c658f7f1d463b66b656c521a9a57fc4bd41c5a405c5ede",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791601618828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-09",
+    "family": "music",
+    "title": "Melodic Lifestyle House",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "house",
+      "chill",
+      "melodic house",
+      "background music",
+      "lifestyle"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-deep-house-295874.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 103,
+    "sha256": "c500c4a6242e840b8eb86a99b0cd00b21b8b7f9f9f263564757d4051a8696f56",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791515218828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-10",
+    "family": "music",
+    "title": "Deep House Instrumental",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "house",
+      "pure instrumental",
+      "clean mix",
+      "driving baseline"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-deep-house-instrumental-295867.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 117,
+    "sha256": "59beb8ccfa322d93de9303ebd4ffebe08cd4d591e7df917d1d6a065ee9de8a6d",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791428818828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-11",
+    "family": "music",
+    "title": "Fashion Chill",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "lounge",
+      "catwalk",
+      "runway vibe",
+      "aesthetic vlog",
+      "chill out"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-fashion-chill-277106.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 97,
+    "sha256": "0849a194d5307e0ee6875e43b4cc30a33682e87d868e7c2fc842ac4e06c5e943",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791342418828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-12",
+    "family": "music",
+    "title": "Hypnotic",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "deep trance",
+      "hypnotic loops",
+      "textural dance"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-hypnotic-295873.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 116,
+    "sha256": "1791d9e33592ed6624a503fc7ae1ba88034963984c67c875b5fca6ff6e303d26",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791256018828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-13",
+    "family": "music",
+    "title": "Lounge Chill",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "lounge",
+      "smooth cafe",
+      "chillout",
+      "relaxed vibe",
+      "background"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-lounge-chill-266590.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 84,
+    "sha256": "9999a8fc9fad911e4e95c4d5c0153d3c1e761368c0c1fa22b91c0ccd086eb652",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791169618828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-14",
+    "family": "music",
+    "title": "Lounge Intro",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "lounge",
+      "opening theme",
+      "soft intro",
+      "background groove"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-lounge-intro-277107.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 101,
+    "sha256": "142acdf579e4c87c7bd42c653a5dffb759ca30ea0ff88abb2d2a936dc0d0486a",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1791083218828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-15",
+    "family": "music",
+    "title": "Spa Relaxed Fashion",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "ambient",
+      "beauty salon",
+      "calm luxury",
+      "chill lounge",
+      "spa"
+    ],
+    "audioPath": "support/Deep Relaxation/kulakovka-spa-relaxed-fashion-268396.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 97,
+    "sha256": "3f064aae259d7873f2ac329f3ebcc4950f1c983c0dbfee79ddcc04552d0092f8",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1790996818828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-16",
+    "family": "music",
+    "title": "Sugar Plum Fairy Remix",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "classical piano",
+      "classical remix",
+      "the nutcracker",
+      "tchaikovsky",
+      "playful"
+    ],
+    "audioPath": "support/Deep Relaxation/nesrality-peter-tchaikovsky-dance-of-the-sugar-plum-fairy-classical-remix-7688.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 105,
+    "sha256": "35ecfde058fc65a581424143d4d41c65cd28244f6cb5d22e9dec56b35d4d6ae6",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1790910418828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Nesrality",
+      "attributionRequired": false,
+      "attributionText": "Music by Nesrality from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-17",
+    "family": "music",
+    "title": "Neapolitan Song Remix",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "classical piano",
+      "tchaikovsky",
+      "classical flip",
+      "upbeat classical"
+    ],
+    "audioPath": "support/Deep Relaxation/nesrality-peter-tchaikovsky-neapolitan-song-opus-39-18-classical-remix-7693.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 69,
+    "sha256": "91a0f38c58d3b5013f2d66c6b45f328aeeabe084c52d7e82e681aaaa5be4978b",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1790824018828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Nesrality",
+      "attributionRequired": false,
+      "attributionText": "Music by Nesrality from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-18",
+    "family": "music",
+    "title": "Minimalist Soft Ambient",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "ambient",
+      "soft background",
+      "minimalist",
+      "gentle movement"
+    ],
+    "audioPath": "support/Deep Relaxation/newmusic-soft-192476.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 83,
+    "sha256": "3fc89e618a9948f502cc2561a9ac72c2092d18fa52f1abd269549f8c7d454e6e",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1790737618828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "NewMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by NewMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-19",
+    "family": "music",
+    "title": "Rainy Study Ambience",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "ambient",
+      "rain background",
+      "calming",
+      "lo-fi atmosphere",
+      "study"
+    ],
+    "audioPath": "support/Deep Relaxation/paulyudin-rain-rain-music-573981.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 68,
+    "sha256": "d6fe8205dfbe211532f93ef573fb36d73c013abdd2c066827e2e791a31903bb8",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1790651218828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "paulyudin",
+      "attributionRequired": false,
+      "attributionText": "Music by paulyudin from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-20",
+    "family": "music",
+    "title": "Chillout",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "electronic",
+      "chillout beat",
+      "smooth melodic",
+      "vlog transition"
+    ],
+    "audioPath": "support/Deep Relaxation/prettyjohn1-chillout-525761.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 91,
+    "sha256": "8b4e82ee2f95e6276a7512e60a6b83e3c9f87bad252f0fd819d13d6b89400a71",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1790564818828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-21",
+    "family": "music",
+    "title": "Meditation",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "ambient",
+      "calm",
+      "mindful practice",
+      "zen",
+      "soft drone"
+    ],
+    "audioPath": "support/Deep Relaxation/prettyjohn1-meditation-495676.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 39,
+    "sha256": "d0d6d6a7ad1dea3fb11ff1521d43d73785ecf582f033c386ffcaed4020961841",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1790478418828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-22",
+    "family": "music",
+    "title": "Phonk",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "beats",
+      "phonk",
+      "drift phonk",
+      "energetic bass",
+      "aggressive"
+    ],
+    "audioPath": "support/Deep Relaxation/souravdasix0ii-phonk-250412.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 89,
+    "sha256": "0faf7d4abb9520705a2d8e39a43854a6059ee91e9598feafe4d8abf22087d176",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1790392018828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "SouravDasIX0II",
+      "attributionRequired": false,
+      "attributionText": "Music by SouravDasIX0II from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-23",
+    "family": "music",
+    "title": "Tape Echo Reflections",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "ambient",
+      "tape echo",
+      "retro texture",
+      "nostalgic",
+      "short cut"
+    ],
+    "audioPath": "support/Deep Relaxation/tape-echo-reflection-reflections_58sec-567726.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 58,
+    "sha256": "905b687fcc7ea0da11b12384fe98eeef6ae46ae13907ddf70768fe5b2d7f56bf",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1790305618828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "tape-echo",
+      "attributionRequired": false,
+      "attributionText": "Music by tape-echo from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-deep-relaxation-24",
+    "family": "music",
+    "title": "Space",
+    "topic": "music_topic_deep_relaxation",
+    "tags": [
+      "ambient",
+      "cosmic ethereal",
+      "deep space",
+      "soundscape"
+    ],
+    "audioPath": "support/Deep Relaxation/the_mountain-space-438391.mp3",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "durationSec": 114,
+    "sha256": "9f31af2f60dc6dfc7d6840645ffaf1c25ecac10012c3aa7712b1c2980eeaa33e",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563",
+    "newUntil": 1790219218828,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/deep-relaxation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

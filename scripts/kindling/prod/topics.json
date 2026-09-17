@@ -88,5 +88,11 @@
     "title": "Breathing & Meditation",
     "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
     "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948"
+  },
+  {
+    "slug": "deep_relaxation",
+    "title": "Deep Relaxation",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563"
   }
 ]
