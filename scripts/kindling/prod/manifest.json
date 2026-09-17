@@ -9250,5 +9250,990 @@
       "attributionText": "Music by The_Mountain from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-hope-positivity-01",
+    "family": "music",
+    "title": "Bright Commercial Energy",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "corporate",
+      "pop",
+      "upbeat energy",
+      "optimistic",
+      "commercial background"
+    ],
+    "audioPath": "support/Hope & Positivity/alex-morgan-upbeat-591314.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 41,
+    "sha256": "61f8ce0ae9ee35abee17c0ddefd8e1a8fc40af83a4732d4fe62ab48cd6ed3acd",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1792237502013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "alex-morgan",
+      "attributionRequired": false,
+      "attributionText": "Music by alex-morgan from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-02",
+    "family": "music",
+    "title": "Family Day",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "acoustic",
+      "happy",
+      "family gathering",
+      "acoustic guitar",
+      "happy vibe"
+    ],
+    "audioPath": "support/Hope & Positivity/atlasaudio-family-day-589982.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 103,
+    "sha256": "c533c0fe4f5e3a569aebf0089406d4b80ec13cc8679ad74c1e4a6080391cf03f",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1792151102013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-03",
+    "family": "music",
+    "title": "Light Horizon Ambient",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "ambient",
+      "hopeful",
+      "light horizon",
+      "uplifting atmosphere",
+      "light textures"
+    ],
+    "audioPath": "support/Hope & Positivity/atlasaudio-hope-590153.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 120,
+    "sha256": "51d6f52eb6a9191da1c2b214ca4a27e3e199b6ece3843ae0a261ebff44e62cdc",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1792064702013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-04",
+    "family": "music",
+    "title": "Emotional String Reflection",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "ambient",
+      "cinematic",
+      "soft strings",
+      "emotional",
+      "inward reflection"
+    ],
+    "audioPath": "support/Hope & Positivity/atlasaudio-hopeful-590152.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 102,
+    "sha256": "6d491e67ae0cfd59df5cee388490429fa9365252e0f0024aa291cf1be6c54687",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791978302013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-05",
+    "family": "music",
+    "title": "Stylish Funk",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "funk",
+      "groove",
+      "stylish",
+      "energetic bass",
+      "fashion vlog",
+      "catchy"
+    ],
+    "audioPath": "support/Hope & Positivity/atlasaudio-stylish-funk-590002.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 70,
+    "sha256": "33b0c083b007b870d3f0d549c46ef40e45a1fcd6d466e53d7569047cffe4056d",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791891902013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-06",
+    "family": "music",
+    "title": "Summer Party",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "pop",
+      "electronic",
+      "summer vibe",
+      "party groove",
+      "uplifting",
+      "travel"
+    ],
+    "audioPath": "support/Hope & Positivity/atlasaudio-summer-party-590004.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 68,
+    "sha256": "5c10fac88229038324e110e1a4504b7e9eaedd545251d9c039012ea8ba012c44",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791805502013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-07",
+    "family": "music",
+    "title": "Uplifting Background",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "corporate",
+      "pop",
+      "corporate storytelling",
+      "business growth",
+      "success"
+    ],
+    "audioPath": "support/Hope & Positivity/atlasaudio-uplifting-background-582204.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 100,
+    "sha256": "4fcd0feaa0448a82b9f28487a7df372e09948d824bee5c673fc8f428c399a187",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791719102013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-08",
+    "family": "music",
+    "title": "Daily Vlog Beat",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "beats",
+      "electronic",
+      "daily vlog",
+      "modern lifestyle",
+      "review intro"
+    ],
+    "audioPath": "support/Hope & Positivity/atlasaudio-vlogging-590007.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 61,
+    "sha256": "e103e96e3d4eeb283ee9df3927012911d9554064fc4d472e949af111e63bac8a",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791632702013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-09",
+    "family": "music",
+    "title": "Action Rock Energy",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "rock",
+      "high energy",
+      "action sequence",
+      "driving guitar"
+    ],
+    "audioPath": "support/Hope & Positivity/jonasblakewood-energy-rock-action-567332.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 31,
+    "sha256": "1fac99b19f0a9514f18dfd86bfd1e04ed42244fe53a2a66dd8e2f263bb6d0d64",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791546302013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "jonasblakewood",
+      "attributionRequired": false,
+      "attributionText": "Music by jonasblakewood from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-10",
+    "family": "music",
+    "title": "Powerful Rock",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "rock",
+      "aggressive",
+      "sports promo",
+      "heavy riffs"
+    ],
+    "audioPath": "support/Hope & Positivity/jonasblakewood-powerful-rock-573487.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 61,
+    "sha256": "a18cff16da84df0e46655216a2b5fdaec5f4d93842b30be5da565160f5da32b8",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791459902013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "jonasblakewood",
+      "attributionRequired": false,
+      "attributionText": "Music by jonasblakewood from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-11",
+    "family": "music",
+    "title": "Upbeat Summer Rock",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "rock",
+      "summer festival",
+      "feel-good rock",
+      "bright"
+    ],
+    "audioPath": "support/Hope & Positivity/jonasblakewood-upbeat-summer-rock-573486.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 33,
+    "sha256": "b8f2aba372f4f717f43611d9fd0933c7243d99b7477dff323f1051734fe1ed24",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791373502013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "jonasblakewood",
+      "attributionRequired": false,
+      "attributionText": "Music by jonasblakewood from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-12",
+    "family": "music",
+    "title": "Inspiring Success Strings",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "cinematic",
+      "corporate",
+      "inspiring journey",
+      "bright strings",
+      "success pitch"
+    ],
+    "audioPath": "support/Hope & Positivity/leberch-inspirational-584481.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 102,
+    "sha256": "82b7c603cb96d9d8eb9c11b86910677df2650e46e59bb83cfd2a2398ecb0ad0f",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791287102013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-13",
+    "family": "music",
+    "title": "Fresh Start Piano",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "cinematic",
+      "pop",
+      "motivational",
+      "uplifting piano",
+      "fresh start"
+    ],
+    "audioPath": "support/Hope & Positivity/leberch-inspire-585271.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 105,
+    "sha256": "ba276c18f342b683f9ac78aff243fc12a70189162a308471a1ed0b9ee1101333",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791200702013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-14",
+    "family": "music",
+    "title": "Travel Adventure",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "orchestral",
+      "adventure",
+      "wandering",
+      "cinematic journey",
+      "epic exploration"
+    ],
+    "audioPath": "support/Hope & Positivity/leberch-travel-adventure-586187.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 94,
+    "sha256": "a721b7c49378b7bf789b266ac383c8c40bdc1d2b664c25c71c66a695460c5723",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791114302013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "leberch",
+      "attributionRequired": false,
+      "attributionText": "Music by leberch from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-15",
+    "family": "music",
+    "title": "Clean Tech Focus",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "electronic",
+      "ambient",
+      "tech focus",
+      "presentation",
+      "clean backdrop"
+    ],
+    "audioPath": "support/Hope & Positivity/paulyudin-minimal-164833.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 118,
+    "sha256": "009abd867a91e26ab326fb7796afa25be4f94796014575ebf1ec5e481ee6e465",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1791027902013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "paulyudin",
+      "attributionRequired": false,
+      "attributionText": "Music by paulyudin from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-16",
+    "family": "music",
+    "title": "Whistling Business Promo",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "upbeat",
+      "corporate",
+      "business promo",
+      "positive energy",
+      "whistling"
+    ],
+    "audioPath": "support/Hope & Positivity/paulyudin-motivation-motivation-music-573993.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 76,
+    "sha256": "85f71305c7f3863da9c2cf43ba01245d3e56b9ad0506e8164a7699ed521ef1da",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790941502013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "paulyudin",
+      "attributionRequired": false,
+      "attributionText": "Music by paulyudin from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-17",
+    "family": "music",
+    "title": "Bright Guitar Explainer",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "corporate",
+      "explainer video",
+      "professional tone",
+      "bright guitar"
+    ],
+    "audioPath": "support/Hope & Positivity/paulyudin-upbeat-corporate-corporate-music-595943.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 92,
+    "sha256": "186bec774faccb23884098970b298c785959543009685a405455d7e35b1becd6",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790855102013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "paulyudin",
+      "attributionRequired": false,
+      "attributionText": "Music by paulyudin from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-18",
+    "family": "music",
+    "title": "Easy Listening Backdrop",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "ambient",
+      "pop",
+      "soft background",
+      "easy listening",
+      "daily vlog"
+    ],
+    "audioPath": "support/Hope & Positivity/prettyjohn1-background-background-music-581651.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 39,
+    "sha256": "1199193816ce681317ca94bfc08cd4b99dfed62db8490243005bf324c4cdd23b",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790768702013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-19",
+    "family": "music",
+    "title": "Springtime Ukulele",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "acoustic",
+      "children's",
+      "springtime",
+      "playful ukulele",
+      "cute",
+      "festive"
+    ],
+    "audioPath": "support/Hope & Positivity/prettyjohn1-easter-490466.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 83,
+    "sha256": "cba49b87c9a721099bfb34fb3e5344ee275f4120db9ff4142cb0d1ed9e0eddae",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790682302013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-20",
+    "family": "music",
+    "title": "Chill Hop Routine",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "beats",
+      "lofi",
+      "chill hop",
+      "routine vlog",
+      "relaxed vibe"
+    ],
+    "audioPath": "support/Hope & Positivity/prettyjohn1-lifestyle-500587.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 53,
+    "sha256": "2b0390acc0cc481c227c8369f16fa91fa2abfe0e9052ef1db4a13947017b0f44",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790595902013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-21",
+    "family": "music",
+    "title": "Business Intro Cut",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "cinematic",
+      "corporate",
+      "short cut",
+      "business intro",
+      "uplifting"
+    ],
+    "audioPath": "support/Hope & Positivity/prettyjohn1-motivational_54sec-530634.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 54,
+    "sha256": "e550a36bf645c2d15ee4f3c0f6ae7614fedada6a27b98203f6adbc33840bc024",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790509502013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-22",
+    "family": "music",
+    "title": "Energetic Success Pop",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "pop",
+      "electronic",
+      "energetic",
+      "commercial success",
+      "inspiring"
+    ],
+    "audioPath": "support/Hope & Positivity/prettyjohn1-motivational-530632.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 99,
+    "sha256": "e5bc69bacff5f28e4803bb420ad93e1670fa7b694a8ad5628c632eab2aee9d36",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790423102013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-23",
+    "family": "music",
+    "title": "Dynamic Product Launch",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "electronic",
+      "upbeat",
+      "advertising",
+      "product launch",
+      "dynamic"
+    ],
+    "audioPath": "support/Hope & Positivity/prettyjohn1-promo-promo-music-503917.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 60,
+    "sha256": "8ae318c509ad0a6a2035acb1d41836e96718b1c2e3226624fcf00aeaa17ae4d5",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790336702013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-24",
+    "family": "music",
+    "title": "Punchy Modern Ad",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "electronic",
+      "upbeat",
+      "commercial ad",
+      "punchy beats",
+      "modern tech"
+    ],
+    "audioPath": "support/Hope & Positivity/prettyjohn1-promo-promo-music-595666.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 95,
+    "sha256": "25a9ffc8b554e434e1f5a913749a73f94a1c7b0122e9be9c6be203139029d484",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790250302013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "prettyjohn1",
+      "attributionRequired": false,
+      "attributionText": "Music by prettyjohn1 from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-25",
+    "family": "music",
+    "title": "Workout Impact",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "rock",
+      "electronic",
+      "high impact",
+      "workout beat",
+      "extreme sports"
+    ],
+    "audioPath": "support/Hope & Positivity/soundsurfer-energy-591346.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 100,
+    "sha256": "4f551eee7ad7ceeed7e1201604f569526fe6a57c2b64052966676e32af72c775",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790163902013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Soundsurfer",
+      "attributionRequired": false,
+      "attributionText": "Music by Soundsurfer from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-26",
+    "family": "music",
+    "title": "Smooth Cafe Lounge",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "jazz",
+      "lounge",
+      "cafe atmosphere",
+      "smooth lounge",
+      "background ambient"
+    ],
+    "audioPath": "support/Hope & Positivity/soundsurfer-restaurant-580476.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 119,
+    "sha256": "be8d0760060d497f556f63a43e6a80f63fe42ee488e6bc046e6189abc72657a2",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1790077502013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Soundsurfer",
+      "attributionRequired": false,
+      "attributionText": "Music by Soundsurfer from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-27",
+    "family": "music",
+    "title": "Streetball",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "hip hop",
+      "beats",
+      "urban rhythm",
+      "street sports",
+      "boom bap",
+      "edgy"
+    ],
+    "audioPath": "support/Hope & Positivity/soundsurfer-streetball-582112.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 114,
+    "sha256": "99f3856aa8bd092335f9730b76ca14384a11383aa20e2256c8b5094dd1a86687",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1789991102013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Soundsurfer",
+      "attributionRequired": false,
+      "attributionText": "Music by Soundsurfer from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-28",
+    "family": "music",
+    "title": "Catwalk Groove",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "electronic",
+      "house",
+      "deep tech",
+      "catwalk groove",
+      "modern luxury"
+    ],
+    "audioPath": "support/Hope & Positivity/soundsurfer-stylish-582113.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 118,
+    "sha256": "f7e8440cfaa6f957f336a2e0b0cb0cdaab2a7b2d41f42f4efac8893ed44d7682",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1789904702013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Soundsurfer",
+      "attributionRequired": false,
+      "attributionText": "Music by Soundsurfer from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-29",
+    "family": "music",
+    "title": "Summer Beach",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "pop",
+      "r&b",
+      "chill surf",
+      "tropical vibe",
+      "sunset relax"
+    ],
+    "audioPath": "support/Hope & Positivity/the_mountain-summer-beach-593071.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 101,
+    "sha256": "b682fe86b183022f262889c77bb0d6508770d49d96e8123a81797eb6b01e0365",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1789818302013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-30",
+    "family": "music",
+    "title": "Summer Pop",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "pop",
+      "catchy melody",
+      "upbeat dance",
+      "holiday vlog"
+    ],
+    "audioPath": "support/Hope & Positivity/the_mountain-summer-pop-593072.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 114,
+    "sha256": "ffd619fac2edebae4d8f92a8371fe893c1c19a2a1117e1a1d0bd29ffb17c3e30",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1789731902013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-31",
+    "family": "music",
+    "title": "Travel Funk",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "funk",
+      "groove",
+      "retro horns",
+      "travel vlog",
+      "road trip vibe"
+    ],
+    "audioPath": "support/Hope & Positivity/the_mountain-travel-funk-593080.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 88,
+    "sha256": "560d3898b261aa84dd51ff99fabb277e943bc5adb841bb89dddd478480a90cec",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1789645502013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-32",
+    "family": "music",
+    "title": "Upbeat Acoustic",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "acoustic",
+      "ukulele",
+      "warm daylight",
+      "bright",
+      "happy"
+    ],
+    "audioPath": "support/Hope & Positivity/the_mountain-upbeat-acoustic-593084.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 91,
+    "sha256": "668ddf47419fba6e2be56660106bc013cc7d2cec3cd2a2a4335ab69d446be3b5",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1789559102013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-33",
+    "family": "music",
+    "title": "Positive Commercial Pace",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "pop",
+      "upbeat",
+      "positive pacing",
+      "commercial promo",
+      "inspiring"
+    ],
+    "audioPath": "support/Hope & Positivity/the_mountain-uplifting-song-593085.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 95,
+    "sha256": "d180e9ce8cad7dc46a0aaedb71826161cb7f4c767cfb838061535dbf77da3324",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1789472702013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-hope-positivity-34",
+    "family": "music",
+    "title": "Positive Lofi",
+    "topic": "music_topic_hope_positivity",
+    "tags": [
+      "beats",
+      "lofi",
+      "study focus",
+      "chill hop",
+      "warm vinyl melodies"
+    ],
+    "audioPath": "support/Hope & Positivity/zephiramusic-positive-lofi-587548.mp3",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "durationSec": 102,
+    "sha256": "eec7515dff03699173abc6f1b460ac79d51cb155c2364f880247770362746435",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719",
+    "newUntil": 1789386302013,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/hope-positivity/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "ZephiraMusic",
+      "attributionRequired": false,
+      "attributionText": "Music by ZephiraMusic from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]

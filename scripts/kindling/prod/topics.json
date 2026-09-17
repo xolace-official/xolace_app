@@ -100,5 +100,11 @@
     "title": "Healing & Recovery",
     "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
     "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724"
+  },
+  {
+    "slug": "hope_positivity",
+    "title": "Hope & Positivity",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719"
   }
 ]
