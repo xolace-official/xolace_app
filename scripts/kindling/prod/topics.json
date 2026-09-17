@@ -82,5 +82,11 @@
     "title": "Happiness & Joy",
     "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
     "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2"
+  },
+  {
+    "slug": "breathing_meditation",
+    "title": "Breathing & Meditation",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948"
   }
 ]

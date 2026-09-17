@@ -7143,5 +7143,641 @@
       "attributionText": "Music by The_Mountain from Pixabay",
       "acquiredAt": 1789087800000
     }
+  },
+  {
+    "slug": "music-breathing-meditation-01",
+    "family": "music",
+    "title": "Dark And Light",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "beats",
+      "dubstep",
+      "halloween",
+      "creepy",
+      "scary",
+      "fitness energy"
+    ],
+    "audioPath": "support/Breathing & Meditation/alisiabeats-dark-and-light-171712.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 104,
+    "sha256": "02e72a5825f93ec8c0bde113923e72563fd4f95a9ca3082d1cca9b865cfe9fe0",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1792204465165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AlisiaBeats",
+      "attributionRequired": false,
+      "attributionText": "Music by AlisiaBeats from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-02",
+    "family": "music",
+    "title": "Cinematic Softness",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "cinematic soft",
+      "piano",
+      "tender background"
+    ],
+    "audioPath": "support/Breathing & Meditation/atlasaudio-cinematic-softness-511863.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 120,
+    "sha256": "b5e52b26cd18093238849664d85fb8ad62106b65522b8728375c7412a8150af7",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1792118065165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "AtlasAudio",
+      "attributionRequired": false,
+      "attributionText": "Music by AtlasAudio from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-03",
+    "family": "music",
+    "title": "Claps and Stomp Trailer Music (Medium)",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "upbeat",
+      "rock",
+      "claps and stomps",
+      "advertising",
+      "energy",
+      "rhythm"
+    ],
+    "audioPath": "support/Breathing & Meditation/brightestavenue-claps-and-stomp-trailer-music-medium-version-the-energy-of-claps-112973.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 43,
+    "sha256": "ac584f24159377243771512d64d61c89ed322baa54b456df0c1d5ad43a49840a",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1792031665165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "BrightestAvenue",
+      "attributionRequired": false,
+      "attributionText": "Music by BrightestAvenue from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-04",
+    "family": "music",
+    "title": "Claps Stomp and Trappy Hats (Short Ver. 2)",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "upbeat",
+      "electronic",
+      "trap hats",
+      "percussion",
+      "advertising",
+      "intro cut"
+    ],
+    "audioPath": "support/Breathing & Meditation/brightestavenue-claps-stomp-and-trappy-hats-short-version-2-the-energy-of-claps-112971.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 31,
+    "sha256": "edb89d605c00220d3ab0f48b3fcf07260c87e04921080e49dfc36925b00d0efe",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791945265165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "BrightestAvenue",
+      "attributionRequired": false,
+      "attributionText": "Music by BrightestAvenue from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-05",
+    "family": "music",
+    "title": "Meditation - Nature Music",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "ambient",
+      "voice of nature",
+      "spiritual",
+      "advertising background"
+    ],
+    "audioPath": "support/Breathing & Meditation/diamond_tunes-meditation-nature-music-20683.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 99,
+    "sha256": "1f11df13caf1825710fd1a11e68b1560076de79679f4f83c65487700a35be2a9",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791858865165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Diamond_Tunes",
+      "attributionRequired": false,
+      "attributionText": "Music by Diamond_Tunes from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-06",
+    "family": "music",
+    "title": "Meditation",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "deep calm",
+      "relaxation",
+      "mindfulness",
+      "spa"
+    ],
+    "audioPath": "support/Breathing & Meditation/freemusicforvideo-meditation-504885.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 116,
+    "sha256": "7d01734c1d9046f8fed725d3c7ee3fbb4228e890b41b3b883080747cee4beaba",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791772465165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "FreeMusicForVideo",
+      "attributionRequired": false,
+      "attributionText": "Music by FreeMusicForVideo from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-07",
+    "family": "music",
+    "title": "Reflections About Eternity",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "cinematic",
+      "nostalgic",
+      "orchestral",
+      "deep reflection",
+      "hopeful"
+    ],
+    "audioPath": "support/Breathing & Meditation/joyinsound-reflections-about-eternity-398334.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 92,
+    "sha256": "76e6fc6ebf2a06c0c3ea4b77e763abdf7cc4a70c49d0283674998b7b63bd786f",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791686065165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "joyinsound",
+      "attributionRequired": false,
+      "attributionText": "Music by joyinsound from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-08",
+    "family": "music",
+    "title": "Earth and Nature Ambient Cinematic Music",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "ambient",
+      "forest sounds",
+      "earth",
+      "nature elements",
+      "relaxing"
+    ],
+    "audioPath": "support/Breathing & Meditation/juliush-earth-and-nature-ambient-cinematic-music-with-forest-sounds-509017.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 170,
+    "sha256": "c93f17a784fffc830a9835246cd441e9c79f3f7514f15baaa983a35cc9125869",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791599665165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "juliush",
+      "attributionRequired": false,
+      "attributionText": "Music by juliush from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-09",
+    "family": "music",
+    "title": "Cinematic Ambient",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "ambient",
+      "cinematic soundscape",
+      "film score",
+      "textural atmosphere"
+    ],
+    "audioPath": "support/Breathing & Meditation/kulakovka-cinematic-ambient-274889.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 118,
+    "sha256": "16cd4e518cc53f80e1d1615639f6768fd381b4fc9caec15d409f882175908ce7",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791513265165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-10",
+    "family": "music",
+    "title": "Documentary Ambient",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "ambient",
+      "background textures",
+      "educational",
+      "slow movement"
+    ],
+    "audioPath": "support/Breathing & Meditation/kulakovka-documentary-ambient-274888.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 117,
+    "sha256": "240f2daad1c9602358c18af5fb45339c5f67434e092516959152fdfb2015e34b",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791426865165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Kulakovka",
+      "attributionRequired": false,
+      "attributionText": "Music by Kulakovka from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-11",
+    "family": "music",
+    "title": "Pure Immersive Yoga and Meditation",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "immersive soundbath",
+      "pure healing",
+      "yoga flow"
+    ],
+    "audioPath": "support/Breathing & Meditation/meditativetiger-pure-immersive-yoga-and-meditation-by-meditative-tiger-432230.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 165,
+    "sha256": "6cd973eed8c471626dd8901cb6728ebb2033aff379175170be92ab083068aa2b",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791340465165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "MeditativeTiger",
+      "attributionRequired": false,
+      "attributionText": "Music by MeditativeTiger from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-12",
+    "family": "music",
+    "title": "Relaxing",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "ambient",
+      "soft background",
+      "soothing",
+      "stress relief",
+      "chill"
+    ],
+    "audioPath": "support/Breathing & Meditation/music_for_videos-relaxing-145038.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 72,
+    "sha256": "49bd98317c649d420215bca109baa6811365a976ff722034238a4bd32dc36349",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791254065165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "music_for_videos",
+      "attributionRequired": false,
+      "attributionText": "Music by music_for_videos from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-13",
+    "family": "music",
+    "title": "Calm and Magic Tune Relaxing Ambient",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "ambient",
+      "magic atmosphere",
+      "whimsical",
+      "gentle relaxation"
+    ],
+    "audioPath": "support/Breathing & Meditation/psyai-calm-and-magic-tune-relaxing-ambient-551370.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 179,
+    "sha256": "e9e6411e2b5e364e9a5adcc608930051293acc84f6fffc94f98ddae4448ef5f6",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791167665165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "psyai",
+      "attributionRequired": false,
+      "attributionText": "Music by psyai from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-14",
+    "family": "music",
+    "title": "Minimal Tech Ambient",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "electronic",
+      "ambient",
+      "corporate presentation",
+      "clean minimal",
+      "tech focus"
+    ],
+    "audioPath": "support/Breathing & Meditation/psyai-calm-background-minimal-music-for-video-and-presentation-451141.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 160,
+    "sha256": "2a03667bbd2b48322357be7cf050fe870eb694f7884443b174142f6bc8c247fd",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1791081265165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "psyai",
+      "attributionRequired": false,
+      "attributionText": "Music by psyai from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-15",
+    "family": "music",
+    "title": "Meditation and Sleep Coherent Breathing",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "breathwork",
+      "coherent pacing",
+      "deep sleep",
+      "insomnia"
+    ],
+    "audioPath": "support/Breathing & Meditation/siarhei_korbut-meditation-and-sleep-coherent-breathing-520866.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 600,
+    "sha256": "921e2c0ec7ce67415ebd5676017f392845190adbae7b3ea0aceffcde6028fda7",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1790994865165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "Siarhei_Korbut",
+      "attributionRequired": false,
+      "attributionText": "Music by Siarhei_Korbut from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-16",
+    "family": "music",
+    "title": "Inspiring Heroic Journey",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "cinematic",
+      "orchestral",
+      "epic trailer",
+      "heroic journey",
+      "corporate success"
+    ],
+    "audioPath": "support/Breathing & Meditation/sigmamusicart-the-inspiring-and-motivation-epic-trailer-152847.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 111,
+    "sha256": "4c50f56fd44e66dbbb114a44822517bc7379a6fdaa36d333b47b74e8a181573a",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1790908465165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "sigmamusicart",
+      "attributionRequired": false,
+      "attributionText": "Music by sigmamusicart from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-17",
+    "family": "music",
+    "title": "Aggressive Sports Intro",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "rock",
+      "hip hop",
+      "action trailer",
+      "aggressive beat",
+      "sports intro"
+    ],
+    "audioPath": "support/Breathing & Meditation/spirographsounds-hard-hitting-rock-and-hip-hop-cinematic-trailer-epic-energetic-191766.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 113,
+    "sha256": "1c629aa608de8fbdd1ee0de7364cb73d0f093183c46b9770664c9b58e97932e9",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1790822065165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "spirographsounds",
+      "attributionRequired": false,
+      "attributionText": "Music by spirographsounds from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-18",
+    "family": "music",
+    "title": "Health",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "ambient",
+      "healing frequency",
+      "wellbeing",
+      "clinical spa"
+    ],
+    "audioPath": "support/Breathing & Meditation/the_mountain-health-186331.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 116,
+    "sha256": "149a332dc52025c8fcc3a1bb13d8775f8ca674985dcd7a2f9f0b44a303dfa713",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1790735665165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-19",
+    "family": "music",
+    "title": "Mindfulness",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "ambient",
+      "zen mind",
+      "calming piano",
+      "gentle flow"
+    ],
+    "audioPath": "support/Breathing & Meditation/the_mountain-mindfulness-149939.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 90,
+    "sha256": "83144b3a2345695590055e2cf229d914616b92ee68d2904533dad4cf0c683ee9",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1790649265165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-20",
+    "family": "music",
+    "title": "Space",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "ambient",
+      "cosmic ethereal",
+      "deep space",
+      "soundscape"
+    ],
+    "audioPath": "support/Breathing & Meditation/the_mountain-space-438391.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 114,
+    "sha256": "9f31af2f60dc6dfc7d6840645ffaf1c25ecac10012c3aa7712b1c2980eeaa33e",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1790562865165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "The_Mountain",
+      "attributionRequired": false,
+      "attributionText": "Music by The_Mountain from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-21",
+    "family": "music",
+    "title": "Meditation Music",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "meditation",
+      "spiritual",
+      "peace",
+      "mindful practice",
+      "yoga soundscape"
+    ],
+    "audioPath": "support/Breathing & Meditation/verclub_music-meditation-music-550885.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 523,
+    "sha256": "6fcc30008dc610da72f01c04fd396693dac37b556b19b0036ed68f50e9246aa7",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1790476465165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "verclub_music",
+      "attributionRequired": false,
+      "attributionText": "Music by verclub_music from Pixabay",
+      "acquiredAt": 1789087800000
+    }
+  },
+  {
+    "slug": "music-breathing-meditation-22",
+    "family": "music",
+    "title": "Inspiring Orchestral Music with Majestic Themes",
+    "topic": "music_topic_breathing_meditation",
+    "tags": [
+      "cinematic",
+      "orchestral",
+      "majestic theme",
+      "uplifting strings",
+      "grand finale"
+    ],
+    "audioPath": "support/Breathing & Meditation/viramiller-inspiring-orchestral-music-with-majestic-and-uplifting-themes-279441.mp3",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "durationSec": 60,
+    "sha256": "47bbcec350333a7961c775e501c5939d525275f6be22a43f492ed1ea3021868a",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948",
+    "newUntil": 1790390065165,
+    "licence": {
+      "source": "pixabay",
+      "sourceUrl": "https://pixabay.com/music/search/breathing-meditation/",
+      "licenceName": "Pixabay Content License",
+      "licenceUrl": "https://pixabay.com/service/license-summary/",
+      "artist": "ViraMiller",
+      "attributionRequired": false,
+      "attributionText": "Music by ViraMiller from Pixabay",
+      "acquiredAt": 1789087800000
+    }
   }
 ]
