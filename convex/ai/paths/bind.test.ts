@@ -58,6 +58,18 @@ describe("bindTwig", () => {
     expect(bind("audio_topic_anxiety", [b, a], { primaryEmotion: "anxiety" })).toEqual(first);
   });
 
+  it("spreads ties the same regardless of thematicTags order or duplicates", () => {
+    const a = track({ slug: "a", tags: ["anxiety"] });
+    const b = track({ slug: "b", tags: ["anxiety"] });
+    const base = bind("audio_topic_anxiety", [a, b], { thematicTags: ["racing-thoughts", "sleep"] });
+    const reordered = bind("audio_topic_anxiety", [a, b], { thematicTags: ["sleep", "racing-thoughts"] });
+    const duplicated = bind("audio_topic_anxiety", [a, b], {
+      thematicTags: ["racing-thoughts", "sleep", "sleep", "racing-thoughts"],
+    });
+    expect(reordered).toEqual(base);
+    expect(duplicated).toEqual(base);
+  });
+
   it("music_topic_* binds only against the music family", () => {
     const tracks = [
       track({ slug: "spoken", topic: "music_topic_sadness" }),

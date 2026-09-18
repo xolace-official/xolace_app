@@ -91,7 +91,8 @@ function bindTrack(
   );
   const topScore = score(sorted[0]);
   const tied = sorted.filter((t) => score(t) === topScore);
-  const seed = [u.primaryEmotion, u.secondaryEmotion ?? "", ...u.thematicTags].join("|");
+  const canonicalTags = [...new Set(u.thematicTags)].sort();
+  const seed = [u.primaryEmotion, u.secondaryEmotion ?? "", ...canonicalTags].join("|");
   const pick = tied[hashSeed(seed) % tied.length];
   return { slug: pick.slug };
 }

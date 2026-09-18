@@ -120,7 +120,7 @@ async function main() {
   await pool(toCurate, CONCURRENCY, async (track) => {
     try {
       const curated = await curateOne(track);
-      track.sourceTags = track.tags;
+      track.sourceTags ??= track.tags;
       track.tags = curated;
       console.log(`${track.slug}: ${JSON.stringify(curated)}`);
     } catch (err) {
