@@ -1,5 +1,5 @@
 import { useAction } from 'convex/react';
-import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { File } from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 import { api } from '@/convex/_generated/api';
 import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
+import { configureAudioSession } from '@/src/lib/audio/session';
 import { useVentRecorder } from '@/src/features/vent/hooks/use-vent-recorder';
 import {
   playAffirmativePress,
@@ -113,7 +114,7 @@ export function useVentFlow(): UseVentFlowReturn {
   useEffect(() => {
     if (state !== 'heard' || !audioUrl) return;
     player.replace({ uri: audioUrl });
-    setAudioModeAsync({ playsInSilentMode: true })
+    configureAudioSession()
       .then(() => player.play())
       .catch((err) => console.error('[vent-flow] TTS playback failed:', err));
   }, [state, audioUrl, player]);

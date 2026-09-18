@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useConvex, useMutation } from 'convex/react';
 import type { FunctionReturnType } from 'convex/server';
 import { ConvexError } from 'convex/values';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
+import { configureAudioSession } from '@/src/lib/audio/session';
+import { getLockScreenMetadata } from './track-lock-screen-metadata';
 
 export type BoundTrack = NonNullable<FunctionReturnType<typeof api.paths.getBoundAudioTrack>>;
 
@@ -101,10 +103,12 @@ export function useTrackPlayback(
     (async () => {
       if (seek > 0) await player.seekTo(seek);
       if (play) {
-        await setAudioModeAsync({ playsInSilentMode: true });
+        await configureAudioSession();
+        if (track) player.setActiveForLockScreen(true, getLockScreenMetadata(track));
         player.play();
       }
     })().catch((e) => console.error('[useTrackPlayback] resume failed:', e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- track read for lock-screen metadata only, not a resume trigger
   }, [status.isLoaded, player]);
 
   // On the player, not the status: the status only reports what the player
@@ -123,6 +127,13 @@ export function useTrackPlayback(
       console.error('[useTrackPlayback] completeStep failed:', e);
     });
   }, [status.didJustFinish, options.stepId, completeStep]);
+
+  useEffect(() => {
+    if (status.didJustFinish) player.setActiveForLockScreen(false);
+  }, [status.didJustFinish, player]);
+
+  // Release lock-screen controls when the player is torn down (screen left, re-mint).
+  useEffect(() => () => player.setActiveForLockScreen(false), [player]);
 
   /**
    * Past `expiresAt`, re-mint and queue the action for the rebuilt player.
@@ -149,7 +160,8 @@ export function useTrackPlayback(
         pending.current = { seek: 0, play: true };
         return;
       }
-      await setAudioModeAsync({ playsInSilentMode: true });
+      await configureAudioSession();
+      player.setActiveForLockScreen(true, getLockScreenMetadata(track));
       if (status.didJustFinish) await player.seekTo(0);
       player.play();
     } catch (e) {

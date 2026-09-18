@@ -1,5 +1,6 @@
-import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
+import { useAudioPlayer } from 'expo-audio';
 import { useEffect, useRef } from 'react';
+import { configureAudioSession } from '@/src/lib/audio/session';
 import { COMPRESS_MS, FLASH_MS } from '../components/particles/particle-config';
 import type { VentState } from './use-vent-flow';
 
@@ -21,7 +22,7 @@ export function useVentSounds(state: VentState): void {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.volume is a documented mutable setter
     crackle.volume = 0.7;
-    setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
+    configureAudioSession().catch(() => {});
   }, [crackle]);
 
   useEffect(() => {

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
+import { configureAudioSession } from '@/src/lib/audio/session';
 
 type UseMirrorAudioReturn = {
   isReady: boolean;
@@ -35,7 +36,7 @@ export function useMirrorAudio(
   useEffect(() => {
     if (!awaitingFirstPlay.current || !status.isLoaded) return;
     awaitingFirstPlay.current = false;
-    setAudioModeAsync({ playsInSilentMode: true })
+    configureAudioSession()
       .then(() => player.play())
       .catch((e) => console.error('[useMirrorAudio] first play failed:', e));
   }, [status.isLoaded, player]);
@@ -52,7 +53,7 @@ export function useMirrorAudio(
       if (status.playing) {
         player.pause();
       } else {
-        await setAudioModeAsync({ playsInSilentMode: true });
+        await configureAudioSession();
         if (status.didJustFinish) {
           player.seekTo(0);
         }
