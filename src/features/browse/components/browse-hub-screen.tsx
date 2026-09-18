@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
@@ -11,6 +11,7 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { ShelfTile } from '@/src/features/browse/components/shelf-tile';
+import { pickListeningTip } from '@/src/features/browse/components/listening-tip';
 
 type Entry = {
   id: 'support' | 'music' | 'topics';
@@ -58,6 +59,8 @@ export function BrowseHubScreen() {
   const { width } = useWindowDimensions();
   const posthog = usePostHog();
   const shelf = useQuery(api.browse.getNewShelf, {});
+  const [tip] = useState(pickListeningTip);
+  const mutedTint = useCSSVariable('--muted');
 
   useEffect(() => {
     posthog.capture('browse_opened');
@@ -72,6 +75,15 @@ export function BrowseHubScreen() {
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ paddingBottom: 40 }}
     >
+      <View className="flex-row items-center gap-1.5 px-4 pt-4">
+        <SymbolView
+          name={{ ios: 'headphones', android: 'headphones', web: 'headphones' }}
+          size={13}
+          tintColor={String(mutedTint)}
+        />
+        <AppText className="text-muted flex-1 text-[13px]">{tip}</AppText>
+      </View>
+
       <View className="flex-row justify-around px-4 pt-6">
         {ENTRIES.map((entry) => (
           <EntryButton key={entry.id} entry={entry} />
