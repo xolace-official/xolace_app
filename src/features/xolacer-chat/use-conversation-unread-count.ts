@@ -23,12 +23,15 @@ import { useStreamStatus } from '@/src/features/xolacer-chat/providers/stream-ch
  * form). The snapshot is a field read and React bails out when the number is
  * unchanged, so the breadth costs a comparison per event.
  */
-export function useConversationUnreadCount(streamChannelId: string | undefined) {
+export function useConversationUnreadCount(
+  streamChannelId: string | undefined,
+  channelType = 'messaging',
+) {
   const { client, status } = useStreamStatus();
   const connectedClient = status === 'ready' ? client : null;
   const channel =
     connectedClient && streamChannelId
-      ? connectedClient.channel('messaging', streamChannelId)
+      ? connectedClient.channel(channelType, streamChannelId)
       : null;
 
   // Kept despite the React Compiler, for correctness rather than perf: a fresh

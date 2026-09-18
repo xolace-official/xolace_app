@@ -4,7 +4,7 @@ import { useToast } from 'heroui-native';
 import { api } from '@/convex/_generated/api';
 import { playAffirmativePress } from '@/src/lib/haptics';
 import { setTabBarHidden } from '@/src/lib/tab-bar';
-import type { ConversationList } from './components/chats-list';
+import type { PairConversation } from './components/chats-list';
 
 /**
  * The long-press actions for a conversation row, and the row they belong to.
@@ -24,11 +24,11 @@ export function useConversationRowActions() {
   const deleteConversation = useMutation(api.xolacerChat.deleteConversation);
   // The long-pressed row, which is also what the action sheet is: the bottom
   // toolbar only exists while something is selected.
-  const [sheetFor, setSheetFor] = useState<ConversationList[number] | null>(null);
+  const [sheetFor, setSheetFor] = useState<PairConversation | null>(null);
   // The row Delete was tapped on — and, the same way, what the confirmation
   // dialog is. Delete is the only one of these that can't be undone, so it is
   // the only one that asks first.
-  const [deleteFor, setDeleteFor] = useState<ConversationList[number] | null>(null);
+  const [deleteFor, setDeleteFor] = useState<PairConversation | null>(null);
 
   // The sheet and the floating tab bar are the same strip of screen: left up,
   // the tab pill sits between Cancel and Archive and swallows the taps under
@@ -38,7 +38,7 @@ export function useConversationRowActions() {
     return () => setTabBarHidden(false);
   }, [sheetFor]);
 
-  const toggleArchive = (conversation: ConversationList[number]) => {
+  const toggleArchive = (conversation: PairConversation) => {
     setSheetFor(null);
     playAffirmativePress();
     const call = conversation.archived ? unarchiveConversation : archiveConversation;
@@ -52,7 +52,7 @@ export function useConversationRowActions() {
     });
   };
 
-  const close = (conversation: ConversationList[number]) => {
+  const close = (conversation: PairConversation) => {
     setSheetFor(null);
     playAffirmativePress();
     restConversation({ conversationId: conversation.id }).catch((err: unknown) => {

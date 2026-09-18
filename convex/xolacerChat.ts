@@ -28,7 +28,7 @@ import {
   messageNotifiedField,
   xolacerChannelId,
 } from "./lib/chatNotifications";
-import { XOLACE_CHANNEL_ID } from "./lib/streamSetup";
+import { XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID } from "./lib/streamSetup";
 import {
   conversationOrigin,
   type ConversationOrigin,
@@ -90,7 +90,8 @@ const originValidator = v.optional(
 const restingReasonValidator = v.optional(
   v.union(v.literal("manual"), v.literal("quiet")),
 );
-const conversationRowValidator = v.object({
+const pairConversationRowValidator = v.object({
+  kind: v.literal("pair"),
   id: v.id("xolacer_conversations"),
   role: v.union(v.literal("user"), v.literal("xolacer")),
   status: statusValidator,
@@ -130,6 +131,31 @@ const conversationRowValidator = v.object({
    */
   archived: v.boolean(),
 });
+
+/**
+ * The synthetic Xolace-channel row (#377, CONTEXT.md "The Xolace channel").
+ * A separate object rather than an all-optional `conversationRowValidator` —
+ * `xolacerProfileId`/`counterpartProfileId` stay non-optional for every other
+ * consumer, which assumes they're always present on a row.
+ *
+ * No unread count here: that's read live off Stream's own channel state,
+ * client-side, the same way every other row's badge is — see
+ * `useConversationUnreadCount`. `lastMessageAt`/`lastMessageText` are the one
+ * thing actually cached (#376), for the row's preview line and sort key.
+ */
+const broadcastConversationRowValidator = v.object({
+  kind: v.literal("broadcast"),
+  id: v.string(),
+  streamChannelId: v.string(),
+  channelType: v.string(),
+  lastMessageAt: v.optional(v.number()),
+  lastMessageText: v.optional(v.string()),
+});
+
+const conversationRowValidator = v.union(
+  pairConversationRowValidator,
+  broadcastConversationRowValidator,
+);
 
 // Volume cap counts OPEN conversations only — resting/closed free the slot.
 export const MAX_OPEN_CONVERSATIONS = 8;
@@ -846,6 +872,7 @@ export const myConversations = query({
         conversation.xolacerProfileId,
       );
       rows.push({
+        kind: "pair" as const,
         id: conversation._id,
         role: "user" as const,
         status: conversation.status,
@@ -869,6 +896,7 @@ export const myConversations = query({
       if (isBlocked(conversation.closedReason)) continue;
       if (conversation.deletedByXolacer) continue;
       rows.push({
+        kind: "pair" as const,
         id: conversation._id,
         role: "xolacer" as const,
         status: conversation.status,
@@ -890,10 +918,25 @@ export const myConversations = query({
       });
     }
 
-    // Requested first (xolacer inbox), then most recent activity.
+    // Every member's row (CONTEXT.md, "The Xolace channel") — no membership
+    // check needed, membership is universal by construction (#374). Sourced
+    // from #376's cache; absent until the channel's first message.
+    const xolaceCache = await ctx.db.query("xolace_channel_cache").first();
+    rows.push({
+      kind: "broadcast" as const,
+      id: XOLACE_CHANNEL_ID,
+      streamChannelId: XOLACE_CHANNEL_ID,
+      channelType: XOLACE_BROADCAST_CHANNEL_TYPE,
+      lastMessageAt: xolaceCache?.sentAt,
+      lastMessageText: xolaceCache?.text,
+    });
+
+    // Requested first (xolacer inbox), then most recent activity. No special
+    // case for the broadcast row — it sorts by the same key as everything
+    // else (CONTEXT.md: "no permanent pin").
     rows.sort((a, b) => {
-      const aKey = a.lastMessageAt ?? a.requestedAt;
-      const bKey = b.lastMessageAt ?? b.requestedAt;
+      const aKey = a.lastMessageAt ?? (a.kind === "pair" ? a.requestedAt : 0);
+      const bKey = b.lastMessageAt ?? (b.kind === "pair" ? b.requestedAt : 0);
       return bKey - aKey;
     });
     return rows;
