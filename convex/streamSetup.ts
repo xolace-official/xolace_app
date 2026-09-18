@@ -1,25 +1,39 @@
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import {
+  assignStreamChannelRole,
   createStreamBlockList,
+  createStreamChannelType,
+  createStreamRole,
   deleteStreamBlockList,
   getStreamChannelType,
   getStreamModerationPolicy,
   listStreamBlockLists,
+  listStreamRoles,
+  tryGetStreamChannelType,
   updateStreamBlockList,
   updateStreamChannelType,
+  upsertStreamChannel,
   upsertStreamModerationPolicy,
+  upsertStreamUsers,
 } from "./integrations/stream";
 import {
   CONTACT_LEAK_BLOCKLIST,
   DESIRED_BLOCK_LIST_POLICY,
   DESIRED_MESSAGING,
+  DESIRED_XOLACE_BROADCAST,
   MESSAGING_POLICY_KEY,
+  needsBroadcasterRole,
   planBlockList,
   planChannelTypeUpdate,
   planModerationPolicy,
+  planXolaceBroadcastType,
+  XOLACE_BROADCAST_CHANNEL_TYPE,
+  XOLACE_BROADCASTER_ROLE,
+  XOLACE_CHANNEL_ID,
   type ChannelTypeConfig,
   type ModerationPolicy,
+  type XolaceBroadcastConfig,
 } from "./lib/streamSetup";
 
 /**
@@ -75,9 +89,73 @@ export const setup = internalAction({
       if (apply) await upsertStreamModerationPolicy(policyPlan.body);
     }
 
+    // --- xolace-broadcast channel type (#373) ---
+    // The role must be registered before it can appear as a `grants` key below.
+    const existingRoles = await listStreamRoles();
+    if (needsBroadcasterRole(existingRoles)) {
+      changes.push(`role ${XOLACE_BROADCASTER_ROLE}: create`);
+      if (apply) await createStreamRole(XOLACE_BROADCASTER_ROLE);
+    }
+
+    const currentBroadcast = (await tryGetStreamChannelType(
+      XOLACE_BROADCAST_CHANNEL_TYPE,
+    )) as XolaceBroadcastConfig | null;
+    const broadcastPlan = planXolaceBroadcastType(currentBroadcast, DESIRED_XOLACE_BROADCAST);
+    if (broadcastPlan) {
+      if (broadcastPlan.op === "create") {
+        changes.push(`${XOLACE_BROADCAST_CHANNEL_TYPE}: create ${JSON.stringify(broadcastPlan.body)}`);
+        if (apply) await createStreamChannelType(broadcastPlan.body);
+      } else {
+        for (const [key, diff] of Object.entries(broadcastPlan.changes)) {
+          changes.push(
+            `${XOLACE_BROADCAST_CHANNEL_TYPE}.${key}: ${JSON.stringify(diff.from)} → ${JSON.stringify(diff.to)}`,
+          );
+        }
+        if (apply) await updateStreamChannelType(XOLACE_BROADCAST_CHANNEL_TYPE, broadcastPlan.body);
+      }
+    }
+
     for (const line of changes) console.log(line);
     if (changes.length === 0) console.log("Stream app already matches desired state");
     else if (!apply) console.log("Dry run — pass {\"apply\":true} to apply");
     return { applied: apply && changes.length > 0, changes };
+  },
+});
+
+/**
+ * One-off (#373): creates the fixed Xolace singleton channel and grants its one designated
+ * sender — the real Xolace-email `users` row, identified here by its `emotionalProfileId`
+ * (the existing convention for keying a Stream user, same as every other profile) — the
+ * `XOLACE_BROADCASTER_ROLE`. The id is taken as an explicit argument rather than looked up:
+ * `users` deliberately stores no email (see `schema.ts`), so there is no way to find "the real
+ * Xolace account" from inside Convex — the caller supplies the profile id of the account that
+ * already signed up through normal onboarding. Explicitly distinct from `XOLACE_SYSTEM_USER_ID`
+ * (the crisis-resource pseudo-user in `integrations/stream.ts`) — this action never touches it.
+ *
+ * Run once per environment, after `stream:setup` has created the `xolace-broadcast` channel
+ * type and role — dev first:
+ *
+ *   convex run streamSetup:createXolaceChannel '{"senderProfileId":"<emotional_profiles id>"}'
+ */
+export const createXolaceChannel = internalAction({
+  args: {
+    senderProfileId: v.id("emotional_profiles"),
+    senderDisplayName: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (_ctx, { senderProfileId, senderDisplayName }) => {
+    const name = senderDisplayName ?? "Xolace Inc";
+    await upsertStreamUsers([{ id: senderProfileId, name }]);
+    await upsertStreamChannel(XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID, {
+      members: [senderProfileId],
+      createdById: senderProfileId,
+    });
+    await assignStreamChannelRole(XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID, [
+      { userId: senderProfileId, channelRole: XOLACE_BROADCASTER_ROLE },
+    ]);
+    console.log(
+      `Xolace channel "${XOLACE_CHANNEL_ID}" ready; ${senderProfileId} granted ${XOLACE_BROADCASTER_ROLE}`,
+    );
+    return null;
   },
 });

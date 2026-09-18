@@ -7,9 +7,14 @@ import { describe, expect, it } from "vitest";
 import {
   DESIRED_BLOCK_LIST_POLICY,
   DESIRED_MESSAGING,
+  DESIRED_XOLACE_BROADCAST,
+  needsBroadcasterRole,
   planBlockList,
   planChannelTypeUpdate,
   planModerationPolicy,
+  planXolaceBroadcastType,
+  XOLACE_BROADCAST_CHANNEL_TYPE,
+  XOLACE_BROADCASTER_ROLE,
 } from "./streamSetup";
 
 const DEV_MESSAGING_2026_09_11 = {
@@ -119,6 +124,97 @@ describe("planModerationPolicy", () => {
     const plan = planModerationPolicy(drifted, DESIRED_BLOCK_LIST_POLICY);
     expect(plan!.from).toEqual(drifted.block_list_config);
     expect(plan!.body.block_list_config).toEqual(DESIRED_BLOCK_LIST_POLICY);
+  });
+});
+
+describe("planXolaceBroadcastType", () => {
+  it("read_events/typing_events/replies are off in the desired state (#373)", () => {
+    expect(DESIRED_XOLACE_BROADCAST.read_events).toBe(false);
+    expect(DESIRED_XOLACE_BROADCAST.typing_events).toBe(false);
+    expect(DESIRED_XOLACE_BROADCAST.replies).toBe(false);
+  });
+
+  it("creates the channel type on a clean Stream app (GET 404 → current: null)", () => {
+    const plan = planXolaceBroadcastType(null, DESIRED_XOLACE_BROADCAST);
+    expect(plan).toEqual({
+      op: "create",
+      body: { name: XOLACE_BROADCAST_CHANNEL_TYPE, ...DESIRED_XOLACE_BROADCAST },
+    });
+  });
+
+  const APPLIED = {
+    automod: "disabled",
+    automod_behavior: "flag",
+    max_message_length: 5000,
+    read_events: false,
+    typing_events: false,
+    replies: false,
+    grants: DESIRED_XOLACE_BROADCAST.grants,
+  };
+
+  it("is a no-op once applied", () => {
+    expect(planXolaceBroadcastType(APPLIED, DESIRED_XOLACE_BROADCAST)).toBeNull();
+  });
+
+  /** Grants merge onto Stream's full built-in defaults (`admin`, `moderator`, `user`, …) —
+   * confirmed against the dev app's real `GetChannelType` response, 2026-09-18. The diff must
+   * ignore every role it doesn't manage, or it would try to "fix" roles it never touched. */
+  it("is a no-op alongside every built-in role Stream returns untouched", () => {
+    const withBuiltins = {
+      ...APPLIED,
+      grants: {
+        ...DESIRED_XOLACE_BROADCAST.grants,
+        admin: ["create-message", "delete-channel", "ban-user"],
+        moderator: ["create-message", "delete-message", "ban-channel-member"],
+        user: ["create-message-owner", "update-message-owner"],
+      },
+    };
+    expect(planXolaceBroadcastType(withBuiltins, DESIRED_XOLACE_BROADCAST)).toBeNull();
+  });
+
+  it("is a no-op whatever order Stream returns each role's permissions in", () => {
+    const reordered = {
+      ...APPLIED,
+      grants: {
+        [XOLACE_BROADCASTER_ROLE]: [
+          "delete-reaction-owner",
+          "create-reaction",
+          "create-message",
+          "read-channel",
+        ],
+        channel_member: ["delete-reaction-owner", "create-reaction", "read-channel"],
+      },
+    };
+    expect(planXolaceBroadcastType(reordered, DESIRED_XOLACE_BROADCAST)).toBeNull();
+  });
+
+  it("diffs a drifted config, carrying the three required fields on the update body", () => {
+    const drifted = { ...APPLIED, read_events: true, grants: { channel_member: ["read-channel"] } };
+    const plan = planXolaceBroadcastType(drifted, DESIRED_XOLACE_BROADCAST);
+    expect(plan!.op).toBe("update");
+    expect(plan!.changes).toEqual({
+      read_events: { from: true, to: false },
+      grants: { from: drifted.grants, to: DESIRED_XOLACE_BROADCAST.grants },
+    });
+    expect(plan!.body).toEqual({
+      automod: "disabled",
+      automod_behavior: "flag",
+      max_message_length: 5000,
+      read_events: false,
+      typing_events: false,
+      replies: false,
+      grants: DESIRED_XOLACE_BROADCAST.grants,
+    });
+  });
+});
+
+describe("needsBroadcasterRole", () => {
+  it("is true when the role hasn't been registered yet", () => {
+    expect(needsBroadcasterRole(["admin", "channel_member"])).toBe(true);
+  });
+
+  it("is false once registered", () => {
+    expect(needsBroadcasterRole(["admin", XOLACE_BROADCASTER_ROLE])).toBe(false);
   });
 });
 

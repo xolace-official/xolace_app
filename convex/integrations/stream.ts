@@ -341,6 +341,77 @@ export async function updateStreamChannelType(
   await streamRequest("PUT", `/channeltypes/${encodeURIComponent(name)}`, { body });
 }
 
+/**
+ * Same lookup as `getStreamChannelType`, but returns null instead of throwing when the type
+ * doesn't exist yet — how `streamSetup`'s plan tells "needs update" from "needs creation" for a
+ * channel type that isn't guaranteed to exist on every Stream app (unlike the built-in `messaging`).
+ */
+export async function tryGetStreamChannelType(
+  name: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    return await getStreamChannelType(name);
+  } catch (error) {
+    if (error instanceof Error && /\(404\)/.test(error.message)) return null;
+    throw error;
+  }
+}
+
+/** POST /channeltypes — Stream requires only `name`; every other field defaults from the
+ * built-in `messaging` type when omitted. */
+export async function createStreamChannelType(body: Record<string, unknown>): Promise<void> {
+  await streamRequest("POST", "/channeltypes", { body });
+}
+
+/**
+ * Custom permission roles are app-wide and must be registered once (`CreateRole`) before a
+ * channel type's `grants` can reference the role name as a key — Stream rejects an
+ * unregistered role there.
+ */
+export async function listStreamRoles(): Promise<string[]> {
+  const response = await streamRequest("GET", "/roles");
+  const roles = response.roles as Array<{ name?: string }> | undefined;
+  return (roles ?? []).map((r) => r.name).filter((n): n is string => !!n);
+}
+
+export async function createStreamRole(name: string): Promise<void> {
+  await streamRequest("POST", "/roles", { body: { name } });
+}
+
+/**
+ * Create (or return) a channel under an arbitrary channel type — the general form of
+ * `createXolacerChannel`, which hardcodes `messaging`. Used for the fixed Xolace singleton.
+ */
+export async function upsertStreamChannel(
+  channelType: string,
+  channelId: string,
+  data: { members: string[]; createdById: string },
+): Promise<void> {
+  await streamRequest(
+    "POST",
+    `/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}/query`,
+    { body: { data: { members: data.members, created_by_id: data.createdById }, state: false } },
+  );
+}
+
+/**
+ * Per-member channel-role assignment — the mechanism that lets one member post in a channel
+ * type whose default `channel_member` role cannot (see `lib/streamSetup`'s
+ * `XOLACE_BROADCASTER_ROLE`). Mirrors the `stream-chat` package's `Channel.assignRoles`, which
+ * posts (not patches) `{ assign_roles }` to the channel's own endpoint.
+ */
+export async function assignStreamChannelRole(
+  channelType: string,
+  channelId: string,
+  roles: { userId: string; channelRole: string }[],
+): Promise<void> {
+  await streamRequest(
+    "POST",
+    `/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}`,
+    { body: { assign_roles: roles.map((r) => ({ user_id: r.userId, channel_role: r.channelRole })) } },
+  );
+}
+
 export type StreamBlockList = { name: string; type?: string; words: string[] };
 
 export async function listStreamBlockLists(): Promise<StreamBlockList[]> {
