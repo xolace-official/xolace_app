@@ -8,16 +8,17 @@ import {
   createStreamChannelType,
   createStreamRole,
   deleteStreamBlockList,
+  ensureStreamUsers,
   getStreamChannelType,
   getStreamModerationPolicy,
   listStreamBlockLists,
   listStreamRoles,
+  setStreamUserFields,
   tryGetStreamChannelType,
   updateStreamBlockList,
   updateStreamChannelType,
   upsertStreamChannel,
   upsertStreamModerationPolicy,
-  upsertStreamUsers,
 } from "./integrations/stream";
 import { GENERIC_CAMPER_NAME } from "./lib/camperTag";
 import {
@@ -148,7 +149,10 @@ export const createXolaceChannel = internalAction({
   returns: v.null(),
   handler: async (_ctx, { senderProfileId, senderDisplayName }) => {
     const name = senderDisplayName ?? "Xolace Inc";
-    await upsertStreamUsers([{ id: senderProfileId, name }]);
+    // Create-if-missing then patch the name: a full upsert would wipe the
+    // account's existing Stream image/custom fields.
+    await ensureStreamUsers([{ id: senderProfileId, name }]);
+    await setStreamUserFields(senderProfileId, { name });
     await upsertStreamChannel(XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID, {
       members: [senderProfileId],
       createdById: senderProfileId,
@@ -165,26 +169,43 @@ export const createXolaceChannel = internalAction({
 
 /**
  * Universal membership (#374): every camper is a member of the fixed Xolace
- * channel. Scheduled best-effort from `users.getOrCreate` — a signup or
- * reactivation should never fail on a Stream hiccup, and a member who didn't
- * make it in this time gets picked up by the next backfill run.
+ * channel. Scheduled from `users.getOrCreate` — a signup or reactivation
+ * never fails on a Stream hiccup, so the failure is absorbed here instead:
+ * the action re-schedules itself with backoff up to `XOLACE_ADD_MAX_ATTEMPTS`
+ * (Convex's scheduler does not retry actions on its own). A member who still
+ * didn't make it gets picked up by the next backfill run.
  *
- * Upserts the pseudonymous placeholder user first — `add_members` 400s on an
- * id Stream has never seen (see `addStreamChannelMembers`), so this can't
- * skip straight to the add the way a member-already-minted-their-own-Stream-
- * user path might assume.
+ * Creates the pseudonymous placeholder user first if Stream has never seen the
+ * id — `add_members` 400s otherwise (see `addStreamChannelMembers`). Create-only:
+ * a full upsert here would wipe the image a chat flow already set.
  */
+// ponytail: fixed 1s/4s/16s backoff, no jitter; enough for a Stream blip
+export const XOLACE_ADD_MAX_ATTEMPTS = 4;
+const XOLACE_ADD_BACKOFF_MS = 1000;
+
 export const addToXolaceChannel = internalAction({
-  args: { profileId: v.id("emotional_profiles") },
+  args: { profileId: v.id("emotional_profiles"), attempt: v.optional(v.number()) },
   returns: v.null(),
-  handler: async (_ctx, { profileId }) => {
+  handler: async (ctx, { profileId, attempt = 1 }) => {
     try {
-      await upsertStreamUsers([{ id: profileId, name: GENERIC_CAMPER_NAME }]);
+      await ensureStreamUsers([{ id: profileId, name: GENERIC_CAMPER_NAME }]);
       await addStreamChannelMembers(XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID, [
         profileId,
       ]);
     } catch (error) {
-      console.warn("[xolace-channel] addStreamChannelMembers failed", error);
+      if (attempt >= XOLACE_ADD_MAX_ATTEMPTS) {
+        console.error(
+          `[xolace-channel] giving up on ${profileId} after ${attempt} attempts; backfill will retry`,
+          error,
+        );
+        return null;
+      }
+      const delayMs = XOLACE_ADD_BACKOFF_MS * 4 ** (attempt - 1);
+      console.warn(`[xolace-channel] attempt ${attempt} failed for ${profileId}, retrying in ${delayMs}ms`, error);
+      await ctx.scheduler.runAfter(delayMs, internal.streamSetup.addToXolaceChannel, {
+        profileId,
+        attempt: attempt + 1,
+      });
     }
     return null;
   },
@@ -195,7 +216,7 @@ export const addToXolaceChannel = internalAction({
  * member of the fixed Xolace channel. Safe to re-run — Stream's `add_members`
  * no-ops for an id that's already a member — and safe to run mid-signup-traffic
  * since new signups add themselves via `addToXolaceChannel`. Paginates through
- * the whole table in one invocation, 500 ids per Stream call:
+ * the whole table in one invocation, 100 ids per Stream call:
  *
  *   convex run streamSetup:backfillXolaceChannelMembership
  */
@@ -213,7 +234,7 @@ export const backfillXolaceChannelMembership = internalAction({
       } = await ctx.runQuery(internal.streamSetup.listProfileIdsPage, { cursor });
 
       if (page.profileIds.length > 0) {
-        await upsertStreamUsers(
+        await ensureStreamUsers(
           page.profileIds.map((id) => ({ id, name: GENERIC_CAMPER_NAME })),
         );
         await addStreamChannelMembers(
@@ -242,7 +263,7 @@ export const listProfileIdsPage = internalQuery({
   handler: async (ctx, { cursor }) => {
     const result = await ctx.db
       .query("emotional_profiles")
-      .paginate({ numItems: 500, cursor });
+      .paginate({ numItems: 100, cursor }); // Stream add_members caps at 100 ids per call
     return {
       profileIds: result.page.map((p) => p._id),
       continueCursor: result.continueCursor,

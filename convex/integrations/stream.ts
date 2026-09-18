@@ -176,6 +176,39 @@ export async function upsertStreamUsers(users: StreamUser[]): Promise<void> {
 }
 
 /**
+ * Create only the users Stream doesn't know yet. `POST /users` is a full
+ * replace, so an `{id, name}`-only upsert of an existing record would wipe its
+ * `image` (and any custom field) — the membership flows that just need the id
+ * to exist go through this instead.
+ */
+export async function ensureStreamUsers(users: StreamUser[]): Promise<void> {
+  const missing: StreamUser[] = [];
+  // ponytail: $in and query limit cap at 100 ids per call
+  for (let i = 0; i < users.length; i += 100) {
+    const chunk = users.slice(i, i + 100);
+    const result = await streamRequest("GET", "/users", {
+      query: {
+        payload: JSON.stringify({
+          filter_conditions: { id: { $in: chunk.map((u) => u.id) } },
+          limit: chunk.length,
+        }),
+      },
+    });
+    const known = new Set(((result.users ?? []) as { id: string }[]).map((u) => u.id));
+    for (const u of chunk) if (!known.has(u.id)) missing.push(u);
+  }
+  if (missing.length > 0) await upsertStreamUsers(missing);
+}
+
+/** Partial update — touches only the given fields of an existing user. */
+export async function setStreamUserFields(
+  id: string,
+  set: Omit<StreamUser, "id">,
+): Promise<void> {
+  await streamRequest("PATCH", "/users", { body: { users: [{ id, set }] } });
+}
+
+/**
  * Create (or return) the 1:1 messaging channel for a conversation.
  * Channel id is deterministic per conversation row, so accept is idempotent.
  */

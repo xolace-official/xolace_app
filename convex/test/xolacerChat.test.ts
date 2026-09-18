@@ -70,4 +70,14 @@ describe("myConversations (#377)", () => {
     expect(rows[0].lastMessageAt).toBeUndefined();
     expect(rows[0].lastMessageText).toBeUndefined();
   });
+
+  it("keeps the always-on Xolace channel row when the xolacer kill switch is off, dropping only pair rows", async () => {
+    const user = await asNewUser();
+    await seedConversation(user.root, user.profileId, "resting");
+    process.env.XOLACER_CHAT_ENABLED = "false";
+
+    const rows = await user.t.query(api.xolacerChat.myConversations, {});
+
+    expect(rows.map((row) => row.kind)).toEqual(["broadcast"]);
+  });
 });

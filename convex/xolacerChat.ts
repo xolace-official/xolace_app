@@ -820,15 +820,21 @@ export const myConversations = query({
   args: {},
   returns: v.array(conversationRowValidator),
   handler: async (ctx) => {
-    if (!chatEnabled()) return [];
     const { user, profile } = await requireAuth(ctx);
 
-    const asUser = await ctx.db
-      .query("xolacer_conversations")
-      .withIndex("by_user_and_status", (q) => q.eq("userProfileId", profile._id))
-      .take(100);
+    // The kill switch gates only the ambassador pair rows — the Xolace
+    // broadcast row below is always-on (CONTEXT.md, "The Xolace channel").
+    const pairsEnabled = chatEnabled();
+    const asUser = pairsEnabled
+      ? await ctx.db
+          .query("xolacer_conversations")
+          .withIndex("by_user_and_status", (q) =>
+            q.eq("userProfileId", profile._id),
+          )
+          .take(100)
+      : [];
 
-    const asXolacer = user.isXolacer
+    const asXolacer = pairsEnabled && user.isXolacer
       ? await ctx.db
           .query("xolacer_conversations")
           .withIndex("by_xolacer_and_status", (q) =>
