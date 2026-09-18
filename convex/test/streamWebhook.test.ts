@@ -14,6 +14,10 @@ import { aggregatesMock, noopJob } from "./mocks.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../chatNotifications", () => ({ sendMessagePush: noopJob(), send: noopJob() }));
+vi.mock("../xolaceChannelNotifications", () => ({
+  broadcastXolaceChannelPush: noopJob(),
+  sendXolaceChannelPush: noopJob(),
+}));
 vi.mock("../ai/chat/moderate", async (orig) => ({
   ...(await orig<typeof import("../ai/chat/moderate")>()),
   moderateChatMessage: noopJob(),
@@ -136,7 +140,7 @@ describe("Xolace channel cache (#376)", () => {
     });
   }
 
-  it("a Xolace-channel message updates the cache with text/sender/time, without a push", async () => {
+  it("a Xolace-channel message updates the cache and schedules the broadcast push (#378)", async () => {
     const user = await asNewUser();
     const before = Date.now();
     const response = await deliverXolace(user, { id: "msg_1", text: "New this week" });
@@ -145,7 +149,32 @@ describe("Xolace channel cache (#376)", () => {
     const cache = await user.root.run((ctx) => ctx.db.query("xolace_channel_cache").first());
     expect(cache).toMatchObject({ text: "New this week", senderId: user.profileId });
     expect(cache!.sentAt).toBeGreaterThanOrEqual(before);
-    expect(await scheduledCalls(user.root)).toEqual([]);
+    expect(cache!.lastNotifiedAt).toBe(cache!.sentAt);
+
+    expect(await scheduledCalls(user.root)).toEqual([
+      {
+        name: "xolaceChannelNotifications:broadcastXolaceChannelPush",
+        args: { excludeProfileId: user.profileId, silent: false },
+      },
+    ]);
+  });
+
+  it("a second Xolace-channel message inside the suppression window fans out silently", async () => {
+    const user = await asNewUser();
+    await deliverXolace(user, { id: "msg_1", text: "first" }, "wh_xolace_a");
+    const firstCache = await user.root.run((ctx) => ctx.db.query("xolace_channel_cache").first());
+
+    await deliverXolace(user, { id: "msg_2", text: "second" }, "wh_xolace_b");
+    const secondCache = await user.root.run((ctx) => ctx.db.query("xolace_channel_cache").first());
+    expect(secondCache?.text).toBe("second");
+    // The window is unchanged by a suppressed message, only the text/time ride through.
+    expect(secondCache?.lastNotifiedAt).toBe(firstCache?.lastNotifiedAt);
+
+    const calls = await scheduledCalls(user.root);
+    expect(calls.filter((c) => c.name === "xolaceChannelNotifications:broadcastXolaceChannelPush")).toEqual([
+      { name: "xolaceChannelNotifications:broadcastXolaceChannelPush", args: { excludeProfileId: user.profileId, silent: false } },
+      { name: "xolaceChannelNotifications:broadcastXolaceChannelPush", args: { excludeProfileId: user.profileId, silent: true } },
+    ]);
   });
 
   it("does not create or modify any xolacer_conversations row", async () => {

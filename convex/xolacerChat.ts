@@ -1722,16 +1722,30 @@ async function webhookAlreadySeen(
   return false;
 }
 
-/** The Xolace channel's one-row last-message cache (#376). */
+/**
+ * The Xolace channel's one-row last-message cache (#376), plus (#378) the
+ * shared suppression stamp for its push fan-out — `lastNotifiedAt` is one
+ * timestamp for the whole channel rather than per recipient, because every
+ * recipient is notified together in the same `broadcastXolaceChannelPush`
+ * run, so they are always all loud or all silent at once.
+ */
 async function cacheXolaceChannelMessage(
   ctx: MutationCtx,
   senderId: string,
   text: string | undefined,
-): Promise<void> {
-  const row = { text: text ?? "", senderId, sentAt: Date.now() };
+): Promise<{ suppressed: boolean }> {
+  const now = Date.now();
   const existing = await ctx.db.query("xolace_channel_cache").first();
+  const suppressed = messageNotificationSuppressed(existing?.lastNotifiedAt, now);
+  const row = {
+    text: text ?? "",
+    senderId,
+    sentAt: now,
+    lastNotifiedAt: suppressed ? existing?.lastNotifiedAt : now,
+  };
   if (existing) await ctx.db.patch("xolace_channel_cache", existing._id, row);
   else await ctx.db.insert("xolace_channel_cache", row);
+  return { suppressed };
 }
 
 /**
@@ -1780,7 +1794,19 @@ export const notifyNewMessage = internalMutation({
     // match anyway (its channel id carries no `xolacer_` prefix).
     if (args.channelId === XOLACE_CHANNEL_ID) {
       if (!(await webhookAlreadySeen(ctx, args.webhookId))) {
-        await cacheXolaceChannelMessage(ctx, args.senderId, args.text);
+        const { suppressed } = await cacheXolaceChannelMessage(ctx, args.senderId, args.text);
+        // Trusted the same way the conversation path trusts its own row's
+        // participant ids rather than the webhook payload — but this channel
+        // has no such row, so the check falls on the sender id directly. A
+        // payload naming a sender who isn't a real profile fans out to
+        // nobody rather than scheduling with a bogus exclude id.
+        const senderProfileId = ctx.db.normalizeId("emotional_profiles", args.senderId);
+        if (senderProfileId) {
+          await ctx.scheduler.runAfter(0, internal.xolaceChannelNotifications.broadcastXolaceChannelPush, {
+            excludeProfileId: senderProfileId,
+            silent: suppressed,
+          });
+        }
       }
       return null;
     }

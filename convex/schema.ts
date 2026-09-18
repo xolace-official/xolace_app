@@ -1979,6 +1979,13 @@ export default defineSchema({
     text: v.string(),
     senderId: v.string(),
     sentAt: v.number(),
+    // When the last message push went out (#378). Read the same way as a
+    // conversation's `lastNotifiedUserAt`/`lastNotifiedXolacerAt`: a second
+    // message inside `MESSAGE_NOTIFICATION_WINDOW_MS` sends badge-only.
+    // Shared across every recipient rather than per-profile — the whole
+    // membership is fanned out from one job run per message, so they are
+    // always all loud or all silent together.
+    lastNotifiedAt: v.optional(v.number()),
   }),
 
   // ===========================================================

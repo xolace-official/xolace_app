@@ -140,6 +140,14 @@ describe('notificationTapPlan', () => {
     });
   });
 
+  it('routes a Xolace-channel message to the channel screen, no conversation id needed', () => {
+    const plan = notificationTapPlan({ type: 'xolace_message' }, 'Posted a new message', 1000);
+    expect(plan.navigation).toEqual({
+      action: 'navigate',
+      href: { pathname: '/xolace-channel', params: {} },
+    });
+  });
+
   it('drops a thread route with no usable conversation id', () => {
     for (const type of ['chat_accepted', 'chat_message']) {
       expect(notificationTapPlan({ type }, null, 1000).navigation).toBeUndefined();
