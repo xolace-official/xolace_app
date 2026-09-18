@@ -19,6 +19,7 @@ import {
   upsertStreamModerationPolicy,
   upsertStreamUsers,
 } from "./integrations/stream";
+import { GENERIC_CAMPER_NAME } from "./lib/camperTag";
 import {
   CONTACT_LEAK_BLOCKLIST,
   DESIRED_BLOCK_LIST_POLICY,
@@ -167,12 +168,18 @@ export const createXolaceChannel = internalAction({
  * channel. Scheduled best-effort from `users.getOrCreate` — a signup or
  * reactivation should never fail on a Stream hiccup, and a member who didn't
  * make it in this time gets picked up by the next backfill run.
+ *
+ * Upserts the pseudonymous placeholder user first — `add_members` 400s on an
+ * id Stream has never seen (see `addStreamChannelMembers`), so this can't
+ * skip straight to the add the way a member-already-minted-their-own-Stream-
+ * user path might assume.
  */
 export const addToXolaceChannel = internalAction({
   args: { profileId: v.id("emotional_profiles") },
   returns: v.null(),
   handler: async (_ctx, { profileId }) => {
     try {
+      await upsertStreamUsers([{ id: profileId, name: GENERIC_CAMPER_NAME }]);
       await addStreamChannelMembers(XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID, [
         profileId,
       ]);
@@ -206,6 +213,9 @@ export const backfillXolaceChannelMembership = internalAction({
       } = await ctx.runQuery(internal.streamSetup.listProfileIdsPage, { cursor });
 
       if (page.profileIds.length > 0) {
+        await upsertStreamUsers(
+          page.profileIds.map((id) => ({ id, name: GENERIC_CAMPER_NAME })),
+        );
         await addStreamChannelMembers(
           XOLACE_BROADCAST_CHANNEL_TYPE,
           XOLACE_CHANNEL_ID,

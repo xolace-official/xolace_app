@@ -390,11 +390,16 @@ export async function upsertStreamChannel(
 }
 
 /**
- * Add members to an existing channel. Stream upserts a shell user record for
- * any id it hasn't seen before, so this never has to wait on the member
- * minting a Stream credential — confirmed against the `stream-chat` package
- * source (`Channel.addMembers` posts the same `add_members` field to the
- * channel's own endpoint, no separate user-creation step). Adding an id
+ * Add members to an existing channel.
+ *
+ * **Confirmed against the real API (#374): Stream does NOT upsert a shell
+ * user for an unknown id here** — `POST /channels/{type}/{id}` rejects with
+ * "involved in channel update operation, but don't exist" for any member id
+ * that has no Stream user record yet. (`createXolacerChannel` /
+ * `upsertStreamChannel` are unaffected — that's the `/query` create endpoint,
+ * which upserts via its `data`.) So the caller must `upsertStreamUsers` first;
+ * this never waits on the member minting their own Stream credential, since
+ * the app can upsert a pseudonymous placeholder on their behalf. Adding an id
  * that's already a member is a no-op on Stream's side, so this is safe to
  * call repeatedly for the same member.
  */
