@@ -32,10 +32,13 @@ exception.** It counts toward the app badge and the Connect-tab badge the
 same as any other unread channel (Stream's `total_unread_count` already
 aggregates across every channel a member belongs to — this needed no special
 handling), and it sorts into the chats list by last-activity like every
-other row, no permanent pin. The one exception: **read receipts and typing
-events are off for this channel's type.** Those are per-member fan-out
-operations, and "channel" here means "every user on the app" — fine at 1:1
-scale, not something to run for a member list, that size, forever.
+other row, no permanent pin. The one exception: **typing events are off for
+this channel's type.** Read events stay **on** — Stream only tracks per-user
+read state, and so `countUnread()` and the channel's share of
+`total_unread_count`, for channel types that have them; the first cut turned
+them off for fan-out reasons and no announcement ever badged. `message.read`
+fans out to watchers (clients that have the channel open or warmed), not to
+the member list, so the cost is bounded by concurrent Connect-tab users.
 
 **The chats list stays Convex-owned, with one deliberate exception.** Per
 "Conversation, channel, thread" below, `myConversations` never reads Stream

@@ -161,9 +161,15 @@ export const DESIRED_XOLACE_BROADCAST: {
   replies: boolean;
   grants: Record<string, string[]>;
 } = {
-  // The member list is the entire user base — per-member read/typing
-  // fan-out is not viable at that scale (see ADR 0013).
-  read_events: false,
+  // Stream tracks per-user read state — and therefore `countUnread()` and
+  // the channel's share of `total_unread_count` — only when read events are
+  // on. Off, the row and the Connect-tab badge never light for a new
+  // announcement (ADR 0013 assumed otherwise). Typing stays off: nobody but
+  // the broadcaster can type, and the member list is the whole user base.
+  // ponytail: `message.read` fans out to watchers only (Connect-tab users
+  // warming the channel), not members; revisit if that fan-out shows up in
+  // Stream's usage.
+  read_events: true,
   typing_events: false,
   // No threads/replies — matches xolacer chat, which doesn't use them either.
   replies: false,

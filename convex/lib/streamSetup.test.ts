@@ -128,8 +128,8 @@ describe("planModerationPolicy", () => {
 });
 
 describe("planXolaceBroadcastType", () => {
-  it("read_events/typing_events/replies are off in the desired state (#373)", () => {
-    expect(DESIRED_XOLACE_BROADCAST.read_events).toBe(false);
+  it("read events on for unread counts; typing/replies off in the desired state (#373)", () => {
+    expect(DESIRED_XOLACE_BROADCAST.read_events).toBe(true);
     expect(DESIRED_XOLACE_BROADCAST.typing_events).toBe(false);
     expect(DESIRED_XOLACE_BROADCAST.replies).toBe(false);
   });
@@ -146,7 +146,7 @@ describe("planXolaceBroadcastType", () => {
     automod: "disabled",
     automod_behavior: "flag",
     max_message_length: 5000,
-    read_events: false,
+    read_events: true,
     typing_events: false,
     replies: false,
     grants: DESIRED_XOLACE_BROADCAST.grants,
@@ -189,18 +189,18 @@ describe("planXolaceBroadcastType", () => {
   });
 
   it("diffs a drifted config, carrying the three required fields on the update body", () => {
-    const drifted = { ...APPLIED, read_events: true, grants: { channel_member: ["read-channel"] } };
+    const drifted = { ...APPLIED, read_events: false, grants: { channel_member: ["read-channel"] } };
     const plan = planXolaceBroadcastType(drifted, DESIRED_XOLACE_BROADCAST);
-    expect(plan!.op).toBe("update");
-    expect(plan!.changes).toEqual({
-      read_events: { from: true, to: false },
+    if (plan?.op !== "update") throw new Error("expected an update plan");
+    expect(plan.changes).toEqual({
+      read_events: { from: false, to: true },
       grants: { from: drifted.grants, to: DESIRED_XOLACE_BROADCAST.grants },
     });
-    expect(plan!.body).toEqual({
+    expect(plan.body).toEqual({
       automod: "disabled",
       automod_behavior: "flag",
       max_message_length: 5000,
-      read_events: false,
+      read_events: true,
       typing_events: false,
       replies: false,
       grants: DESIRED_XOLACE_BROADCAST.grants,

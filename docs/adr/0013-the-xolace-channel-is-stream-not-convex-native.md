@@ -31,9 +31,13 @@ contribute to it; one more ordinary channel is exactly the case that
 invariant is built to handle.
 
 **Consequences.** This channel needs its own Stream channel type (not
-`messaging`) with `read_events: false` and `typing_events: false` — a
-member-list the size of the whole user base makes per-member read/typing
-fan-out a real cost that 1:1 channels never hit — and `create-message`
+`messaging`) with `typing_events: false` — a member-list the size of the
+whole user base makes per-member typing fan-out a real cost that 1:1
+channels never hit. `read_events` was also off in the first cut and had to
+be turned back on (2026-09-18): Stream keeps no read state for a channel
+type without them, so unread counts for this channel were always zero and
+the badge parity above never held. Read fan-out goes to watchers, not
+members, which bounds it — and `create-message`
 permission restricted to the one Xolace account's user id. It also means the
 Connect list, otherwise strictly Convex-owned per "Conversation, channel,
 thread," gets one synthetic row for this channel, sourced from a small

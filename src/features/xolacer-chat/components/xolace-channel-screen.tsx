@@ -2,16 +2,12 @@ import { useMemo, useState } from 'react';
 import { useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
-import { useThemeColor } from 'heroui-native';
 import {
   Channel,
-  MessageComposer,
   MessageList,
   WithComponents,
   useChatContext,
   useOverlayContext,
-  useOwnCapabilitiesContext,
 } from 'stream-chat-expo';
 import { XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID } from '@/convex/lib/streamSetup';
 import { AppText } from '@/src/components/shared/app-text';
@@ -29,14 +25,17 @@ import { MessagesUnavailable } from './thread-screen';
 import { ThreadSkeleton } from './thread-skeleton';
 import { useLocalChannelState } from './thread-messages';
 import { XolacerAvatar } from './xolacer-avatar';
+import {
+  BroadcastComposerBar,
+  BroadcastMessageAuthor,
+  BroadcastMessageFooter,
+} from './xolace-channel-overrides';
 
 /**
  * The one fixed, no-lifecycle channel every camper is a member of (#372-#375).
  * Unlike a xolacer thread there is no `xolacer_conversations` row, no
- * request/accept/rest/close status, and no per-pair identity to resolve: the
- * designated sender's Stream user was created with its real name ("Xolace",
- * see `streamSetup.createXolaceChannel`), so `MessageAuthor` can show it
- * straight off the message with no override. Composer visibility for
+ * request/accept/rest/close status, and no per-pair identity to resolve —
+ * every author is Xolace, see `BroadcastMessageAuthor`. Composer visibility for
  * everyone else is entirely Stream's own doing — only the sender's channel
  * membership carries the `create-message` grant (see `DESIRED_XOLACE_BROADCAST`),
  * so `<MessageComposer>` renders its stock "can't send" state for anyone else
@@ -50,7 +49,7 @@ import { XolacerAvatar } from './xolacer-avatar';
 // (pseudonymous) reactor names instead of hiding every non-self row, which is
 // what `ConversationReactionUser` does with no `ConversationIdentityProvider`
 // mounted. Everything else in the map is a safe no-op without one.
-const { MessageUserReactionsItem: _reactionIdentityOverride, ...BROADCAST_OVERRIDES } =
+const { MessageUserReactionsItem: _reactionIdentityOverride, ...BROADCAST_OVERRIDES_BASE } =
   COMPONENT_OVERRIDES;
 
 /**
@@ -74,30 +73,11 @@ function XolaceChannelHeader() {
   );
 }
 
-const LOCK_ICON = { ios: 'lock.fill', android: 'lock', web: 'lock' } as const;
-
-/**
- * Replaces the bare `<MessageComposer>` for anyone but the broadcast sender.
- * Left alone, Stream renders its own generic "You can't send messages in this
- * channel" for that case — technically correct, and reads like an error. This
- * says the same thing in the channel's own voice: reactions still work, this
- * seat just doesn't have a mic.
- */
-function BroadcastComposerBar() {
-  const { sendMessage: canSendMessage } = useOwnCapabilitiesContext();
-  const muted = useThemeColor('muted') as string;
-
-  if (canSendMessage) return <MessageComposer />;
-
-  return (
-    <View className="flex-row items-center gap-2 border-t border-border/40 bg-surface-secondary px-4 py-3">
-      <SymbolView name={LOCK_ICON} size={13} tintColor={muted} />
-      <AppText className="flex-1 text-[11px] text-muted">
-        Xolace only talks at the whole camp, not back — drop a reaction instead 🔥
-      </AppText>
-    </View>
-  );
-}
+const BROADCAST_OVERRIDES = {
+  ...BROADCAST_OVERRIDES_BASE,
+  MessageAuthor: BroadcastMessageAuthor,
+  MessageFooter: BroadcastMessageFooter,
+};
 
 export function XolaceChannelScreen() {
   const { status: streamStatus, retry } = useStreamConnection();
