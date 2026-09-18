@@ -84,6 +84,7 @@ export default function ProtectedLayout() {
 
           
           <Stack.Screen name="chat/[conversationId]" options={CHAT_OPTIONS} />
+          <Stack.Screen name="xolace-channel" options={CHAT_OPTIONS} />
           <Stack.Screen name="xolacer/[profileId]" />
           <Stack.Screen name="xolacer-setup" />
           <Stack.Screen name="xolacer-edit" options={EDIT_PROFILE_OPTIONS} />
