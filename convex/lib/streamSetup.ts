@@ -132,6 +132,152 @@ export function planModerationPolicy(
   return { from: existing, body };
 }
 
+// ============================================================
+// `xolace-broadcast` channel type (#373) — the app-wide Xolace channel.
+// One well-known channel type, one fixed singleton channel, one designated
+// sender. `channel_member` gets read + reactions only; a purpose-built
+// custom role (`XOLACE_BROADCASTER_ROLE`) carries the one `create-message`
+// grant, assigned to exactly one member — never a channel-type default —
+// via Stream's per-member `assign_roles`. A channel type's `grants` is a
+// role → permissions map, and Stream requires a role be registered with
+// `CreateRole` before it can appear as a `grants` key — that's why setup
+// registers the role before creating/updating the channel type. This is the
+// resolved answer to "custom role vs. per-member override": a custom role,
+// recorded here per #373 rather than as an ADR (implementation detail, not
+// a hard-to-reverse product decision — see
+// docs/adr/0013-the-xolace-channel-is-stream-not-convex-native.md).
+// ============================================================
+
+export const XOLACE_BROADCAST_CHANNEL_TYPE = "xolace-broadcast";
+
+/** Fixed constant, not derived from any row — contrast `xolacerChannelId()`. */
+export const XOLACE_CHANNEL_ID = "xolace-announcements";
+
+export const XOLACE_BROADCASTER_ROLE = "xolace_broadcaster";
+
+export const DESIRED_XOLACE_BROADCAST: {
+  read_events: boolean;
+  typing_events: boolean;
+  replies: boolean;
+  grants: Record<string, string[]>;
+} = {
+  // Stream tracks per-user read state — and therefore `countUnread()` and
+  // the channel's share of `total_unread_count` — only when read events are
+  // on. Off, the row and the Connect-tab badge never light for a new
+  // announcement (ADR 0013 assumed otherwise). Typing stays off: nobody but
+  // the broadcaster can type, and the member list is the whole user base.
+  // ponytail: `message.read` fans out to watchers only (Connect-tab users
+  // warming the channel), not members; revisit if that fan-out shows up in
+  // Stream's usage.
+  read_events: true,
+  typing_events: false,
+  // No threads/replies — matches xolacer chat, which doesn't use them either.
+  replies: false,
+  grants: {
+    channel_member: ["read-channel", "create-reaction", "delete-reaction-owner"],
+    [XOLACE_BROADCASTER_ROLE]: [
+      "read-channel",
+      "create-message",
+      "create-reaction",
+      "delete-reaction-owner",
+    ],
+  },
+};
+
+export type DesiredXolaceBroadcast = typeof DESIRED_XOLACE_BROADCAST;
+
+export type XolaceBroadcastConfig = {
+  automod?: string;
+  automod_behavior?: string;
+  max_message_length?: number;
+  read_events?: boolean;
+  typing_events?: boolean;
+  replies?: boolean;
+  grants?: Record<string, string[]>;
+  [key: string]: unknown;
+};
+
+export type XolaceBroadcastPlan =
+  | { op: "create"; body: Record<string, unknown> }
+  | {
+      op: "update";
+      changes: Record<string, { from: unknown; to: unknown }>;
+      body: Record<string, unknown>;
+    };
+
+/**
+ * Grants merge by role key onto Stream's full built-in defaults — a create/update submitting
+ * only `{channel_member: [...], xolace_broadcaster: [...]}` leaves `admin`/`moderator`/etc.
+ * untouched (confirmed against the dev app's real response). So the diff only ever looks at
+ * the roles this plan manages, never at every key Stream happens to return.
+ */
+function sameGrants(
+  current: Record<string, string[]> | undefined,
+  desired: Record<string, string[]>,
+): boolean {
+  return Object.entries(desired).every(([role, perms]) => {
+    const currentPerms = [...(current?.[role] ?? [])].sort();
+    const desiredPerms = [...perms].sort();
+    return (
+      currentPerms.length === desiredPerms.length &&
+      currentPerms.every((p, i) => p === desiredPerms[i])
+    );
+  });
+}
+
+/**
+ * Unlike `planChannelTypeUpdate` (`messaging` always exists on any Stream app),
+ * `xolace-broadcast` may not exist yet — `current` is null when
+ * `GET /channeltypes/xolace-broadcast` 404s on a clean app, which `setup()`
+ * turns into a create instead of an update.
+ */
+export function planXolaceBroadcastType(
+  current: XolaceBroadcastConfig | null,
+  desired: DesiredXolaceBroadcast,
+): XolaceBroadcastPlan | null {
+  if (!current) {
+    return {
+      op: "create",
+      body: { name: XOLACE_BROADCAST_CHANNEL_TYPE, ...desired },
+    };
+  }
+
+  const changes: Record<string, { from: unknown; to: unknown }> = {};
+  for (const key of ["read_events", "typing_events", "replies"] as const) {
+    if (current[key] !== desired[key]) {
+      changes[key] = { from: current[key], to: desired[key] };
+    }
+  }
+  if (!sameGrants(current.grants, desired.grants)) {
+    changes.grants = { from: current.grants, to: desired.grants };
+  }
+
+  if (Object.keys(changes).length === 0) return null;
+
+  return {
+    op: "update",
+    changes,
+    body: {
+      // The three fields Stream's PUT marks required (see `planChannelTypeUpdate`).
+      automod: current.automod,
+      automod_behavior: current.automod_behavior,
+      max_message_length: current.max_message_length,
+      read_events: desired.read_events,
+      typing_events: desired.typing_events,
+      replies: desired.replies,
+      grants: desired.grants,
+    },
+  };
+}
+
+/**
+ * Roles are app-wide and registered once (`CreateRole`), not per channel type —
+ * this is the plan's "does it already exist" check ahead of that call.
+ */
+export function needsBroadcasterRole(existingRoles: string[]): boolean {
+  return !existingRoles.includes(XOLACE_BROADCASTER_ROLE);
+}
+
 export type BlockListPlan =
   | { op: "create" }
   | { op: "update"; from: string[] }

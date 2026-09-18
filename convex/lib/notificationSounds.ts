@@ -123,6 +123,7 @@ export function chatNotificationSound(
     case "chat_message":
     case "chat_declined":
     case "chat_expired":
+    case "xolace_message":
       return { sound: MESSAGE_SOUND, channelId: MESSAGE_CHANNEL_ID };
   }
 }

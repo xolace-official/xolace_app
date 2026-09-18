@@ -1965,6 +1965,30 @@ export default defineSchema({
     .index("by_xolacer", ["xolacerProfileId"]),
 
   // ===========================================================
+  // XOLACE CHANNEL CACHE (#376)
+  // ===========================================================
+  //
+  // Exactly one row. The shared Xolace broadcast channel (CONTEXT.md, "The
+  // Xolace channel") has no `xolacer_conversations` row of its own, so
+  // `myConversations` (#377) needs its last-message text/sender/time from
+  // somewhere else — kept current by the same `message.new` webhook that
+  // maintains `messageCount` for a real conversation, special-cased onto
+  // this table instead.
+  //
+  xolace_channel_cache: defineTable({
+    text: v.string(),
+    senderId: v.string(),
+    sentAt: v.number(),
+    // When the last message push went out (#378). Read the same way as a
+    // conversation's `lastNotifiedUserAt`/`lastNotifiedXolacerAt`: a second
+    // message inside `MESSAGE_NOTIFICATION_WINDOW_MS` sends badge-only.
+    // Shared across every recipient rather than per-profile — the whole
+    // membership is fanned out from one job run per message, so they are
+    // always all loud or all silent together.
+    lastNotifiedAt: v.optional(v.number()),
+  }),
+
+  // ===========================================================
   // WEEKLY COHORT COUNTS
   // ===========================================================
   //

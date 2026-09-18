@@ -144,6 +144,7 @@ import type * as streamWebhook from "../streamWebhook.js";
 import type * as understanding from "../understanding.js";
 import type * as users from "../users.js";
 import type * as vent from "../vent.js";
+import type * as xolaceChannelNotifications from "../xolaceChannelNotifications.js";
 import type * as xolacerChat from "../xolacerChat.js";
 
 import type {
@@ -289,6 +290,7 @@ declare const fullApi: ApiFromModules<{
   understanding: typeof understanding;
   users: typeof users;
   vent: typeof vent;
+  xolaceChannelNotifications: typeof xolaceChannelNotifications;
   xolacerChat: typeof xolacerChat;
 }>;
 

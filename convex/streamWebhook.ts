@@ -90,6 +90,7 @@ export const streamEvents = httpAction(async (ctx, request) => {
     channelId: event.channel_id,
     senderId,
     webhookId,
+    text: typeof event.message?.text === "string" ? event.message.text : undefined,
   });
 
   // The post-delivery moderation lane (#344), queued after the mutation — and

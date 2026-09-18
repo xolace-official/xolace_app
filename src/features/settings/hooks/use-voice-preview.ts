@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from "expo-audio";
+import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { VOICE_PREVIEWS } from "@/src/features/settings/voice-options";
+import { configureAudioSession } from "@/src/lib/audio/session";
 import type { VoiceSlug } from "@/convex/lib/voices";
 
 type UseVoicePreviewReturn = {
@@ -32,7 +33,7 @@ export function useVoicePreview(): UseVoicePreviewReturn {
         setActiveSlug(null);
         return;
       }
-      await setAudioModeAsync({ playsInSilentMode: true });
+      await configureAudioSession();
       player.replace(VOICE_PREVIEWS[slug]);
       player.play();
       setActiveSlug(slug);

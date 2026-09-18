@@ -28,6 +28,7 @@ import {
   messageNotifiedField,
   xolacerChannelId,
 } from "./lib/chatNotifications";
+import { XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID } from "./lib/streamSetup";
 import {
   conversationOrigin,
   type ConversationOrigin,
@@ -89,7 +90,8 @@ const originValidator = v.optional(
 const restingReasonValidator = v.optional(
   v.union(v.literal("manual"), v.literal("quiet")),
 );
-const conversationRowValidator = v.object({
+const pairConversationRowValidator = v.object({
+  kind: v.literal("pair"),
   id: v.id("xolacer_conversations"),
   role: v.union(v.literal("user"), v.literal("xolacer")),
   status: statusValidator,
@@ -129,6 +131,31 @@ const conversationRowValidator = v.object({
    */
   archived: v.boolean(),
 });
+
+/**
+ * The synthetic Xolace-channel row (#377, CONTEXT.md "The Xolace channel").
+ * A separate object rather than an all-optional `conversationRowValidator` —
+ * `xolacerProfileId`/`counterpartProfileId` stay non-optional for every other
+ * consumer, which assumes they're always present on a row.
+ *
+ * No unread count here: that's read live off Stream's own channel state,
+ * client-side, the same way every other row's badge is — see
+ * `useConversationUnreadCount`. `lastMessageAt`/`lastMessageText` are the one
+ * thing actually cached (#376), for the row's preview line and sort key.
+ */
+const broadcastConversationRowValidator = v.object({
+  kind: v.literal("broadcast"),
+  id: v.string(),
+  streamChannelId: v.string(),
+  channelType: v.string(),
+  lastMessageAt: v.optional(v.number()),
+  lastMessageText: v.optional(v.string()),
+});
+
+const conversationRowValidator = v.union(
+  pairConversationRowValidator,
+  broadcastConversationRowValidator,
+);
 
 // Volume cap counts OPEN conversations only — resting/closed free the slot.
 export const MAX_OPEN_CONVERSATIONS = 8;
@@ -793,15 +820,21 @@ export const myConversations = query({
   args: {},
   returns: v.array(conversationRowValidator),
   handler: async (ctx) => {
-    if (!chatEnabled()) return [];
     const { user, profile } = await requireAuth(ctx);
 
-    const asUser = await ctx.db
-      .query("xolacer_conversations")
-      .withIndex("by_user_and_status", (q) => q.eq("userProfileId", profile._id))
-      .take(100);
+    // The kill switch gates only the ambassador pair rows — the Xolace
+    // broadcast row below is always-on (CONTEXT.md, "The Xolace channel").
+    const pairsEnabled = chatEnabled();
+    const asUser = pairsEnabled
+      ? await ctx.db
+          .query("xolacer_conversations")
+          .withIndex("by_user_and_status", (q) =>
+            q.eq("userProfileId", profile._id),
+          )
+          .take(100)
+      : [];
 
-    const asXolacer = user.isXolacer
+    const asXolacer = pairsEnabled && user.isXolacer
       ? await ctx.db
           .query("xolacer_conversations")
           .withIndex("by_xolacer_and_status", (q) =>
@@ -845,6 +878,7 @@ export const myConversations = query({
         conversation.xolacerProfileId,
       );
       rows.push({
+        kind: "pair" as const,
         id: conversation._id,
         role: "user" as const,
         status: conversation.status,
@@ -868,6 +902,7 @@ export const myConversations = query({
       if (isBlocked(conversation.closedReason)) continue;
       if (conversation.deletedByXolacer) continue;
       rows.push({
+        kind: "pair" as const,
         id: conversation._id,
         role: "xolacer" as const,
         status: conversation.status,
@@ -889,10 +924,25 @@ export const myConversations = query({
       });
     }
 
-    // Requested first (xolacer inbox), then most recent activity.
+    // Every member's row (CONTEXT.md, "The Xolace channel") — no membership
+    // check needed, membership is universal by construction (#374). Sourced
+    // from #376's cache; absent until the channel's first message.
+    const xolaceCache = await ctx.db.query("xolace_channel_cache").first();
+    rows.push({
+      kind: "broadcast" as const,
+      id: XOLACE_CHANNEL_ID,
+      streamChannelId: XOLACE_CHANNEL_ID,
+      channelType: XOLACE_BROADCAST_CHANNEL_TYPE,
+      lastMessageAt: xolaceCache?.sentAt,
+      lastMessageText: xolaceCache?.text,
+    });
+
+    // Requested first (xolacer inbox), then most recent activity. No special
+    // case for the broadcast row — it sorts by the same key as everything
+    // else (CONTEXT.md: "no permanent pin").
     rows.sort((a, b) => {
-      const aKey = a.lastMessageAt ?? a.requestedAt;
-      const bKey = b.lastMessageAt ?? b.requestedAt;
+      const aKey = a.lastMessageAt ?? (a.kind === "pair" ? a.requestedAt : 0);
+      const bKey = b.lastMessageAt ?? (b.kind === "pair" ? b.requestedAt : 0);
       return bKey - aKey;
     });
     return rows;
@@ -1658,6 +1708,53 @@ export const touchConversation = mutation({
 });
 
 /**
+ * Has this webhook delivery already been processed? Records it if not.
+ *
+ * Shared by every `notifyNewMessage` branch: Stream retries any delivery it
+ * cannot confirm, and the seen-check plus the insert share the caller's
+ * transaction, so two concurrent copies of one event cannot both get through.
+ */
+async function webhookAlreadySeen(
+  ctx: MutationCtx,
+  webhookId: string | undefined,
+): Promise<boolean> {
+  if (!webhookId) return false;
+  const seen = await ctx.db
+    .query("stream_webhook_events")
+    .withIndex("by_webhookId", (q) => q.eq("webhookId", webhookId))
+    .unique();
+  if (seen) return true;
+  await ctx.db.insert("stream_webhook_events", { webhookId });
+  return false;
+}
+
+/**
+ * The Xolace channel's one-row last-message cache (#376), plus (#378) the
+ * shared suppression stamp for its push fan-out — `lastNotifiedAt` is one
+ * timestamp for the whole channel rather than per recipient, because every
+ * recipient is notified together in the same `broadcastXolaceChannelPush`
+ * run, so they are always all loud or all silent at once.
+ */
+async function cacheXolaceChannelMessage(
+  ctx: MutationCtx,
+  senderId: string,
+  text: string | undefined,
+): Promise<{ suppressed: boolean }> {
+  const now = Date.now();
+  const existing = await ctx.db.query("xolace_channel_cache").first();
+  const suppressed = messageNotificationSuppressed(existing?.lastNotifiedAt, now);
+  const row = {
+    text: text ?? "",
+    senderId,
+    sentAt: now,
+    lastNotifiedAt: suppressed ? existing?.lastNotifiedAt : now,
+  };
+  if (existing) await ctx.db.patch("xolace_channel_cache", existing._id, row);
+  else await ctx.db.insert("xolace_channel_cache", row);
+  return { suppressed };
+}
+
+/**
  * Tell the other party a message arrived, from Stream's `message.new` webhook.
  *
  * Every identity here comes off **our** row: the channel id names a
@@ -1678,6 +1775,9 @@ export const notifyNewMessage = internalMutation({
     // Optional: a delivery whose header was dropped, and any client older than
     // the deploy that started sending it, still counts as before.
     webhookId: v.optional(v.string()),
+    // Only used by the Xolace-channel branch below, to populate the cache.
+    // Absent for older webhook deliveries or a non-string payload field.
+    text: v.optional(v.string()),
   },
   // Non-null only for the first delivery of a message from someone on the
   // row: what the webhook needs to schedule the post-delivery moderation lane
@@ -1690,6 +1790,33 @@ export const notifyNewMessage = internalMutation({
     }),
   ),
   handler: async (ctx, args) => {
+    // The shared Xolace broadcast channel (CONTEXT.md, "The Xolace channel")
+    // is universal and unrelated to xolacer peer chat — checked ahead of
+    // `chatEnabled()` below, whose kill switch gates only the ambassador
+    // DPA-gated feature, not this always-on channel. It is also not a
+    // Conversation — no pairing, no lifecycle, one side is the app itself —
+    // so it short-circuits to the denormalized cache (#376) ahead of the
+    // `xolacer_conversations` resolution further down, which it would never
+    // match anyway (its channel id carries no `xolacer_` prefix).
+    if (args.channelId === XOLACE_CHANNEL_ID) {
+      if (!(await webhookAlreadySeen(ctx, args.webhookId))) {
+        const { suppressed } = await cacheXolaceChannelMessage(ctx, args.senderId, args.text);
+        // Trusted the same way the conversation path trusts its own row's
+        // participant ids rather than the webhook payload — but this channel
+        // has no such row, so the check falls on the sender id directly. A
+        // payload naming a sender who isn't a real profile fans out to
+        // nobody rather than scheduling with a bogus exclude id.
+        const senderProfileId = ctx.db.normalizeId("emotional_profiles", args.senderId);
+        if (senderProfileId) {
+          await ctx.scheduler.runAfter(0, internal.xolaceChannelNotifications.broadcastXolaceChannelPush, {
+            excludeProfileId: senderProfileId,
+            silent: suppressed,
+          });
+        }
+      }
+      return null;
+    }
+
     if (!chatEnabled()) return null;
 
     const rawId = conversationIdFromChannelId(args.channelId);
@@ -1713,16 +1840,7 @@ export const notifyNewMessage = internalMutation({
     // gate they had not reached. The seen-check and the insert share this
     // mutation's transaction, so two concurrent copies of one event cannot
     // both get through.
-    const webhookId = args.webhookId;
-    let alreadyCounted = false;
-    if (webhookId) {
-      const seen = await ctx.db
-        .query("stream_webhook_events")
-        .withIndex("by_webhookId", (q) => q.eq("webhookId", webhookId))
-        .unique();
-      if (seen) alreadyCounted = true;
-      else await ctx.db.insert("stream_webhook_events", { webhookId });
-    }
+    const alreadyCounted = await webhookAlreadySeen(ctx, args.webhookId);
     if (!alreadyCounted) {
       await ctx.db.patch("xolacer_conversations", conversationId, {
         messageCount: (conversation.messageCount ?? 0) + 1,

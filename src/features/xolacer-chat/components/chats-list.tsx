@@ -9,6 +9,8 @@ import { playSoftPress } from '@/src/lib/haptics';
 import { ConversationRow } from './conversation-row';
 
 export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConversations>;
+/** The `xolacer_conversations`-backed rows — every row except the synthetic Xolace-channel one. */
+export type PairConversation = Extract<ConversationList[number], { kind: 'pair' }>;
 
 /**
  * All lifecycle states live in one flat list — one continuous run of rows the
@@ -43,7 +45,7 @@ export function ChatsList({
   header?: ReactNode;
   /** Omitted where there is nowhere to browse from — the Archived screen. */
   onBrowseXolacers?: () => void;
-  onLongPress: (conversation: ConversationList[number]) => void;
+  onLongPress: (conversation: PairConversation) => void;
   onOpen: () => void;
 }) {
   const router = useRouter();
@@ -98,15 +100,26 @@ export function ChatsList({
             // another row would still be waiting — over the wrong row, with the
             // tab bar still hidden — when you come back.
             onOpen();
+            if (conversation.kind === 'broadcast') {
+              router.push('/xolace-channel');
+              return;
+            }
             router.push({
               pathname: '/chat/[conversationId]',
               params: { conversationId: conversation.id },
             });
           }}
-          onLongPress={() => {
-            playSoftPress();
-            onLongPress(conversation);
-          }}
+          // Archive/close/delete are xolacer_conversations operations — the
+          // broadcast row has no such row behind it, so it gets no long-press
+          // sheet.
+          onLongPress={
+            conversation.kind === 'pair'
+              ? () => {
+                  playSoftPress();
+                  onLongPress(conversation);
+                }
+              : undefined
+          }
         />
       ))}
     </View>

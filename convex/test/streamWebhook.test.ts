@@ -6,6 +6,7 @@
  * assertions read the scheduler at the enqueue boundary.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { XOLACE_CHANNEL_ID } from "../lib/streamSetup";
 import { seedConversation } from "./fixtures.helpers";
 import { scheduledCalls } from "./fixtures.helpers";
 import { asNewUser } from "./harness.helpers";
@@ -13,6 +14,10 @@ import { aggregatesMock, noopJob } from "./mocks.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../chatNotifications", () => ({ sendMessagePush: noopJob(), send: noopJob() }));
+vi.mock("../xolaceChannelNotifications", () => ({
+  broadcastXolaceChannelPush: noopJob(),
+  sendXolaceChannelPush: noopJob(),
+}));
 vi.mock("../ai/chat/moderate", async (orig) => ({
   ...(await orig<typeof import("../ai/chat/moderate")>()),
   moderateChatMessage: noopJob(),
@@ -113,5 +118,103 @@ describe("streamEvents", () => {
     expect(await scheduledCalls(user.root)).toEqual([]);
     const row = await user.root.run((ctx) => ctx.db.get("xolacer_conversations", conversationId));
     expect(row?.messageCount ?? 0).toBe(0);
+  });
+});
+
+describe("Xolace channel cache (#376)", () => {
+  async function deliverXolace(
+    user: Awaited<ReturnType<typeof asNewUser>>,
+    message: { id: string; text: string },
+    webhookId = "wh_xolace_1",
+  ) {
+    const body = JSON.stringify({
+      type: "message.new",
+      channel_id: XOLACE_CHANNEL_ID,
+      user: { id: user.profileId },
+      message,
+    });
+    return user.root.fetch("/webhooks/stream", {
+      method: "POST",
+      headers: { "x-signature": await sign(body), "x-webhook-id": webhookId },
+      body,
+    });
+  }
+
+  it("a Xolace-channel message updates the cache and schedules the broadcast push (#378)", async () => {
+    const user = await asNewUser();
+    const before = Date.now();
+    const response = await deliverXolace(user, { id: "msg_1", text: "New this week" });
+    expect(response.status).toBe(200);
+
+    const cache = await user.root.run((ctx) => ctx.db.query("xolace_channel_cache").first());
+    expect(cache).toMatchObject({ text: "New this week", senderId: user.profileId });
+    expect(cache!.sentAt).toBeGreaterThanOrEqual(before);
+    expect(cache!.lastNotifiedAt).toBe(cache!.sentAt);
+
+    expect(await scheduledCalls(user.root)).toEqual([
+      {
+        name: "xolaceChannelNotifications:broadcastXolaceChannelPush",
+        args: { excludeProfileId: user.profileId, silent: false },
+      },
+    ]);
+  });
+
+  it("a second Xolace-channel message inside the suppression window fans out silently", async () => {
+    const user = await asNewUser();
+    await deliverXolace(user, { id: "msg_1", text: "first" }, "wh_xolace_a");
+    const firstCache = await user.root.run((ctx) => ctx.db.query("xolace_channel_cache").first());
+
+    await deliverXolace(user, { id: "msg_2", text: "second" }, "wh_xolace_b");
+    const secondCache = await user.root.run((ctx) => ctx.db.query("xolace_channel_cache").first());
+    expect(secondCache?.text).toBe("second");
+    // The window is unchanged by a suppressed message, only the text/time ride through.
+    expect(secondCache?.lastNotifiedAt).toBe(firstCache?.lastNotifiedAt);
+
+    const calls = await scheduledCalls(user.root);
+    expect(calls.filter((c) => c.name === "xolaceChannelNotifications:broadcastXolaceChannelPush")).toEqual([
+      { name: "xolaceChannelNotifications:broadcastXolaceChannelPush", args: { excludeProfileId: user.profileId, silent: false } },
+      { name: "xolaceChannelNotifications:broadcastXolaceChannelPush", args: { excludeProfileId: user.profileId, silent: true } },
+    ]);
+  });
+
+  it("does not create or modify any xolacer_conversations row", async () => {
+    const { user, conversationId, deliver } = await setup();
+    await deliverXolace(user, { id: "msg_1", text: "New this week" });
+
+    const conversations = await user.root.run((ctx) =>
+      ctx.db.query("xolacer_conversations").collect(),
+    );
+    expect(conversations).toHaveLength(1);
+    expect(conversations[0]._id).toBe(conversationId);
+    expect(conversations[0].messageCount ?? 0).toBe(0);
+
+    // The regression case: a normal conversation message on the same
+    // deployment still resolves through the existing path, unaffected.
+    await deliver({ id: "msg_2", text: "hey" });
+    const row = await user.root.run((ctx) => ctx.db.get("xolacer_conversations", conversationId));
+    expect(row?.messageCount).toBe(1);
+  });
+
+  it("updates the cache even while the xolacer peer-chat kill switch is off", async () => {
+    process.env.XOLACER_CHAT_ENABLED = "false";
+    const user = await asNewUser();
+    await deliverXolace(user, { id: "msg_1", text: "New this week" });
+
+    const cache = await user.root.run((ctx) => ctx.db.query("xolace_channel_cache").first());
+    expect(cache?.text).toBe("New this week");
+  });
+
+  it("the x-webhook-id dedupe guard prevents a replayed Xolace event from overwriting the cache", async () => {
+    const user = await asNewUser();
+    await deliverXolace(user, { id: "msg_1", text: "first" }, "wh_xolace_1");
+    await deliverXolace(user, { id: "msg_1", text: "first" }, "wh_xolace_1");
+
+    const rows = await user.root.run((ctx) => ctx.db.query("xolace_channel_cache").collect());
+    expect(rows).toHaveLength(1);
+
+    // A genuinely new event (different webhook id) still updates the cache.
+    await deliverXolace(user, { id: "msg_2", text: "second" }, "wh_xolace_2");
+    const cache = await user.root.run((ctx) => ctx.db.query("xolace_channel_cache").first());
+    expect(cache?.text).toBe("second");
   });
 });

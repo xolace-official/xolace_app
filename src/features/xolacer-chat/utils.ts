@@ -91,6 +91,14 @@ export function unreadBadge(
   count: number,
 ): { label: string; a11y: string } | null {
   if (!canHoldUnread(status)) return null;
+  return formatUnreadBadge(count);
+}
+
+/**
+ * Same cap/copy as `unreadBadge`, without the lifecycle gate — for the
+ * Xolace broadcast row (#377), which has no status and so nothing to gate on.
+ */
+export function formatUnreadBadge(count: number): { label: string; a11y: string } | null {
   if (count <= 0) return null;
   return {
     label: count > UNREAD_CAP ? `${UNREAD_CAP}+` : String(count),

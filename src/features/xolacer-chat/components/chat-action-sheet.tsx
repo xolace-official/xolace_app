@@ -5,10 +5,10 @@ import CloseIcon from '@expo/material-symbols/close.xml';
 import DeleteIcon from '@expo/material-symbols/delete.xml';
 import UnarchiveIcon from '@expo/material-symbols/unarchive.xml';
 import { canDelete, canManualRest } from '@/convex/lib/conversationGating';
-import type { ConversationList } from './chats-list';
+import type { PairConversation } from './chats-list';
 
 export type ChatActionSheetProps = {
-  conversation: ConversationList[number];
+  conversation: PairConversation;
   onDismiss: () => void;
   onArchive: () => void;
   onClose: () => void;
