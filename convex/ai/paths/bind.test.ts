@@ -40,11 +40,34 @@ describe("bindTwig", () => {
     expect(bind("audio_topic_anxiety", tracks, { thematicTags: ["racing-thoughts"] })).toEqual({ slug: "b" });
   });
 
-  it("breaks ties on slug, independent of input order", () => {
+  it("breaks ties deterministically, independent of input order", () => {
     const a = track({ slug: "a", tags: ["anxiety"] });
     const b = track({ slug: "b", tags: ["anxiety"] });
-    expect(bind("audio_topic_anxiety", [b, a])).toEqual({ slug: "a" });
-    expect(bind("audio_topic_anxiety", [a, b])).toEqual({ slug: "a" });
+    const forward = bind("audio_topic_anxiety", [a, b]);
+    const reversed = bind("audio_topic_anxiety", [b, a]);
+    expect(reversed).toEqual(forward);
+  });
+
+  it("spreads ties across sessions instead of collapsing onto one track", () => {
+    const a = track({ slug: "a", tags: ["anxiety"] });
+    const b = track({ slug: "b", tags: ["anxiety"] });
+    const first = bind("audio_topic_anxiety", [a, b], { primaryEmotion: "anxiety" });
+    const second = bind("audio_topic_anxiety", [a, b], { primaryEmotion: "sadness" });
+    expect(first).not.toEqual(second);
+    // Same session re-run (any input order) always binds the same slug.
+    expect(bind("audio_topic_anxiety", [b, a], { primaryEmotion: "anxiety" })).toEqual(first);
+  });
+
+  it("spreads ties the same regardless of thematicTags order or duplicates", () => {
+    const a = track({ slug: "a", tags: ["anxiety"] });
+    const b = track({ slug: "b", tags: ["anxiety"] });
+    const base = bind("audio_topic_anxiety", [a, b], { thematicTags: ["racing-thoughts", "sleep"] });
+    const reordered = bind("audio_topic_anxiety", [a, b], { thematicTags: ["sleep", "racing-thoughts"] });
+    const duplicated = bind("audio_topic_anxiety", [a, b], {
+      thematicTags: ["racing-thoughts", "sleep", "sleep", "racing-thoughts"],
+    });
+    expect(reordered).toEqual(base);
+    expect(duplicated).toEqual(base);
   });
 
   it("music_topic_* binds only against the music family", () => {
@@ -71,7 +94,9 @@ describe("bindTwig", () => {
     const standalone = track({ slug: "standalone", tags: ["anxiety"] });
     expect(bind("audio_topic_anxiety", [standalone, t4], { thematicTags: ["racing-thoughts"] })).toEqual({ slug: "t4" });
     const t4Tied = track({ slug: "t4", series: "the-spectrum", tags: ["anxiety"] });
-    expect(bind("audio_topic_anxiety", [t4Tied, standalone])).toEqual({ slug: "standalone" });
+    expect(bind("audio_topic_anxiety", [t4Tied, standalone])).toEqual(
+      bind("audio_topic_anxiety", [standalone, t4Tied]),
+    );
   });
 
   it("skips inactive rows and unknown action types", () => {

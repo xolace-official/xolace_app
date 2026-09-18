@@ -24,6 +24,7 @@ const base = (slug: string, family: Track["family"], topic: string, extra: Parti
   topic,
   title: slug,
   tags: [],
+  sourceTags: [],
   key: `${family}/${slug}.m4a`,
   thumbKey: `thumb/${slug}.webp`,
   durationSec: 60,

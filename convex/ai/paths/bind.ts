@@ -27,6 +27,16 @@ export type BoundParams = { slug: string } | { exercise: string } | { specialty:
 /** Track 2 "Reality, Not False Hope" — the one cross-topic series (§3.1). */
 export const REFRAME_SERIES = "reality-not-false-hope";
 
+/** FNV-1a — deterministic, no randomness/clock, spreads ties across sessions. */
+function hashSeed(seed: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
 export function bindTwig(
   actionType: string,
   u: BindUnderstanding,
@@ -74,8 +84,15 @@ function bindTrack(
   ]);
   const score = (t: BindTrack) => t.tags.filter((tag) => wanted.has(tag)).length;
 
-  const best = [...candidates].sort(
+  // Sort first so the tied set (and its order) is independent of input order,
+  // then spread ties deterministically across sessions via a seeded hash.
+  const sorted = [...candidates].sort(
     (a, b) => score(b) - score(a) || (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0),
-  )[0];
-  return { slug: best.slug };
+  );
+  const topScore = score(sorted[0]);
+  const tied = sorted.filter((t) => score(t) === topScore);
+  const canonicalTags = [...new Set(u.thematicTags)].sort();
+  const seed = [u.primaryEmotion, u.secondaryEmotion ?? "", ...canonicalTags].join("|");
+  const pick = tied[hashSeed(seed) % tied.length];
+  return { slug: pick.slug };
 }

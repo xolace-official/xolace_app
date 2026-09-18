@@ -58,5 +58,65 @@
     "title": "Confidence & Empowerment",
     "thumbPath": "thumbs/Confidence & Empowerment/confidence-empowerment-album-cover.png",
     "thumbSha256": "6e1f2d3bc587ea9fe7f5c613a5e4b880711807b4903a380852bafa6a27620b76"
+  },
+  {
+    "slug": "anxiety_relief",
+    "title": "Anxiety Relief",
+    "thumbPath": "thumbs/Anxiety Relief/anxiety-relief-album-cover.jpg",
+    "thumbSha256": "619b8a3240f08c2221ef112d8e558cfdcdf333447cd43ec9fa3dfb8665099283"
+  },
+  {
+    "slug": "overthinking",
+    "title": "Overthinking",
+    "thumbPath": "thumbs/Overthinking/overthinking-album-cover.jpg",
+    "thumbSha256": "26017ea1a4bb1f42e9bd154acc74dbdec771acd7fd698fad5f1700acd121d51c"
+  },
+  {
+    "slug": "focus_concentration",
+    "title": "Focus & Concentration",
+    "thumbPath": "thumbs/Focus & Concentration/Ablum-Cover-Focus-and-Concern.jpg",
+    "thumbSha256": "19eb167f77edf71c152c8ced268be435a76b9348394762b82396ea67784b5c53"
+  },
+  {
+    "slug": "happiness_joy",
+    "title": "Happiness & Joy",
+    "thumbPath": "thumbs/Happiness & Joy/Happiness and Joy.jpg",
+    "thumbSha256": "95d8fcdb235264d46c47a4cdbac661b45ab83a4272061900bec63f5c2f703ef2"
+  },
+  {
+    "slug": "breathing_meditation",
+    "title": "Breathing & Meditation",
+    "thumbPath": "thumbs/Breathing & Meditation/breathing-meditation-album-cover.png",
+    "thumbSha256": "16b4925bde8752a770e763a7e802af448c87f14be850bfbe40c416968a34d948"
+  },
+  {
+    "slug": "deep_relaxation",
+    "title": "Deep Relaxation",
+    "thumbPath": "thumbs/Deep Relaxation/Deep-Relaxation-album-cover.jpg",
+    "thumbSha256": "eaa027ae9023d193bfe4a8f2b8a2e3023df7640d206c51c2690f058687cb6563"
+  },
+  {
+    "slug": "healing_recovery",
+    "title": "Healing & Recovery",
+    "thumbPath": "thumbs/Healing & Recovery/healing-recovery-album-cover.png",
+    "thumbSha256": "d2bffc7f1f6a566295f380c8fefa65dfcadbb29566bed8060b6695b21db49724"
+  },
+  {
+    "slug": "hope_positivity",
+    "title": "Hope & Positivity",
+    "thumbPath": "thumbs/Hope & Positivity/Hope-Positivity-album-cover.jpg",
+    "thumbSha256": "bdc00b0965926e74a89aae83c2eddddcf87ba726f2fed350b54815beb4e6e719"
+  },
+  {
+    "slug": "meditation",
+    "title": "Meditation",
+    "thumbPath": "thumbs/Meditation/meditation-album-cover.jpg",
+    "thumbSha256": "a951d42e6595a1ae5711f64d768edbb9a0f8247e3393fadae7b640249d50d5c7"
+  },
+  {
+    "slug": "sadness",
+    "title": "Sadness",
+    "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
+    "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700"
   }
 ]
