@@ -28,6 +28,7 @@ import {
   messageNotifiedField,
   xolacerChannelId,
 } from "./lib/chatNotifications";
+import { XOLACE_CHANNEL_ID } from "./lib/streamSetup";
 import {
   conversationOrigin,
   type ConversationOrigin,
@@ -1658,6 +1659,39 @@ export const touchConversation = mutation({
 });
 
 /**
+ * Has this webhook delivery already been processed? Records it if not.
+ *
+ * Shared by every `notifyNewMessage` branch: Stream retries any delivery it
+ * cannot confirm, and the seen-check plus the insert share the caller's
+ * transaction, so two concurrent copies of one event cannot both get through.
+ */
+async function webhookAlreadySeen(
+  ctx: MutationCtx,
+  webhookId: string | undefined,
+): Promise<boolean> {
+  if (!webhookId) return false;
+  const seen = await ctx.db
+    .query("stream_webhook_events")
+    .withIndex("by_webhookId", (q) => q.eq("webhookId", webhookId))
+    .unique();
+  if (seen) return true;
+  await ctx.db.insert("stream_webhook_events", { webhookId });
+  return false;
+}
+
+/** The Xolace channel's one-row last-message cache (#376). */
+async function cacheXolaceChannelMessage(
+  ctx: MutationCtx,
+  senderId: string,
+  text: string | undefined,
+): Promise<void> {
+  const row = { text: text ?? "", senderId, sentAt: Date.now() };
+  const existing = await ctx.db.query("xolace_channel_cache").first();
+  if (existing) await ctx.db.patch("xolace_channel_cache", existing._id, row);
+  else await ctx.db.insert("xolace_channel_cache", row);
+}
+
+/**
  * Tell the other party a message arrived, from Stream's `message.new` webhook.
  *
  * Every identity here comes off **our** row: the channel id names a
@@ -1678,6 +1712,9 @@ export const notifyNewMessage = internalMutation({
     // Optional: a delivery whose header was dropped, and any client older than
     // the deploy that started sending it, still counts as before.
     webhookId: v.optional(v.string()),
+    // Only used by the Xolace-channel branch below, to populate the cache.
+    // Absent for older webhook deliveries or a non-string payload field.
+    text: v.optional(v.string()),
   },
   // Non-null only for the first delivery of a message from someone on the
   // row: what the webhook needs to schedule the post-delivery moderation lane
@@ -1690,6 +1727,21 @@ export const notifyNewMessage = internalMutation({
     }),
   ),
   handler: async (ctx, args) => {
+    // The shared Xolace broadcast channel (CONTEXT.md, "The Xolace channel")
+    // is universal and unrelated to xolacer peer chat — checked ahead of
+    // `chatEnabled()` below, whose kill switch gates only the ambassador
+    // DPA-gated feature, not this always-on channel. It is also not a
+    // Conversation — no pairing, no lifecycle, one side is the app itself —
+    // so it short-circuits to the denormalized cache (#376) ahead of the
+    // `xolacer_conversations` resolution further down, which it would never
+    // match anyway (its channel id carries no `xolacer_` prefix).
+    if (args.channelId === XOLACE_CHANNEL_ID) {
+      if (!(await webhookAlreadySeen(ctx, args.webhookId))) {
+        await cacheXolaceChannelMessage(ctx, args.senderId, args.text);
+      }
+      return null;
+    }
+
     if (!chatEnabled()) return null;
 
     const rawId = conversationIdFromChannelId(args.channelId);
@@ -1713,16 +1765,7 @@ export const notifyNewMessage = internalMutation({
     // gate they had not reached. The seen-check and the insert share this
     // mutation's transaction, so two concurrent copies of one event cannot
     // both get through.
-    const webhookId = args.webhookId;
-    let alreadyCounted = false;
-    if (webhookId) {
-      const seen = await ctx.db
-        .query("stream_webhook_events")
-        .withIndex("by_webhookId", (q) => q.eq("webhookId", webhookId))
-        .unique();
-      if (seen) alreadyCounted = true;
-      else await ctx.db.insert("stream_webhook_events", { webhookId });
-    }
+    const alreadyCounted = await webhookAlreadySeen(ctx, args.webhookId);
     if (!alreadyCounted) {
       await ctx.db.patch("xolacer_conversations", conversationId, {
         messageCount: (conversation.messageCount ?? 0) + 1,

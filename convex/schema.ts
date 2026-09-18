@@ -1965,6 +1965,23 @@ export default defineSchema({
     .index("by_xolacer", ["xolacerProfileId"]),
 
   // ===========================================================
+  // XOLACE CHANNEL CACHE (#376)
+  // ===========================================================
+  //
+  // Exactly one row. The shared Xolace broadcast channel (CONTEXT.md, "The
+  // Xolace channel") has no `xolacer_conversations` row of its own, so
+  // `myConversations` (#377) needs its last-message text/sender/time from
+  // somewhere else — kept current by the same `message.new` webhook that
+  // maintains `messageCount` for a real conversation, special-cased onto
+  // this table instead.
+  //
+  xolace_channel_cache: defineTable({
+    text: v.string(),
+    senderId: v.string(),
+    sentAt: v.number(),
+  }),
+
+  // ===========================================================
   // WEEKLY COHORT COUNTS
   // ===========================================================
   //
