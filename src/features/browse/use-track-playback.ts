@@ -132,8 +132,9 @@ export function useTrackPlayback(
     if (status.didJustFinish) player.setActiveForLockScreen(false);
   }, [status.didJustFinish, player]);
 
-  // Release lock-screen controls when the player is torn down (screen left, re-mint).
-  useEffect(() => () => player.setActiveForLockScreen(false), [player]);
+  // No lock-screen cleanup on unmount/re-mint: `useAudioPlayer` releases the
+  // native player first, and its `sharedObjectWillRelease` already clears the
+  // active lock-screen player. Calling into the released object throws.
 
   /**
    * Past `expiresAt`, re-mint and queue the action for the rebuilt player.

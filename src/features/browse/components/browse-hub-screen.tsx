@@ -100,10 +100,16 @@ export function BrowseHubScreen() {
             {featured.attribution && (
               <AppText className="text-muted mb-3 text-[15px]">{featured.attribution}</AppText>
             )}
-            <Image
-              source={{ uri: featured.thumbUrl }}
-              style={{ width: width - 32, height: (width - 32) * 0.55, borderRadius: 14, marginTop: featured.attribution ? 0 : 8 }}
-            />
+            <View
+              className="bg-surface-tertiary overflow-hidden rounded-[14px]"
+              style={{ width: width - 32, height: (width - 32) * 0.55, marginTop: featured.attribution ? 0 : 8 }}
+            >
+              <Image
+                source={{ uri: featured.thumbUrl }}
+                style={{ width: '100%', height: '100%' }}
+                transition={200}
+              />
+            </View>
           </View>
 
           <AppText className="px-4 pb-2 pt-8 text-[22px] font-bold">New</AppText>
