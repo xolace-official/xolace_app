@@ -5,9 +5,10 @@
     "title": "Meditation Mindfulness Ambient",
     "topic": "music_topic_mindfulness",
     "tags": [
-      "ambient",
-      "meditation",
-      "instrumental"
+      "presence",
+      "awareness",
+      "grounding",
+      "noticing"
     ],
     "audioPath": "support/databend-meditation-mindfulness-ambient-546937.mp3",
     "thumbPath": "thumbs/mindfullness-01.jpg",
@@ -24,7 +25,12 @@
       "attributionRequired": false,
       "attributionText": "Music by Databend from Pixabay",
       "acquiredAt": 1757650000000
-    }
+    },
+    "sourceTags": [
+      "ambient",
+      "meditation",
+      "instrumental"
+    ]
   },
   {
     "slug": "music-mindfulness-02",
@@ -32,9 +38,9 @@
     "title": "Sacred Fire of Mindfulness",
     "topic": "music_topic_mindfulness",
     "tags": [
-      "meditation",
-      "spiritual",
-      "instrumental"
+      "presence",
+      "awareness",
+      "grounding"
     ],
     "audioPath": "support/meditativecalmbuddha-sacred-fire-of-mindfulness-389028.mp3",
     "thumbPath": "thumbs/mindfullness-02.jpg",
@@ -50,7 +56,12 @@
       "attributionRequired": false,
       "attributionText": "Music by MeditativeCalmBuddha from Pixabay",
       "acquiredAt": 1757650000000
-    }
+    },
+    "sourceTags": [
+      "meditation",
+      "spiritual",
+      "instrumental"
+    ]
   },
   {
     "slug": "music-sleep-rest-01",
@@ -58,9 +69,9 @@
     "title": "LoFi Sleep",
     "topic": "music_topic_sleep_rest",
     "tags": [
-      "lofi",
-      "beats",
-      "sleep"
+      "sleep",
+      "drowsiness",
+      "winding-down"
     ],
     "audioPath": "support/the_mountain-lofi-sleep-lofi-sleep-music-587590.mp3",
     "thumbPath": "thumbs/sleep-rest-01.jpg",
@@ -77,7 +88,12 @@
       "attributionRequired": false,
       "attributionText": "Music by The_Mountain from Pixabay",
       "acquiredAt": 1757650000000
-    }
+    },
+    "sourceTags": [
+      "lofi",
+      "beats",
+      "sleep"
+    ]
   },
   {
     "slug": "music-sleep-rest-02",
@@ -85,9 +101,9 @@
     "title": "Deep Sleep",
     "topic": "music_topic_sleep_rest",
     "tags": [
-      "lullaby",
       "sleep",
-      "instrumental"
+      "drowsiness",
+      "winding-down"
     ],
     "audioPath": "support/the_mountain-deep-sleep-deep-sleep-music-587578.mp3",
     "thumbPath": "thumbs/sleep-rest-02.jpg",
@@ -104,6 +120,11 @@
       "attributionRequired": false,
       "attributionText": "Music by The_Mountain from Pixabay",
       "acquiredAt": 1757650000000
-    }
+    },
+    "sourceTags": [
+      "lullaby",
+      "sleep",
+      "instrumental"
+    ]
   }
 ]

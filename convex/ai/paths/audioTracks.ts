@@ -16,6 +16,7 @@ const sharedFields = {
   title: v.string(),
   topic: v.string(),
   tags: v.array(v.string()),
+  sourceTags: v.array(v.string()),
   key: v.string(),
   thumbKey: v.string(),
   durationSec: v.number(),

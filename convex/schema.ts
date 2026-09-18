@@ -2044,7 +2044,8 @@ export default defineSchema({
     family: v.union(v.literal("support"), v.literal("music")),
     title: v.string(),
     topic: v.string(), // the audio_topic_* / music_topic_* catalog entry
-    tags: v.array(v.string()), // shared emotion/theme vocab, both families
+    tags: v.array(v.string()), // curated: shared emotion/theme vocab, binder-scored, both families
+    sourceTags: v.array(v.string()), // raw, unedited source tags (e.g. Pixabay), preserved losslessly
     key: v.string(), // R2 object key, e.g. `${family}/${slug}.m4a`
     thumbKey: v.string(), // R2 key, content-addressed: `thumb/${thumbSha256}.webp`
     durationSec: v.number(),

@@ -722,6 +722,7 @@ describe("paths.getBoundAudioTrack (#334)", () => {
     topic: "audio_topic_anxiety",
     title: "Track",
     tags: [],
+    sourceTags: [],
     key: "audio/s.m4a",
     thumbKey: "thumb/s.webp",
     durationSec: 300,
