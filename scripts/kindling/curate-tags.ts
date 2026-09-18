@@ -16,6 +16,9 @@
 //   bun scripts/kindling/curate-tags.ts                # dev/manifest.json
 //   bun scripts/kindling/curate-tags.ts --prod          # prod/manifest.json
 //   bun scripts/kindling/curate-tags.ts --manifest path/to/manifest.json
+//
+// Idempotent by default: a track that already has `sourceTags` is treated as
+// already curated and skipped. Pass --force to re-curate every track anyway.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -38,6 +41,7 @@ const flag = (name: string, fallback: string) => {
   return i === -1 ? fallback : args[i + 1];
 };
 const prod = args.includes("--prod");
+const force = args.includes("--force");
 const manifestPath = path.resolve(
   flag("manifest", `scripts/kindling/${prod ? "prod" : "dev"}/manifest.json`),
 );
@@ -49,16 +53,17 @@ function vocabFor(topic: string): string[] {
   return [...new Set([...entry.emotions, ...entry.themes])];
 }
 
-function parseTagArray(raw: string, vocab: Set<string>): string[] {
+/** Returns null on unparseable model output — distinct from a genuine, valid empty pick. */
+function parseTagArray(raw: string, vocab: Set<string>): string[] | null {
   const match = raw.match(/\[[\s\S]*\]/);
-  if (!match) return [];
+  if (!match) return null;
   let parsed: unknown;
   try {
     parsed = JSON.parse(match[0]);
   } catch {
-    return [];
+    return null;
   }
-  if (!Array.isArray(parsed)) return [];
+  if (!Array.isArray(parsed)) return null;
   return parsed.filter((v): v is string => typeof v === "string" && vocab.has(v));
 }
 
@@ -85,7 +90,9 @@ async function curateOne(track: ManifestTrack): Promise<string[]> {
     ],
   });
 
-  return parseTagArray(extractTextFromResponse(response), vocabSet);
+  const tags = parseTagArray(extractTextFromResponse(response), vocabSet);
+  if (tags === null) throw new Error("could not parse a tag array from the model response");
+  return tags;
 }
 
 async function pool<T>(items: T[], limit: number, worker: (item: T) => Promise<void>): Promise<void> {
@@ -101,9 +108,16 @@ async function pool<T>(items: T[], limit: number, worker: (item: T) => Promise<v
 async function main() {
   const manifest: ManifestTrack[] = JSON.parse(readFileSync(manifestPath, "utf8"));
   const musicTracks = manifest.filter((t) => t.family === "music");
+  // Idempotent by default: a track with `sourceTags` already set has already
+  // been curated by a prior run — skip it so a retry after a partial failure
+  // doesn't re-spend API calls or risk the (non-deterministic) model
+  // flip-flopping tags that already landed. --force re-curates everyone.
+  const toCurate = force ? musicTracks : musicTracks.filter((t) => t.sourceTags === undefined);
+  const skipped = musicTracks.length - toCurate.length;
+  if (skipped > 0) console.log(`Skipping ${skipped} already-curated track(s) (pass --force to re-curate)`);
 
   let failures = 0;
-  await pool(musicTracks, CONCURRENCY, async (track) => {
+  await pool(toCurate, CONCURRENCY, async (track) => {
     try {
       const curated = await curateOne(track);
       track.sourceTags = track.tags;
@@ -128,7 +142,7 @@ async function main() {
   }
 
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
-  console.log(`Curated ${musicTracks.length - failures}/${musicTracks.length} music tracks in ${manifestPath}`);
+  console.log(`Curated ${toCurate.length - failures}/${toCurate.length} music tracks in ${manifestPath}`);
   if (failures > 0) process.exit(1);
 }
 
