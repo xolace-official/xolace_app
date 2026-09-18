@@ -184,12 +184,7 @@ export async function createXolacerChannel(
   memberIds: string[],
   createdById: string,
 ): Promise<void> {
-  await streamRequest("POST", `/channels/messaging/${encodeURIComponent(channelId)}/query`, {
-    body: {
-      data: { members: memberIds, created_by_id: createdById },
-      state: false,
-    },
-  });
+  await upsertStreamChannel("messaging", channelId, { members: memberIds, createdById });
 }
 
 /**
