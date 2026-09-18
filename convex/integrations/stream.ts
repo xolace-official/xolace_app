@@ -390,6 +390,27 @@ export async function upsertStreamChannel(
 }
 
 /**
+ * Add members to an existing channel. Stream upserts a shell user record for
+ * any id it hasn't seen before, so this never has to wait on the member
+ * minting a Stream credential — confirmed against the `stream-chat` package
+ * source (`Channel.addMembers` posts the same `add_members` field to the
+ * channel's own endpoint, no separate user-creation step). Adding an id
+ * that's already a member is a no-op on Stream's side, so this is safe to
+ * call repeatedly for the same member.
+ */
+export async function addStreamChannelMembers(
+  channelType: string,
+  channelId: string,
+  memberIds: string[],
+): Promise<void> {
+  await streamRequest(
+    "POST",
+    `/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}`,
+    { body: { add_members: memberIds } },
+  );
+}
+
+/**
  * Per-member channel-role assignment — the mechanism that lets one member post in a channel
  * type whose default `channel_member` role cannot (see `lib/streamSetup`'s
  * `XOLACE_BROADCASTER_ROLE`). Mirrors the `stream-chat` package's `Channel.assignRoles`, which

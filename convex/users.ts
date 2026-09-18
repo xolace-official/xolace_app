@@ -57,6 +57,12 @@ export const getOrCreate = mutation({
           deletionRequestedAt: undefined,
           updatedAt: Date.now(),
         });
+        // Best-effort, never blocks reactivation on a Stream hiccup — see
+        // `streamSetup.addToXolaceChannel`. Idempotent: Stream no-ops adding
+        // an id that's already a member.
+        await ctx.scheduler.runAfter(0, internal.streamSetup.addToXolaceChannel, {
+          profileId: existingUser.emotionalProfileId,
+        });
       }
       return existingUser._id;
     }
@@ -123,6 +129,12 @@ export const getOrCreate = mutation({
         createdAt: now,
       });
     }
+
+    // Every camper is a member of the Xolace channel from the moment their
+    // account exists (#374) — best-effort, see `streamSetup.addToXolaceChannel`.
+    await ctx.scheduler.runAfter(0, internal.streamSetup.addToXolaceChannel, {
+      profileId,
+    });
 
     return userId;
   },

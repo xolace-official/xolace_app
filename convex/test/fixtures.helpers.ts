@@ -44,8 +44,22 @@ export async function expectCode(run: () => Promise<unknown>, code: string) {
  * The pipeline tests assert scheduled work at the enqueue boundary rather than
  * running the downstream job: what was enqueued with which arguments is the
  * contract `generateMirror` owns; what the job then does is the job's own test.
+ *
+ * Excludes `streamSetup:addToXolaceChannel` — `users.getOrCreate` schedules it
+ * unconditionally on every onboarding (#374), so it would otherwise show up in
+ * every fixture built through `asNewUser`. It has its own coverage in
+ * `users.test.ts`; use `allScheduledCalls` there instead of this.
  */
 export async function scheduledCalls(
+  root: Root,
+): Promise<{ name: string; args: Record<string, unknown> }[]> {
+  return (await allScheduledCalls(root)).filter(
+    (j) => !j.name.endsWith("streamSetup:addToXolaceChannel"),
+  );
+}
+
+/** `scheduledCalls`, without the `addToXolaceChannel` filter. */
+export async function allScheduledCalls(
   root: Root,
 ): Promise<{ name: string; args: Record<string, unknown> }[]> {
   const jobs = await root.run((ctx) =>

@@ -1,6 +1,8 @@
 import { v } from "convex/values";
-import { internalAction } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { internalAction, internalQuery } from "./_generated/server";
 import {
+  addStreamChannelMembers,
   assignStreamChannelRole,
   createStreamBlockList,
   createStreamChannelType,
@@ -157,5 +159,84 @@ export const createXolaceChannel = internalAction({
       `Xolace channel "${XOLACE_CHANNEL_ID}" ready; ${senderProfileId} granted ${XOLACE_BROADCASTER_ROLE}`,
     );
     return null;
+  },
+});
+
+/**
+ * Universal membership (#374): every camper is a member of the fixed Xolace
+ * channel. Scheduled best-effort from `users.getOrCreate` — a signup or
+ * reactivation should never fail on a Stream hiccup, and a member who didn't
+ * make it in this time gets picked up by the next backfill run.
+ */
+export const addToXolaceChannel = internalAction({
+  args: { profileId: v.id("emotional_profiles") },
+  returns: v.null(),
+  handler: async (_ctx, { profileId }) => {
+    try {
+      await addStreamChannelMembers(XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID, [
+        profileId,
+      ]);
+    } catch (error) {
+      console.warn("[xolace-channel] addStreamChannelMembers failed", error);
+    }
+    return null;
+  },
+});
+
+/**
+ * One-off backfill (#374): adds every existing `emotional_profiles` row as a
+ * member of the fixed Xolace channel. Safe to re-run — Stream's `add_members`
+ * no-ops for an id that's already a member — and safe to run mid-signup-traffic
+ * since new signups add themselves via `addToXolaceChannel`. Paginates through
+ * the whole table in one invocation, 500 ids per Stream call:
+ *
+ *   convex run streamSetup:backfillXolaceChannelMembership
+ */
+export const backfillXolaceChannelMembership = internalAction({
+  args: {},
+  returns: v.object({ added: v.number() }),
+  handler: async (ctx): Promise<{ added: number }> => {
+    let cursor: string | null = null;
+    let added = 0;
+    for (;;) {
+      const page: {
+        profileIds: string[];
+        continueCursor: string;
+        isDone: boolean;
+      } = await ctx.runQuery(internal.streamSetup.listProfileIdsPage, { cursor });
+
+      if (page.profileIds.length > 0) {
+        await addStreamChannelMembers(
+          XOLACE_BROADCAST_CHANNEL_TYPE,
+          XOLACE_CHANNEL_ID,
+          page.profileIds,
+        );
+        added += page.profileIds.length;
+      }
+
+      if (page.isDone) break;
+      cursor = page.continueCursor;
+    }
+    console.log(`Backfilled ${added} Xolace channel member(s)`);
+    return { added };
+  },
+});
+
+export const listProfileIdsPage = internalQuery({
+  args: { cursor: v.union(v.string(), v.null()) },
+  returns: v.object({
+    profileIds: v.array(v.string()),
+    continueCursor: v.string(),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { cursor }) => {
+    const result = await ctx.db
+      .query("emotional_profiles")
+      .paginate({ numItems: 500, cursor });
+    return {
+      profileIds: result.page.map((p) => p._id),
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
   },
 });
