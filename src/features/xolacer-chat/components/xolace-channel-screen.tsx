@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
+import { useThemeColor } from 'heroui-native';
 import {
   Channel,
   MessageComposer,
@@ -9,8 +11,10 @@ import {
   WithComponents,
   useChatContext,
   useOverlayContext,
+  useOwnCapabilitiesContext,
 } from 'stream-chat-expo';
 import { XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID } from '@/convex/lib/streamSetup';
+import { AppText } from '@/src/components/shared/app-text';
 import { useStreamConnection } from '../providers/stream-chat-provider';
 import { OfflineStrip } from './offline-strip';
 import { SafetyStrip } from './safety-strip';
@@ -24,6 +28,7 @@ import {
 import { MessagesUnavailable } from './thread-screen';
 import { ThreadSkeleton } from './thread-skeleton';
 import { useLocalChannelState } from './thread-messages';
+import { XolacerAvatar } from './xolacer-avatar';
 
 /**
  * The one fixed, no-lifecycle channel every camper is a member of (#372-#375).
@@ -48,13 +53,66 @@ import { useLocalChannelState } from './thread-messages';
 const { MessageUserReactionsItem: _reactionIdentityOverride, ...BROADCAST_OVERRIDES } =
   COMPONENT_OVERRIDES;
 
+/**
+ * Same identity as the chats-list row (#377) — campfire mark, "Camp
+ * announcements" subtitle — rendered into the native header's title slot
+ * instead of a plain string, same pattern as `ThreadHeader`.
+ */
+function XolaceChannelHeader() {
+  return (
+    <View className="flex-row items-center gap-2.5">
+      <XolacerAvatar name="Xolace" size="sm" campfire />
+      <View className="min-w-0 shrink">
+        <AppText className="text-sm font-semibold text-foreground" numberOfLines={1}>
+          Xolace
+        </AppText>
+        <AppText className="text-[11px] text-muted mt-px" numberOfLines={1}>
+          Camp announcements
+        </AppText>
+      </View>
+    </View>
+  );
+}
+
+const LOCK_ICON = { ios: 'lock.fill', android: 'lock', web: 'lock' } as const;
+
+/**
+ * Replaces the bare `<MessageComposer>` for anyone but the broadcast sender.
+ * Left alone, Stream renders its own generic "You can't send messages in this
+ * channel" for that case — technically correct, and reads like an error. This
+ * says the same thing in the channel's own voice: reactions still work, this
+ * seat just doesn't have a mic.
+ */
+function BroadcastComposerBar() {
+  const { sendMessage: canSendMessage } = useOwnCapabilitiesContext();
+  const muted = useThemeColor('muted') as string;
+
+  if (canSendMessage) return <MessageComposer />;
+
+  return (
+    <View className="flex-row items-center gap-2 border-t border-border/40 bg-surface-secondary px-4 py-3">
+      <SymbolView name={LOCK_ICON} size={13} tintColor={muted} />
+      <AppText className="flex-1 text-[11px] text-muted">
+        Xolace only talks at the whole camp, not back — drop a reaction instead 🔥
+      </AppText>
+    </View>
+  );
+}
+
 export function XolaceChannelScreen() {
   const { status: streamStatus, retry } = useStreamConnection();
   const { overlay } = useOverlayContext();
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Xolace', gestureEnabled: overlay === 'none' }} />
+      <Stack.Screen
+        options={{
+          // eslint-disable-next-line react/no-unstable-nested-components -- navigation header render prop, not a mounted subtree
+          headerTitle: () => <XolaceChannelHeader />,
+          title: 'Xolace',
+          gestureEnabled: overlay === 'none',
+        }}
+      />
       {streamStatus === 'ready' ? (
         <XolaceChannelMessages />
       ) : (
@@ -123,7 +181,7 @@ function XolaceChannelMessages() {
           <SafetyStrip />
           <MessageList />
           <OfflineStrip />
-          <MessageComposer />
+          <BroadcastComposerBar />
         </Channel>
       </WithComponents>
     </View>

@@ -168,7 +168,7 @@ function BroadcastRow({
     >
       <View className="px-4">
         <View className="flex-row items-center gap-3 py-3">
-          <XolacerAvatar name="Xolace" />
+          <XolacerAvatar name="Xolace" campfire />
           <View className="flex-1 min-w-0">
             <View className="flex-row items-center gap-1.5">
               <AppText className="shrink text-sm font-semibold text-foreground" numberOfLines={1}>
@@ -199,11 +199,11 @@ function BroadcastRow({
                 </View>
               )}
             </View>
-            {conversation.lastMessageText && (
-              <AppText className="text-xs text-muted mt-0.5" numberOfLines={1}>
-                {conversation.lastMessageText}
-              </AppText>
-            )}
+            {/* Static, not the last message: this row speaks for the whole
+                camp, not a person, so a preview line would misread as one. */}
+            <AppText className="text-xs text-muted mt-0.5" numberOfLines={1}>
+              Camp announcements
+            </AppText>
           </View>
         </View>
         {showSeparator && <View className="h-px bg-border/40 ml-14" />}
