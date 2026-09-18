@@ -144,9 +144,9 @@ The model picks *action types*; a pure function binds each to a concrete target.
 
 | `actionType` family | Binding rule |
 |---|---|
-| `audio_topic_*` | `audio_tracks` where `family="support"` (§4) `.eq("topic", <the entry's topic>)`, tag-match `emotions`/`themes` against the twig's emotion/theme set in memory, **stable sort on `slug`** to break ties, take the top. Episodes and standalones of the topic compete in the same pool — `tier` never filters (§8). |
+| `audio_topic_*` | `audio_tracks` where `family="support"` (§4) `.eq("topic", <the entry's topic>)`, tag-match `emotions`/`themes` against the twig's emotion/theme set in memory, sort by score then **`slug`** (order-independence only — not the tiebreak itself), then break the remaining tie with a deterministic hash of the session's `primaryEmotion`/`secondaryEmotion`/`thematicTags` (#364). Episodes and standalones of the topic compete in the same pool — `tier` never filters (§8). |
 | `music_topic_*` | same rule, `family="music"`. |
-| `episode_reframe` | `audio_tracks` where `family="support"` **and `series` set** for the "reality-not-false-hope" series, tag-match, slug tiebreak. |
+| `episode_reframe` | `audio_tracks` where `family="support"` **and `series` set** for the "reality-not-false-hope" series, tag-match, same hash tiebreak. |
 | `breathing` | the existing **sit-with-this** exercise (no new content). |
 | `bridge` | `{ exercise: "trusted-bridge" }` — the existing Trusted Bridge flow (no new content). |
 | `xolacer` | the existing `sessionSuggestion` ranker (no new content). |
@@ -428,7 +428,7 @@ in v1.**
   enabled once every bound-track player renders the crisis-resource line from
   `showCrisisLine` (§3.3). Until then the ingest manifest ships no tier-4 rows.
   Track 1 episodes bind through the existing `audio_topic_*` entries and compete
-  with the topic's standalone tracks on tag score, slug tiebreak. (Crisis forces
+  with the topic's standalone tracks on tag score, hash tiebreak (#364). (Crisis forces
   `supportNeed: "none"` — those users get no kindling regardless.)
 - **Track 2** = the cross-topic `episode_reframe` action type (§3.1).
 - **Editorial safeguards — curation playbook + two code touches:**
