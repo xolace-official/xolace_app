@@ -77,12 +77,23 @@ describe("parsePathsResponse", () => {
 
   it("drops a why that is too short or too long", () => {
     const short = "Breathe now.";
-    const long = Array.from({ length: 30 }, () => "word").join(" ") + ".";
+    const long = Array.from({ length: 40 }, () => "word").join(" ") + ".";
     const { dropped } = parsePathsResponse(
       JSON.stringify([entry("breathing", 1, short), entry("music_topic_calm_peace", 2, long)]),
       CATALOG,
     );
     expect(dropped.map((d) => d.reason)).toEqual(["why_length", "why_length"]);
+  });
+
+  // Prod no-ship 2026-09-19: a 25-word bridge why was dropped against a
+  // 24-word cap, leaving 1 twig < MIN_TWIGS. The validator needs slack past
+  // the prompt's "roughly 12–22".
+  it("keeps a why that overshoots the prompt's rough range by a few words", () => {
+    const why =
+      "You said the people are slipping away for a dream you are not sure about, so this is a message to someone who still knows you well.";
+    expect(why.split(/\s+/).length).toBe(27);
+    const { dropped } = parsePathsResponse(JSON.stringify([entry("bridge", 1, why)]), CATALOG);
+    expect(dropped).toEqual([]);
   });
 
   it("drops a why that is more than one sentence", () => {
@@ -93,17 +104,18 @@ describe("parsePathsResponse", () => {
     expect(dropped[0].reason).toBe("why_sentences");
   });
 
-  it("keeps at most three twigs", () => {
+  it("keeps at most four twigs", () => {
     const { twigs, dropped } = parsePathsResponse(
       JSON.stringify([
         entry("breathing", 1),
         entry("music_topic_calm_peace", 2),
         entry("audio_topic_grief", 3),
         entry("audio_topic_anxiety", 4),
+        entry("xolacer", 5),
       ]),
       CATALOG,
     );
-    expect(twigs).toHaveLength(3);
+    expect(twigs).toHaveLength(4);
     expect(dropped[0].reason).toBe("over_max");
   });
 

@@ -11,7 +11,7 @@
 ## 0. What this is
 
 After a session the pipeline judges needs support, Xolace generates — in the
-background, for Xolace+ users only — a **kindling**: a small bundle of **2–3
+background, for Xolace+ users only — a **kindling**: a small bundle of **3–4
 support actions** (each a **twig**), bound to real content (a support-audio or
 music track, a breathing exercise, a xolacer). The user gets a notification, a
 Today-card entry, and a dedicated screen where they tend twigs in any order.
@@ -105,7 +105,7 @@ derivation):
 - Premium tier (always `plus` here — passed for prompt framing, not a branch).
 - **No episodic RAG in v1.** Carried as fog (§11).
 
-**Output contract:** a JSON array of **2–3** objects:
+**Output contract:** a JSON array of **3–4** objects:
 
 ```ts
 { actionType: string,   // must be a catalog key
@@ -188,7 +188,7 @@ Action **types**, in code, not a table. Extensible shape:
   self-invalidation / toxic positivity / "I should be over this". Track 1
   ("The Spectrum") gets **no** new entry — it rides the existing `audio_topic_*`
   entries; its episodes compete with standalone tracks on tags (§8).
-- Music is a **standalone action type** the model may pick as one of the 2–3
+- Music is a **standalone action type** the model may pick as one of the 3–4
   twigs (decision 16), not an ambient bed under other actions.
 
 ### 3.2 `audio_tracks` table — `convex/schema.ts`
@@ -388,7 +388,7 @@ path_steps: defineTable({
   .index("by_path", ["pathId"]);
 ```
 
-- 2–3 `path_steps` rows per `paths` row.
+- 3–4 `path_steps` rows per `paths` row.
 - **Both tables added to `SESSION_CASCADE_TABLES`** (`convex/lib/sessionCascade.ts`) —
   they carry a `sessionId` (directly on `paths`, transitively for `path_steps` via
   `pathId`). `purgeSessions` deletes `path_steps` by `pathId` then the `paths`
@@ -632,7 +632,7 @@ topic | discovery-strip | twig-more-like-this`, `browse_paywall_shown` /
 2. **Cascade:** `sessionCascade.test.ts` passes with `paths` / `path_steps` in
    `SESSION_CASCADE_TABLES`; a wipe/retention/account-deletion test deletes them.
 3. **Trigger:** complete a session that classifies `supportNeed: "light"` as a
-   Plus user (argent iOS sim) → a `paths` row + 2–3 `path_steps` appear; a free
+   Plus user (argent iOS sim) → a `paths` row + 3–4 `path_steps` appear; a free
    user gets none.
 4. **Fallback:** force all twigs unbindable → no `paths` row, no notification.
 5. **Binding:** an `audio_topic_*` twig resolves to a real `audio_tracks` slug;

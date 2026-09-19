@@ -28,7 +28,7 @@ type ManifestTrack = Omit<Doc<"audio_tracks">, "_id" | "_creationTime" | "key" |
 
 const WHY = "You said the mornings are the hardest, so this is one slow minute before the day starts.";
 const twig = (actionType: string, order: number, why = WHY) => ({ actionType, order, why });
-const goodReply = JSON.stringify([twig("breathing", 1), twig("xolacer", 2)]);
+const goodReply = JSON.stringify([twig("breathing", 1), twig("xolacer", 2), twig("bridge", 3)]);
 
 const stub = vi.hoisted(() => ({
   isPlus: true,
@@ -174,7 +174,7 @@ const readSteps = (user: SeededUser, pathId: Id<"paths">) =>
   );
 
 describe("ai/paths/generate.run", () => {
-  it("writes one active kindling with 2–3 pending twigs for a Plus user", async () => {
+  it("writes one active kindling with 3–4 pending twigs for a Plus user", async () => {
     const user = await asNewUser();
     const sessionId = await seedQualifying(user, "light");
 
@@ -184,10 +184,10 @@ describe("ai/paths/generate.run", () => {
     expect(rest).toEqual([]);
     expect(path).toMatchObject({ sessionId, status: "active" });
     const steps = await readSteps(user, path._id);
-    expect(steps.length).toBeGreaterThanOrEqual(2);
-    expect(steps.length).toBeLessThanOrEqual(3);
+    expect(steps.length).toBeGreaterThanOrEqual(3);
+    expect(steps.length).toBeLessThanOrEqual(4);
     expect(steps.every((s) => s.state === "pending")).toBe(true);
-    expect(steps.map((s) => s.actionType).sort()).toEqual(["breathing", "xolacer"]);
+    expect(steps.map((s) => s.actionType).sort()).toEqual(["breathing", "bridge", "xolacer"]);
     expect(steps.find((s) => s.actionType === "xolacer")?.params).toEqual({ specialty: "burnout" });
     expect(path.modelVersion).toBe("paths-v1-haiku-4.5");
   });
@@ -197,6 +197,7 @@ describe("ai/paths/generate.run", () => {
       twig("breathing", 1, "You mentioned anxiety, so this helps you cope and regulate for a minute."),
       twig("breathing", 2),
       twig("xolacer", 3),
+      twig("bridge", 4),
     ]);
     const user = await asNewUser();
     const sessionId = await seedQualifying(user);
@@ -209,6 +210,7 @@ describe("ai/paths/generate.run", () => {
     expect(steps.map((s) => [s.actionType, s.order])).toEqual([
       ["breathing", 1],
       ["xolacer", 2],
+      ["bridge", 3],
     ]);
     expect(error).toHaveBeenCalledWith(
       "kindling: twig dropped",
@@ -216,8 +218,8 @@ describe("ai/paths/generate.run", () => {
     );
   });
 
-  it("writes no paths row when fewer than 2 twigs survive", async () => {
-    stub.reply = JSON.stringify([twig("breathing", 1), twig("not_a_key", 2)]);
+  it("writes no paths row when fewer than 3 twigs survive", async () => {
+    stub.reply = JSON.stringify([twig("breathing", 1), twig("xolacer", 2), twig("not_a_key", 3)]);
     const user = await asNewUser();
     const sessionId = await seedQualifying(user);
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -227,7 +229,7 @@ describe("ai/paths/generate.run", () => {
     expect(await readPaths(user)).toEqual([]);
     expect(error).toHaveBeenCalledWith(
       "kindling: no-ship",
-      expect.objectContaining({ reason: "fewer_than_min_twigs", surviving: 1 }),
+      expect.objectContaining({ reason: "fewer_than_min_twigs", surviving: 2 }),
     );
   });
 
@@ -287,7 +289,7 @@ describe("ai/paths/generate.run", () => {
   });
 
   it("binds a *_topic_* twig to a real slug from the dev catalogue", async () => {
-    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2)]);
+    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2), twig("bridge", 3)]);
     const user = await asNewUser();
     await seedCatalogue(user);
     const sessionId = await seedQualifying(user);
@@ -604,6 +606,7 @@ describe("the active-kindling screen API (#333)", () => {
     expect(active?.twigs.map((t) => [t.order, t.kind, t.state])).toEqual([
       [1, "breathing", "pending"],
       [2, "xolacer", "pending"],
+      [3, "bridge", "pending"],
     ]);
   });
 
@@ -614,7 +617,7 @@ describe("the active-kindling screen API (#333)", () => {
   });
 
   it("resolves a bound track's title onto an audio/music twig", async () => {
-    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2)]);
+    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2), twig("bridge", 3)]);
     const user = await asNewUser();
     await seedCatalogue(user);
     await generate(user, await seedQualifying(user));
@@ -628,12 +631,13 @@ describe("the active-kindling screen API (#333)", () => {
 
   it("skipStep and completeStep are independent of order and close the kindling once nothing is pending", async () => {
     const { user, active } = await withKindling();
-    const [breathing, xolacer] = active.twigs;
+    const [breathing, xolacer, bridge] = active.twigs;
 
     await user.t.mutation(api.paths.skipStep, { stepId: xolacer._id });
     let now = await user.t.query(api.paths.getActive, {});
-    expect(now?.twigs.map((t) => t.state)).toEqual(["pending", "skipped"]);
+    expect(now?.twigs.map((t) => t.state)).toEqual(["pending", "skipped", "pending"]);
 
+    await user.t.mutation(api.paths.completeStep, { stepId: bridge._id });
     await user.t.mutation(api.paths.completeStep, { stepId: breathing._id });
     now = await user.t.query(api.paths.getActive, {});
     expect(now).toBeNull();
@@ -678,7 +682,7 @@ describe("stale kindling screens", () => {
 
 describe("a browse play beside a bound twig (§9.6, #341)", () => {
   it("leaves the twig's binding byte-identical, never tends it, and never moves profile stats", async () => {
-    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2)]);
+    stub.reply = JSON.stringify([twig(CATALOGUE_TOPIC, 1), twig("breathing", 2), twig("bridge", 3)]);
     const user = await asNewUser();
     await seedCatalogue(user);
     await generate(user, await seedQualifying(user));

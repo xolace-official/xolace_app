@@ -53,8 +53,8 @@ export function TopicGridScreen() {
             <View key={i} style={{ width: tile, marginHorizontal: GAP / 2, marginBottom: GAP + 4 }}>
               <Skeleton className="rounded-xl" style={{ width: tile, height: tile }} />
               <View className="mt-2 gap-1.5">
-                <Skeleton className="h-[15px] w-3/4 rounded" />
-                <Skeleton className="h-[13px] w-1/2 rounded" />
+                <Skeleton className="h-3.75 w-3/4 rounded" />
+                <Skeleton className="h-3.25 w-1/2 rounded" />
               </View>
             </View>
           ))}

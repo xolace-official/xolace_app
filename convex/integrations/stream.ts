@@ -485,10 +485,17 @@ export async function deleteStreamBlockList(name: string): Promise<void> {
   await streamRequest("DELETE", `/blocklists/${encodeURIComponent(name)}`);
 }
 
-/** The Moderation v2 policy for a key such as `chat:messaging`, every field. */
+/** The Moderation v2 policy for a key such as `chat:messaging`, every field. A fresh app
+ * (prod before first setup) has no policy row yet — Stream 404s — so that comes back as the
+ * bare `{ key }` the planner needs to create it. */
 export async function getStreamModerationPolicy(key: string): Promise<Record<string, unknown>> {
-  const response = await streamRequest("GET", `/api/v2/moderation/config/${encodeURIComponent(key)}`);
-  return response.config as Record<string, unknown>;
+  try {
+    const response = await streamRequest("GET", `/api/v2/moderation/config/${encodeURIComponent(key)}`);
+    return response.config as Record<string, unknown>;
+  } catch (error) {
+    if (error instanceof Error && /\(404\)/.test(error.message)) return { key };
+    throw error;
+  }
 }
 
 /** Replaces the policy — submit it whole (see `lib/streamSetup.planModerationPolicy`). */
