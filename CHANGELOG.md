@@ -4,6 +4,14 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.11.0] - (2026-09-19)
+
+### Added
+
+- **Vessa, the audio catalog** — a browsable library of support audio and music, organized by topic. A new Browse tab surfaces a hub (entry buttons, a New shelf, a rotating listening tip), topic grids with curated art, and a topic screen for a full family list. Tracks play through a dedicated player with background playback and lock-screen controls; free users hit a paywall gate on play, Xolace+ users get the full catalog.
+- **Kindling** — after a session where you seem to need it, Xolace quietly puts together a small bundle of 3–4 next steps for you — a support-audio or music track, a breathing exercise, or a chat with a Xolacer — and lets you know it's ready. You'll see it on Today and can work through it in any order, at your own pace. Xolace+ only.
+- **The Xolace channel** — a standing broadcast channel from the team, with push notifications, unread counts, and its own row in your chats list.
+
 ## [1.10.0] - OTA Update (2026-09-11)
 
 ### Changed
