@@ -64,8 +64,8 @@ export function XolacerRoster({
 
   const openWith = new Set(
     conversations
-      .filter((c) => c.role === 'user' && c.status === 'open')
-      .map((c) => c.xolacerProfileId),
+      .filter((c) => c.kind === 'pair' && c.role === 'user' && c.status === 'open')
+      .map((c) => (c as { xolacerProfileId: string }).xolacerProfileId),
   );
 
   const xolacers = directory ?? [];

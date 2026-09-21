@@ -37,12 +37,16 @@ export const send = internalMutation({
       v.literal("chat_declined"),
       v.literal("chat_expired"),
       v.literal("chat_message"),
+      v.literal("xolace_message"),
     ),
     // The recipient's counterpart, named by the caller exactly as the recipient
     // already sees them elsewhere — this path never resolves an identity of its
-    // own. Absent for a decline, which names nobody.
+    // own. Absent for a decline, which names nobody, and for `xolace_message`,
+    // which has no counterpart at all.
     counterpartName: v.optional(v.string()),
-    conversationId: v.id("xolacer_conversations"),
+    // Absent for `xolace_message`: the Xolace channel has no
+    // `xolacer_conversations` row, so its push carries no thread to reopen.
+    conversationId: v.optional(v.id("xolacer_conversations")),
     // Stream's unread total for the recipient, set only by `sendMessagePush`.
     // The lifecycle types never badge: the icon number means "messages" and
     // only that, and it must equal what the Connect tab shows.

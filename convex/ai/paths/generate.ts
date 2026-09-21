@@ -27,7 +27,7 @@ import {
  * `completeSession` route only. Off the critical path and best-effort: every
  * failure is logged, nothing is thrown, the session never waits on it.
  *
- * One standalone Haiku call, no tool loop: the model picks 2–3 action TYPES
+ * One standalone Haiku call, no tool loop: the model picks 3–4 action TYPES
  * from the catalog and writes a `why` line each. Twigs that fail validation
  * or binding are dropped, never retried; fewer than MIN_TWIGS survivors means
  * no `paths` row at all — never a synthetic default.

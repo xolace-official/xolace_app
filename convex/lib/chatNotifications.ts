@@ -18,7 +18,8 @@ export type ChatNotificationType =
   | "chat_accepted"
   | "chat_declined"
   | "chat_expired"
-  | "chat_message";
+  | "chat_message"
+  | "xolace_message";
 
 const TYPES: ChatNotificationType[] = [
   "chat_request",
@@ -26,6 +27,7 @@ const TYPES: ChatNotificationType[] = [
   "chat_declined",
   "chat_expired",
   "chat_message",
+  "xolace_message",
 ];
 
 /** Narrows the `type` field off a push payload, which arrives untyped. */
@@ -84,6 +86,10 @@ export function chatNotificationRoute(
         pathname: "/connect",
         params: { view: "xolacers", t: String(tappedAt) },
       } as const;
+    // The Xolace channel (#378) isn't a `xolacer_conversations` row, so it has
+    // no thread route keyed by id — it opens the one screen for it instead.
+    case "xolace_message":
+      return { pathname: "/xolace-channel", params: {} } as const;
   }
 }
 
@@ -128,6 +134,10 @@ export function chatNotificationContent(
       };
     case "chat_message":
       return { title: counterpartName, body: "Sent you a message" };
+    // Always "Xolace" — there is no counterpart to name for the broadcast
+    // channel, so the `counterpartName` parameter is unused here.
+    case "xolace_message":
+      return { title: "Xolace", body: "Posted a new message" };
   }
 }
 

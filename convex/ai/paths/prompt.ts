@@ -5,7 +5,7 @@ import type { CatalogEntry } from "./catalog";
 /**
  * Kindling generation prompt + parser (docs/paths-v1.md §2.2, #331).
  *
- * One Haiku call, no tool loop. The model picks 2–3 action TYPES from the
+ * One Haiku call, no tool loop. The model picks 3–4 action TYPES from the
  * catalog and writes one user-facing `why` line per pick. Negative examples
  * only (repo precedent: feedback_prompt_examples_cause_fixation — positive
  * examples make the model fixate and mode-collapse toward them).
@@ -58,10 +58,12 @@ export interface Dropped {
   reason: DropReason;
 }
 
-export const MIN_TWIGS = 2;
-export const MAX_TWIGS = 3;
-const WHY_MIN_WORDS = 10;
-const WHY_MAX_WORDS = 24;
+export const MIN_TWIGS = 3;
+export const MAX_TWIGS = 4;
+// Wider than the prompt's "roughly 12–22": Haiku overshoots "roughly" by a
+// few words routinely, and a drop here can sink the whole kindling.
+const WHY_MIN_WORDS = 8;
+const WHY_MAX_WORDS = 32;
 
 // The banned clinical register (§2.2), matched on stems so "anxious",
 // "coping", "regulation", "grounded", "managing" all fail too.
@@ -79,7 +81,7 @@ export function buildPathsPrompt(ctx: PathsPromptContext): {
 } {
   const system = `You choose what Xolace quietly offers a person after they have sat with a feeling. Xolace is a digital campfire, the fire helps someone see what they are carrying; it is not a therapist and never sounds like one.
 
-Pick ${MIN_TWIGS} or ${MAX_TWIGS} actions from the catalog below that fit this person right now, order them, and for each write one "why" line the person will read under the action.
+Pick exactly ${MAX_TWIGS} actions from the catalog below that fit this person right now, order them, and for each write one "why" line the person will read under the action.
 
 ## The why line
 - Second person, present tense.

@@ -7,6 +7,7 @@ import {
 } from 'expo-audio';
 import { useEffect } from 'react';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
+import { AUDIO_SESSION } from '@/src/lib/audio/session';
 
 export type UseVentRecorderReturn = {
   // Resolves true only when recording actually began (permission granted and
@@ -53,7 +54,7 @@ export function useVentRecorder(): UseVentRecorderReturn {
         return false;
       }
 
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await setAudioModeAsync({ ...AUDIO_SESSION, allowsRecording: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
       return true;

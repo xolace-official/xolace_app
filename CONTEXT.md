@@ -3,6 +3,54 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## The Xolace channel (2026-09-18)
+
+Every user is a member of one shared Stream channel — prose and UI call it
+just **Xolace**, the same register as a contact name, not "the system
+channel" or "announcements." It carries what the founder writes for updates
+and events; seekers can react to a message (the same per-message reaction
+picker as a xolacer conversation) but never send one. It is **not** a
+Conversation in this codebase's sense (see "Conversation, channel, thread"
+below) — there is no pairing, no lifecycle, and one side of it is the app
+itself, not a person — so it gets its own name rather than reusing that
+vocabulary.
+
+**Membership is universal by construction.** Every existing user is
+backfilled in one pass; every new signup is added to it in the same
+`users.getOrCreate` flow that creates their profile, before they ever open
+chat — Stream's `addMembers` upserts the underlying Stream user even if one
+doesn't exist yet, so this doesn't wait on a first chat session minting a
+Stream credential.
+
+**Sending is locked to one real account**, not a synthetic system identity —
+the Xolace team already has a genuine `users` row with its own Stream
+identity, and that account is the sole permitted sender. However many staff
+members type into it, it posts as one voice.
+
+**It behaves like an ordinary conversation, deliberately, with one
+exception.** It counts toward the app badge and the Connect-tab badge the
+same as any other unread channel (Stream's `total_unread_count` already
+aggregates across every channel a member belongs to — this needed no special
+handling), and it sorts into the chats list by last-activity like every
+other row, no permanent pin. The one exception: **typing events are off for
+this channel's type.** Read events stay **on** — Stream only tracks per-user
+read state, and so `countUnread()` and the channel's share of
+`total_unread_count`, for channel types that have them; the first cut turned
+them off for fan-out reasons and no announcement ever badged. `message.read`
+fans out to watchers (clients that have the channel open or warmed), not to
+the member list, so the cost is bounded by concurrent Connect-tab users.
+
+**The chats list stays Convex-owned, with one deliberate exception.** Per
+"Conversation, channel, thread" below, `myConversations` never reads Stream
+directly — it's sourced from `xolacer_conversations`. This channel has no
+row there, so the list gains one synthetic entry sourced from a small
+denormalized cache (last message text/time), kept current the same way
+`messageCount` already is: the existing `message.new` webhook, which now
+special-cases this one known channel id instead of resolving it to a
+conversation.
+
+See [ADR 0013](docs/adr/0013-the-xolace-channel-is-stream-not-convex-native.md).
+
 ## Trusted Bridge folds into kindling (2026-09-15)
 
 **Trusted Bridge is now a twig, not a standalone entry point.** It becomes

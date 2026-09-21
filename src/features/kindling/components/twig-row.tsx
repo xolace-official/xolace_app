@@ -2,6 +2,7 @@ import { Pressable, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 import { TWIG_PRESENTATION, twigBrowseHref, type Twig } from "../twig-presentation";
 
 /**
@@ -81,7 +82,7 @@ export function TwigRow({
               {look.eyebrow}
             </AppText>
             <AppText className="mt-1 text-lg font-semibold text-foreground">{title}</AppText>
-            <AppText className="mt-2 text-[15px] leading-relaxed text-muted">{twig.why}</AppText>
+            <AppText className="mt-2 text-[15px] leading-relaxed text-muted">{removeEmDash(twig.why)}</AppText>
             {browsable && !done && (
               <Pressable
                 onPress={onBrowseMore}

@@ -138,7 +138,7 @@ export function ThreadMessages({ conversation }: { conversation: ThreadConversat
  * has never held. Failure resolves too: Stream's own `LoadingErrorIndicator`
  * is a better place to land than a skeleton that never ends.
  */
-function useLocalChannelState(channel: StreamChannel) {
+export function useLocalChannelState(channel: StreamChannel) {
   // Records only the settled cid. Success needs no state of its own —
   // `channel.initialized` / `offlineMode` already carry it — but it does need
   // a re-render, which is the whole reason this lands in state at all. Stored

@@ -24,7 +24,12 @@ export function useThreadConversation(
 
   if (conversation !== undefined) return conversation;
 
-  const row = rows?.find((candidate) => candidate.id === conversationId);
+  // Broadcast row never matches: it routes through `/xolace-channel`, not
+  // this `/chat/[conversationId]` route, and carries no `xolacer_conversations`
+  // id to seed a `ThreadConversation` from.
+  const row = rows
+    ?.filter((candidate) => candidate.kind === 'pair')
+    .find((candidate) => candidate.id === conversationId);
   if (!row) return undefined;
 
   // `resumable`, `canRate` and `myRating` are per-conversation reads the list

@@ -10,22 +10,37 @@ const SIZES = {
   lg: { box: 'h-[76px] w-[76px]', text: 'text-2xl' },
 } as const;
 
+const CAMPFIRE_IMAGE = require('@/assets/images/flux/campfire-mini.jpeg');
+
 /**
  * Initial-or-photo avatar. `muted` renders the resting/unavailable look
- * (grey surface instead of accent) per the mockup.
+ * (grey surface instead of accent) per the mockup. `campfire` is the Xolace
+ * broadcast channel's identity specifically — no person, no photo, so it
+ * gets the campfire mark instead of an "X" initial. Not a general fallback:
+ * every other row still falls through to initials.
  */
 export function XolacerAvatar({
   name,
   photoUrl,
   size = 'md',
   muted = false,
+  campfire = false,
 }: {
   name: string;
   photoUrl?: string;
   size?: keyof typeof SIZES;
   muted?: boolean;
+  campfire?: boolean;
 }) {
   const { box, text } = SIZES[size];
+
+  if (campfire) {
+    return (
+      <View className={cn(box, 'rounded-full overflow-hidden bg-surface-secondary')}>
+        <Image source={CAMPFIRE_IMAGE} style={StyleSheet.absoluteFill} contentFit="cover" />
+      </View>
+    );
+  }
 
   if (photoUrl) {
     return (

@@ -235,7 +235,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         }
       ],
       "expo-video",
-      "expo-audio",
+      ["expo-audio", { enableBackgroundPlayback: true }],
       "expo-asset",
       "expo-image",
       "expo-status-bar",

@@ -176,6 +176,39 @@ export async function upsertStreamUsers(users: StreamUser[]): Promise<void> {
 }
 
 /**
+ * Create only the users Stream doesn't know yet. `POST /users` is a full
+ * replace, so an `{id, name}`-only upsert of an existing record would wipe its
+ * `image` (and any custom field) — the membership flows that just need the id
+ * to exist go through this instead.
+ */
+export async function ensureStreamUsers(users: StreamUser[]): Promise<void> {
+  const missing: StreamUser[] = [];
+  // ponytail: $in and query limit cap at 100 ids per call
+  for (let i = 0; i < users.length; i += 100) {
+    const chunk = users.slice(i, i + 100);
+    const result = await streamRequest("GET", "/users", {
+      query: {
+        payload: JSON.stringify({
+          filter_conditions: { id: { $in: chunk.map((u) => u.id) } },
+          limit: chunk.length,
+        }),
+      },
+    });
+    const known = new Set(((result.users ?? []) as { id: string }[]).map((u) => u.id));
+    for (const u of chunk) if (!known.has(u.id)) missing.push(u);
+  }
+  if (missing.length > 0) await upsertStreamUsers(missing);
+}
+
+/** Partial update — touches only the given fields of an existing user. */
+export async function setStreamUserFields(
+  id: string,
+  set: Omit<StreamUser, "id">,
+): Promise<void> {
+  await streamRequest("PATCH", "/users", { body: { users: [{ id, set }] } });
+}
+
+/**
  * Create (or return) the 1:1 messaging channel for a conversation.
  * Channel id is deterministic per conversation row, so accept is idempotent.
  */
@@ -184,12 +217,7 @@ export async function createXolacerChannel(
   memberIds: string[],
   createdById: string,
 ): Promise<void> {
-  await streamRequest("POST", `/channels/messaging/${encodeURIComponent(channelId)}/query`, {
-    body: {
-      data: { members: memberIds, created_by_id: createdById },
-      state: false,
-    },
-  });
+  await upsertStreamChannel("messaging", channelId, { members: memberIds, createdById });
 }
 
 /**
@@ -341,6 +369,103 @@ export async function updateStreamChannelType(
   await streamRequest("PUT", `/channeltypes/${encodeURIComponent(name)}`, { body });
 }
 
+/**
+ * Same lookup as `getStreamChannelType`, but returns null instead of throwing when the type
+ * doesn't exist yet — how `streamSetup`'s plan tells "needs update" from "needs creation" for a
+ * channel type that isn't guaranteed to exist on every Stream app (unlike the built-in `messaging`).
+ */
+export async function tryGetStreamChannelType(
+  name: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    return await getStreamChannelType(name);
+  } catch (error) {
+    if (error instanceof Error && /\(404\)/.test(error.message)) return null;
+    throw error;
+  }
+}
+
+/** POST /channeltypes — Stream requires only `name`; every other field defaults from the
+ * built-in `messaging` type when omitted. */
+export async function createStreamChannelType(body: Record<string, unknown>): Promise<void> {
+  await streamRequest("POST", "/channeltypes", { body });
+}
+
+/**
+ * Custom permission roles are app-wide and must be registered once (`CreateRole`) before a
+ * channel type's `grants` can reference the role name as a key — Stream rejects an
+ * unregistered role there.
+ */
+export async function listStreamRoles(): Promise<string[]> {
+  const response = await streamRequest("GET", "/roles");
+  const roles = response.roles as Array<{ name?: string }> | undefined;
+  return (roles ?? []).map((r) => r.name).filter((n): n is string => !!n);
+}
+
+export async function createStreamRole(name: string): Promise<void> {
+  await streamRequest("POST", "/roles", { body: { name } });
+}
+
+/**
+ * Create (or return) a channel under an arbitrary channel type — the general form of
+ * `createXolacerChannel`, which hardcodes `messaging`. Used for the fixed Xolace singleton.
+ */
+export async function upsertStreamChannel(
+  channelType: string,
+  channelId: string,
+  data: { members: string[]; createdById: string },
+): Promise<void> {
+  await streamRequest(
+    "POST",
+    `/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}/query`,
+    { body: { data: { members: data.members, created_by_id: data.createdById }, state: false } },
+  );
+}
+
+/**
+ * Add members to an existing channel.
+ *
+ * **Confirmed against the real API (#374): Stream does NOT upsert a shell
+ * user for an unknown id here** — `POST /channels/{type}/{id}` rejects with
+ * "involved in channel update operation, but don't exist" for any member id
+ * that has no Stream user record yet. (`createXolacerChannel` /
+ * `upsertStreamChannel` are unaffected — that's the `/query` create endpoint,
+ * which upserts via its `data`.) So the caller must `upsertStreamUsers` first;
+ * this never waits on the member minting their own Stream credential, since
+ * the app can upsert a pseudonymous placeholder on their behalf. Adding an id
+ * that's already a member is a no-op on Stream's side, so this is safe to
+ * call repeatedly for the same member.
+ */
+export async function addStreamChannelMembers(
+  channelType: string,
+  channelId: string,
+  memberIds: string[],
+): Promise<void> {
+  await streamRequest(
+    "POST",
+    `/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}`,
+    { body: { add_members: memberIds } },
+  );
+}
+
+/**
+ * Per-member channel-role assignment — the mechanism that lets one member post in a channel
+ * type whose default `channel_member` role cannot (see `lib/streamSetup`'s
+ * `XOLACE_BROADCASTER_ROLE`). Mirrors the `stream-chat` package's `Channel.assignRoles`, which
+ * posts (not patches) `{ assign_roles }` to the channel's own endpoint.
+ */
+export async function assignStreamChannelRole(
+  channelType: string,
+  channelId: string,
+  roles: { userId: string; channelRole: string }[],
+): Promise<void> {
+  await streamRequest(
+    "POST",
+    `/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}`,
+    { body: { assign_roles: roles.map((r) => ({ user_id: r.userId, channel_role: r.channelRole })) } },
+  );
+}
+
 export type StreamBlockList = { name: string; type?: string; words: string[] };
 
 export async function listStreamBlockLists(): Promise<StreamBlockList[]> {
@@ -360,10 +485,17 @@ export async function deleteStreamBlockList(name: string): Promise<void> {
   await streamRequest("DELETE", `/blocklists/${encodeURIComponent(name)}`);
 }
 
-/** The Moderation v2 policy for a key such as `chat:messaging`, every field. */
+/** The Moderation v2 policy for a key such as `chat:messaging`, every field. A fresh app
+ * (prod before first setup) has no policy row yet — Stream 404s — so that comes back as the
+ * bare `{ key }` the planner needs to create it. */
 export async function getStreamModerationPolicy(key: string): Promise<Record<string, unknown>> {
-  const response = await streamRequest("GET", `/api/v2/moderation/config/${encodeURIComponent(key)}`);
-  return response.config as Record<string, unknown>;
+  try {
+    const response = await streamRequest("GET", `/api/v2/moderation/config/${encodeURIComponent(key)}`);
+    return response.config as Record<string, unknown>;
+  } catch (error) {
+    if (error instanceof Error && /\(404\)/.test(error.message)) return { key };
+    throw error;
+  }
 }
 
 /** Replaces the policy — submit it whole (see `lib/streamSetup.planModerationPolicy`). */

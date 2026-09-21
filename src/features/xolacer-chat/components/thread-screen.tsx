@@ -142,7 +142,7 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
   );
 }
 
-function MessagesUnavailable({ onRetry }: { onRetry: () => void }) {
+export function MessagesUnavailable({ onRetry }: { onRetry: () => void }) {
   return (
     <View className="flex-1 items-center justify-center gap-4 px-10">
       <AppText className="text-center text-[13px] leading-5 text-muted">
