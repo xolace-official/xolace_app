@@ -16,6 +16,11 @@ export default defineConfig({
     // is what runs them.
     include: ['convex/**/*.test.ts', 'src/**/*.test.ts'],
     setupFiles: ['./vitest.setup.ts'],
+    // edge-runtime workers occasionally race their console.log RPC against
+    // worker teardown ("Closing rpc while onUserConsoleLog was pending") —
+    // a Vitest/edge-runtime flake unrelated to test correctness. One retry
+    // absorbs it in CI.
+    retry: process.env.CI ? 1 : 0,
     // `bun test` auto-loaded .env.local; vitest only exposes VITE_-prefixed
     // vars, so the live evals would silently see no ANTHROPIC_API_KEY and
     // no-op. Empty prefix = load everything into process.env.
