@@ -218,6 +218,7 @@ export const generateMirror = internalAction({
           episodicRecall,
           claimStrength: plan.claimStrength,
           useAudioTags: context.isPremium,
+          intakeSignals: context.intakeSignals,
         });
 
         const mirrorResponse = await anthropic.messages.create({

@@ -4,6 +4,7 @@
 
 import type { ClassificationResult } from "../providers/anthropic";
 import type { ClaimStrength } from "../routing";
+import type { IntakeSignals } from "../intakeSignals";
 import { AUDIO_TAG_INSTRUCTIONS } from "./mirrorAudioTags";
 
 interface ArticulatorInput {
@@ -36,6 +37,14 @@ interface ArticulatorInput {
   // Xolace+ perk: bake ElevenLabs audio tags into the mirror for a more
   // expressive read. Gated on isPremium only — applies across all tones.
   useAudioTags?: boolean;
+  // ADR-0014: first-session-only intake personalization. Already gated to
+  // null past session one by buildSessionContext — this function does not
+  // re-check isFirstSession itself.
+  intakeSignals?: IntakeSignals | null;
+  // How many turns this session has taken so far (refinement count), handed
+  // to the model alongside intakeSignals as a corroboration signal. Omitted
+  // on the initial pass.
+  turnCount?: number;
 }
 
 /**
@@ -76,6 +85,8 @@ export function buildArticulatorPrompt(
     episodicRecall,
     claimStrength,
     useAudioTags,
+    intakeSignals,
+    turnCount,
   } = input;
 
   // The reach paths (§4.3): the blocks only hold once the standing prompt
@@ -87,6 +98,12 @@ export function buildArticulatorPrompt(
   const safeguardInstructions = getSafeguardInstructions(safeguardLevel);
   const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
   const entryTypeInstructions = getEntryTypeInstructions(entryType, isFaint);
+  const intakeInstructions = getIntakeInstructions(
+    intakeSignals,
+    entryType,
+    rawInput,
+    turnCount
+  );
   const identityLine = getIdentityLine(spaceName);
   const [lastMirror, ...olderMirrors] = recentMirrors;
 
@@ -123,7 +140,7 @@ Primary: ${classification.primaryEmotion} (${classification.primaryEmotionConfid
 Intensity: ${classification.intensity}/10 | Specificity: ${classification.specificity}/10
 ${classification.thematicTags.length > 0 ? `Themes: ${classification.thematicTags.join(", ")}` : ""}${classification.temporalContext ? `\nTemporal: ${classification.temporalContext}` : ""}
 User's words: ${classification.userLanguageTags.length > 0 ? classification.userLanguageTags.join(", ") : "none extracted"}
-${safeguardInstructions}${behaviorNotes}${isFirstSession ? "\nFirst session. Be slightly warmer. They don't know what to expect. The mirror should feel like a surprise." : ""}
+${safeguardInstructions}${behaviorNotes}${isFirstSession ? "\nFirst session. Be slightly warmer. They don't know what to expect. The mirror should feel like a surprise." : ""}${intakeInstructions}
 ${sessionMode === "night" ? getLateNightAddendum() : ""}
 ## Pattern Context (this is the emotional terrain they tend to carry, ${isFaint ? "let it inform your ear only; it may not supply anything tonight's words did not" : "let it actively shape what you notice and how precisely you name it"}; never reference past sessions explicitly)
 ${patternSummary}
@@ -359,6 +376,50 @@ The read here is clear and well-formed. Trust it. Name the feeling precisely and
     default:
       return "";
   }
+}
+
+const DISCLOSURE_STYLE_CLAIMS: Record<IntakeSignals["disclosureStyle"], string> = {
+  all_at_once: "they tend to share everything at once when something's going on",
+  bit_at_a_time: "they tend to open up gradually, a bit at a time",
+  keep_it_brief: "they prefer to keep things brief",
+  depends: "how much they share depends on the day, no fixed pattern",
+};
+
+const EMOTION_AWARENESS_CLAIMS: Record<
+  NonNullable<IntakeSignals["emotionAwareness"]>,
+  string
+> = {
+  know_and_can_say: "they usually know what they're feeling and can say it",
+  know_but_no_words: "they usually know what they're feeling but struggle to find the words for it",
+  something_off_unclear: "something often feels off but stays unclear to them",
+  numb_or_cant_tell: "they often feel numb or can't tell what they're feeling",
+};
+
+/**
+ * ADR-0014: turns first-session intake answers into a corroboration
+ * instruction, never an assumption. The model is handed both the intake
+ * claim and this session's actual behavior (entry type, what they wrote,
+ * how many turns it took) and told to only acknowledge a claim tonight's
+ * behavior actually backs up — there is no coded threshold here on purpose,
+ * that judgment call belongs to the model, same as claim-strength blending.
+ */
+function getIntakeInstructions(
+  intakeSignals: IntakeSignals | null | undefined,
+  entryType: string | undefined,
+  rawInput: string,
+  turnCount?: number
+): string {
+  if (!intakeSignals) return "";
+
+  const claims: string[] = [DISCLOSURE_STYLE_CLAIMS[intakeSignals.disclosureStyle]];
+  if (intakeSignals.emotionAwareness) {
+    claims.push(EMOTION_AWARENESS_CLAIMS[intakeSignals.emotionAwareness]);
+  }
+
+  return `\n\n## Intake Signal (first session only, unverified)
+At onboarding, before writing anything, this user said ${claims.join(" and ")}.
+This session so far: entry type "${entryType ?? "open_prompt"}", ${rawInput.length} characters written${turnCount ? `, ${turnCount} turn(s)` : ""}.
+Only let the intake claim shape your mirror if what they actually did tonight corroborates it. If tonight's behavior contradicts the claim (e.g. they wrote at length despite claiming brevity, or wrote clearly despite claiming numbness), ignore the intake claim entirely and respond only to what's actually here. If it does corroborate, you may gently acknowledge it (e.g. "it's okay you don't have the words for this yet") without making them feel profiled. Never mention intake, onboarding, or that you were told anything about them.`;
 }
 
 /**
