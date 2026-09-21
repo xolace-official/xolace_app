@@ -962,7 +962,10 @@ export default defineSchema({
     .index("by_resonance", ["status", "resonanceCount"])
 
     // Moderation queue.
-    .index("by_status", ["status", "addedAt"]),
+    .index("by_status", ["status", "addedAt"])
+
+    // Seed-dedup lookup: "does this curated seed reflection already exist?"
+    .index("by_seed_displayText", ["isSeed", "displayText"]),
 
   // ===========================================================
   // 7b. REFLECTION RESONANCES

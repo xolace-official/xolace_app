@@ -445,7 +445,7 @@ export const coldStart = action({
   returns: v.null(),
   handler: async (ctx) => {
     
-    const profile: { _id: string } | null = await ctx.runQuery(
+    const profile: { _id: Id<"emotional_profiles"> } | null = await ctx.runQuery(
       internal.dailyQuotes.getMyProfile,
       {}
     );
@@ -455,7 +455,7 @@ export const coldStart = action({
     // 30s+, which drops the WebSocket. The reactive getToday query pushes the
     // update to the client automatically when quotes land.
     await ctx.scheduler.runAfter(0, internal.jobs.quotesGenerator.processUser, {
-      emotionalProfileId: profile._id as any,
+      emotionalProfileId: profile._id,
     });
     return null;
   },

@@ -14,6 +14,53 @@ import { reconcilePushDevice } from "./lib/pushDevices";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
 import { NUDGE_NOTIFICATION_SOUND } from "./lib/notificationSounds";
 
+// Full `notification_log` document shape, mirroring schema.ts exactly.
+const notificationLogDocValidator = v.object({
+  _id: v.id("notification_log"),
+  _creationTime: v.number(),
+  emotionalProfileId: v.id("emotional_profiles"),
+  type: v.union(
+    v.literal("gentle_return"),
+    v.literal("pattern_nudge"),
+    v.literal("milestone"),
+    v.literal("affirmation"),
+    v.literal("follow_up"),
+    v.literal("kindling_ready"),
+  ),
+  content: v.string(),
+  triggerReason: v.string(),
+  delivered: v.boolean(),
+  resultedInSession: v.optional(v.boolean()),
+  suppressedReason: v.optional(
+    v.union(
+      v.literal("rate_limit"),
+      v.literal("user_inactive"),
+      v.literal("escalation_active"),
+    ),
+  ),
+  scheduledFor: v.number(),
+  sentAt: v.optional(v.number()),
+  createdAt: v.number(),
+  reachUsed: v.optional(
+    v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet")),
+  ),
+  patternContextUsed: v.optional(v.boolean()),
+  generatedBy: v.optional(
+    v.union(
+      v.literal("haiku_personalized"),
+      v.literal("template_cold_start"),
+      v.literal("template_fallback"),
+    ),
+  ),
+  landed: v.optional(
+    v.union(
+      v.literal("felt_right"),
+      v.literal("too_much"),
+      v.literal("not_enough"),
+    ),
+  ),
+});
+
 /**
  * Schedule a notification for delivery.
  * Rate-limited, then dispatched via the push notifications component.
@@ -259,6 +306,7 @@ export const markResultedInSession = mutation({
   args: {
     logId: v.id("notification_log"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
@@ -302,6 +350,7 @@ export const recordLandedPublic = mutation({
       v.literal("not_enough")
     ),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const log = await ctx.db.get("notification_log", args.notificationId);
@@ -385,6 +434,7 @@ export const loadGenerationContext = internalQuery({
  */
 export const list = query({
   args: {},
+  returns: v.array(notificationLogDocValidator),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
@@ -404,6 +454,7 @@ export const list = query({
  */
 export const lastDelivered = query({
   args: {},
+  returns: v.union(notificationLogDocValidator, v.null()),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 

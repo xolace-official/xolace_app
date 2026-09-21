@@ -6,6 +6,25 @@ import { hasPremium } from "./lib/premium";
 import { loadSemanticMatches, matchByTags } from "./lib/reflectionMatching";
 import { rateLimiter } from "./lib/rateLimits";
 
+// Full `reflections` document shape, mirroring schema.ts's `reflections` table.
+const reflectionDocValidator = v.object({
+  _id: v.id("reflections"),
+  _creationTime: v.number(),
+  displayText: v.string(),
+  primaryEmotion: v.string(),
+  granularLabel: v.optional(v.string()),
+  thematicTags: v.array(v.string()),
+  intensity: v.number(),
+  resonanceCount: v.number(),
+  status: v.union(
+    v.literal("active"),
+    v.literal("flagged"),
+    v.literal("removed"),
+  ),
+  isSeed: v.boolean(),
+  addedAt: v.number(),
+});
+
 /**
  * Match reflections for a session based on its emotional metadata.
  * Accepts sessionId, verifies ownership, derives emotion from metadata.
@@ -14,6 +33,7 @@ export const matchForSession = query({
   args: {
     sessionId: v.id("sessions"),
   },
+  returns: v.array(reflectionDocValidator),
   handler: async (ctx, args) => {
     const { profile, session } = await requireSessionOwnership(
       ctx,
@@ -46,6 +66,10 @@ export const toggleResonance = mutation({
   args: {
     reflectionId: v.id("reflections"),
   },
+  returns: v.object({
+    resonated: v.boolean(),
+    rateLimited: v.optional(v.boolean()),
+  }),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
@@ -100,6 +124,7 @@ export const hasResonated = query({
   args: {
     reflectionIds: v.array(v.id("reflections")),
   },
+  returns: v.record(v.string(), v.boolean()),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
@@ -126,6 +151,7 @@ export const listRecent = query({
   args: {
     limit: v.number(),
   },
+  returns: v.array(reflectionDocValidator),
   handler: async (ctx, args) => {
     await requireAuth(ctx);
 
@@ -153,6 +179,11 @@ export const reportReflection = mutation({
     reflectionId: v.id("reflections"),
     reason: reportReasonValidator,
   },
+  returns: v.object({
+    rateLimited: v.optional(v.boolean()),
+    alreadyReported: v.optional(v.boolean()),
+    reported: v.optional(v.boolean()),
+  }),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
@@ -266,15 +297,10 @@ export const seed = internalMutation({
       const { addedAt, ...rest } = reflection;
 
       // Upsert: skip if this seed reflection already exists (any status).
-      // Uses a full-scan filter because displayText has no index — acceptable
-      // for a one-time manual seed operation on a small table.
       const existing = await ctx.db
         .query("reflections")
-        .filter((q) =>
-          q.and(
-            q.eq(q.field("isSeed"), true),
-            q.eq(q.field("displayText"), rest.displayText)
-          )
+        .withIndex("by_seed_displayText", (q) =>
+          q.eq("isSeed", true).eq("displayText", rest.displayText)
         )
         .first();
       if (existing !== null) continue;

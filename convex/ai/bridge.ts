@@ -130,6 +130,13 @@ export const refundBridgeQuota = internalMutation({
  */
 export const getQuota = query({
   args: {},
+  returns: v.object({
+    isPremium: v.boolean(),
+    draftsRemaining: v.number(),
+    draftsTotal: v.number(),
+    plusDrafts: v.number(),
+    resetsAt: v.number(),
+  }),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     const isPremium = await hasPremium(ctx, profile);
@@ -266,6 +273,7 @@ export const requestBridgeDraft = action({
     recipientRelationship: v.optional(v.string()),
     addressTerm: v.optional(v.string()),
   },
+  returns: v.object({ draft: v.string() }),
   handler: async (ctx, args) => {
     const context = (await ctx.runQuery(
       internal.ai.bridge.gatherBridgeContext,

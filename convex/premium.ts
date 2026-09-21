@@ -42,6 +42,11 @@ const ownershipTypeValidator = v.union(
  */
 export const getEntitlement = query({
   args: {},
+  returns: v.object({
+    isPlus: v.boolean(),
+    tier: v.union(v.literal("plus"), v.literal("free")),
+    appUserId: v.id("emotional_profiles"),
+  }),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     const isPlus = await hasPremium(ctx, profile);

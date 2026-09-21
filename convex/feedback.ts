@@ -7,6 +7,7 @@ const THROTTLE_MS = 24 * 60 * 60 * 1000;
 
 export const canAskContextual = query({
   args: {},
+  returns: v.boolean(),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     const last = await ctx.db
@@ -23,6 +24,7 @@ export const canAskContextual = query({
 
 export const canAskUnsureContextual = query({
   args: {},
+  returns: v.boolean(),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     const last = await ctx.db
@@ -39,6 +41,7 @@ export const canAskUnsureContextual = query({
 
 export const canSubmitGeneral = query({
   args: {},
+  returns: v.boolean(),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     const { ok } = await rateLimiter.check(ctx, "generalFeedback", {
@@ -62,6 +65,7 @@ export const submit = mutation({
     text: v.optional(v.string()),
     selectedOption: v.optional(v.string()),
   },
+  returns: v.union(v.literal("ok"), v.null()),
   handler: async (ctx, args) => {
     const { profile } = args.sessionId
       ? await requireSessionOwnership(ctx, args.sessionId)

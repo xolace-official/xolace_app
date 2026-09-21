@@ -146,14 +146,14 @@ export const loadRecentReplies = internalQuery({
  */
 type EmotionalContext = {
   sessions: {
-    sessionId: string;
+    sessionId: Id<"sessions">;
     sessionCreatedAt: number;
     primaryEmotion: string;
     granularLabel?: string;
     thematicTags: string[];
     intensity: number;
   }[];
-  sessionIds: string[];
+  sessionIds: Id<"sessions">[];
 } | null;
 
 /**
@@ -222,7 +222,7 @@ export async function distillQuoteForUser(
         type: "session",
         text: quote.text,
         title: quote.title,
-        sessionContextIds: context.sessionIds as any,
+        sessionContextIds: context.sessionIds,
       });
 
       console.log(

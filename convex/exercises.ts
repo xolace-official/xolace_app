@@ -85,12 +85,42 @@ const stepValidator = v.object({
   syncToBreath: v.optional(v.boolean()),
 });
 
+// Full `exercises` document shape, mirroring schema.ts's `exercises` table.
+const exerciseDocValidator = v.object({
+  _id: v.id("exercises"),
+  _creationTime: v.number(),
+  title: v.string(),
+  type: v.union(
+    v.literal("breathing"),
+    v.literal("body_scan"),
+    v.literal("grounding"),
+    v.literal("self_compassion"),
+    v.literal("cognitive_reframe"),
+    v.literal("visualization"),
+    v.literal("journaling_prompt"),
+  ),
+  targetEmotions: v.array(v.string()),
+  intensityRange: v.object({ min: v.number(), max: v.number() }),
+  steps: v.array(stepValidator),
+  estimatedMinutes: v.number(),
+  active: v.boolean(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+});
+
 /**
  * Get the active exercise for a running session (matched or latest swap).
  * Returns exercise doc + filled slot values.
  */
 export const getForSession = query({
   args: { sessionId: v.id("sessions") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      exercise: exerciseDocValidator,
+      slots: v.record(v.string(), v.string()),
+    }),
+  ),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -124,6 +154,7 @@ export const getForSession = query({
  */
 export const matchForSession = query({
   args: { sessionId: v.id("sessions") },
+  returns: v.array(exerciseDocValidator),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -173,6 +204,10 @@ export const matchForSession = query({
  */
 export const getSwapOptions = query({
   args: { sessionId: v.id("sessions") },
+  returns: v.object({
+    resetId: v.union(v.id("exercises"), v.null()),
+    nextBestId: v.union(v.id("exercises"), v.null()),
+  }),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
     return await computeSwapOptions(ctx, session);
@@ -184,6 +219,7 @@ export const getSwapOptions = query({
  */
 export const getById = query({
   args: { exerciseId: v.id("exercises") },
+  returns: v.union(exerciseDocValidator, v.null()),
   handler: async (ctx, args) => {
     await requireAuth(ctx);
     return await ctx.db.get("exercises", args.exerciseId);
@@ -198,6 +234,7 @@ export const recordSwap = mutation({
     sessionId: v.id("sessions"),
     newExerciseId: v.id("exercises"),
   },
+  returns: v.object({ swapsUsed: v.number() }),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 

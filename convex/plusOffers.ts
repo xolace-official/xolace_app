@@ -1,3 +1,4 @@
+import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
@@ -27,6 +28,21 @@ const RECENT_METADATA = 30;
  */
 export const offerContext = query({
   args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      now: v.number(),
+      registerComplaint: v.boolean(),
+      safeguardActive: v.boolean(),
+      sessionId: v.union(v.id("sessions"), v.null()),
+      previousSessionId: v.union(v.id("sessions"), v.null()),
+      completedCount: v.number(),
+      firstSession: v.boolean(),
+      gapObservation: v.union(v.string(), v.null()),
+      milestoneObservation: v.union(v.string(), v.null()),
+      patternObservation: v.union(v.string(), v.null()),
+    }),
+  ),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 

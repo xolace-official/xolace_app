@@ -26,6 +26,22 @@ function seededDisplayName(profileId: string): string {
  */
 export const getSummary = query({
   args: {},
+  returns: v.object({
+    displayName: v.string(),
+    avatarId: v.string(),
+    firstSessionAt: v.union(v.number(), v.null()),
+    sessionCount: v.number(),
+    currentStreak: v.number(),
+    longestStreak: v.number(),
+    dominantEmotionTags: v.array(v.string()),
+    typicalUsagePattern: v.union(
+      v.object({ dayOfWeek: v.number(), hourOfDay: v.number() }),
+      v.null(),
+    ),
+    recentWords: v.array(v.object({ word: v.string(), count: v.number() })),
+    wordCount: v.number(),
+    premiumRequired: v.boolean(),
+  }),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
@@ -72,6 +88,14 @@ export const getSummary = query({
  */
 export const getMoodDelta = query({
   args: {},
+  returns: v.union(
+    v.null(),
+    v.literal("lighter"),
+    v.literal("same"),
+    v.literal("heavier"),
+    v.literal("unsure"),
+    v.literal("mixed"),
+  ),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
@@ -138,6 +162,23 @@ const RANK_MIN_POPULATION = (() => {
  */
 export const getReflectionRank = query({
   args: {},
+  returns: v.union(
+    v.object({
+      status: v.literal("pending"),
+      sessionCount: v.number(),
+      threshold: v.number(),
+      remaining: v.number(),
+    }),
+    v.object({
+      status: v.literal("warming"),
+      sessionCount: v.number(),
+    }),
+    v.object({
+      status: v.literal("ranked"),
+      percentile: v.number(),
+      sessionCount: v.number(),
+    }),
+  ),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
@@ -203,6 +244,22 @@ function formatWeekLabel(weekStart: Date, weekEnd: Date): string {
  */
 export const getWeekIntensity = query({
   args: { weekOffset: v.optional(v.number()) },
+  returns: v.object({
+    days: v.array(
+      v.object({
+        label: v.string(),
+        dayName: v.string(),
+        intensity: v.union(v.number(), v.null()),
+        isToday: v.boolean(),
+      }),
+    ),
+    peakDay: v.union(v.string(), v.null()),
+    hasData: v.boolean(),
+    premiumRequired: v.boolean(),
+    weekOffset: v.number(),
+    weekLabel: v.string(),
+    isEarliestWeek: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const premium = await hasPremium(ctx, profile);
@@ -274,6 +331,7 @@ export const getWeekIntensity = query({
  */
 export const joinInsightWaitlist = mutation({
   args: { feature: insightFeatureValidator },
+  returns: v.object({ alreadyJoined: v.boolean() }),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
@@ -301,6 +359,7 @@ export const joinInsightWaitlist = mutation({
  */
 export const listInsightWaitlist = query({
   args: {},
+  returns: v.array(insightFeatureValidator),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     const rows = await ctx.db
@@ -316,6 +375,7 @@ export const listInsightWaitlist = query({
  */
 export const updateDisplayName = mutation({
   args: { displayName: v.string() },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 

@@ -11,6 +11,7 @@ export const grant = mutation({
     consentType: consentTypeValidator,
     consentLanguageVersion: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const now = Date.now();
@@ -35,6 +36,7 @@ export const revoke = mutation({
   args: {
     consentType: consentTypeValidator,
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const now = Date.now();
@@ -71,6 +73,14 @@ export const getCurrentStatus = query({
   args: {
     consentType: consentTypeValidator,
   },
+  returns: v.union(
+    v.null(),
+    v.object({
+      status: v.union(v.literal("granted"), v.literal("revoked")),
+      consentLanguageVersion: v.string(),
+      createdAt: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
