@@ -7,6 +7,7 @@ import { requireAuth } from "./lib/auth";
 import { hasPremium, requirePremium } from "./lib/premium";
 import { MODERATION_UNAVAILABLE, moderateInput } from "./ai/providers/moderation";
 import { internal } from "./_generated/api";
+import { rateLimiter } from "./lib/rateLimits";
 
 function utcDateString(): string {
   return new Date().toISOString().split("T")[0];
@@ -31,25 +32,28 @@ export const getToday = query({
           q.eq("emotionalProfileId", profile._id).eq("date", today)
         )
         .collect(),
+      // Most recent completed session for this profile — checked against the
+      // time window in JS rather than via a second index field, since state
+      // is already pinned to "completed" by the index's second key.
       ctx.db
         .query("sessions")
-        .withIndex("by_profile_time", (q) =>
-          q
-            .eq("emotionalProfileId", profile._id)
-            .gte("createdAt", new Date(today + "T00:00:00Z").getTime())
+        .withIndex("by_profile_state", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("state", "completed")
         )
-        .filter((q) => q.eq(q.field("state"), "completed"))
-        .first(),
+        .order("desc")
+        .first()
+        .then((s) => (s && s.createdAt >= new Date(today + "T00:00:00Z").getTime() ? s : null)),
       hasPremium(ctx, profile),
       // Mirrors the eligibility window in ai/quotesDistiller.ts loadEmotionalContext —
       // this is what would make a session-derived quote get generated for a premium user.
       ctx.db
         .query("sessions")
-        .withIndex("by_profile_time", (q) =>
-          q.eq("emotionalProfileId", profile._id).gte("createdAt", fiveDaysAgo)
+        .withIndex("by_profile_state", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("state", "completed")
         )
-        .filter((q) => q.eq(q.field("state"), "completed"))
-        .first(),
+        .order("desc")
+        .first()
+        .then((s) => (s && s.createdAt >= fiveDaysAgo ? s : null)),
       ctx.db
         .query("preferences")
         .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
@@ -218,6 +222,19 @@ export const reply = action({
       });
     }
 
+    // Auth, ownership, and rate limit all land BEFORE the moderation call —
+    // moderateInput is a paid external request, so nothing here can spend it
+    // on behalf of an unauthenticated caller or someone else's quote.
+    const { ok, retryAfter } = await ctx.runMutation(internal.dailyQuotes.beginReply, {
+      quoteId: args.quoteId,
+    });
+    if (!ok) {
+      throw new ConvexError({
+        code: "rate_limited",
+        message: `Too many replies. Try again in ${Math.ceil(retryAfter / 1000)}s`,
+      });
+    }
+
     const moderation = await moderateInput(text);
     // Moderation down is not a clean verdict. The reply is still kept — those
     // are the person's words — but marked so the quote prompt skips it.
@@ -238,6 +255,22 @@ export const reply = action({
     });
 
     return { flagged: moderation.flagged };
+  },
+});
+
+/**
+ * Internal: auth + ownership + rate limit for `reply`, charged BEFORE the
+ * action spends a moderation call. A mutation because the rate limiter writes
+ * its own usage row — an action has no ctx.db for that.
+ */
+export const beginReply = internalMutation({
+  args: { quoteId: v.id("daily_quotes") },
+  handler: async (ctx, args): Promise<{ ok: boolean; retryAfter: number }> => {
+    const { profile } = await requireOwnQuote(ctx, args.quoteId);
+    const { ok, retryAfter } = await rateLimiter.limit(ctx, "quoteReply", {
+      key: profile._id,
+    });
+    return { ok, retryAfter: retryAfter ?? 0 };
   },
 });
 

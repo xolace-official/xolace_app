@@ -114,6 +114,10 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // pool-ceiling bucket is a noted hardening TODO.
   reflectionConsolidation: { kind: "fixed window", rate: 4, period: DAY },
 
+  // Daily quote reply — the action calls an external moderation API before
+  // any write lands, so this guards that call directly (not just the DB row).
+  quoteReply: { kind: "fixed window", rate: 4, period: DAY },
+
   // Kindling generation (docs/paths-v1.md §2.2), Plus only. One kindling per
   // profile per day: the first qualifying session of the day generates, every
   // later session that day is a no-ship (logged `rate_limited`). A user gets
