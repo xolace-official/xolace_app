@@ -117,6 +117,10 @@ export const listByFamily = query({
     page: v.array(trackItemValidator),
     isDone: v.boolean(),
     continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(
+      v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())
+    ),
   }),
   handler: async (ctx, args) => {
     await requireAuth(ctx);
