@@ -11,7 +11,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
-import { aggregatesMock, ragMock } from "./mocks.helpers";
+import { aggregatesMock, ragMock, rateLimiterMock } from "./mocks.helpers";
 import { asNewUser, type SeededUser } from "./harness.helpers";
 
 const stub = vi.hoisted(() => ({ flagged: false, unavailable: false }));
@@ -20,6 +20,10 @@ const ragDeletes = vi.hoisted(() => [] as string[]);
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../rag", () => ragMock({}, ragDeletes));
+vi.mock("../lib/rateLimits", async (orig) => ({
+  ...(await orig<typeof import("../lib/rateLimits")>()),
+  ...rateLimiterMock(),
+}));
 vi.mock("../ai/providers/moderation", async (orig) => {
   const actual = await orig<typeof import("../ai/providers/moderation")>();
   return {

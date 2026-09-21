@@ -7,10 +7,37 @@ import { requireAuth } from "./lib/auth";
 import { hasPremium, requirePremium } from "./lib/premium";
 import { MODERATION_UNAVAILABLE, moderateInput } from "./ai/providers/moderation";
 import { internal } from "./_generated/api";
+import { rateLimiter } from "./lib/rateLimits";
 
 function utcDateString(): string {
   return new Date().toISOString().split("T")[0];
 }
+
+/** Shape of a `daily_quotes` row, as returned to the client. */
+const quoteValidator = v.object({
+  _id: v.id("daily_quotes"),
+  _creationTime: v.number(),
+  emotionalProfileId: v.id("emotional_profiles"),
+  date: v.string(),
+  type: v.union(v.literal("session"), v.literal("curated")),
+  text: v.string(),
+  title: v.optional(v.string()),
+  sessionContextIds: v.optional(v.array(v.id("sessions"))),
+  isPremium: v.boolean(),
+  reaction: v.optional(v.union(v.literal("resonates"), v.literal("not_today"))),
+  savedAt: v.optional(v.number()),
+  reply: v.optional(v.string()),
+  repliedAt: v.optional(v.number()),
+  replyModeration: v.optional(
+    v.object({
+      flagged: v.boolean(),
+      categories: v.array(v.string()),
+      checkedAt: v.number(),
+      unavailable: v.optional(v.boolean()),
+    })
+  ),
+  createdAt: v.number(),
+});
 
 /**
  * Get today's quotes for the authenticated user.
@@ -18,6 +45,16 @@ function utcDateString(): string {
  */
 export const getToday = query({
   args: {},
+  returns: v.object({
+    session: v.union(quoteValidator, v.null()),
+    curated: v.union(quoteValidator, v.null()),
+    hasSessionToday: v.boolean(),
+    savedCount: v.number(),
+    saveLocked: v.boolean(),
+    sessionLocked: v.boolean(),
+    replyReaches: v.boolean(),
+    replyRemembered: v.boolean(),
+  }),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     const today = utcDateString();
@@ -31,25 +68,28 @@ export const getToday = query({
           q.eq("emotionalProfileId", profile._id).eq("date", today)
         )
         .collect(),
+      // Most recent completed session for this profile — checked against the
+      // time window in JS rather than via a second index field, since state
+      // is already pinned to "completed" by the index's second key.
       ctx.db
         .query("sessions")
-        .withIndex("by_profile_time", (q) =>
-          q
-            .eq("emotionalProfileId", profile._id)
-            .gte("createdAt", new Date(today + "T00:00:00Z").getTime())
+        .withIndex("by_profile_state", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("state", "completed")
         )
-        .filter((q) => q.eq(q.field("state"), "completed"))
-        .first(),
+        .order("desc")
+        .first()
+        .then((s) => (s && s.createdAt >= new Date(today + "T00:00:00Z").getTime() ? s : null)),
       hasPremium(ctx, profile),
       // Mirrors the eligibility window in ai/quotesDistiller.ts loadEmotionalContext —
       // this is what would make a session-derived quote get generated for a premium user.
       ctx.db
         .query("sessions")
-        .withIndex("by_profile_time", (q) =>
-          q.eq("emotionalProfileId", profile._id).gte("createdAt", fiveDaysAgo)
+        .withIndex("by_profile_state", (q) =>
+          q.eq("emotionalProfileId", profile._id).eq("state", "completed")
         )
-        .filter((q) => q.eq(q.field("state"), "completed"))
-        .first(),
+        .order("desc")
+        .first()
+        .then((s) => (s && s.createdAt >= fiveDaysAgo ? s : null)),
       ctx.db
         .query("preferences")
         .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
@@ -122,6 +162,7 @@ export const react = mutation({
     // visibly breaks. Keep it until the supported version floor has passed.
     reaction: v.union(v.literal("resonates"), v.literal("not_today")),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await requireOwnQuote(ctx, args.quoteId);
     await ctx.db.patch("daily_quotes", args.quoteId, { reaction: args.reaction });
@@ -134,6 +175,7 @@ export const react = mutation({
  */
 export const clearReaction = mutation({
   args: { quoteId: v.id("daily_quotes") },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await requireOwnQuote(ctx, args.quoteId);
     await ctx.db.patch("daily_quotes", args.quoteId, { reaction: undefined });
@@ -152,6 +194,7 @@ export const clearReaction = mutation({
  */
 export const save = mutation({
   args: { quoteId: v.id("daily_quotes") },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile, quote } = await requireOwnQuote(ctx, args.quoteId);
     await requirePremium(ctx, profile, "saving quotes");
@@ -171,6 +214,7 @@ export const save = mutation({
  */
 export const unsave = mutation({
   args: { quoteId: v.id("daily_quotes") },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile, quote } = await requireOwnQuote(ctx, args.quoteId);
     if (quote.savedAt === undefined) return null;
@@ -206,6 +250,7 @@ export const REPLY_MAX_LENGTH = 500;
  */
 export const reply = action({
   args: { quoteId: v.id("daily_quotes"), text: v.string() },
+  returns: v.object({ flagged: v.boolean() }),
   handler: async (ctx, args): Promise<{ flagged: boolean }> => {
     const text = args.text.trim();
     if (text.length === 0) {
@@ -215,6 +260,19 @@ export const reply = action({
       throw new ConvexError({
         code: "reply_too_long",
         message: `Reply exceeds ${REPLY_MAX_LENGTH} characters`,
+      });
+    }
+
+    // Auth, ownership, and rate limit all land BEFORE the moderation call —
+    // moderateInput is a paid external request, so nothing here can spend it
+    // on behalf of an unauthenticated caller or someone else's quote.
+    const { ok, retryAfter } = await ctx.runMutation(internal.dailyQuotes.beginReply, {
+      quoteId: args.quoteId,
+    });
+    if (!ok) {
+      throw new ConvexError({
+        code: "rate_limited",
+        message: `Too many replies. Try again in ${Math.ceil(retryAfter / 1000)}s`,
       });
     }
 
@@ -242,6 +300,23 @@ export const reply = action({
 });
 
 /**
+ * Internal: auth + ownership + rate limit for `reply`, charged BEFORE the
+ * action spends a moderation call. A mutation because the rate limiter writes
+ * its own usage row — an action has no ctx.db for that.
+ */
+export const beginReply = internalMutation({
+  args: { quoteId: v.id("daily_quotes") },
+  returns: v.object({ ok: v.boolean(), retryAfter: v.number() }),
+  handler: async (ctx, args): Promise<{ ok: boolean; retryAfter: number }> => {
+    const { profile } = await requireOwnQuote(ctx, args.quoteId);
+    const { ok, retryAfter } = await rateLimiter.limit(ctx, "quoteReply", {
+      key: profile._id,
+    });
+    return { ok, retryAfter: retryAfter ?? 0 };
+  },
+});
+
+/**
  * Internal: land a moderated reply on the row. Ownership is re-checked here
  * rather than in the action — auth propagates from the action, and this is the
  * only thing that actually writes.
@@ -257,6 +332,7 @@ export const writeReply = internalMutation({
       unavailable: v.optional(v.boolean()),
     }),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await requireOwnQuote(ctx, args.quoteId);
     await ctx.db.patch("daily_quotes", args.quoteId, {
@@ -289,6 +365,15 @@ export const writeReply = internalMutation({
  */
 export const listSaved = query({
   args: { paginationOpts: paginationOptsValidator },
+  returns: v.object({
+    page: v.array(quoteValidator),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(
+      v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())
+    ),
+  }),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
@@ -315,6 +400,7 @@ export const store = internalMutation({
     title: v.optional(v.string()),
     sessionContextIds: v.optional(v.array(v.id("sessions"))),
   },
+  returns: v.id("daily_quotes"),
   handler: async (ctx, args) => {
     // Idempotency check
     const existing = await ctx.db
@@ -356,9 +442,10 @@ export const store = internalMutation({
  */
 export const coldStart = action({
   args: {},
+  returns: v.null(),
   handler: async (ctx) => {
     
-    const profile: { _id: string } | null = await ctx.runQuery(
+    const profile: { _id: Id<"emotional_profiles"> } | null = await ctx.runQuery(
       internal.dailyQuotes.getMyProfile,
       {}
     );
@@ -368,7 +455,7 @@ export const coldStart = action({
     // 30s+, which drops the WebSocket. The reactive getToday query pushes the
     // update to the client automatically when quotes land.
     await ctx.scheduler.runAfter(0, internal.jobs.quotesGenerator.processUser, {
-      emotionalProfileId: profile._id as any,
+      emotionalProfileId: profile._id,
     });
     return null;
   },
@@ -379,6 +466,7 @@ export const coldStart = action({
  */
 export const getMyProfile = internalQuery({
   args: {},
+  returns: v.union(v.object({ _id: v.id("emotional_profiles") }), v.null()),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -400,6 +488,7 @@ export const hasQuotesForToday = internalQuery({
     emotionalProfileId: v.id("emotional_profiles"),
     date: v.string(),
   },
+  returns: v.boolean(),
   handler: async (ctx, args) => {
     const quotes = await ctx.db
       .query("daily_quotes")

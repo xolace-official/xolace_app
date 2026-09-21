@@ -113,6 +113,15 @@ const topicTitle = (slug: string) => {
 /** Per-family list — `active` rows only, page size chosen by the client (30). */
 export const listByFamily = query({
   args: { family: familyValidator, paginationOpts: paginationOptsValidator },
+  returns: v.object({
+    page: v.array(trackItemValidator),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(
+      v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())
+    ),
+  }),
   handler: async (ctx, args) => {
     await requireAuth(ctx);
     const result = await ctx.db

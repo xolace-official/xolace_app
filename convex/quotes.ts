@@ -92,18 +92,18 @@ export const seed = internalMutation({
     force: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    if (!args.force) {
-      const existing = await ctx.db.query("quotes").take(1);
-      if (existing.length > 0) {
-        console.log(
-          "[quotes:seed] Library not empty, skipping. Pass force=true to override.",
-        );
-        return { skipped: true };
-      }
+    const existingRows = await ctx.db.query("quotes").take(1000);
+    if (!args.force && existingRows.length > 0) {
+      console.log(
+        "[quotes:seed] Library not empty, skipping. Pass force=true to override.",
+      );
+      return { skipped: true };
     }
 
+    const existingTexts = new Set(existingRows.map((r) => r.text));
     let inserted = 0;
     for (const q of args.quotes) {
+      if (existingTexts.has(q.text)) continue;
       await ctx.db.insert("quotes", {
         text: q.text,
         title: q.title,
@@ -111,6 +111,7 @@ export const seed = internalMutation({
         source: q.source,
         language: q.language ?? "en",
       });
+      existingTexts.add(q.text);
       inserted++;
     }
     console.log(`[quotes:seed] Inserted ${inserted} quotes.`);

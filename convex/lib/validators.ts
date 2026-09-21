@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { voiceSlugValidator } from "./voices";
 
 export const resourceValidator = v.object({
   // How the value is opened: phone → tel:, url → browser, email → mailto:, text → display only
@@ -287,3 +288,55 @@ export const chatModerationCategoryValidator = v.union(
   v.literal("spam"),
   v.literal("contact"),
 );
+
+// Full `preferences` document shape, mirroring schema.ts's `preferences` table.
+// Shared by preferences.ts and users.ts so the two return validators can never drift.
+export const preferencesDocValidator = v.object({
+  _id: v.id("preferences"),
+  _creationTime: v.number(),
+  emotionalProfileId: v.id("emotional_profiles"),
+  theme: v.union(v.literal("light"), v.literal("dark"), v.literal("system")),
+  colorTheme: v.optional(v.string()),
+  motionPreference: v.optional(motionPreferenceValidator),
+  reducedMotion: v.boolean(),
+  notifications: v.object({
+    enabled: v.boolean(),
+    gentleReturn: v.boolean(),
+    patternNudge: v.boolean(),
+    milestone: v.boolean(),
+    chat: v.optional(v.boolean()),
+    reach: v.optional(
+      v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet")),
+    ),
+    quietWindow: v.optional(
+      v.object({
+        dontReachBefore: v.number(),
+        dontReachAfter: v.number(),
+      }),
+    ),
+    timezone: v.optional(v.string()),
+  }),
+  mirrorTone: mirrorToneValidator,
+  voice: v.optional(voiceSlugValidator),
+  contributeByDefault: v.boolean(),
+  dataRetentionPreference: v.union(
+    v.literal("indefinite"),
+    v.literal("6_months"),
+    v.literal("1_year"),
+  ),
+  personalMemoryEnabled: v.optional(v.boolean()),
+  preferredInputType: v.union(v.literal("text"), v.literal("voice")),
+  spaceName: v.optional(v.string()),
+  displayName: v.optional(v.string()),
+  avatarId: v.optional(v.string()),
+  spaceNamePromptDismissed: v.optional(v.boolean()),
+  registerComplaint: v.optional(v.boolean()),
+  quotes: v.optional(
+    v.object({
+      themes: v.array(v.string()),
+      notificationEnabled: v.boolean(),
+      notificationTime: v.optional(v.string()),
+      shownQuoteIds: v.array(v.id("quotes")),
+    }),
+  ),
+});

@@ -2,7 +2,11 @@ import { v } from "convex/values";
 import { mutation, query, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
-import { mirrorToneValidator, motionPreferenceValidator } from "./lib/validators";
+import {
+  preferencesDocValidator,
+  mirrorToneValidator,
+  motionPreferenceValidator,
+} from "./lib/validators";
 import { validateSpaceName } from "./lib/spaceName";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
 import { requirePremium, hasPremium } from "./lib/premium";
@@ -14,6 +18,15 @@ import { voiceSlugValidator } from "./lib/voices";
  */
 export const getQuotePreferences = query({
   args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      themes: v.array(v.string()),
+      notificationEnabled: v.boolean(),
+      notificationTime: v.optional(v.string()),
+      shownQuoteIds: v.array(v.id("quotes")),
+    }),
+  ),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     const prefs = await ctx.db
@@ -34,6 +47,7 @@ export const updateQuotePreferences = mutation({
     notificationEnabled: v.boolean(),
     notificationTime: v.optional(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
@@ -63,6 +77,7 @@ export const updateQuotePreferences = mutation({
  */
 export const get = query({
   args: {},
+  returns: preferencesDocValidator,
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
@@ -87,6 +102,7 @@ export const get = query({
  */
 export const getContributeByDefault = query({
   args: {},
+  returns: v.boolean(),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
@@ -162,6 +178,7 @@ export const update = mutation({
     // undefined = no-op. Gated below, same shape as spaceName.
     voice: v.optional(v.union(voiceSlugValidator, v.null())),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 

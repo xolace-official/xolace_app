@@ -2360,7 +2360,2163 @@ const QUOTES: {
     themes: ["inspiration"],
     source: "Helen Keller",
     language: "en",
-  },
+    },
+// New (21st sept)
+  //  purpose, hope, motivation, inspiration, growth
+  
+    {
+      text: "Waste no more time arguing about what a good man should be. Be one.",
+      title: "Be one",
+      themes: ["purpose", "motivation"],
+      source: "Marcus Aurelius",
+      language: "en",
+    },
+    {
+      text: "If a man knows not to which port he sails, no wind is favorable.",
+      title: "Which port",
+      themes: ["purpose", "motivation"],
+      source: "Seneca",
+      language: "en",
+    },
+    {
+      text: "If one advances confidently in the direction of his dreams, and endeavors to live the life which he has imagined, he will meet with a success unexpected in common hours.",
+      title: "Toward your dreams",
+      themes: ["purpose", "motivation", "inspiration"],
+      source: "Henry David Thoreau",
+      language: "en",
+    },
+    {
+      text: "Life is either a daring adventure or nothing at all.",
+      title: "Daring adventure",
+      themes: ["purpose", "inspiration"],
+      source: "Helen Keller",
+      language: "en",
+    },
+    {
+      text: "Let yourself be silently drawn by the strange pull of what you really love. It will not lead you astray.",
+      title: "The strange pull",
+      themes: ["purpose", "inspiration"],
+      source: "Rumi",
+      language: "en",
+    },
+    {
+      text: "What you seek is seeking you.",
+      title: "Seeking you",
+      themes: ["purpose", "hope"],
+      source: "Rumi",
+      language: "en",
+    },
+    {
+      text: "If you do follow your bliss you put yourself on a kind of track that has been there all the while, waiting for you, and the life that you ought to be living is the one you are living.",
+      title: "Follow your bliss",
+      themes: ["purpose", "inspiration"],
+      source: "Joseph Campbell",
+      language: "en",
+    },
+    {
+      text: "To live is the rarest thing in the world. Most people exist, that is all.",
+      title: "Rarest thing",
+      themes: ["purpose", "inspiration"],
+      source: "Oscar Wilde",
+      language: "en",
+    },
+    {
+      text: "Work is love made visible.",
+      title: "Love made visible",
+      themes: ["purpose"],
+      source: "Kahlil Gibran",
+      language: "en",
+    },
+    {
+      text: "How wonderful it is that nobody need wait a single moment before starting to improve the world.",
+      title: "Start now",
+      themes: ["purpose", "motivation", "hope"],
+      source: "Anne Frank",
+      language: "en",
+    },
+    {
+      text: "Life's most persistent and urgent question is, 'What are you doing for others?'",
+      title: "Urgent question",
+      themes: ["purpose"],
+      source: "Martin Luther King Jr.",
+      language: "en",
+    },
+    {
+      text: "Hope is not the conviction that something will turn out well, but the certainty that something makes sense, regardless of how it turns out.",
+      title: "What hope is",
+      themes: ["hope", "purpose"],
+      source: "Václav Havel",
+      language: "en",
+    },
+    {
+      text: "I am seeking, I am striving, I am in it with all my heart.",
+      title: "All my heart",
+      themes: ["motivation", "purpose"],
+      source: "Vincent van Gogh",
+      language: "en",
+    },
+    {
+      text: "Great things are done by a series of small things brought together.",
+      title: "Small things",
+      themes: ["motivation", "growth"],
+      source: "Vincent van Gogh",
+      language: "en",
+    },
+    {
+      text: "If you hear a voice within you say 'you cannot paint,' then by all means paint, and that voice will be silenced.",
+      title: "Then paint",
+      themes: ["motivation", "inspiration"],
+      source: "Vincent van Gogh",
+      language: "en",
+    },
+    {
+      text: "You may not control all the events that happen to you, but you can decide not to be reduced by them.",
+      title: "Not reduced",
+      themes: ["growth", "hope"],
+      source: "Maya Angelou",
+      language: "en",
+    },
+    {
+      text: "Nothing will work unless you do.",
+      title: "Nothing will work",
+      themes: ["motivation"],
+      source: "Maya Angelou",
+      language: "en",
+    },
+    {
+      text: "Try to be a rainbow in someone's cloud.",
+      title: "Be a rainbow",
+      themes: ["hope", "inspiration"],
+      source: "Maya Angelou",
+      language: "en",
+    },
+    {
+      text: "If there's a book that you want to read, but it hasn't been written yet, then you must write it.",
+      title: "Write it",
+      themes: ["motivation", "inspiration", "purpose"],
+      source: "Toni Morrison",
+      language: "en",
+    },
+    {
+      text: "When I dare to be powerful, to use my strength in the service of my vision, then it becomes less and less important whether I am afraid.",
+      title: "Dare to be powerful",
+      themes: ["motivation", "purpose"],
+      source: "Audre Lorde",
+      language: "en",
+    },
+    {
+      text: "You must do the thing you think you cannot do.",
+      title: "The impossible thing",
+      themes: ["motivation", "growth"],
+      source: "Eleanor Roosevelt",
+      language: "en",
+    },
+    {
+      text: "You gain strength, courage and confidence by every experience in which you really stop to look fear in the face.",
+      title: "Face the fear",
+      themes: ["growth", "motivation"],
+      source: "Eleanor Roosevelt",
+      language: "en",
+    },
+    {
+      text: "Do what you can, with what you have, where you are.",
+      title: "Where you are",
+      themes: ["motivation"],
+      source: "Theodore Roosevelt",
+      language: "en",
+    },
+    {
+      text: "Nothing in the world is worth having or worth doing unless it means effort, pain, difficulty.",
+      title: "Worth the effort",
+      themes: ["motivation", "growth"],
+      source: "Theodore Roosevelt",
+      language: "en",
+    },
+    {
+      text: "If there is no struggle, there is no progress.",
+      title: "Progress",
+      themes: ["growth", "motivation"],
+      source: "Frederick Douglass",
+      language: "en",
+    },
+    {
+      text: "A journey of a thousand miles begins with a single step.",
+      title: "First step",
+      themes: ["motivation", "growth"],
+      source: "Lao Tzu",
+      language: "en",
+    },
+    {
+      text: "Knowing others is intelligence; knowing yourself is true wisdom. Mastering others is strength; mastering yourself is true power.",
+      title: "True power",
+      themes: ["growth", "purpose"],
+      source: "Lao Tzu",
+      language: "en",
+    },
+    {
+      text: "No mud, no lotus.",
+      title: "No mud, no lotus",
+      themes: ["growth", "hope"],
+      source: "Thich Nhat Hanh",
+      language: "en",
+    },
+    {
+      text: "The future enters into us, in order to transform itself in us, long before it happens.",
+      title: "The future enters",
+      themes: ["hope", "growth"],
+      source: "Rainer Maria Rilke",
+      language: "en",
+    },
+    {
+      text: "Attention is the beginning of devotion.",
+      title: "Attention",
+      themes: ["inspiration"],
+      source: "Mary Oliver",
+      language: "en",
+    },
+    {
+      text: "It is good to have an end to journey toward; but it is the journey that matters, in the end.",
+      title: "The journey",
+      themes: ["purpose", "growth", "inspiration"],
+      source: "Ursula K. Le Guin",
+      language: "en",
+    },
+    {
+      text: "If you don't like someone's story, write your own.",
+      title: "Write your own",
+      themes: ["motivation", "inspiration"],
+      source: "Chinua Achebe",
+      language: "en",
+    },
+    {
+      text: "It's the little things citizens do. That's what will make the difference. My little thing is planting trees.",
+      title: "Little things",
+      themes: ["purpose", "motivation", "hope"],
+      source: "Wangari Maathai",
+      language: "en",
+    },
+    {
+      text: "One child, one teacher, one book, one pen can change the world.",
+      title: "One pen",
+      themes: ["hope", "inspiration"],
+      source: "Malala Yousafzai",
+      language: "en",
+    },
+    {
+      text: "Life is not easy for any of us. But what of that? We must have perseverance and above all confidence in ourselves.",
+      title: "Perseverance",
+      themes: ["motivation", "growth"],
+      source: "Marie Curie",
+      language: "en",
+    },
+    {
+      text: "I was taught that the way of progress was neither swift nor easy.",
+      title: "Neither swift",
+      themes: ["growth", "hope"],
+      source: "Marie Curie",
+      language: "en",
+    },
+    {
+      text: "What you do makes a difference, and you have to decide what kind of difference you want to make.",
+      title: "Make a difference",
+      themes: ["purpose", "motivation"],
+      source: "Jane Goodall",
+      language: "en",
+    },
+    {
+      text: "We are a way for the cosmos to know itself.",
+      title: "The cosmos knows",
+      themes: ["purpose", "inspiration"],
+      source: "Carl Sagan",
+      language: "en",
+    },
+    {
+      text: "Imagination is more important than knowledge.",
+      title: "Imagination",
+      themes: ["inspiration"],
+      source: "Albert Einstein",
+      language: "en",
+    },
+    {
+      text: "The important thing is not to stop questioning. Curiosity has its own reason for existing.",
+      title: "Keep questioning",
+      themes: ["growth", "inspiration"],
+      source: "Albert Einstein",
+      language: "en",
+    },
+    {
+      text: "The most beautiful thing we can experience is the mysterious.",
+      title: "The mysterious",
+      themes: ["inspiration"],
+      source: "Albert Einstein",
+      language: "en",
+    },
+    {
+      text: "The only way to do great work is to love what you do.",
+      title: "Love the work",
+      themes: ["purpose", "motivation", "inspiration"],
+      source: "Steve Jobs",
+      language: "en",
+    },
+    {
+      text: "Your time is limited, so don't waste it living someone else's life.",
+      title: "Your own life",
+      themes: ["purpose", "motivation"],
+      source: "Steve Jobs",
+      language: "en",
+    },
+    {
+      text: "It is impossible to live without failing at something, unless you live so cautiously that you might as well not have lived at all - in which case, you fail by default.",
+      title: "Fail by default",
+      themes: ["growth", "motivation"],
+      source: "J.K. Rowling",
+      language: "en",
+    },
+    {
+      text: "All we have to decide is what to do with the time that is given us.",
+      title: "Time given",
+      themes: ["purpose", "motivation"],
+      source: "J.R.R. Tolkien",
+      language: "en",
+    },
+    {
+      text: "Hope is the power of being cheerful in circumstances which we know to be desperate.",
+      title: "Cheerful anyway",
+      themes: ["hope"],
+      source: "G.K. Chesterton",
+      language: "en",
+    },
+    {
+      text: "Hope is a good breakfast, but it is a bad supper.",
+      title: "Good breakfast",
+      themes: ["hope"],
+      source: "Francis Bacon",
+      language: "en",
+    },
+    {
+      text: "Hope springs eternal in the human breast.",
+      title: "Springs eternal",
+      themes: ["hope"],
+      source: "Alexander Pope",
+      language: "en",
+    },
+    {
+      text: "I am no bird; and no net ensnares me: I am a free human being with an independent will.",
+      title: "No net",
+      themes: ["motivation", "inspiration"],
+      source: "Charlotte Brontë",
+      language: "en",
+    },
+    {
+      text: "I am larger, better than I thought; I did not know I held so much goodness.",
+      title: "Larger than thought",
+      themes: ["growth", "inspiration"],
+      source: "Walt Whitman",
+      language: "en",
+    },
+    {
+      text: "Things do not change; we change.",
+      title: "We change",
+      themes: ["growth"],
+      source: "Henry David Thoreau",
+      language: "en",
+    },
+    {
+      text: "Only that day dawns to which we are awake.",
+      title: "Awake to dawn",
+      themes: ["hope", "inspiration"],
+      source: "Henry David Thoreau",
+      language: "en",
+    },
+    {
+      text: "Trust thyself: every heart vibrates to that iron string.",
+      title: "Iron string",
+      themes: ["motivation", "growth"],
+      source: "Ralph Waldo Emerson",
+      language: "en",
+    },
+    {
+      text: "Write it on your heart that every day is the best day in the year.",
+      title: "Best day",
+      themes: ["hope", "inspiration"],
+      source: "Ralph Waldo Emerson",
+      language: "en",
+    },
+    {
+      text: "Nothing great was ever achieved without enthusiasm.",
+      title: "Enthusiasm",
+      themes: ["motivation", "inspiration"],
+      source: "Ralph Waldo Emerson",
+      language: "en",
+    },
+    {
+      text: "To strive, to seek, to find, and not to yield.",
+      title: "Not to yield",
+      themes: ["motivation", "purpose"],
+      source: "Alfred, Lord Tennyson",
+      language: "en",
+    },
+    {
+      text: "'Tis not too late to seek a newer world.",
+      title: "A newer world",
+      themes: ["hope", "motivation"],
+      source: "Alfred, Lord Tennyson",
+      language: "en",
+    },
+    {
+      text: "Our doubts are traitors, and make us lose the good we oft might win, by fearing to attempt.",
+      title: "Doubts are traitors",
+      themes: ["motivation", "growth"],
+      source: "William Shakespeare",
+      language: "en",
+    },
+    {
+      text: "The miserable have no other medicine but only hope.",
+      title: "Only medicine",
+      themes: ["hope"],
+      source: "William Shakespeare",
+      language: "en",
+    },
+    {
+      text: "Trust in dreams, for in them is hidden the gate to eternity.",
+      title: "Trust dreams",
+      themes: ["hope", "inspiration"],
+      source: "Kahlil Gibran",
+      language: "en",
+    },
+    {
+      text: "The deeper that sorrow carves into your being, the more joy you can contain.",
+      title: "Carved deeper",
+      themes: ["growth", "hope"],
+      source: "Kahlil Gibran",
+      language: "en",
+    },
+    {
+      text: "Your pain is the breaking of the shell that encloses your understanding.",
+      title: "Breaking the shell",
+      themes: ["growth"],
+      source: "Kahlil Gibran",
+      language: "en",
+    },
+    {
+      text: "Life shrinks or expands in proportion to one's courage.",
+      title: "Expanding life",
+      themes: ["growth", "motivation"],
+      source: "Anaïs Nin",
+      language: "en",
+    },
+    {
+      text: "One must still have chaos in oneself to be able to give birth to a dancing star.",
+      title: "Dancing star",
+      themes: ["inspiration", "growth"],
+      source: "Friedrich Nietzsche",
+      language: "en",
+    },
+    {
+      text: "It is not because things are difficult that we do not dare; it is because we do not dare that they are difficult.",
+      title: "Dare first",
+      themes: ["motivation", "growth"],
+      source: "Seneca",
+      language: "en",
+    },
+    {
+      text: "First say to yourself what you would be; and then do what you have to do.",
+      title: "First, decide",
+      themes: ["purpose", "motivation"],
+      source: "Epictetus",
+      language: "en",
+    },
+    {
+      text: "The impediment to action advances action. What stands in the way becomes the way.",
+      title: "The way",
+      themes: ["growth", "motivation"],
+      source: "Marcus Aurelius",
+      language: "en",
+    },
+    {
+      text: "Dripping water hollows out stone, not through force but through persistence.",
+      title: "Dripping water",
+      themes: ["motivation", "growth"],
+      source: "Ovid",
+      language: "en",
+    },
+    {
+      text: "Fortune favors the bold.",
+      title: "The bold",
+      themes: ["motivation"],
+      source: "Virgil",
+      language: "en",
+    },
+    {
+      text: "Faith is the bird that feels the light and sings when the dawn is still dark.",
+      title: "Bird of faith",
+      themes: ["hope", "inspiration"],
+      source: "Rabindranath Tagore",
+      language: "en",
+    },
+    {
+      text: "Let me not pray to be sheltered from dangers, but to be fearless in facing them.",
+      title: "Fearless",
+      themes: ["motivation", "growth"],
+      source: "Rabindranath Tagore",
+      language: "en",
+    },
+    {
+      text: "The butterfly counts not months but moments, and has time enough.",
+      title: "Time enough",
+      themes: ["purpose", "inspiration"],
+      source: "Rabindranath Tagore",
+      language: "en",
+    },
+    {
+      text: "Success is to be measured not so much by the position that one has reached in life as by the obstacles which he has overcome while trying to succeed.",
+      title: "Obstacles overcome",
+      themes: ["growth", "motivation"],
+      source: "Booker T. Washington",
+      language: "en",
+    },
+    {
+      text: "The mystery of human existence lies not in just staying alive, but in finding something to live for.",
+      title: "Something to live for",
+      themes: ["purpose"],
+      source: "Fyodor Dostoevsky",
+      language: "en",
+    },
+    {
+      text: "Taking a new step, uttering a new word, is what people fear most.",
+      title: "A new step",
+      themes: ["growth", "motivation"],
+      source: "Fyodor Dostoevsky",
+      language: "en",
+    },
+    {
+      text: "Everyone thinks of changing the world, but no one thinks of changing himself.",
+      title: "Start within",
+      themes: ["growth"],
+      source: "Leo Tolstoy",
+      language: "en",
+    },
+    {
+      text: "Knowing is not enough; we must apply. Willing is not enough; we must do.",
+      title: "Knowing, doing",
+      themes: ["motivation"],
+      source: "Johann Wolfgang von Goethe",
+      language: "en",
+    },
+    {
+      text: "When you want something, all the universe conspires in helping you to achieve it.",
+      title: "Universe conspires",
+      themes: ["motivation", "hope", "inspiration"],
+      source: "Paulo Coelho",
+      language: "en",
+    },
+    {
+      text: "It's the possibility of having a dream come true that makes life interesting.",
+      title: "Possible dreams",
+      themes: ["hope", "purpose"],
+      source: "Paulo Coelho",
+      language: "en",
+    },
+    {
+      text: "Set your life on fire. Seek those who fan your flames.",
+      title: "Set on fire",
+      themes: ["inspiration", "motivation"],
+      source: "Rumi",
+      language: "en",
+    },
+    {
+      text: "Don't be satisfied with stories, how things have gone with others. Unfold your own myth.",
+      title: "Your own myth",
+      themes: ["purpose", "inspiration"],
+      source: "Rumi",
+      language: "en",
+    },
+    {
+      text: "The purpose of art is to lay bare the questions that have been hidden by the answers.",
+      title: "Bare questions",
+      themes: ["inspiration", "purpose"],
+      source: "James Baldwin",
+      language: "en",
+    },
+    {
+      text: "Practice any art ... no matter how well or badly, not to get money and fame, but to experience becoming, to find out what's inside you, to make your soul grow.",
+      title: "Make it grow",
+      themes: ["growth", "inspiration", "purpose"],
+      source: "Kurt Vonnegut",
+      language: "en",
+    },
+    {
+      text: "I hope you will make new mistakes. Make glorious, amazing mistakes.",
+      title: "New mistakes",
+      themes: ["growth", "motivation"],
+      source: "Neil Gaiman",
+      language: "en",
+    },
+    {
+      text: "Man's main task in life is to give birth to himself, to become what he potentially is.",
+      title: "Give birth to self",
+      themes: ["growth", "purpose"],
+      source: "Erich Fromm",
+      language: "en",
+    },
+    {
+      text: "A musician must make music, an artist must paint, a poet must write, if he is to be ultimately at peace with himself. What a man can be, he must be.",
+      title: "What one can be",
+      themes: ["purpose", "growth"],
+      source: "Abraham Maslow",
+      language: "en",
+    },
+    {
+      text: "Human beings are not born once and for all on the day their mothers give birth to them, but that life obliges them over and over again to give birth to themselves.",
+      title: "Born again",
+      themes: ["growth"],
+      source: "Gabriel García Márquez",
+      language: "en",
+    },
+    {
+      text: "For all that has been, thanks. To all that shall be, yes.",
+      title: "Thanks, and yes",
+      themes: ["hope", "purpose"],
+      source: "Dag Hammarskjöld",
+      language: "en",
+    },
+    {
+      text: "Believe that life is worth living, and your belief will help create the fact.",
+      title: "Create the fact",
+      themes: ["hope", "purpose"],
+      source: "William James",
+      language: "en",
+    },
+    {
+      text: "Hope is being able to see that there is light despite all of the darkness.",
+      title: "Light in darkness",
+      themes: ["hope"],
+      source: "Desmond Tutu",
+      language: "en",
+    },
+    {
+      text: "Do your little bit of good where you are; it's those little bits of good put together that overwhelm the world.",
+      title: "Bits of good",
+      themes: ["purpose", "motivation", "hope"],
+      source: "Desmond Tutu",
+      language: "en",
+    },
+    {
+      text: "Genius is one per cent inspiration, ninety-nine per cent perspiration.",
+      title: "Perspiration",
+      themes: ["motivation", "inspiration"],
+      source: "Thomas Edison",
+      language: "en",
+    },
+    {
+      text: "To improve is to change; so to be perfect is to have changed often.",
+      title: "Changed often",
+      themes: ["growth"],
+      source: "Winston Churchill",
+      language: "en",
+    },
+    {
+      text: "The mountains are calling and I must go.",
+      title: "Mountains calling",
+      themes: ["inspiration", "purpose"],
+      source: "John Muir",
+      language: "en",
+    },
+    {
+      text: "Those who contemplate the beauty of the earth find reserves of strength that will endure as long as life lasts.",
+      title: "Reserves of strength",
+      themes: ["inspiration", "hope"],
+      source: "Rachel Carson",
+      language: "en",
+    },
+    {
+      text: "If Winter comes, can Spring be far behind?",
+      title: "Spring ahead",
+      themes: ["hope"],
+      source: "Percy Bysshe Shelley",
+      language: "en",
+    },
+    {
+      text: "Ah, but a man's reach should exceed his grasp, or what's a heaven for?",
+      title: "Reach and grasp",
+      themes: ["motivation", "growth", "inspiration"],
+      source: "Robert Browning",
+      language: "en",
+    },
+    {
+      text: "No one is useless in this world who lightens the burden of it to anyone else.",
+      title: "Lightening burdens",
+      themes: ["purpose"],
+      source: "Charles Dickens",
+      language: "en",
+    },
+    {
+      text: "That the powerful play goes on, and you may contribute a verse.",
+      title: "Contribute a verse",
+      themes: ["purpose", "inspiration"],
+      source: "Walt Whitman",
+      language: "en",
+    },
+    {
+      text: "Energy is eternal delight.",
+      title: "Eternal delight",
+      themes: ["inspiration", "motivation"],
+      source: "William Blake",
+      language: "en",
+    },
+    {
+      text: "It is only with the heart that one can see rightly; what is essential is invisible to the eye.",
+      title: "Seeing rightly",
+      themes: ["inspiration", "purpose"],
+      source: "Antoine de Saint-Exupéry",
+      language: "en",
+    },
+    {
+      text: "Well done is better than well said.",
+      title: "Well done",
+      themes: ["motivation"],
+      source: "Benjamin Franklin",
+      language: "en",
+    },
+
+    
+    // identity, self-worth, acceptance, healing
+    
+    {
+    text: "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.",
+    title: "Greatest accomplishment",
+    themes: ["identity", "acceptance", "self-worth"],
+    source: "Ralph Waldo Emerson",
+    language: "en"
+    },
+    {
+    text: "Because one believes in oneself, one doesn't try to convince others. Because one is content with oneself, one doesn't need others' approval.",
+    title: "Content with oneself",
+    themes: ["self-worth", "acceptance"],
+    source: "Lao Tzu",
+    language: "en"
+    },
+    {
+    text: "Care about what other people think and you will always be their prisoner.",
+    title: "Their prisoner",
+    themes: ["self-worth", "identity"],
+    source: "Lao Tzu",
+    language: "en"
+    },
+    {
+    text: "Accepting yourself is the seed of all growth.",
+    title: "The seed",
+    themes: ["acceptance", "healing"],
+    source: "Carl Rogers",
+    language: "en"
+    },
+    {
+    text: "Love yourself first and everything else falls into line.",
+    title: "Love yourself first",
+    themes: ["self-worth", "healing"],
+    source: "Lucille Ball",
+    language: "en"
+    },
+    {
+    text: "Noli te bastardes carborundorum. Don't let the bastards grind you down.",
+    title: "Don't let them",
+    themes: ["identity", "self-worth"],
+    source: "Margaret Atwood",
+    language: "en"
+    },
+    {
+    text: "We cannot change anything until we accept it. Condemnation does not liberate, it oppresses.",
+    title: "Accept to change",
+    themes: ["acceptance", "healing"],
+    source: "Carl Jung",
+    language: "en"
+    },
+    {
+    text: "I am not what happened to me, I am what I choose to become.",
+    title: "What I choose",
+    themes: ["identity", "healing"],
+    source: "Carl Jung",
+    language: "en"
+    },
+    {
+    text: "What lies behind us and what lies before us are tiny matters compared to what lies within us.",
+    title: "What lies within",
+    themes: ["identity", "self-worth"],
+    source: "Ralph Waldo Emerson",
+    language: "en"
+    },
+    {
+    text: "Healing takes courage, and we all have courage, even if we have to dig a little to find it.",
+    title: "Healing takes courage",
+    themes: ["healing", "self-worth"],
+    source: "Tori Amos",
+    language: "en"
+    },
+    {
+    text: "The privilege of a lifetime is to become who you truly are.",
+    title: "Who you truly are",
+    themes: ["identity", "acceptance"],
+    source: "Carl Jung",
+    language: "en"
+    },
+    {
+    text: "Never be bullied into silence. Never allow yourself to be made a victim. Accept no one's definition of your life; define yourself.",
+    title: "Define yourself",
+    themes: ["identity", "self-worth"],
+    source: "Harvey Fierstein",
+    language: "en"
+    },
+    {
+    text: "Nothing can bring you peace but yourself.",
+    title: "Bring you peace",
+    themes: ["acceptance", "healing"],
+    source: "Ralph Waldo Emerson",
+    language: "en"
+    },
+    {
+    text: "Turn your wounds into wisdom.",
+    title: "Wounds to wisdom",
+    themes: ["healing", "acceptance"],
+    source: "Oprah Winfrey",
+    language: "en"
+    },
+    {
+    text: "To be beautiful means to be yourself. You don’t need to be accepted by others. You need to accept yourself.",
+    title: "To be beautiful",
+    themes: ["acceptance", "self-worth", "identity"],
+    source: "Thich Nhat Hanh",
+    language: "en"
+    },
+    {
+    text: "Smile, breathe, and go slowly.",
+    title: "Go slowly",
+    themes: ["healing", "acceptance"],
+    source: "Thich Nhat Hanh",
+    language: "en"
+    },
+    {
+    text: "He who acts in holiness reporting to himself alone is truly free.",
+    title: "Truly free",
+    themes: ["identity", "self-worth"],
+    source: "Baruch Spinoza",
+    language: "en"
+    },
+    {
+    text: "Self-care is how you take your power back.",
+    title: "Take your power",
+    themes: ["self-worth", "healing"],
+    source: "Lalah Delia",
+    language: "en"
+    },
+    {
+    text: "I carry my landscapes with me.",
+    title: "My landscapes",
+    themes: ["identity", "acceptance"],
+    source: "Joan Mitchell",
+    language: "en"
+    },
+    {
+    text: "Lighten up on yourself. No one is perfect. Gently accept your humanness.",
+    title: "Gently accept",
+    themes: ["acceptance", "self-worth"],
+    source: "Deborah Day",
+    language: "en"
+    },
+    {
+    text: "Act as if what you do makes a difference. It does.",
+    title: "It does",
+    themes: ["self-worth", "identity"],
+    source: "William James",
+    language: "en"
+    },
+    {
+    text: "The highest form of human intelligence is to observe without executing judgment.",
+    title: "Observe without judgment",
+    themes: ["acceptance", "healing"],
+    source: "Jiddu Krishnamurti",
+    language: "en"
+    },
+    {
+    text: "Be who you are and say what you feel, because those who mind don't matter, and those who matter don't mind.",
+    title: "Be who you are",
+    themes: ["identity", "self-worth", "acceptance"],
+    source: "Bernard M. Baruch",
+    language: "en"
+    },
+    {
+    text: "In the middle of difficulty lies opportunity.",
+    title: "Opportunity",
+    themes: ["healing", "acceptance"],
+    source: "Albert Einstein",
+    language: "en"
+    },
+    {
+    text: "You are allowed to be both a masterpiece and a half-written story at the same time.",
+    title: "Masterpiece and story",
+    themes: ["self-worth", "acceptance", "identity"],
+    source: "Sophia Bush",
+    language: "en"
+    },
+    {
+    text: "Forgiveness is the fragrance that the violet sheds on the heel that has crushed it.",
+    title: "Forgiveness",
+    themes: ["healing", "acceptance"],
+    source: "Mark Twain",
+    language: "en"
+    },
+    {
+    text: "When you accept yourself, the whole world accepts you.",
+    title: "Whole world accepts",
+    themes: ["acceptance", "self-worth"],
+    source: "Lao Tzu",
+    language: "en"
+    },
+    {
+    text: "I am my own sanctuary and I can be reborn as many times as I choose.",
+    title: "My own sanctuary",
+    themes: ["identity", "healing", "self-worth"],
+    source: "Lady Gaga",
+    language: "en"
+    },
+    {
+    text: "True humility is not thinking less of yourself, it is thinking of yourself less.",
+    title: "True humility",
+    themes: ["identity", "self-worth"],
+    source: "C.S. Lewis",
+    language: "en"
+    },
+    {
+    text: "We are all broken, that's how the light gets in.",
+    title: "We are all broken",
+    themes: ["healing", "acceptance"],
+    source: "Ernest Hemingway",
+    language: "en"
+    },
+    {
+    text: "If you have no confidence in self, you are twice defeated in the race of life.",
+    title: "Twice defeated",
+    themes: ["self-worth", "identity"],
+    source: "Marcus Garvey",
+    language: "en"
+    },
+    {
+    text: "To love oneself is the beginning of a lifelong romance.",
+    title: "Lifelong romance",
+    themes: ["self-worth", "acceptance"],
+    source: "Oscar Wilde",
+    language: "en"
+    },
+    {
+    text: "I am deliberate and afraid of nothing.",
+    title: "Afraid of nothing",
+    themes: ["identity", "self-worth"],
+    source: "Audre Lorde",
+    language: "en"
+    },
+    {
+    text: "Caring for myself is not self-indulgence, it is self-preservation, and that is an act of political warfare.",
+    title: "Self-preservation",
+    themes: ["self-worth", "healing"],
+    source: "Audre Lorde",
+    language: "en"
+    },
+    {
+    text: "Acceptance doesn't mean resignation; it means understanding that something is what it is and that there's got to be a way through it.",
+    title: "A way through",
+    themes: ["acceptance", "healing"],
+    source: "Michael J. Fox",
+    language: "en"
+    },
+    {
+    text: "Finish each day and be done with it. You have done what you could.",
+    title: "Be done with it",
+    themes: ["acceptance", "healing"],
+    source: "Ralph Waldo Emerson",
+    language: "en"
+    },
+
+    //  grief-and-loss, relationships, loneliness, burnout
+
+    
+      {
+        text: "No one ever told me that grief felt so like fear.",
+        title: "Grief like fear",
+        themes: ["grief-and-loss"],
+        source: "C. S. Lewis",
+        language: "en"
+      },
+      {
+        text: "It’s so much darker when a light goes out than it would have been if it had never shone.",
+        title: "Darker light",
+        themes: ["grief-and-loss"],
+        source: "John Steinbeck",
+        language: "en"
+      },
+      {
+        text: "What we have once enjoyed deeply we can never lose. All that we love deeply becomes a part of us.",
+        title: "Becomes part",
+        themes: ["grief-and-loss", "relationships"],
+        source: "Helen Keller",
+        language: "en"
+      },
+      {
+        text: "Death ends a life, not a relationship.",
+        title: "Not a relationship",
+        themes: ["grief-and-loss", "relationships"],
+        source: "Mitch Albom",
+        language: "en"
+      },
+      {
+        text: "There is no grief like the grief that does not speak.",
+        title: "Silent grief",
+        themes: ["grief-and-loss"],
+        source: "Henry Wadsworth Longfellow",
+        language: "en"
+      },
+      {
+        text: "I will not say: do not weep; for not all tears are an evil.",
+        title: "Not all tears",
+        themes: ["grief-and-loss"],
+        source: "J. R. R. Tolkien",
+        language: "en"
+      },
+      {
+        text: "How lucky I am to have something that makes saying goodbye so hard.",
+        title: "Hard goodbye",
+        themes: ["grief-and-loss", "relationships"],
+        source: "A. A. Milne",
+        language: "en"
+      },
+      {
+        text: "Grief does not change you. It reveals you.",
+        title: "Reveals you",
+        themes: ["grief-and-loss"],
+        source: "John Green",
+        language: "en"
+      },
+      {
+        text: "Only people who are capable of loving strongly can also suffer great sorrow.",
+        title: "Strong love",
+        themes: ["grief-and-loss", "relationships"],
+        source: "Leo Tolstoy",
+        language: "en"
+      },
+      {
+        text: "Sometimes, only one person is missing, and the whole world seems depopulated.",
+        title: "One missing",
+        themes: ["grief-and-loss", "loneliness"],
+        source: "Alphonse de Lamartine",
+        language: "en"
+      },
+      {
+        text: "Love consists of this: two solitudes that meet, protect and greet each other.",
+        title: "Two solitudes",
+        themes: ["relationships", "loneliness"],
+        source: "Rainer Maria Rilke",
+        language: "en"
+      },
+      {
+        text: "You don’t love because: you love despite; not for the virtues, but despite the faults.",
+        title: "Love despite",
+        themes: ["relationships"],
+        source: "William Faulkner",
+        language: "en"
+      },
+      {
+        text: "There is no remedy for love but to love more.",
+        title: "Love more",
+        themes: ["relationships"],
+        source: "Henry David Thoreau",
+        language: "en"
+      },
+      {
+        text: "Love does not begin and end the way we seem to think it does. Love is a battle, love is a war; love is a growing up.",
+        title: "Love is war",
+        themes: ["relationships"],
+        source: "James Baldwin",
+        language: "en"
+      },
+      {
+        text: "Being deeply loved by someone gives you strength, while loving someone deeply gives you courage.",
+        title: "Strength courage",
+        themes: ["relationships"],
+        source: "Lao Tzu",
+        language: "en"
+      },
+      {
+        text: "The greatest happiness of life is the conviction that we are loved; loved for ourselves, or rather, loved in spite of ourselves.",
+        title: "Loved in spite",
+        themes: ["relationships"],
+        source: "Victor Hugo",
+        language: "en"
+      },
+      {
+        text: "We are born alone, we live alone, we die alone. Only through our love and friendship can we create the illusion that we’re not alone.",
+        title: "Illusion alone",
+        themes: ["relationships", "loneliness"],
+        source: "Orson Welles",
+        language: "en"
+      },
+      {
+        text: "If you find someone you love in your life, then hang on to that love.",
+        title: "Hang on",
+        themes: ["relationships"],
+        source: "Princess Diana",
+        language: "en"
+      },
+      {
+        text: "Love is that condition in which the happiness of another person is essential to your own.",
+        title: "Their happiness",
+        themes: ["relationships"],
+        source: "Robert A. Heinlein",
+        language: "en"
+      },
+      {
+        text: "The purpose of a relationship is not to have another who might complete you; but to have another with whom you might share your completeness.",
+        title: "Share completeness",
+        themes: ["relationships"],
+        source: "Neale Donald Walsch",
+        language: "en"
+      },
+      {
+        text: "If you meet a loner, no matter what they tell you, it’s not because they enjoy solitude. It’s because they have tried to blend into the world before, and people continue to disappoint them.",
+        title: "Tried to blend",
+        themes: ["loneliness"],
+        source: "Jodi Picoult",
+        language: "en"
+      },
+      {
+        text: "Music was my refuge. I could crawl into the space between the notes and curl my back to loneliness.",
+        title: "Space between",
+        themes: ["loneliness"],
+        source: "Maya Angelou",
+        language: "en"
+      },
+      {
+        text: "Alone is a fact, a condition where no one else is around. Lonely is how you feel about that.",
+        title: "Alone or lonely",
+        themes: ["loneliness"],
+        source: "Twyla Tharp",
+        language: "en"
+      },
+      {
+        text: "Great men are like eagles, and build their nest on some lofty solitude.",
+        title: "Lofty solitude",
+        themes: ["loneliness"],
+        source: "Arthur Schopenhauer",
+        language: "en"
+      },
+      {
+        text: "The thing that makes you exceptional, if you are at all, is inevitably that which makes you lonely.",
+        title: "Makes you lonely",
+        themes: ["loneliness"],
+        source: "Alan Watts",
+        language: "en"
+      },
+      {
+        text: "I felt a haunting loneliness sometimes, and felt it in others—young clerks in the dusk, wasting the most poignant moments of night and life.",
+        title: "Haunting loneliness",
+        themes: ["loneliness"],
+        source: "F. Scott Fitzgerald",
+        language: "en"
+      },
+      {
+        text: "Loneliness is and always has been the central and inevitable experience of every man.",
+        title: "Inevitable experience",
+        themes: ["loneliness"],
+        source: "Thomas Wolfe",
+        language: "en"
+      },
+      {
+        text: "We’re all lonely for something we don’t know we’re lonely for.",
+        title: "Something unknown",
+        themes: ["loneliness"],
+        source: "David Foster Wallace",
+        language: "en"
+      },
+      {
+        text: "Nothing makes us lonelier than our secrets.",
+        title: "Our secrets",
+        themes: ["loneliness"],
+        source: "Paul Tournier",
+        language: "en"
+      },
+      {
+        text: "I have to be alone very often. I’d be quite happy if I spent from Saturday night until Monday morning alone in my apartment. That’s how I refuel.",
+        title: "How I refuel",
+        themes: ["loneliness"],
+        source: "Audrey Hepburn",
+        language: "en"
+      },
+      {
+        text: "If you get tired, learn to rest, not to quit.",
+        title: "Rest not quit",
+        themes: ["burnout"],
+        source: "Banksy",
+        language: "en"
+      },
+      {
+        text: "Our fatigue is often caused not by work, but by worry, frustration and resentment.",
+        title: "Not by work",
+        themes: ["burnout"],
+        source: "Dale Carnegie",
+        language: "en"
+      },
+      {
+        text: "Fatigue makes cowards of us all.",
+        title: "Makes cowards",
+        themes: ["burnout"],
+        source: "Vince Lombardi",
+        language: "en"
+      },
+      {
+        text: "The time to relax is when you don’t have time for it.",
+        title: "Time to relax",
+        themes: ["burnout"],
+        source: "Sydney J. Harris",
+        language: "en"
+      },
+      {
+        text: "If you want rest, you have to take it. You have to resist the lure of busyness, make time for rest, take it seriously, and protect it.",
+        title: "Take rest",
+        themes: ["burnout"],
+        source: "Alex Soojung-Kim Pang",
+        language: "en"
+      },
+      {
+        text: "In dealing with those who are undergoing great suffering, if you feel burnout setting in, if you feel demoralized and exhausted, it is best to withdraw and restore yourself.",
+        title: "Withdraw restore",
+        themes: ["burnout"],
+        source: "Dalai Lama",
+        language: "en"
+      },
+      {
+        text: "Burnout is nature’s way of telling you, you’ve been going through the motions your soul has departed; you’re a zombie, a member of the walking dead.",
+        title: "Soul departed",
+        themes: ["burnout"],
+        source: "Herbert J. Freudenberger",
+        language: "en"
+      },
+      {
+        text: "Rest is, quite simply, when you stop using a part of you that’s used up, worn out, damaged, or inflamed, so that it has a chance to renew itself.",
+        title: "Chance to renew",
+        themes: ["burnout"],
+        source: "Emily Nagoski",
+        language: "en"
+      },
+      {
+        text: "Laughter and tears are both responses to frustration and exhaustion. I myself prefer to laugh, since there is less cleaning up to do afterward.",
+        title: "Prefer to laugh",
+        themes: ["burnout"],
+        source: "Kurt Vonnegut",
+        language: "en"
+      },
+      {
+        text: "Exhaustion pays no mind to age or beauty. Like rain and hail and floods.",
+        title: "Pays no mind",
+        themes: ["burnout"],
+        source: "Haruki Murakami",
+        language: "en"
+      },
+      {
+        text: "Where you used to be, there is a hole in the world, which I find myself constantly walking around in the daytime, and falling in at night.",
+        title: "Hole in world",
+        themes: ["grief-and-loss", "loneliness"],
+        source: "Edna St. Vincent Millay",
+        language: "en"
+      },
+      {
+        text: "The reality is that you will grieve forever. You will not ‘get over’ the loss of a loved one; you will learn to live with it.",
+        title: "Learn to live",
+        themes: ["grief-and-loss"],
+        source: "Elisabeth Kübler-Ross",
+        language: "en"
+      },
+      {
+        text: "Absence is a house so vast that inside you will pass through its walls and hang pictures on the air.",
+        title: "House of absence",
+        themes: ["grief-and-loss", "loneliness"],
+        source: "Pablo Neruda",
+        language: "en"
+      },
+      {
+        text: "To live in hearts we leave behind is not to die.",
+        title: "Live in hearts",
+        themes: ["grief-and-loss", "relationships"],
+        source: "Thomas Campbell",
+        language: "en"
+      },
+      {
+        text: "Love is not just looking at each other, it’s looking in the same direction.",
+        title: "Same direction",
+        themes: ["relationships"],
+        source: "Antoine de Saint-Exupéry",
+        language: "en"
+      },
+      {
+        text: "I never found the companion that was so companionable as solitude.",
+        title: "Companionable solitude",
+        themes: ["loneliness"],
+        source: "Henry David Thoreau",
+        language: "en"
+      },
+      {
+        text: "We enter solitude, in which also we lose loneliness.",
+        title: "Lose loneliness",
+        themes: ["loneliness"],
+        source: "Wendell Berry",
+        language: "en"
+      },
+      {
+        text: "Solitude is the path over which destiny endeavors to lead man to himself.",
+        title: "Path to himself",
+        themes: ["loneliness"],
+        source: "Hermann Hesse",
+        language: "en"
+      },
+      {
+        text: "If your work is your self, when you cease to work, you cease to exist.",
+        title: "Cease to exist",
+        themes: ["burnout"],
+        source: "Alex Soojung-Kim Pang",
+        language: "en"
+      },
+      {
+        text: "The supreme quality of great men is the power of resting. Anxiety, restlessness, fretting are marks of weakness.",
+        title: "Power of resting",
+        themes: ["burnout"],
+        source: "J. R. Seeley",
+        language: "en"
+      },
+      {
+        text: "Rest when you’re weary. Refresh and renew yourself, your body, your mind, your spirit. Then get back to work.",
+        title: "Refresh renew",
+        themes: ["burnout"],
+        source: "Ralph Marston",
+        language: "en"
+      },
+      {
+        text: "Fatigue is the best pillow.",
+        title: "Best pillow",
+        themes: ["burnout"],
+        source: "Benjamin Franklin",
+        language: "en"
+      },
+      {
+        text: "What is grief, if not love persevering?",
+        title: "Love persevering",
+        themes: ["grief-and-loss", "relationships"],
+        source: "Vision (WandaVision)",
+        language: "en"
+      },
+      {
+        text: "Love looks not with the eyes, but with the mind.",
+        title: "With the mind",
+        themes: ["relationships"],
+        source: "William Shakespeare",
+        language: "en"
+      },
+      {
+        text: "I am too alone in the world, yet not alone enough to make every minute holy.",
+        title: "Too alone",
+        themes: ["loneliness"],
+        source: "Rainer Maria Rilke",
+        language: "en"
+      },
+      {
+        text: "The loneliest moment in someone’s life is when they are watching their whole world fall apart.",
+        title: "World fall apart",
+        themes: ["loneliness", "grief-and-loss"],
+        source: "F. Scott Fitzgerald",
+        language: "en"
+      },
+      {
+        text: "Just because you take breaks doesn’t mean you’re broken.",
+        title: "Not broken",
+        themes: ["burnout"],
+        source: "Curtis Tyrone Jones",
+        language: "en"
+      },
+      {
+        text: "Everything needs a break.",
+        title: "Needs a break",
+        themes: ["burnout"],
+        source: "Toba Beta",
+        language: "en"
+      },
+      {
+        text: "She was no longer wrestling with the grief, but could sit down with it as a lasting companion and make it a sharer in her thoughts.",
+        title: "Lasting companion",
+        themes: ["grief-and-loss"],
+        source: "George Eliot",
+        language: "en"
+      },
+      {
+        text: "Have enough courage to trust love one more time and always one more time.",
+        title: "One more time",
+        themes: ["relationships"],
+        source: "Maya Angelou",
+        language: "en"
+      },
+      {
+        text: "The greatest thing in the world is to know how to belong to oneself.",
+        title: "Belong to oneself",
+        themes: ["loneliness"],
+        source: "Michel de Montaigne",
+        language: "en"
+      },
+      {
+        text: "We read to know we are not alone.",
+        title: "Not alone",
+        themes: ["loneliness"],
+        source: "William Nicholson",
+        language: "en"
+      },
+      {
+        text: "Living in a constant chase after gain compels people to expend their spirit to the point of exhaustion.",
+        title: "Point of exhaustion",
+        themes: ["burnout"],
+        source: "Friedrich Nietzsche",
+        language: "en"
+      },
+      {
+        text: "It is our best work that God wants, not the dregs of our exhaustion.",
+        title: "Not the dregs",
+        themes: ["burnout"],
+        source: "George MacDonald",
+        language: "en"
+      },
+      {
+        text: "Grief fills the room up of my absent child, lies in his bed, walks up and down with me.",
+        title: "Fills the room",
+        themes: ["grief-and-loss"],
+        source: "William Shakespeare",
+        language: "en"
+      },
+      {
+        text: "Never love anyone who treats you like you’re ordinary.",
+        title: "Not ordinary",
+        themes: ["relationships"],
+        source: "Oscar Wilde",
+        language: "en"
+      },
+      {
+        text: "I want to be with those who know secret things or else alone.",
+        title: "Secret things",
+        themes: ["loneliness"],
+        source: "Rainer Maria Rilke",
+        language: "en"
+      },
+      {
+        text: "How we need another soul to cling to.",
+        title: "Another soul",
+        themes: ["loneliness", "relationships"],
+        source: "Sylvia Plath",
+        language: "en"
+      },
+      {
+        text: "Tired minds don’t plan well. Sleep first, plan later.",
+        title: "Sleep first",
+        themes: ["burnout"],
+        source: "Walter Reisch",
+        language: "en"
+      },
+      {
+        text: "The vision of a champion is bent over, drenched in sweat, at the point of exhaustion, when nobody else is looking.",
+        title: "Point of exhaustion",
+        themes: ["burnout"],
+        source: "Mia Hamm",
+        language: "en"
+      },
+      {
+        text: "There is a sacredness in tears. They are not the mark of weakness, but of power.",
+        title: "Sacred tears",
+        themes: ["grief-and-loss"],
+        source: "Washington Irving",
+        language: "en"
+      },
+      {
+        text: "I love her and it is the beginning of everything.",
+        title: "Beginning of all",
+        themes: ["relationships"],
+        source: "F. Scott Fitzgerald",
+        language: "en"
+      },
+      {
+        text: "Solitude is where one discovers one’s true self.",
+        title: "True self",
+        themes: ["loneliness"],
+        source: "Joseph Campbell",
+        language: "en"
+      },
+      {
+        text: "There is a loneliness in this world so great that you can see it in the slow movement of the hands of a clock.",
+        title: "Hands of clock",
+        themes: ["loneliness"],
+        source: "Charles Bukowski",
+        language: "en"
+      },
+      {
+        text: "If you want to go fast, go alone. If you want to go far, go together.",
+        title: "Go together",
+        themes: ["relationships", "loneliness"],
+        source: "African Proverb",
+        language: "en"
+      },
+      {
+        text: "Burnout is about resentment. And you beat it by knowing what it is you’re giving up that makes you resentful.",
+        title: "About resentment",
+        themes: ["burnout"],
+        source: "Marissa Mayer",
+        language: "en"
+      },
+      {
+        text: "Ninety nine percent of the time it’s not urgent and to create a culture where you are constantly plugged in is to create a culture of burnout.",
+        title: "Culture of burnout",
+        themes: ["burnout"],
+        source: "Arianna Huffington",
+        language: "en"
+      },
+      {
+        text: "The pain of parting is nothing to the joy of meeting again.",
+        title: "Joy of meeting",
+        themes: ["grief-and-loss", "relationships"],
+        source: "Charles Dickens",
+        language: "en"
+      },
+      {
+        text: "Whatever our souls are made of, his and mine are the same.",
+        title: "Same souls",
+        themes: ["relationships"],
+        source: "Emily Brontë",
+        language: "en"
+      },
+
+
+      //resilience, self-compassion, anxiety, change, fear
+      //
+
+      
+      {
+      text: "Our greatest glory is not in never falling, but in rising every time we fall.",
+      title: "Rise again",
+      themes: ["resilience"],
+      source: "Confucius",
+      language: "en"
+      },
+      {
+      text: "The human capacity for burden is like bamboo—far more flexible than you'd ever believe at first glance.",
+      title: "Like bamboo",
+      themes: ["resilience"],
+      source: "Jodi Picoult",
+      language: "en"
+      },
+      {
+      text: "Rock bottom became the solid foundation on which I rebuilt my life.",
+      title: "Solid foundation",
+      themes: ["resilience", "change"],
+      source: "J. K. Rowling",
+      language: "en"
+      },
+      {
+      text: "Fall seven times and stand up eight.",
+      title: "Stand up eight",
+      themes: ["resilience"],
+      source: "Japanese Proverb",
+      language: "en"
+      },
+      {
+      text: "Life doesn't get easier or more forgiving, we get stronger and more resilient.",
+      title: "We get stronger",
+      themes: ["resilience"],
+      source: "Steve Maraboli",
+      language: "en"
+      },
+      {
+      text: "You may have to fight a battle more than once to win it.",
+      title: "Fight again",
+      themes: ["resilience"],
+      source: "Margaret Thatcher",
+      language: "en"
+      },
+      {
+      text: "Strength does not come from physical capacity. It comes from an indomitable will.",
+      title: "Indomitable will",
+      themes: ["resilience"],
+      source: "Mahatma Gandhi",
+      language: "en"
+      },
+      {
+      text: "The bamboo that bends is stronger than the oak that resists.",
+      title: "Bend and endure",
+      themes: ["resilience", "change"],
+      source: "Japanese Proverb",
+      language: "en"
+      },
+      {
+      text: "Hardships often prepare ordinary people for an extraordinary destiny.",
+      title: "Prepared by hardship",
+      themes: ["resilience"],
+      source: "C. S. Lewis",
+      language: "en"
+      },
+      {
+      text: "He who conquers others is strong; he who conquers himself is mighty.",
+      title: "Conquer yourself",
+      themes: ["resilience"],
+      source: "Lao Tzu",
+      language: "en"
+      },
+      {
+      text: "You have power over your mind—not outside events. Realize this, and you will find strength.",
+      title: "Inner strength",
+      themes: ["resilience", "anxiety"],
+      source: "Marcus Aurelius",
+      language: "en"
+      },
+      {
+      text: "A smooth sea never made a skilled sailor.",
+      title: "Rough seas",
+      themes: ["resilience"],
+      source: "Franklin D. Roosevelt",
+      language: "en"
+      },
+      {
+      text: "Adversity has the effect of eliciting talents which in prosperous circumstances would have lain dormant.",
+      title: "Hidden talents",
+      themes: ["resilience"],
+      source: "Horace",
+      language: "en"
+      },
+      {
+      text: "Difficulties strengthen the mind, as labor does the body.",
+      title: "Strength through trials",
+      themes: ["resilience"],
+      source: "Seneca",
+      language: "en"
+      },
+      {
+      text: "The greater the obstacle, the more glory in overcoming it.",
+      title: "Overcome the obstacle",
+      themes: ["resilience"],
+      source: "Molière",
+      language: "en"
+      },
+      {
+      text: "Our wounds are often the openings into the best and most beautiful part of us.",
+      title: "Openings in wounds",
+      themes: ["resilience"],
+      source: "David Richo",
+      language: "en"
+      },
+      {
+      text: "Life is not about waiting for the storm to pass. It's about learning to dance in the rain.",
+      title: "Dance in rain",
+      themes: ["resilience", "change"],
+      source: "Vivian Greene",
+      language: "en"
+      },
+      {
+      text: "You never know how strong you are until being strong is your only choice.",
+      title: "Only choice",
+      themes: ["resilience"],
+      source: "Bob Marley",
+      language: "en"
+      },
+      {
+      text: "You have been criticizing yourself for years and it hasn't worked. Try approving of yourself and see what happens.",
+      title: "Try self-approval",
+      themes: ["self-compassion"],
+      source: "Louise Hay",
+      language: "en"
+      },
+      {
+      text: "Self-compassion is simply giving the same kindness to ourselves that we would give to others.",
+      title: "Kindness inward",
+      themes: ["self-compassion"],
+      source: "Christopher Germer",
+      language: "en"
+      },
+      {
+      text: "With self-compassion, we give ourselves the same kindness and care we'd give to a good friend.",
+      title: "Like a good friend",
+      themes: ["self-compassion"],
+      source: "Kristin Neff",
+      language: "en"
+      },
+      {
+      text: "Compassion is not a relationship between the healer and the wounded. It's a relationship between equals.",
+      title: "Between equals",
+      themes: ["self-compassion"],
+      source: "Pema Chödrön",
+      language: "en"
+      },
+      {
+      text: "If your compassion does not include yourself, it is incomplete.",
+      title: "Include yourself",
+      themes: ["self-compassion"],
+      source: "Jack Kornfield",
+      language: "en"
+      },
+      {
+      text: "The most powerful relationship you will ever have is the relationship with yourself.",
+      title: "With yourself",
+      themes: ["self-compassion"],
+      source: "Steve Maraboli",
+      language: "en"
+      },
+      {
+      text: "Be gentle first with yourself if you wish to be gentle with others.",
+      title: "Be gentle",
+      themes: ["self-compassion"],
+      source: "Lama Yeshe",
+      language: "en"
+      },
+      {
+      text: "You, yourself, as much as anybody in the entire universe, deserve your love and affection.",
+      title: "Deserve your love",
+      themes: ["self-compassion"],
+      source: "Sharon Salzberg",
+      language: "en"
+      },
+      {
+      text: "Kindness begins with the understanding that we all struggle.",
+      title: "We all struggle",
+      themes: ["self-compassion"],
+      source: "Charles F. Glassman",
+      language: "en"
+      },
+      {
+      text: "Be kinder to yourself. And then let your kindness flood the world.",
+      title: "Flood the world",
+      themes: ["self-compassion"],
+      source: "Pema Chödrön",
+      language: "en"
+      },
+      {
+      text: "The greatest gift you can give yourself is a little bit of your own attention.",
+      title: "Your own attention",
+      themes: ["self-compassion"],
+      source: "Anthony J. D'Angelo",
+      language: "en"
+      },
+      {
+      text: "There is nothing in a caterpillar that tells you it's going to be a butterfly.",
+      title: "Becoming",
+      themes: ["self-compassion", "change"],
+      source: "R. Buckminster Fuller",
+      language: "en"
+      },
+      {
+      text: "You are imperfect, you are wired for struggle, but you are worthy of love and belonging.",
+      title: "Worthy of love",
+      themes: ["self-compassion"],
+      source: "Brené Brown",
+      language: "en"
+      },
+      {
+      text: "When you make a mistake, respond to yourself in ways that are kind, understanding, and supportive.",
+      title: "When you stumble",
+      themes: ["self-compassion"],
+      source: "Kristin Neff",
+      language: "en"
+      },
+      {
+      text: "The greatest weapon against stress is our ability to choose one thought over another.",
+      title: "Choose your thought",
+      themes: ["self-compassion", "anxiety"],
+      source: "William James",
+      language: "en"
+      },
+      {
+      text: "Be faithful to that which exists within yourself.",
+      title: "Be faithful",
+      themes: ["self-compassion"],
+      source: "André Gide",
+      language: "en"
+      },
+      {
+      text: "Almost everything will work again if you unplug it for a few minutes, including you.",
+      title: "Unplug yourself",
+      themes: ["self-compassion"],
+      source: "Anne Lamott",
+      language: "en"
+      },
+      {
+      text: "We suffer more often in imagination than in reality.",
+      title: "Imagination hurts",
+      themes: ["anxiety", "fear"],
+      source: "Seneca",
+      language: "en"
+      },
+      {
+      text: "Today is the first day of the rest of your life.",
+      title: "Start today",
+      themes: ["anxiety", "change"],
+      source: "Charles Dederich",
+      language: "en"
+      },
+      {
+      text: "Nothing diminishes anxiety faster than action.",
+      title: "Action over worry",
+      themes: ["anxiety", "fear"],
+      source: "Walter Anderson",
+      language: "en"
+      },
+      {
+      text: "Our anxiety does not empty tomorrow of its sorrows, but only empties today of its strength.",
+      title: "Borrowed sorrow",
+      themes: ["anxiety"],
+      source: "Charles H. Spurgeon",
+      language: "en"
+      },
+      {
+      text: "You don't have to control your thoughts. You just have to stop letting them control you.",
+      title: "Let thoughts pass",
+      themes: ["anxiety"],
+      source: "Dan Millman",
+      language: "en"
+      },
+      {
+      text: "Anxiety and fear are cousins, but they're not the same thing.",
+      title: "Different cousins",
+      themes: ["anxiety", "fear"],
+      source: "Bessel van der Kolk",
+      language: "en"
+      },
+      {
+      text: "The greatest mistake you can make in life is to be continually fearing you will make one.",
+      title: "Fear of mistakes",
+      themes: ["anxiety", "fear"],
+      source: "Elbert Hubbard",
+      language: "en"
+      },
+      {
+      text: "Rule your mind or it will rule you.",
+      title: "Rule your mind",
+      themes: ["anxiety"],
+      source: "Horace",
+      language: "en"
+      },
+      {
+      text: "If you want to conquer the anxiety of life, live in the moment, live in the breath.",
+      title: "Live in the breath",
+      themes: ["anxiety"],
+      source: "Amit Ray",
+      language: "en"
+      },
+      {
+      text: "The mind is its own place, and in itself can make a heaven of hell, a hell of heaven.",
+      title: "The mind's place",
+      themes: ["anxiety"],
+      source: "John Milton",
+      language: "en"
+      },
+      {
+      text: "Nothing is permanent in this wicked world—not even our troubles.",
+      title: "Troubles pass",
+      themes: ["anxiety", "resilience"],
+      source: "Charlie Chaplin",
+      language: "en"
+      },
+      {
+      text: "There is no need to hurry. There is no need to sparkle. There is no need to be anybody but oneself.",
+      title: "No need to hurry",
+      themes: ["anxiety", "self-compassion"],
+      source: "Virginia Woolf",
+      language: "en"
+      },
+      {
+      text: "Worry never robs tomorrow of its sorrow, it only saps today of its joy.",
+      title: "Worry steals today",
+      themes: ["anxiety"],
+      source: "Leo F. Buscaglia",
+      language: "en"
+      },
+      {
+      text: "The greatest mistake you can make is to believe that you are working for someone else.",
+      title: "Your own path",
+      themes: ["anxiety", "change"],
+      source: "Earl Nightingale",
+      language: "en"
+      },
+      {
+      text: "If you cannot do great things, do small things in a great way.",
+      title: "Small things",
+      themes: ["anxiety", "resilience"],
+      source: "Napoleon Hill",
+      language: "en"
+      },
+      {
+      text: "Anxiety is love's greatest killer. It makes others feel as you might feel when a drowning man holds on to you.",
+      title: "Anxiety's grip",
+      themes: ["anxiety"],
+      source: "Anaïs Nin",
+      language: "en"
+      },
+      {
+      text: "The life in front of you is far more important than the life behind you.",
+      title: "Life ahead",
+      themes: ["anxiety", "change"],
+      source: "Joel Osteen",
+      language: "en"
+      },
+      {
+      text: "Change is the law of life. And those who look only to the past or present are certain to miss the future.",
+      title: "Law of life",
+      themes: ["change"],
+      source: "John F. Kennedy",
+      language: "en"
+      },
+      {
+      text: "They always say time changes things, but you actually have to change them yourself.",
+      title: "Change yourself",
+      themes: ["change"],
+      source: "Andy Warhol",
+      language: "en"
+      },
+      {
+      text: "The measure of intelligence is the ability to change.",
+      title: "Measure of intelligence",
+      themes: ["change"],
+      source: "Albert Einstein",
+      language: "en"
+      },
+      {
+      text: "Change alone is unchanging.",
+      title: "Change remains",
+      themes: ["change"],
+      source: "Heraclitus",
+      language: "en"
+      },
+      {
+      text: "All things must change to something new, to something strange.",
+      title: "Something new",
+      themes: ["change"],
+      source: "Henry Wadsworth Longfellow",
+      language: "en"
+      },
+      {
+      text: "If you do not change direction, you may end up where you are heading.",
+      title: "Change direction",
+      themes: ["change"],
+      source: "Lao Tzu",
+      language: "en"
+      },
+      {
+      text: "Change your thoughts and you change your world.",
+      title: "Change your thoughts",
+      themes: ["change", "anxiety"],
+      source: "Norman Vincent Peale",
+      language: "en"
+      },
+      {
+      text: "We delight in the beauty of the butterfly, but rarely admit the changes it has gone through to achieve that beauty.",
+      title: "Butterfly changes",
+      themes: ["change"],
+      source: "Maya Angelou",
+      language: "en"
+      },
+      {
+      text: "The world as we have created it is a process of our thinking. It cannot be changed without changing our thinking.",
+      title: "Change your thinking",
+      themes: ["change"],
+      source: "Albert Einstein",
+      language: "en"
+      },
+      {
+      text: "Your life does not get better by chance, it gets better by change.",
+      title: "Better by change",
+      themes: ["change"],
+      source: "Jim Rohn",
+      language: "en"
+      },
+      {
+      text: "Nothing endures but change.",
+      title: "Nothing but change",
+      themes: ["change"],
+      source: "Heraclitus",
+      language: "en"
+      },
+      {
+      text: "Progress is impossible without change, and those who cannot change their minds cannot change anything.",
+      title: "Progress needs change",
+      themes: ["change"],
+      source: "George Bernard Shaw",
+      language: "en"
+      },
+      {
+      text: "To exist is to change, to change is to mature, to mature is to go on creating oneself endlessly.",
+      title: "Creating yourself",
+      themes: ["change"],
+      source: "Henri Bergson",
+      language: "en"
+      },
+      {
+      text: "The price of doing the same old thing is far higher than the price of change.",
+      title: "Price of sameness",
+      themes: ["change"],
+      source: "Bill Clinton",
+      language: "en"
+      },
+      {
+      text: "Every new beginning comes from some other beginning's end.",
+      title: "New beginnings",
+      themes: ["change"],
+      source: "Seneca",
+      language: "en"
+      },
+      {
+      text: "The only constant in life is change.",
+      title: "The constant",
+      themes: ["change"],
+      source: "Heraclitus",
+      language: "en"
+      },
+      {
+      text: "The only thing we have to fear is fear itself.",
+      title: "Fear itself",
+      themes: ["fear"],
+      source: "Franklin D. Roosevelt",
+      language: "en"
+      },
+      {
+      text: "Courage is resistance to fear, mastery of fear—not absence of fear.",
+      title: "Mastery of fear",
+      themes: ["fear", "resilience"],
+      source: "Mark Twain",
+      language: "en"
+      },
+      {
+      text: "Fear cuts deeper than swords.",
+      title: "Deeper than swords",
+      themes: ["fear"],
+      source: "George R. R. Martin",
+      language: "en"
+      },
+      {
+      text: "Everything you want is on the other side of fear.",
+      title: "Beyond fear",
+      themes: ["fear", "resilience"],
+      source: "Jack Canfield",
+      language: "en"
+      },
+      {
+      text: "Fear is the mind-killer.",
+      title: "Mind-killer",
+      themes: ["fear"],
+      source: "Frank Herbert",
+      language: "en"
+      },
+      {
+      text: "The cave you fear to enter holds the treasure you seek.",
+      title: "The hidden treasure",
+      themes: ["fear", "change"],
+      source: "Joseph Campbell",
+      language: "en"
+      },
+      {
+      text: "Do one thing every day that scares you.",
+      title: "Do the scary thing",
+      themes: ["fear", "resilience"],
+      source: "Eleanor Roosevelt",
+      language: "en"
+      },
+      {
+      text: "Fear defeats more people than any other one thing in the world.",
+      title: "Fear defeats",
+      themes: ["fear"],
+      source: "Ralph Waldo Emerson",
+      language: "en"
+      },
+      {
+      text: "I learned that courage was not the absence of fear, but the triumph over it.",
+      title: "Triumph over fear",
+      themes: ["fear", "resilience"],
+      source: "Nelson Mandela",
+      language: "en"
+      },
+      {
+      text: "Fear doesn't shut you down; it wakes you up.",
+      title: "Fear wakes you",
+      themes: ["fear"],
+      source: "Veronica Roth",
+      language: "en"
+      },
+      {
+      text: "He who is not everyday conquering some fear has not learned the secret of life.",
+      title: "Conquer some fear",
+      themes: ["fear", "resilience"],
+      source: "Ralph Waldo Emerson",
+      language: "en"
+      },
+      {
+      text: "Fear is an instructor of great sagacity, and the herald of all revolutions.",
+      title: "Fear teaches",
+      themes: ["fear", "change"],
+      source: "Ralph Waldo Emerson",
+      language: "en"
+      },
+      {
+      text: "We should all start to live before we get too old. Fear is stupid. So are regrets.",
+      title: "Fear is stupid",
+      themes: ["fear"],
+      source: "Marilyn Monroe",
+      language: "en"
+      },
+      {
+      text: "The brave man is not he who does not feel afraid, but he who conquers that fear.",
+      title: "Conquer fear",
+      themes: ["fear", "resilience"],
+      source: "Nelson Mandela",
+      language: "en"
+      },
+      {
+      text: "Fear has a large shadow, but he himself is small.",
+      title: "Fear's shadow",
+      themes: ["fear"],
+      source: "Ruth Gendler",
+      language: "en"
+      },
+      {
+      text: "A ship in harbor is safe, but that is not what ships are built for.",
+      title: "Built to sail",
+      themes: ["fear", "change"],
+      source: "John A. Shedd",
+      language: "en"
+      },
+      {
+      text: "Fear is static that prevents me from hearing myself.",
+      title: "Fear is static",
+      themes: ["fear", "anxiety"],
+      source: "Samuel Butler",
+      language: "en"
+      },
+      {
+      text: "Do not fear to be eccentric in opinion, for every opinion now accepted was once eccentric.",
+      title: "Dare to differ",
+      themes: ["fear", "change"],
+      source: "Bertrand Russell",
+      language: "en"
+      },
+      {
+      text: "The way to develop self-confidence is to do the thing you fear and get a record of successful experiences behind you.",
+      title: "Build confidence",
+      themes: ["fear", "resilience"],
+      source: "William Jennings Bryan",
+      language: "en"
+      },
+      {
+      text: "Fear is a reaction. Courage is a decision.",
+      title: "Courage decides",
+      themes: ["fear", "resilience"],
+      source: "Winston Churchill",
+      language: "en"
+      }
+    
+
+    
+    
 ];
 
 /**

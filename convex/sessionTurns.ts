@@ -7,6 +7,19 @@ import { userFeedbackValidator } from "./lib/validators";
 /** The refinement cap. Exported so the clarify action agrees on the ceiling. */
 export const MAX_TURNS = 2;
 
+// Full `session_turns` document shape, mirroring schema.ts exactly.
+const sessionTurnDocValidator = v.object({
+  _id: v.id("session_turns"),
+  _creationTime: v.number(),
+  sessionId: v.id("sessions"),
+  turnNumber: v.number(),
+  userFeedback: userFeedbackValidator,
+  userInput: v.optional(v.string()),
+  revisedMirrorText: v.string(),
+  modelVersion: v.string(),
+  createdAt: v.number(),
+});
+
 /**
  * Submit refinement feedback ("Not quite" / "Say more").
  * Creates a turn, transitions session back to processing, schedules AI.
@@ -18,6 +31,7 @@ export const submitFeedback = mutation({
     userInput: v.optional(v.string()),
     additionalRawText: v.optional(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -113,6 +127,7 @@ export const listBySession = query({
   args: {
     sessionId: v.id("sessions"),
   },
+  returns: v.array(sessionTurnDocValidator),
   handler: async (ctx, args) => {
     await requireSessionOwnership(ctx, args.sessionId);
 

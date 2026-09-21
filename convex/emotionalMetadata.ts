@@ -16,6 +16,7 @@ import {
 } from "./lib/xolacerSuggestion";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
+import { specialtyValidator } from "./lib/specialties";
 
 /**
  * The two IO gates the pure suggestion module deliberately doesn't own: a
@@ -308,6 +309,43 @@ export const adjustEpisodicImportance = internalMutation({
   },
 });
 
+// Full `emotional_metadata` document shape, mirroring schema.ts exactly.
+const emotionalMetadataDocValidator = v.object({
+  _id: v.id("emotional_metadata"),
+  _creationTime: v.number(),
+  sessionId: v.id("sessions"),
+  emotionalProfileId: v.id("emotional_profiles"),
+  classifierVersion: v.string(),
+  primaryEmotion: v.string(),
+  primaryEmotionConfidence: v.number(),
+  granularLabel: v.optional(v.string()),
+  secondaryEmotion: v.optional(v.string()),
+  intensity: v.number(),
+  specificity: v.number(),
+  thematicTags: v.array(v.string()),
+  userLanguageTags: v.array(v.string()),
+  temporalContext: v.optional(
+    v.union(
+      v.literal("past_focused"),
+      v.literal("present_focused"),
+      v.literal("future_focused"),
+    ),
+  ),
+  riskFlag: v.boolean(),
+  safeguardLevel: v.optional(safeguardLevelValidator),
+  safeguardTrigger: v.optional(triggerTypeValidator),
+  supportNeed: v.optional(supportNeedValidator),
+  episodicMatchKeys: v.optional(v.array(v.string())),
+  episodicTopScore: v.optional(v.number()),
+  initialConfidence: v.optional(v.number()),
+  episodicImportance: v.optional(v.number()),
+  profileVersion: v.optional(v.number()),
+  followUpReason: v.optional(v.string()),
+  suggestedSpecialty: v.optional(specialtyValidator),
+  createdAt: v.number(),
+  reclassifiedAt: v.optional(v.number()),
+});
+
 /**
  * Get emotional metadata for a session (with ownership check).
  */
@@ -315,6 +353,7 @@ export const getBySession = query({
   args: {
     sessionId: v.id("sessions"),
   },
+  returns: v.union(emotionalMetadataDocValidator, v.null()),
   handler: async (ctx, args) => {
     await requireSessionOwnership(ctx, args.sessionId);
 

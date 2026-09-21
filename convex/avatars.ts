@@ -12,6 +12,16 @@ const tierValidator = v.union(v.literal("free"), v.literal("premium"));
  */
 export const listAvatars = query({
   args: {},
+  returns: v.array(
+    v.object({
+      key: v.string(),
+      tier: tierValidator,
+      label: v.string(),
+      order: v.number(),
+      isDefault: v.boolean(),
+      url: v.string(),
+    }),
+  ),
   handler: async (ctx) => {
     // Parity with setAvatar / the rest of the API — the catalog isn't secret,
     // but every function reads auth; no reason this one is the exception.
@@ -34,6 +44,7 @@ export const listAvatars = query({
  */
 export const setAvatar = mutation({
   args: { key: v.string() },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 

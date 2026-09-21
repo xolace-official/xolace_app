@@ -18,7 +18,11 @@ import {
   postSessionMoodValidator,
   resourceValidator,
   mirrorToneValidator,
+  sessionStateValidator,
+  timeOfDayValidator,
+  safeguardLevelValidator,
 } from "./lib/validators";
+import { vWorkflowId } from "@convex-dev/workflow";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "./lib/rateLimits";
 import {
@@ -39,6 +43,52 @@ const MAX_RAW_INPUT = 5_000;
 
 // Terminal states — sessions in these states cannot be transitioned further.
 const TERMINAL_STATES = new Set(["completed", "abandoned"]);
+
+// Full `sessions` document shape, mirroring schema.ts's `sessions` table
+// exactly. Reused across every public query that returns a raw session doc.
+const sessionDocValidator = v.object({
+  _id: v.id("sessions"),
+  _creationTime: v.number(),
+  emotionalProfileId: v.id("emotional_profiles"),
+  state: sessionStateValidator,
+  entryType: entryTypeValidator,
+  rawInput: v.optional(v.string()),
+  rawInputLength: v.optional(v.number()),
+  inputDuration: v.optional(v.number()),
+  freezeOccurred: v.optional(v.boolean()),
+  freezeDuration: v.optional(v.number()),
+  mirrorText: v.optional(v.string()),
+  mirrorModelVersion: v.optional(v.string()),
+  toneUsed: v.optional(mirrorToneValidator),
+  mirrorAudioStorageId: v.optional(v.id("_storage")),
+  confirmationState: v.optional(confirmationStateValidator),
+  pathChosen: v.optional(pathChosenValidator),
+  pathCompleted: v.optional(v.boolean()),
+  exerciseId: v.optional(v.id("exercises")),
+  matchedExerciseId: v.optional(v.id("exercises")),
+  swappedExerciseIds: v.optional(v.array(v.id("exercises"))),
+  exerciseSlots: v.optional(v.record(v.string(), v.string())),
+  contributedReflection: v.optional(v.boolean()),
+  distilledText: v.optional(v.string()),
+  kept: v.optional(v.boolean()),
+  postSessionMood: v.optional(postSessionMoodValidator),
+  escalationTriggered: v.optional(v.boolean()),
+  escalationResources: v.optional(v.array(resourceValidator)),
+  timeOfDay: v.optional(timeOfDayValidator),
+  dayOfWeek: v.optional(v.number()),
+  customPrompt: v.optional(v.string()),
+  sessionMode: v.optional(v.union(v.literal("day"), v.literal("night"))),
+  sessionDuration: v.optional(v.number()),
+  errorMessage: v.optional(v.string()),
+  safeguardLevel: v.optional(safeguardLevelValidator),
+  requiresFollowUp: v.optional(v.boolean()),
+  followUpWorkflowId: v.optional(vWorkflowId),
+  gapNamed: v.optional(v.boolean()),
+  semanticMatchIds: v.optional(v.array(v.id("reflections"))),
+  createdAt: v.number(),
+  completedAt: v.optional(v.number()),
+  updatedAt: v.number(),
+});
 
 /**
  * Finalize the follow-up gate at session close and (idempotently) kick off the
@@ -190,6 +240,7 @@ export const initiate = mutation({
     entryType: entryTypeValidator,
     sessionMode: v.optional(v.union(v.literal("day"), v.literal("night"))),
   },
+  returns: v.id("sessions"),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const now = Date.now();
@@ -237,6 +288,7 @@ export const submitInput = mutation({
     freezeOccurred: v.boolean(),
     freezeDuration: v.optional(v.number()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -287,6 +339,7 @@ export const confirmMirror = mutation({
     sessionId: v.id("sessions"),
     confirmationState: confirmationStateValidator,
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -347,6 +400,7 @@ export const selectPath = mutation({
     sessionId: v.id("sessions"),
     pathChosen: pathChosenValidator,
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { profile, session } = await requireSessionOwnership(
       ctx,
@@ -386,6 +440,7 @@ export const startPath = mutation({
     sessionId: v.id("sessions"),
     exerciseId: v.optional(v.id("exercises")),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -421,6 +476,7 @@ export const completePath = mutation({
     contributedReflection: v.optional(v.boolean()),
     postSessionMood: v.optional(postSessionMoodValidator),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -476,6 +532,7 @@ export const recordPostSessionFeedback = mutation({
     contributedReflection: v.optional(v.boolean()),
     postSessionMood: v.optional(postSessionMoodValidator),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -506,6 +563,7 @@ export const completeSession = mutation({
   args: {
     sessionId: v.id("sessions"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -536,6 +594,7 @@ export const retrySession = mutation({
     /** @deprecated retry reprocesses session.rawInput; value ignored */
     rawText: v.optional(v.string()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -571,6 +630,7 @@ export const abandon = mutation({
   args: {
     sessionId: v.id("sessions"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -601,6 +661,7 @@ export const abandon = mutation({
  */
 export const getActive = query({
   args: {},
+  returns: v.union(sessionDocValidator, v.null()),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
@@ -651,6 +712,16 @@ export const getById = query({
   args: {
     sessionId: v.id("sessions"),
   },
+  returns: v.object({
+    ...sessionDocValidator.fields,
+    claimStrength: v.union(
+      v.literal("reaching"),
+      v.literal("holding"),
+      v.literal("measured"),
+      v.literal("confident"),
+      v.null(),
+    ),
+  }),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
     return { ...session, claimStrength: await deriveClaimStrength(ctx, session) };
@@ -665,6 +736,11 @@ export const listByProfile = query({
   args: {
     paginationOpts: paginationOptsValidator,
   },
+  returns: v.object({
+    page: v.array(sessionDocValidator),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+  }),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
 
@@ -713,6 +789,24 @@ export const listForTimeline = query({
   args: {
     paginationOpts: paginationOptsValidator,
   },
+  returns: v.object({
+    page: v.array(
+      v.object({
+        _id: v.id("sessions"),
+        mirrorText: v.string(),
+        entryType: entryTypeValidator,
+        hasMirrorAudio: v.boolean(),
+        confirmationState: v.union(confirmationStateValidator, v.null()),
+        pathChosen: v.union(pathChosenValidator, v.null()),
+        toneUsed: v.union(mirrorToneValidator, v.null()),
+        primaryEmotion: v.union(v.string(), v.null()),
+        granularLabel: v.union(v.string(), v.null()),
+        createdAt: v.number(),
+      }),
+    ),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+  }),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const isPremium = await hasPremium(ctx, profile);
@@ -768,6 +862,11 @@ export const listForTimeline = query({
  */
 export const getTimelineWindowInfo = query({
   args: {},
+  returns: v.object({
+    premiumRequired: v.boolean(),
+    hasOlderSessions: v.boolean(),
+    windowDays: v.union(v.number(), v.null()),
+  }),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     const isPremium = await hasPremium(ctx, profile);
@@ -801,6 +900,13 @@ export const getTimelineWindowInfo = query({
  */
 export const getSessionDetails = query({
   args: { sessionId: v.id("sessions") },
+  returns: v.object({
+    ...sessionDocValidator.fields,
+    primaryEmotion: v.union(v.string(), v.null()),
+    granularLabel: v.union(v.string(), v.null()),
+    intensity: v.union(v.number(), v.null()),
+    thematicTags: v.union(v.array(v.string()), v.null()),
+  }),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
@@ -923,6 +1029,7 @@ export const clearMirrorAudio = internalMutation({
  */
 export const getMirrorAudioUrl = query({
   args: { sessionId: v.id("sessions") },
+  returns: v.union(v.string(), v.null()),
   handler: async (ctx, args) => {
     const { session } = await requireSessionOwnership(ctx, args.sessionId);
     if (!session.mirrorAudioStorageId) return null;

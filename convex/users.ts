@@ -5,6 +5,69 @@ import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
 import { rankInsert } from "./lib/aggregates";
 import { generateDisplayName } from "./lib/displayName";
+import {
+  intakeAnswerValidators,
+  preferencesDocValidator,
+} from "./lib/validators";
+
+// Full `users` document shape, mirroring schema.ts's `users` table exactly.
+const userDocValidator = v.object({
+  _id: v.id("users"),
+  _creationTime: v.number(),
+  authProvider: v.union(v.literal("apple"), v.literal("google")),
+  authProviderAccountId: v.string(),
+  emotionalProfileId: v.id("emotional_profiles"),
+  tokenIdentifier: v.string(),
+  accountStatus: v.union(
+    v.literal("active"),
+    v.literal("suspended"),
+    v.literal("deleted"),
+    v.literal("purging"),
+  ),
+  deletionRequestedAt: v.optional(v.number()),
+  isXolacer: v.optional(v.boolean()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+});
+
+// Full `emotional_profiles` document shape, mirroring schema.ts exactly.
+const profileDocValidator = v.object({
+  _id: v.id("emotional_profiles"),
+  _creationTime: v.number(),
+  onboardingComplete: v.boolean(),
+  sessionCount: v.number(),
+  savedQuoteCount: v.optional(v.number()),
+  firstSessionAt: v.optional(v.number()),
+  lastSessionAt: v.optional(v.number()),
+  averageSessionDuration: v.optional(v.number()),
+  currentStreak: v.number(),
+  longestStreak: v.optional(v.number()),
+  pendingKindlingSessionId: v.optional(v.id("sessions")),
+  dominantEmotionTags: v.array(v.string()),
+  frequentWords: v.optional(
+    v.array(v.object({ word: v.string(), count: v.number() })),
+  ),
+  typicalUsagePattern: v.optional(
+    v.object({ dayOfWeek: v.number(), hourOfDay: v.number() }),
+  ),
+  ventDailyMinutesUsed: v.optional(v.number()),
+  ventDailyResetAt: v.optional(v.number()),
+  dataWipeInProgress: v.optional(v.boolean()),
+  currentSemanticProfileId: v.optional(v.id("semantic_profiles")),
+  lastConsolidationAt: v.optional(v.number()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+});
+
+// Full `intake_responses` document shape, mirroring schema.ts exactly.
+const intakeResponseDocValidator = v.object({
+  _id: v.id("intake_responses"),
+  _creationTime: v.number(),
+  emotionalProfileId: v.id("emotional_profiles"),
+  intakeVersion: v.number(),
+  completedAt: v.number(),
+  ...intakeAnswerValidators,
+});
 
 /**
  * Idempotent onboarding: find existing user by tokenIdentifier
@@ -22,6 +85,7 @@ export const getOrCreate = mutation({
     /** @deprecated server stores identity.subject; value ignored */
     authProviderAccountId: v.optional(v.string()),
   },
+  returns: v.id("users"),
   handler: async (ctx, args) => {
     console.log("getOrCreate", args);
     const identity = await ctx.auth.getUserIdentity();
@@ -145,6 +209,7 @@ export const getOrCreate = mutation({
  */
 export const getCurrent = query({
   args: {},
+  returns: userDocValidator,
   handler: async (ctx) => {
     const { user } = await requireAuth(ctx);
     return user;
@@ -157,6 +222,7 @@ export const getCurrent = query({
  */
 export const getSessionCount = query({
   args: {},
+  returns: v.number(),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     return profile.sessionCount;
@@ -168,6 +234,13 @@ export const getSessionCount = query({
  */
 export const getFullContext = query({
   args: {},
+  returns: v.object({
+    user: userDocValidator,
+    profile: profileDocValidator,
+    preferences: v.union(preferencesDocValidator, v.null()),
+    hasPendingFollowUp: v.boolean(),
+    intake: v.union(intakeResponseDocValidator, v.null()),
+  }),
   handler: async (ctx) => {
     const { user, profile } = await requireAuth(ctx);
 
@@ -215,6 +288,7 @@ export const getFullContext = query({
  */
 export const requestDeletion = mutation({
   args: {},
+  returns: v.null(),
   handler: async (ctx) => {
     const { user } = await requireAuth(ctx);
 
@@ -237,6 +311,7 @@ export const requestDeletion = mutation({
  */
 export const requestDataWipe = mutation({
   args: {},
+  returns: v.null(),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
 
