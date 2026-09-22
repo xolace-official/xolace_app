@@ -4,7 +4,7 @@
  * with `bunx convex env set DEV_TOOLS_ENABLED true` on the dev deployment.
  */
 import { v } from "convex/values";
-import { internalMutation, internalQuery, mutation } from "./_generated/server";
+import { internalMutation, mutation } from "./_generated/server";
 import type { WorkflowId } from "@convex-dev/workflow";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
@@ -250,20 +250,6 @@ export const resetIntake = mutation({
       updatedAt: Date.now(),
     });
     return null;
-  },
-});
-
-/**
- * Resolve a `_storage` id to a signed URL — for manually checking an upload
- * from the CLI/dashboard without wiring a query into the app.
- *   bunx convex run devTools:getFileUrl '{"storageId":"..."}'
- */
-export const getFileUrl = internalQuery({
-  args: { storageId: v.id("_storage") },
-  returns: v.union(v.string(), v.null()),
-  handler: async (ctx, args) => {
-    assertDevToolsEnabled();
-    return await ctx.storage.getUrl(args.storageId);
   },
 });
 
