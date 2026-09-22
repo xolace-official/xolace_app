@@ -26,6 +26,7 @@ export const TWIG_PRESENTATION: Record<
     eyebrow: "A few minutes",
     title: "Sit with this",
     actionLabel: "Begin",
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/6d4d937e-8dd9-4e8d-bbd6-3ee58b538988",
   },
   audio: {
     symbol: { ios: "waveform", android: "graphic_eq", web: "graphic_eq" },
@@ -39,18 +40,21 @@ export const TWIG_PRESENTATION: Record<
     eyebrow: "Something to hear",
     title: "Low sound for the quiet",
     actionLabel: "Play",
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/91ae3a04-e554-431a-b2e0-e4c46191cf76",
   },
   xolacer: {
     symbol: { ios: "person.2", android: "group", web: "group" },
     eyebrow: "When you want it",
     title: "Someone who has been here",
     actionLabel: "See who",
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/6642efe2-7add-4a87-91d8-70f547ada414",
   },
   bridge: {
     symbol: { ios: "envelope", android: "mail", web: "mail" },
     eyebrow: "When you're ready",
     title: "Tell someone you trust",
     actionLabel: "Write",
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/8f7dc3c4-9caa-4744-b3bf-2393b572a1e9",
   },
 };
 
