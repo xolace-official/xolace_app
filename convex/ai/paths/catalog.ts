@@ -113,10 +113,10 @@ export const CATALOG: readonly CatalogEntry[] = [
       'A short spoken episode from the series "Reality, Not False Hope" — plain talk that pushes back on toxic positivity and self-invalidation. Fits when they are telling themselves they should be over it, that others have it worse, or that their feeling is wrong to have.',
   },
   audioTopic(
-    "anxiety",
+    "anxiety_relief",
     ["anxiety", "fear"],
-    ["racing-thoughts", "uncertainty", "worry"],
-    "Spoken support audio on worry, dread and racing thoughts — a calm voice keeping them company through it.",
+    ["vigilance", "masking", "anticipation", "support", "grounding"],
+    "Spoken support audio for settling an anxious body — naming the vigilance and masking, then grounding through it.",
   ),
   audioTopic(
     "grief",
@@ -159,6 +159,54 @@ export const CATALOG: readonly CatalogEntry[] = [
     ["anxiety", "sadness", "confusion"],
     ["overwhelm", "burnout", "too-much", "work"],
     "Spoken support audio on being stretched thin — too much on, no room to breathe.",
+  ),
+  audioTopic(
+    "procrastination",
+    ["anxiety", "shame", "fear"],
+    ["avoidance", "self-talk", "momentum", "stuck"],
+    "Spoken support audio on avoidance and the shrinking feeling before starting — naming the fear under the delay.",
+  ),
+  audioTopic(
+    "mild_stress",
+    ["anxiety"],
+    ["tension", "buildup", "breathwork", "release"],
+    "Spoken support audio on stress that built up quietly — noticing the tension and releasing it through breath.",
+  ),
+  audioTopic(
+    "decision_fatigue",
+    ["confusion", "anxiety"],
+    ["depletion", "overload", "simplification", "willpower"],
+    "Spoken support audio on being worn down by too many small choices — simplifying when willpower runs thin.",
+  ),
+  audioTopic(
+    "depression_non_crisis",
+    ["sadness", "numbness"],
+    ["flatness", "anhedonia", "dismissal", "permission"],
+    "Spoken support audio on a low mood that won't lift — permission to feel flat without dismissing it.",
+  ),
+  audioTopic(
+    "mild_burnout",
+    ["numbness", "sadness"],
+    ["recognition", "exhaustion", "apathy", "onset"],
+    "Spoken support audio on running on empty — naming early burnout before it deepens.",
+  ),
+  audioTopic(
+    "relationship_strain",
+    ["sadness", "anger"],
+    ["drift", "gap", "blamelessness", "repair"],
+    "Spoken support audio on a relationship that's drifted — sitting with the gap without assigning blame.",
+  ),
+  audioTopic(
+    "sleep_hygiene",
+    ["anxiety", "numbness"],
+    ["screens", "winddown", "consistency", "arousal"],
+    "Spoken support audio on the habits that keep sleep away — winding down instead of fighting for it.",
+  ),
+  audioTopic(
+    "social_awkwardness",
+    ["shame", "anxiety"],
+    ["rumination", "insecurity", "vigilance", "perspective"],
+    "Spoken support audio on replaying an awkward moment — perspective on how little the room actually noticed.",
   ),
   // Music topics mirror the curated Pixabay shelves exactly (20 topics).
   musicTopic(

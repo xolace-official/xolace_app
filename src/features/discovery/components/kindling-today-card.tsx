@@ -1,12 +1,32 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
-import { SymbolView } from "expo-symbols";
-import { PressableFeedback, useThemeColor } from "heroui-native";
+import { Image } from "expo-image";
+import { PressableFeedback } from "heroui-native";
 
 import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { playSoftPress } from "@/src/lib/haptics";
+
+const ART_URL =
+  "https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/ecc29516-333a-42b0-9ee6-e1dbffd80bd9";
+
+// rounded-3xl, as px — the art window has to match the card's own radius.
+const CARD_RADIUS = 24;
+
+const styles = StyleSheet.create({
+  card: { borderCurve: "continuous" },
+  // Android only honours `overflow: 'hidden'` on a view that has a border
+  // radius — without one it never sets up the clip and the art below spills
+  // out past the card.
+  artWindow: {
+    width: 96,
+    overflow: "hidden",
+    borderTopRightRadius: CARD_RADIUS,
+    borderBottomRightRadius: CARD_RADIUS,
+    borderCurve: "continuous",
+  },
+});
 
 /**
  * Today's entry point to the active-kindling screen (docs/paths-v1.md §9.2,
@@ -17,7 +37,6 @@ import { playSoftPress } from "@/src/lib/haptics";
  */
 export function KindlingTodayCard() {
   const router = useRouter();
-  const accent = useThemeColor("accent") as string;
   const kindling = useQuery(api.paths.getActive, {});
 
   if (!kindling) return null;
@@ -35,13 +54,27 @@ export function KindlingTodayCard() {
       accessibilityRole="button"
       accessibilityLabel="Open your kindling"
     >
-      <View className="flex-row items-center gap-4 overflow-hidden rounded-3xl border border-border/65 bg-surface px-5 py-6">
-        <SymbolView name={{ ios: "leaf", android: "eco", web: "eco" }} size={28} tintColor={accent} />
-        <View className="flex-1">
+      <View
+        className="flex-row items-center overflow-hidden rounded-3xl border border-border/65 bg-surface"
+        style={styles.card}
+      >
+        <View className="flex-1 py-6 pl-5 pr-3">
           <AppText className="text-lg font-semibold text-foreground">Your kindling</AppText>
           <AppText className="mt-1.5 text-sm leading-5 text-muted">
             {tended} of {kindling.twigs.length} tended; a few things from your last session.
           </AppText>
+        </View>
+        {/* Stretches to the card's height rather than carrying its own, so the
+            rounded corners land on the card's corners instead of floating a
+            few points inside them. */}
+        <View className="self-stretch" style={styles.artWindow}>
+          <Image
+            source={ART_URL}
+            contentFit="cover"
+            style={{ flex: 1 }}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          />
         </View>
       </View>
     </PressableFeedback>

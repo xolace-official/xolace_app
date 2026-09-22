@@ -20,6 +20,7 @@ import type * as ai_evalMetrics from "../ai/evalMetrics.js";
 import type * as ai_generateNotification from "../ai/generateNotification.js";
 import type * as ai_helpers_episodicSearch from "../ai/helpers/episodicSearch.js";
 import type * as ai_helpers_patternSummary from "../ai/helpers/patternSummary.js";
+import type * as ai_intakeSignals from "../ai/intakeSignals.js";
 import type * as ai_mirrorPlan from "../ai/mirrorPlan.js";
 import type * as ai_paths_audioTracks from "../ai/paths/audioTracks.js";
 import type * as ai_paths_bind from "../ai/paths/bind.js";
@@ -166,6 +167,7 @@ declare const fullApi: ApiFromModules<{
   "ai/generateNotification": typeof ai_generateNotification;
   "ai/helpers/episodicSearch": typeof ai_helpers_episodicSearch;
   "ai/helpers/patternSummary": typeof ai_helpers_patternSummary;
+  "ai/intakeSignals": typeof ai_intakeSignals;
   "ai/mirrorPlan": typeof ai_mirrorPlan;
   "ai/paths/audioTracks": typeof ai_paths_audioTracks;
   "ai/paths/bind": typeof ai_paths_bind;

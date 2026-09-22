@@ -848,7 +848,11 @@ export const listForTimeline = query({
         }),
     );
 
-    return { ...result, page: enrichedPage };
+    return {
+      page: enrichedPage,
+      isDone: result.isDone,
+      continueCursor: result.continueCursor,
+    };
   },
 });
 
