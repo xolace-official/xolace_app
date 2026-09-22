@@ -8,8 +8,9 @@ import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { playSoftPress } from "@/src/lib/haptics";
 
-const ART_URL =
-  "https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/ecc29516-333a-42b0-9ee6-e1dbffd80bd9";
+const ART_URL = __DEV__
+  ? "https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/ecc29516-333a-42b0-9ee6-e1dbffd80bd9"
+  : "https://energetic-guineapig-283.convex.cloud/api/storage/ffeee9b5-769c-48b2-8f25-c6c5f036352c";
 
 // rounded-3xl, as px — the art window has to match the card's own radius.
 const CARD_RADIUS = 24;
