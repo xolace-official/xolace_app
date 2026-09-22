@@ -1,4 +1,5 @@
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
@@ -78,6 +79,9 @@ export function TwigRow({
           <View
             className={`rounded-2xl border border-border bg-surface p-5 ${done ? "opacity-60" : ""}`}
           >
+            {look.image && (
+              <Image source={look.image} contentFit="contain" style={styles.twigImage} />
+            )}
             <AppText className="text-[11px] uppercase tracking-wider text-muted">
               {look.eyebrow}
             </AppText>
@@ -113,3 +117,14 @@ export function TwigRow({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  twigImage: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    width: 56,
+    height: 56,
+    opacity: 0.8,
+  },
+});

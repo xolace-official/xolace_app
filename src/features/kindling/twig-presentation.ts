@@ -13,7 +13,13 @@ export type Twig = Kindling["twigs"][number];
  */
 export const TWIG_PRESENTATION: Record<
   Twig["kind"],
-  { symbol: SymbolViewProps["name"]; eyebrow: string; title: string; actionLabel: string }
+  {
+    symbol: SymbolViewProps["name"];
+    eyebrow: string;
+    title: string;
+    actionLabel: string;
+    image?: string;
+  }
 > = {
   breathing: {
     symbol: { ios: "wind", android: "air", web: "air" },
@@ -26,6 +32,7 @@ export const TWIG_PRESENTATION: Record<
     eyebrow: "Something to hear",
     title: "A voice for this",
     actionLabel: "Play",
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/be99df4e-7738-4cf8-9384-8cabae5a476e",
   },
   music: {
     symbol: { ios: "music.note", android: "music_note", web: "music_note" },
