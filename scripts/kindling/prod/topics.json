@@ -118,5 +118,59 @@
     "title": "Sadness",
     "thumbPath": "thumbs/Sadness/Sadness-album-cover.jpg",
     "thumbSha256": "be2ab6e203227ef07fe0e0e7d33b0422a5d5b8e778bf99b25570266dbdfaf700"
+  },
+  {
+    "slug": "decision_fatigue",
+    "title": "Decision Fatigue",
+    "thumbPath": "support-audio-thumbs/Decision Fatigue/decision-fatigue-album-cover.png",
+    "thumbSha256": "4c7b014c9442637cf9d2b6d393cb724df8dba0c30d93bdc227c9296b9300bad8"
+  },
+  {
+    "slug": "depression_non_crisis",
+    "title": "Depression, Non-Crisis",
+    "thumbPath": "support-audio-thumbs/Depression (Non-Crisis)/depression-no-crisis-album-cover.png",
+    "thumbSha256": "a644c2cffca56a03047a6cba44c04f944e2cc4edd0d2e7c311cbb68509bcc536"
+  },
+  {
+    "slug": "grief",
+    "title": "Grief",
+    "thumbPath": "support-audio-thumbs/Grief/Grief-album-cover.png",
+    "thumbSha256": "2750bd5900121346a358fffdd86e45d82efc11e21a6c145acd9e8d5d3e2bbacd"
+  },
+  {
+    "slug": "mild_burnout",
+    "title": "Mild Burnout",
+    "thumbPath": "support-audio-thumbs/Mild Burnout/mild-burnout-album-cover-sm.png",
+    "thumbSha256": "56b7c005c435996ea2c0d2fecb9a0c9ddfbc2132d7db961fa713e131633247ad"
+  },
+  {
+    "slug": "mild_stress",
+    "title": "Mild Stress",
+    "thumbPath": "support-audio-thumbs/Mild Stress/mild-stress-album-cover.png",
+    "thumbSha256": "d37abc04338ae0ffcdd94813d8509c086f6fcf2b5adf3999be6b9600822bde99"
+  },
+  {
+    "slug": "procrastination",
+    "title": "Procrastination",
+    "thumbPath": "support-audio-thumbs/Procrastination/Proscrastination-album-cover.png",
+    "thumbSha256": "8b6846bef5f5ada835d73525440c60d4c453e7d85d8f9db6921a7361360d494f"
+  },
+  {
+    "slug": "relationship_strain",
+    "title": "Relationship Strain",
+    "thumbPath": "support-audio-thumbs/Relationship Strain/Relationship-strain-album-cover.png",
+    "thumbSha256": "0c9a8366fbc417dd19a4c05c49dd36751a8e778ff40ae3a73a4219b18decef7c"
+  },
+  {
+    "slug": "sleep_hygiene",
+    "title": "Sleep Hygiene",
+    "thumbPath": "support-audio-thumbs/Sleep Hygene/sleep-hygiene-album-cover.png",
+    "thumbSha256": "a2d2a8f9ec94f4684ea819e6130bcb1ed95137319b16689c13d63c883fd15fb7"
+  },
+  {
+    "slug": "social_awkwardness",
+    "title": "Social Awkwardness",
+    "thumbPath": "support-audio-thumbs/Social Awkwardness/social-Awkwardness-album-cover.png",
+    "thumbSha256": "8c3d4ba31509243eaee535c6df6a96eaec1cc27daa656cf354fa64bcf08ccf1f"
   }
 ]
