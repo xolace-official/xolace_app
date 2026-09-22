@@ -64,6 +64,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ios: {
       icon: "./assets/xolace-app-v2.icon",
       bundleIdentifier: getUniqueIdentifier(),
+      supportsTablet: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSPhotoLibraryUsageDescription: "Allow $(PRODUCT_NAME) to access your photos.",
