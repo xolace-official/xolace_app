@@ -110,7 +110,7 @@ describe("parsePathsResponse", () => {
         entry("breathing", 1),
         entry("music_topic_calm_peace", 2),
         entry("audio_topic_grief", 3),
-        entry("audio_topic_anxiety", 4),
+        entry("audio_topic_anxiety_relief", 4),
         entry("xolacer", 5),
       ]),
       CATALOG,
