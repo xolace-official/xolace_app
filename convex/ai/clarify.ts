@@ -318,6 +318,8 @@ export const handleClarification = internalAction({
         episodicRecall: episodic.matches.map((m) => m.text),
         claimStrength,
         useAudioTags: context.isPremium,
+        intakeSignals: context.intakeSignals,
+        turnCount: args.turnNumber,
       });
 
       // 5. Call Sonnet for revised mirror

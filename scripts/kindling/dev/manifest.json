@@ -1,5 +1,33 @@
 [
   {
+    "slug": "support-procrastination-01",
+    "family": "support",
+    "title": "The Procrastination Trap",
+    "topic": "audio_topic_procrastination",
+    "tags": ["avoidance", "stuck", "fear", "momentum", "self-talk"],
+    "sourceTags": ["avoidance", "stuck", "fear", "momentum", "self-talk"],
+    "narrators": ["Juniper"],
+    "audioPath": "support-audios/Procrastination/ElevenLabs_2026-09-17T08_53_34_Juniper - Grounded and Professional_pvc_sp100_s50_sb75_v3.mp3",
+    "thumbPath": "support-audio-thumbs/Procrastination/Proscrastination-album-cover.png",
+    "durationSec": 97,
+    "sha256": "b86a413779c66cad3c34c21fac82b834ff480734730957e6a118bb724a48c22f",
+    "thumbSha256": "8b6846bef5f5ada835d73525440c60d4c453e7d85d8f9db6921a7361360d494f"
+  },
+  {
+    "slug": "support-mild-stress-01",
+    "family": "support",
+    "title": "The Weight You Didn't Notice You Were Carrying",
+    "topic": "audio_topic_mild_stress",
+    "tags": ["tension", "buildup", "intervention", "breathwork", "release"],
+    "sourceTags": ["tension", "buildup", "intervention", "breathwork", "release"],
+    "narrators": ["Juniper"],
+    "audioPath": "support-audios/Mild Stress/The Weight You Didn't Notice You Were Carrying.mp3",
+    "thumbPath": "support-audio-thumbs/Mild Stress/mild-stress-album-cover.png",
+    "durationSec": 91,
+    "sha256": "f15539982ab0f7819c344f7fae32c1b68c5336cb53f39be635c929b466226460",
+    "thumbSha256": "d37abc04338ae0ffcdd94813d8509c086f6fcf2b5adf3999be6b9600822bde99"
+  },
+  {
     "slug": "music-mindfulness-01",
     "family": "music",
     "title": "Meditation Mindfulness Ambient",

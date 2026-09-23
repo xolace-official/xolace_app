@@ -10,5 +10,17 @@
     "title": "Sleep & Rest",
     "thumbPath": "thumbs/sleep-rest-cover.jpg",
     "thumbSha256": "b55056db082da8c17d17e513d9c942b4d3a504287b7d1af393cb24ae32a12470"
+  },
+  {
+    "slug": "procrastination",
+    "title": "Procrastination",
+    "thumbPath": "support-audio-thumbs/Procrastination/Proscrastination-album-cover.png",
+    "thumbSha256": "8b6846bef5f5ada835d73525440c60d4c453e7d85d8f9db6921a7361360d494f"
+  },
+  {
+    "slug": "mild_stress",
+    "title": "Mild Stress",
+    "thumbPath": "support-audio-thumbs/Mild Stress/mild-stress-album-cover.png",
+    "thumbSha256": "d37abc04338ae0ffcdd94813d8509c086f6fcf2b5adf3999be6b9600822bde99"
   }
 ]

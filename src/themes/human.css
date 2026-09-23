@@ -49,6 +49,10 @@
       --tone-gentle: oklch(68% 0.17 15);
       --tone-direct: oklch(68% 0.15 225);
       --tone-witnessed: oklch(72% 0.15 75);
+      --tone-poetic-text: oklch(48% 0.18 305);
+      --tone-gentle-text: oklch(46% 0.17 15);
+      --tone-direct-text: oklch(46% 0.15 225);
+      --tone-witnessed-text: oklch(48% 0.15 75);
       --browse-audio: oklch(70% 0.15 15 / 16%);
       --browse-audio-foreground: oklch(70% 0.15 15);
       --browse-music: oklch(68% 0.11 190 / 16%);
@@ -138,6 +142,10 @@
       --tone-gentle: oklch(72% 0.17 15);
       --tone-direct: oklch(72% 0.15 225);
       --tone-witnessed: oklch(76% 0.15 75);
+      --tone-poetic-text: var(--tone-poetic);
+      --tone-gentle-text: var(--tone-gentle);
+      --tone-direct-text: var(--tone-direct);
+      --tone-witnessed-text: var(--tone-witnessed);
       --browse-audio: oklch(74% 0.15 15 / 14%);
       --browse-audio-foreground: oklch(74% 0.15 15);
       --browse-music: oklch(72% 0.11 190 / 14%);

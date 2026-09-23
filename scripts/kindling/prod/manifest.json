@@ -13781,5 +13781,245 @@
       "minimal accent",
       "content creation"
     ]
+  },
+
+
+
+  
+  {
+    "slug": "support-anxiety-relief-01",
+    "family": "support",
+    "title": "The Noise That Doesn't Turn Off",
+    "topic": "audio_topic_anxiety_relief",
+    "tags": [
+      "vigilance",
+      "masking",
+      "anticipation",
+      "support",
+      "grounding"
+    ],
+    "sourceTags": [
+      "vigilance",
+      "masking",
+      "anticipation",
+      "support",
+      "grounding"
+    ],
+    "audioPath": "support-audios/Anxiety Relief/The Noise That Doesn't Turn Off.mp3",
+    "thumbPath": "support-audio-thumbs/Anxiety Relief/The Noise That Doesn't Turn Off.png",
+    "durationSec": 114,
+    "sha256": "027c7a3408da0e841170ebc339e1ae3b056413e4d7d7f9d06e10ea0dd1d10540",
+    "thumbSha256": "5028ee904ff938e05750ab4bbf55880a93607a5f2426754501a47c45d799c65c"
+  },
+  {
+    "slug": "support-decision-fatigue-01",
+    "family": "support",
+    "title": "Too Many Small Doors",
+    "topic": "audio_topic_decision_fatigue",
+    "tags": [
+      "depletion",
+      "overload",
+      "simplification",
+      "willpower"
+    ],
+    "sourceTags": [
+      "depletion",
+      "overload",
+      "simplification",
+      "willpower"
+    ],
+    "audioPath": "support-audios/Decision Fatigue/Too Many Small Doors.mp3",
+    "thumbPath": "support-audio-thumbs/Decision Fatigue/decision-fatigue-album-cover.png",
+    "durationSec": 89,
+    "sha256": "81e1199885f5827aaf844608ef8d858eba159b3cfd5caff70c3aa73838c21953",
+    "thumbSha256": "4c7b014c9442637cf9d2b6d393cb724df8dba0c30d93bdc227c9296b9300bad8"
+  },
+  {
+    "slug": "support-depression-non-crisis-01",
+    "family": "support",
+    "title": "The Flatness No One Warned You About",
+    "topic": "audio_topic_depression_non_crisis",
+    "tags": [
+      "flatness",
+      "anhedonia",
+      "dismissal",
+      "permission"
+    ],
+    "sourceTags": [
+      "flatness",
+      "anhedonia",
+      "dismissal",
+      "permission"
+    ],
+    "audioPath": "support-audios/Depression (Non-Crisis)/The Flatness No One Warned You About.mp3",
+    "thumbPath": "support-audio-thumbs/Depression (Non-Crisis)/depression-no-crisis-album-cover.png",
+    "durationSec": 118,
+    "sha256": "4320a2e3281ae8c432beb7fc54c3276028c1003298a2117ada0c561ffdbec7d5",
+    "thumbSha256": "a644c2cffca56a03047a6cba44c04f944e2cc4edd0d2e7c311cbb68509bcc536"
+  },
+  {
+    "slug": "support-grief-01",
+    "family": "support",
+    "title": "The Loss That Doesn't Get a Card",
+    "topic": "audio_topic_grief",
+    "tags": [
+      "grief",
+      "loss",
+      "ritual",
+      "validation"
+    ],
+    "sourceTags": [
+      "grief",
+      "loss",
+      "ritual",
+      "validation"
+    ],
+    "audioPath": "support-audios/Grief/The Loss That Doesn't Get a Card.mp3",
+    "thumbPath": "support-audio-thumbs/Grief/Grief-album-cover.png",
+    "durationSec": 118,
+    "sha256": "36bea7e747f8c9e948cbb200c27b417cfaf13d1773c20db0da121b9c876bf52f",
+    "thumbSha256": "2750bd5900121346a358fffdd86e45d82efc11e21a6c145acd9e8d5d3e2bbacd"
+  },
+  {
+    "slug": "support-mild-burnout-01",
+    "family": "support",
+    "title": "Running on a Tank You Didn't Refill",
+    "topic": "audio_topic_mild_burnout",
+    "tags": [
+      "recognition",
+      "exhaustion",
+      "apathy",
+      "onset"
+    ],
+    "sourceTags": [
+      "recognition",
+      "exhaustion",
+      "apathy",
+      "onset"
+    ],
+    "audioPath": "support-audios/Mild Burnout/Running on a Tank You Didn't Refill.mp3",
+    "thumbPath": "support-audio-thumbs/Mild Burnout/mild-burnout-album-cover-sm.png",
+    "durationSec": 84,
+    "sha256": "b0b8cb0bc72d8f1503eb2eef18a2164c944b1b402153d8a15d5d4115ce8d26f8",
+    "thumbSha256": "56b7c005c435996ea2c0d2fecb9a0c9ddfbc2132d7db961fa713e131633247ad"
+  },
+  {
+    "slug": "support-mild-stress-01",
+    "family": "support",
+    "title": "The Weight You Didn't Notice You Were Carrying",
+    "topic": "audio_topic_mild_stress",
+    "tags": [
+      "tension",
+      "buildup",
+      "intervention",
+      "breathwork",
+      "release"
+    ],
+    "sourceTags": [
+      "tension",
+      "buildup",
+      "intervention",
+      "breathwork",
+      "release"
+    ],
+    "audioPath": "support-audios/Mild Stress/The Weight You Didn't Notice You Were Carrying.mp3",
+    "thumbPath": "support-audio-thumbs/Mild Stress/mild-stress-album-cover.png",
+    "durationSec": 91,
+    "sha256": "f15539982ab0f7819c344f7fae32c1b68c5336cb53f39be635c929b466226460",
+    "thumbSha256": "d37abc04338ae0ffcdd94813d8509c086f6fcf2b5adf3999be6b9600822bde99"
+  },
+  {
+    "slug": "support-procrastination-01",
+    "family": "support",
+    "title": "The Procrastination Trap",
+    "topic": "audio_topic_procrastination",
+    "tags": [
+      "avoidance",
+      "stuck",
+      "fear",
+      "momentum",
+      "self-talk"
+    ],
+    "sourceTags": [
+      "avoidance",
+      "stuck",
+      "fear",
+      "momentum",
+      "self-talk"
+    ],
+    "audioPath": "support-audios/Procrastination/procrastination-trap.mp3",
+    "thumbPath": "support-audio-thumbs/Procrastination/Proscrastination-album-cover.png",
+    "durationSec": 97,
+    "sha256": "b86a413779c66cad3c34c21fac82b834ff480734730957e6a118bb724a48c22f",
+    "thumbSha256": "8b6846bef5f5ada835d73525440c60d4c453e7d85d8f9db6921a7361360d494f"
+  },
+  {
+    "slug": "support-relationship-strain-01",
+    "family": "support",
+    "title": "Fine, on Paper",
+    "topic": "audio_topic_relationship_strain",
+    "tags": [
+      "drift",
+      "gap",
+      "blamelessness",
+      "repair"
+    ],
+    "sourceTags": [
+      "drift",
+      "gap",
+      "blamelessness",
+      "repair"
+    ],
+    "audioPath": "support-audios/Relationship Strain/Fine, on Paper.mp3",
+    "thumbPath": "support-audio-thumbs/Relationship Strain/Relationship-strain-album-cover.png",
+    "durationSec": 106,
+    "sha256": "9a9fe520b4bfcb51ec25b4788a866fa33a826da9d529330740ab0ad3e14872e3",
+    "thumbSha256": "0c9a8366fbc417dd19a4c05c49dd36751a8e778ff40ae3a73a4219b18decef7c"
+  },
+  {
+    "slug": "support-sleep-hygiene-01",
+    "family": "support",
+    "title": "Stop Fighting Sleep. Fix the Habits.",
+    "topic": "audio_topic_sleep_hygiene",
+    "tags": [
+      "screens",
+      "winddown",
+      "consistency",
+      "arousal"
+    ],
+    "sourceTags": [
+      "screens",
+      "winddown",
+      "consistency",
+      "arousal"
+    ],
+    "audioPath": "support-audios/Sleep Hygene/Stop Fighting Sleep-Fix the Habits.mp3",
+    "thumbPath": "support-audio-thumbs/Sleep Hygene/sleep-hygiene-album-cover.png",
+    "durationSec": 108,
+    "sha256": "57e201f175c5ffa99513ce86d9fcf07a7c25c62a281f751ca21cfba95714deab",
+    "thumbSha256": "a2d2a8f9ec94f4684ea819e6130bcb1ed95137319b16689c13d63c883fd15fb7"
+  },
+  {
+    "slug": "support-social-awkwardness-01",
+    "family": "support",
+    "title": "The Room Doesn't Notice You the Way You Think It Does",
+    "topic": "audio_topic_social_awkwardness",
+    "tags": [
+      "rumination",
+      "insecurity",
+      "vigilance",
+      "perspective"
+    ],
+    "sourceTags": [
+      "rumination",
+      "insecurity",
+      "vigilance",
+      "perspective"
+    ],
+    "audioPath": "support-audios/Social Awkwardness/The Room Doesn't Notice You the Way You Think It Does.mp3",
+    "thumbPath": "support-audio-thumbs/Social Awkwardness/social-Awkwardness-album-cover.png",
+    "durationSec": 106,
+    "sha256": "09fe9facaf609c7195078326150fd74d323a2d5e30e65b25711a9c03bf112bbd",
+    "thumbSha256": "8c3d4ba31509243eaee535c6df6a96eaec1cc27daa656cf354fa64bcf08ccf1f"
   }
 ]

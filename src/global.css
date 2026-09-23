@@ -166,6 +166,14 @@
     --tone-direct: oklch(68% 0.15 225);
     --tone-witnessed: oklch(72% 0.15 75);
 
+    /* Text variants of the tone hues — the badge lightness (68-72%) reads as
+     * text on a light background, so the texture pill labels need a deeper
+     * pull of the same hue. Dark theme keeps the badge value (see below). */
+    --tone-poetic-text: oklch(48% 0.18 305);
+    --tone-gentle-text: oklch(46% 0.17 15);
+    --tone-direct-text: oklch(46% 0.15 225);
+    --tone-witnessed-text: oklch(48% 0.15 75);
+
     /* Browse hub entry icons (#338) — fixed per-entry hues, same across
      * every theme (like --tone-*), so Support audio / Music / Topics stay
      * visually distinct without borrowing --accent. */
@@ -310,6 +318,13 @@
     --tone-direct: oklch(72% 0.15 225);
     --tone-witnessed: oklch(76% 0.15 75);
 
+    /* Dark theme reads fine at the badge lightness, so the text variant is
+     * the same value — unlike light theme, no deeper pull is needed. */
+    --tone-poetic-text: var(--tone-poetic);
+    --tone-gentle-text: var(--tone-gentle);
+    --tone-direct-text: var(--tone-direct);
+    --tone-witnessed-text: var(--tone-witnessed);
+
     /* Browse hub entry icons (#338) — same hues as light, bumped for dark */
     --browse-audio: oklch(74% 0.15 25 / 14%);
     --browse-audio-foreground: oklch(74% 0.15 25);
@@ -386,4 +401,9 @@
   --color-tone-gentle: var(--tone-gentle);
   --color-tone-direct: var(--tone-direct);
   --color-tone-witnessed: var(--tone-witnessed);
+
+  --color-tone-poetic-text: var(--tone-poetic-text);
+  --color-tone-gentle-text: var(--tone-gentle-text);
+  --color-tone-direct-text: var(--tone-direct-text);
+  --color-tone-witnessed-text: var(--tone-witnessed-text);
 }

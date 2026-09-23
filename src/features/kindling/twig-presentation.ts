@@ -13,37 +13,48 @@ export type Twig = Kindling["twigs"][number];
  */
 export const TWIG_PRESENTATION: Record<
   Twig["kind"],
-  { symbol: SymbolViewProps["name"]; eyebrow: string; title: string; actionLabel: string }
+  {
+    symbol: SymbolViewProps["name"];
+    eyebrow: string;
+    title: string;
+    actionLabel: string;
+    image?: string;
+  }
 > = {
   breathing: {
     symbol: { ios: "wind", android: "air", web: "air" },
     eyebrow: "A few minutes",
     title: "Sit with this",
     actionLabel: "Begin",
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/6d4d937e-8dd9-4e8d-bbd6-3ee58b538988",
   },
   audio: {
     symbol: { ios: "waveform", android: "graphic_eq", web: "graphic_eq" },
     eyebrow: "Something to hear",
     title: "A voice for this",
     actionLabel: "Play",
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/be99df4e-7738-4cf8-9384-8cabae5a476e",
   },
   music: {
     symbol: { ios: "music.note", android: "music_note", web: "music_note" },
     eyebrow: "Something to hear",
     title: "Low sound for the quiet",
     actionLabel: "Play",
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/91ae3a04-e554-431a-b2e0-e4c46191cf76",
   },
   xolacer: {
     symbol: { ios: "person.2", android: "group", web: "group" },
     eyebrow: "When you want it",
     title: "Someone who has been here",
     actionLabel: "See who",
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/6642efe2-7add-4a87-91d8-70f547ada414",
   },
   bridge: {
     symbol: { ios: "envelope", android: "mail", web: "mail" },
     eyebrow: "When you're ready",
     title: "Tell someone you trust",
     actionLabel: "Write",
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/8f7dc3c4-9caa-4744-b3bf-2393b572a1e9",
   },
 };
 

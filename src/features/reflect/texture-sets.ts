@@ -93,25 +93,25 @@ export const TEXTURE_PILL: Record<
   violet: {
     rest: 'bg-tone-poetic/10 border-tone-poetic/25',
     selected: 'bg-tone-poetic/25 border-tone-poetic/55',
-    label: 'text-tone-poetic',
+    label: 'text-tone-poetic-text',
     echo: 'bg-tone-poetic/18',
   },
   rose: {
     rest: 'bg-tone-gentle/10 border-tone-gentle/25',
     selected: 'bg-tone-gentle/25 border-tone-gentle/55',
-    label: 'text-tone-gentle',
+    label: 'text-tone-gentle-text',
     echo: 'bg-tone-gentle/18',
   },
   blue: {
     rest: 'bg-tone-direct/10 border-tone-direct/25',
     selected: 'bg-tone-direct/25 border-tone-direct/55',
-    label: 'text-tone-direct',
+    label: 'text-tone-direct-text',
     echo: 'bg-tone-direct/18',
   },
   amber: {
     rest: 'bg-tone-witnessed/10 border-tone-witnessed/25',
     selected: 'bg-tone-witnessed/25 border-tone-witnessed/55',
-    label: 'text-tone-witnessed',
+    label: 'text-tone-witnessed-text',
     echo: 'bg-tone-witnessed/18',
   },
 };
