@@ -2183,6 +2183,7 @@ export default defineSchema({
     attributionText: v.string(), // required credit line, shown on every entry
     dropBrandingIfAdapted: v.boolean(),
     refreshDays: v.optional(v.number()), // verbatim refresh SLA, e.g. NHS = 7
+    sha256: v.optional(v.string()), // ingest no-op gate (#406)
   }).index("by_slug", ["slug"]),
 
   library_entries: defineTable({
@@ -2206,6 +2207,7 @@ export default defineSchema({
     consentRecordedAt: v.optional(v.number()), // stories: required to publish
     safetyReviewedAt: v.optional(v.number()), // explainers: required to publish
     lastReviewedAt: v.number(),
+    sha256: v.optional(v.string()), // ingest no-op gate: manifest record + body (#406)
   })
     .index("by_slug", ["slug"])
     .index("by_active_and_kind", ["active", "kind"]),
@@ -2241,6 +2243,7 @@ export default defineSchema({
         v.object({ kind: v.literal("audio"), audioTrackId: v.id("audio_tracks") }),
       ),
     ), // bounded by editorial practice (a hub is a short running order)
+    sha256: v.optional(v.string()), // ingest no-op gate (#406)
   })
     .index("by_slug", ["slug"])
     .index("by_active", ["active"]),
