@@ -11,9 +11,10 @@ import { AaSheetFrame, Label, SizeStepper, SurfaceScope, type AaSheetProps } fro
 import { FACES, type Appearance } from './reader-appearance';
 
 const MODES = [
-  { key: 'classic', label: 'Classic', blurb: 'The book face, on your app theme', look: { face: 'literata', spacing: 'normal', surface: 'app' } },
+  // #401 ruling: one face per mode — the app's own face, the hyperlegible face, the book serif.
+  { key: 'classic', label: 'Classic', blurb: 'The app’s own face and theme', look: { face: 'spaceGrotesk', spacing: 'normal', surface: 'app' } },
   { key: 'clear', label: 'Clear', blurb: 'Hyperlegible, roomier lines, paper', look: { face: 'atkinson', spacing: 'loose', surface: 'paper' } },
-  { key: 'fire', label: 'By the fire', blurb: 'Warm and dim, for reading at night', look: { face: 'literata', spacing: 'normal', surface: 'night' } },
+  { key: 'fire', label: 'By the fire', blurb: 'A book serif, warm and dim for night', look: { face: 'literata', spacing: 'normal', surface: 'night' } },
 ] as const satisfies readonly { key: string; label: string; blurb: string; look: Omit<Appearance, 'size'> }[];
 
 export function AaSheetModes({ isOpen, onClose, value, onChange }: AaSheetProps) {
