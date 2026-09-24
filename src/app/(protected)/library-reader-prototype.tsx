@@ -22,7 +22,9 @@ import { VariantCListenDock } from '@/src/features/library/prototype-reader/vari
 const VARIANTS = { A: VariantACoverFold, B: VariantBQuietPage, C: VariantCListenDock };
 
 export default function LibraryReaderPrototypeRoute() {
-  const { variant, plus } = useLocalSearchParams<{ variant?: string; plus?: string }>();
+  const { variant, plus, cover, title } = useLocalSearchParams<{ variant?: string; plus?: string; cover?: string; title?: string }>();
+  // #396 zoom experiment: show the tapped entry's cover/title so the zoom lands on the same photo
+  const entry = { ...MOCK_ENTRY, coverUrl: cover ?? MOCK_ENTRY.coverUrl, title: title ?? MOCK_ENTRY.title };
   const current: VariantKey = variant === 'B' || variant === 'C' ? variant : 'A';
   const isPlus = plus === '1';
   const Variant = VARIANTS[current];
@@ -30,7 +32,7 @@ export default function LibraryReaderPrototypeRoute() {
   return (
     <View className="flex-1 bg-background">
       {/* keyed so switching variant or tier resets scroll + playback */}
-      <Variant key={`${current}-${isPlus}`} entry={MOCK_ENTRY} isPlus={isPlus} />
+      <Variant key={`${current}-${isPlus}`} entry={entry} isPlus={isPlus} />
       <PrototypeSwitcher current={current} isPlus={isPlus} />
     </View>
   );

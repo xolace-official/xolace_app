@@ -4,7 +4,7 @@
  * a native `Stack.Toolbar.Menu` (inline sections) — no custom filter sheet.
  */
 import { Image } from 'expo-image';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 
@@ -61,7 +61,10 @@ export default function LibraryListPrototypeRoute() {
       <ScrollView className="flex-1 bg-background" contentInsetAdjustmentBehavior={hub ? 'never' : 'automatic'} contentContainerStyle={{ paddingBottom: 120 }}>
         {hub && (
           <View>
-            <Image source={{ uri: hub.cover }} style={{ width, height: width * 0.8 }} />
+            {/* Zoom experiment (#396): where the hub card lands */}
+            <Link.AppleZoomTarget>
+              <Image source={{ uri: hub.cover }} style={{ width, height: width * 0.8 }} />
+            </Link.AppleZoomTarget>
             <View className="gap-2 px-4 pb-2 pt-5">
               <AppText style={[SERIF, { fontSize: 30, lineHeight: 35 }]} className="font-bold">{hub.title}</AppText>
               <AppText className="text-muted text-[16px] leading-[22px]">{hub.blurb}</AppText>

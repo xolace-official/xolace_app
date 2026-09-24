@@ -12,6 +12,7 @@
  */
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
@@ -95,7 +96,10 @@ export function VariantACoverFold({ entry, isPlus }: { entry: MockEntry; isPlus:
   return (
     <View className="flex-1 bg-background" onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        {photoEl}
+        {/* #396 zoom experiment: the cover is where a tapped thumbnail/card lands */}
+        <Link.AppleZoomTarget>
+          <View style={{ width, height: coverH }}>{photoEl}</View>
+        </Link.AppleZoomTarget>
       </View>
 
       <Animated.ScrollView
