@@ -102,6 +102,8 @@ export function UpNextCard({
       <Pressable className="active:opacity-90" style={{ width, height }}>
         <Link.AppleZoom>
           <View
+            // AppleZoom needs exactly one native child: keep this wrapper from being flattened
+            collapsable={false}
             className="flex-1 overflow-hidden rounded-[28px]"
             style={{ borderCurve: "continuous" }}
           >

@@ -97,6 +97,8 @@ export function HubCarousel({ hubs }: { hubs: Hub[] }) {
               <Pressable className="active:opacity-90" style={{ width: cardW }}>
                 <Link.AppleZoom>
                   <View
+                    // AppleZoom needs exactly one native child: keep this wrapper from being flattened
+                    collapsable={false}
                     className="bg-surface rounded-[28px] p-2"
                     style={{ borderCurve: "continuous" }}
                   >
