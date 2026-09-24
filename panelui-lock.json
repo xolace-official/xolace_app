@@ -20,6 +20,22 @@
     "src/components/ui/questionnaire.tsx": {
       "item": "questionnaire",
       "digest": "sha256:321d252604c0afcbdb00854ae90fa2a4775478b4693a57d5a33ce1214cf24f3f"
+    },
+    "src/components/ui/scroll-header.tsx": {
+      "item": "scroll-header",
+      "digest": "sha256:ed99a2cc9ac58c4d7756a5ccc1e391b4e73d52beeb66e85afa1e17b010b6bdbd"
+    },
+    "src/components/ui/scroll-header-math.ts": {
+      "item": "scroll-header",
+      "digest": "sha256:2596c5986e08f95d57bb77fa45cba9d6b92f1391fca71b73c39d7734a1322985"
+    },
+    "src/components/ui/scrim.tsx": {
+      "item": "scrim",
+      "digest": "sha256:b8a5f68918ced359b54fa8897f752c6f18ad6a9f2e8e445c572d19f518986fb2"
+    },
+    "src/helpers/hooks/use-theme.ts": {
+      "item": "use-theme",
+      "digest": "sha256:1e0fe0e82d80fbb51c93bf6735d2676cf5f125a7f8f1210756e0aec5e8ec743f"
     }
   },
   "roots": {
@@ -45,6 +61,14 @@
       "keyboard-avoider",
       "use-keyboard-avoidance",
       "label"
+    ],
+    "scroll-header": [
+      "scroll-header",
+      "cn",
+      "scrim",
+      "text",
+      "use-direction",
+      "use-theme"
     ]
   },
   "legacyFiles": [],
