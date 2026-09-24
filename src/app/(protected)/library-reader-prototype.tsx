@@ -1,37 +1,53 @@
 /**
- * PROTOTYPE — throwaway route for #395 (Library: reader screen prototype).
- * Not linked from anywhere; open it directly:
- *   router.push('/library-reader-prototype?variant=A')
+ * PROTOTYPE — throwaway route for #395 (reader screen) and #401 (reader
+ * typeface + Aa appearance sheet). Not linked from anywhere; open it directly:
+ *   xolace://library-reader-prototype?aa=A&plus=0
  *
- * Three reader variants, switchable via `?variant=`, and `?plus=1|0` for the
- * audio gate:
- *   A — Cover fold: parallax cover folds into a photo bar, rounded body sheet,
- *       progress hairline, compact docked mini-player
- *   B — Quiet page: typographic ScrollHeader, one pill = progress + player
- *   C — Listen dock: inset cover card, section-aware bar, persistent dock
+ * The reader is #395's chosen variant A (cover fold); the body now renders
+ * through react-native-enriched-markdown. Tap the `Aa` button in the bar.
+ * Three Aa sheets, switchable via `?aa=`:
+ *   A — Quick:  size, Book vs Hyperlegible, page surface
+ *   B — Studio: live preview, every face, size, line spacing, surface
+ *   C — Modes:  three presets (Classic / Clear / By the fire) + size
+ * Appearance is in-memory and shared across sheets, so switching keeps it.
  */
 import { useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { View } from 'react-native';
 
+import { AaSheetQuick } from '@/src/features/library/prototype-reader/aa-sheet-a-quick';
+import { AaSheetStudio } from '@/src/features/library/prototype-reader/aa-sheet-b-studio';
+import { AaSheetModes } from '@/src/features/library/prototype-reader/aa-sheet-c-modes';
 import { MOCK_ENTRY } from '@/src/features/library/prototype-reader/mock-entry';
-import { PrototypeSwitcher, type VariantKey } from '@/src/features/library/prototype-reader/prototype-switcher';
+import { PrototypeSwitcher, type AaKey } from '@/src/features/library/prototype-reader/prototype-switcher';
+import { DEFAULT_APPEARANCE, useReaderFonts } from '@/src/features/library/prototype-reader/reader-appearance';
 import { VariantACoverFold } from '@/src/features/library/prototype-reader/variant-a-cover-fold';
-import { VariantBQuietPage } from '@/src/features/library/prototype-reader/variant-b-quiet-page';
-import { VariantCListenDock } from '@/src/features/library/prototype-reader/variant-c-listen-dock';
 
-const VARIANTS = { A: VariantACoverFold, B: VariantBQuietPage, C: VariantCListenDock };
+const SHEETS = { A: AaSheetQuick, B: AaSheetStudio, C: AaSheetModes };
 
 export default function LibraryReaderPrototypeRoute() {
-  const { variant, plus } = useLocalSearchParams<{ variant?: string; plus?: string }>();
-  const current: VariantKey = variant === 'B' || variant === 'C' ? variant : 'A';
+  const { aa, plus } = useLocalSearchParams<{ aa?: string; plus?: string }>();
+  const current: AaKey = aa === 'B' || aa === 'C' ? aa : 'A';
   const isPlus = plus === '1';
-  const Variant = VARIANTS[current];
+  const Sheet = SHEETS[current];
+
+  const fontsLoaded = useReaderFonts();
+  const [appearance, setAppearance] = useState(DEFAULT_APPEARANCE);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  if (!fontsLoaded) return <View className="flex-1 bg-background" />;
 
   return (
     <View className="flex-1 bg-background">
-      {/* keyed so switching variant or tier resets scroll + playback */}
-      <Variant key={`${current}-${isPlus}`} entry={MOCK_ENTRY} isPlus={isPlus} />
-      <PrototypeSwitcher current={current} isPlus={isPlus} />
+      <VariantACoverFold
+        key={String(isPlus)}
+        entry={MOCK_ENTRY}
+        isPlus={isPlus}
+        appearance={appearance}
+        onAa={() => setSheetOpen(true)}
+      />
+      <PrototypeSwitcher current={current} isPlus={isPlus} appearance={appearance} />
+      <Sheet isOpen={sheetOpen} onClose={() => setSheetOpen(false)} value={appearance} onChange={setAppearance} />
     </View>
   );
 }

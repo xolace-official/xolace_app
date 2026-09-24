@@ -57,6 +57,10 @@
     "@convex-dev/rate-limiter": "^0.3.2",
     "@convex-dev/react-query": "^0.1.0",
     "@convex-dev/workflow": "^0.4.6",
+    "@expo-google-fonts/atkinson-hyperlegible-next": "^0.4.1",
+    "@expo-google-fonts/literata": "^0.4.3",
+    "@expo-google-fonts/newsreader": "^0.4.1",
+    "@expo-google-fonts/source-serif-4": "^0.4.1",
     "@expo-google-fonts/space-grotesk": "^0.4.1",
     "@expo/material-symbols": "^0.1.1",
     "@gorhom/bottom-sheet": "^5.2.14",
@@ -117,6 +121,7 @@
     "react-error-boundary": "^5",
     "react-native": "0.86.3",
     "react-native-ease": "^0.8.0",
+    "react-native-enriched-markdown": "^1.0.2",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-keyboard-controller": "1.21.9",
     "react-native-pulsar": "^1.7.0",
@@ -154,6 +159,11 @@
     "vitest": "^4.1.11"
   },
   "private": true,
+  "enriched-markdown": {
+    "enableCodeHighlight": false,
+    "enableMath": false,
+    "enableVideo": false
+  },
   "trustedDependencies": [
     "@clerk/shared",
     "@sentry/cli",
@@ -162,6 +172,7 @@
     "bufferutil",
     "core-js",
     "esbuild",
+    "react-native-enriched-markdown",
     "stream-chat",
     "unrs-resolver",
     "utf-8-validate"

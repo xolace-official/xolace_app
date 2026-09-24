@@ -26,7 +26,9 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/src/components/shared/app-text';
-import { READING_FACE, useMockPlayback, type MockEntry } from './mock-entry';
+import { useMockPlayback, type MockEntry } from './mock-entry';
+import { SurfaceScope } from './aa-controls';
+import { FACES, useSurface, type Appearance } from './reader-appearance';
 import { EndMagazine } from './end-magazine';
 import { BackButton, EntryBody, GlassButton, Glyph, KindAndTime, SourceCredit } from './shared';
 import { BackToTop } from './back-to-top';
@@ -38,7 +40,17 @@ const BAR_ROW = 52;
 const MINI_PLAYER_H = 72; // ponytail: measured by eye; onLayout if the player's height ever varies
 const SCRIM = ['transparent', 'rgba(0,0,0,0.65)'] as const; // ponytail: photo scrim, not a theme colour
 
-export function VariantACoverFold({ entry, isPlus }: { entry: MockEntry; isPlus: boolean }) {
+export function VariantACoverFold({
+  entry,
+  isPlus,
+  appearance,
+  onAa,
+}: {
+  entry: MockEntry;
+  isPlus: boolean;
+  appearance: Appearance;
+  onAa: () => void;
+}) {
   const insets = useSafeAreaInsets();
   const { height: screenH, width } = useWindowDimensions();
   const coverH = Math.round(screenH * 0.52);
@@ -46,6 +58,9 @@ export function VariantACoverFold({ entry, isPlus }: { entry: MockEntry; isPlus:
   const fold = coverH - SHEET_OVERLAP - barH; // scroll at which the sheet meets the bar
   const imageStop = (coverH - barH) / 2; // parallax travel before the photo pins
 
+  // ponytail: bg painted from the hook — ScopedVariables didn't reach `bg-background`
+  // on the sheet (see #401 resolution); text/ink classes do follow the scope.
+  const page = useSurface(appearance.surface).bg;
   const playback = useMockPlayback(entry.listenMin * 60, isPlus);
   const [contentH, setContentH] = useState(1);
   const [viewH, setViewH] = useState(1);
@@ -93,7 +108,8 @@ export function VariantACoverFold({ entry, isPlus }: { entry: MockEntry; isPlus:
   );
 
   return (
-    <View className="flex-1 bg-background" onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>
+    <SurfaceScope surface={appearance.surface}>
+    <View className="flex-1" style={{ backgroundColor: page }} onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {photoEl}
       </View>
@@ -111,13 +127,13 @@ export function VariantACoverFold({ entry, isPlus }: { entry: MockEntry; isPlus:
           style={[{ height: coverH - SHEET_OVERLAP }, largeTitle]}
         >
           <AppText className="mb-2 text-xs uppercase tracking-widest text-white/80">{entry.kind}</AppText>
-          <AppText className="text-white" style={{ fontFamily: READING_FACE, fontSize: 32, lineHeight: 38, fontWeight: '700' }}>
+          <AppText className="text-white" style={{ fontFamily: FACES[appearance.face].bold, fontSize: 32, lineHeight: 38 }}>
             {entry.title}
           </AppText>
           <KindAndTime entry={entry} className="mt-2 text-sm text-white/80" />
         </Animated.View>
 
-        <View className="rounded-t-[28px] bg-background px-6 pt-6" style={{ borderCurve: 'continuous', minHeight: screenH }}>
+        <View className="rounded-t-[28px] px-6 pt-6" style={{ borderCurve: 'continuous', minHeight: screenH, backgroundColor: page }}>
           <View className="mb-8 flex-row items-center gap-3">
             <View className="flex-1">
               <SourceCredit entry={entry} />
@@ -131,7 +147,7 @@ export function VariantACoverFold({ entry, isPlus }: { entry: MockEntry; isPlus:
             </Pressable>
           </View>
           <View onLayout={(e) => tracker.bodyY.set(coverH - SHEET_OVERLAP + e.nativeEvent.layout.y)}>
-            <EntryBody entry={entry} onSectionLayout={tracker.onSectionLayout} />
+            <EntryBody entry={entry} appearance={appearance} onSectionLayout={tracker.onSectionLayout} />
           </View>
           <EndMagazine entry={entry} bottomInset={insets.bottom + (playback.started ? 150 : 80)} />
         </View>
@@ -151,6 +167,7 @@ export function VariantACoverFold({ entry, isPlus }: { entry: MockEntry; isPlus:
             </AppText>
             <BarSection entry={entry} scrollY={y} line={barH + 24} tracker={tracker} />
           </Animated.View>
+          <GlassButton name="textformat.size" label="Reading appearance" onPress={onAa} onImage />
           <GlassButton name="bookmark" label="Save" onImage />
           <GlassButton name="square.and.arrow.up" label="Share" onImage />
         </View>
@@ -166,6 +183,7 @@ export function VariantACoverFold({ entry, isPlus }: { entry: MockEntry; isPlus:
       />
       <DockedMiniPlayer entry={entry} playback={playback} bottom={insets.bottom} />
     </View>
+    </SurfaceScope>
   );
 }
 

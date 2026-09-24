@@ -10,7 +10,9 @@ import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-nativ
 import { useCSSVariable } from 'uniwind';
 
 import { AppText } from '@/src/components/shared/app-text';
-import { READING_FACE, type MockEntry } from './mock-entry';
+import { EnrichedMarkdownText } from 'react-native-enriched-markdown';
+import type { MockEntry } from './mock-entry';
+import { DEFAULT_APPEARANCE, useMarkdownStyle, type Appearance } from './reader-appearance';
 
 /**
  * The one spring every variant uses: damping ratio ≈ 1 (30 / 2√220), so it
@@ -97,26 +99,25 @@ export function SourceCredit({ entry }: { entry: MockEntry }) {
 export function EntryBody({
   entry,
   onSectionLayout,
+  appearance = DEFAULT_APPEARANCE,
 }: {
   entry: MockEntry;
   onSectionLayout?: (index: number, y: number) => void;
+  appearance?: Appearance;
 }) {
+  // #401: rendered through enriched-markdown, one node per section so the
+  // section tracker still gets an offset for each.
+  const markdownStyle = useMarkdownStyle(appearance);
   return (
-    <View className="gap-7">
+    <View className="gap-4">
       {entry.sections.map((s, i) => (
-        <View
-          key={s.id}
-          className="gap-4"
-          onLayout={(e: LayoutChangeEvent) => onSectionLayout?.(i, e.nativeEvent.layout.y)}
-        >
-          <AppText accessibilityRole="header" className="font-bold text-xl">
-            {s.heading}
-          </AppText>
-          {s.paragraphs.map((p, j) => (
-            <AppText key={j} selectable style={{ fontFamily: READING_FACE, fontSize: 18, lineHeight: 28 }}>
-              {p}
-            </AppText>
-          ))}
+        <View key={s.id} onLayout={(e: LayoutChangeEvent) => onSectionLayout?.(i, e.nativeEvent.layout.y)}>
+          <EnrichedMarkdownText
+            flavor="github"
+            selectable
+            markdownStyle={markdownStyle}
+            markdown={`## ${s.heading}\n\n${s.paragraphs.join('\n\n')}`}
+          />
         </View>
       ))}
     </View>

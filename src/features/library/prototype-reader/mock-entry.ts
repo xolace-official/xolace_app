@@ -31,7 +31,7 @@ export const MOCK_ENTRY = {
       heading: 'What racing thoughts usually look like',
       paragraphs: [
         'Replaying a conversation and rewriting what you should have said. Running through tomorrow’s list again and again. Jumping from one worry to a bigger, vaguer one.',
-        'Notice that very few of these thoughts end in a decision. They loop. Naming the loop — “I’m rehearsing again” — is often the first thing that loosens it.',
+        'Notice that very few of these thoughts end in a decision. They loop. Naming the loop — *“I’m rehearsing again”* — is **often the first thing that loosens it.**',
       ],
     },
     {
@@ -40,7 +40,7 @@ export const MOCK_ENTRY = {
       paragraphs: [
         'Give the thoughts somewhere to go before bed. Ten minutes with a notebook — what is bothering me, what is the next small step — tells your mind the problem has been parked, not ignored.',
         'If you have been awake for what feels like twenty minutes, get up. Do something dull in dim light until you feel sleepy, then try again. Bed should stay the place where sleep happens, not where worrying happens.',
-        'Slow your breathing: in for four, out for six. A longer out-breath is one of the few levers you have directly on your nervous system.',
+        '**Slow your breathing:** in for four, out for six. A longer out-breath is one of the few levers you have directly on your nervous system.',
       ],
     },
     {

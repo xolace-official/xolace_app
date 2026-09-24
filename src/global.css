@@ -96,6 +96,18 @@
      * change typeface with the chrome behind it. */
     --font-poster-display: "SpaceGrotesk-Bold";
     --font-poster-body: "SpaceGrotesk-Regular";
+
+    /* PROTOTYPE (#401) — reader-local surfaces the Aa sheet can pick over the
+     * app theme. Warm, low-blue; "night" is for reading in the dark. */
+    --color-reader-paper-bg: #fbf8f1;
+    --color-reader-paper-ink: #2b2724;
+    --color-reader-paper-muted: #6f6760;
+    --color-reader-sepia-bg: #f1e6d0;
+    --color-reader-sepia-ink: #3b2f22;
+    --color-reader-sepia-muted: #7a6a55;
+    --color-reader-night-bg: #1b1714;
+    --color-reader-night-ink: #e6dccb;
+    --color-reader-night-muted: #9c9080;
 }
 
 @layer theme {
