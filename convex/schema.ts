@@ -2158,4 +2158,90 @@ export default defineSchema({
     ),
     why_: v.optional(v.string()), // (reserved) tuning notes
   }).index("by_path", ["pathId"]),
+
+  // ===========================================================
+  // LIBRARY — curated reading (#405, CONTEXT.md "Library", ADR 0015)
+  // ===========================================================
+  //
+  // Shared catalogue rows, cascade-exempt like `audio_tracks`: no
+  // sessionId/profileId, never touched by wipe or account deletion.
+  // Written only by the curator ingest (scripts/library, #406); retraction
+  // is `active: false`, never a delete (#404).
+  //
+  library_sources: defineTable({
+    slug: v.string(),
+    name: v.string(), // publisher, as credited: "NHS", "NIMH", "Xolace"
+    url: v.optional(v.string()),
+    logoUrl: v.optional(v.string()), // stable URL (#386), not a signed one
+    // Reuse terms belong to the source (#384).
+    licence: v.string(), // e.g. "OGL v3.0", "US public domain", "Xolace original"
+    permission: v.union(
+      v.literal("not_required"),
+      v.literal("granted"),
+      v.literal("pending"),
+    ),
+    attributionText: v.string(), // required credit line, shown on every entry
+    dropBrandingIfAdapted: v.boolean(),
+    refreshDays: v.optional(v.number()), // verbatim refresh SLA, e.g. NHS = 7
+  }).index("by_slug", ["slug"]),
+
+  library_entries: defineTable({
+    slug: v.string(),
+    kind: v.union(v.literal("explainer"), v.literal("advice"), v.literal("story")),
+    title: v.string(),
+    dek: v.string(),
+    primarySubject: v.string(), // shelf home; also written as a `subject` facet
+    sourceId: v.id("library_sources"),
+    reuse: v.union(v.literal("verbatim"), v.literal("adapted"), v.literal("original")),
+    readMin: v.number(), // computed at ingest
+    active: v.boolean(),
+    newUntil: v.optional(v.number()),
+    coverUrl: v.optional(v.string()), // else the primary subject's cover
+    originalUrl: v.optional(v.string()),
+    author: v.optional(v.string()),
+    publishedAt: v.optional(v.number()),
+    retrievedAt: v.optional(v.number()),
+    storyDescriptor: v.optional(v.string()), // stories: "a second-year student, 20"
+    // Curator-only — never returned to readers (#387, #404).
+    consentRecordedAt: v.optional(v.number()), // stories: required to publish
+    safetyReviewedAt: v.optional(v.number()), // explainers: required to publish
+    lastReviewedAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_active_and_kind", ["active", "kind"]),
+
+  // GFM markdown (#386), kept off `library_entries` so lists skip it.
+  library_entry_bodies: defineTable({
+    entryId: v.id("library_entries"),
+    markdown: v.string(),
+  }).index("by_entryId", ["entryId"]),
+
+  // Facets are generic (axis, slug) rows, not per-axis columns (ADR 0015),
+  // so every value is indexable and a new axis needs no schema change.
+  // `emotion` / `lifeArea` slugs come from lib/understandingVocab.ts.
+  library_entry_facets: defineTable({
+    entryId: v.id("library_entries"),
+    axis: v.string(), // subject | audience | emotion | lifeArea | …
+    slug: v.string(),
+  })
+    .index("by_entryId", ["entryId"])
+    .index("by_axis_and_slug", ["axis", "slug"]),
+
+  // An editor's ordered reading list. Items are a tagged union so a series
+  // or app action can join later as a new variant (ADR 0015).
+  library_hubs: defineTable({
+    slug: v.string(),
+    title: v.string(),
+    intro: v.string(),
+    coverUrl: v.optional(v.string()),
+    active: v.boolean(),
+    items: v.array(
+      v.union(
+        v.object({ kind: v.literal("entry"), entryId: v.id("library_entries") }),
+        v.object({ kind: v.literal("audio"), audioTrackId: v.id("audio_tracks") }),
+      ),
+    ), // bounded by editorial practice (a hub is a short running order)
+  })
+    .index("by_slug", ["slug"])
+    .index("by_active", ["active"]),
 });

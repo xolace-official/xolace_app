@@ -1,3 +1,7 @@
+import { PRIMARY_EMOTIONS, THEMATIC_TAGS } from "../../lib/understandingVocab";
+
+const quotedList = (values: readonly string[]) => values.map((v) => `"${v}"`).join(", ");
+
 /**
  * Construct the system and user prompts used for Haiku emotion classification.
  *
@@ -54,7 +58,7 @@ The JSON must have this exact shape:
 
 ## Field Definitions
 
-**primaryEmotion**: The DOMINANT emotion. Must be one of: "anger", "sadness", "grief", "fear", "anxiety", "joy", "love", "surprise", "disgust", "shame", "guilt", "confusion", "numbness".
+**primaryEmotion**: The DOMINANT emotion. Must be one of: ${quotedList(PRIMARY_EMOTIONS)}.
 
 Read through the surface to the real emotion. Someone who writes "I'm so angry at myself" is probably feeling shame, not anger. Someone who writes "I don't care anymore" is probably feeling exhaustion or grief, not apathy. Choose the most TRUE emotion, not the most OBVIOUS one.
 
@@ -102,7 +106,7 @@ For body areas: Multiple areas = higher intensity. Single area = lower.
 
 Texture words and body areas are LESS specific by nature. Expect lower specificity scores (1-4) for those input types.
 
-**thematicTags**: 2-5 life domain tags inferred from content. Choose from: "work", "relationships", "family", "identity", "health", "finances", "purpose", "self-worth", "loss", "change", "conflict", "isolation", "achievement", "creativity", "trauma", "abuse", "neglect".
+**thematicTags**: 2-5 life domain tags inferred from content. Choose from: ${quotedList(THEMATIC_TAGS)}.
 
 Only tag what's clearly present. For texture words and body areas, an empty array is fine.
 

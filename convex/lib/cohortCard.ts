@@ -1,26 +1,13 @@
 import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
+import { PRIMARY_EMOTIONS } from "./understandingVocab";
 
 /**
- * The classifier's fixed primaryEmotion taxonomy (see ai/prompts/classifier.ts).
- * The weekly aggregate is keyed by these and nothing else — a new label here
+ * The classifier's fixed primaryEmotion taxonomy (lib/understandingVocab.ts).
+ * The weekly aggregate is keyed by these and nothing else — a new label there
  * means a cron change, not just a query change (ADR 0004).
  */
-export const COHORT_EMOTIONS = [
-  "anger",
-  "sadness",
-  "grief",
-  "fear",
-  "anxiety",
-  "joy",
-  "love",
-  "surprise",
-  "disgust",
-  "shame",
-  "guilt",
-  "confusion",
-  "numbness",
-] as const;
+export const COHORT_EMOTIONS = PRIMARY_EMOTIONS;
 
 export type CohortEmotion = (typeof COHORT_EMOTIONS)[number];
 
