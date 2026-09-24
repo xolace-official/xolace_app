@@ -7,13 +7,12 @@ import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { Glyph, useInk } from '@/src/features/library/prototype-reader/shared';
 import { READING_FACE } from '@/src/features/library/prototype-reader/mock-entry';
-import { AUDIENCES, type Entry, type Hub, kindLabel } from './mock-library';
+import { AUDIENCES, type Entry, kindLabel } from './mock-library';
 
 export const SERIF = { fontFamily: READING_FACE };
 const SCRIM = ['transparent', 'rgba(0,0,0,0.25)', 'rgba(0,0,0,0.78)'] as const; // ponytail: scrim stops, a --player-scrim token when real
@@ -53,17 +52,18 @@ export function UpNextCard({ entry, kicker, isPlus, width, height = 300 }: {
     <Pressable onPress={() => openEntry(entry.slug)} className="overflow-hidden rounded-[28px] active:opacity-90" style={{ width, height }}>
       <Image source={{ uri: entry.cover }} style={StyleSheet.absoluteFill} transition={200} />
       <LinearGradient colors={SCRIM} locations={[0.25, 0.5, 1]} style={StyleSheet.absoluteFill} />
+      {/* Play sits top-right: tapping opens the reader, it doesn’t autoplay */}
+      <View className="absolute right-4 top-4 h-10 w-10 items-center justify-center overflow-hidden rounded-full">
+        <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
+        <Glyph name="play.fill" size={15} color="white" />
+      </View>
       <View className="flex-1 justify-end gap-2 p-5">
         <AppText className="text-[12px] font-medium uppercase tracking-[1.5px] text-white/70">{kicker}</AppText>
         <AppText style={[SERIF, { fontSize: 26, lineHeight: 31 }]} className="font-bold text-white" numberOfLines={3}>
           {entry.title}
         </AppText>
-        <View className="flex-row items-center justify-between pt-1">
-          <View className="flex-1 pr-2"><Meta entry={entry} isPlus={isPlus} onImage /></View>
-          <View className="h-12 w-12 items-center justify-center overflow-hidden rounded-full">
-            <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-            <Glyph name="play.fill" size={18} color="white" />
-          </View>
+        <View className="pt-1">
+          <Meta entry={entry} isPlus={isPlus} onImage />
         </View>
       </View>
       {entry.progress != null && (
@@ -88,43 +88,6 @@ export function EntryRow({ entry, isPlus, reason }: { entry: Entry; isPlus: bool
         <Meta entry={entry} isPlus={isPlus} />
       </View>
     </Pressable>
-  );
-}
-
-/** Reference card 2: paged hub carousel — inset photo, serif title, blurb, dots. */
-export function HubCarousel({ hubs }: { hubs: Hub[] }) {
-  const { width } = useWindowDimensions();
-  const cardW = width - 48;
-  const [index, setIndex] = useState(0);
-  return (
-    <View>
-      <ScrollView
-        horizontal
-        snapToInterval={cardW + 12}
-        decelerationRate="fast"
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}
-        onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / (cardW + 12)))}
-      >
-        {hubs.map((hub) => (
-          <Pressable key={hub.slug} onPress={() => openList(`hub=${hub.slug}`)} className="bg-surface rounded-[28px] p-2 active:opacity-90" style={{ width: cardW }}>
-            <Image source={{ uri: hub.cover }} style={{ width: '100%', height: cardW * 0.62, borderRadius: 22 }} transition={200} />
-            <View className="gap-1.5 px-3 pb-3 pt-3">
-              <AppText style={[SERIF, { fontSize: 22, lineHeight: 27 }]} className="font-bold">{hub.title}</AppText>
-              <AppText className="text-muted text-[14px] leading-5" numberOfLines={2}>{hub.blurb}</AppText>
-              <AppText className="text-accent text-[13px] font-semibold">
-                {hub.entries.length} entries{hub.audioOnly ? ` · ${hub.audioOnly} to listen` : ''}
-              </AppText>
-            </View>
-          </Pressable>
-        ))}
-      </ScrollView>
-      <View className="flex-row justify-center gap-1.5 pt-3">
-        {hubs.map((h, i) => (
-          <View key={h.slug} className={i === index ? 'bg-accent h-1.5 w-5 rounded-full' : 'bg-surface-tertiary h-1.5 w-1.5 rounded-full'} />
-        ))}
-      </View>
-    </View>
   );
 }
 
