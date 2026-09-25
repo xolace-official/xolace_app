@@ -1,9 +1,11 @@
 import { v } from "convex/values";
-import { query } from "../_generated/server";
-import type { Doc } from "../_generated/dataModel";
+import { query, type QueryCtx } from "../_generated/server";
+import type { Doc, Id } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import { cardItemValidator, entryIdsWithFacet, toListItem } from "./entries";
-import { cardSignals, readRow } from "./reads";
+import { readRow, withCardSignals } from "./reads";
+
+type Entry = Doc<"library_entries">;
 
 /**
  * The "Up next" card at the end of a read (#417). A rule, no model call
@@ -19,36 +21,39 @@ export const getNext = query({
     const { profile } = await requireAuth(ctx);
     const current = await ctx.db.get("library_entries", args.entryId);
     if (!current) return null;
-    const card = async (e: Doc<"library_entries">) => ({
-      ...toListItem(e),
-      ...(await cardSignals(ctx, profile._id, e._id)),
-    });
-
-    const { hub: hubSlug } = args;
-    if (hubSlug) {
-      const hub = await ctx.db
-        .query("library_hubs")
-        .withIndex("by_slug", (q) => q.eq("slug", hubSlug))
-        .unique();
-      if (hub?.active) {
-        const ids = hub.items.flatMap((i) => (i.kind === "entry" ? [i.entryId] : []));
-        const at = ids.indexOf(args.entryId);
-        if (at >= 0) {
-          for (const id of ids.slice(at + 1)) {
-            const e = await ctx.db.get("library_entries", id);
-            if (e?.active) return await card(e);
-          }
-        }
-      }
-    }
-
-    for (const id of await entryIdsWithFacet(ctx, "subject", current.primarySubject)) {
-      if (id === current._id) continue;
-      const e = await ctx.db.get("library_entries", id);
-      if (!e?.active || e.primarySubject !== current.primarySubject) continue;
-      const r = await readRow(ctx, profile._id, id);
-      if (r?.finishedAt === undefined) return await card(e);
-    }
-    return null;
+    const next = (await nextInHub(ctx, current, args.hub)) ?? (await nextInSubject(ctx, current, profile._id));
+    if (!next) return null;
+    const [item] = await withCardSignals(ctx, profile._id, [toListItem(next)]);
+    return item;
   },
 });
+
+/** The next active entry after `current` in the hub's order; null past its end, or if it isn't in the hub. */
+async function nextInHub(ctx: QueryCtx, current: Entry, hubSlug?: string) {
+  if (!hubSlug) return null;
+  const hub = await ctx.db
+    .query("library_hubs")
+    .withIndex("by_slug", (q) => q.eq("slug", hubSlug))
+    .unique();
+  if (!hub?.active) return null;
+  const ids = hub.items.flatMap((i) => (i.kind === "entry" ? [i.entryId] : []));
+  const at = ids.indexOf(current._id);
+  if (at < 0) return null;
+  for (const id of ids.slice(at + 1)) {
+    const e = await ctx.db.get("library_entries", id);
+    if (e?.active) return e;
+  }
+  return null;
+}
+
+/** The first active entry with `current`'s primary subject this reader hasn't finished. */
+async function nextInSubject(ctx: QueryCtx, current: Entry, profileId: Id<"emotional_profiles">) {
+  for (const id of await entryIdsWithFacet(ctx, "subject", current.primarySubject)) {
+    if (id === current._id) continue;
+    const e = await ctx.db.get("library_entries", id);
+    if (!e?.active || e.primarySubject !== current.primarySubject) continue;
+    const r = await readRow(ctx, profileId, id);
+    if (r?.finishedAt === undefined) return e;
+  }
+  return null;
+}

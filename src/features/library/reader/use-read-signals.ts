@@ -18,6 +18,14 @@ import { trackLibrary, type ReaderFrom } from '@/src/features/library/analytics'
 
 type EntryId = Id<'library_entries'>;
 
+/**
+ * The reader's route params beyond the slug, read in one place: `from` for
+ * analytics (#416), `stepId` from a read twig (#412), `hub` so Up next
+ * follows a hub's order (#417).
+ */
+export const useReaderParams = () =>
+  useLocalSearchParams<{ stepId?: Id<'path_steps'>; from?: ReaderFrom; hub?: string }>();
+
 const DWELL_SHARE = 0.3;
 const HELPED_FLOOR = 15; // mirrors convex/library/reads.ts
 // At or past this the read is done; the next open starts from the top.
@@ -67,7 +75,7 @@ export function useReadSignals({
   const [openedAt] = useState(() => Date.now());
   const [reachedEnd, setReachedEnd] = useState(false);
   const posthog = usePostHog();
-  const { stepId, from } = useLocalSearchParams<{ stepId?: Id<'path_steps'>; from?: ReaderFrom }>();
+  const { stepId, from } = useReaderParams();
 
   // The view: the server counts only the first open. Analytics counts every one.
   useEffect(() => {
