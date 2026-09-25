@@ -124,6 +124,7 @@ import type * as library_entries from "../library/entries.js";
 import type * as library_home from "../library/home.js";
 import type * as library_hubs from "../library/hubs.js";
 import type * as library_ingest from "../library/ingest.js";
+import type * as library_reads from "../library/reads.js";
 import type * as migrations from "../migrations.js";
 import type * as monthlyEvents from "../monthlyEvents.js";
 import type * as notifications from "../notifications.js";
@@ -278,6 +279,7 @@ declare const fullApi: ApiFromModules<{
   "library/home": typeof library_home;
   "library/hubs": typeof library_hubs;
   "library/ingest": typeof library_ingest;
+  "library/reads": typeof library_reads;
   migrations: typeof migrations;
   monthlyEvents: typeof monthlyEvents;
   notifications: typeof notifications;

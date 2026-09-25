@@ -34,10 +34,12 @@ import { useAppStore } from '@/src/store/store';
 import { AaSheet } from './aa-sheet';
 import { BackToTop } from './back-to-top';
 import { COVER_SCRIM } from './cover-palette';
+import { EndOfRead } from './end-of-read';
 import { metaLine, prepareBody } from './reader-copy';
 import { ReaderPageScope } from './reader-page';
-import { AaButton, BackButton, SourceCredit } from './reader-parts';
+import { AaButton, BackButton, SaveButton, SourceCredit } from './reader-parts';
 import { READING_MODES, useReadingFonts } from './reading-mode';
+import { useReadSignals } from './use-read-signals';
 import { useMarkdownStyle } from './use-markdown-style';
 
 export type ReaderEntry = NonNullable<FunctionReturnType<typeof api.library.entries.getEntry>>;
@@ -82,6 +84,8 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
   const onScroll = useAnimatedScrollHandler((e) => {
     y.set(e.contentOffset.y);
   });
+  const maxScroll = contentH - viewH;
+  const signals = useReadSignals({ entryId: entry._id, readMin: entry.readMin, scrollY: y, scrollRef, maxScroll });
 
   // Both copies of the photo. Pulled down, it grows from its top edge.
   const photo = useAnimatedStyle(() => {
@@ -154,6 +158,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
             markdownStyle={markdownStyle}
             onLinkPress={({ url }) => Linking.openURL(url)}
           />
+          {signals && <EndOfRead entryId={entry._id} helped={signals.helped} helpedCount={signals.helpedCount} />}
           <AppText className="mt-8 border-t border-separator pt-4 text-xs text-muted">
             {entry.source.attributionText}
           </AppText>
@@ -173,6 +178,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
               {entry.title}
             </AppText>
           </Animated.View>
+          {signals && <SaveButton entryId={entry._id} saved={signals.saved} onCover />}
           <AaButton onPress={onOpenAa} />
         </View>
         {/* Reading progress hairline. */}
@@ -181,7 +187,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
 
       <BackToTop
         scrollY={y}
-        endAt={contentH > viewH ? contentH - viewH - 40 : Number.POSITIVE_INFINITY}
+        endAt={maxScroll > 0 ? maxScroll - 40 : Number.POSITIVE_INFINITY}
         bottom={insets.bottom + 16}
         onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: !reduced })}
       />

@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
+import { useState } from 'react';
 import { Linking, Pressable, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
@@ -9,9 +10,12 @@ import { AppText } from '@/src/components/shared/app-text';
 import { cn } from '@/src/lib/utils';
 import { creditLine } from './reader-copy';
 import type { ReaderEntry } from './reader-screen';
+import { useRecord } from './use-read-signals';
 
 const BACK_ICON = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
 const AA_ICON = { ios: 'textformat.size', android: 'text_fields', web: 'text_fields' } as const;
+const SAVE_ICON = { ios: 'bookmark', android: 'bookmark_border', web: 'bookmark_border' } as const;
+const SAVED_ICON = { ios: 'bookmark.fill', android: 'bookmark_added', web: 'bookmark_added' } as const;
 const SOURCE_ICON = { ios: 'building.columns', android: 'account_balance', web: 'account_balance' } as const;
 
 // A share link opens the reader with nothing under it.
@@ -49,6 +53,39 @@ export function AaButton({ onPress }: { onPress: () => void }) {
       className="h-10 w-10 items-center justify-center rounded-full bg-cover-scrim/30 active:opacity-60"
     >
       <SymbolView name={AA_ICON} size={17} weight="semibold" tintColor={coverInk} />
+    </Pressable>
+  );
+}
+
+/**
+ * "I want this back" (#410): a plain toggle on the entry, same on the cards
+ * and in the reader. On a cover photo it takes the fixed cover ink.
+ */
+export function SaveButton({ entryId, saved, onCover = false }: { entryId: ReaderEntry['_id']; saved: boolean; onCover?: boolean }) {
+  const record = useRecord();
+  // Cards' `saved` comes from list queries the optimistic update can't reach:
+  // hold the tapped value until the server answers, and take no second tap.
+  const [pending, setPending] = useState<boolean | null>(null);
+  const shown = pending ?? saved;
+  const coverInk = String(useCSSVariable('--color-cover-ink'));
+  const foreground = useThemeColor('foreground');
+  return (
+    <Pressable
+      disabled={pending !== null}
+      onPress={() => {
+        setPending(!shown);
+        record({ entryId, saved: !shown }).finally(() => setPending(null));
+      }}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Save"
+      accessibilityState={{ selected: shown }}
+      className={cn(
+        'h-10 w-10 items-center justify-center rounded-full active:opacity-60',
+        onCover && 'bg-cover-scrim/30',
+      )}
+    >
+      <SymbolView name={shown ? SAVED_ICON : SAVE_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />
     </Pressable>
   );
 }

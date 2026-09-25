@@ -21,7 +21,12 @@ export const KINDS: { kind: Kind; label: string; line: string }[] = [
 ];
 
 // ponytail: audio lands in #411 — then this grows "· M min listen" and the Plus mark.
-export const readTimeLine = (readMin: number) => `${readMin} min read`;
+// ponytail: hand-rolled compact count; Hermes' Intl lacks `notation: 'compact'` on some Android builds.
+const compact = (n: number) => (n < 1000 ? `${n}` : `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`);
+
+/** "4 min read", plus "· 1.2k views" once anyone has opened it (#410). */
+export const readTimeLine = (readMin: number, views = 0) =>
+  [`${readMin} min read`, views > 0 && `${compact(views)} ${views === 1 ? 'view' : 'views'}`].filter(Boolean).join(' · ');
 
 /** Why For you picked an entry — the card's kicker. */
 export function reasonLine({ axis, slug }: Reason) {

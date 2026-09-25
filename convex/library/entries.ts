@@ -3,6 +3,7 @@ import { query, type QueryCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import schema from "../schema";
+import { withCardSignals } from "./reads";
 
 /**
  * Library base reads (#405, CONTEXT.md "Library", ADR 0015). Open to every
@@ -23,6 +24,13 @@ export const listItemValidator = v.object({
   readMin: v.number(),
   coverUrl: v.optional(v.string()),
   newUntil: v.optional(v.number()),
+});
+
+/** A list item as the entry cards draw it: plus views and this reader's saved state (#410). */
+export const cardItemValidator = v.object({
+  ...listItemValidator.fields,
+  views: v.number(),
+  saved: v.boolean(),
 });
 
 export const toListItem = (e: Doc<"library_entries">) => ({
@@ -128,9 +136,9 @@ export const listEntries = query({
     audience: v.optional(v.string()),
     limit: v.optional(v.number()),
   },
-  returns: v.array(listItemValidator),
+  returns: v.array(cardItemValidator),
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const { profile } = await requireAuth(ctx);
     const limit = Math.max(1, Math.min(Math.floor(args.limit ?? 50), MAX_LIMIT));
     const facetFilters: [string, string][] = [];
     if (args.subject) facetFilters.push(["subject", args.subject]);
@@ -144,7 +152,7 @@ export const listEntries = query({
           kind ? q.eq("active", true).eq("kind", kind) : q.eq("active", true),
         )
         .take(limit);
-      return rows.map(toListItem);
+      return await withCardSignals(ctx, profile._id, rows.map(toListItem));
     }
 
     const [first, ...rest] = await Promise.all(
@@ -152,9 +160,10 @@ export const listEntries = query({
     );
     const ids = [...first].filter((id) => rest.every((s) => s.has(id)));
     const rows = await Promise.all(ids.map((id) => ctx.db.get("library_entries", id)));
-    return rows
+    const items = rows
       .filter((e): e is Doc<"library_entries"> => !!e && e.active && (!args.kind || e.kind === args.kind))
       .slice(0, limit)
       .map(toListItem);
+    return await withCardSignals(ctx, profile._id, items);
   },
 });

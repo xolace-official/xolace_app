@@ -3,7 +3,8 @@ import { mutation, query, type QueryCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import { recentUnderstandings } from "../understanding";
-import { entryIdsWithFacet, listItemValidator, toListItem } from "./entries";
+import { cardItemValidator, entryIdsWithFacet, toListItem } from "./entries";
+import { cardSignals } from "./reads";
 import { hubValidator, toHub } from "./hubs";
 
 /**
@@ -67,7 +68,12 @@ async function forYouSignals(ctx: QueryCtx, profileId: Id<"emotional_profiles">,
 }
 
 /** Round-robin: each signal gives its next unpicked entry per round. Never padded. */
-async function forYou(ctx: QueryCtx, signals: Signal[], active: Map<Id<"library_entries">, Doc<"library_entries">>) {
+async function forYou(
+  ctx: QueryCtx,
+  profileId: Id<"emotional_profiles">,
+  signals: Signal[],
+  active: Map<Id<"library_entries">, Doc<"library_entries">>,
+) {
   const matches = await Promise.all(signals.map((s) => entryIdsWithFacet(ctx, s.axis, s.slug)));
   const lists = matches.map((ids) => [...ids].filter((id) => active.has(id)));
   const picked = new Map<Id<"library_entries">, Signal>();
@@ -78,7 +84,12 @@ async function forYou(ctx: QueryCtx, signals: Signal[], active: Map<Id<"library_
       if (id && !picked.has(id) && picked.size < FOR_YOU_MAX) picked.set(id, signals[i]);
     });
   }
-  return [...picked].map(([id, reason]) => ({ entry: toListItem(active.get(id)!), reason }));
+  return await Promise.all(
+    [...picked].map(async ([id, reason]) => ({
+      entry: { ...toListItem(active.get(id)!), ...(await cardSignals(ctx, profileId, id)) },
+      reason,
+    })),
+  );
 }
 
 async function readingAsRow(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
@@ -94,7 +105,7 @@ export const getHome = query({
     // null = never answered: show the one-time card.
     readingAs: v.union(v.null(), v.array(v.string())),
     audiences: facetCountValidator,
-    forYou: v.array(v.object({ entry: listItemValidator, reason: v.object({ axis: signalAxis, slug: v.string() }) })),
+    forYou: v.array(v.object({ entry: cardItemValidator, reason: v.object({ axis: signalAxis, slug: v.string() }) })),
     hubs: v.array(
       v.object({ ...hubValidator.fields, entries: v.number(), listens: v.number() }),
     ),
@@ -120,7 +131,7 @@ export const getHome = query({
     return {
       readingAs,
       audiences,
-      forYou: await forYou(ctx, signals, active),
+      forYou: await forYou(ctx, profile._id, signals, active),
       hubs: hubs.map((h) => ({
         ...toHub(h),
         entries: h.items.filter((i) => i.kind === "entry" && activeIds.has(i.entryId)).length,

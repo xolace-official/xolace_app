@@ -3,7 +3,8 @@ import { query } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import { toTrackItem, trackItemValidator } from "../browse";
-import { listItemValidator, toListItem } from "./entries";
+import { cardItemValidator, toListItem } from "./entries";
+import { cardSignals } from "./reads";
 
 /** Library hubs (#405): editorial, ordered reading lists (ADR 0015). */
 
@@ -45,14 +46,14 @@ export const getHub = query({
       ...hubValidator.fields,
       items: v.array(
         v.union(
-          v.object({ kind: v.literal("entry"), entry: listItemValidator }),
+          v.object({ kind: v.literal("entry"), entry: cardItemValidator }),
           v.object({ kind: v.literal("audio"), track: trackItemValidator }),
         ),
       ),
     }),
   ),
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const { profile } = await requireAuth(ctx);
     const hub = await ctx.db
       .query("library_hubs")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
@@ -63,7 +64,8 @@ export const getHub = query({
       hub.items.map(async (item) => {
         if (item.kind === "entry") {
           const e = await ctx.db.get("library_entries", item.entryId);
-          return e?.active ? { kind: "entry" as const, entry: toListItem(e) } : null;
+          if (!e?.active) return null;
+          return { kind: "entry" as const, entry: { ...toListItem(e), ...(await cardSignals(ctx, profile._id, e._id)) } };
         }
         const t = await ctx.db.get("audio_tracks", item.audioTrackId);
         return t?.active ? { kind: "audio" as const, track: await toTrackItem(t) } : null;

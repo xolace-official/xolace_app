@@ -2252,4 +2252,26 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_active", ["active"]),
+
+  // What a reader leaves behind on an entry (#410, CONTEXT.md "Library:
+  // finished, helped, saved"). Private: one row per (profile, entry), purged
+  // by wipe and account deletion.
+  library_reads: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    entryId: v.id("library_entries"),
+    viewedAt: v.optional(v.number()), // first reader open — the one view
+    position: v.optional(v.number()), // resume: 0–1 of the scrollable body
+    finishedAt: v.optional(v.number()), // reached the end AND dwelt; never shown
+    saved: v.boolean(),
+    helped: v.boolean(),
+  }).index("by_emotionalProfileId_and_entryId", ["emotionalProfileId", "entryId"]),
+
+  // Public totals, off `library_entries` because ingest `replace`s those
+  // rows. Never decremented by wipe/deletion — only an undo of "helped"
+  // subtracts (ADR 0016). Never seeded.
+  library_entry_totals: defineTable({
+    entryId: v.id("library_entries"),
+    views: v.number(),
+    helped: v.number(),
+  }).index("by_entryId", ["entryId"]),
 });

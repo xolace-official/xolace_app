@@ -126,3 +126,13 @@ export const drainWaitlist: DrainStep = async (ctx, profileId) => {
   return rows.length === BATCH_SIZE;
 };
 
+
+/** Private Library rows; public totals stay up (ADR 0016). */
+export const drainLibraryReads: DrainStep = async (ctx, profileId) => {
+  const reads = await ctx.db
+    .query("library_reads")
+    .withIndex("by_emotionalProfileId_and_entryId", (q) => q.eq("emotionalProfileId", profileId))
+    .take(BATCH_SIZE);
+  for (const r of reads) await ctx.db.delete("library_reads", r._id);
+  return reads.length === BATCH_SIZE;
+};
