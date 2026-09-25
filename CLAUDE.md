@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+# Tests
+Dont write any more unit tests
+Never write tests after you write code (we will be cleaning up the current ones soon)
+
 ## Project Overview
 
 ### What Xolace Is
