@@ -16,8 +16,12 @@ import { NIGHT_HEADLINE } from "@/src/features/reflect/night-copy";
  */
 export const DEFAULT_PROMPT = "What’s sitting with you right now?";
 
-/** Above this many characters the card drops to the smaller scale. */
-const LONG_TEXT_CHARS = 60;
+/**
+ * Above this many characters the card drops to the smaller scale. The large
+ * scale fits ~36 characters in the resting card's four lines; anything longer
+ * was clipped mid-word (#413).
+ */
+const LONG_TEXT_CHARS = 36;
 
 /** A reply runs to 500 chars; the card is a fixed size. One line, clipped. */
 const SEED_CHARS = 88;
