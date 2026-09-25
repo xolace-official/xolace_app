@@ -3,7 +3,7 @@ import { query, type QueryCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import schema from "../schema";
-import { withCardSignals } from "./reads";
+import { readRow, withCardSignals } from "./reads";
 
 /**
  * Library base reads (#405, CONTEXT.md "Library", ADR 0015). Open to every
@@ -47,8 +47,9 @@ export const toListItem = (e: Doc<"library_entries">) => ({
 
 /**
  * One entry by slug, with its body, source credit and facets. Inactive
- * (retracted) entries are still returned, flagged, so a reader who saved or
- * started one keeps read-only access (#404); every list/hub read skips them.
+ * (retracted) entries are returned, flagged, only to a reader who saved or
+ * opened one — read-only access (#404); to anyone else they're null. Every
+ * list/hub read skips them.
  */
 export const getEntry = query({
   args: { slug: v.string() },
@@ -73,12 +74,16 @@ export const getEntry = query({
     }),
   ),
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const { profile } = await requireAuth(ctx);
     const e = await ctx.db
       .query("library_entries")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .unique();
     if (!e) return null;
+    if (!e.active) {
+      const r = await readRow(ctx, profile._id, e._id);
+      if (!r || (!r.saved && r.viewedAt === undefined)) return null;
+    }
 
     const [body, source, facets] = await Promise.all([
       ctx.db

@@ -89,9 +89,20 @@ describe("library.getEntry", () => {
     expect(await user.t.query(api.library.entries.getEntry, { slug: "nope" })).toBeNull();
   });
 
-  it("still serves a retracted entry, flagged inactive (#404 read-only access)", async () => {
+  it("serves a retracted entry only to a reader who opened it (#404 read-only access)", async () => {
     const user = await asNewUser();
-    await seed(user, [{ e: entry("gone", { active: false }) }]);
+    const { gone } = await seed(user, [{ e: entry("gone", { active: false }) }]);
+    expect(await user.t.query(api.library.entries.getEntry, { slug: "gone" })).toBeNull();
+
+    await user.root.run((ctx) =>
+      ctx.db.insert("library_reads", {
+        emotionalProfileId: user.profileId,
+        entryId: gone,
+        viewedAt: 1,
+        saved: false,
+        helped: false,
+      }),
+    );
     const got = await user.t.query(api.library.entries.getEntry, { slug: "gone" });
     expect(got?.active).toBe(false);
   });

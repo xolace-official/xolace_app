@@ -15,7 +15,7 @@ export const HELPED_FLOOR = 15;
 type EntryId = Id<"library_entries">;
 type ProfileId = Id<"emotional_profiles">;
 
-const readRow = (ctx: QueryCtx, profileId: ProfileId, entryId: EntryId) =>
+export const readRow = (ctx: QueryCtx, profileId: ProfileId, entryId: EntryId) =>
   ctx.db
     .query("library_reads")
     .withIndex("by_emotionalProfileId_and_entryId", (q) =>
@@ -89,10 +89,13 @@ export const record = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
-    if (!(await ctx.db.get("library_entries", args.entryId))) throw new Error("Library entry not found");
+    const entry = await ctx.db.get("library_entries", args.entryId);
+    if (!entry) throw new Error("Library entry not found");
 
     let row: Doc<"library_reads"> | null = await readRow(ctx, profile._id, args.entryId);
     if (!row) {
+      // A retracted entry only stays open to its existing readers — a new row would unlock it in getEntry.
+      if (!entry.active) throw new Error("Library entry not found");
       const id = await ctx.db.insert("library_reads", {
         emotionalProfileId: profile._id,
         entryId: args.entryId,
