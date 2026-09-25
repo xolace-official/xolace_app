@@ -158,7 +158,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
             markdownStyle={markdownStyle}
             onLinkPress={({ url }) => Linking.openURL(url)}
           />
-          {signals && <EndOfRead entryId={entry._id} helped={signals.helped} helpedCount={signals.helpedCount} />}
+          {signals && <EndOfRead entryId={entry._id} signals={signals} />}
           <AppText className="mt-8 border-t border-separator pt-4 text-xs text-muted">
             {entry.source.attributionText}
           </AppText>
