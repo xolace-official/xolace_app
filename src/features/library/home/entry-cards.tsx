@@ -11,10 +11,14 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { facetLabel, readTimeLine } from '@/src/features/library/home/library-copy';
 import { COVER_SCRIM } from '@/src/features/library/reader/cover-palette';
-import { facetLabel, kindLabel, metaLine } from './library-copy';
+import { capitalise } from '@/src/features/library/reader/reader-copy';
 
 export type EntryItem = FunctionReturnType<typeof api.library.entries.listEntries>[number];
+
+/** Photo cards' corner, shared with the For you blur that sits over them. */
+export const CARD_RADIUS = 28;
 
 export const readerHref = (slug: string) => ({ pathname: '/library/[slug]', params: { slug } }) as const;
 
@@ -24,9 +28,9 @@ export function PhotoCard({ entry, kicker, width, height }: { entry: EntryItem; 
     <Link href={readerHref(entry.slug)} asChild>
       <Pressable
         accessibilityRole="link"
-        accessibilityLabel={`${entry.title}. ${kicker}. ${metaLine(entry.readMin)}`}
-        className="overflow-hidden rounded-[28px] bg-cover-scrim active:opacity-90"
-        style={{ width, height, borderCurve: 'continuous' }}
+        accessibilityLabel={`${entry.title}. ${kicker}. ${readTimeLine(entry.readMin)}`}
+        className="overflow-hidden bg-cover-scrim active:opacity-90"
+        style={{ width, height, borderRadius: CARD_RADIUS, borderCurve: 'continuous' }}
       >
         {entry.coverUrl && (
           <Image source={{ uri: entry.coverUrl }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
@@ -37,7 +41,7 @@ export function PhotoCard({ entry, kicker, width, height }: { entry: EntryItem; 
           <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={3}>
             {entry.title}
           </AppText>
-          <AppText className="text-[13px] text-cover-ink/75">{metaLine(entry.readMin)}</AppText>
+          <AppText className="text-[13px] text-cover-ink/75">{readTimeLine(entry.readMin)}</AppText>
         </View>
       </Pressable>
     </Link>
@@ -55,12 +59,12 @@ export function EntryRow({ entry, index }: { entry: EntryItem; index?: number })
         </View>
         <View className="flex-1 gap-1">
           <AppText className="text-[12px] text-muted">
-            {kindLabel(entry.kind)} · {facetLabel(entry.primarySubject)}
+            {capitalise(entry.kind)} · {facetLabel(entry.primarySubject)}
           </AppText>
           <AppText className="text-[16px] font-semibold leading-[21px]" numberOfLines={2}>
             {entry.title}
           </AppText>
-          <AppText className="text-[13px] text-muted">{metaLine(entry.readMin)}</AppText>
+          <AppText className="text-[13px] text-muted">{readTimeLine(entry.readMin)}</AppText>
         </View>
       </Pressable>
     </Link>

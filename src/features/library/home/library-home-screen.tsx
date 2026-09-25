@@ -12,12 +12,12 @@ import { useEffect } from 'react';
 import { ScrollView } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
-import { KindRows, LetterStrip } from './browse-sections';
-import { SectionTitle } from './entry-cards';
-import { ForYouCarousel } from './for-you-carousel';
-import { HubCarousel } from './hub-carousel';
-import { reasonLine } from './library-copy';
-import { ReadingAsCard, ReadingAsMenu } from './reading-as';
+import { KindRows, LetterStrip } from '@/src/features/library/home/browse-sections';
+import { SectionTitle } from '@/src/features/library/home/entry-cards';
+import { ForYouCarousel } from '@/src/features/library/home/for-you-carousel';
+import { HubCarousel } from '@/src/features/library/home/hub-carousel';
+import { reasonLine } from '@/src/features/library/home/library-copy';
+import { ReadingAsCard, ReadingAsMenu } from '@/src/features/library/home/reading-as';
 
 export function LibraryHomeScreen() {
   const posthog = usePostHog();
@@ -59,7 +59,7 @@ export function LibraryHomeScreen() {
             )}
 
             <KindRows />
-            {home.subjects.length > 0 && <LetterStrip subjects={home.subjects} />}
+            <LetterStrip />
           </>
         )}
       </ScrollView>

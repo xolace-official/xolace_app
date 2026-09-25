@@ -7,7 +7,7 @@ import { listItemValidator, toListItem } from "./entries";
 
 /** Library hubs (#405): editorial, ordered reading lists (ADR 0015). */
 
-const hubValidator = v.object({
+export const hubValidator = v.object({
   _id: v.id("library_hubs"),
   slug: v.string(),
   title: v.string(),
@@ -15,7 +15,7 @@ const hubValidator = v.object({
   coverUrl: v.optional(v.string()),
 });
 
-const toHub = (h: Doc<"library_hubs">) => ({
+export const toHub = (h: Doc<"library_hubs">) => ({
   _id: h._id,
   slug: h.slug,
   title: h.title,

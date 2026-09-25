@@ -5,7 +5,7 @@
 
 import type { Doc } from '@/convex/_generated/dataModel';
 
-type Kind = Doc<'library_entries'>['kind'];
+export type Kind = Doc<'library_entries'>['kind'];
 type Reuse = Doc<'library_entries'>['reuse'];
 
 const LEADING_H1 = /^#[ \t]+[^\n]*\n*/;
@@ -14,7 +14,7 @@ const LEADING_H1 = /^#[ \t]+[^\n]*\n*/;
 // and style `blockquote.admonitions` instead.
 const ALERT_MARKER = /^>[ \t]*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*$/gim;
 
-const capitalise = (s: string) => s[0].toUpperCase() + s.slice(1).toLowerCase();
+export const capitalise = (s: string) => s[0].toUpperCase() + s.slice(1).toLowerCase();
 
 /** Stored GFM → what the renderer is handed. */
 export function prepareBody(markdown: string) {

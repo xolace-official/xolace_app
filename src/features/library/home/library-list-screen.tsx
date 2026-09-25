@@ -11,8 +11,8 @@ import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { TrackRow } from '@/src/features/browse/components/track-row';
-import { EntryRow } from './entry-cards';
-import { KINDS, type Kind, facetLabel } from './library-copy';
+import { EntryRow } from '@/src/features/library/home/entry-cards';
+import { KINDS, type Kind, facetLabel } from '@/src/features/library/home/library-copy';
 
 export type ListBy = { hub: string } | { kind: Kind } | { subject: string };
 
@@ -56,9 +56,16 @@ const Empty = ({ line }: { line: string }) => (
   <AppText className="px-4 pt-12 text-center text-[15px] text-muted">{line}</AppText>
 );
 
+/** One branch on what the list is of: its header title and its rows. */
+function listOf(by: ListBy) {
+  if ('hub' in by) return { title: '', rows: <HubList slug={by.hub} /> };
+  if ('kind' in by)
+    return { title: KINDS.find((k) => k.kind === by.kind)?.label ?? '', rows: <EntryList kind={by.kind} /> };
+  return { title: facetLabel(by.subject), rows: <EntryList subject={by.subject} /> };
+}
+
 export function LibraryListScreen({ by }: { by: ListBy }) {
-  const title =
-    'kind' in by ? (KINDS.find((k) => k.kind === by.kind)?.label ?? '') : 'subject' in by ? facetLabel(by.subject) : '';
+  const { title, rows } = listOf(by);
 
   return (
     <>
@@ -68,11 +75,7 @@ export function LibraryListScreen({ by }: { by: ListBy }) {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        {'hub' in by ? (
-          <HubList slug={by.hub} />
-        ) : (
-          <EntryList kind={'kind' in by ? by.kind : undefined} subject={'subject' in by ? by.subject : undefined} />
-        )}
+        {rows}
       </ScrollView>
     </>
   );

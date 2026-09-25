@@ -3,14 +3,16 @@
  * kind of light" kind rows and the A–Z letter strip. Letters with no
  * subject are dimmed.
  */
+import { useQuery } from 'convex/react';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
+import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { cn } from '@/src/lib/utils';
-import { SectionTitle } from './entry-cards';
-import { KINDS, type Kind } from './library-copy';
+import { SectionTitle } from '@/src/features/library/home/entry-cards';
+import { KINDS, type Kind } from '@/src/features/library/home/library-copy';
 
 const KIND_FLUX: Record<Kind, number> = {
   explainer: require('@/assets/images/flux/writer-flux.png'),
@@ -48,7 +50,9 @@ export function KindRows() {
   );
 }
 
-export function LetterStrip({ subjects }: { subjects: { slug: string }[] }) {
+export function LetterStrip() {
+  const subjects = useQuery(api.library.home.getSubjects, {});
+  if (!subjects?.length) return null;
   const has = new Set(subjects.map((s) => s.slug[0]?.toUpperCase()));
   return (
     <>

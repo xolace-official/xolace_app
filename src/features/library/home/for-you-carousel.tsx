@@ -15,7 +15,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { type EntryItem, PhotoCard } from './entry-cards';
+import { CARD_RADIUS, type EntryItem, PhotoCard } from '@/src/features/library/home/entry-cards';
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 const GAP = 10;
@@ -39,11 +39,12 @@ function Card({ item, index, scrollX, itemW }: { item: Item; index: number; scro
     <Animated.View style={[{ width: itemW }, style]}>
       <PhotoCard entry={item.entry} kicker={item.kicker} width={itemW} height={HEIGHT} />
       {Platform.OS === 'ios' && (
+        // Dark tint on purpose: it frosts the cover photo, a fixed palette (CLAUDE.md).
         <AnimatedBlurView
           animatedProps={blurProps}
           pointerEvents="none"
           tint="systemThinMaterialDark"
-          style={[StyleSheet.absoluteFill, { borderRadius: 28, overflow: 'hidden' }]}
+          style={[StyleSheet.absoluteFill, { borderRadius: CARD_RADIUS, overflow: 'hidden' }]}
         />
       )}
     </Animated.View>

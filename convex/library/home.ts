@@ -1,16 +1,17 @@
-import { v } from "convex/values";
+import { v, type Infer } from "convex/values";
 import { mutation, query, type QueryCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import { recentUnderstandings } from "../understanding";
 import { entryIdsWithFacet, listItemValidator, toListItem } from "./entries";
+import { hubValidator, toHub } from "./hubs";
 
 /**
  * The Library home (#409, CONTEXT.md "Library: where it lives"): one read for
  * everything the front page shows, plus the "Reading as…" write.
  *
- * For you is a deterministic facet match — chosen audiences first, then the
- * emotions and life areas of the reader's recent Understanding. No model
+ * For you is a deterministic facet match — chosen audiences interleaved with
+ * the emotions and life areas of the reader's recent Understanding. No model
  * call (Constitution Rule), never padded.
  */
 
@@ -24,7 +25,16 @@ const RECENT_SESSIONS = 5;
 const MAX_AUDIENCES = 10;
 
 const signalAxis = v.union(v.literal("audience"), v.literal("emotion"), v.literal("lifeArea"));
-type Signal = { axis: "audience" | "emotion" | "lifeArea"; slug: string };
+type Signal = { axis: Infer<typeof signalAxis>; slug: string };
+const facetCountValidator = v.array(v.object({ slug: v.string(), count: v.number() }));
+
+async function activeEntries(ctx: QueryCtx) {
+  const rows = await ctx.db
+    .query("library_entries")
+    .withIndex("by_active_and_kind", (q) => q.eq("active", true))
+    .take(CATALOGUE_SCAN);
+  return new Map(rows.map((e) => [e._id, e]));
+}
 
 /** Slug → count, alphabetical, counting only active entries. */
 async function facetCounts(ctx: QueryCtx, axis: string, active: Set<Id<"library_entries">>) {
@@ -83,59 +93,51 @@ export const getHome = query({
   returns: v.object({
     // null = never answered: show the one-time card.
     readingAs: v.union(v.null(), v.array(v.string())),
-    audiences: v.array(v.object({ slug: v.string(), count: v.number() })),
-    subjects: v.array(v.object({ slug: v.string(), count: v.number() })),
+    audiences: facetCountValidator,
     forYou: v.array(v.object({ entry: listItemValidator, reason: v.object({ axis: signalAxis, slug: v.string() }) })),
     hubs: v.array(
-      v.object({
-        _id: v.id("library_hubs"),
-        slug: v.string(),
-        title: v.string(),
-        intro: v.string(),
-        coverUrl: v.optional(v.string()),
-        entries: v.number(),
-        listens: v.number(),
-      }),
+      v.object({ ...hubValidator.fields, entries: v.number(), listens: v.number() }),
     ),
   }),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
-    const [prefs, entries, hubs] = await Promise.all([
+    const [prefs, active, hubs] = await Promise.all([
       readingAsRow(ctx, profile._id),
-      ctx.db
-        .query("library_entries")
-        .withIndex("by_active_and_kind", (q) => q.eq("active", true))
-        .take(CATALOGUE_SCAN),
+      activeEntries(ctx),
       ctx.db
         .query("library_hubs")
         .withIndex("by_active", (q) => q.eq("active", true))
         .take(50),
     ]);
-    const active = new Map(entries.map((e) => [e._id, e]));
     const activeIds = new Set(active.keys());
     const readingAs = prefs?.libraryAudiences ?? null;
 
-    const [audiences, subjects, signals] = await Promise.all([
+    const [audiences, signals] = await Promise.all([
       facetCounts(ctx, "audience", activeIds),
-      facetCounts(ctx, "subject", activeIds),
       forYouSignals(ctx, profile._id, readingAs ?? []),
     ]);
 
     return {
       readingAs,
       audiences,
-      subjects,
       forYou: await forYou(ctx, signals, active),
       hubs: hubs.map((h) => ({
-        _id: h._id,
-        slug: h.slug,
-        title: h.title,
-        intro: h.intro,
-        coverUrl: h.coverUrl,
+        ...toHub(h),
         entries: h.items.filter((i) => i.kind === "entry" && activeIds.has(i.entryId)).length,
         listens: h.items.filter((i) => i.kind === "audio").length,
       })),
     };
+  },
+});
+
+/** Lantern A–Z: every subject with active entries, alphabetical, with counts. */
+export const getSubjects = query({
+  args: {},
+  returns: facetCountValidator,
+  handler: async (ctx) => {
+    await requireAuth(ctx);
+    const active = await activeEntries(ctx);
+    return await facetCounts(ctx, "subject", new Set(active.keys()));
   },
 });
 

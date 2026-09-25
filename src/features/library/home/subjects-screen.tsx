@@ -11,17 +11,16 @@ import { Pressable, SectionList, View } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
-import { facetLabel } from './library-copy';
+import { facetLabel } from '@/src/features/library/home/library-copy';
 
 type Subject = { slug: string; count: number };
 
 export function SubjectsScreen() {
   const { letter } = useLocalSearchParams<{ letter?: string }>();
-  const home = useQuery(api.library.home.getHome, {});
+  const subjects = useQuery(api.library.home.getSubjects, {}) ?? [];
   const ref = useRef<SectionList<Subject>>(null);
   const muted = useThemeColor('muted');
 
-  const subjects = home?.subjects ?? [];
   const sections = [...new Set(subjects.map((s) => s.slug[0].toUpperCase()))].map((title) => ({
     title,
     data: subjects.filter((s) => s.slug[0].toUpperCase() === title),

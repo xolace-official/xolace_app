@@ -12,7 +12,7 @@ import { Pressable, View } from 'react-native';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { cn } from '@/src/lib/utils';
-import { facetLabel } from './library-copy';
+import { facetLabel } from '@/src/features/library/home/library-copy';
 
 const toggle = (list: string[], slug: string) =>
   list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug];
