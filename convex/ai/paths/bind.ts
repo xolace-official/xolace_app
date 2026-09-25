@@ -22,6 +22,13 @@ export interface BindUnderstanding {
   suggestedSpecialty: Doc<"emotional_metadata">["suggestedSpecialty"];
 }
 
+/** A Library entry the reader hasn't finished, with the facets that matched this Understanding. */
+export interface BindEntry {
+  slug: string;
+  emotions: string[]; // `emotion` facet slugs
+  lifeAreas: string[]; // `lifeArea` facet slugs
+}
+
 export type BoundParams = { slug: string } | { exercise: string } | { specialty: string };
 
 /** Track 2 "Reality, Not False Hope" — the one cross-topic series (§3.1). */
@@ -41,8 +48,11 @@ export function bindTwig(
   actionType: string,
   u: BindUnderstanding,
   tracks: readonly BindTrack[],
+  entries: readonly BindEntry[] = [],
 ): BoundParams | null {
   switch (actionType) {
+    case "read":
+      return bindEntry(u, entries);
     case "breathing":
       return { exercise: "sit-with-this" };
     case "bridge":
@@ -84,6 +94,28 @@ function bindTrack(
   ]);
   const score = (t: BindTrack) => t.tags.filter((tag) => wanted.has(tag)).length;
 
+  return pickSeeded(candidates, score, u);
+}
+
+/**
+ * The read twig (#412): a plain facet join, no catalogue indirection
+ * (ADR 0015) — the Understanding's emotions against `emotion` facets, its
+ * thematic tags against `lifeArea`. Finished entries never reach here.
+ */
+function bindEntry(u: BindUnderstanding, entries: readonly BindEntry[]): { slug: string } | null {
+  const emotions = new Set([u.primaryEmotion, ...(u.secondaryEmotion ? [u.secondaryEmotion] : [])]);
+  const areas = new Set(u.thematicTags);
+  const score = (e: BindEntry) =>
+    e.emotions.filter((s) => emotions.has(s)).length + e.lifeAreas.filter((s) => areas.has(s)).length;
+  const candidates = entries.filter((e) => score(e) > 0);
+  return candidates.length === 0 ? null : pickSeeded(candidates, score, u);
+}
+
+function pickSeeded<T extends { slug: string }>(
+  candidates: readonly T[],
+  score: (c: T) => number,
+  u: BindUnderstanding,
+): { slug: string } {
   // Sort first so the tied set (and its order) is independent of input order,
   // then spread ties deterministically across sessions via a seeded hash.
   const sorted = [...candidates].sort(

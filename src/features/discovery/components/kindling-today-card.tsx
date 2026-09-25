@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
  */
 export function KindlingTodayCard() {
   const router = useRouter();
-  const kindling = useQuery(api.paths.getActive, {});
+  const kindling = useQuery(api.paths.getActive, { withRead: true });
 
   if (!kindling) return null;
 

@@ -1,12 +1,14 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery } from "../../_generated/server";
-import type { Doc } from "../../_generated/dataModel";
+import type { Doc, Id } from "../../_generated/dataModel";
+import type { QueryCtx } from "../../_generated/server";
 import { hasPremium } from "../../lib/premium";
 import { rateLimiter } from "../../lib/rateLimits";
 import { renderSemanticProfile } from "../../semanticProfiles";
 import { posthog } from "../../posthog";
 import type { PathsPromptUnderstanding } from "./prompt";
-import type { BindTrack, BindUnderstanding } from "./bind";
+import type { BindEntry, BindTrack, BindUnderstanding } from "./bind";
+import { readRow } from "../../library/reads";
 
 /**
  * Kindling generation — the DB halves of `generate.ts` (#331): the context
@@ -20,11 +22,55 @@ export interface GenerateContext {
   semanticProfileId: Doc<"emotional_profiles">["currentSemanticProfileId"];
   binding: BindUnderstanding;
   tracks: BindTrack[];
+  entries: BindEntry[];
 }
 
 // ponytail: the whole active catalogue in one read (~200–400 rows, six small
 // fields). Per-topic index reads if the catalogue outgrows a single query.
 const MAX_TRACKS = 2000;
+
+// ponytail: per facet value, the first N tagged entries. Fine for a
+// hand-curated Library; rank inside the index if a facet outgrows it.
+const MAX_ENTRIES_PER_FACET = 200;
+
+/**
+ * Library entries whose `emotion` / `lifeArea` facets overlap this
+ * Understanding (#412), carrying only the matched facets — the binder's score
+ * is their count. Retracted and already-finished entries are left out, and
+ * an elevated/crisis session matches nothing (ADR 0015 twig safety).
+ */
+async function loadReadCandidates(
+  ctx: QueryCtx,
+  profileId: Id<"emotional_profiles">,
+  u: Doc<"emotional_metadata">,
+): Promise<BindEntry[]> {
+  if (u.safeguardLevel === "elevated" || u.safeguardLevel === "crisis") return [];
+  const wanted = [
+    ...[u.primaryEmotion, u.secondaryEmotion].filter((s): s is string => !!s).map((slug) => ({ axis: "emotion", slug })),
+    ...u.thematicTags.map((slug) => ({ axis: "lifeArea", slug })),
+  ];
+  const matched = new Map<Id<"library_entries">, { emotions: string[]; lifeAreas: string[] }>();
+  for (const { axis, slug } of wanted) {
+    const rows = await ctx.db
+      .query("library_entry_facets")
+      .withIndex("by_axis_and_slug", (q) => q.eq("axis", axis).eq("slug", slug))
+      .take(MAX_ENTRIES_PER_FACET);
+    for (const row of rows) {
+      const m = matched.get(row.entryId) ?? { emotions: [], lifeAreas: [] };
+      (axis === "emotion" ? m.emotions : m.lifeAreas).push(slug);
+      matched.set(row.entryId, m);
+    }
+  }
+
+  const entries: BindEntry[] = [];
+  for (const [entryId, m] of matched) {
+    const entry = await ctx.db.get("library_entries", entryId);
+    if (!entry?.active) continue;
+    if ((await readRow(ctx, profileId, entryId))?.finishedAt !== undefined) continue;
+    entries.push({ slug: entry.slug, ...m });
+  }
+  return entries;
+}
 
 /**
  * Null means "do nothing, silently": free user (ADR 0009), no Understanding
@@ -77,6 +123,7 @@ export const getContext = internalQuery({
         suggestedSpecialty: u.suggestedSpecialty,
       },
       tracks,
+      entries: await loadReadCandidates(ctx, profile._id, u),
     };
   },
 });

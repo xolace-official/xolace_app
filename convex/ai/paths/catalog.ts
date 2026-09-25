@@ -102,6 +102,18 @@ export const CATALOG: readonly CatalogEntry[] = [
       "Draft a short message to send someone the user already knows outside the app — a partner, friend, or family member — to open up about what they're carrying. Fits when the gap is not inside Xolace but with a real person in their life who doesn't know yet.",
   },
   {
+    // Binds by facet overlap with the Library (#412), not by these tag axes.
+    actionType: "read",
+    emotions: [],
+    themes: [],
+    supportNeedFit: BOTH,
+    premium: true,
+    humanContact: false,
+    alwaysAvailable: false,
+    modelDescription:
+      "A short piece to read from the Library — an explainer, practical advice, or someone's own story about something close to what they're carrying. Fits when putting words and context to it would help, and they have a few quiet minutes.",
+  },
+  {
     actionType: "episode_reframe",
     emotions: ["shame", "guilt", "sadness", "numbness"],
     themes: ["self-criticism", "toxic-positivity", "should-be-over-this"],

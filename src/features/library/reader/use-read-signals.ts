@@ -2,10 +2,12 @@
  * What a reader leaves behind on an entry (#410, CONTEXT.md "Library:
  * finished, helped, saved"): the view on open, finished (end reached AND
  * dwelt ≥30% of the read time — never a button), and the resume position.
+ * Reached from a read twig (#412), `stepId` rides along and a finish tends it.
  */
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { useMutation, useQuery } from 'convex/react';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import type Animated from 'react-native-reanimated';
 import { useAnimatedReaction, type AnimatedRef, type SharedValue } from 'react-native-reanimated';
@@ -82,6 +84,16 @@ export function useReadSignals({
     const t = setTimeout(() => record({ entryId, finished: true }), Math.max(wait, 0));
     return () => clearTimeout(t);
   }, [reachedEnd, finished, openedAt, readMin, record, entryId]);
+
+  // A read twig is tended by the finish alone (reading or listening), once.
+  const { stepId } = useLocalSearchParams<{ stepId?: Id<'path_steps'> }>();
+  const completeStep = useMutation(api.paths.completeStep);
+  const tended = useRef(false);
+  useEffect(() => {
+    if (!stepId || finished !== true || tended.current) return;
+    tended.current = true;
+    completeStep({ stepId }).catch((e) => console.error('[useReadSignals] completeStep failed:', e));
+  }, [stepId, finished, completeStep]);
 
   // Resume once, as soon as both the saved position and the layout are in.
   const restored = useRef(false);

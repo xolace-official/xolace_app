@@ -1,7 +1,7 @@
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import { useConvex, useQuery } from 'convex/react';
-import { useState } from 'react';
+import { useConvex, useMutation, useQuery } from 'convex/react';
+import { useEffect, useState } from 'react';
 
 import { usePlayback } from '@/src/lib/audio/use-playback';
 
@@ -31,6 +31,14 @@ export function useEntryAudio(entryId: Id<'library_entries'>, hasAudio: boolean)
   const [endedUrl, setEndedUrl] = useState<string>();
   if (p.didJustFinish && p.track?.preview && endedUrl !== p.track.url) setEndedUrl(p.track.url);
   const previewEnded = !!p.track && endedUrl === p.track.url;
+
+  // Hearing the full asset to the end finishes the entry, same as reading it (#410, #412).
+  const record = useMutation(api.library.reads.record);
+  const [listened, setListened] = useState(false);
+  if (p.didJustFinish && p.track && !p.track.preview && !listened) setListened(true);
+  useEffect(() => {
+    if (listened) record({ entryId, finished: true });
+  }, [listened, record, entryId]);
 
   return {
     ...p,

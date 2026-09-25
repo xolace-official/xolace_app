@@ -34,7 +34,7 @@ export function KindlingScreen() {
   const { toast } = useToast();
   const foreground = useThemeColor("foreground") as string;
 
-  const kindling = useQuery(api.paths.getActive, {});
+  const kindling = useQuery(api.paths.getActive, { withRead: true });
   const skipStep = useMutation(api.paths.skipStep);
   const dismiss = useMutation(api.paths.dismiss);
   const [confirmDismiss, setConfirmDismiss] = useState(false);
