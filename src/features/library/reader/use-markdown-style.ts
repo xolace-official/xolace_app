@@ -2,6 +2,7 @@ import { useThemeColor } from 'heroui-native';
 import type { MarkdownStyle } from 'react-native-enriched-markdown';
 import { useCSSVariable } from 'uniwind';
 
+import { useAppTheme } from '@/src/context/app-theme-context';
 import { READING_MODES, type ReadingModeKey } from './reading-mode';
 
 /**
@@ -11,14 +12,20 @@ import { READING_MODES, type ReadingModeKey } from './reading-mode';
  * Until a mode's runtime fonts load it falls back to the theme's own face.
  */
 export function useMarkdownStyle(mode: ReadingModeKey, size: number, fontsLoaded: boolean): MarkdownStyle {
-  const [foreground, muted, border, surface] = useThemeColor([
+  const [foreground, muted, accent, border, surface] = useThemeColor([
     'foreground',
     'muted',
+    'accent',
     'border',
     'surface-secondary',
   ]);
   const [themeRegular, themeBold] = (useCSSVariable(['--font-normal', '--font-bold']) as string[]).map(String);
-  const { face, lineHeight } = READING_MODES[mode];
+  const { face, lineHeight, page } = READING_MODES[mode];
+  const { isLight } = useAppTheme();
+  // Accent links clear AA (4.5:1) on every dark page and miss it on every light
+  // one, Paper included (#415, measured per theme); there the underlined ink
+  // carries the link. Re-measure when a theme's accent changes.
+  const darkPage = page === 'night' || (page === 'app' && !isLight);
   // Clear and By the fire load at runtime; until then, the theme's face.
   const ready = fontsLoaded || mode === 'classic';
   const regular = ready ? face.regular : themeRegular;
@@ -36,9 +43,7 @@ export function useMarkdownStyle(mode: ReadingModeKey, size: number, fontsLoaded
     strong: { fontFamily: bold, fontWeight: 'normal', color: foreground },
     // A face without a real italic (Space Grotesk) keeps the synthesized slant.
     em: { fontFamily: italic, fontStyle: italic === regular ? 'italic' : 'normal', color: foreground },
-    // Ink, not accent: accent misses AA (4.5:1) on every light page, Paper included (#415).
-    // The underline carries the "this is a link".
-    link: { color: foreground, underline: true },
+    link: { color: darkPage ? accent : foreground, underline: true },
     code: { color: foreground, backgroundColor: surface, borderColor: border },
     list: {
       fontFamily: regular,
