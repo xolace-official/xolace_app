@@ -72,7 +72,7 @@ function ModeCard({ mode, selected, onPress }: { mode: ReadingModeKey; selected:
           )}
           style={{ borderCurve: 'continuous' }}
         >
-          <AppText className="font-bold text-[26px]" style={face ? { fontFamily: face.bold } : undefined}>
+          <AppText className="font-bold text-[26px]" style={{ fontFamily: face.bold }}>
             Aa
           </AppText>
           <View className={lineHeight > 1.6 ? 'gap-1.5' : 'gap-1'}>

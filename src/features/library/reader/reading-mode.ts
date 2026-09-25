@@ -1,7 +1,7 @@
 /**
  * Reading modes (#401, CONTEXT.md "Library: reading mode"). A mode fixes the
  * typeface, line spacing and page at once; text size is the one control
- * outside them. Classic's face comes from the active theme's `--font-*`.
+ * outside them.
  */
 import {
   AtkinsonHyperlegibleNext_400Regular,
@@ -18,9 +18,16 @@ type Face = { regular: string; italic: string; bold: string };
 
 export const READING_MODES: Record<
   ReadingModeKey,
-  { label: string; blurb: string; face: Face | null; lineHeight: number; page: ReaderPage }
+  { label: string; blurb: string; face: Face; lineHeight: number; page: ReaderPage }
 > = {
-  classic: { label: 'Classic', blurb: 'The app’s own face and theme', face: null, lineHeight: 1.55, page: 'app' },
+  classic: {
+    label: 'Classic',
+    blurb: 'The app’s own face and theme',
+    // Space Grotesk whatever the app theme's face; it has no italic, so emphasis is a synthesized slant.
+    face: { regular: 'SpaceGrotesk_400Regular', italic: 'SpaceGrotesk_400Regular', bold: 'SpaceGrotesk_700Bold' },
+    lineHeight: 1.55,
+    page: 'app',
+  },
   clear: {
     label: 'Clear',
     blurb: 'Easy letters, roomier lines, paper',

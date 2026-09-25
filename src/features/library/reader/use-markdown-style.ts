@@ -8,7 +8,7 @@ import { READING_MODES, type ReadingModeKey } from './reading-mode';
  * The entry body's look for a reading mode (#401) at a base text size. Colours
  * come from tokens, so called inside `ReaderPageScope` they follow the page.
  * Sizes are base sizes: the OS text size still multiplies them, uncapped.
- * Until a mode's fonts load it falls back to the theme's own face.
+ * Until a mode's runtime fonts load it falls back to the theme's own face.
  */
 export function useMarkdownStyle(mode: ReadingModeKey, size: number, fontsLoaded: boolean): MarkdownStyle {
   const [foreground, muted, accent, border, surface] = useThemeColor([
@@ -20,9 +20,11 @@ export function useMarkdownStyle(mode: ReadingModeKey, size: number, fontsLoaded
   ]);
   const [themeRegular, themeBold] = (useCSSVariable(['--font-normal', '--font-bold']) as string[]).map(String);
   const { face, lineHeight } = READING_MODES[mode];
-  const loadedFace = fontsLoaded ? face : null;
-  const regular = loadedFace?.regular ?? themeRegular;
-  const bold = loadedFace?.bold ?? themeBold;
+  // Clear and By the fire load at runtime; until then, the theme's face.
+  const ready = fontsLoaded || mode === 'classic';
+  const regular = ready ? face.regular : themeRegular;
+  const bold = ready ? face.bold : themeBold;
+  const italic = ready ? face.italic : themeRegular;
   const lh = (n: number) => Math.round(n * lineHeight);
   const px = (k: number) => Math.round(size * k);
 
@@ -33,8 +35,8 @@ export function useMarkdownStyle(mode: ReadingModeKey, size: number, fontsLoaded
     h2: { ...heading, fontSize: px(1.22), lineHeight: px(1.55) },
     h3: { ...heading, fontSize: px(1.06), lineHeight: px(1.45) },
     strong: { fontFamily: bold, fontWeight: 'normal', color: foreground },
-    // A face without a loaded italic (Classic's) keeps the synthesized slant.
-    em: loadedFace ? { fontFamily: loadedFace.italic, fontStyle: 'normal', color: foreground } : { color: foreground },
+    // A face without a real italic (Space Grotesk) keeps the synthesized slant.
+    em: { fontFamily: italic, fontStyle: italic === regular ? 'italic' : 'normal', color: foreground },
     link: { color: accent, underline: true },
     code: { color: foreground, backgroundColor: surface, borderColor: border },
     list: {
