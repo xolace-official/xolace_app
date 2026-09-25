@@ -7,8 +7,9 @@ import type { FunctionReturnType } from 'convex/server';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
-import type { ReactNode } from 'react';
+import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 
 import type { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
@@ -27,15 +28,17 @@ export const CARD_RADIUS = 28;
 export const readerHref = (slug: string, from: ReaderFrom, hub?: string) =>
   ({ pathname: '/library/[slug]', params: { slug, from, ...(hub && { hub }) } }) as const;
 
-/** Full-bleed cover photo, kicker, title, meta. Ink is the reader cover's fixed palette. */
+/**
+ * Full-bleed cover photo, kicker, title, meta, and a play mark when the entry
+ * has audio. Ink is the reader cover's fixed palette.
+ */
 export function PhotoCard({
   entry,
   kicker,
   width,
   height,
   href = readerHref(entry.slug, 'home'),
-  meta = readTimeLine(entry.readMin, entry.views, entry.listenMin),
-  corner,
+  meta = readTimeLine(entry.readMin, entry.views),
 }: {
   entry: EntryItem;
   kicker: string;
@@ -43,11 +46,7 @@ export function PhotoCard({
   height: number;
   href?: ReturnType<typeof readerHref>;
   meta?: string;
-  /** Top-right, over the photo. Defaults to Save; `null` for none. */
-  corner?: ReactNode;
 }) {
-  // Save sits beside the link, not in it: a nested button is unreachable to
-  // screen readers and, on web, a click inside the anchor follows it.
   return (
     <View style={{ width, height }}>
       <Link href={href} asChild>
@@ -84,11 +83,24 @@ export function PhotoCard({
           </View>
         </Pressable>
       </Link>
-      {corner !== null && (
-        <View className="absolute right-3 top-3">
-          {corner ?? <SaveButton entryId={entry._id} saved={entry.saved} onCover />}
-        </View>
-      )}
+      {entry.listenMin !== undefined && <HasAudio />}
+    </View>
+  );
+}
+
+const PLAY = { ios: 'play.fill', android: 'play_arrow', web: 'play_arrow' } as const;
+
+/** A mark, not a control: this entry has audio. Taps fall through to the card. */
+function HasAudio() {
+  const coverInk = String(useCSSVariable('--color-cover-ink'));
+  return (
+    <View
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      className="absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full bg-cover-scrim/30"
+    >
+      <SymbolView name={PLAY} size={15} weight="semibold" tintColor={coverInk} />
     </View>
   );
 }
