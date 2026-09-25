@@ -19,6 +19,8 @@ export function SubjectsScreen() {
   const { letter } = useLocalSearchParams<{ letter?: string }>();
   const subjects = useQuery(api.library.home.getSubjects, {}) ?? [];
   const ref = useRef<SectionList<Subject>>(null);
+  // Jump to `?letter=` once; later content-size changes (virtualized rows mounting) must not snap back.
+  const jumped = useRef(false);
   const muted = useThemeColor('muted');
 
   const sections = [...new Set(subjects.map((s) => s.slug[0].toUpperCase()))].map((title) => ({
@@ -36,7 +38,9 @@ export function SubjectsScreen() {
       keyExtractor={(s) => s.slug}
       stickySectionHeadersEnabled
       onContentSizeChange={() => {
-        if (start > 0) ref.current?.scrollToLocation({ sectionIndex: start, itemIndex: 0, animated: false });
+        if (start <= 0 || jumped.current) return;
+        jumped.current = true;
+        ref.current?.scrollToLocation({ sectionIndex: start, itemIndex: 0, animated: false });
       }}
       onScrollToIndexFailed={() => {}}
       renderSectionHeader={({ section }) => (

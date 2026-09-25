@@ -56,7 +56,7 @@ async function row(t: ReturnType<typeof asUnauthed>, slug: string) {
     const facets = await ctx.db
       .query("library_entry_facets")
       .withIndex("by_entryId", (q) => q.eq("entryId", e._id))
-      .collect();
+      .take(500);
     return { e, body, facets: facets.map((f) => `${f.axis}:${f.slug}`).sort() };
   });
 }

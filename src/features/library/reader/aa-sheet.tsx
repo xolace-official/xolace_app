@@ -60,7 +60,7 @@ function ModeCard({ mode, selected, onPress }: { mode: ReadingModeKey; selected:
       className="flex-1 active:opacity-70"
       onPress={onPress}
       accessibilityRole="radio"
-      accessibilityState={{ selected }}
+      accessibilityState={{ checked: selected }}
       accessibilityLabel={label}
       accessibilityHint={blurb}
     >
