@@ -40,7 +40,7 @@ export function PhotoCard({
   href = readerHref(entry.slug, 'home'),
   meta = readTimeLine(entry.readMin, entry.views),
 }: {
-  entry: EntryItem;
+  entry: Omit<EntryItem, 'views' | 'saved'> & { views?: number };
   kicker: string;
   width: number;
   height: number;

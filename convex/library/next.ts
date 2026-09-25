@@ -2,8 +2,9 @@ import { v } from "convex/values";
 import { query, type QueryCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
-import { cardItemValidator, entryIdsWithFacet, toListItem } from "./entries";
-import { readRow, withCardSignals } from "./reads";
+import { listenMin } from "./audio";
+import { entryIdsWithFacet, listItemValidator, toListItem } from "./entries";
+import { readRow } from "./reads";
 
 type Entry = Doc<"library_entries">;
 
@@ -13,18 +14,20 @@ type Entry = Doc<"library_entries">;
  * otherwise (or past the hub's last entry) the first active entry sharing
  * this one's primary subject that the reader hasn't finished. Nothing
  * qualifies → null, never padded. Inactive entries are never offered.
+ *
+ * No views or saved state: the card shows neither, and reading the shared
+ * totals would re-run every reader's card whenever anyone opens that entry.
  */
 export const getNext = query({
   args: { entryId: v.id("library_entries"), hub: v.optional(v.string()) },
-  returns: v.union(v.null(), cardItemValidator),
+  returns: v.union(v.null(), v.object({ ...listItemValidator.fields, listenMin: v.optional(v.number()) })),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const current = await ctx.db.get("library_entries", args.entryId);
     if (!current) return null;
     const next = (await nextInHub(ctx, current, args.hub)) ?? (await nextInSubject(ctx, current, profile._id));
     if (!next) return null;
-    const [item] = await withCardSignals(ctx, profile._id, [toListItem(next)]);
-    return item;
+    return { ...toListItem(next), listenMin: await listenMin(ctx, next._id) };
   },
 });
 
