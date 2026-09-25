@@ -36,6 +36,7 @@ import { AudioDock, ListenPill } from './audio-dock';
 import { BackToTop } from './back-to-top';
 import { COVER_SCRIM } from './cover-palette';
 import { EndOfRead } from './end-of-read';
+import { ContentNote, FireDim, HelplineLink, ReflectOnThis, ShareButton } from './reader-extras';
 import { metaLine, prepareBody } from './reader-copy';
 import { ReaderPageScope } from './reader-page';
 import { AaButton, BackButton, SaveButton, SourceCredit } from './reader-parts';
@@ -155,6 +156,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
           <View className="mb-6">
             <SourceCredit entry={entry} aside={entry.listenMin && <ListenPill audio={audio} listenMin={entry.listenMin} />} />
           </View>
+          {entry.contentNote && <ContentNote note={entry.contentNote} />}
           <EnrichedMarkdownText
             flavor="github"
             markdown={prepareBody(entry.markdown)}
@@ -162,9 +164,11 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
             onLinkPress={({ url }) => Linking.openURL(url)}
           />
           {signals && <EndOfRead entryId={entry._id} signals={signals} />}
+          <ReflectOnThis entry={entry} />
           <AppText className="mt-8 border-t border-separator pt-4 text-xs text-muted">
             {entry.source.attributionText}
           </AppText>
+          <HelplineLink kind={entry.kind} />
         </View>
       </Animated.ScrollView>
 
@@ -182,12 +186,14 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
             </AppText>
           </Animated.View>
           {signals && <SaveButton entryId={entry._id} saved={signals.saved} onCover />}
+          <ShareButton entry={entry} />
           <AaButton onPress={onOpenAa} />
         </View>
         {/* Reading progress hairline. */}
         <Animated.View style={[{ height: 2, transformOrigin: 'left' }, readBar]} className="bg-cover-ink/80" />
       </View>
 
+      <FireDim />
       <BackToTop
         scrollY={y}
         endAt={maxScroll > 0 ? maxScroll - 40 : Number.POSITIVE_INFINITY}

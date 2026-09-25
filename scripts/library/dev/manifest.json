@@ -3,6 +3,8 @@
     "slug": "dev-exam-stress-advice",
     "kind": "advice",
     "title": "Getting through exam season",
+    "contentNote": "Mentions sleep and eating trouble under stress.",
+    "reflectPrompt": "What's making this exam season feel heavy?",
     "dek": "Small things that make revision weeks feel lighter.",
     "primarySubject": "exams",
     "coverUrl": "https://picsum.photos/seed/lantern-exams/1200/900",

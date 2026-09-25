@@ -239,6 +239,7 @@ export const initiate = mutation({
   args: {
     entryType: entryTypeValidator,
     sessionMode: v.optional(v.union(v.literal("day"), v.literal("night"))),
+    fromEntryId: v.optional(v.id("library_entries")), // "Reflect on this" (#413)
   },
   returns: v.id("sessions"),
   handler: async (ctx, args) => {
@@ -260,6 +261,7 @@ export const initiate = mutation({
       entryType: args.entryType,
       kept: true,
       ...(args.sessionMode ? { sessionMode: args.sessionMode } : {}),
+      ...(args.fromEntryId ? { fromEntryId: args.fromEntryId } : {}),
       createdAt: now,
       updatedAt: now,
     });

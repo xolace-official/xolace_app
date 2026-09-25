@@ -36,9 +36,13 @@ export const useComposeCard = ({
     ? (pendingEventPrompt.label ?? null)
     : null;
 
+  // An entry's prompt (#413) was asked for just now, so it outranks what the
+  // space would say at night or on a quiet return.
+  const fromEntry = eventPromptActive && !!pendingEventPrompt.fromEntryId;
+
   const card = resolveCardContent({
-    isNight,
-    quietReturnTier: !isNight ? quietReturn : null,
+    isNight: isNight && !fromEntry,
+    quietReturnTier: !isNight && !fromEntry ? quietReturn : null,
     eventPrompt,
     // Dismissing the composer keeps the writing (#258), so the resting card
     // shows the draft's opening line rather than a prompt over the top of it.

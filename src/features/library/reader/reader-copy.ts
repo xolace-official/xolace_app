@@ -37,3 +37,6 @@ export function metaLine(kind: Kind, readMin: number, storyDescriptor?: string, 
     .filter(Boolean)
     .join(' · ');
 }
+
+/** "Reflect on this" when the curator wrote no prompt of their own (#413). */
+export const REFLECT_PROMPT = 'What did this bring up for you?';

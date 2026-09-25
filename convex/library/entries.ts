@@ -65,6 +65,8 @@ export const getEntry = query({
       author: v.optional(v.string()),
       publishedAt: v.optional(v.number()),
       storyDescriptor: v.optional(v.string()),
+      contentNote: v.optional(v.string()),
+      reflectPrompt: v.optional(v.string()),
       listenMin: v.optional(v.number()), // set when the entry has audio (#411)
       markdown: v.string(),
       source: v.object({
@@ -110,6 +112,8 @@ export const getEntry = query({
       author: e.author,
       publishedAt: e.publishedAt,
       storyDescriptor: e.storyDescriptor,
+      contentNote: e.contentNote,
+      reflectPrompt: e.reflectPrompt,
       listenMin: e.active ? await listenMin(ctx, e._id) : undefined,
       markdown: body.markdown,
       source: {

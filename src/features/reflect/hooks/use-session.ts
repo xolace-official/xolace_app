@@ -5,6 +5,7 @@ import type { Id } from '@/convex/_generated/dataModel';
 import type { EntryType } from '@/src/features/reflect/types';
 import { mapEntryType } from '@/src/features/reflect/session-service';
 import { useSessionMode } from '@/src/context/session-mode-context';
+import { useAppStore } from '@/src/store/store';
 
 // States where turns are relevant (mirror has been delivered at least once)
 const TURN_RELEVANT_STATES = new Set([
@@ -89,10 +90,16 @@ export function useSession() {
       freezeDuration?: number,
     ) => {
       const serverEntryType = mapEntryType(entryType);
+      // "Reflect on this" (#413): the session remembers the entry it opened on.
+      // One session per tap: once a session takes the entry, the prompt is spent.
+      const pending = useAppStore.getState().pendingEventPrompt;
+      const fromEntryId = pending && pending.expiresAt > Date.now() ? pending.fromEntryId : undefined;
       const newSessionId = await initiateMutation({
         entryType: serverEntryType,
         sessionMode: sessionModeAtHook,
+        fromEntryId,
       });
+      if (fromEntryId) useAppStore.getState().setPendingEventPrompt(null);
       setLocalSessionId(newSessionId);
       setLastRawText(rawText);
 

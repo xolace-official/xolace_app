@@ -3,7 +3,7 @@
  * drawn as a small page in its own look, plus text size. No separate font or
  * colour controls. Writes straight to the persisted store.
  */
-import { BottomSheet } from 'heroui-native';
+import { BottomSheet, Switch } from 'heroui-native';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -30,6 +30,7 @@ export function AaSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             <ModePicker />
             <Label>Text size</Label>
             <SizeStepper />
+            <FireToggle />
           </View>
         </BottomSheet.Content>
       </BottomSheet.Portal>
@@ -85,6 +86,21 @@ function ModeCard({ mode, selected, onPress }: { mode: ReadingModeKey; selected:
       <AppText className={cn('mt-2 text-center text-sm', selected ? 'font-bold' : 'font-semibold')}>{label}</AppText>
       <AppText className="text-center text-[11px] text-muted">{blurb}</AppText>
     </Pressable>
+  );
+}
+
+/** "Read by the fire" (#413): a dimming toggle, independent of the mode above. */
+function FireToggle() {
+  const on = useAppStore((s) => s.readByFire);
+  const setOn = useAppStore((s) => s.setReadByFire);
+  return (
+    <View className="flex-row items-center gap-3">
+      <View className="flex-1">
+        <AppText className="font-semibold">Read by the fire</AppText>
+        <AppText className="text-xs text-muted">Dims the page, like reading by firelight</AppText>
+      </View>
+      <Switch isSelected={on} onSelectedChange={setOn} accessibilityLabel="Read by the fire" />
+    </View>
   );
 }
 

@@ -595,6 +595,9 @@ export default defineSchema({
     // for the full session regardless of clock changes mid-session.
     sessionMode: v.optional(v.union(v.literal("day"), v.literal("night"))),
 
+    // The Library entry this session was opened from ("Reflect on this", #413).
+    fromEntryId: v.optional(v.id("library_entries")),
+
     // --- Duration ---
 
     // Total session time in milliseconds.
@@ -2208,6 +2211,8 @@ export default defineSchema({
     publishedAt: v.optional(v.number()),
     retrievedAt: v.optional(v.number()),
     storyDescriptor: v.optional(v.string()), // stories: "a second-year student, 20"
+    contentNote: v.optional(v.string()), // curator's heads-up shown before a heavy body (#413)
+    reflectPrompt: v.optional(v.string()), // curator's "Reflect on this" opener; else a plain default (#413)
     // Curator-only — never returned to readers (#387, #404).
     consentRecordedAt: v.optional(v.number()), // stories: required to publish
     safetyReviewedAt: v.optional(v.number()), // explainers: required to publish

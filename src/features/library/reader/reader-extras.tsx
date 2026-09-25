@@ -1,0 +1,114 @@
+/**
+ * The reader's small moves (#413, CONTEXT.md "Library: what reading can lead
+ * to"): the content note, "Reflect on this", sharing, the helpline link and
+ * the "Read by the fire" ambience.
+ */
+import * as Linking from 'expo-linking';
+import { router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
+import { useThemeColor } from 'heroui-native';
+import { usePostHog } from 'posthog-react-native';
+import { Pressable, Share, StyleSheet, View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
+
+import { AppText } from '@/src/components/shared/app-text';
+import { detectCountry } from '@/src/features/crisis-resources/use-crisis-resources';
+import { useAppStore } from '@/src/store/store';
+import { REFLECT_PROMPT } from './reader-copy';
+import type { ReaderEntry } from './reader-screen';
+
+const NOTE_ICON = { ios: 'exclamationmark.circle', android: 'info', web: 'info' } as const;
+const SHARE_ICON = { ios: 'square.and.arrow.up', android: 'share', web: 'share' } as const;
+const HELP_ICON = { ios: 'phone', android: 'call', web: 'call' } as const;
+const CHEVRON = { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' } as const;
+const DAY_MS = 86_400_000;
+
+/** A curator's heads-up, before the body begins. */
+export function ContentNote({ note }: { note: string }) {
+  const muted = useThemeColor('muted');
+  return (
+    <View className="mb-6 flex-row gap-3 rounded-2xl bg-surface-secondary p-4" style={{ borderCurve: 'continuous' }}>
+      <SymbolView name={NOTE_ICON} size={16} tintColor={muted} />
+      <View className="flex-1 gap-1">
+        <AppText className="text-xs font-semibold uppercase tracking-widest text-muted">Content note</AppText>
+        <AppText className="text-sm">{note}</AppText>
+      </View>
+    </View>
+  );
+}
+
+/** Leaves the entry for a reflect session that opens on its prompt; the session records the entry. */
+export function ReflectOnThis({ entry }: { entry: Pick<ReaderEntry, '_id' | 'slug' | 'title' | 'reflectPrompt'> }) {
+  const setPrompt = useAppStore((s) => s.setPendingEventPrompt);
+  const posthog = usePostHog();
+  const prompt = entry.reflectPrompt ?? REFLECT_PROMPT;
+  return (
+    <View className="mt-10 gap-4 rounded-3xl bg-surface p-5" style={{ borderCurve: 'continuous' }}>
+      <AppText className="text-lg font-semibold">{prompt}</AppText>
+      <Pressable
+        onPress={() => {
+          setPrompt({ text: prompt, label: entry.title, expiresAt: Date.now() + DAY_MS, fromEntryId: entry._id });
+          posthog.capture('library_reflect_started', { slug: entry.slug, curated: !!entry.reflectPrompt });
+          router.dismissTo('/');
+        }}
+        accessibilityRole="button"
+        className="items-center rounded-full bg-accent py-3 active:opacity-70"
+      >
+        <AppText className="font-semibold text-accent-foreground">Reflect on this</AppText>
+      </Pressable>
+    </View>
+  );
+}
+
+/** Standard share sheet with a deep link to the entry. Sits on the cover. */
+export function ShareButton({ entry }: { entry: Pick<ReaderEntry, 'slug' | 'title'> }) {
+  const coverInk = String(useCSSVariable('--color-cover-ink'));
+  const posthog = usePostHog();
+  return (
+    <Pressable
+      onPress={async () => {
+        const url = Linking.createURL(`library/${entry.slug}`);
+        try {
+          const { action } = await Share.share({ message: `${entry.title}\n${url}` });
+          if (action === Share.sharedAction) posthog.capture('library_entry_shared', { slug: entry.slug });
+        } catch {
+          // The sheet failed to open; nothing was shared and there's nothing to undo.
+        }
+      }}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Share"
+      className="h-10 w-10 items-center justify-center rounded-full bg-cover-scrim/30 active:opacity-60"
+    >
+      <SymbolView name={SHARE_ICON} size={17} weight="semibold" tintColor={coverInk} />
+    </Pressable>
+  );
+}
+
+/** Explainers end on a way to the crisis-resources screen — only where we have resources (#403). */
+export function HelplineLink({ kind }: { kind: ReaderEntry['kind'] }) {
+  const muted = useThemeColor('muted');
+  if (kind !== 'explainer' || !detectCountry()) return null;
+  return (
+    <Pressable
+      onPress={() => router.push('/crisis-resources?from=library')}
+      accessibilityRole="link"
+      className="mt-6 flex-row items-center gap-3 rounded-2xl bg-surface-secondary p-4 active:opacity-70"
+      style={{ borderCurve: 'continuous' }}
+    >
+      <SymbolView name={HELP_ICON} size={16} tintColor={muted} />
+      <AppText className="flex-1 text-sm font-semibold">Need to talk to someone? Find support near you</AppText>
+      <SymbolView name={CHEVRON} size={13} tintColor={muted} />
+    </Pressable>
+  );
+}
+
+/**
+ * "Read by the fire": the night page's warm dark laid over the whole reader,
+ * whatever the Aa mode. Atmosphere only — narration is the audio.
+ */
+export function FireDim() {
+  const on = useAppStore((s) => s.readByFire);
+  if (!on) return null;
+  return <View pointerEvents="none" style={StyleSheet.absoluteFill} className="bg-reader-night-bg/45" />;
+}
