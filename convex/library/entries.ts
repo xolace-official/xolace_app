@@ -144,6 +144,8 @@ export const listEntries = query({
   returns: v.array(cardItemValidator),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+    // ponytail: category screens call without a limit and get the first 50, no
+    // load-more; switch to paginate once a subject or kind nears 50 entries.
     const limit = Math.max(1, Math.min(Math.floor(args.limit ?? 50), MAX_LIMIT));
     const facetFilters: [string, string][] = [];
     if (args.subject) facetFilters.push(["subject", args.subject]);

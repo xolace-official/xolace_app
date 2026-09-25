@@ -105,6 +105,14 @@ export const record = mutation({
       row = (await ctx.db.get("library_reads", id))!;
     }
 
+    // Read-only once retracted (#404): no new view, save or helped — only the
+    // reader's private progress, and unsaving. Dropped, not thrown: the reader
+    // sends `opened` on every open.
+    if (!entry.active) {
+      const { entryId, position, finished, saved } = args;
+      args = { entryId, position, finished, saved: saved === false ? false : undefined };
+    }
+
     const patch: Partial<Doc<"library_reads">> = {};
     if (args.opened && row.viewedAt === undefined) {
       patch.viewedAt = Date.now();
