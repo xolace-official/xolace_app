@@ -40,3 +40,7 @@ export function metaLine(kind: Kind, readMin: number, storyDescriptor?: string, 
 
 /** "Reflect on this" when the curator wrote no prompt of their own (#413). */
 export const REFLECT_PROMPT = 'What did this bring up for you?';
+
+/** What the share sheet sends: a short personal note, then the link. */
+export const shareMessage = (title: string, url: string) =>
+  `I just read “${title}” on Xolace and thought you might like it too. Worth a few minutes:\n${url}`;

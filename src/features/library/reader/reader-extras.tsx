@@ -14,7 +14,7 @@ import { useCSSVariable } from 'uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { detectCountry } from '@/src/features/crisis-resources/use-crisis-resources';
 import { useAppStore } from '@/src/store/store';
-import { REFLECT_PROMPT } from './reader-copy';
+import { REFLECT_PROMPT, shareMessage } from './reader-copy';
 import type { ReaderEntry } from './reader-screen';
 
 const NOTE_ICON = { ios: 'exclamationmark.circle', android: 'info', web: 'info' } as const;
@@ -69,7 +69,7 @@ export function ShareButton({ entry }: { entry: Pick<ReaderEntry, 'slug' | 'titl
       onPress={async () => {
         const url = Linking.createURL(`library/${entry.slug}`);
         try {
-          const { action } = await Share.share({ message: `${entry.title}\n${url}` });
+          const { action } = await Share.share({ message: shareMessage(entry.title, url) });
           if (action === Share.sharedAction) posthog.capture('library_entry_shared', { slug: entry.slug });
         } catch {
           // The sheet failed to open; nothing was shared and there's nothing to undo.
