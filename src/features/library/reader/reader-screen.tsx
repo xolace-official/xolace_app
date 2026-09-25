@@ -32,6 +32,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
 import { useAppStore } from '@/src/store/store';
 import { AaSheet } from './aa-sheet';
+import { AudioDock, DOCK_ROW } from './audio-dock';
 import { BackToTop } from './back-to-top';
 import { COVER_SCRIM } from './cover-palette';
 import { EndOfRead } from './end-of-read';
@@ -76,6 +77,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
   const fold = coverH - SHEET_OVERLAP - barH; // scroll at which the sheet meets the bar
   const imageStop = (coverH - barH) / 2; // parallax travel before the photo pins
   const drift = reduced ? 1 : 0.5; // reduced motion: the photo just scrolls, no parallax
+  const dockH = entry.listenMin ? DOCK_ROW : 0; // clears the audio dock (#411)
 
   const [contentH, setContentH] = useState(1);
   const [viewH, setViewH] = useState(1);
@@ -147,7 +149,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
 
         <View
           className="rounded-t-[28px] px-6 pt-6"
-          style={{ backgroundColor: page, borderCurve: 'continuous', minHeight: screenH, paddingBottom: insets.bottom + 96 }}
+          style={{ backgroundColor: page, borderCurve: 'continuous', minHeight: screenH, paddingBottom: insets.bottom + dockH + 96 }}
         >
           <View className="mb-6">
             <SourceCredit entry={entry} />
@@ -188,9 +190,10 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
       <BackToTop
         scrollY={y}
         endAt={maxScroll > 0 ? maxScroll - 40 : Number.POSITIVE_INFINITY}
-        bottom={insets.bottom + 16}
+        bottom={insets.bottom + dockH + 16}
         onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: !reduced })}
       />
+      {entry.listenMin && <AudioDock entryId={entry._id} title={entry.title} listenMin={entry.listenMin} />}
     </View>
   );
 }

@@ -2223,6 +2223,26 @@ export default defineSchema({
     markdown: v.string(),
   }).index("by_entryId", ["entryId"]),
 
+  // One narrated clip per entry (#411, decision in #390). The R2-key +
+  // sha256 + durationSec pattern of `audio_tracks`, not that table. Two
+  // blobs: `previewKey` is a separate 30s cut anyone may stream; `key` is
+  // only ever minted behind `requirePremium`. Retract with `active: false`.
+  library_entry_audio: defineTable({
+    entryId: v.id("library_entries"),
+    key: v.string(), // full asset — Plus only
+    previewKey: v.string(), // truncated 30s asset — free
+    durationSec: v.number(), // of the full asset; the card's "M min listen"
+    sha256: v.string(), // full audio + transcript (the preview is cut from it): ingest no-op gate
+    active: v.boolean(),
+  }).index("by_entryId", ["entryId"]),
+
+  // Plain text of what's said (CONTEXT.md "Library: transcript") — Plus only,
+  // kept off `library_entry_audio` so card reads skip it.
+  library_entry_transcripts: defineTable({
+    entryId: v.id("library_entries"),
+    text: v.string(),
+  }).index("by_entryId", ["entryId"]),
+
   // Facets are generic (axis, slug) rows, not per-axis columns (ADR 0015),
   // so every value is indexable and a new axis needs no schema change.
   // `emotion` / `lifeArea` slugs come from lib/understandingVocab.ts.

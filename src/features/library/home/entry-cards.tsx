@@ -42,7 +42,7 @@ export function PhotoCard({
       <Link href={readerHref(entry.slug)} asChild>
         <Pressable
           accessibilityRole="link"
-          accessibilityLabel={`${entry.title}. ${kicker}. ${readTimeLine(entry.readMin, entry.views)}`}
+          accessibilityLabel={`${entry.title}. ${kicker}. ${readTimeLine(entry.readMin, entry.views, entry.listenMin)}`}
           className="overflow-hidden bg-cover-scrim active:opacity-90"
           style={{
             width,
@@ -69,7 +69,7 @@ export function PhotoCard({
             <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={3}>
               {entry.title}
             </AppText>
-            <AppText className="text-[13px] text-cover-ink/75">{readTimeLine(entry.readMin, entry.views)}</AppText>
+            <AppText className="text-[13px] text-cover-ink/75">{readTimeLine(entry.readMin, entry.views, entry.listenMin)}</AppText>
           </View>
         </Pressable>
       </Link>
@@ -97,7 +97,7 @@ export function EntryRow({ entry, index }: { entry: EntryItem; index?: number })
             <AppText className="text-[16px] font-semibold leading-[21px]" numberOfLines={2}>
               {entry.title}
             </AppText>
-            <AppText className="text-[13px] text-muted">{readTimeLine(entry.readMin, entry.views)}</AppText>
+            <AppText className="text-[13px] text-muted">{readTimeLine(entry.readMin, entry.views, entry.listenMin)}</AppText>
           </View>
         </Pressable>
       </Link>

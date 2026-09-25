@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, type MutationCtx, type QueryCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
+import { listenMin } from "./audio";
 
 /**
  * What a reader leaves behind on an entry (#410, CONTEXT.md "Library:
@@ -37,10 +38,14 @@ async function bumpTotals(ctx: MutationCtx, entryId: EntryId, delta: { views?: n
   else await ctx.db.insert("library_entry_totals", { entryId, views, helped });
 }
 
-/** Views plus this reader's saved state, for every entry card. */
+/** Views, listen time (#411) and this reader's saved state, for every entry card. */
 export async function cardSignals(ctx: QueryCtx, profileId: ProfileId, entryId: EntryId) {
-  const [t, r] = await Promise.all([totalsRow(ctx, entryId), readRow(ctx, profileId, entryId)]);
-  return { views: t?.views ?? 0, saved: r?.saved ?? false };
+  const [t, r, listen] = await Promise.all([
+    totalsRow(ctx, entryId),
+    readRow(ctx, profileId, entryId),
+    listenMin(ctx, entryId),
+  ]);
+  return { views: t?.views ?? 0, saved: r?.saved ?? false, listenMin: listen };
 }
 
 /** Attaches `cardSignals` to already-shaped list items. */

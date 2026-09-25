@@ -3,6 +3,7 @@ import { query, type QueryCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import schema from "../schema";
+import { listenMin } from "./audio";
 import { readRow, withCardSignals } from "./reads";
 
 /**
@@ -31,6 +32,7 @@ export const cardItemValidator = v.object({
   ...listItemValidator.fields,
   views: v.number(),
   saved: v.boolean(),
+  listenMin: v.optional(v.number()),
 });
 
 export const toListItem = (e: Doc<"library_entries">) => ({
@@ -63,6 +65,7 @@ export const getEntry = query({
       author: v.optional(v.string()),
       publishedAt: v.optional(v.number()),
       storyDescriptor: v.optional(v.string()),
+      listenMin: v.optional(v.number()), // set when the entry has audio (#411)
       markdown: v.string(),
       source: v.object({
         name: v.string(),
@@ -107,6 +110,7 @@ export const getEntry = query({
       author: e.author,
       publishedAt: e.publishedAt,
       storyDescriptor: e.storyDescriptor,
+      listenMin: e.active ? await listenMin(ctx, e._id) : undefined,
       markdown: body.markdown,
       source: {
         name: source.name,

@@ -37,7 +37,10 @@ export type PaywallSurface =
   // Session-end's free-user upsell line (docs/paths-v1.md §12, #337). Fixed
   // contract slot, not one of the five ranked proactive moments — no cooldown,
   // shown every qualifying session.
-  | "kindling";
+  | "kindling"
+  // The Lantern reader's audio dock at the end of the 30s preview (#411).
+  // Pushed over the reader, never replacing it — the read stays in place.
+  | "library_audio";
 
 /**
  * `sessionId` rides only with the `kindling` surface: the just-completed

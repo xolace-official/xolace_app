@@ -20,13 +20,19 @@ export const KINDS: { kind: Kind; label: string; line: string }[] = [
   { kind: 'story', label: 'Stories', line: 'People who’ve felt it too' },
 ];
 
-// ponytail: audio lands in #411 — then this grows "· M min listen" and the Plus mark.
+// ponytail: #409's Plus mark on audio cards isn't drawn yet — needs a design pass.
 // ponytail: hand-rolled compact count; Hermes' Intl lacks `notation: 'compact'` on some Android builds.
 const compact = (n: number) => (n < 1000 ? `${n}` : `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`);
 
-/** "4 min read", plus "· 1.2k views" once anyone has opened it (#410). */
-export const readTimeLine = (readMin: number, views = 0) =>
-  [`${readMin} min read`, views > 0 && `${compact(views)} ${views === 1 ? 'view' : 'views'}`].filter(Boolean).join(' · ');
+/** "4 min read", "· 6 min listen" when it has audio (#411), "· 1.2k views" once anyone has opened it (#410). */
+export const readTimeLine = (readMin: number, views = 0, listenMin?: number) =>
+  [
+    `${readMin} min read`,
+    listenMin && `${listenMin} min listen`,
+    views > 0 && `${compact(views)} ${views === 1 ? 'view' : 'views'}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
 /** Why For you picked an entry — the card's kicker. */
 export function reasonLine({ axis, slug }: Reason) {

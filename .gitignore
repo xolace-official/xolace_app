@@ -62,3 +62,6 @@ google-services-preview/
 /scripts/kindling/dev/media/
 /scripts/kindling/prod/media/
 /scripts/kindling/tmp/
+# Library audio (#411) — local media, never the audio.json
+/scripts/library/dev/media/
+/scripts/library/prod/media/
