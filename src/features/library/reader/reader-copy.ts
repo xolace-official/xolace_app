@@ -32,6 +32,8 @@ const CREDIT: Record<Reuse, string> = {
 /** The line under the source's name: how its words reached this page. */
 export const creditLine = (reuse: Reuse) => CREDIT[reuse];
 
-export function metaLine(kind: Kind, readMin: number, storyDescriptor?: string) {
-  return [capitalise(kind), storyDescriptor, `${readMin} min read`].filter(Boolean).join(' · ');
+export function metaLine(kind: Kind, readMin: number, storyDescriptor?: string, listenMin?: number) {
+  return [capitalise(kind), storyDescriptor, `${readMin} min read`, listenMin && `${listenMin} min listen`]
+    .filter(Boolean)
+    .join(' · ');
 }

@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Linking, Pressable, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
@@ -93,30 +93,34 @@ export function SaveButton({ entryId, saved, onCover = false }: { entryId: Reade
 type Credit = Pick<ReaderEntry, 'reuse' | 'author' | 'originalUrl' | 'source'>;
 
 /** Who wrote it and how it reached this page. Every entry shows it (#383). */
-export function SourceCredit({ entry }: { entry: Credit }) {
+/** The source's credit; `aside` sits at its trailing edge (the Listen pill, #411). */
+export function SourceCredit({ entry, aside }: { entry: Credit; aside?: ReactNode }) {
   const muted = useThemeColor('muted');
   const href = entry.originalUrl ?? entry.source.url;
   const line = [creditLine(entry.reuse), entry.author && `by ${entry.author}`].filter(Boolean).join(' · ');
 
   return (
-    <Pressable
-      disabled={!href}
-      onPress={() => href && Linking.openURL(href)}
-      accessibilityRole={href ? 'link' : undefined}
-      accessibilityHint={href ? 'Opens the original' : undefined}
-      className="flex-row items-center gap-3 active:opacity-70"
-    >
-      <View className="h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-surface-secondary">
-        {entry.source.logoUrl ? (
-          <Image source={{ uri: entry.source.logoUrl }} style={{ width: 36, height: 36 }} contentFit="cover" />
-        ) : (
-          <SymbolView name={SOURCE_ICON} size={15} tintColor={muted} />
-        )}
-      </View>
-      <View className="flex-1">
-        <AppText className="font-semibold text-sm">{entry.source.name}</AppText>
-        <AppText className="text-xs text-muted">{line}</AppText>
-      </View>
-    </Pressable>
+    <View className="flex-row items-center gap-3">
+      <Pressable
+        disabled={!href}
+        onPress={() => href && Linking.openURL(href)}
+        accessibilityRole={href ? 'link' : undefined}
+        accessibilityHint={href ? 'Opens the original' : undefined}
+        className="flex-1 flex-row items-center gap-3 active:opacity-70"
+      >
+        <View className="h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-surface-secondary">
+          {entry.source.logoUrl ? (
+            <Image source={{ uri: entry.source.logoUrl }} style={{ width: 36, height: 36 }} contentFit="cover" />
+          ) : (
+            <SymbolView name={SOURCE_ICON} size={15} tintColor={muted} />
+          )}
+        </View>
+        <View className="flex-1">
+          <AppText className="font-semibold text-sm">{entry.source.name}</AppText>
+          <AppText className="text-xs text-muted">{line}</AppText>
+        </View>
+      </Pressable>
+      {aside}
+    </View>
   );
 }
