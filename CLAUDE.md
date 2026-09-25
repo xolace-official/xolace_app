@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+# Tests
+Dont write any more unit tests
+Never write tests after you write code (we will be cleaning up the current ones soon)
+
 ## Project Overview
 
 ### What Xolace Is
@@ -152,7 +156,7 @@ Scheduled functions always run their currently-deployed version, not the version
 - **Images**: Use `expo-image` only, never `Image` from `react-native`.
 - **Platform-specific code**: Use Expo platform extensions (`.ios.tsx`, `.android.tsx`, `.web.tsx`). For styling, use Uniwind platform selectors (`ios:`, `android:`).
 - **Theme colors**: Use CSS variables (e.g., `--background`, `--foreground`, `--accent`, `--surface`, `--overlay`). Never hard-code colors. All themes must define the same set of variables. Use `useThemeColor` from `heroui-native` when you need color values in JS.
-- **Fixed palettes**: A surface may hold a fixed palette when its palette *is* the content, not the container — it is a printed object and does not follow the active theme. Members: the quotes poster (**hero and deck — one printed object, two sheets**), `vent/`, `auth/`. This is a named category, not a per-feature exemption: anything not listed here follows the Theme colors convention above. A fixed palette still lands as tokens (e.g. `--poster-*` under `@theme static` in `global.css`) so no hex enters a component; only the values a token cannot express — a gradient stop array, a Skia opacity — live in a palette module beside the feature.
+- **Fixed palettes**: A surface may hold a fixed palette when its palette *is* the content, not the container — it is a printed object and does not follow the active theme. Members: the quotes poster (**hero and deck — one printed object, two sheets**), `vent/`, `auth/`, the Lantern reader's cover photo (ink over the photo only), the Lantern reader's Paper and Night pages (a reading mode's page is the reading surface itself; Classic's page follows the theme). This is a named category, not a per-feature exemption: anything not listed here follows the Theme colors convention above. A fixed palette still lands as tokens (e.g. `--poster-*` under `@theme static` in `global.css`) so no hex enters a component; only the values a token cannot express — a gradient stop array, a Skia opacity — live in a palette module beside the feature.
 - **Fonts**: Poppins loaded via `expo-font` plugin. Space Grotesk loaded dynamically via `@expo-google-fonts/space-grotesk` in root layout. Font mapping in `global.css` `@theme` block.
 - **File size**: Keep files under 200 lines. Extract logic into hooks, utils, services.
 - **Imports**: Always use `@/src/` path alias. Avoid barrel re-exports that pull in unused code.
@@ -160,6 +164,7 @@ Scheduled functions always run their currently-deployed version, not the version
 - **Convex reactive reads whose args change from user interaction**: use `useStableQuery` / `useStablePaginatedQuery` from `@/src/lib/convex/use-stable-query`, not raw `useQuery` / `usePaginatedQuery`. When a query's args change (paging, filtering, sorting, tab switches), Convex returns `undefined` (or resets a paginated list to `LoadingFirstPage` + `[]`) until the new data loads — any `&& data` guard then unmounts the subtree mid-interaction, blanking it and replaying mount animations (the "overreacting" problem, see https://stack.convex.dev/help-my-app-is-overreacting). The stable variants hold the previously loaded result during the reload so the UI swaps in place. Keep plain `useQuery` / `usePaginatedQuery` when args are stable — there the `undefined`/first-page-loading state is a genuine cold start you want to render a skeleton for.
 - **Services**: Backend logic in `src/services/`, never directly in UI components.
 - **No new horizontal files**: Do not add new files to top-level horizontal directories (`hooks/`, `services/`, `interfaces/`, `types/`, `helpers/`). Instead, colocate new code with the feature it belongs to (e.g. a new hook for the reflect flow goes in `components/reflect/` or a dedicated `features/reflect/` directory, not `hooks/`). Exceptions: `shared/` design system primitives, cross-cutting infrastructure (`providers/`, `store/`, `lib/`), and `themes/`.
+- **Feature folders**: New files for a feature go in a folder named for that feature, on both backend and client (e.g. Library code lives in `convex/library/` and `src/features/library/`, with its tests alongside).
 - **Adding themes**: Create a new CSS file in `src/themes/`, define `@variant <name>-light` and `@variant <name>-dark` with all required CSS variables, import it in `global.css`, register both variants in `metro.config.js` `extraThemes`, add the names to the `ThemeName` union in `src/context/app-theme-context.tsx`, and add a `toggleTheme` case for the light/dark pair.
 
 ## Key Experiments Enabled

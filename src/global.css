@@ -81,6 +81,21 @@
      * src/features/browse/player/player-palette.ts. */
     --color-player-ink: #ffffff;
     --color-player-scrim: #000000;
+    /* Lantern reader cover (#407): title and controls sit on the entry's
+     * photo, so the same fixed white-on-black. Scrim stops live in
+     * src/features/library/reader/cover-palette.ts. */
+    --color-cover-ink: #ffffff;
+    --color-cover-scrim: #000000;
+    /* Lantern reader pages (#408): the reading modes' own sheets, laid over
+     * the light/dark base by ScopedVariables in reader-page.tsx. Warm and
+     * low-blue; Night is for reading in the dark. Classic has no tokens here —
+     * its page is the app theme. */
+    --color-reader-paper-bg: #fbf8f1;
+    --color-reader-paper-ink: #2b2724;
+    --color-reader-paper-muted: #6f6760;
+    --color-reader-night-bg: #1b1714;
+    --color-reader-night-ink: #e6dccb;
+    --color-reader-night-muted: #9c9080;
     /* The archive card's chip fill — ink at 7%, so one value sits on every tint */
     --color-poster-chip: rgba(20, 20, 20, 0.07);
     /* The archive card tints, cycled by item index (#296). Fixed objects inside

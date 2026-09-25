@@ -18,6 +18,12 @@ export default function BrowseLayout() {
         <Stack.Screen name="list" options={SUB_OPTIONS} />
         <Stack.Screen name="topics" options={{ ...SUB_OPTIONS, title: 'Topics' }} />
         <Stack.Screen name="topic/[slug]" options={SUB_OPTIONS} />
+        {/* Lantern (#409): the Library home keeps a large title of its own */}
+        <Stack.Screen name="library/index" options={{ title: 'Lantern', headerBackButtonDisplayMode: 'minimal' }} />
+        <Stack.Screen name="library/hub/[slug]" options={SUB_OPTIONS} />
+        <Stack.Screen name="library/kind/[kind]" options={SUB_OPTIONS} />
+        <Stack.Screen name="library/subject/[slug]" options={SUB_OPTIONS} />
+        <Stack.Screen name="library/subjects" options={{ ...SUB_OPTIONS, title: 'Subjects' }} />
       </Stack>
     </View>
   );

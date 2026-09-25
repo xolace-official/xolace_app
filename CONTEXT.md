@@ -3,6 +3,144 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Library: reading mode (2026-09-24)
+
+How an entry looks is set by picking a **reading mode**, not by adjusting
+separate font and colour controls. A mode fixes three things at once:
+typeface, line spacing, and **page** (the surface behind the text).
+
+- **Classic**: Space Grotesk (the app's own face), normal spacing, page
+  follows the app theme.
+- **Clear**: Atkinson Hyperlegible, roomier lines, Paper page. The
+  hyperlegible option exists only as this mode, never as a font name.
+- **By the fire**: Literata, normal spacing, Night page (warm, dark).
+
+**Text size** is the one control outside the modes. It adds to the phone's
+text size setting, never replaces it, and the body is never capped. A page is
+reader-local: it changes the reader, not the app theme.
+
+## Library is branded Lantern (2026-09-23)
+
+The reading surface's user-facing brand name is **Lantern** — it replaces
+the "Library" placeholder in UI copy and marketing. "Library" stays as the
+internal/code name for the surface (routes, tables, this doc's other
+entries); only prose the user reads switches to Lantern. The per-entry term
+stays **entry** in both code and UI copy — unlike kindling's "twig," an
+entry is inert content to read/listen to, not something you tend, so it
+doesn't need its own warm synonym.
+
+Rejected: `Fireside` (too broad — reads as the whole campfire scene, not
+this specific surface); a Vessa-style invented brand name (Vessa is the
+separate, not-yet-shown audio-catalogue brand; matching its pattern would
+blur two distinct catalogues into one family). `Ember`, `hearth`, `glow`,
+`flame`, `kindling`, `twig`, `path`, `collection`, `series`, and `Vessa`
+are all taken by other features. `Lantern` was chosen because it
+literalizes the campfire metaphor's own language ("the flames help you see
+what you're carrying") for the thing you specifically read *by* — the
+light, not the fire itself.
+
+## Library: where it lives (2026-09-23)
+
+The Library lives **inside Browse**: Browse is the whole catalogue, for
+listening *and* reading. The **Library home** is the Library's front page
+within Browse. The **reader** is the one screen an entry opens in, wherever
+you came from: Browse, a twig, Tonight's reading, a share link.
+
+In anything a user reads, "library" means the reading surface only. Never
+use it for audio (the old "From the library" audio strip on Today gets a
+listening name).
+
+- **Reading as…**: the reader's chosen audiences, set from a one-time card
+  on the Library home and changed later from the same control. Skipping it
+  is an answer: For you then reads the Understanding alone.
+- **Continue reading**: entries the reader opened but hasn't finished.
+
+## Library: what reading can lead to (2026-09-23)
+
+The Library's own moves: the things only Xolace does with an entry.
+
+- **Reflect on this**: leaving an entry for a reflect session that opens
+  on a prompt from that entry. The curator may write the prompt; otherwise a
+  plain one is used. The session remembers which entry it came from, so
+  that is the only way an entry reaches the timeline.
+- **Quiet voices**: at the end of a read, two or three anonymous peer
+  reflections from campers who carried the same emotion or life area. They
+  are lines people already wrote in their own sessions, never comments on
+  the entry. Nobody writes *on* an entry.
+- **You named this too**: one line on an entry that echoes something the
+  reader named in a recent session of their own, linking back to it. Never
+  drawn from a crisis session.
+- **Read by the fire**: the optional dimmed, ambient reading mode. It is
+  atmosphere, not narration; narration is the entry's audio.
+- **Tonight's reading**: the one entry Today offers each day. It's an
+  offer, never a task.
+- **Content note**: a curator's heads-up shown before a heavy entry begins.
+
+"Helped" steers what is offered next and nothing else. It is not part of the
+Understanding and not memory.
+
+## Library: finished, helped, saved (2026-09-23)
+
+What a reader leaves behind on an entry. Each is private to them; only
+anonymous totals are ever shown to others.
+
+- **View** — one person opening the entry for the first time. Opening it
+  again is not another view.
+- **Finished** — the reader reached the end of the body *and* stayed long
+  enough to have read it. Never a button; a skim to the bottom is not
+  finished.
+- **Helped** — the one feedback a reader can give: a private "this helped"
+  tap, undoable. There is no negative counterpart; an entry that didn't land
+  is simply left.
+- **Saved** — "I want this back." A plain state on the entry, not a
+  collection. Named folders, when they come, hold saved entries; saving
+  does not become filing.
+
+Readers see two totals: **views** (on the entry card) and **found this
+helpful** (at the end of the read). Finished counts are for curation and
+are never shown. A total counts readers the entry has had, not readers it
+has now: it stays up after an account is deleted (ADR 0016).
+
+## Library: entry, subject, facet, hub, source (2026-09-23)
+
+The **Library** (working name) is the curated, browsable collection of
+reading. One item in it is an **entry**. Never "collection" — reserved for
+playlists/favourites.
+
+An entry has exactly one **kind**: **explainer** (what something is — a
+condition, a concept), **advice** (what to do; a numbered "guide" is just
+advice in that shape), or **story** (a life slice — someone else's
+experience). Kind is the only closed classification; it changes how an entry
+is presented.
+
+Everything else about an entry is a **facet** — a value on an **axis**. An
+axis is one way of sorting the shelf; a facet is one position on it. An
+entry carries any number of facets on any axes. Launch axes:
+
+- **subject** — what it's about (anxiety, grief, burnout, exams). The
+  Library's A–Z. Not a **topic**: topic stays the kindling audio axis.
+- **audience** — who it's for (student, professional, parent).
+- **emotion** / **life area** — what it serves, spoken in the
+  Understanding's own words (the classifier's primary-emotion and thematic
+  tag vocabularies), so the read twig matches without translation.
+
+A new axis is a new kind of facet, not a new shape of entry. Each entry has
+one **primary subject** — its home on the shelf. A user may say who they
+are inside the Library ("I'm a student", "I'm a founder") — their chosen
+**audiences** — and that, with their recent Understanding, is all "For you"
+reads.
+
+A **hub** is a curated, *ordered* reading list with its own title, cover and
+intro ("Preparing for university"). Not a facet (facets are unordered tags)
+and not a **series** (a series has continuity between episodes; a hub is an
+editor's running order). An entry may sit in many hubs. A hub may also hold
+kindling audio — a hub is a way through the whole app, not only the Library.
+
+A **source** is the publisher an entry is credited to (NHS, NIMH, Xolace
+itself for first-hand stories). Reuse terms belong to the source, not the
+entry; each entry records only how *it* was reused — **verbatim**,
+**adapted**, or **original**. Every entry credits its source, always.
+
 ## The Xolace channel (2026-09-18)
 
 Every user is a member of one shared Stream channel — prose and UI call it

@@ -1,3 +1,7 @@
+# Tests
+Dont write any more unit tests
+Never write tests after you write code (we will be cleaning up the current ones soon)
+
 # Convex Skills
 
 Agent skills for building production-ready applications with Convex, following the Agent Skills open format.

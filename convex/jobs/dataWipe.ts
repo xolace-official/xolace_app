@@ -13,7 +13,7 @@ const BATCH_SIZE = 100;
  * preferences, and consent records.
  *
  * Deletes: sessions, emotional_metadata, session_turns,
- *          reflection_resonances, notification_log
+ *          reflection_resonances, notification_log, library_reads
  * Anonymizes: escalation_events (strip profileId for safety audit)
  * Resets: emotional_profile counters
  *
@@ -80,6 +80,18 @@ export const wipe = internalMutation({
       quotes.filter((q) => q.reply !== undefined).map((q) => q._id),
     );
     for (const q of quotes) await ctx.db.delete("daily_quotes", q._id);
+
+    // ── Delete Library reads ─────────────────────────────────────
+    // Private rows only; the public totals stay up (ADR 0016).
+    const reads = await ctx.db
+      .query("library_reads")
+      .withIndex("by_emotionalProfileId_and_entryId", (q) =>
+        q.eq("emotionalProfileId", emotionalProfileId)
+      )
+      .take(BATCH_SIZE);
+
+    if (reads.length === BATCH_SIZE) hasMore = true;
+    for (const r of reads) await ctx.db.delete("library_reads", r._id);
 
     // ── Anonymize escalation events ──────────────────────────────
     const escalations = await ctx.db

@@ -13,7 +13,8 @@ import { playSoftPress } from "@/src/lib/haptics";
 const TILE = 132;
 
 /**
- * "From the library" (docs/paths-v1.md §9.5, #341) — the same newest-4 query
+ * "Something to listen to" (docs/paths-v1.md §9.5, #341; was "From the library" —
+ * that name now belongs to Lantern, #409) — the same newest-4 query
  * as the hub's New shelf, ending in "See all" into the Browse tab. Hidden
  * entirely below one item, never padded. Recently-played and
  * recommended-for-you are fog (§11).
@@ -35,7 +36,7 @@ export function LibraryStrip() {
   return (
     <View className="mt-10">
       <View className="flex-row items-center justify-between px-4">
-        <AppText className="text-lg font-semibold text-foreground">From the library</AppText>
+        <AppText className="text-lg font-semibold text-foreground">Something to listen to</AppText>
         <PressableFeedback onPress={seeAll} accessibilityRole="button" accessibilityLabel="See all in Browse">
           <View className="flex-row items-center gap-0.5 py-1 pl-3">
             <AppText className="text-sm font-medium" style={{ color: accent }}>

@@ -1,0 +1,61 @@
+[
+  {
+    "slug": "dev-exam-stress-advice",
+    "kind": "advice",
+    "title": "Getting through exam season",
+    "dek": "Small things that make revision weeks feel lighter.",
+    "primarySubject": "exams",
+    "coverUrl": "https://picsum.photos/seed/lantern-exams/1200/900",
+    "sourceSlug": "dev-nhs",
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1789430400000,
+    "lastReviewedAt": 1789430400000,
+    "facets": { "audience": ["student"], "emotion": ["anxiety"], "lifeArea": ["achievement"] },
+    "bodyPath": "bodies/dev-exam-stress-advice.md"
+  },
+  {
+    "slug": "dev-sleep-verbatim",
+    "kind": "advice",
+    "title": "Sleep when your mind won't switch off",
+    "dek": "A few habits for the nights that drag.",
+    "primarySubject": "sleep",
+    "sourceSlug": "dev-nhs",
+    "reuse": "verbatim",
+    "active": true,
+    "originalUrl": "https://www.nhs.uk/every-mind-matters/mental-health-issues/sleep/",
+    "retrievedAt": 1788220800000,
+    "lastReviewedAt": 1788220800000,
+    "facets": { "emotion": ["anxiety"], "lifeArea": ["health"] },
+    "bodyPath": "bodies/dev-sleep-verbatim.md"
+  },
+  {
+    "slug": "dev-what-is-burnout",
+    "kind": "explainer",
+    "title": "What burnout is",
+    "dek": "Why running on empty feels different from being tired.",
+    "primarySubject": "burnout",
+    "sourceSlug": "dev-nhs",
+    "reuse": "adapted",
+    "active": false,
+    "retrievedAt": 1789430400000,
+    "lastReviewedAt": 1789430400000,
+    "facets": { "audience": ["professional"], "emotion": ["numbness"], "lifeArea": ["work"] },
+    "bodyPath": "bodies/dev-what-is-burnout.md"
+  },
+  {
+    "slug": "dev-first-term-story",
+    "kind": "story",
+    "title": "The first term nobody warned me about",
+    "dek": "Moving away, and the quiet weeks after.",
+    "primarySubject": "loneliness",
+    "sourceSlug": "dev-xolace",
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "a first-year student, 19",
+    "consentRecordedAt": 1789862400000,
+    "lastReviewedAt": 1789862400000,
+    "facets": { "audience": ["student"], "emotion": ["sadness"], "lifeArea": ["isolation", "change"] },
+    "bodyPath": "bodies/dev-first-term-story.md"
+  }
+]

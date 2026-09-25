@@ -81,6 +81,7 @@ export default function ProtectedLayout() {
           <Stack.Screen name="kindling/index" />
           {/* Outside `(tabs)` on purpose: the player is full-bleed, no tab bar. */}
           <Stack.Screen name="browse-player" options={PLAYER_OPTIONS} />
+          <Stack.Screen name="library/[slug]" />
 
           
           <Stack.Screen name="chat/[conversationId]" options={CHAT_OPTIONS} />

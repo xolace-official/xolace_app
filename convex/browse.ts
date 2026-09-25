@@ -77,7 +77,7 @@ export const getNewShelf = query({
 
 const familyValidator = v.union(v.literal("support"), v.literal("music"));
 
-const trackItemValidator = v.object({
+export const trackItemValidator = v.object({
   _id: v.id("audio_tracks"),
   slug: v.string(),
   family: familyValidator,
@@ -90,7 +90,7 @@ const trackItemValidator = v.object({
   episodeNumber: v.optional(v.number()),
 });
 
-async function toTrackItem(t: Doc<"audio_tracks">) {
+export async function toTrackItem(t: Doc<"audio_tracks">) {
   return {
     _id: t._id,
     slug: t.slug,

@@ -9,6 +9,7 @@ import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import { zustandJSONStorage } from '@/src/lib/storage/unified-storage';
 import type { Id } from '@/convex/_generated/dataModel';
 import type { TextureSetId } from '@/src/features/reflect/texture-sets';
+import type { ReadingModeKey } from '@/src/features/library/reader/reading-mode';
 import {
   createPlusOfferSlice,
   plusOfferPersistedKeys,
@@ -95,6 +96,11 @@ type TogglesSlice = {
 type PreferencesSlice = {
   textureSetId: TextureSetId;
   setTextureSetId: (id: TextureSetId) => void;
+  /** The Lantern reader's reading mode and base text size (#408). Per device. */
+  readingMode: ReadingModeKey;
+  setReadingMode: (m: ReadingModeKey) => void;
+  readerTextSize: number;
+  setReaderTextSize: (n: number) => void;
 };
 
 /** Ephemeral, not persisted. Tracks store version check state. */
@@ -210,6 +216,10 @@ export const useAppStore = create<AppState>()(
 
         textureSetId: 'flat',
         setTextureSetId: (id) => set({ textureSetId: id }),
+        readingMode: 'classic',
+        setReadingMode: (m) => set({ readingMode: m }),
+        readerTextSize: 18,
+        setReaderTextSize: (n) => set({ readerTextSize: n }),
 
         isVersionChecked: false,
         setIsVersionChecked: (v) => set({ isVersionChecked: v }),
@@ -246,6 +256,8 @@ export const useAppStore = create<AppState>()(
           seenMenuItems: s.seenMenuItems,
           lastAcknowledgedStreak: s.lastAcknowledgedStreak,
           textureSetId: s.textureSetId,
+          readingMode: s.readingMode,
+          readerTextSize: s.readerTextSize,
           seenEventIds: s.seenEventIds,
           pendingEventPrompt: s.pendingEventPrompt,
           ...plusOfferPersistedKeys(s),

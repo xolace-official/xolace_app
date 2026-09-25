@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { internalQuery } from "./_generated/server";
-import type { Doc } from "./_generated/dataModel";
+import { internalQuery, type QueryCtx } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
 
 // =============================================================
 // UNDERSTANDING — Cognition Layer Phase 2
@@ -45,3 +45,21 @@ export const getUnderstanding = internalQuery({
       .unique();
   },
 });
+
+/**
+ * A profile's most recent Understandings, newest first — the sanctioned
+ * by-profile read for features that take "recent Understanding" as input
+ * (Lantern's For you, #409). A helper, not a query, so callers read it
+ * inside their own transaction.
+ */
+export async function recentUnderstandings(
+  ctx: QueryCtx,
+  profileId: Id<"emotional_profiles">,
+  limit: number,
+): Promise<Understanding[]> {
+  return await ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_profile_createdAt", (q) => q.eq("emotionalProfileId", profileId))
+    .order("desc")
+    .take(limit);
+}

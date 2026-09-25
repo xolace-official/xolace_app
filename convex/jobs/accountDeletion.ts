@@ -5,6 +5,7 @@ import {
   drainConsentRecords,
   drainEscalations,
   drainFeedback,
+  drainLibraryReads,
   drainNotifications,
   drainProductFeedback,
   drainQuotes,
@@ -104,6 +105,7 @@ export const purgeUser = internalMutation({
       drainRatingsReceived,
       drainSemanticVersions,
       drainPushDevices,
+      drainLibraryReads,
     ];
 
     let hasMore = false;

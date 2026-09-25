@@ -92,7 +92,7 @@ function Player() {
       {track === null || p.error ? (
         <View className="flex-1 items-center justify-center px-8">
           <AppText className="text-center text-[15px] text-player-ink/70">
-            {p.error ? "Couldn't reach this one right now." : "This one has left the library."}
+            {p.error ? "Couldn't reach this one right now." : "This one isn’t here anymore."}
           </AppText>
         </View>
       ) : (

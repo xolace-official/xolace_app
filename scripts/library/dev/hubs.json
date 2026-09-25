@@ -1,0 +1,13 @@
+[
+  {
+    "slug": "dev-starting-university",
+    "title": "Starting university",
+    "intro": "A short running order for the first few months away.",
+    "active": true,
+    "items": [
+      { "kind": "entry", "ref": "dev-first-term-story" },
+      { "kind": "entry", "ref": "dev-exam-stress-advice" },
+      { "kind": "entry", "ref": "dev-sleep-verbatim" }
+    ]
+  }
+]

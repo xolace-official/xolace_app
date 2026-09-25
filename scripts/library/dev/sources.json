@@ -1,0 +1,20 @@
+[
+  {
+    "slug": "dev-nhs",
+    "name": "NHS",
+    "url": "https://www.nhs.uk",
+    "licence": "OGL v3.0",
+    "permission": "not_required",
+    "attributionText": "Contains public sector information licensed under the Open Government Licence v3.0",
+    "dropBrandingIfAdapted": true,
+    "refreshDays": 7
+  },
+  {
+    "slug": "dev-xolace",
+    "name": "Xolace",
+    "licence": "Xolace original",
+    "permission": "not_required",
+    "attributionText": "Shared with Xolace, with permission",
+    "dropBrandingIfAdapted": false
+  }
+]
