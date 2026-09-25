@@ -122,11 +122,17 @@ export const getHome = query({
     ]);
     const activeIds = new Set(active.keys());
     const readingAs = prefs?.libraryAudiences ?? null;
+    const trackIds = [
+      ...new Set(hubs.flatMap((h) => h.items.flatMap((i) => (i.kind === "audio" ? [i.audioTrackId] : [])))),
+    ];
 
-    const [audiences, signals] = await Promise.all([
+    const [audiences, signals, tracks] = await Promise.all([
       facetCounts(ctx, "audience", activeIds),
       forYouSignals(ctx, profile._id, readingAs ?? []),
+      Promise.all(trackIds.map((id) => ctx.db.get("audio_tracks", id))),
     ]);
+    // Same rule as the hub detail: an inactive track isn't there to listen to.
+    const activeTracks = new Set(tracks.flatMap((t) => (t?.active ? [t._id] : [])));
 
     return {
       readingAs,
@@ -135,7 +141,7 @@ export const getHome = query({
       hubs: hubs.map((h) => ({
         ...toHub(h),
         entries: h.items.filter((i) => i.kind === "entry" && activeIds.has(i.entryId)).length,
-        listens: h.items.filter((i) => i.kind === "audio").length,
+        listens: h.items.filter((i) => i.kind === "audio" && activeTracks.has(i.audioTrackId)).length,
       })),
     };
   },
