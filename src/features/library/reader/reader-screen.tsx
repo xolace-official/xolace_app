@@ -79,7 +79,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
   const fold = coverH - SHEET_OVERLAP - barH; // scroll at which the sheet meets the bar
   const imageStop = (coverH - barH) / 2; // parallax travel before the photo pins
   const drift = reduced ? 1 : 0.5; // reduced motion: the photo just scrolls, no parallax
-  const audio = useEntryAudio(entry._id, !!entry.listenMin); // #411
+  const audio = useEntryAudio(entry._id, entry.slug, !!entry.listenMin); // #411
 
   const [contentH, setContentH] = useState(1);
   const [viewH, setViewH] = useState(1);
@@ -87,7 +87,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
   const y = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => y.set(e.contentOffset.y));
   const maxScroll = contentH - viewH;
-  const signals = useReadSignals({ entryId: entry._id, readMin: entry.readMin, scrollY: y, scrollRef, maxScroll });
+  const signals = useReadSignals({ entryId: entry._id, slug: entry.slug, readMin: entry.readMin, scrollY: y, scrollRef, maxScroll });
   const toTop = () => scrollRef.current?.scrollTo({ y: 0, animated: !reduced });
   const resumeAt = signals?.position ? signals.position * maxScroll : 0;
   const title = (
@@ -159,7 +159,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
           <AppText className="mt-8 border-t border-separator pt-4 text-xs text-muted">
             {entry.source.attributionText}
           </AppText>
-          {signals && <EndOfRead entryId={entry._id} signals={signals} />}
+          {signals && <EndOfRead entry={entry} signals={signals} />}
           <ReflectOnThis entry={entry} />
           <HelplineLink kind={entry.kind} />
         </View>

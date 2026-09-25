@@ -92,6 +92,9 @@ export function twigBrowseHref(twig: Twig): Href | null {
  * rides along so `useTrackPlayback` tends the twig on a natural finish —
  * a Browse play carries no `stepId` and never completes anything (§9.6).
  */
+/** The entry or track a twig points at, if it points at one. */
+export const twigSlug = (twig: Twig) => (twig.params as { slug?: string } | null)?.slug;
+
 export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | null {
   switch (twig.kind) {
     case "audio":
@@ -102,9 +105,9 @@ export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | n
     }
     case "read": {
       // `stepId` rides along so the reader tends the twig once the entry is finished.
-      const slug = (twig.params as { slug?: string } | null)?.slug;
+      const slug = twigSlug(twig);
       if (!slug) return null;
-      return { pathname: "/library/[slug]", params: { slug, stepId: twig._id } };
+      return { pathname: "/library/[slug]", params: { slug, stepId: twig._id, from: "twig" } };
     }
     case "breathing":
       // `stepId` rides along so finishing the exercise tends the twig.

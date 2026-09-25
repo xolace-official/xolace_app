@@ -8,10 +8,13 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { useMutation, useQuery } from 'convex/react';
 import { useLocalSearchParams } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
 import { useEffect, useRef, useState } from 'react';
 import type Animated from 'react-native-reanimated';
 import { useAnimatedReaction, type AnimatedRef, type SharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+
+import { trackLibrary, type ReaderFrom } from '@/src/features/library/analytics';
 
 type EntryId = Id<'library_entries'>;
 
@@ -44,12 +47,14 @@ export function useRecord() {
 
 export function useReadSignals({
   entryId,
+  slug,
   readMin,
   scrollY,
   scrollRef,
   maxScroll,
 }: {
   entryId: EntryId;
+  slug: string;
   readMin: number;
   scrollY: SharedValue<number>;
   scrollRef: AnimatedRef<Animated.ScrollView>;
@@ -61,10 +66,16 @@ export function useReadSignals({
   const state = useQuery(api.library.reads.getReaderState, { entryId });
   const [openedAt] = useState(() => Date.now());
   const [reachedEnd, setReachedEnd] = useState(false);
+  const posthog = usePostHog();
+  const { stepId, from } = useLocalSearchParams<{ stepId?: Id<'path_steps'>; from?: ReaderFrom }>();
 
-  // The view: the server counts only the first open.
+  // The view: the server counts only the first open. Analytics counts every one.
   useEffect(() => {
     record({ entryId, opened: true });
+    // A shared link carries no `from`; every in-app way in sets one.
+    trackLibrary(posthog, 'library_entry_opened', { slug, from: from ?? 'share' });
+    // Once per entry: slug/from/posthog are fixed for a mounted reader.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [record, entryId]);
 
   const endAt = maxScroll > 0 ? maxScroll - 40 : Number.POSITIVE_INFINITY;
@@ -85,8 +96,14 @@ export function useReadSignals({
     return () => clearTimeout(t);
   }, [reachedEnd, finished, openedAt, readMin, record, entryId]);
 
+  // Seen flip to finished while open (read or listened), not already finished on arrival.
+  const wasFinished = useRef(finished);
+  useEffect(() => {
+    if (wasFinished.current === false && finished === true) trackLibrary(posthog, 'library_entry_finished', { slug });
+    wasFinished.current = finished;
+  }, [finished, posthog, slug]);
+
   // A read twig is tended by the finish alone (reading or listening), once.
-  const { stepId } = useLocalSearchParams<{ stepId?: Id<'path_steps'> }>();
   const completeStep = useMutation(api.paths.completeStep);
   const tended = useRef(false);
   useEffect(() => {

@@ -10,8 +10,9 @@ import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
+import { trackLibrary } from "@/src/features/library/analytics";
 import { playSoftPress } from "@/src/lib/haptics";
-import { twigBrowseHref, twigHref, type Twig } from "../twig-presentation";
+import { twigBrowseHref, twigHref, twigSlug, type Twig } from "../twig-presentation";
 import { TwigRow } from "./twig-row";
 
 const HEADER_OPTIONS = {
@@ -40,7 +41,12 @@ export function KindlingScreen() {
   const [confirmDismiss, setConfirmDismiss] = useState(false);
 
   useEffect(() => {
-    if (kindling) posthog.capture("path_opened", { pathId: kindling._id });
+    if (!kindling) return;
+    posthog.capture("path_opened", { pathId: kindling._id });
+    for (const twig of kindling.twigs) {
+      const slug = twigSlug(twig);
+      if (twig.kind === "read" && slug) trackLibrary(posthog, "library_twig_shown", { slug, state: twig.state });
+    }
     // Once per landing, not per re-render of the subscription.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kindling?._id]);

@@ -11,11 +11,13 @@ import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
+import { usePostHog } from 'posthog-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, findNodeHandle, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Easing, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { trackLibrary } from '@/src/features/library/analytics';
 import { formatTime } from '@/src/features/browse/player/format-time';
 import { usePaywall } from '@/src/features/purchases/use-paywall';
 import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
@@ -97,7 +99,7 @@ export function AudioDock({ audio, entryId, title, coverUrl, bottom }: DockProps
           </AppText>
         </View>
 
-        {audio.previewEnded ? <KeepListening /> : <Transport audio={audio} title={title} />}
+        {audio.previewEnded ? <KeepListening slug={audio.slug} /> : <Transport audio={audio} title={title} />}
         {audio.track && !audio.preview && (
           <Pressable hitSlop={8} onPress={() => setTranscriptOpen(true)} accessibilityRole="button" accessibilityLabel="Transcript">
             <Glyph name={ICON.transcript} size={18} />
@@ -145,9 +147,10 @@ function Transport({ audio, title }: { audio: EntryAudio; title: string }) {
 }
 
 /** In place of the transport once the 30s preview is spent. */
-function KeepListening() {
+function KeepListening({ slug }: { slug: string }) {
   const accentInk = useThemeColor('accent-foreground');
   const openPaywall = usePaywall((s) => s.open);
+  const posthog = usePostHog();
   // Mounts the moment the preview ends: say so, and put focus on the way on.
   const ref = useRef<View>(null);
   useEffect(() => {
@@ -163,7 +166,10 @@ function KeepListening() {
   return (
     <Pressable
       ref={ref}
-      onPress={() => openPaywall('library_audio')}
+      onPress={() => {
+        trackLibrary(posthog, 'library_paywall_tapped', { slug, trigger: 'audio_preview' });
+        openPaywall('library_audio');
+      }}
       accessibilityRole="button"
       accessibilityLabel="Keep listening with Xolace+"
       className="flex-row items-center gap-2 rounded-full bg-accent px-4 py-2 active:opacity-80"

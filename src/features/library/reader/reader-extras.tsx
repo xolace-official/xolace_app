@@ -12,6 +12,7 @@ import { Pressable, Share, StyleSheet, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { trackLibrary } from '@/src/features/library/analytics';
 import { detectCountry } from '@/src/features/crisis-resources/use-crisis-resources';
 import { useAppStore } from '@/src/store/store';
 import { REFLECT_PROMPT, shareMessage } from './reader-copy';
@@ -53,7 +54,7 @@ export function ReflectOnThis({ entry }: { entry: Pick<ReaderEntry, '_id' | 'slu
       <Pressable
         onPress={() => {
           setPrompt({ text: prompt, label: entry.title, expiresAt: Date.now() + DAY_MS, fromEntryId: entry._id });
-          posthog.capture('library_reflect_started', { slug: entry.slug, curated: !!entry.reflectPrompt });
+          trackLibrary(posthog, 'library_reflect_started', { slug: entry.slug, curated: !!entry.reflectPrompt });
           router.dismissTo('/');
         }}
         accessibilityRole="button"
@@ -75,7 +76,7 @@ export function ShareButton({ entry }: { entry: Pick<ReaderEntry, 'slug' | 'titl
         const url = Linking.createURL(`library/${entry.slug}`);
         try {
           const { action } = await Share.share({ message: shareMessage(entry.title, url) });
-          if (action === Share.sharedAction) posthog.capture('library_entry_shared', { slug: entry.slug });
+          if (action === Share.sharedAction) trackLibrary(posthog, 'library_entry_shared', { slug: entry.slug });
         } catch {
           // The sheet failed to open; nothing was shared and there's nothing to undo.
         }

@@ -15,13 +15,15 @@ import { facetLabel, readTimeLine } from '@/src/features/library/home/library-co
 import { COVER_SCRIM } from '@/src/features/library/reader/cover-palette';
 import { capitalise } from '@/src/features/library/reader/reader-copy';
 import { SaveButton } from '@/src/features/library/reader/reader-parts';
+import type { ReaderFrom } from '@/src/features/library/analytics';
 
 export type EntryItem = FunctionReturnType<typeof api.library.entries.listEntries>[number];
 
 /** Photo cards' corner, shared with the For you blur that sits over them. */
 export const CARD_RADIUS = 28;
 
-export const readerHref = (slug: string) => ({ pathname: '/library/[slug]', params: { slug } }) as const;
+export const readerHref = (slug: string, from: ReaderFrom) =>
+  ({ pathname: '/library/[slug]', params: { slug, from } }) as const;
 
 /** Full-bleed cover photo, kicker, title, meta. Ink is the reader cover's fixed palette. */
 export function PhotoCard({
@@ -39,7 +41,7 @@ export function PhotoCard({
   // screen readers and, on web, a click inside the anchor follows it.
   return (
     <View style={{ width, height }}>
-      <Link href={readerHref(entry.slug)} asChild>
+      <Link href={readerHref(entry.slug, 'home')} asChild>
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={`${entry.title}. ${kicker}. ${readTimeLine(entry.readMin, entry.views, entry.listenMin)}`}
@@ -81,10 +83,10 @@ export function PhotoCard({
 }
 
 /** Thumbnail left, "Kind · Subject" kicker, bold title, meta. */
-export function EntryRow({ entry, index }: { entry: EntryItem; index?: number }) {
+export function EntryRow({ entry, index, from }: { entry: EntryItem; index?: number; from: ReaderFrom }) {
   return (
     <View className="flex-row items-center pr-4">
-      <Link href={readerHref(entry.slug)} asChild>
+      <Link href={readerHref(entry.slug, from)} asChild>
         <Pressable accessibilityRole="link" className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70">
           {index !== undefined && <AppText className="w-4 text-[13px] text-muted">{index + 1}</AppText>}
           <View className="overflow-hidden rounded-[14px] bg-surface-secondary" style={THUMB}>

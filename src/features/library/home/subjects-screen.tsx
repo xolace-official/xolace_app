@@ -6,11 +6,13 @@ import { useQuery } from 'convex/react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
-import { useRef } from 'react';
+import { usePostHog } from 'posthog-react-native';
+import { useEffect, useRef } from 'react';
 import { Pressable, SectionList, View } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { trackLibrary } from '@/src/features/library/analytics';
 import { facetLabel } from '@/src/features/library/home/library-copy';
 
 type Subject = { slug: string; count: number };
@@ -22,6 +24,12 @@ export function SubjectsScreen() {
   // Jump to `?letter=` once; later content-size changes (virtualized rows mounting) must not snap back.
   const jumped = useRef(false);
   const muted = useThemeColor('muted');
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    trackLibrary(posthog, 'library_subjects_opened', { letter: letter ?? null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sections = [...new Set(subjects.map((s) => s.slug[0].toUpperCase()))].map((title) => ({
     title,

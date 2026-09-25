@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { ScrollView } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
+import { trackLibrary } from '@/src/features/library/analytics';
 import { KindRows, LetterStrip } from '@/src/features/library/home/browse-sections';
 import { SectionTitle } from '@/src/features/library/home/entry-cards';
 import { ForYouCarousel } from '@/src/features/library/home/for-you-carousel';
@@ -25,7 +26,7 @@ export function LibraryHomeScreen() {
   const setReadingAs = useMutation(api.library.home.setReadingAs);
 
   useEffect(() => {
-    posthog.capture('library_home_opened');
+    trackLibrary(posthog, 'library_home_opened');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
