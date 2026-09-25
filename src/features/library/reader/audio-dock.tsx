@@ -11,15 +11,19 @@ import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, findNodeHandle, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { Easing, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { formatTime } from '@/src/features/browse/player/format-time';
 import { usePaywall } from '@/src/features/purchases/use-paywall';
+import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import { TranscriptSheet } from './transcript-sheet';
 import type { EntryAudio } from './use-entry-audio';
+
+// One-row bar: capped so it stays one row; the full text is in the labels (#400).
+export const BAR_MAX_SCALE = 1.5;
 
 const ICON = {
   listen: { ios: 'headphones', android: 'headphones', web: 'headphones' },
@@ -42,6 +46,7 @@ export function ListenPill({ audio, listenMin }: { audio: EntryAudio; listenMin:
     <Pressable
       onPress={audio.toggle}
       accessibilityRole="button"
+      accessibilityLabel={audio.started ? (audio.isPlaying ? 'Pause' : 'Play') : `Listen, ${listenMin} ${listenMin === 1 ? 'minute' : 'minutes'}`}
       className="flex-row items-center gap-2 rounded-full bg-surface-secondary px-4 py-2 active:opacity-70"
     >
       <Glyph name={audio.isPlaying ? ICON.pause : ICON.listen} size={14} />
@@ -54,14 +59,18 @@ type DockProps = { audio: EntryAudio; entryId: Id<'library_entries'>; title: str
 
 export function AudioDock({ audio, entryId, title, coverUrl, bottom }: DockProps) {
   const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const reduced = useEffectiveReducedMotion();
   if (!audio.started) return null;
   const pct = audio.duration > 0 ? Math.min(audio.currentTime / audio.duration, 1) : 0;
 
   return (
     <Animated.View
-      // Timed, not sprung: straight up into place, nothing to settle.
-      entering={SlideInDown.duration(280).easing(Easing.out(Easing.cubic))}
-      exiting={SlideOutDown.duration(200).easing(Easing.in(Easing.cubic))}
+      // Timed, not sprung: straight up into place, nothing to settle. Reduced motion: just there.
+      entering={reduced ? undefined : SlideInDown.duration(280).easing(Easing.out(Easing.cubic))}
+      exiting={reduced ? undefined : SlideOutDown.duration(200).easing(Easing.in(Easing.cubic))}
+      // Its own group, reached after the body; appearing never takes focus.
+      accessibilityRole="toolbar"
+      accessibilityLabel="Audio player"
       className="absolute inset-x-0 bottom-0 overflow-hidden rounded-t-[28px] border-t border-border"
       style={{ paddingBottom: bottom + 8, borderCurve: 'continuous' }}
     >
@@ -76,10 +85,10 @@ export function AudioDock({ audio, entryId, title, coverUrl, bottom }: DockProps
           {coverUrl && <Image source={{ uri: coverUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />}
         </View>
         <View className="flex-1">
-          <AppText numberOfLines={1} className="font-semibold text-sm">
+          <AppText numberOfLines={1} maxFontSizeMultiplier={BAR_MAX_SCALE} className="font-semibold text-sm">
             {title}
           </AppText>
-          <AppText className="text-xs text-muted">
+          <AppText numberOfLines={1} maxFontSizeMultiplier={BAR_MAX_SCALE} className="text-xs text-muted">
             {audio.error
               ? 'Audio unavailable'
               : audio.previewEnded
@@ -88,7 +97,7 @@ export function AudioDock({ audio, entryId, title, coverUrl, bottom }: DockProps
           </AppText>
         </View>
 
-        {audio.previewEnded ? <KeepListening /> : <Transport audio={audio} />}
+        {audio.previewEnded ? <KeepListening /> : <Transport audio={audio} title={title} />}
         {audio.track && !audio.preview && (
           <Pressable hitSlop={8} onPress={() => setTranscriptOpen(true)} accessibilityRole="button" accessibilityLabel="Transcript">
             <Glyph name={ICON.transcript} size={18} />
@@ -105,8 +114,9 @@ export function AudioDock({ audio, entryId, title, coverUrl, bottom }: DockProps
   );
 }
 
-function Transport({ audio }: { audio: EntryAudio }) {
+function Transport({ audio, title }: { audio: EntryAudio; title: string }) {
   const background = useThemeColor('background');
+  const remaining = Math.max(audio.duration - audio.currentTime, 0);
   return (
     <>
       <Pressable hitSlop={8} onPress={() => audio.skip(-15)} accessibilityRole="button" accessibilityLabel="Back 15 seconds">
@@ -116,8 +126,16 @@ function Transport({ audio }: { audio: EntryAudio }) {
         hitSlop={8}
         onPress={audio.toggle}
         disabled={!audio.track}
-        accessibilityRole="button"
-        accessibilityLabel={audio.isPlaying ? 'Pause' : 'Play'}
+        // Skip ±15s by swiping up/down on play, not a scrubber (#400).
+        accessibilityRole="adjustable"
+        accessibilityLabel={`${audio.isPlaying ? 'Pause' : 'Play'} ${title}`}
+        accessibilityValue={{ text: `${formatTime(audio.currentTime)} elapsed, ${formatTime(remaining)} remaining` }}
+        accessibilityActions={[{ name: 'activate' }, { name: 'increment' }, { name: 'decrement' }]}
+        onAccessibilityAction={(e) => {
+          const a = e.nativeEvent.actionName;
+          if (a === 'activate') audio.toggle();
+          else audio.skip(a === 'increment' ? 15 : -15);
+        }}
         className="h-10 w-10 items-center justify-center rounded-full bg-foreground active:opacity-70"
       >
         <Glyph name={audio.isPlaying ? ICON.pause : ICON.play} size={16} color={background} />
@@ -130,14 +148,30 @@ function Transport({ audio }: { audio: EntryAudio }) {
 function KeepListening() {
   const accentInk = useThemeColor('accent-foreground');
   const openPaywall = usePaywall((s) => s.open);
+  // Mounts the moment the preview ends: say so, and put focus on the way on.
+  const ref = useRef<View>(null);
+  useEffect(() => {
+    // A beat after mount: focus set before the first layout is dropped.
+    const t = setTimeout(() => {
+      const node = findNodeHandle(ref.current);
+      if (node) AccessibilityInfo.setAccessibilityFocus(node);
+      // Queued, so the focus move doesn't cut it off (iOS).
+      AccessibilityInfo.announceForAccessibilityWithOptions('Preview ended. Xolace+ unlocks the full listen', { queue: true });
+    }, 300);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <Pressable
+      ref={ref}
       onPress={() => openPaywall('library_audio')}
       accessibilityRole="button"
+      accessibilityLabel="Keep listening with Xolace+"
       className="flex-row items-center gap-2 rounded-full bg-accent px-4 py-2 active:opacity-80"
     >
       <Glyph name={ICON.plus} size={14} color={accentInk} />
-      <AppText className="font-semibold text-sm text-accent-foreground">Keep listening</AppText>
+      <AppText maxFontSizeMultiplier={BAR_MAX_SCALE} className="font-semibold text-sm text-accent-foreground">
+        Keep listening
+      </AppText>
     </Pressable>
   );
 }

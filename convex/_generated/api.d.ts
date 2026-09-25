@@ -124,6 +124,7 @@ import type * as library_audio from "../library/audio.js";
 import type * as library_entries from "../library/entries.js";
 import type * as library_home from "../library/home.js";
 import type * as library_hubs from "../library/hubs.js";
+import type * as library_imageAlts from "../library/imageAlts.js";
 import type * as library_ingest from "../library/ingest.js";
 import type * as library_reads from "../library/reads.js";
 import type * as migrations from "../migrations.js";
@@ -280,6 +281,7 @@ declare const fullApi: ApiFromModules<{
   "library/entries": typeof library_entries;
   "library/home": typeof library_home;
   "library/hubs": typeof library_hubs;
+  "library/imageAlts": typeof library_imageAlts;
   "library/ingest": typeof library_ingest;
   "library/reads": typeof library_reads;
   migrations: typeof migrations;

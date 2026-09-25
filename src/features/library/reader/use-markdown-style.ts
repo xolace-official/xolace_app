@@ -11,10 +11,9 @@ import { READING_MODES, type ReadingModeKey } from './reading-mode';
  * Until a mode's runtime fonts load it falls back to the theme's own face.
  */
 export function useMarkdownStyle(mode: ReadingModeKey, size: number, fontsLoaded: boolean): MarkdownStyle {
-  const [foreground, muted, accent, border, surface] = useThemeColor([
+  const [foreground, muted, border, surface] = useThemeColor([
     'foreground',
     'muted',
-    'accent',
     'border',
     'surface-secondary',
   ]);
@@ -37,7 +36,9 @@ export function useMarkdownStyle(mode: ReadingModeKey, size: number, fontsLoaded
     strong: { fontFamily: bold, fontWeight: 'normal', color: foreground },
     // A face without a real italic (Space Grotesk) keeps the synthesized slant.
     em: { fontFamily: italic, fontStyle: italic === regular ? 'italic' : 'normal', color: foreground },
-    link: { color: accent, underline: true },
+    // Ink, not accent: accent misses AA (4.5:1) on every light page, Paper included (#415).
+    // The underline carries the "this is a link".
+    link: { color: foreground, underline: true },
     code: { color: foreground, backgroundColor: surface, borderColor: border },
     list: {
       fontFamily: regular,

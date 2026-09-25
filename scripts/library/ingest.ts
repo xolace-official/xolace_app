@@ -17,7 +17,9 @@
 // `library/admin:markSafetyReviewed` has signed off its current body. Soft
 // gate (#404): a verbatim entry from a source with `refreshDays` (NHS = 7)
 // whose `retrievedAt` is older than that prints a refresh nag — it still
-// ingests. Unpublishing is `library/admin:setActive`, not this script.
+// ingests. Alt text is a hard gate too (#400): an image with empty alt is
+// rejected unless the record lists its src in `decorativeImages`.
+// Unpublishing is `library/admin:setActive`, not this script.
 //
 // Audio (#411) is a last pass over `audio.json`, keyed by `entrySlug`:
 // `[{ entrySlug, audioPath, transcriptPath, active }]`, paths relative to
@@ -47,6 +49,7 @@ type Entry = {
   reuse: string;
   retrievedAt?: number;
   bodyPath: string;
+  decorativeImages?: string[];
   [k: string]: unknown;
 };
 type Hub = { slug: string; [k: string]: unknown };
@@ -152,10 +155,11 @@ async function main() {
     }
     await attempt(`entry ${record.slug}`, () => {
       const markdown = readFileSync(path.resolve(dir, record.bodyPath), "utf8");
-      const { bodyPath: _bodyPath, ...entry } = record;
+      const { bodyPath: _bodyPath, decorativeImages, ...entry } = record;
       return convexRun("library/ingest:upsertEntry", {
         entry,
         markdown,
+        decorativeImages,
         sha256: sha256(JSON.stringify(record), markdown),
       });
     });

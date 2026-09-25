@@ -27,7 +27,12 @@ const DAY_MS = 86_400_000;
 export function ContentNote({ note }: { note: string }) {
   const muted = useThemeColor('muted');
   return (
-    <View className="mb-6 flex-row gap-3 rounded-2xl bg-surface-secondary p-4" style={{ borderCurve: 'continuous' }}>
+    <View
+      accessible
+      accessibilityLabel={`Content note: ${note}`}
+      className="mb-6 flex-row gap-3 rounded-2xl bg-surface-secondary p-4"
+      style={{ borderCurve: 'continuous' }}
+    >
       <SymbolView name={NOTE_ICON} size={16} tintColor={muted} />
       <View className="flex-1 gap-1">
         <AppText className="text-xs font-semibold uppercase tracking-widest text-muted">Content note</AppText>
@@ -93,6 +98,7 @@ export function HelplineLink({ kind }: { kind: ReaderEntry['kind'] }) {
     <Pressable
       onPress={() => router.push('/crisis-resources?from=library')}
       accessibilityRole="link"
+      accessibilityLabel="Need to talk to someone? Find support near you"
       className="mt-6 flex-row items-center gap-3 rounded-2xl bg-surface-secondary p-4 active:opacity-70"
       style={{ borderCurve: 'continuous' }}
     >
@@ -105,10 +111,11 @@ export function HelplineLink({ kind }: { kind: ReaderEntry['kind'] }) {
 
 /**
  * "Read by the fire": the night page's warm dark laid over the whole reader,
- * whatever the Aa mode. Atmosphere only — narration is the audio.
+ * whatever the Aa mode. Atmosphere only — narration is the audio. 30%, not
+ * more: past that the dimmest light theme (nightly) drops body text below AA.
  */
 export function FireDim() {
   const on = useAppStore((s) => s.readByFire);
   if (!on) return null;
-  return <View pointerEvents="none" style={StyleSheet.absoluteFill} className="bg-reader-night-bg/45" />;
+  return <View pointerEvents="none" style={StyleSheet.absoluteFill} className="bg-reader-night-bg/30" />;
 }

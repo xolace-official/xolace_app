@@ -13,33 +13,28 @@
  */
 import { api } from '@/convex/_generated/api';
 import type { FunctionReturnType } from 'convex/server';
-import { Image } from 'expo-image';
 import { useThemeColor } from 'heroui-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import { Linking, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { EnrichedMarkdownText } from 'react-native-enriched-markdown';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import { useAppStore } from '@/src/store/store';
 import { AaSheet } from './aa-sheet';
-import { AudioDock, ListenPill } from './audio-dock';
+import { AudioDock, BAR_MAX_SCALE, ListenPill } from './audio-dock';
 import { BackToTop } from './back-to-top';
-import { COVER_SCRIM } from './cover-palette';
 import { EndOfRead } from './end-of-read';
 import { ContentNote, FireDim, HelplineLink, ReflectOnThis, ShareButton } from './reader-extras';
-import { metaLine, prepareBody } from './reader-copy';
 import { ReaderPageScope } from './reader-page';
-import { AaButton, BackButton, SaveButton, SourceCredit } from './reader-parts';
+import { AaButton, BackButton, CoverPhoto, ReaderBody, ReaderTitle, SaveButton, SourceCredit } from './reader-parts';
 import { READING_MODES, useReadingFonts } from './reading-mode';
 import { useEntryAudio } from './use-entry-audio';
 import { useReadSignals } from './use-read-signals';
@@ -49,6 +44,9 @@ export type ReaderEntry = NonNullable<FunctionReturnType<typeof api.library.entr
 
 const SHEET_OVERLAP = 28;
 const BAR_ROW = 52;
+// iOS's first accessibility text size (AX1) is ~1.65×; at these the cover is a band.
+const AX_FONT_SCALE = 1.6;
+const COVER_BAND = 72;
 
 /** The reader on its reading mode's page (#408); the Aa sheet sits outside it, on the app theme. */
 export function ReaderScreen({ entry }: { entry: ReaderEntry }) {
@@ -66,16 +64,18 @@ export function ReaderScreen({ entry }: { entry: ReaderEntry }) {
 
 function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => void }) {
   const insets = useSafeAreaInsets();
-  const { height: screenH, width } = useWindowDimensions();
-  const reduced = useReducedMotion();
+  const { height: screenH, width, fontScale } = useWindowDimensions();
+  const reduced = useEffectiveReducedMotion();
+  const ax = fontScale >= AX_FONT_SCALE;
   const mode = useAppStore((s) => s.readingMode);
   const textSize = useAppStore((s) => s.readerTextSize);
   const markdownStyle = useMarkdownStyle(mode, textSize, useReadingFonts());
   // The page from the hook, not `bg-background`: the class doesn't pick up the
   // scoped page on this screen (#401 prototype finding).
   const page = useThemeColor('background');
-  const coverH = Math.round(screenH * 0.52);
   const barH = insets.top + BAR_ROW;
+  // At accessibility sizes the photo shrinks to a band and the title moves onto the page.
+  const coverH = ax ? barH + COVER_BAND : Math.round(screenH * 0.52);
   const fold = coverH - SHEET_OVERLAP - barH; // scroll at which the sheet meets the bar
   const imageStop = (coverH - barH) / 2; // parallax travel before the photo pins
   const drift = reduced ? 1 : 0.5; // reduced motion: the photo just scrolls, no parallax
@@ -85,11 +85,19 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
   const [viewH, setViewH] = useState(1);
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const y = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler((e) => {
-    y.set(e.contentOffset.y);
-  });
+  const onScroll = useAnimatedScrollHandler((e) => y.set(e.contentOffset.y));
   const maxScroll = contentH - viewH;
   const signals = useReadSignals({ entryId: entry._id, readMin: entry.readMin, scrollY: y, scrollRef, maxScroll });
+  const toTop = () => scrollRef.current?.scrollTo({ y: 0, animated: !reduced });
+  const resumeAt = signals?.position ? signals.position * maxScroll : 0;
+  const title = (
+    <ReaderTitle
+      entry={entry}
+      onCover={!ax}
+      onBackToTop={toTop}
+      onResume={resumeAt > 0 ? () => scrollRef.current?.scrollTo({ y: resumeAt, animated: !reduced }) : undefined}
+    />
+  );
 
   // Both copies of the photo. Pulled down, it grows from its top edge.
   const photo = useAnimatedStyle(() => {
@@ -113,19 +121,12 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
   }));
 
   // One element, drawn twice: behind the scroller and inside the bar window.
-  const photoEl = (
-    <Animated.View style={[{ width, height: coverH }, photo]} className="bg-cover-scrim">
-      {/* ponytail: no cover → the plain scrim; the subject's cover lands when subjects get art */}
-      {entry.coverUrl && (
-        <Image source={{ uri: entry.coverUrl }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-      )}
-      <LinearGradient colors={COVER_SCRIM.colors} locations={COVER_SCRIM.locations} style={StyleSheet.absoluteFill} />
-    </Animated.View>
-  );
+  const photoEl = <CoverPhoto uri={entry.coverUrl} style={[{ width, height: coverH }, photo]} />;
 
   return (
     <View className="flex-1" style={{ backgroundColor: page }} onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {/* Decorative: the cover is hidden from screen readers (#400). */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         {photoEl}
       </View>
 
@@ -141,47 +142,40 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
           className="justify-end px-6 pb-12"
           style={[{ height: coverH - SHEET_OVERLAP }, largeTitle]}
         >
-          <AppText accessibilityRole="header" className="font-bold text-[32px] leading-[38px] text-cover-ink">
-            {entry.title}
-          </AppText>
-          <AppText className="mt-2 text-sm text-cover-ink/80">
-            {metaLine(entry.kind, entry.readMin, entry.storyDescriptor, entry.listenMin)}
-          </AppText>
+          {!ax && title}
         </Animated.View>
 
         <View
           className="rounded-t-[28px] px-6 pt-6"
           style={{ backgroundColor: page, borderCurve: 'continuous', minHeight: screenH, paddingBottom: insets.bottom + audio.dockH + 96 }}
         >
+          {ax && <View className="mb-6">{title}</View>}
           <View className="mb-6">
             <SourceCredit entry={entry} aside={entry.listenMin && <ListenPill audio={audio} listenMin={entry.listenMin} />} />
           </View>
           {entry.contentNote && <ContentNote note={entry.contentNote} />}
-          <EnrichedMarkdownText
-            flavor="github"
-            markdown={prepareBody(entry.markdown)}
-            markdownStyle={markdownStyle}
-            onLinkPress={({ url }) => Linking.openURL(url)}
-          />
-          {signals && <EndOfRead entryId={entry._id} signals={signals} />}
-          <ReflectOnThis entry={entry} />
+          <ReaderBody markdown={entry.markdown} style={markdownStyle} />
+          {/* Attribution straight after the body, before the end of the read (#400). */}
           <AppText className="mt-8 border-t border-separator pt-4 text-xs text-muted">
             {entry.source.attributionText}
           </AppText>
+          {signals && <EndOfRead entryId={entry._id} signals={signals} />}
+          <ReflectOnThis entry={entry} />
           <HelplineLink kind={entry.kind} />
         </View>
       </Animated.ScrollView>
 
       {/* The bar window: same photo, same offset, clipped to the bar. */}
       <View pointerEvents="box-none" className="absolute inset-x-0 top-0 overflow-hidden" style={{ height: barH }}>
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <View pointerEvents="none" style={StyleSheet.absoluteFill} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           {photoEl}
           <Animated.View style={[StyleSheet.absoluteFill, barShade]} className="bg-cover-scrim/35" />
         </View>
         <View className="flex-1 flex-row items-center gap-3 px-4" style={{ paddingTop: insets.top }}>
           <BackButton onCover />
-          <Animated.View className="flex-1" style={barTitle}>
-            <AppText numberOfLines={1} className="font-semibold text-cover-ink">
+          {/* A visual echo of the title: screen readers already have the heading. */}
+          <Animated.View className="flex-1" style={barTitle} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            <AppText numberOfLines={1} maxFontSizeMultiplier={BAR_MAX_SCALE} className="font-semibold text-cover-ink">
               {entry.title}
             </AppText>
           </Animated.View>
@@ -198,7 +192,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
         scrollY={y}
         endAt={maxScroll > 0 ? maxScroll - 40 : Number.POSITIVE_INFINITY}
         bottom={insets.bottom + audio.dockH + 16}
-        onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: !reduced })}
+        onPress={toTop}
       />
       <AudioDock audio={audio} entryId={entry._id} title={entry.title} coverUrl={entry.coverUrl} bottom={insets.bottom} />
     </View>

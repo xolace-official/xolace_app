@@ -38,6 +38,29 @@ export function metaLine(kind: Kind, readMin: number, storyDescriptor?: string, 
     .join(' · ');
 }
 
+/**
+ * The meta line as a screen reader hears it (#400): kind · source, and
+ * whether it was adapted · the times. Commas, since "·" is read aloud.
+ */
+export function metaLabel(e: {
+  kind: Kind;
+  reuse: Reuse;
+  source: { name: string };
+  readMin: number;
+  storyDescriptor?: string;
+  listenMin?: number;
+}) {
+  return [
+    capitalise(e.kind),
+    e.storyDescriptor,
+    `from ${e.source.name}${e.reuse === 'adapted' ? ', adapted' : ''}`,
+    `${e.readMin} min read`,
+    e.listenMin && `${e.listenMin} min listen`,
+  ]
+    .filter(Boolean)
+    .join(', ');
+}
+
 /** "Reflect on this" when the curator wrote no prompt of their own (#413). */
 export const REFLECT_PROMPT = 'What did this bring up for you?';
 

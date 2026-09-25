@@ -49,6 +49,7 @@ export function EndOfRead({
         <Pressable
           onPress={() => record({ entryId, helped: !helped })}
           accessibilityRole="button"
+          accessibilityLabel="This helped"
           accessibilityState={{ selected: helped }}
           accessibilityHint={helped ? 'Tap again to undo' : undefined}
           className={cn(
