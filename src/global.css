@@ -81,6 +81,11 @@
      * src/features/browse/player/player-palette.ts. */
     --color-player-ink: #ffffff;
     --color-player-scrim: #000000;
+    /* Lantern reader cover (#407): title and controls sit on the entry's
+     * photo, so the same fixed white-on-black. Scrim stops live in
+     * src/features/library/reader/cover-palette.ts. */
+    --color-cover-ink: #ffffff;
+    --color-cover-scrim: #000000;
     /* The archive card's chip fill — ink at 7%, so one value sits on every tint */
     --color-poster-chip: rgba(20, 20, 20, 0.07);
     /* The archive card tints, cycled by item index (#296). Fixed objects inside
