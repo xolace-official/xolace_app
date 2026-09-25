@@ -22,8 +22,9 @@ export type EntryItem = FunctionReturnType<typeof api.library.entries.listEntrie
 /** Photo cards' corner, shared with the For you blur that sits over them. */
 export const CARD_RADIUS = 28;
 
-export const readerHref = (slug: string, from: ReaderFrom) =>
-  ({ pathname: '/library/[slug]', params: { slug, from } }) as const;
+/** `hub` rides along from a hub so the reader's Up next follows its order (#417). */
+export const readerHref = (slug: string, from: ReaderFrom, hub?: string) =>
+  ({ pathname: '/library/[slug]', params: { slug, from, ...(hub && { hub }) } }) as const;
 
 /** Full-bleed cover photo, kicker, title, meta. Ink is the reader cover's fixed palette. */
 export function PhotoCard({
@@ -31,17 +32,19 @@ export function PhotoCard({
   kicker,
   width,
   height,
+  href = readerHref(entry.slug, 'home'),
 }: {
   entry: EntryItem;
   kicker: string;
   width: number;
   height: number;
+  href?: ReturnType<typeof readerHref>;
 }) {
   // Save sits beside the link, not in it: a nested button is unreachable to
   // screen readers and, on web, a click inside the anchor follows it.
   return (
     <View style={{ width, height }}>
-      <Link href={readerHref(entry.slug, 'home')} asChild>
+      <Link href={href} asChild>
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={`${entry.title}. ${kicker}. ${readTimeLine(entry.readMin, entry.views, entry.listenMin)}`}
@@ -83,10 +86,20 @@ export function PhotoCard({
 }
 
 /** Thumbnail left, "Kind · Subject" kicker, bold title, meta. */
-export function EntryRow({ entry, index, from }: { entry: EntryItem; index?: number; from: ReaderFrom }) {
+export function EntryRow({
+  entry,
+  index,
+  from,
+  hub,
+}: {
+  entry: EntryItem;
+  index?: number;
+  from: ReaderFrom;
+  hub?: string;
+}) {
   return (
     <View className="flex-row items-center pr-4">
-      <Link href={readerHref(entry.slug, from)} asChild>
+      <Link href={readerHref(entry.slug, from, hub)} asChild>
         <Pressable accessibilityRole="link" className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70">
           {index !== undefined && <AppText className="w-4 text-[13px] text-muted">{index + 1}</AppText>}
           <View className="overflow-hidden rounded-[14px] bg-surface-secondary" style={THUMB}>

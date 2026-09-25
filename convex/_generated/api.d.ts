@@ -126,6 +126,7 @@ import type * as library_home from "../library/home.js";
 import type * as library_hubs from "../library/hubs.js";
 import type * as library_imageAlts from "../library/imageAlts.js";
 import type * as library_ingest from "../library/ingest.js";
+import type * as library_next from "../library/next.js";
 import type * as library_reads from "../library/reads.js";
 import type * as migrations from "../migrations.js";
 import type * as monthlyEvents from "../monthlyEvents.js";
@@ -283,6 +284,7 @@ declare const fullApi: ApiFromModules<{
   "library/hubs": typeof library_hubs;
   "library/imageAlts": typeof library_imageAlts;
   "library/ingest": typeof library_ingest;
+  "library/next": typeof library_next;
   "library/reads": typeof library_reads;
   migrations: typeof migrations;
   monthlyEvents: typeof monthlyEvents;

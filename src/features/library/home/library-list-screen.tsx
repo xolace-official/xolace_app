@@ -39,7 +39,7 @@ function HubList({ slug }: { slug: string }) {
       </View>
       {hub.items.map((item) =>
         item.kind === 'entry' ? (
-          <EntryRow key={item.entry._id} entry={item.entry} index={n++} from="hub" />
+          <EntryRow key={item.entry._id} entry={item.entry} index={n++} from="hub" hub={slug} />
         ) : (
           <TrackRow key={item.track._id} track={item.track} from="library-hub" />
         ),

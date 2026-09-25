@@ -10,6 +10,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { trackLibrary } from '@/src/features/library/analytics';
 import { cn } from '@/src/lib/utils';
 import type { ReaderEntry } from './reader-screen';
+import { UpNext } from './up-next';
 import { useRecord } from './use-read-signals';
 
 const HEART = { ios: 'heart', android: 'favorite_border', web: 'favorite_border' } as const;
@@ -23,7 +24,8 @@ type ReaderState = FunctionReturnType<typeof api.library.reads.getReaderState>;
  * The end of an entry (#410), from #395's "magazine close": a small
  * finished row with "This helped" (positive-only, undoable), then the
  * "you're not the only one" strip — shown only once the server lets the
- * total out (≥15, ADR 0016; below that `helpedCount` is null).
+ * total out (≥15, ADR 0016; below that `helpedCount` is null) — then
+ * the next entry (#417).
  */
 export function EndOfRead({
   entry: { _id: entryId, slug },
@@ -77,6 +79,8 @@ export function EndOfRead({
           </View>
         </View>
       )}
+
+      <UpNext entryId={entryId} />
     </View>
   );
 }
