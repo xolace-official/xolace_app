@@ -11,6 +11,7 @@ import { creditLine } from './reader-copy';
 import type { ReaderEntry } from './reader-screen';
 
 const BACK_ICON = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
+const AA_ICON = { ios: 'textformat.size', android: 'text_fields', web: 'text_fields' } as const;
 const SOURCE_ICON = { ios: 'building.columns', android: 'account_balance', web: 'account_balance' } as const;
 
 // A share link opens the reader with nothing under it.
@@ -32,6 +33,22 @@ export function BackButton({ onCover = false }: { onCover?: boolean }) {
       )}
     >
       <SymbolView name={BACK_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />
+    </Pressable>
+  );
+}
+
+/** Opens the Aa sheet. Sits on the cover photo, so it takes the fixed cover ink. */
+export function AaButton({ onPress }: { onPress: () => void }) {
+  const coverInk = String(useCSSVariable('--color-cover-ink'));
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Reading appearance"
+      className="h-10 w-10 items-center justify-center rounded-full bg-cover-scrim/30 active:opacity-60"
+    >
+      <SymbolView name={AA_ICON} size={17} weight="semibold" tintColor={coverInk} />
     </Pressable>
   );
 }

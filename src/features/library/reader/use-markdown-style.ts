@@ -2,13 +2,15 @@ import { useThemeColor } from 'heroui-native';
 import type { MarkdownStyle } from 'react-native-enriched-markdown';
 import { useCSSVariable } from 'uniwind';
 
+import { READING_MODES, type ReadingModeKey } from './reading-mode';
+
 /**
- * The entry body's look, built from the active theme's tokens so it follows
- * every theme switch (#386). This is the "Classic" reading mode from #401 —
- * the app's own face, ~1.55 line spacing, the theme's own page. The Aa sheet
- * (a later ticket) swaps this for a per-mode style.
+ * The entry body's look for a reading mode (#401) at a base text size. Colours
+ * come from tokens, so called inside `ReaderPageScope` they follow the page.
+ * Sizes are base sizes: the OS text size still multiplies them, uncapped.
+ * Until a mode's fonts load it falls back to the theme's own face.
  */
-export function useMarkdownStyle(): MarkdownStyle {
+export function useMarkdownStyle(mode: ReadingModeKey, size: number, fontsLoaded: boolean): MarkdownStyle {
   const [foreground, muted, accent, border, surface] = useThemeColor([
     'foreground',
     'muted',
@@ -16,31 +18,39 @@ export function useMarkdownStyle(): MarkdownStyle {
     'border',
     'surface-secondary',
   ]);
-  const [regular, bold] = (useCSSVariable(['--font-normal', '--font-bold']) as string[]).map(String);
+  const [themeRegular, themeBold] = (useCSSVariable(['--font-normal', '--font-bold']) as string[]).map(String);
+  const { face, lineHeight } = READING_MODES[mode];
+  const loadedFace = fontsLoaded ? face : null;
+  const regular = loadedFace?.regular ?? themeRegular;
+  const bold = loadedFace?.bold ?? themeBold;
+  const lh = (n: number) => Math.round(n * lineHeight);
+  const px = (k: number) => Math.round(size * k);
 
   const heading = { fontFamily: bold, color: foreground, marginTop: 20, marginBottom: 8 };
   return {
-    paragraph: { fontFamily: regular, fontSize: 18, lineHeight: 28, color: foreground, marginBottom: 16 },
-    h1: { ...heading, fontSize: 26, lineHeight: 32 },
-    h2: { ...heading, fontSize: 22, lineHeight: 28 },
-    h3: { ...heading, fontSize: 19, lineHeight: 26 },
+    paragraph: { fontFamily: regular, fontSize: size, lineHeight: lh(size), color: foreground, marginBottom: px(0.9) },
+    h1: { ...heading, fontSize: px(1.45), lineHeight: px(1.8) },
+    h2: { ...heading, fontSize: px(1.22), lineHeight: px(1.55) },
+    h3: { ...heading, fontSize: px(1.06), lineHeight: px(1.45) },
     strong: { fontFamily: bold, fontWeight: 'normal', color: foreground },
-    em: { color: foreground },
+    // A face without a loaded italic (Classic's) keeps the synthesized slant.
+    em: loadedFace ? { fontFamily: loadedFace.italic, fontStyle: 'normal', color: foreground } : { color: foreground },
     link: { color: accent, underline: true },
+    code: { color: foreground, backgroundColor: surface, borderColor: border },
     list: {
       fontFamily: regular,
-      fontSize: 18,
-      lineHeight: 28,
+      fontSize: size,
+      lineHeight: lh(size),
       color: foreground,
       bulletColor: muted,
       markerColor: muted,
-      marginBottom: 16,
+      marginBottom: px(0.9),
       itemSpacing: 6,
     },
     blockquote: {
       fontFamily: regular,
-      fontSize: 17,
-      lineHeight: 26,
+      fontSize: size - 1,
+      lineHeight: lh(size - 1),
       color: foreground,
       backgroundColor: surface,
       borderColor: border,
@@ -48,7 +58,7 @@ export function useMarkdownStyle(): MarkdownStyle {
       borderRadius: 12,
       padding: 12,
       gapWidth: 12,
-      marginBottom: 16,
+      marginBottom: px(0.9),
     },
     thematicBreak: { color: border, marginTop: 8, marginBottom: 24 },
   };

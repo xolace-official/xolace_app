@@ -14,6 +14,7 @@
 import { api } from '@/convex/_generated/api';
 import type { FunctionReturnType } from 'convex/server';
 import { Image } from 'expo-image';
+import { useThemeColor } from 'heroui-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Linking, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -29,10 +30,14 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { useAppStore } from '@/src/store/store';
+import { AaSheet } from './aa-sheet';
 import { BackToTop } from './back-to-top';
 import { COVER_SCRIM } from './cover-palette';
 import { metaLine, prepareBody } from './reader-copy';
-import { BackButton, SourceCredit } from './reader-parts';
+import { ReaderPageScope } from './reader-page';
+import { AaButton, BackButton, SourceCredit } from './reader-parts';
+import { READING_MODES, useReadingFonts } from './reading-mode';
 import { useMarkdownStyle } from './use-markdown-style';
 
 export type ReaderEntry = NonNullable<FunctionReturnType<typeof api.library.entries.getEntry>>;
@@ -40,11 +45,30 @@ export type ReaderEntry = NonNullable<FunctionReturnType<typeof api.library.entr
 const SHEET_OVERLAP = 28;
 const BAR_ROW = 52;
 
+/** The reader on its reading mode's page (#408); the Aa sheet sits outside it, on the app theme. */
 export function ReaderScreen({ entry }: { entry: ReaderEntry }) {
+  const mode = useAppStore((s) => s.readingMode);
+  const [aaOpen, setAaOpen] = useState(false);
+  return (
+    <>
+      <ReaderPageScope page={READING_MODES[mode].page}>
+        <ReaderView entry={entry} onOpenAa={() => setAaOpen(true)} />
+      </ReaderPageScope>
+      <AaSheet isOpen={aaOpen} onClose={() => setAaOpen(false)} />
+    </>
+  );
+}
+
+function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => void }) {
   const insets = useSafeAreaInsets();
   const { height: screenH, width } = useWindowDimensions();
   const reduced = useReducedMotion();
-  const markdownStyle = useMarkdownStyle();
+  const mode = useAppStore((s) => s.readingMode);
+  const textSize = useAppStore((s) => s.readerTextSize);
+  const markdownStyle = useMarkdownStyle(mode, textSize, useReadingFonts());
+  // The page from the hook, not `bg-background`: the class doesn't pick up the
+  // scoped page on this screen (#401 prototype finding).
+  const page = useThemeColor('background');
   const coverH = Math.round(screenH * 0.52);
   const barH = insets.top + BAR_ROW;
   const fold = coverH - SHEET_OVERLAP - barH; // scroll at which the sheet meets the bar
@@ -92,7 +116,7 @@ export function ReaderScreen({ entry }: { entry: ReaderEntry }) {
   );
 
   return (
-    <View className="flex-1 bg-background" onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>
+    <View className="flex-1" style={{ backgroundColor: page }} onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {photoEl}
       </View>
@@ -118,8 +142,8 @@ export function ReaderScreen({ entry }: { entry: ReaderEntry }) {
         </Animated.View>
 
         <View
-          className="rounded-t-[28px] bg-background px-6 pt-6"
-          style={{ borderCurve: 'continuous', minHeight: screenH, paddingBottom: insets.bottom + 96 }}
+          className="rounded-t-[28px] px-6 pt-6"
+          style={{ backgroundColor: page, borderCurve: 'continuous', minHeight: screenH, paddingBottom: insets.bottom + 96 }}
         >
           <View className="mb-6">
             <SourceCredit entry={entry} />
@@ -149,6 +173,7 @@ export function ReaderScreen({ entry }: { entry: ReaderEntry }) {
               {entry.title}
             </AppText>
           </Animated.View>
+          <AaButton onPress={onOpenAa} />
         </View>
         {/* Reading progress hairline. */}
         <Animated.View style={[{ height: 2, transformOrigin: 'left' }, readBar]} className="bg-cover-ink/80" />

@@ -3,6 +3,22 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Library: reading mode (2026-09-24)
+
+How an entry looks is set by picking a **reading mode**, not by adjusting
+separate font and colour controls. A mode fixes three things at once:
+typeface, line spacing, and **page** (the surface behind the text).
+
+- **Classic**: Space Grotesk (the app's own face), normal spacing, page
+  follows the app theme.
+- **Clear**: Atkinson Hyperlegible, roomier lines, Paper page. The
+  hyperlegible option exists only as this mode, never as a font name.
+- **By the fire**: Literata, normal spacing, Night page (warm, dark).
+
+**Text size** is the one control outside the modes. It adds to the phone's
+text size setting, never replaces it, and the body is never capped. A page is
+reader-local: it changes the reader, not the app theme.
+
 ## Library is branded Lantern (2026-09-23)
 
 The reading surface's user-facing brand name is **Lantern** — it replaces
