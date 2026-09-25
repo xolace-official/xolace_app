@@ -7,6 +7,7 @@ import type { FunctionReturnType } from 'convex/server';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { api } from '@/convex/_generated/api';
@@ -33,12 +34,17 @@ export function PhotoCard({
   width,
   height,
   href = readerHref(entry.slug, 'home'),
+  meta = readTimeLine(entry.readMin, entry.views, entry.listenMin),
+  corner,
 }: {
   entry: EntryItem;
   kicker: string;
   width: number;
   height: number;
   href?: ReturnType<typeof readerHref>;
+  meta?: string;
+  /** Top-right, over the photo. Defaults to Save; `null` for none. */
+  corner?: ReactNode;
 }) {
   // Save sits beside the link, not in it: a nested button is unreachable to
   // screen readers and, on web, a click inside the anchor follows it.
@@ -47,7 +53,7 @@ export function PhotoCard({
       <Link href={href} asChild>
         <Pressable
           accessibilityRole="link"
-          accessibilityLabel={`${entry.title}. ${kicker}. ${readTimeLine(entry.readMin, entry.views, entry.listenMin)}`}
+          accessibilityLabel={`${entry.title}. ${kicker}. ${meta}`}
           className="overflow-hidden bg-cover-scrim active:opacity-90"
           style={{
             width,
@@ -74,13 +80,15 @@ export function PhotoCard({
             <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={3}>
               {entry.title}
             </AppText>
-            <AppText className="text-[13px] text-cover-ink/75">{readTimeLine(entry.readMin, entry.views, entry.listenMin)}</AppText>
+            <AppText className="text-[13px] text-cover-ink/75">{meta}</AppText>
           </View>
         </Pressable>
       </Link>
-      <View className="absolute right-3 top-3">
-        <SaveButton entryId={entry._id} saved={entry.saved} onCover />
-      </View>
+      {corner !== null && (
+        <View className="absolute right-3 top-3">
+          {corner ?? <SaveButton entryId={entry._id} saved={entry.saved} onCover />}
+        </View>
+      )}
     </View>
   );
 }
