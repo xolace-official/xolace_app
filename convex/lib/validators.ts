@@ -331,6 +331,7 @@ export const preferencesDocValidator = v.object({
   avatarId: v.optional(v.string()),
   spaceNamePromptDismissed: v.optional(v.boolean()),
   registerComplaint: v.optional(v.boolean()),
+  libraryAudiences: v.optional(v.array(v.string())),
   quotes: v.optional(
     v.object({
       themes: v.array(v.string()),

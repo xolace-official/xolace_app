@@ -112,7 +112,7 @@ const MAX_LIMIT = 100;
 // when one facet value outgrows it.
 const FACET_SCAN = 500;
 
-async function entryIdsWithFacet(ctx: QueryCtx, axis: string, slug: string) {
+export async function entryIdsWithFacet(ctx: QueryCtx, axis: string, slug: string) {
   const rows = await ctx.db
     .query("library_entry_facets")
     .withIndex("by_axis_and_slug", (q) => q.eq("axis", axis).eq("slug", slug))

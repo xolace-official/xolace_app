@@ -331,6 +331,11 @@ export default defineSchema({
     // default back doesn't unlearn that they noticed.
     registerComplaint: v.optional(v.boolean()),
 
+    // Lantern "Reading as…" (#409): audience facet slugs the reader chose.
+    // Undefined = never answered (the home shows the one-time card); [] =
+    // dismissed, which is an answer — For you then reads the Understanding alone.
+    libraryAudiences: v.optional(v.array(v.string())),
+
     // Daily Quotes feature preferences.
     // Undefined until the user first visits the quotes screen.
     // Nightly cron only processes users where this is defined OR

@@ -14,7 +14,7 @@ import { ShelfTile } from '@/src/features/browse/components/shelf-tile';
 import { pickListeningTip } from '@/src/features/browse/components/listening-tip';
 
 type Entry = {
-  id: 'support' | 'music' | 'topics';
+  id: 'support' | 'music' | 'topics' | 'lantern';
   label: string;
   icon: SymbolViewProps['name'];
   bg: string;
@@ -26,6 +26,8 @@ const ENTRIES: Entry[] = [
   { id: 'support', label: 'Support audio', icon: { ios: 'waveform', android: 'graphic_eq', web: 'graphic_eq' }, bg: 'bg-browse-audio', fg: '--color-browse-audio-foreground', href: '/browse/list?family=support' },
   { id: 'music', label: 'Music', icon: { ios: 'music.note', android: 'music_note', web: 'music_note' }, bg: 'bg-browse-music', fg: '--color-browse-music-foreground', href: '/browse/list?family=music' },
   { id: 'topics', label: 'Topics', icon: { ios: 'square.grid.2x2', android: 'grid_view', web: 'grid_view' }, bg: 'bg-browse-topics', fg: '--color-browse-topics-foreground', href: '/browse/topics' },
+  // The Library's home, inside Browse (#393, #409); branded Lantern (#394).
+  { id: 'lantern', label: 'Lantern', icon: { ios: 'book', android: 'menu_book', web: 'menu_book' }, bg: 'bg-browse-topics', fg: '--color-browse-topics-foreground', href: '/browse/library' },
 ];
 
 function EntryButton({ entry }: { entry: Entry }) {

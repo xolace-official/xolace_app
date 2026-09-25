@@ -221,7 +221,7 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
               id="audio"
               icon={AUDIO_ICON}
               title="Full audio catalog"
-              description="Every guided track and song in the library, unlocked"
+              description="Every guided track and song, unlocked"
               isHighlighted={highlightedFeature === "audio"}
             />
           </PaywallFeatureSection>

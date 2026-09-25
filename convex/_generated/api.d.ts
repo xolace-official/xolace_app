@@ -121,6 +121,7 @@ import type * as lib_voices from "../lib/voices.js";
 import type * as lib_xolacerSuggestion from "../lib/xolacerSuggestion.js";
 import type * as library_admin from "../library/admin.js";
 import type * as library_entries from "../library/entries.js";
+import type * as library_home from "../library/home.js";
 import type * as library_hubs from "../library/hubs.js";
 import type * as library_ingest from "../library/ingest.js";
 import type * as migrations from "../migrations.js";
@@ -274,6 +275,7 @@ declare const fullApi: ApiFromModules<{
   "lib/xolacerSuggestion": typeof lib_xolacerSuggestion;
   "library/admin": typeof library_admin;
   "library/entries": typeof library_entries;
+  "library/home": typeof library_home;
   "library/hubs": typeof library_hubs;
   "library/ingest": typeof library_ingest;
   migrations: typeof migrations;
