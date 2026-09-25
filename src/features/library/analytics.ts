@@ -9,11 +9,11 @@ import type { Twig } from '@/src/features/kindling/twig-presentation';
 import type { Kind } from '@/src/features/library/home/library-copy';
 
 /**
- * Where a reader open came from. Every in-app way in sets it; a link from
- * the share sheet arrives without one, so an absent `from` reads as `share`.
+ * Where a reader open came from. Every way in sets it, the share sheet's link
+ * included; a link that forgets it lands as `unknown` so the gap shows.
  * `today` is reserved for Tonight's reading, which has no surface yet.
  */
-export type ReaderFrom = 'twig' | 'home' | 'hub' | 'kind' | 'subject' | 'share' | 'today';
+export type ReaderFrom = 'twig' | 'home' | 'hub' | 'kind' | 'subject' | 'share' | 'today' | 'unknown';
 
 type Entry = { slug: string };
 

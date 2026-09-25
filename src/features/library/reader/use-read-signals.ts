@@ -72,8 +72,8 @@ export function useReadSignals({
   // The view: the server counts only the first open. Analytics counts every one.
   useEffect(() => {
     record({ entryId, opened: true });
-    // A shared link carries no `from`; every in-app way in sets one.
-    trackLibrary(posthog, 'library_entry_opened', { slug, from: from ?? 'share' });
+    // Every way in sets `from` (shared links too); missing means a link forgot it.
+    trackLibrary(posthog, 'library_entry_opened', { slug, from: from ?? 'unknown' });
     // Once per entry: slug/from/posthog are fixed for a mounted reader.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [record, entryId]);

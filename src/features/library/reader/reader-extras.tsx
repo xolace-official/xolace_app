@@ -73,7 +73,7 @@ export function ShareButton({ entry }: { entry: Pick<ReaderEntry, 'slug' | 'titl
   return (
     <Pressable
       onPress={async () => {
-        const url = Linking.createURL(`library/${entry.slug}`);
+        const url = Linking.createURL(`library/${entry.slug}`, { queryParams: { from: 'share' } });
         try {
           const { action } = await Share.share({ message: shareMessage(entry.title, url) });
           if (action === Share.sharedAction) trackLibrary(posthog, 'library_entry_shared', { slug: entry.slug });
