@@ -1,10 +1,10 @@
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
-import { recordActivity } from "./lib/activityLog";
+import { internalMutation } from "../_generated/server";
+import { recordActivity } from "./activityLog";
 
 // Manual-invocation entry point for recordActivity — no production call sites
 // route through here yet (#432). Demo via the Convex dashboard:
-//   bunx convex run streaks:recordActivity '{"emotionalProfileId": "...", "actionType": "reflect"}'
+//   bunx convex run streaks/manual:recordActivityManual '{"emotionalProfileId": "...", "actionType": "reflect"}'
 export const recordActivityManual = internalMutation({
   args: {
     emotionalProfileId: v.id("emotional_profiles"),

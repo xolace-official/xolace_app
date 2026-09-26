@@ -1,6 +1,6 @@
 import { Doc, Id } from "../_generated/dataModel";
 import { MutationCtx } from "../_generated/server";
-import { isStreakExpired } from "./streak";
+import { isStreakExpired } from "../lib/streak";
 
 export type ActivityActionType = Doc<"activity_log">["actionType"];
 

@@ -3,7 +3,7 @@ import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 import { reflectionRank } from "./lib/aggregates";
 import { displayStreak } from "./lib/streak";
-import { localDayKey } from "./lib/activityLog";
+import { localDayKey } from "./streaks/activityLog";
 
 // Run both in sequence (renameRawInput first, then renameUserInput):
 //   bunx convex run migrations:runAll
