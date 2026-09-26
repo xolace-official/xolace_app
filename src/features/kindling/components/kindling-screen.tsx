@@ -11,17 +11,10 @@ import { AppText } from "@/src/components/shared/app-text";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { trackLibrary } from "@/src/features/library/analytics";
+import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
 import { playSoftPress } from "@/src/lib/haptics";
 import { twigBrowseHref, twigHref, twigSlug, type Twig } from "../twig-presentation";
 import { TwigRow } from "./twig-row";
-
-const HEADER_OPTIONS = {
-  headerShown: true,
-  headerTransparent: true,
-  headerTitle: "",
-  headerShadowVisible: false,
-  headerBackButtonDisplayMode: "minimal",
-} as const;
 
 /**
  * The active-kindling screen (docs/paths-v1.md §9.1, #333) — Variant D:
@@ -34,6 +27,12 @@ export function KindlingScreen() {
   const posthog = usePostHog();
   const { toast } = useToast();
   const foreground = useThemeColor("foreground") as string;
+  const headerOptions = {
+    ...useLargeHeaderOptions(),
+    headerShown: true,
+    title: "Your kindling",
+    headerBackButtonDisplayMode: "minimal" as const,
+  };
 
   const kindling = useQuery(api.paths.getActive, { withRead: true });
   const skipStep = useMutation(api.paths.skipStep);
@@ -93,87 +92,85 @@ export function KindlingScreen() {
     }
   };
 
-  if (kindling === undefined) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Stack.Screen options={HEADER_OPTIONS} />
-        <MorphLoader />
-        <AppText className="mt-6 text-sm text-muted">Setting up your kindling…</AppText>
-      </View>
-    );
-  }
+  const tended = kindling ? kindling.twigs.filter((t) => t.state === "done").length : 0;
 
-  if (kindling === null) {
-    return (
-      <View className="flex-1 bg-background" style={{ paddingTop: insets.top + 44 }}>
-        <Stack.Screen options={HEADER_OPTIONS} />
-        <View className="px-5 pb-6">
-          <AppText className="text-2xl font-semibold text-foreground">Your kindling</AppText>
-        </View>
-        <View className="flex-1 items-center justify-center px-10 pb-24">
-          <SymbolView
-            name={{ ios: "leaf", android: "eco", web: "eco" }}
-            size={40}
-            tintColor={foreground}
-          />
-          <AppText className="mt-4 text-center text-[15px] text-muted">
-            When a session leaves something to sit with, a little kindling shows up here.
-          </AppText>
-        </View>
-      </View>
-    );
-  }
-
-  const tended = kindling.twigs.filter((t) => t.state === "done").length;
-
+  // One ScrollView as the root for every state: UIKit collapses the large
+  // title only when the screen's first native child is the scroll view, and
+  // it binds once — swapping a loading View for it later leaves it unbound.
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top + 44 }}>
-      <Stack.Screen options={HEADER_OPTIONS} />
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button onPress={() => setConfirmDismiss(true)}>
-          Dismiss
-        </Stack.Toolbar.Button>
-      </Stack.Toolbar>
+    <>
+      <Stack.Screen options={headerOptions} />
+      {kindling ? (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button onPress={() => setConfirmDismiss(true)}>
+            Dismiss
+          </Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      ) : null}
 
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}>
-        <View className="px-5 pb-6">
-          <AppText className="text-2xl font-semibold text-foreground">Your kindling</AppText>
-          <AppText className="mt-1 text-[15px] text-muted">
-            A few things to try, from what your last session held.
-          </AppText>
-          <View className="mt-4 flex-row items-center gap-3">
-            <AppText className="text-[13px] font-medium text-muted">
-              {tended} of {kindling.twigs.length} tended
+      <ScrollView
+        className="flex-1 bg-background"
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="grow"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+      >
+        {kindling === undefined ? (
+          <View className="flex-1 items-center justify-center">
+            <MorphLoader />
+            <AppText className="mt-6 text-sm text-muted">Setting up your kindling…</AppText>
+          </View>
+        ) : kindling === null ? (
+          <View className="flex-1 items-center justify-center px-10">
+            <SymbolView
+              name={{ ios: "leaf", android: "eco", web: "eco" }}
+              size={40}
+              tintColor={foreground}
+            />
+            <AppText className="mt-4 text-center text-[15px] text-muted">
+              When a session leaves something to sit with, a little kindling shows up here.
             </AppText>
-            <View className="flex-1 flex-row gap-1.5">
-              {kindling.twigs.map((t) => (
-                <View
-                  key={t._id}
-                  className={`h-1.5 flex-1 rounded-full ${
-                    t.state === "done"
-                      ? "bg-accent"
-                      : t.state === "skipped"
-                        ? "bg-border"
-                        : "bg-surface-secondary"
-                  }`}
+          </View>
+        ) : (
+          <>
+            <View className="px-5 pb-6">
+              <AppText className="text-[15px] text-muted">
+                A few things to try, from what your last session held.
+              </AppText>
+              <View className="mt-4 flex-row items-center gap-3">
+                <AppText className="text-[13px] font-medium text-muted">
+                  {tended} of {kindling.twigs.length} tended
+                </AppText>
+                <View className="flex-1 flex-row gap-1.5">
+                  {kindling.twigs.map((t) => (
+                    <View
+                      key={t._id}
+                      className={`h-1.5 flex-1 rounded-full ${
+                        t.state === "done"
+                          ? "bg-accent"
+                          : t.state === "skipped"
+                            ? "bg-border"
+                            : "bg-surface-secondary"
+                      }`}
+                    />
+                  ))}
+                </View>
+              </View>
+            </View>
+
+            <View className="px-5">
+              {kindling.twigs.map((twig, i) => (
+                <TwigRow
+                  key={twig._id}
+                  twig={twig}
+                  last={i === kindling.twigs.length - 1}
+                  onBegin={() => handleBegin(twig)}
+                  onSkip={() => handleSkip(twig)}
+                  onBrowseMore={() => handleBrowseMore(twig)}
                 />
               ))}
             </View>
-          </View>
-        </View>
-
-        <View className="px-5">
-          {kindling.twigs.map((twig, i) => (
-            <TwigRow
-              key={twig._id}
-              twig={twig}
-              last={i === kindling.twigs.length - 1}
-              onBegin={() => handleBegin(twig)}
-              onSkip={() => handleSkip(twig)}
-              onBrowseMore={() => handleBrowseMore(twig)}
-            />
-          ))}
-        </View>
+          </>
+        )}
       </ScrollView>
 
       <ConfirmationDialog
@@ -184,6 +181,6 @@ export function KindlingScreen() {
         confirmLabel="Dismiss"
         onConfirm={handleDismiss}
       />
-    </View>
+    </>
   );
 }
