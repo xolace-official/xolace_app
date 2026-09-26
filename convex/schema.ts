@@ -2287,9 +2287,12 @@ export default defineSchema({
     viewedAt: v.optional(v.number()), // first reader open — the one view
     position: v.optional(v.number()), // resume: 0–1 of the scrollable body
     finishedAt: v.optional(v.number()), // reached the end AND dwelt; never shown
+    lastReadAt: v.optional(v.number()), // last open or position write — orders Continue reading (#419)
     saved: v.boolean(),
     helped: v.boolean(),
-  }).index("by_emotionalProfileId_and_entryId", ["emotionalProfileId", "entryId"]),
+  })
+    .index("by_emotionalProfileId_and_entryId", ["emotionalProfileId", "entryId"])
+    .index("by_emotionalProfileId_and_lastReadAt", ["emotionalProfileId", "lastReadAt"]),
 
   // Public totals, off `library_entries` because ingest `replace`s those
   // rows. Never decremented by wipe/deletion — only an undo of "helped"
