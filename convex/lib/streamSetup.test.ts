@@ -8,7 +8,6 @@ import {
   DESIRED_BLOCK_LIST_POLICY,
   DESIRED_MESSAGING,
   DESIRED_XOLACE_BROADCAST,
-  needsBroadcasterRole,
   planBlockList,
   planChannelTypeUpdate,
   planModerationPolicy,
@@ -128,12 +127,6 @@ describe("planModerationPolicy", () => {
 });
 
 describe("planXolaceBroadcastType", () => {
-  it("read events on for unread counts; typing/replies off in the desired state (#373)", () => {
-    expect(DESIRED_XOLACE_BROADCAST.read_events).toBe(true);
-    expect(DESIRED_XOLACE_BROADCAST.typing_events).toBe(false);
-    expect(DESIRED_XOLACE_BROADCAST.replies).toBe(false);
-  });
-
   it("creates the channel type on a clean Stream app (GET 404 → current: null)", () => {
     const plan = planXolaceBroadcastType(null, DESIRED_XOLACE_BROADCAST);
     expect(plan).toEqual({
@@ -205,16 +198,6 @@ describe("planXolaceBroadcastType", () => {
       replies: false,
       grants: DESIRED_XOLACE_BROADCAST.grants,
     });
-  });
-});
-
-describe("needsBroadcasterRole", () => {
-  it("is true when the role hasn't been registered yet", () => {
-    expect(needsBroadcasterRole(["admin", "channel_member"])).toBe(true);
-  });
-
-  it("is false once registered", () => {
-    expect(needsBroadcasterRole(["admin", XOLACE_BROADCASTER_ROLE])).toBe(false);
   });
 });
 

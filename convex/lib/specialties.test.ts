@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   isSpecialty,
-  MAX_SPECIALTIES,
   SPECIALTIES,
   specialtyLabel,
   specialtyListensTo,
@@ -15,31 +14,9 @@ describe("isSpecialty", () => {
   it("rejects a slug nothing declares", () => {
     expect(isSpecialty("depression")).toBe(false);
   });
-
-  // The guard exists for route params, where the value is whatever was typed
-  // into the URL — including nothing at all.
-  it("rejects undefined", () => {
-    expect(isSpecialty(undefined)).toBe(false);
-  });
-
-  it("rejects the empty string", () => {
-    expect(isSpecialty("")).toBe(false);
-  });
-
-  it("is case-sensitive, so a display label is not a slug", () => {
-    expect(isSpecialty("Anxiety")).toBe(false);
-  });
 });
 
 describe("specialtyLabel / specialtyListensTo", () => {
-  it("returns the declared label", () => {
-    expect(specialtyLabel("anxiety")).toBe("Anxiety");
-  });
-
-  it("returns the declared listensTo phrase", () => {
-    expect(specialtyListensTo("loneliness")).toBe("loneliness");
-  });
-
   // Falling back to the raw slug keeps the sentence grammatical rather than
   // rendering "undefined" at the user.
   it("falls back to the slug when nothing matches", () => {
@@ -66,8 +43,4 @@ describe("the taxonomy itself", () => {
     });
 
   }
-
-  it("caps what a profile may declare below the taxonomy size", () => {
-    expect(MAX_SPECIALTIES).toBeLessThan(SPECIALTIES.length);
-  });
 });

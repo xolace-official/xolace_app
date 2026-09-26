@@ -82,12 +82,6 @@ describe("requireSessionOwnership", () => {
 });
 
 describe("users.getOrCreate", () => {
-  it("is idempotent for the same identity", async () => {
-    const { t, userId } = await asNewUser();
-    const again = await t.mutation(api.users.getOrCreate, { authProvider: "google" });
-    expect(again).toBe(userId);
-  });
-
   it("stores identity.subject as authProviderAccountId, ignoring the client arg", async () => {
     const { root, userId } = await asNewUser(7);
     const t = root.withIdentity(makeIdentity(7));

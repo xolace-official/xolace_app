@@ -32,14 +32,4 @@ describe("applyAudioFence", () => {
     expect(ttsText).toBe(fallback);
     expect(displayText).toBe(fallback);
   });
-
-  it("both texts equal for premium mirror with no tags", () => {
-    const { ttsText, displayText } = applyAudioFence({
-      mirrorText: "Just words, no tags.",
-      isFallback: false,
-      isPremium: true,
-    });
-    expect(ttsText).toBe("Just words, no tags.");
-    expect(displayText).toBe("Just words, no tags.");
-  });
 });

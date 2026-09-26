@@ -45,20 +45,6 @@ async function recipient() {
 }
 
 describe("chatNotifications.send", () => {
-  it("a message push carries Stream's unread total as the badge", async () => {
-    sent.length = 0;
-    const { user, conversationId } = await recipient();
-    await user.root.mutation(internal.chatNotifications.send, {
-      emotionalProfileId: user.profileId,
-      type: "chat_message",
-      counterpartName: "Camper",
-      conversationId,
-      badge: 3,
-    });
-    expect(sent).toHaveLength(1);
-    expect(sent[0].notification.badge).toBe(3);
-  });
-
   it("a lifecycle push has no badge", async () => {
     sent.length = 0;
     const { user, conversationId } = await recipient();

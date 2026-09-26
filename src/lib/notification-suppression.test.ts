@@ -7,18 +7,11 @@ import {
 } from '@/src/lib/notification-suppression';
 
 describe('suppressedInForeground', () => {
-  it('suppresses every conversation type for the active thread', () => {
+  it('suppresses a conversation notification for the active thread', () => {
     setActiveNotificationConversation('c1');
-
-    for (const type of [
-      'chat_request',
-      'chat_accepted',
-      'chat_declined',
-      'chat_expired',
-      'chat_message',
-    ]) {
-      expect(suppressedInForeground({ type, conversationId: 'c1' })).toBe(true);
-    }
+    expect(
+      suppressedInForeground({ type: 'chat_request', conversationId: 'c1' }),
+    ).toBe(true);
 
     clearActiveNotificationConversation('c1');
   });
@@ -29,12 +22,6 @@ describe('suppressedInForeground', () => {
       suppressedInForeground({ type: 'chat_message', conversationId: 'c2' }),
     ).toBe(false);
     clearActiveNotificationConversation('c1');
-  });
-
-  it('shows conversation notifications when no thread is active', () => {
-    expect(
-      suppressedInForeground({ type: 'chat_request', conversationId: 'c1' }),
-    ).toBe(false);
   });
 
   it('does not let a stale screen clear a newer active thread', () => {

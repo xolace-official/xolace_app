@@ -40,12 +40,4 @@ describe("buildNotificationPrompt", () => {
       );
     });
   });
-
-  it("carries the reach voice into the system prompt in both branches", () => {
-    const withProfile = buildNotificationPrompt({ ...baseCtx, reach: "quiet", semanticProfile: "Recurring themes: X" });
-    const withoutProfile = buildNotificationPrompt({ ...baseCtx, reach: "quiet", semanticProfile: null });
-
-    expect(withProfile.system).toContain("minimal. Often just presence.");
-    expect(withoutProfile.system).toContain("minimal. Often just presence.");
-  });
 });

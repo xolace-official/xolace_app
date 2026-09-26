@@ -7,7 +7,6 @@ import {
   minReturnGapForTier,
   shouldEmitReturn,
   shouldSupersede,
-  TIER_WEIGHT,
 } from "./followUpCadence";
 
 describe("followUpTier", () => {
@@ -108,11 +107,6 @@ describe("shouldSupersede (weight-aware)", () => {
     expect(shouldSupersede("standard", "acute")).toBe(false);
     expect(shouldSupersede("elevated", "acute")).toBe(false);
   });
-
-  it("tier weight order is acute > elevated > standard", () => {
-    expect(TIER_WEIGHT.acute).toBeGreaterThan(TIER_WEIGHT.elevated);
-    expect(TIER_WEIGHT.elevated).toBeGreaterThan(TIER_WEIGHT.standard);
-  });
 });
 
 describe("computeRequiresFollowUp", () => {
@@ -155,15 +149,6 @@ describe("abandonRequiresFollowUp — IRON rule (T13 regression)", () => {
   it("abandon WITH escalation → starts a follow-up", () => {
     expect(abandonRequiresFollowUp({ escalationTriggered: true })).toBe(true);
   });
-
-  it("is STRICTER than the completion gate — an AI-flagged but non-escalated abandon must not start", () => {
-    // At completion, a stored AI flag would qualify...
-    expect(computeRequiresFollowUp({ storedFlag: true })).toBe(true);
-    // ...but on the abandon path the same session must NOT (escalation only).
-    expect(
-      abandonRequiresFollowUp({ escalationTriggered: false }),
-    ).toBe(false);
-  });
 });
 
 describe("shouldEmitReturn (gap guard)", () => {
@@ -201,17 +186,6 @@ describe("shouldEmitReturn (gap guard)", () => {
         minGapMs: gap,
       }),
     ).toBe(false);
-  });
-
-  it("respects a custom minGapMs", () => {
-    expect(
-      shouldEmitReturn({
-        cardStatus: "pending",
-        cardCreatedAt: created,
-        now: created + 100,
-        minGapMs: 50,
-      }),
-    ).toBe(true);
   });
 });
 

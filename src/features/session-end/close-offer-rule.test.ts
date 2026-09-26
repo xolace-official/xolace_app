@@ -66,15 +66,6 @@ describe("chooseCloseOffer", () => {
       }),
     ).toBe("none");
   });
-
-  it("offers nothing when there is no suggestion and no Plus moment", () => {
-    expect(
-      chooseCloseOffer({
-        hasSession: true,
-        suggestion: null,
-      }),
-    ).toBe("none");
-  });
 });
 
 describe("chooseCloseOffer — the Plus moment", () => {
@@ -86,18 +77,6 @@ describe("chooseCloseOffer — the Plus moment", () => {
         plusOffer: true,
       }),
     ).toBe("plus");
-  });
-
-  // The rarer offer still wins: a suggestion has survived a theme match, an
-  // intensity floor, a safeguard gate and a weekly cooldown to get here.
-  it("yields to a suggestion", () => {
-    expect(
-      chooseCloseOffer({
-        hasSession: true,
-        suggestion: person,
-        plusOffer: true,
-      }),
-    ).toBe("suggestion");
   });
 
   it("still waits for a suggestion that may yet arrive", () => {

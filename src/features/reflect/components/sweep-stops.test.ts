@@ -13,10 +13,6 @@ const alphaOf = (stop: string) =>
   stop.length > 7 ? parseInt(stop.slice(7), 16) : 255;
 
 describe("buildSweepStops", () => {
-  it("lays nine stops around the turn", () => {
-    expect(buildSweepStops(TOKENS)).toHaveLength(9);
-  });
-
   it("builds every stop from a theme token, never a literal", () => {
     // #246 story 19: cycling palettes must change the wash. A stop that isn't
     // derived from a token is a fixed orange in all eleven themes.

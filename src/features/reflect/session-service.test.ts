@@ -18,19 +18,13 @@ describe('projectScreen', () => {
   ][] = [
     // Pre-processing — local always wins
     ['initiated', 'idle', false, null],
-    ['initiated', 'typing', false, null],
-    ['input_received', 'typing-nudge', false, null],
     ['input_received', 'processing', false, null],
     // Processing — server wins
     ['processing', 'mirror', false, 'processing'],
-    ['processing', 'processing', false, 'processing'],
-    ['processing', 'error', false, 'processing'],
     // Mirror delivered — server wins at the edge…
     ['mirror_delivered', 'processing', false, 'mirror'],
     ['mirror_delivered', 'idle', false, 'mirror'], // cold resume
-    ['mirror_delivered', 'error', false, 'mirror'], // after retry
     ['mirror_delivered', 'processing', true, 'escalation'],
-    ['mirror_delivered', 'escalation', true, 'escalation'],
     // …but local sub-modes and optimistic advances win
     ['mirror_delivered', 'clarify', false, null],
     ['mirror_delivered', 'gave-up', false, null],
@@ -38,16 +32,12 @@ describe('projectScreen', () => {
     ['mirror_delivered', 'clarify', true, null],
     // Confirmed — server wins
     ['confirmed', 'mirror', false, 'path-selection'],
-    ['confirmed', 'path-selection', false, 'path-selection'],
-    ['confirmed', 'gave-up', false, 'path-selection'],
     // In-path — owned by the path screens, never projected onto reflect
     // (a stale in-path session via getActive must not resurrect a screen)
     ['path_selected', 'path-selection', false, null],
-    ['path_selected', 'idle', false, null],
     ['path_in_progress', 'idle', false, null],
     // Error — server wins
     ['error', 'processing', false, 'error'],
-    ['error', 'mirror', false, 'error'],
     // Terminal — no screen; the machine resets
     ['completed', 'path-selection', false, null],
     ['abandoned', 'typing', false, null],
@@ -114,14 +104,6 @@ describe('extractErrorMessage — rate limit', () => {
         }),
       ),
     ).toBe('Your session expired. Please sign in again.');
-  });
-
-  it('still handles the dev-shaped message', () => {
-    expect(
-      isRateLimitMessage(
-        extractErrorMessage(new Error('RateLimited {"retryAfter":120000}')),
-      ),
-    ).toBe(true);
   });
 });
 

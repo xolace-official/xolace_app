@@ -5,45 +5,33 @@ import {
 } from "@/src/features/reflect/tour-copy";
 import { useAppStore } from "./store";
 
+type State = ReturnType<typeof useAppStore.getState>;
+const persistedKeys = () =>
+  Object.keys(
+    (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: State) => object } } })
+      .persist.getOptions()
+      .partialize(useAppStore.getState()),
+  );
+
 describe("store partialize", () => {
   it("bridgeIntroSeen is persisted", () => {
-    const state = useAppStore.getState();
-    const persisted = Object.keys(
-      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
-        .persist.getOptions()
-        .partialize(state),
-    );
+    const persisted = persistedKeys();
     expect(persisted).toContain("bridgeIntroSeen");
   });
 
   it("ventIntroSeen is persisted", () => {
-    const state = useAppStore.getState();
-    const persisted = Object.keys(
-      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
-        .persist.getOptions()
-        .partialize(state),
-    );
+    const persisted = persistedKeys();
     expect(persisted).toContain("ventIntroSeen");
   });
 
   it("xolacerPrimerSeen is persisted", () => {
-    const state = useAppStore.getState();
-    const persisted = Object.keys(
-      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
-        .persist.getOptions()
-        .partialize(state),
-    );
+    const persisted = persistedKeys();
     expect(persisted).toContain("xolacerPrimerSeen");
   });
 
   // The whole point of the cooldown is that a "no" survives a relaunch.
   it("plus offer cadence state is persisted", () => {
-    const state = useAppStore.getState();
-    const persisted = Object.keys(
-      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
-        .persist.getOptions()
-        .partialize(state),
-    );
+    const persisted = persistedKeys();
     expect(persisted).toContain("plusOfferLastDismissedAt");
     expect(persisted).toContain("plusOfferDismissalCount");
     expect(persisted).toContain("plusOfferFullStopAt");
@@ -55,12 +43,7 @@ describe("store partialize", () => {
   // A cold kill mid-intake must restart at the founder message with nothing
   // half-answered (T6, issue #263).
   it("intake answers are NOT persisted", () => {
-    const state = useAppStore.getState();
-    const persisted = Object.keys(
-      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
-        .persist.getOptions()
-        .partialize(state),
-    );
+    const persisted = persistedKeys();
     expect(persisted).not.toContain("intakeAnswers");
   });
 });
@@ -76,12 +59,7 @@ describe("reflect tour version", () => {
   });
 
   it("is persisted, so a finished tour stays finished across relaunches", () => {
-    const state = useAppStore.getState();
-    const persisted = Object.keys(
-      (useAppStore as unknown as { persist: { getOptions: () => { partialize: (s: typeof state) => object } } })
-        .persist.getOptions()
-        .partialize(state),
-    );
+    const persisted = persistedKeys();
     expect(persisted).toContain("reflectTourVersion");
   });
 });

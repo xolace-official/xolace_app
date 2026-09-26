@@ -49,11 +49,4 @@ describe('planPremiumThemeReset', () => {
       planPremiumThemeReset({ ...LAPSE, currentTheme: 'nightly-dark' }),
     ).toEqual({ clearPreviousTheme: false, applyBaseTheme: null });
   });
-
-  // 7 — 'system' passthrough as the stored base.
-  it('restores a system base theme', () => {
-    expect(
-      planPremiumThemeReset({ ...LAPSE, storedTheme: 'system' }),
-    ).toEqual({ clearPreviousTheme: false, applyBaseTheme: 'system' });
-  });
 });

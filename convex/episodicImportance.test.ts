@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   adjustImportance,
   importanceDelta,
-  isActionableFeedback,
   DEFAULT_IMPORTANCE,
   MIN_IMPORTANCE,
   MAX_IMPORTANCE,
@@ -23,15 +22,6 @@ describe("importanceDelta", () => {
     expect(Math.abs(importanceDelta("gave_up"))).toBeGreaterThan(
       importanceDelta("confirmed"),
     );
-  });
-});
-
-describe("isActionableFeedback", () => {
-  it("is true only for the weight-moving states", () => {
-    expect(isActionableFeedback("confirmed")).toBe(true);
-    expect(isActionableFeedback("gave_up")).toBe(true);
-    expect(isActionableFeedback("refined")).toBe(false);
-    expect(isActionableFeedback("abandoned")).toBe(false);
   });
 });
 

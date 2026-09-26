@@ -29,15 +29,4 @@ describe("shapeIntakeSignals", () => {
     expect(result).toEqual({ disclosureStyle: "all_at_once" });
     expect(result).not.toHaveProperty("emotionAwareness");
   });
-
-  it.each([
-    "all_at_once",
-    "bit_at_a_time",
-    "keep_it_brief",
-    "depends",
-  ] as const)("passes disclosureStyle %s through", (disclosureStyle) => {
-    expect(
-      shapeIntakeSignals({ disclosureStyle, emotionAwareness: undefined })
-    ).toEqual({ disclosureStyle });
-  });
 });

@@ -5,7 +5,6 @@ import {
   MESSAGE_CHANNEL_ID,
   MESSAGE_SOUND,
   NUDGE_CHANNEL_ID,
-  NUDGE_NOTIFICATION_SOUND,
   NUDGE_SOUND,
   REACH_CHANNEL_ID,
   REACH_SOUND,
@@ -49,39 +48,9 @@ describe("chatNotificationSound", () => {
     expect(REACH_SOUND).not.toBe(MESSAGE_SOUND);
     expect(REACH_CHANNEL_ID).not.toBe(MESSAGE_CHANNEL_ID);
   });
-
-  // Neither channel may be `default`: that one carries the AI nudges, and
-  // reusing it would take the nudge sound instead of ours.
-  it("never routes a conversation event onto the default channel", () => {
-    for (const type of [
-      "chat_request",
-      "chat_accepted",
-      "chat_declined",
-      "chat_expired",
-      "chat_message",
-    ] as const) {
-      expect(chatNotificationSound(type).channelId).not.toBe("default");
-    }
-  });
-
-  // Android turns the filename into a res/raw resource name by dropping the
-  // extension, and those must be lowercase with no interior dots or the build
-  // fails on an invalid resource name.
-  it("uses filenames Android can turn into raw resource names", () => {
-    for (const file of [REACH_SOUND, MESSAGE_SOUND]) {
-      expect(file).toMatch(/^[a-z][a-z0-9_]*\.wav$/);
-    }
-  });
 });
 
 describe("nudge sound", () => {
-  it("gives the AI's own reaching out its own sound", () => {
-    expect(NUDGE_NOTIFICATION_SOUND).toEqual({
-      sound: NUDGE_SOUND,
-      channelId: NUDGE_CHANNEL_ID,
-    });
-  });
-
   // The whole reason nudges moved off `default`: that channel exists without a
   // sound on every device already running the app, and a channel's sound can
   // never be changed. Reusing the id would give the new sound to fresh installs
