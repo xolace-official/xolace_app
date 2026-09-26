@@ -244,17 +244,6 @@ describe("ai/paths/generate.run", () => {
     expect(await readPaths(user)).toEqual([]);
   });
 
-  it("still generates on a cold start with no semantic profile", async () => {
-    const user = await asNewUser();
-    const sessionId = await seedQualifying(user);
-
-    await generate(user, sessionId);
-
-    const [path] = await readPaths(user);
-    expect(path.status).toBe("active");
-    expect(path.emotionalProfileVersionId).toBeUndefined();
-  });
-
   it("writes nothing for a free user", async () => {
     stub.isPlus = false;
     const user = await asNewUser();

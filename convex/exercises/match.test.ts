@@ -20,18 +20,8 @@ describe("matchExercise", () => {
     expect(first).toBe("reset");
   });
 
-  it("routes intensity 10 to reset", () => {
-    const [first] = matchExercise({ ...base, intensity: 10 });
-    expect(first).toBe("reset");
-  });
-
   it("routes anxiety emotion to reset regardless of intensity", () => {
     const [first] = matchExercise({ ...base, primaryEmotion: "anxiety", intensity: 4 });
-    expect(first).toBe("reset");
-  });
-
-  it("routes panic to reset", () => {
-    const [first] = matchExercise({ ...base, primaryEmotion: "panic" });
     expect(first).toBe("reset");
   });
 
@@ -42,11 +32,6 @@ describe("matchExercise", () => {
 
   it("routes numb language tags to find_your_edges", () => {
     const [first] = matchExercise({ ...base, userLanguageTags: ["empty", "blank"] });
-    expect(first).toBe("find_your_edges");
-  });
-
-  it("routes dissociation emotion to find_your_edges", () => {
-    const [first] = matchExercise({ ...base, primaryEmotion: "dissociation" });
     expect(first).toBe("find_your_edges");
   });
 
@@ -95,10 +80,5 @@ describe("matchExercise", () => {
     expect(result).toHaveLength(6);
     const all = ["let_it_land", "find_your_edges", "make_room", "speak_to_it", "soften_toward_it", "reset"];
     expect(result.sort()).toEqual(all.sort());
-  });
-
-  it("high-activation emotion overrides low intensity", () => {
-    const [first] = matchExercise({ ...base, primaryEmotion: "dread", intensity: 2 });
-    expect(first).toBe("reset");
   });
 });

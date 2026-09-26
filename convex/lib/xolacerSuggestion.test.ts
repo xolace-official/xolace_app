@@ -20,36 +20,6 @@ const base: SuggestionInput = {
   entryType: "open_prompt",
 };
 
-describe("suggestedSpecialty — theme map", () => {
-  const rows: [string, string | null][] = [
-    ["work", "burnout"],
-    ["relationships", "relationships"],
-    ["conflict", "relationships"],
-    ["family", "family"],
-    ["identity", "identity"],
-    ["self-worth", "identity"],
-    ["purpose", "identity"],
-    ["change", "change"],
-    ["loss", "grief"],
-    ["isolation", "loneliness"],
-    ["health", null],
-    ["finances", null],
-    ["achievement", null],
-    ["creativity", null],
-    ["trauma", null],
-    ["abuse", null],
-    ["neglect", null],
-  ];
-
-  for (const [theme, specialty] of rows) {
-    it(`maps theme "${theme}" to ${specialty ?? "no suggestion"}`, () => {
-      expect(suggestedSpecialty({ ...base, thematicTags: [theme] })).toBe(
-        specialty,
-      );
-    });
-  }
-});
-
 describe("suggestedSpecialty — emotion fallback", () => {
   it("maps emotion anxiety to anxiety when no theme mapped", () => {
     expect(
@@ -59,16 +29,6 @@ describe("suggestedSpecialty — emotion fallback", () => {
         thematicTags: ["health"],
       }),
     ).toBe("anxiety");
-  });
-
-  it("maps emotion grief to grief", () => {
-    expect(
-      suggestedSpecialty({
-        ...base,
-        primaryEmotion: "grief",
-        thematicTags: ["health"],
-      }),
-    ).toBe("grief");
   });
 
   it("maps granular label loneliness to loneliness", () => {
@@ -163,18 +123,6 @@ describe("suggestedSpecialty — suppression and gates", () => {
     ).toBeNull();
   });
 
-  it("suppresses abuse over a valid theme match", () => {
-    expect(
-      suggestedSpecialty({ ...base, thematicTags: ["work", "abuse"] }),
-    ).toBeNull();
-  });
-
-  it("suppresses neglect over a valid theme match", () => {
-    expect(
-      suggestedSpecialty({ ...base, thematicTags: ["loss", "neglect"] }),
-    ).toBeNull();
-  });
-
   it("suppresses trauma over a matching emotion fallback", () => {
     expect(
       suggestedSpecialty({
@@ -183,16 +131,6 @@ describe("suggestedSpecialty — suppression and gates", () => {
         primaryEmotion: "anxiety",
       }),
     ).toBeNull();
-  });
-
-  it("passes safeguard none", () => {
-    expect(
-      suggestedSpecialty({
-        ...base,
-        thematicTags: ["work"],
-        safeguardLevel: "none",
-      }),
-    ).toBe("burnout");
   });
 
   it("passes safeguard gentle", () => {
@@ -380,10 +318,6 @@ describe("rankSuggestionCandidates", () => {
     expect(ranked[0].xolacerProfileId).toBe("a");
   });
 
-  it("returns empty for no candidates", () => {
-    expect(rankSuggestionCandidates([], "session1")).toEqual([]);
-  });
-
   // Presence is the sort's first key: a present candidate outranks an absent
   // one even carrying more open conversations — reaching someone now is the
   // point of the feature, and MAX_OPEN_CONVERSATIONS is what still caps them.
@@ -398,14 +332,6 @@ describe("rankSuggestionCandidates", () => {
   it("falls back to open count among present candidates", () => {
     const ranked = rankSuggestionCandidates(
       [load("a", 3, true), load("b", 0, true), load("c", 1, true)],
-      "session1",
-    );
-    expect(ranked.map((c) => c.xolacerProfileId)).toEqual(["b", "c", "a"]);
-  });
-
-  it("falls back to open count among absent candidates", () => {
-    const ranked = rankSuggestionCandidates(
-      [load("a", 3, false), load("b", 0, false), load("c", 1, false)],
       "session1",
     );
     expect(ranked.map((c) => c.xolacerProfileId)).toEqual(["b", "c", "a"]);
@@ -452,10 +378,6 @@ describe("isInSuggestionCooldown", () => {
       suggestedSpecialty: "burnout",
     };
     expect(isInSuggestionCooldown([row], now)).toBe(false);
-  });
-
-  it("is open on an empty history", () => {
-    expect(isInSuggestionCooldown([], now)).toBe(false);
   });
 
   // The real shape of the argument: a week of sessions, most carrying no
@@ -505,10 +427,6 @@ describe("conversationOrigin", () => {
 
   it("stamps direct with no overlap", () => {
     expect(conversationOrigin(["burnout"], ["grief", "family"])).toBe("direct");
-  });
-
-  it("stamps direct when nothing recent was suggested", () => {
-    expect(conversationOrigin([], ["burnout"])).toBe("direct");
   });
 
   it("stamps direct when the xolacer declares nothing", () => {

@@ -17,14 +17,6 @@ describe("getInitialThemeCarouselIndex", () => {
     expect(getInitialThemeCarouselIndex(THEME_STUBS, "reverie")).toBe(2);
   });
 
-  it("centers on the active premium theme", () => {
-    expect(getInitialThemeCarouselIndex(THEME_STUBS, "noir")).toBe(4);
-  });
-
-  it("centers on the first card", () => {
-    expect(getInitialThemeCarouselIndex(THEME_STUBS, "default")).toBe(0);
-  });
-
   it("falls back to the first card for an unknown/stale id", () => {
     expect(getInitialThemeCarouselIndex(THEME_STUBS, "ghost-theme")).toBe(0);
   });

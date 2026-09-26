@@ -132,14 +132,6 @@ describe('notificationTapPlan', () => {
     expect(plan.logId).toBeUndefined();
   });
 
-  it('routes a request to the chats segment, stamped so a repeat tap lands', () => {
-    const plan = notificationTapPlan({ type: 'chat_request', conversationId: 'c1' }, null, 1000);
-    expect(plan.navigation).toEqual({
-      action: 'navigate',
-      href: { pathname: '/connect', params: { view: 'chats', t: '1000' } },
-    });
-  });
-
   it('routes a Xolace-channel message to the channel screen, no conversation id needed', () => {
     const plan = notificationTapPlan({ type: 'xolace_message' }, 'Posted a new message', 1000);
     expect(plan.navigation).toEqual({

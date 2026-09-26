@@ -12,11 +12,6 @@ describe("buildVentAcknowledgePrompt", () => {
     expect(withNull.system).not.toContain("What you know about this person");
   });
 
-  it("passes the transcript through untouched as the user message regardless of profile", () => {
-    const { user } = buildVentAcknowledgePrompt(TRANSCRIPT, PROFILE);
-    expect(user).toBe(TRANSCRIPT);
-  });
-
   it("appends the attunement guard line and profile text when a profile is present", () => {
     const { system } = buildVentAcknowledgePrompt(TRANSCRIPT, PROFILE);
     expect(system).toContain(

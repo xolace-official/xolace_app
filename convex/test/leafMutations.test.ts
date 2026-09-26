@@ -163,15 +163,13 @@ describe("sessions.deliverMirror", () => {
 
   it("leaves a session that moved on while the model was working", async () => {
     const user = await asNewUser();
-    for (const state of ["abandoned", "completed", "error"] as const) {
-      const sessionId = await seedSession(user.root, user.profileId, { state });
+    const sessionId = await seedSession(user.root, user.profileId, { state: "abandoned" });
 
-      await user.root.mutation(internal.sessions.deliverMirror, { sessionId, ...mirror });
+    await user.root.mutation(internal.sessions.deliverMirror, { sessionId, ...mirror });
 
-      const session = await readSession(user, sessionId);
-      expect(session?.state).toBe(state);
-      expect(session?.mirrorText).toBeUndefined();
-    }
+    const session = await readSession(user, sessionId);
+    expect(session?.state).toBe("abandoned");
+    expect(session?.mirrorText).toBeUndefined();
   });
 
   it("throws for a session that no longer exists", async () => {

@@ -767,6 +767,12 @@
       "skillPath": "skills/productivity/teach/SKILL.md",
       "computedHash": "68999bb1a241384b2f921f3321d779b7d05eb6089077b70d88cee2aee3d75ccc"
     },
+    "test-audit": {
+      "source": "vercel/eve",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/test-audit/SKILL.md",
+      "computedHash": "4a8e8751b126f7223b733ace9723fe279b5886109bcab1e49c925883d1647956"
+    },
     "text-to-speech": {
       "source": "elevenlabs/skills",
       "sourceType": "github",

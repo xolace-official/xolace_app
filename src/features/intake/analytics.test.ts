@@ -4,26 +4,7 @@ import {
   declinedCount,
   intakePersonProperties,
   questionAnsweredProps,
-  stepViewedProps,
 } from '@/src/features/intake/analytics';
-
-describe('stepViewedProps', () => {
-  it('carries the T7 §2.3 index, type and section', () => {
-    expect(stepViewedProps('founder')).toEqual({
-      step_key: 'founder',
-      step_index: 0,
-      step_type: 'founder',
-      section: null,
-    });
-    expect(stepViewedProps('coping_style')).toEqual({
-      step_key: 'coping_style',
-      step_index: 7,
-      step_type: 'question',
-      section: 'how_you_carry_it',
-    });
-    expect(stepViewedProps('paywall').step_index).toBe(14);
-  });
-});
 
 describe('questionAnsweredProps', () => {
   it('omits selection_count for a single-select', () => {

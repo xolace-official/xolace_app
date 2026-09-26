@@ -3,8 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 # Tests
-Dont write any more unit tests
-Never write tests after you write code (we will be cleaning up the current ones soon)
+- Never write unit tests after you write code.
+
+- Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.(E2E not setup yet, we will soon)
+
+- If you must test a system in isolation, first write down all the ways it could fail, then write the code.
 
 ## Project Overview
 

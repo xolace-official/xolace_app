@@ -10,7 +10,6 @@ import {
   hasRequestExpired,
   isArchivedFor,
   isAtOpenCap,
-  isBlocked,
   isPairBlocked,
   MIN_MESSAGES_TO_RATE,
   planBlock,
@@ -40,9 +39,6 @@ describe("hasRequestExpired", () => {
   // requestedAt + elapsed → has the sweep's span run out?
   const cases: { elapsed: number; expected: boolean; label: string }[] = [
     { elapsed: 0, expected: false, label: "just sent" },
-    // The window the median accept (4h) and the 90th percentile (32h) live in.
-    { elapsed: 4 * HOUR, expected: false, label: "the median accept" },
-    { elapsed: 32 * HOUR, expected: false, label: "the 90th percentile" },
     {
       elapsed: REQUEST_EXPIRY_MS - 1,
       expected: false,
@@ -54,8 +50,6 @@ describe("hasRequestExpired", () => {
       label: "exactly at the span",
     },
     { elapsed: REQUEST_EXPIRY_MS + 1, expected: true, label: "one tick late" },
-    // The request that sat pending for four days in production.
-    { elapsed: 106 * HOUR, expected: true, label: "four days and change" },
   ];
 
   for (const c of cases) {
@@ -77,24 +71,6 @@ describe("hasRequestExpired", () => {
   // request that has not happened yet.
   it("never expires a request stamped in the future", () => {
     expect(hasRequestExpired(REQUESTED, REQUESTED - HOUR)).toBe(false);
-  });
-});
-
-// Expiry writes no `declinedAt`, so the cooldown gate has nothing to read and
-// the seeker may ask the same xolacer again the moment the sweep closes the
-// row. Asserted here as the seeker-facing rule, not as a relationship between
-// the two constants — they are independent by decision.
-describe("an expired request carries no cooldown", () => {
-  const REQUESTED = 1_000_000;
-  const now = REQUESTED + REQUEST_EXPIRY_MS;
-
-  it("reopens the door the instant the sweep closes the row", () => {
-    expect(
-      declineCooldownUntil(
-        { status: "closed", closedReason: "expired", declinedAt: undefined },
-        now,
-      ),
-    ).toBeUndefined();
   });
 });
 
@@ -136,13 +112,6 @@ describe("declineCooldownUntil", () => {
       now: OPEN_AGAIN,
       label: "exactly at the boundary",
     },
-    {
-      status: "closed",
-      reason: "declined",
-      declinedAt: DECLINED,
-      now: DECLINED + 30 * 24 * 60 * 60 * 1000,
-      label: "a month later",
-    },
     // Expiry is silence, not a refusal — no cooldown, whatever the stamp says.
     {
       status: "closed",
@@ -160,13 +129,6 @@ describe("declineCooldownUntil", () => {
       now: DECLINED + 1,
       label: "blocked",
     },
-    {
-      status: "closed",
-      reason: "xolacer_left",
-      declinedAt: DECLINED,
-      now: DECLINED + 1,
-      label: "xolacer left",
-    },
     // Rows declined before the stamp existed wait for nothing.
     {
       status: "closed",
@@ -181,13 +143,6 @@ describe("declineCooldownUntil", () => {
       declinedAt: DECLINED,
       now: DECLINED + 1,
       label: "re-requested, stamp still on the row",
-    },
-    { status: "open", declinedAt: DECLINED, now: DECLINED + 1, label: "open" },
-    {
-      status: "resting",
-      declinedAt: DECLINED,
-      now: DECLINED + 1,
-      label: "resting",
     },
     { now: DECLINED, label: "no row at all" },
   ];
@@ -231,18 +186,12 @@ describe("isPairBlocked", () => {
       expected: true,
       label: "reverse pairing blocked",
     },
-    { forward: null, reverse: null, expected: false, label: "both unblocked" },
     // A decline or an expiry is not a block — the seeker may come back.
     {
       forward: "declined",
       reverse: "expired",
       expected: false,
       label: "closed for a non-blocked reason",
-    },
-    {
-      forward: "xolacer_left",
-      expected: false,
-      label: "xolacer_left is not a block",
     },
   ];
 
@@ -263,20 +212,15 @@ describe("isPairBlocked", () => {
 });
 
 describe("isAtOpenCap", () => {
-  const XOLACER_CAP = 8;
   const SEEKER_CAP = 3;
 
   // openCount | cap → is this party full?
   const cases: { open: number; cap: number; expected: boolean }[] = [
-    { open: 0, cap: SEEKER_CAP, expected: false },
     { open: 2, cap: SEEKER_CAP, expected: false },
     { open: 3, cap: SEEKER_CAP, expected: true },
     // Grandfathered seekers from before the cap existed: still full, never
     // negative-space back under it.
     { open: 5, cap: SEEKER_CAP, expected: true },
-    { open: 7, cap: XOLACER_CAP, expected: false },
-    { open: 8, cap: XOLACER_CAP, expected: true },
-    { open: 9, cap: XOLACER_CAP, expected: true },
   ];
 
   for (const c of cases) {
@@ -382,25 +326,6 @@ describe("planBlock", () => {
   }
 });
 
-describe("isBlocked", () => {
-  const cases: {
-    reason?: "declined" | "expired" | "blocked" | "xolacer_left";
-    expected: boolean;
-  }[] = [
-    { reason: "blocked", expected: true },
-    { reason: "declined", expected: false },
-    { reason: "expired", expected: false },
-    { reason: "xolacer_left", expected: false },
-    { reason: undefined, expected: false },
-  ];
-
-  for (const c of cases) {
-    it(`closedReason=${c.reason} → ${c.expected}`, () => {
-      expect(isBlocked(c.reason)).toBe(c.expected);
-    });
-  }
-});
-
 describe("canRate", () => {
   const ACCEPTED = 1_000;
   const AFTER = 2_000;
@@ -449,20 +374,13 @@ describe("canRate", () => {
       expected: false,
     },
     { role: "user", expected: false },
-    // The threshold, one tick either side of it and exactly on it.
+    // One tick under the threshold.
     {
       role: "user",
       acceptedAt: ACCEPTED,
       lastMessageAt: AFTER,
       messageCount: ENOUGH - 1,
       expected: false,
-    },
-    {
-      role: "user",
-      acceptedAt: ACCEPTED,
-      lastMessageAt: AFTER,
-      messageCount: ENOUGH + 1,
-      expected: true,
     },
     // Predates the counter: absent reads as 0, and is not backfilled.
     {

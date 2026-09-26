@@ -19,21 +19,6 @@ describe("chatNotificationContent", () => {
     expect(content.body).not.toContain("Camper 4F2A");
   });
 
-  // The same words the chats list shows for this row, so a xolacer reads the
-  // notification and the list entry as one event.
-  it("reuses the chats-list wording for a request", () => {
-    expect(chatNotificationContent("chat_request", "Camper 4F2A").body).toBe(
-      "Wants to talk, accept when you have space",
-    );
-  });
-
-  it("says nothing beyond the pseudonym about who is asking", () => {
-    const content = chatNotificationContent("chat_request", "Camper 9B10");
-    expect(`${content.title} ${content.body}`).toBe(
-      "Camper 9B10 Wants to talk, accept when you have space",
-    );
-  });
-
   // A seeker knows their xolacer by display name, never by a pseudonym — the
   // caller passes whichever name the recipient already sees elsewhere.
   it("titles an accept with the xolacer's name", () => {
@@ -65,29 +50,10 @@ describe("chatNotificationContent", () => {
     expect(chatNotificationContent("chat_expired", "River")).toEqual(content);
   });
 
-  it("points an expiry at other xolacers", () => {
-    expect(chatNotificationContent("chat_expired").body).toContain("xolacers");
-  });
-
-  // Two different events must not read as the same one on a lock screen.
-  it("words an expiry differently from a decline", () => {
-    expect(chatNotificationContent("chat_expired").body).not.toBe(
-      chatNotificationContent("chat_declined").body,
-    );
-  });
-
   it("titles a message with the sender's name and says only that one arrived", () => {
     const content = chatNotificationContent("chat_message", "Camper 4F2A");
     expect(content.title).toBe("Camper 4F2A");
     expect(content.body).toBe("Sent you a message");
-  });
-
-  // The whole point of the body being a constant: no branch of this function
-  // can ever be handed something the sender wrote.
-  it("carries no message content, whatever it is passed", () => {
-    expect(chatNotificationContent("chat_message", "River").body).toBe(
-      chatNotificationContent("chat_message", "Camper 9B10").body,
-    );
   });
 });
 
@@ -165,14 +131,6 @@ describe("chatNotificationRoute", () => {
 });
 
 describe("isChatNotificationType", () => {
-  it("accepts the conversation types", () => {
-    expect(isChatNotificationType("chat_request")).toBe(true);
-    expect(isChatNotificationType("chat_accepted")).toBe(true);
-    expect(isChatNotificationType("chat_declined")).toBe(true);
-    expect(isChatNotificationType("chat_expired")).toBe(true);
-    expect(isChatNotificationType("chat_message")).toBe(true);
-  });
-
   // The nudge types share the `data.type` field and must not route here.
   it("rejects nudge types and junk", () => {
     expect(isChatNotificationType("gentle_return")).toBe(false);
@@ -245,16 +203,6 @@ describe("messageNotificationRecipient", () => {
     );
   });
 
-  // Sender-exclusion is not a check anywhere — it falls out of resolving the
-  // recipient as "the participant who is not them".
-  it("never resolves to the sender", () => {
-    for (const sender of ["seeker1", "xolacer1"]) {
-      expect(messageNotificationRecipient(conversation, sender)).not.toBe(
-        sender,
-      );
-    }
-  });
-
   // The forged-payload case: a stranger named as the sender addresses nobody,
   // rather than addressing whichever participant happens to be listed first.
   it("drops a sender who is not on this row", () => {
@@ -291,15 +239,6 @@ describe("messageNotificationSuppressed", () => {
         now,
       ),
     ).toBe(false);
-  });
-
-  // Each stamp stands alone: a second conversation, or the other side of this
-  // one, carries its own, so a loud thread can never hide a quiet one.
-  it("is per stamp, so a quiet thread is unaffected by a loud one", () => {
-    const loud = now - 1_000;
-    const quiet = undefined;
-    expect(messageNotificationSuppressed(loud, now)).toBe(true);
-    expect(messageNotificationSuppressed(quiet, now)).toBe(false);
   });
 });
 

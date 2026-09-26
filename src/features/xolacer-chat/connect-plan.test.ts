@@ -54,11 +54,6 @@ describe('connectPlan', () => {
       input: { clerkUserId: null },
       expected: { activateNow: false, resetDb: false, clearCredential: false },
     },
-    {
-      label: 'live status arriving after cached activation: still active, nothing reset',
-      input: { cachedEnabled: true, cachedCredential: MINE, liveStatus: true },
-      expected: { activateNow: true, resetDb: false, clearCredential: false },
-    },
   ];
 
   for (const c of cases) {

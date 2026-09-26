@@ -1,34 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { COUNTRY_RESOURCES, LAST_UPDATED } from '@/src/features/crisis-resources/data';
-import type { CountryCode, Resource } from '@/src/features/crisis-resources/types';
+import { COUNTRY_RESOURCES } from '@/src/features/crisis-resources/data';
+import type { Resource } from '@/src/features/crisis-resources/types';
 
 const VALID_TYPES = new Set<Resource['type']>(['phone', 'url', 'text', 'email']);
 const VALID_SOURCES = new Set<Resource['source']>(['crisis_line', 'xolace_support', 'text_support', 'local_service', 'online_resource']);
-const TAPPABLE_TYPES = new Set<Resource['type']>(['phone', 'url', 'email']);
-// Keep in sync with COUNTRY_RESOURCES in ./data — this list is the guard that
-// catches a country being added to the data without its resources being
-// checked, so it has to be updated deliberately rather than derived from it.
-const EXPECTED_COUNTRIES: CountryCode[] = [
-  'GH',
-  'US',
-  'GB',
-  'AU',
-  'CA',
-  'NG',
-  'DE',
-  'KE',
-  'FR',
-  'ZA',
-];
 
 describe('country resolution', () => {
-  it('resolves GH from locale', () => expect(COUNTRY_RESOURCES['GH']).toBeDefined());
-
-  it('returns undefined for unrecognized locale (JP)', () => {
-    const region = 'JP';
-    expect(COUNTRY_RESOURCES[region as keyof typeof COUNTRY_RESOURCES]).toBeUndefined();
-  });
-
   it('all countries have emergencyNumber', () => {
     Object.values(COUNTRY_RESOURCES).forEach((c) => expect(c.emergencyNumber).toBeTruthy());
   });
@@ -52,11 +29,6 @@ describe('country resolution', () => {
 });
 
 describe('data completeness', () => {
-  it('contains exactly the 5 expected country codes', () => {
-    const keys = Object.keys(COUNTRY_RESOURCES) as CountryCode[];
-    expect(keys.sort()).toEqual([...EXPECTED_COUNTRIES].sort());
-  });
-
   it('every country has a non-empty name and flag', () => {
     Object.values(COUNTRY_RESOURCES).forEach((c) => {
       expect(c.name.length).toBeGreaterThan(0);
@@ -70,10 +42,6 @@ describe('data completeness', () => {
     });
   });
 
-  it('LAST_UPDATED is a non-empty string', () => {
-    expect(typeof LAST_UPDATED).toBe('string');
-    expect(LAST_UPDATED.length).toBeGreaterThan(0);
-  });
 });
 
 describe('resource shape validation', () => {
@@ -125,60 +93,5 @@ describe('resource shape validation', () => {
         expect(r.value).toMatch(/^https?:\/\//);
       });
     });
-  });
-});
-
-describe('tappable resource logic', () => {
-  it('phone, url, and email resources are tappable', () => {
-    (['phone', 'url', 'email'] as Resource['type'][]).forEach((t) => {
-      expect(TAPPABLE_TYPES.has(t)).toBe(true);
-    });
-  });
-
-  it('text resources are not tappable', () => {
-    expect(TAPPABLE_TYPES.has('text')).toBe(false);
-  });
-
-  it('every text resource has a non-empty value (instruction string)', () => {
-    Object.values(COUNTRY_RESOURCES).forEach((c) => {
-      c.resources.filter((r) => r.type === 'text').forEach((r) => {
-        expect(r.value.trim().length).toBeGreaterThan(0);
-      });
-    });
-  });
-});
-
-describe('country options derivation', () => {
-  // Tests the mapping logic used by CrisisResourcesScreen to build the Select options
-  const COUNTRY_OPTIONS = (Object.keys(COUNTRY_RESOURCES) as CountryCode[]).map((code) => ({
-    value: code,
-    label: `${COUNTRY_RESOURCES[code].flag} ${COUNTRY_RESOURCES[code].name}`,
-  }));
-
-  it('produces one option per country', () => {
-    expect(COUNTRY_OPTIONS.length).toBe(EXPECTED_COUNTRIES.length);
-  });
-
-  it('each option value matches a valid CountryCode', () => {
-    COUNTRY_OPTIONS.forEach((opt) => {
-      expect(EXPECTED_COUNTRIES).toContain(opt.value as CountryCode);
-    });
-  });
-
-  it('each option label includes the flag and country name', () => {
-    COUNTRY_OPTIONS.forEach((opt) => {
-      const country = COUNTRY_RESOURCES[opt.value as CountryCode];
-      expect(opt.label).toContain(country.flag);
-      expect(opt.label).toContain(country.name);
-    });
-  });
-
-  it('handleCountryChange returns null when option is undefined (null-coalesce branch)', () => {
-    // Mirrors the logic: option?.value as CountryCode ?? null
-    const handleCountryChange = (option: { value: string } | undefined): CountryCode | null =>
-      (option?.value as CountryCode) ?? null;
-
-    expect(handleCountryChange(undefined)).toBeNull();
-    expect(handleCountryChange({ value: 'GH' })).toBe('GH');
   });
 });

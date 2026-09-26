@@ -62,7 +62,7 @@ export const DECLINED_VALUE = 'prefer_not_to_say';
 
 const indexOf = (key: IntakeStepKey) => STEPS.findIndex((step) => step.key === key);
 
-export function stepViewedProps(stepKey: IntakeStepKey) {
+function stepViewedProps(stepKey: IntakeStepKey) {
   const index = indexOf(stepKey);
   const step = STEPS[index]!;
   return {

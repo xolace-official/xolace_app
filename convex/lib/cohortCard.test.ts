@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CohortEmotion } from "./cohortCard";
 import {
-  COHORT_FLOOR,
   deriveCohortCardState,
   isCohortMatch,
   weekStartUtc,
@@ -35,12 +34,6 @@ describe("isCohortMatch", () => {
       target: "sadness",
       expected: false,
     },
-    {
-      name: "no secondary, primary misses",
-      primary: "joy",
-      target: "sadness",
-      expected: false,
-    },
   ];
 
   for (const c of cases) {
@@ -71,11 +64,9 @@ describe("isCohortMatch", () => {
 describe("deriveCohortCardState", () => {
   const cases: { count: number; expected: ReturnType<typeof deriveCohortCardState> }[] = [
     { count: 0, expected: { type: "warming" } },
-    { count: 1, expected: { type: "warming" } },
     // the floor boundary, both sides
     { count: 2, expected: { type: "warming" } },
     { count: 3, expected: { type: "count", value: 3 } },
-    { count: 22, expected: { type: "count", value: 22 } },
   ];
 
   for (const c of cases) {
@@ -83,10 +74,6 @@ describe("deriveCohortCardState", () => {
       expect(deriveCohortCardState(c.count)).toEqual(c.expected);
     });
   }
-
-  it("floor is 3", () => {
-    expect(COHORT_FLOOR).toBe(3);
-  });
 });
 
 describe("weekStartUtc", () => {

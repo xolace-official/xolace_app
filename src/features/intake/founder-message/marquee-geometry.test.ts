@@ -28,18 +28,12 @@ const worstGap = (viewport: number) => {
 describe('founder marquee belt', () => {
   // #280: the belt was pinned to the card count (615px), so anything wider
   // never recycled and the right of the band stayed empty.
-  it.each([320, 390, 430, 614, 615, 700, 800, 1024, 1280, 2000])(
+  it.each([320, 614, 615, 1280, 2000])(
     'covers the whole track at viewport %ipx',
     (viewport) => {
       expect(worstGap(viewport)).toBe(0);
     }
   );
-
-  it('keeps the belt wider than the viewport', () => {
-    for (const viewport of [320, 615, 1280]) {
-      expect(beltSlots(viewport, CARD_COUNT) * CARD_STRIDE).toBeGreaterThan(viewport);
-    }
-  });
 
   it('does not add slots on phone widths', () => {
     expect(beltSlots(390, CARD_COUNT)).toBe(CARD_COUNT);

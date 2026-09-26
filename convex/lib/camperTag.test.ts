@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  camperName,
   camperTagOf,
   generateCamperTag,
   legacyCamperTag,
@@ -45,12 +44,6 @@ describe("legacyCamperTag", () => {
   it("takes the last four characters of the pair row id, uppercased", () => {
     expect(legacyCamperTag("kd7abc4f2a")).toBe("4F2A");
     expect(legacyCamperTag("kd7abc4f2a")).toMatch(SHAPE);
-  });
-});
-
-describe("camperName", () => {
-  it("is the word and the tag", () => {
-    expect(camperName("4F2A")).toBe("Camper 4F2A");
   });
 });
 

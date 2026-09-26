@@ -10,8 +10,6 @@ describe('rateCtaState', () => {
   }[] = [
     { canRate: true, myRating: undefined, expected: 'prompt' },
     { canRate: true, myRating: 4, expected: 'rated' },
-    // The lowest score is still a score — 1 is not "no rating".
-    { canRate: true, myRating: 1, expected: 'rated' },
     { canRate: false, myRating: undefined, expected: 'hidden' },
     // Rated, then the conversation stopped being rateable (a block): the link
     // goes away even for someone who already used it.

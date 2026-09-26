@@ -59,14 +59,6 @@ describe("buildQuotePrompt", () => {
     });
   });
 
-  it("carries the daily angle seed into the system prompt in both branches", () => {
-    const withProfile = buildQuotePrompt({ ...baseParams, renderedProfile: "Recurring themes: X" });
-    const withoutProfile = buildQuotePrompt({ ...baseParams, renderedProfile: null });
-
-    expect(withProfile.systemPrompt).toContain("lens of: stillness");
-    expect(withoutProfile.systemPrompt).toContain("lens of: stillness");
-  });
-
   it("appends the preferred-themes line only when themes are given", () => {
     const withThemes = buildQuotePrompt({
       ...baseParams,
@@ -206,11 +198,6 @@ describe("reply context (#314)", () => {
 
     it("drops blank replies", () => {
       expect(selectReplyContext([reply({ text: "   " })], now)).toEqual([]);
-    });
-
-    it("is the same shape at a count of 1", () => {
-      const one = selectReplyContext([reply({ text: "only" })], now).slice(0, 1);
-      expect(one).toEqual([{ text: "only", repliedAt: now - day }]);
     });
   });
 

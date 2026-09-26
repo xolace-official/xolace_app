@@ -29,7 +29,7 @@ const DAY = 24 * HOUR;
  * A new session may only supersede an active follow-up when its tier weight
  * is >= the active tier (Acute > Elevated > Standard).
  */
-export const TIER_WEIGHT: Record<FollowUpTier, number> = {
+const TIER_WEIGHT: Record<FollowUpTier, number> = {
   acute: 3,
   elevated: 2,
   standard: 1,

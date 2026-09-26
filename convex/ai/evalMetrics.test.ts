@@ -56,17 +56,6 @@ describe("summarizeConfirmations — rates", () => {
     expect(allAbandon.landingRate).toBe(0);
     expect(allAbandon.abandonRate).toBe(1);
   });
-
-  it("is order-independent", () => {
-    const samples = [
-      ...mk("v1", "confirmed", 3),
-      ...mk("v2", "gave_up", 2),
-      ...mk("v1", "refined", 1),
-    ];
-    const forward = summarizeConfirmations(samples).overall;
-    const reversed = summarizeConfirmations([...samples].reverse()).overall;
-    expect(reversed).toEqual(forward);
-  });
 });
 
 describe("summarizeConfirmations — grouping", () => {

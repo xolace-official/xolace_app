@@ -30,7 +30,7 @@ export const cohortEmotionValidator = v.union(
  * card can appear early in the product's life, large enough that "2 campers"
  * — which reads as nobody — never ships.
  */
-export const COHORT_FLOOR = 3;
+const COHORT_FLOOR = 3;
 
 type CohortMatchInputs = Pick<
   Doc<"emotional_metadata">,
