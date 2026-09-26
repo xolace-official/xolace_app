@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, type MutationCtx, type QueryCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
+import { recordActivity } from "../streaks/activityLog";
 import { listenMin } from "./audio";
 import { toListItem } from "./entries";
 
@@ -157,7 +158,10 @@ export const record = mutation({
     // Only in-progress opens count, so quick peeks can't push Continue out of CONTINUE_SCAN.
     const inProgress = (row.position ?? 0) > 0 && row.finishedAt === undefined;
     if (args.position !== undefined || (args.opened && inProgress)) patch.lastReadAt = Date.now();
-    if (args.finished && row.finishedAt === undefined) patch.finishedAt = Date.now();
+    if (args.finished && row.finishedAt === undefined) {
+      patch.finishedAt = Date.now();
+      await recordActivity(ctx, { emotionalProfileId: profile._id, actionType: "library" });
+    }
     if (args.saved !== undefined) patch.saved = args.saved;
     if (args.helped !== undefined && args.helped !== row.helped) {
       patch.helped = args.helped;

@@ -44,8 +44,8 @@ export function localDayKey(timestampMs: number, timezone: string): string {
  * read those directly (Deferred Deprecations, CLAUDE.md) — and bumps
  * lastSessionAt on reflect only.
  *
- * No production call sites yet (#432) — this is the shared core other
- * mutations will call directly (same transaction, no nested ctx.runMutation).
+ * Called directly by every qualifying action's mutation (same transaction,
+ * no nested ctx.runMutation).
  */
 export async function recordActivity(
   ctx: MutationCtx,

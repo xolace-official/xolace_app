@@ -8,6 +8,7 @@ import { hasPremium, requirePremium } from "./lib/premium";
 import { MODERATION_UNAVAILABLE, moderateInput } from "./ai/providers/moderation";
 import { internal } from "./_generated/api";
 import { rateLimiter } from "./lib/rateLimits";
+import { recordActivity } from "./streaks/activityLog";
 
 function utcDateString(): string {
   return new Date().toISOString().split("T")[0];
@@ -164,8 +165,10 @@ export const react = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await requireOwnQuote(ctx, args.quoteId);
+    const { profile } = await requireOwnQuote(ctx, args.quoteId);
     await ctx.db.patch("daily_quotes", args.quoteId, { reaction: args.reaction });
+    // Zero weight: logged as history, never extends a streak on its own.
+    await recordActivity(ctx, { emotionalProfileId: profile._id, actionType: "quotes" });
     return null;
   },
 });

@@ -1,12 +1,11 @@
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { isStreakExpired } from "../lib/streak";
 import { rankReplace } from "../lib/aggregates";
 
 /**
  * Update emotional profile stats after a session completes.
- * Updates sessionCount, streak, dominantEmotionTags, averageSessionDuration.
+ * Updates sessionCount, dominantEmotionTags, averageSessionDuration.
  */
 export const updateAfterSession = internalMutation({
   args: {
@@ -37,34 +36,8 @@ export const updateAfterSession = internalMutation({
       }
     }
 
-    // Update streak: +1 per calendar day, reset after the shared window gap
-    let newStreak = profile.currentStreak;
-    if (!profile.lastSessionAt) {
-      // First ever session
-      newStreak = 1;
-    } else if (isStreakExpired(profile.lastSessionAt, now)) {
-      // Been away too long — reset
-      newStreak = 1;
-    } else {
-      // Only increment if last session was on a different calendar day (UTC)
-      const lastDate = new Date(profile.lastSessionAt);
-      const nowDate = new Date(now);
-      const sameDay =
-        lastDate.getUTCFullYear() === nowDate.getUTCFullYear() &&
-        lastDate.getUTCMonth() === nowDate.getUTCMonth() &&
-        lastDate.getUTCDate() === nowDate.getUTCDate();
-      if (!sameDay) {
-        newStreak = profile.currentStreak + 1;
-      }
-      // else: same day, streak stays the same
-    }
-
-    // Longest streak is a record — only grows. Fall back to currentStreak for
-    // rows predating the field (migration backfills the rest).
-    const newLongestStreak = Math.max(
-      newStreak,
-      profile.longestStreak ?? profile.currentStreak,
-    );
+    // Streak + lastSessionAt moved to recordActivity, called in the same
+    // transaction as the completion (sessions.ts finalizeCompletion, #433).
 
     // Update dominant emotion tags + frequent words from recent metadata.
     // One bounded scan feeds both — words ride along on the emotion loop.
@@ -150,8 +123,6 @@ export const updateAfterSession = internalMutation({
 
     await ctx.db.patch("emotional_profiles", args.emotionalProfileId, {
       sessionCount: newSessionCount,
-      currentStreak: newStreak,
-      longestStreak: newLongestStreak,
       dominantEmotionTags:
         dominantEmotionTags.length > 0
           ? dominantEmotionTags
@@ -160,7 +131,6 @@ export const updateAfterSession = internalMutation({
         frequentWords.length > 0 ? frequentWords : profile.frequentWords,
       averageSessionDuration: newAvgDuration,
       typicalUsagePattern,
-      lastSessionAt: now,
       firstSessionAt: profile.firstSessionAt ?? now,
       updatedAt: now,
     });

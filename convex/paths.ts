@@ -8,6 +8,7 @@ import { hasPremium, requirePremium } from "./lib/premium";
 import { posthog } from "./posthog";
 import { r2 } from "./ai/paths/audioTracks";
 import type { Understanding } from "./understanding";
+import { recordActivity } from "./streaks/activityLog";
 
 /**
  * Kindling reads + twig state for the active-kindling screen
@@ -255,6 +256,12 @@ const setState = (event: "step_completed" | "step_skipped", state: "done" | "ski
       // settled state are no-ops so a late tap can't flip done <-> skipped.
       if (step.state !== "pending") return null;
       await ctx.db.patch("path_steps", step._id, { state });
+      // A tended breathing twig is sit-with-this on its own later occasion —
+      // the only streak credit a twig carries (#433). Other twig kinds credit
+      // at their destination (a read finishes in library.reads.record).
+      if (state === "done" && step.actionType === "breathing") {
+        await recordActivity(ctx, { emotionalProfileId: profile._id, actionType: "sit_with_this" });
+      }
       await posthog.capture(ctx, {
         distinctId: profile._id,
         event,
