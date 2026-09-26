@@ -6,7 +6,7 @@
  */
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import { useMutation, useQuery } from 'convex/react';
+import { useConvexConnectionState, useMutation, useQuery } from 'convex/react';
 import { useLocalSearchParams } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useEffect, useRef, useState } from 'react';
@@ -30,6 +30,7 @@ const DWELL_SHARE = 0.3;
 const HELPED_FLOOR = 15; // mirrors convex/library/reads.ts
 // At or past this the read is done; the next open starts from the top.
 const RESUME_CEILING = 0.98;
+const TEND_ATTEMPTS = 3;
 
 const nudgeHelped = (count: number | null, was: boolean, now?: boolean) => {
   if (count === null || now === undefined || now === was) return count;
@@ -112,13 +113,21 @@ export function useReadSignals({
   }, [finished, posthog, slug]);
 
   // A read twig is tended by the finish alone (reading or listening), once.
+  // A rejection frees it to try again when the connection comes back, a few times at most.
   const completeStep = useMutation(api.paths.completeStep);
+  const { isWebSocketConnected } = useConvexConnectionState();
   const tended = useRef(false);
+  const tendAttempts = useRef(0);
   useEffect(() => {
-    if (!stepId || finished !== true || tended.current) return;
+    if (!stepId || finished !== true || tended.current || !isWebSocketConnected) return;
+    if (tendAttempts.current >= TEND_ATTEMPTS) return;
     tended.current = true;
-    completeStep({ stepId }).catch((e) => console.error('[useReadSignals] completeStep failed:', e));
-  }, [stepId, finished, completeStep]);
+    tendAttempts.current += 1;
+    completeStep({ stepId }).catch((e) => {
+      tended.current = false;
+      console.error('[useReadSignals] completeStep failed:', e);
+    });
+  }, [stepId, finished, completeStep, isWebSocketConnected]);
 
   // Resume once, as soon as both the saved position and the layout are in.
   const restored = useRef(false);
