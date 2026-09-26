@@ -92,8 +92,10 @@ export function useSession() {
       const serverEntryType = mapEntryType(entryType);
       // "Reflect on this" (#413): the session remembers the entry it opened on.
       // One session per tap: once a session takes the entry, the prompt is spent.
-      const pending = useAppStore.getState().pendingEventPrompt;
-      const fromEntryId = pending && pending.expiresAt > Date.now() ? pending.fromEntryId : undefined;
+      // A quote-reply seed outranks the prompt on the card, so that session
+      // opened on the reply, not the entry.
+      const { pendingEventPrompt: pending, replySeed } = useAppStore.getState();
+      const fromEntryId = pending && pending.expiresAt > Date.now() && !replySeed ? pending.fromEntryId : undefined;
       const newSessionId = await initiateMutation({
         entryType: serverEntryType,
         sessionMode: sessionModeAtHook,

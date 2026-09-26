@@ -2292,7 +2292,8 @@ export default defineSchema({
     helped: v.boolean(),
   })
     .index("by_emotionalProfileId_and_entryId", ["emotionalProfileId", "entryId"])
-    .index("by_emotionalProfileId_and_lastReadAt", ["emotionalProfileId", "lastReadAt"]),
+    // finishedAt first so Continue reading only walks unfinished rows (#419).
+    .index("by_emotionalProfileId_and_finishedAt_and_lastReadAt", ["emotionalProfileId", "finishedAt", "lastReadAt"]),
 
   // Public totals, off `library_entries` because ingest `replace`s those
   // rows. Never decremented by wipe/deletion — only an undo of "helped"

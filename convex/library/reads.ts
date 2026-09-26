@@ -13,8 +13,8 @@ import { toListItem } from "./entries";
 
 /** "N found this helpful" stays hidden below this, so a small count can't point at anyone. */
 export const HELPED_FLOOR = 15;
-// Recent reads walked to find Continue; past this many finished/retracted in a row, there's none.
-const CONTINUE_SCAN = 20;
+// Unfinished reads walked to find Continue; past this many retracted/unstarted in a row, there's none.
+const CONTINUE_SCAN = 50;
 
 type EntryId = Id<"library_entries">;
 type ProfileId = Id<"emotional_profiles">;
@@ -65,14 +65,15 @@ export async function continueReading(
   profileId: ProfileId,
   active: Map<EntryId, Doc<"library_entries">>,
 ) {
+  // Finished rows are outside the index range, so they can't crowd out an older in-progress read.
   const reads = await ctx.db
     .query("library_reads")
-    .withIndex("by_emotionalProfileId_and_lastReadAt", (q) =>
-      q.eq("emotionalProfileId", profileId).gt("lastReadAt", 0),
+    .withIndex("by_emotionalProfileId_and_finishedAt_and_lastReadAt", (q) =>
+      q.eq("emotionalProfileId", profileId).eq("finishedAt", undefined).gt("lastReadAt", 0),
     )
     .order("desc")
     .take(CONTINUE_SCAN);
-  const r = reads.find((r) => (r.position ?? 0) > 0 && r.finishedAt === undefined && active.has(r.entryId));
+  const r = reads.find((r) => (r.position ?? 0) > 0 && active.has(r.entryId));
   if (!r) return null;
   return {
     ...toListItem(active.get(r.entryId)!),
