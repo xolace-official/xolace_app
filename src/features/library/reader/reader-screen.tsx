@@ -86,8 +86,15 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const y = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => y.set(e.contentOffset.y));
+  const [articleEnd, setArticleEnd] = useState(0); // bottom of the attribution, in sheet coordinates
   const maxScroll = contentH - viewH;
-  const signals = useReadSignals({ entryId: entry._id, slug: entry.slug, readMin: entry.readMin, scrollY: y, scrollRef, maxScroll });
+  // The end is the article's last line clearing the dock, not the page bottom:
+  // Up next, Reflect on this and the helpline sit below it.
+  const endAt =
+    maxScroll > 0 && articleEnd > 0
+      ? Math.min(coverH - SHEET_OVERLAP + articleEnd - viewH + insets.bottom + audio.dockH, maxScroll - 40)
+      : Number.POSITIVE_INFINITY;
+  const signals = useReadSignals({ entryId: entry._id, slug: entry.slug, readMin: entry.readMin, scrollY: y, scrollRef, maxScroll, endAt });
   const toTop = () => scrollRef.current?.scrollTo({ y: 0, animated: !reduced });
   const resumeAt = signals?.position ? signals.position * maxScroll : 0;
   const title = (
@@ -156,7 +163,10 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
           {entry.contentNote && <ContentNote note={entry.contentNote} />}
           <ReaderBody markdown={entry.markdown} style={markdownStyle} />
           {/* Attribution straight after the body, before the end of the read (#400). */}
-          <AppText className="mt-8 border-t border-separator pt-4 text-xs text-muted">
+          <AppText
+            className="mt-8 border-t border-separator pt-4 text-xs text-muted"
+            onLayout={(e) => setArticleEnd(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
+          >
             {entry.source.attributionText}
           </AppText>
           {signals && <EndOfRead entry={entry} signals={signals} />}
@@ -190,7 +200,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
       <FireDim />
       <BackToTop
         scrollY={y}
-        endAt={maxScroll > 0 ? maxScroll - 40 : Number.POSITIVE_INFINITY}
+        endAt={endAt}
         bottom={insets.bottom + audio.dockH + 16}
         onPress={toTop}
       />

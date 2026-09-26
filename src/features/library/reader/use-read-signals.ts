@@ -61,6 +61,7 @@ export function useReadSignals({
   scrollY,
   scrollRef,
   maxScroll,
+  endAt,
 }: {
   entryId: EntryId;
   slug: string;
@@ -69,6 +70,8 @@ export function useReadSignals({
   scrollRef: AnimatedRef<Animated.ScrollView>;
   /** Scrollable distance (content − viewport); ≤ 0 until laid out. */
   maxScroll: number;
+  /** Scroll offset at which the article counts as read to its end; ∞ until laid out. */
+  endAt: number;
 }) {
   // Plain (stable) mutation: the effects below depend on its identity.
   const record = useMutation(api.library.reads.record);
@@ -87,7 +90,6 @@ export function useReadSignals({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [record, entryId]);
 
-  const endAt = maxScroll > 0 ? maxScroll - 40 : Number.POSITIVE_INFINITY;
   useAnimatedReaction(
     () => scrollY.get() >= endAt,
     (now, was) => {

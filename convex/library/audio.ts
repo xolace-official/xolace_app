@@ -109,7 +109,7 @@ export const upsertEntryAudio = internalMutation({
       .query("library_entries")
       .withIndex("by_slug", (q) => q.eq("slug", entrySlug))
       .unique();
-    // A throw rolls back any delete here; the script's discardUpload cleans up.
+    // A throw rolls back any delete here; the fresh upload is left as a harmless orphan.
     if (!entry) throw new ConvexError(`library audio: unknown entry "${entrySlug}"`);
 
     const existing = await ctx.db

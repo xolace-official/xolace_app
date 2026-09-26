@@ -125,7 +125,14 @@ export function usePlayback<T extends Playable>(
     // `expiresAt` is server time; the margin absorbs a slow device clock.
     if (!track || Date.now() + EXPIRY_MARGIN_MS < track.expiresAt) return false;
     pending.current = { seek, play };
-    setTrack(await mint());
+    try {
+      setTrack(await mint());
+    } catch (e) {
+      // Nothing will load to run the queued action; drop it and surface why.
+      pending.current = null;
+      console.error('[usePlayback] re-mint failed:', e);
+      setError(e instanceof Error ? e : new Error(String(e)));
+    }
     return true;
   };
 

@@ -111,17 +111,6 @@ async function ingestAudio(a: Audio) {
   try {
     await upload(key, audio);
     await upload(previewKey, readFileSync(previewFile));
-    return convexRun("library/audio:upsertEntryAudio", {
-      audio: {
-        entrySlug: a.entrySlug,
-        key,
-        previewKey,
-        durationSec: Math.round(durationSec),
-        transcript,
-        active: a.active,
-        sha256: sha256(createHash("sha256").update(audio).digest("hex"), transcript),
-      },
-    });
   } catch (err) {
     for (const k of [key, previewKey]) {
       try {
@@ -132,6 +121,19 @@ async function ingestAudio(a: Audio) {
     }
     throw err;
   }
+  // No discard past this point: a failed CLI call may still have committed,
+  // and the row would then point at deleted blobs. Worst case is an orphan.
+  return convexRun("library/audio:upsertEntryAudio", {
+    audio: {
+      entrySlug: a.entrySlug,
+      key,
+      previewKey,
+      durationSec: Math.round(durationSec),
+      transcript,
+      active: a.active,
+      sha256: sha256(createHash("sha256").update(audio).digest("hex"), transcript),
+    },
+  });
 }
 
 async function main() {
