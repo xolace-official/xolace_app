@@ -73,7 +73,8 @@ export const getTranscript = query({
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     await requirePremium(ctx, profile, "audio transcript");
-    if (!(await activeAudio(ctx, args.entryId))) return null;
+    const entry = await ctx.db.get("library_entries", args.entryId);
+    if (!entry?.active || !(await activeAudio(ctx, args.entryId))) return null;
     const t = await ctx.db
       .query("library_entry_transcripts")
       .withIndex("by_entryId", (q) => q.eq("entryId", args.entryId))
