@@ -20,11 +20,17 @@ export function useEntryAudio(entryId: Id<'library_entries'>, slug: string, hasA
   const convex = useConvex();
   const posthog = usePostHog();
   // Keyed on server entitlement: buying Plus from the upsell re-mints the full
-  // asset. Unresolved counts as free, so a free reader mints once.
-  const isPlus = useQuery(api.premium.getEntitlement)?.isPlus ?? false;
+  // asset. Nothing mints until it resolves, so a Plus reader never mints the preview first.
+  const entitlement = useQuery(api.premium.getEntitlement);
+  const isPlus = entitlement?.isPlus ?? false;
   const p = usePlayback(
-    `${entryId}:${hasAudio}:${isPlus}`,
-    () => (hasAudio ? convex.query(api.library.audio.getEntryAudio, { entryId }) : Promise.resolve(null)),
+    `${entryId}:${hasAudio}:${entitlement === undefined ? 'pending' : isPlus}`,
+    () =>
+      !hasAudio
+        ? Promise.resolve(null)
+        : entitlement === undefined
+          ? new Promise<never>(() => {}) // stays loading; the resolved key re-mints
+          : convex.query(api.library.audio.getEntryAudio, { entryId }),
     (t) => ({ title: t.title, artist: 'Lantern', artworkUrl: t.coverUrl }),
   );
   const [started, setStarted] = useState(false);
