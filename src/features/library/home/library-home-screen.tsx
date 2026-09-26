@@ -1,20 +1,20 @@
 /**
  * The Lantern home (#409): the Library's front page inside Browse, built from
- * #396's variant A. Top to bottom: Reading as… card (first visit) → For you →
- * Hubs → What kind of light → A–Z.
+ * #396's variant A. Top to bottom: Continue reading → Reading as… card (first
+ * visit) → For you → Hubs → What kind of light → A–Z.
  *
- * Continue reading waits on engagement signals (#410) and search was ruled
- * out of v1 (#397), so neither renders yet.
+ * Search was ruled out of v1 (#397).
  */
 import { useMutation, useQuery } from 'convex/react';
+import type { FunctionReturnType } from 'convex/server';
 import { usePostHog } from 'posthog-react-native';
 import { useEffect } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
 import { trackLibrary } from '@/src/features/library/analytics';
 import { KindRows, LetterStrip } from '@/src/features/library/home/browse-sections';
-import { SectionTitle } from '@/src/features/library/home/entry-cards';
+import { PhotoCard, readerHref, SectionTitle } from '@/src/features/library/home/entry-cards';
 import { ForYouCarousel } from '@/src/features/library/home/for-you-carousel';
 import { HubCarousel } from '@/src/features/library/home/hub-carousel';
 import { reasonLine } from '@/src/features/library/home/library-copy';
@@ -24,6 +24,7 @@ export function LibraryHomeScreen() {
   const posthog = usePostHog();
   const home = useQuery(api.library.home.getHome, {});
   const setReadingAs = useMutation(api.library.home.setReadingAs);
+  const { width } = useWindowDimensions();
 
   useEffect(() => {
     trackLibrary(posthog, 'library_home_opened');
@@ -43,6 +44,8 @@ export function LibraryHomeScreen() {
       >
         {home && (
           <>
+            {home.continue && <ContinueCard entry={home.continue} width={width - GUTTER * 2} />}
+
             {home.readingAs === null && options.length > 0 && <ReadingAsCard options={options} onAnswer={answer} />}
 
             {home.forYou.length > 0 && (
@@ -67,6 +70,32 @@ export function LibraryHomeScreen() {
       {home && home.readingAs !== null && options.length > 0 && (
         <ReadingAsMenu options={options} value={home.readingAs} onChange={answer} />
       )}
+    </>
+  );
+}
+
+const GUTTER = 16;
+const CONTINUE_HEIGHT = 340;
+
+type ContinueEntry = NonNullable<FunctionReturnType<typeof api.library.home.getHome>['continue']>;
+
+/** The one in-progress read (#420); the reader resumes it from `position`. */
+function ContinueCard({ entry, width }: { entry: ContinueEntry; width: number }) {
+  // Unfinished never reads as 0% or 100%.
+  const pct = Math.min(99, Math.max(1, Math.round(entry.position * 100)));
+  return (
+    <>
+      <SectionTitle title="Continue reading" />
+      <View style={{ paddingHorizontal: GUTTER }}>
+        <PhotoCard
+          entry={entry}
+          kicker={`Continue · ${pct}% read`}
+          label={`${entry.title}. ${pct} percent read`}
+          width={width}
+          height={CONTINUE_HEIGHT}
+          href={readerHref(entry.slug, 'continue')}
+        />
+      </View>
     </>
   );
 }

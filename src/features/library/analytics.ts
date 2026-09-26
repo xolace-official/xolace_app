@@ -12,9 +12,10 @@ import type { Kind } from '@/src/features/library/home/library-copy';
  * Where a reader open came from. Every way in sets it, the share sheet's link
  * included; a link that forgets it lands as `unknown` so the gap shows.
  * `today` is reserved for Tonight's reading, which has no surface yet;
- * `next` is the Up next card at the end of a read (#417).
+ * `next` is the Up next card at the end of a read (#417); `continue` is the
+ * home's Continue reading card (#420).
  */
-export type ReaderFrom = 'twig' | 'home' | 'hub' | 'kind' | 'subject' | 'share' | 'today' | 'next' | 'unknown';
+export type ReaderFrom = 'twig' | 'home' | 'hub' | 'kind' | 'subject' | 'share' | 'today' | 'next' | 'continue' | 'unknown';
 
 type Entry = { slug: string };
 

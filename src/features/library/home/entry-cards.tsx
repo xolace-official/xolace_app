@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
 import type { api } from '@/convex/_generated/api';
@@ -23,6 +23,8 @@ export type EntryItem = FunctionReturnType<typeof api.library.entries.listEntrie
 
 /** Photo cards' corner, shared with the For you blur that sits over them. */
 export const CARD_RADIUS = 28;
+// iOS's first accessibility text size (AX1) is ~1.65×; at these titles go uncapped.
+export const AX_FONT_SCALE = 1.6;
 
 /** `hub` rides along from a hub so the reader's Up next follows its order (#417). */
 export const readerHref = (slug: string, from: ReaderFrom, hub?: string) =>
@@ -30,7 +32,8 @@ export const readerHref = (slug: string, from: ReaderFrom, hub?: string) =>
 
 /**
  * Full-bleed cover photo, kicker, title, meta, and a play mark when the entry
- * has audio. Ink is the reader cover's fixed palette.
+ * has audio. Ink is the reader cover's fixed palette. At accessibility text
+ * sizes the title is uncapped and the card grows to fit (#400).
  */
 export function PhotoCard({
   entry,
@@ -39,6 +42,7 @@ export function PhotoCard({
   height,
   href = readerHref(entry.slug, 'home'),
   meta = readTimeLine(entry.readMin, entry.views),
+  label = `${entry.title}. ${kicker}. ${meta}`,
 }: {
   entry: Omit<EntryItem, 'views' | 'saved'> & { views?: number };
   kicker: string;
@@ -46,17 +50,19 @@ export function PhotoCard({
   height: number;
   href?: ReturnType<typeof readerHref>;
   meta?: string;
+  label?: string;
 }) {
+  const ax = useWindowDimensions().fontScale >= AX_FONT_SCALE;
   return (
-    <View style={{ width, height }}>
+    <View style={{ width, minHeight: height }}>
       <Link href={href} asChild>
         <Pressable
           accessibilityRole="link"
-          accessibilityLabel={`${entry.title}. ${kicker}. ${meta}`}
+          accessibilityLabel={label}
           className="overflow-hidden bg-cover-scrim active:opacity-90"
           style={{
             width,
-            height,
+            minHeight: height,
             borderRadius: CARD_RADIUS,
             borderCurve: 'continuous',
           }}
@@ -76,7 +82,7 @@ export function PhotoCard({
           />
           <View className="flex-1 justify-end gap-2 p-5">
             <AppText className="text-[12px] font-medium uppercase tracking-[1.5px] text-cover-ink/70">{kicker}</AppText>
-            <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={3}>
+            <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={ax ? undefined : 3}>
               {entry.title}
             </AppText>
             <AppText className="text-[13px] text-cover-ink/75">{meta}</AppText>

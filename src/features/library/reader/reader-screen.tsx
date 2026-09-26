@@ -26,6 +26,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { AX_FONT_SCALE } from '@/src/features/library/home/entry-cards';
 import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import { useAppStore } from '@/src/store/store';
 import { AaSheet } from './aa-sheet';
@@ -44,8 +45,7 @@ export type ReaderEntry = NonNullable<FunctionReturnType<typeof api.library.entr
 
 const SHEET_OVERLAP = 28;
 const BAR_ROW = 52;
-// iOS's first accessibility text size (AX1) is ~1.65×; at these the cover is a band.
-const AX_FONT_SCALE = 1.6;
+// At accessibility text sizes the cover is a band.
 const COVER_BAND = 72;
 
 /** The reader on its reading mode's page (#408); the Aa sheet sits outside it, on the app theme. */
