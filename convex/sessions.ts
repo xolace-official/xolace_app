@@ -214,13 +214,18 @@ export const initiate = mutation({
       ...(premium ? { config: SESSION_INITIATE_LIMITS_PLUS } : {}),
     });
 
+    // Only link a live entry; a stale or retired one is dropped, not an error.
+    const fromEntry = args.fromEntryId
+      ? await ctx.db.get("library_entries", args.fromEntryId)
+      : null;
+
     const sessionId = await ctx.db.insert("sessions", {
       emotionalProfileId: profile._id,
       state: "initiated",
       entryType: args.entryType,
       kept: true,
       ...(args.sessionMode ? { sessionMode: args.sessionMode } : {}),
-      ...(args.fromEntryId ? { fromEntryId: args.fromEntryId } : {}),
+      ...(fromEntry?.active ? { fromEntryId: fromEntry._id } : {}),
       createdAt: now,
       updatedAt: now,
     });
