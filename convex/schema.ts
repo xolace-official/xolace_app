@@ -197,6 +197,29 @@ export default defineSchema({
     updatedAt: v.number(),
   }),
 
+  // One row per (profile, local day, action type), with a repeat `count`.
+  // Weight is derived from `actionType` at read time (see
+  // convex/lib/activityLog.ts ACTION_WEIGHTS) — never stored, so re-weighting
+  // an action type doesn't require a backfill. `dayKey` is computed once, at
+  // write time, from whichever IANA timezone was active then (see
+  // recordActivity) — never recomputed later from a raw timestamp.
+  activity_log: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    // Local calendar day, "YYYY-MM-DD", computed once at write time.
+    dayKey: v.string(),
+    actionType: v.union(
+      v.literal("reflect"),
+      v.literal("vent"),
+      v.literal("library"),
+      v.literal("sit_with_this"),
+      v.literal("daily_mood"),
+      v.literal("quotes"),
+    ),
+    count: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_profile_day_action", ["emotionalProfileId", "dayKey", "actionType"]),
+
   // ===========================================================
   // 3. PREFERENCES
   // ===========================================================
