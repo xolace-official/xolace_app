@@ -66,6 +66,17 @@ export async function recordActivity(
   const timezone = preferences?.notifications.timezone ?? "UTC";
   const dayKey = localDayKey(now, timezone);
 
+  // The last qualifying (non-zero-weight) day's dayKey, read off its own
+  // persisted row — never recomputed from lastSessionAt under whatever
+  // timezone is active now. A handful of recent rows is enough to skip past
+  // any zero-weight (quotes) rows that don't count as a streak day.
+  const recentLogs = await ctx.db
+    .query("activity_log")
+    .withIndex("by_profile_day_action", (q) => q.eq("emotionalProfileId", args.emotionalProfileId))
+    .order("desc")
+    .take(20);
+  const previousDayKey = recentLogs.find((log) => ACTION_WEIGHTS[log.actionType] > 0)?.dayKey;
+
   const existing = await ctx.db
     .query("activity_log")
     .withIndex("by_profile_day_action", (q) =>
@@ -94,10 +105,6 @@ export async function recordActivity(
 
   // Zero-weight actions (quotes) log history but never touch the streak.
   if (ACTION_WEIGHTS[args.actionType] === 0) return;
-
-  const previousDayKey = profile.lastSessionAt
-    ? localDayKey(profile.lastSessionAt, timezone)
-    : undefined;
 
   let newStreak: number;
   if (!profile.lastSessionAt || isStreakExpired(profile.lastSessionAt, now)) {
