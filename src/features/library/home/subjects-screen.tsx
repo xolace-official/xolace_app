@@ -14,12 +14,14 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { trackLibrary } from '@/src/features/library/analytics';
 import { facetLabel } from '@/src/features/library/home/library-copy';
+import { SubjectsSkeleton } from '@/src/features/library/skeletons';
 
 type Subject = { slug: string; count: number };
 
 export function SubjectsScreen() {
   const { letter } = useLocalSearchParams<{ letter?: string }>();
-  const subjects = useQuery(api.library.home.getSubjects, {}) ?? [];
+  const loaded = useQuery(api.library.home.getSubjects, {});
+  const subjects = loaded ?? [];
   const ref = useRef<SectionList<Subject>>(null);
   // Jump to `?letter=` once; later content-size changes (virtualized rows mounting) must not snap back.
   const jumped = useRef(false);
@@ -37,6 +39,7 @@ export function SubjectsScreen() {
   }));
   const start = sections.findIndex((s) => s.title === letter);
 
+  if (loaded === undefined) return <SubjectsSkeleton />;
   return (
     <SectionList
       ref={ref}

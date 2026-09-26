@@ -16,13 +16,14 @@ import { trackLibrary } from '@/src/features/library/analytics';
 import { TrackRow } from '@/src/features/browse/components/track-row';
 import { EntryRow } from '@/src/features/library/home/entry-cards';
 import { KINDS, type Kind, facetLabel } from '@/src/features/library/home/library-copy';
+import { HubSkeleton, RowsSkeleton } from '@/src/features/library/skeletons';
 
 export type ListBy = { hub: string } | { kind: Kind } | { subject: string };
 
 function HubList({ slug }: { slug: string }) {
   const { width } = useWindowDimensions();
   const hub = useQuery(api.library.hubs.getHub, { slug });
-  if (hub === undefined) return null;
+  if (hub === undefined) return <HubSkeleton />;
   if (hub === null) return <Empty line="This hub has been put away." />;
 
   let n = 0;
@@ -50,7 +51,7 @@ function HubList({ slug }: { slug: string }) {
 
 function EntryList({ kind, subject }: { kind?: Kind; subject?: string }) {
   const entries = useQuery(api.library.entries.listEntries, { kind, subject });
-  if (entries === undefined) return null;
+  if (entries === undefined) return <RowsSkeleton />;
   if (entries.length === 0) return <Empty line="Nothing here yet." />;
   return entries.map((e) => <EntryRow key={e._id} entry={e} from={kind ? 'kind' : 'subject'} />);
 }

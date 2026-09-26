@@ -19,6 +19,7 @@ import { ForYouCarousel } from '@/src/features/library/home/for-you-carousel';
 import { HubCarousel } from '@/src/features/library/home/hub-carousel';
 import { reasonLine } from '@/src/features/library/home/library-copy';
 import { ReadingAsCard, ReadingAsMenu } from '@/src/features/library/home/reading-as';
+import { HomeSkeleton } from '@/src/features/library/skeletons';
 
 export function LibraryHomeScreen() {
   const posthog = usePostHog();
@@ -42,6 +43,7 @@ export function LibraryHomeScreen() {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ paddingBottom: 120 }}
       >
+        {home === undefined && <HomeSkeleton />}
         {home && (
           <>
             {home.continue && <ContinueCard entry={home.continue} width={width - GUTTER * 2} />}
