@@ -6,6 +6,7 @@ import {
   StreamOverlayProvider,
 } from "@/src/features/xolacer-chat/providers/stream-chat-provider";
 import { UnreadIconBadge } from "@/src/features/xolacer-chat/components/unread-icon-badge";
+import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 
 /**
  * Provides the navigation layout used by protected routes.
@@ -54,6 +55,7 @@ export default function ProtectedLayout() {
   // explicitly. Change one of those two and you change the invariant.
   // usePostHogIdentity is hoisted to the root — it must run during intake.
   useNotifications();
+  const reducedMotion = useEffectiveReducedMotion();
 
   return (
     // Above the Stack so the message overlay can lay itself out against the
@@ -81,7 +83,8 @@ export default function ProtectedLayout() {
           <Stack.Screen name="kindling/index" />
           {/* Outside `(tabs)` on purpose: the player is full-bleed, no tab bar. */}
           <Stack.Screen name="browse-player" options={PLAYER_OPTIONS} />
-          <Stack.Screen name="library/[slug]" />
+          {/* Reduced motion: the Lantern reader crossfades in instead of sliding (#400). */}
+          <Stack.Screen name="library/[slug]" options={{ animation: reducedMotion ? "fade" : "default" }} />
 
           
           <Stack.Screen name="chat/[conversationId]" options={CHAT_OPTIONS} />

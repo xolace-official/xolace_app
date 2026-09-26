@@ -8,6 +8,7 @@ import { playSoftPress } from "@/src/lib/haptics";
 import { toTimelineEntry } from "@/src/features/timeline/utils";
 import { StackedCarousel } from "./stacked-carousel";
 import { DiscoveryMomentCard } from "./discovery-moment-card";
+import { MomentsSkeleton } from "./skeletons";
 import type { TimelineEntry } from "@/src/features/timeline/types";
 
 const MOMENT_COUNT = 4;
@@ -25,12 +26,13 @@ export function DiscoveryTimelineSection() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const cardWidth = width - SCREEN_PADDING_X;
-  const { results } = usePaginatedQuery(
+  const { results, status } = usePaginatedQuery(
     api.sessions.listForTimeline,
     {},
     { initialNumItems: MOMENT_COUNT },
   );
 
+  if (status === "LoadingFirstPage") return <MomentsSkeleton cardHeight={CARD_HEIGHT} />;
   if (results.length === 0) return null;
 
   const entries: TimelineEntry[] = results.map(toTimelineEntry);

@@ -32,6 +32,38 @@ const CREDIT: Record<Reuse, string> = {
 /** The line under the source's name: how its words reached this page. */
 export const creditLine = (reuse: Reuse) => CREDIT[reuse];
 
-export function metaLine(kind: Kind, readMin: number, storyDescriptor?: string) {
-  return [capitalise(kind), storyDescriptor, `${readMin} min read`].filter(Boolean).join(' · ');
+export function metaLine(kind: Kind, readMin: number, storyDescriptor?: string, listenMin?: number) {
+  return [capitalise(kind), storyDescriptor, `${readMin} min read`, listenMin && `${listenMin} min listen`]
+    .filter(Boolean)
+    .join(' · ');
 }
+
+/**
+ * The meta line as a screen reader hears it (#400): kind · source, and
+ * whether it was adapted · the times. Commas, since "·" is read aloud.
+ */
+export function metaLabel(e: {
+  kind: Kind;
+  reuse: Reuse;
+  source: { name: string };
+  readMin: number;
+  storyDescriptor?: string;
+  listenMin?: number;
+}) {
+  return [
+    capitalise(e.kind),
+    e.storyDescriptor,
+    `from ${e.source.name}${e.reuse === 'adapted' ? ', adapted' : ''}`,
+    `${e.readMin} min read`,
+    e.listenMin && `${e.listenMin} min listen`,
+  ]
+    .filter(Boolean)
+    .join(', ');
+}
+
+/** "Reflect on this" when the curator wrote no prompt of their own (#413). */
+export const REFLECT_PROMPT = 'What did this bring up for you?';
+
+/** What the share sheet sends: a short personal note, then the link. */
+export const shareMessage = (title: string, url: string) =>
+  `I just read “${title}” on Xolace and thought you might like it too. Worth a few minutes:\n${url}`;

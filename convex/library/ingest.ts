@@ -3,6 +3,7 @@ import { internalMutation } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
 import { PRIMARY_EMOTIONS, THEMATIC_TAGS } from "../lib/understandingVocab";
 import schema from "../schema";
+import { assertImageAlts } from "./imageAlts";
 
 /**
  * Curator ingest for the Library (#406, decisions in #392), driven by
@@ -79,14 +80,18 @@ export const upsertEntry = internalMutation({
       facets: v.record(v.string(), v.array(v.string())), // axis → slugs
     }),
     markdown: v.string(),
+    /** Image srcs whose empty alt is deliberate; not stored. */
+    decorativeImages: v.optional(v.array(v.string())),
     sha256: v.string(),
   },
   returns: upsertResult,
-  handler: async (ctx, { entry, markdown, sha256 }) => {
+  handler: async (ctx, { entry, markdown, decorativeImages, sha256 }) => {
     const existing = await ctx.db
       .query("library_entries")
       .withIndex("by_slug", (q) => q.eq("slug", entry.slug))
       .unique();
+    // Before the no-op check, so a re-run re-verifies bodies already stored.
+    assertImageAlts(entry.slug, markdown, decorativeImages);
     if (existing?.sha256 === sha256) return { action: "unchanged" as const };
 
     const { sourceSlug, facets, ...fields } = entry;

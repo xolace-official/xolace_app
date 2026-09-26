@@ -6,20 +6,24 @@
 import { useQuery } from 'convex/react';
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
+import { useEffect } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { trackLibrary } from '@/src/features/library/analytics';
 import { TrackRow } from '@/src/features/browse/components/track-row';
 import { EntryRow } from '@/src/features/library/home/entry-cards';
 import { KINDS, type Kind, facetLabel } from '@/src/features/library/home/library-copy';
+import { HubSkeleton, RowsSkeleton } from '@/src/features/library/skeletons';
 
 export type ListBy = { hub: string } | { kind: Kind } | { subject: string };
 
 function HubList({ slug }: { slug: string }) {
   const { width } = useWindowDimensions();
   const hub = useQuery(api.library.hubs.getHub, { slug });
-  if (hub === undefined) return null;
+  if (hub === undefined) return <HubSkeleton />;
   if (hub === null) return <Empty line="This hub has been put away." />;
 
   let n = 0;
@@ -36,7 +40,7 @@ function HubList({ slug }: { slug: string }) {
       </View>
       {hub.items.map((item) =>
         item.kind === 'entry' ? (
-          <EntryRow key={item.entry._id} entry={item.entry} index={n++} />
+          <EntryRow key={item.entry._id} entry={item.entry} index={n++} from="hub" hub={slug} />
         ) : (
           <TrackRow key={item.track._id} track={item.track} from="library-hub" />
         ),
@@ -47,9 +51,9 @@ function HubList({ slug }: { slug: string }) {
 
 function EntryList({ kind, subject }: { kind?: Kind; subject?: string }) {
   const entries = useQuery(api.library.entries.listEntries, { kind, subject });
-  if (entries === undefined) return null;
+  if (entries === undefined) return <RowsSkeleton />;
   if (entries.length === 0) return <Empty line="Nothing here yet." />;
-  return entries.map((e) => <EntryRow key={e._id} entry={e} />);
+  return entries.map((e) => <EntryRow key={e._id} entry={e} from={kind ? 'kind' : 'subject'} />);
 }
 
 const Empty = ({ line }: { line: string }) => (
@@ -66,6 +70,16 @@ function listOf(by: ListBy) {
 
 export function LibraryListScreen({ by }: { by: ListBy }) {
   const { title, rows } = listOf(by);
+  const posthog = usePostHog();
+  const key = 'hub' in by ? by.hub : 'kind' in by ? by.kind : by.subject;
+
+  useEffect(() => {
+    if ('hub' in by) trackLibrary(posthog, 'library_hub_opened', { hub: by.hub });
+    else if ('kind' in by) trackLibrary(posthog, 'library_kind_opened', { kind: by.kind });
+    else trackLibrary(posthog, 'library_subject_opened', { subject: by.subject });
+    // Once per list, not per render of the `by` object.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   return (
     <>

@@ -47,7 +47,7 @@ type Args = { sessionId: Id<"sessions">; emotionalProfileId: Id<"emotional_profi
  * so no `path_steps` row ever lands that a reader cannot resolve.
  */
 const bind = (actionType: string, ctx: GenerateContext) =>
-  bindTwig(actionType, ctx.binding, ctx.tracks);
+  bindTwig(actionType, ctx.binding, ctx.tracks, ctx.entries);
 
 async function logDrops(ctx: ActionCtx, args: Args, dropped: Dropped[]) {
   for (const drop of dropped) {

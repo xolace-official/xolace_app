@@ -18,17 +18,14 @@ import {
   postSessionMoodValidator,
   resourceValidator,
   mirrorToneValidator,
-  sessionStateValidator,
-  timeOfDayValidator,
-  safeguardLevelValidator,
 } from "./lib/validators";
-import { vWorkflowId } from "@convex-dev/workflow";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "./lib/rateLimits";
 import {
   abandonRequiresFollowUp,
   computeRequiresFollowUp,
 } from "./lib/followUpCadence";
+import schema from "./schema";
 import type { Doc } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 
@@ -44,50 +41,12 @@ const MAX_RAW_INPUT = 5_000;
 // Terminal states — sessions in these states cannot be transitioned further.
 const TERMINAL_STATES = new Set(["completed", "abandoned"]);
 
-// Full `sessions` document shape, mirroring schema.ts's `sessions` table
-// exactly. Reused across every public query that returns a raw session doc.
+// Full `sessions` document shape, derived from schema.ts so a new column
+// can't silently break every query that returns a raw session doc.
 const sessionDocValidator = v.object({
+  ...schema.tables.sessions.validator.fields,
   _id: v.id("sessions"),
   _creationTime: v.number(),
-  emotionalProfileId: v.id("emotional_profiles"),
-  state: sessionStateValidator,
-  entryType: entryTypeValidator,
-  rawInput: v.optional(v.string()),
-  rawInputLength: v.optional(v.number()),
-  inputDuration: v.optional(v.number()),
-  freezeOccurred: v.optional(v.boolean()),
-  freezeDuration: v.optional(v.number()),
-  mirrorText: v.optional(v.string()),
-  mirrorModelVersion: v.optional(v.string()),
-  toneUsed: v.optional(mirrorToneValidator),
-  mirrorAudioStorageId: v.optional(v.id("_storage")),
-  confirmationState: v.optional(confirmationStateValidator),
-  pathChosen: v.optional(pathChosenValidator),
-  pathCompleted: v.optional(v.boolean()),
-  exerciseId: v.optional(v.id("exercises")),
-  matchedExerciseId: v.optional(v.id("exercises")),
-  swappedExerciseIds: v.optional(v.array(v.id("exercises"))),
-  exerciseSlots: v.optional(v.record(v.string(), v.string())),
-  contributedReflection: v.optional(v.boolean()),
-  distilledText: v.optional(v.string()),
-  kept: v.optional(v.boolean()),
-  postSessionMood: v.optional(postSessionMoodValidator),
-  escalationTriggered: v.optional(v.boolean()),
-  escalationResources: v.optional(v.array(resourceValidator)),
-  timeOfDay: v.optional(timeOfDayValidator),
-  dayOfWeek: v.optional(v.number()),
-  customPrompt: v.optional(v.string()),
-  sessionMode: v.optional(v.union(v.literal("day"), v.literal("night"))),
-  sessionDuration: v.optional(v.number()),
-  errorMessage: v.optional(v.string()),
-  safeguardLevel: v.optional(safeguardLevelValidator),
-  requiresFollowUp: v.optional(v.boolean()),
-  followUpWorkflowId: v.optional(vWorkflowId),
-  gapNamed: v.optional(v.boolean()),
-  semanticMatchIds: v.optional(v.array(v.id("reflections"))),
-  createdAt: v.number(),
-  completedAt: v.optional(v.number()),
-  updatedAt: v.number(),
 });
 
 /**
@@ -239,6 +198,7 @@ export const initiate = mutation({
   args: {
     entryType: entryTypeValidator,
     sessionMode: v.optional(v.union(v.literal("day"), v.literal("night"))),
+    fromEntryId: v.optional(v.id("library_entries")), // "Reflect on this" (#413)
   },
   returns: v.id("sessions"),
   handler: async (ctx, args) => {
@@ -254,12 +214,18 @@ export const initiate = mutation({
       ...(premium ? { config: SESSION_INITIATE_LIMITS_PLUS } : {}),
     });
 
+    // Only link a live entry; a stale or retired one is dropped, not an error.
+    const fromEntry = args.fromEntryId
+      ? await ctx.db.get("library_entries", args.fromEntryId)
+      : null;
+
     const sessionId = await ctx.db.insert("sessions", {
       emotionalProfileId: profile._id,
       state: "initiated",
       entryType: args.entryType,
       kept: true,
       ...(args.sessionMode ? { sessionMode: args.sessionMode } : {}),
+      ...(fromEntry?.active ? { fromEntryId: fromEntry._id } : {}),
       createdAt: now,
       updatedAt: now,
     });

@@ -4,7 +4,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import { recentUnderstandings } from "../understanding";
 import { cardItemValidator, entryIdsWithFacet, toListItem } from "./entries";
-import { cardSignals } from "./reads";
+import { cardSignals, continueReading } from "./reads";
 import { hubValidator, toHub } from "./hubs";
 
 /**
@@ -27,9 +27,10 @@ const MAX_AUDIENCES = 10;
 
 const signalAxis = v.union(v.literal("audience"), v.literal("emotion"), v.literal("lifeArea"));
 type Signal = { axis: Infer<typeof signalAxis>; slug: string };
+type ActiveMap = Map<Id<"library_entries">, Doc<"library_entries">>;
 const facetCountValidator = v.array(v.object({ slug: v.string(), count: v.number() }));
 
-async function activeEntries(ctx: QueryCtx) {
+async function activeEntries(ctx: QueryCtx): Promise<ActiveMap> {
   const rows = await ctx.db
     .query("library_entries")
     .withIndex("by_active_and_kind", (q) => q.eq("active", true))
@@ -72,10 +73,11 @@ async function forYou(
   ctx: QueryCtx,
   profileId: Id<"emotional_profiles">,
   signals: Signal[],
-  active: Map<Id<"library_entries">, Doc<"library_entries">>,
+  active: ActiveMap,
+  skip: Id<"library_entries"> | undefined,
 ) {
   const matches = await Promise.all(signals.map((s) => entryIdsWithFacet(ctx, s.axis, s.slug)));
-  const lists = matches.map((ids) => [...ids].filter((id) => active.has(id)));
+  const lists = matches.map((ids) => [...ids].filter((id) => active.has(id) && id !== skip));
   const picked = new Map<Id<"library_entries">, Signal>();
   const rounds = Math.max(0, ...lists.map((l) => l.length));
   for (let r = 0; r < rounds && picked.size < FOR_YOU_MAX; r++) {
@@ -105,6 +107,7 @@ export const getHome = query({
     // null = never answered: show the one-time card.
     readingAs: v.union(v.null(), v.array(v.string())),
     audiences: facetCountValidator,
+    continue: v.union(v.null(), v.object({ ...cardItemValidator.fields, position: v.number() })),
     forYou: v.array(v.object({ entry: cardItemValidator, reason: v.object({ axis: signalAxis, slug: v.string() }) })),
     hubs: v.array(
       v.object({ ...hubValidator.fields, entries: v.number(), listens: v.number() }),
@@ -126,7 +129,8 @@ export const getHome = query({
       ...new Set(hubs.flatMap((h) => h.items.flatMap((i) => (i.kind === "audio" ? [i.audioTrackId] : [])))),
     ];
 
-    const [audiences, signals, tracks] = await Promise.all([
+    const [cont, audiences, signals, tracks] = await Promise.all([
+      continueReading(ctx, profile._id, active),
       facetCounts(ctx, "audience", activeIds),
       forYouSignals(ctx, profile._id, readingAs ?? []),
       Promise.all(trackIds.map((id) => ctx.db.get("audio_tracks", id))),
@@ -137,7 +141,9 @@ export const getHome = query({
     return {
       readingAs,
       audiences,
-      forYou: await forYou(ctx, profile._id, signals, active),
+      continue: cont,
+      // The Continue entry isn't repeated in For you.
+      forYou: await forYou(ctx, profile._id, signals, active, cont?._id),
       hubs: hubs.map((h) => ({
         ...toHub(h),
         entries: h.items.filter((i) => i.kind === "entry" && activeIds.has(i.entryId)).length,

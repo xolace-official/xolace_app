@@ -41,6 +41,8 @@ type OnboardingSlice = {
   setHomeSheetBlocking: (v: boolean) => void;
 };
 
+type PendingEventPrompt = { text: string; label?: string; expiresAt: number; fromEntryId?: Id<'library_entries'> };
+
 type TogglesSlice = {
   /** When true, SessionModeProvider auto-activates 3am Mode between 10pm–4am. */
   nightModeEnabled: boolean;
@@ -86,11 +88,13 @@ type TogglesSlice = {
   addToSeenEventIds: (slug: string) => void;
   /** Drops entries older than 13 months. Called on hook mount, not during render. */
   pruneSeenEventIds: () => void;
-  /** Session prompt set when a monthly event with sessionPrompt is dismissed. Expires after 7 days. */
-  pendingEventPrompt: { text: string; label?: string; expiresAt: number } | null;
-  setPendingEventPrompt: (
-    prompt: { text: string; label?: string; expiresAt: number } | null,
-  ) => void;
+  /**
+   * Session prompt the next reflect session opens on: a monthly event's
+   * sessionPrompt (7 days), or a Library entry's "Reflect on this" (#413),
+   * which also carries the entry the session records.
+   */
+  pendingEventPrompt: PendingEventPrompt | null;
+  setPendingEventPrompt: (prompt: PendingEventPrompt | null) => void;
 };
 
 type PreferencesSlice = {
@@ -101,6 +105,9 @@ type PreferencesSlice = {
   setReadingMode: (m: ReadingModeKey) => void;
   readerTextSize: number;
   setReaderTextSize: (n: number) => void;
+  /** "Read by the fire" (#413): the reader's dimmed ambience, independent of the reading mode. */
+  readByFire: boolean;
+  setReadByFire: (on: boolean) => void;
 };
 
 /** Ephemeral, not persisted. Tracks store version check state. */
@@ -220,6 +227,8 @@ export const useAppStore = create<AppState>()(
         setReadingMode: (m) => set({ readingMode: m }),
         readerTextSize: 18,
         setReaderTextSize: (n) => set({ readerTextSize: n }),
+        readByFire: false,
+        setReadByFire: (on) => set({ readByFire: on }),
 
         isVersionChecked: false,
         setIsVersionChecked: (v) => set({ isVersionChecked: v }),
@@ -258,6 +267,7 @@ export const useAppStore = create<AppState>()(
           textureSetId: s.textureSetId,
           readingMode: s.readingMode,
           readerTextSize: s.readerTextSize,
+          readByFire: s.readByFire,
           seenEventIds: s.seenEventIds,
           pendingEventPrompt: s.pendingEventPrompt,
           ...plusOfferPersistedKeys(s),

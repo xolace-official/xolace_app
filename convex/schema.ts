@@ -595,6 +595,9 @@ export default defineSchema({
     // for the full session regardless of clock changes mid-session.
     sessionMode: v.optional(v.union(v.literal("day"), v.literal("night"))),
 
+    // The Library entry this session was opened from ("Reflect on this", #413).
+    fromEntryId: v.optional(v.id("library_entries")),
+
     // --- Duration ---
 
     // Total session time in milliseconds.
@@ -2208,6 +2211,8 @@ export default defineSchema({
     publishedAt: v.optional(v.number()),
     retrievedAt: v.optional(v.number()),
     storyDescriptor: v.optional(v.string()), // stories: "a second-year student, 20"
+    contentNote: v.optional(v.string()), // curator's heads-up shown before a heavy body (#413)
+    reflectPrompt: v.optional(v.string()), // curator's "Reflect on this" opener; else a plain default (#413)
     // Curator-only — never returned to readers (#387, #404).
     consentRecordedAt: v.optional(v.number()), // stories: required to publish
     safetyReviewedAt: v.optional(v.number()), // explainers: required to publish
@@ -2221,6 +2226,26 @@ export default defineSchema({
   library_entry_bodies: defineTable({
     entryId: v.id("library_entries"),
     markdown: v.string(),
+  }).index("by_entryId", ["entryId"]),
+
+  // One narrated clip per entry (#411, decision in #390). The R2-key +
+  // sha256 + durationSec pattern of `audio_tracks`, not that table. Two
+  // blobs: `previewKey` is a separate 30s cut anyone may stream; `key` is
+  // only ever minted behind `requirePremium`. Retract with `active: false`.
+  library_entry_audio: defineTable({
+    entryId: v.id("library_entries"),
+    key: v.string(), // full asset — Plus only
+    previewKey: v.string(), // truncated 30s asset — free
+    durationSec: v.number(), // of the full asset; the card's "M min listen"
+    sha256: v.string(), // full audio + transcript (the preview is cut from it): ingest no-op gate
+    active: v.boolean(),
+  }).index("by_entryId", ["entryId"]),
+
+  // Plain text of what's said (CONTEXT.md "Library: transcript") — Plus only,
+  // kept off `library_entry_audio` so card reads skip it.
+  library_entry_transcripts: defineTable({
+    entryId: v.id("library_entries"),
+    text: v.string(),
   }).index("by_entryId", ["entryId"]),
 
   // Facets are generic (axis, slug) rows, not per-axis columns (ADR 0015),
@@ -2262,9 +2287,13 @@ export default defineSchema({
     viewedAt: v.optional(v.number()), // first reader open — the one view
     position: v.optional(v.number()), // resume: 0–1 of the scrollable body
     finishedAt: v.optional(v.number()), // reached the end AND dwelt; never shown
+    lastReadAt: v.optional(v.number()), // last open or position write — orders Continue reading (#419)
     saved: v.boolean(),
     helped: v.boolean(),
-  }).index("by_emotionalProfileId_and_entryId", ["emotionalProfileId", "entryId"]),
+  })
+    .index("by_emotionalProfileId_and_entryId", ["emotionalProfileId", "entryId"])
+    // finishedAt first so Continue reading only walks unfinished rows (#419).
+    .index("by_emotionalProfileId_and_finishedAt_and_lastReadAt", ["emotionalProfileId", "finishedAt", "lastReadAt"]),
 
   // Public totals, off `library_entries` because ingest `replace`s those
   // rows. Never decremented by wipe/deletion — only an undo of "helped"

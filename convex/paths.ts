@@ -19,9 +19,10 @@ import type { Understanding } from "./understanding";
  */
 
 /** Display family for a twig — what the card and the rail node render as. */
-export type TwigKind = "breathing" | "bridge" | "xolacer" | "audio" | "music";
+export type TwigKind = "breathing" | "bridge" | "xolacer" | "audio" | "music" | "read";
 
 function twigKind(actionType: string): TwigKind {
+  if (actionType === "read") return "read";
   if (actionType === "breathing") return "breathing";
   if (actionType === "bridge") return "bridge";
   if (actionType === "xolacer") return "xolacer";
@@ -37,10 +38,11 @@ const twigValidator = v.object({
     v.literal("xolacer"),
     v.literal("audio"),
     v.literal("music"),
+    v.literal("read"),
   ),
   order: v.number(),
   why: v.string(),
-  /** Track title for bound audio/music; undefined for breathing + xolacer. */
+  /** Track or entry title for bound audio/music/read; undefined for breathing + xolacer. */
   title: v.optional(v.string()),
   params: v.any(),
   state: v.union(v.literal("pending"), v.literal("done"), v.literal("skipped")),
@@ -51,7 +53,11 @@ const twigValidator = v.object({
  * no qualifying session yet, or the last one tended and closed.
  */
 export const getActive = query({
-  args: {},
+  args: {
+    /** @deprecated Pre-#412 clients omit it and get no read twigs — they have no card for one. */
+    // DEPRECATED(remove-after: app >= 1.11.0): return read twigs unconditionally once no client omits this.
+    withRead: v.optional(v.boolean()),
+  },
   returns: v.union(
     v.null(),
     v.object({
@@ -61,7 +67,7 @@ export const getActive = query({
       twigs: v.array(twigValidator),
     }),
   ),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     if (!(await hasPremium(ctx, profile))) return null;
 
@@ -80,20 +86,27 @@ export const getActive = query({
 
     const twigs = [];
     for (const step of steps.sort((a, b) => a.order - b.order)) {
+      const kind = twigKind(step.actionType);
+      if (kind === "read" && !args.withRead) continue;
       const slug = (step.params as { slug?: string } | null)?.slug;
-      const track = slug
-        ? await ctx.db
-            .query("audio_tracks")
-            .withIndex("by_slug", (q) => q.eq("slug", slug))
-            .unique()
-        : null;
+      const bound = !slug
+        ? null
+        : kind === "read"
+          ? await ctx.db
+              .query("library_entries")
+              .withIndex("by_slug", (q) => q.eq("slug", slug))
+              .unique()
+          : await ctx.db
+              .query("audio_tracks")
+              .withIndex("by_slug", (q) => q.eq("slug", slug))
+              .unique();
       twigs.push({
         _id: step._id,
         actionType: step.actionType,
-        kind: twigKind(step.actionType),
+        kind,
         order: step.order,
         why: step.why,
-        title: track?.title,
+        title: bound?.title,
         params: step.params,
         state: step.state,
       });

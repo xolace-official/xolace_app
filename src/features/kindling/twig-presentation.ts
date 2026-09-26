@@ -49,6 +49,12 @@ export const TWIG_PRESENTATION: Record<
     actionLabel: "See who",
     image: "https://energetic-guineapig-283.convex.cloud/api/storage/6642efe2-7add-4a87-91d8-70f547ada414",
   },
+  read: {
+    symbol: { ios: "book", android: "menu_book", web: "menu_book" },
+    eyebrow: "Something to read",
+    title: "A few pages for this",
+    actionLabel: "Read",
+  },
   bridge: {
     symbol: { ios: "envelope", android: "mail", web: "mail" },
     eyebrow: "When you're ready",
@@ -86,6 +92,9 @@ export function twigBrowseHref(twig: Twig): Href | null {
  * rides along so `useTrackPlayback` tends the twig on a natural finish —
  * a Browse play carries no `stepId` and never completes anything (§9.6).
  */
+/** The entry or track a twig points at, if it points at one. */
+export const twigSlug = (twig: Twig) => (twig.params as { slug?: string } | null)?.slug;
+
 export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | null {
   switch (twig.kind) {
     case "audio":
@@ -93,6 +102,12 @@ export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | n
       const slug = (twig.params as { slug?: string } | null)?.slug;
       if (!slug) return null;
       return { pathname: "/browse-player", params: { slug, stepId: twig._id } };
+    }
+    case "read": {
+      // `stepId` rides along so the reader tends the twig once the entry is finished.
+      const slug = twigSlug(twig);
+      if (!slug) return null;
+      return { pathname: "/library/[slug]", params: { slug, stepId: twig._id, from: "twig" } };
     }
     case "breathing":
       // `stepId` rides along so finishing the exercise tends the twig.

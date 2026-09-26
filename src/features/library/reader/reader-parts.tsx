@@ -1,14 +1,18 @@
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
-import { useState } from 'react';
-import { Linking, Pressable, View } from 'react-native';
+import { useState, type ComponentProps, type ReactNode } from 'react';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { EnrichedMarkdownText, type MarkdownStyle } from 'react-native-enriched-markdown';
+import Animated from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { cn } from '@/src/lib/utils';
-import { creditLine } from './reader-copy';
+import { COVER_SCRIM } from './cover-palette';
+import { creditLine, metaLabel, metaLine, prepareBody } from './reader-copy';
 import type { ReaderEntry } from './reader-screen';
 import { useRecord } from './use-read-signals';
 
@@ -17,6 +21,8 @@ const AA_ICON = { ios: 'textformat.size', android: 'text_fields', web: 'text_fie
 const SAVE_ICON = { ios: 'bookmark', android: 'bookmark_border', web: 'bookmark_border' } as const;
 const SAVED_ICON = { ios: 'bookmark.fill', android: 'bookmark_added', web: 'bookmark_added' } as const;
 const SOURCE_ICON = { ios: 'building.columns', android: 'account_balance', web: 'account_balance' } as const;
+// Callouts arrive as quotes led by their kind in bold (`prepareBody`), so the kind is read first.
+const A11Y_LABELS = { blockquote: { quote: 'Quote' } };
 
 // A share link opens the reader with nothing under it.
 const goBack = () => (router.canGoBack() ? router.back() : router.replace('/(protected)'));
@@ -90,33 +96,99 @@ export function SaveButton({ entryId, saved, onCover = false }: { entryId: Reade
   );
 }
 
+/**
+ * The entry's title and meta line — on the cover photo, or at the top of the
+ * sheet at accessibility text sizes. First thing a screen reader lands on
+ * (#400); focus never jumps to the resume point on its own, it's an action.
+ */
+export function ReaderTitle({
+  entry,
+  onCover,
+  onBackToTop,
+  onResume,
+}: {
+  entry: ReaderEntry;
+  onCover: boolean;
+  onBackToTop: () => void;
+  /** Only when there's a place to resume. */
+  onResume?: () => void;
+}) {
+  return (
+    <>
+      <AppText
+        accessibilityRole="header"
+        accessibilityActions={[
+          { name: 'backToTop', label: 'Back to top' },
+          ...(onResume ? [{ name: 'resume', label: 'Resume where you left off' }] : []),
+        ]}
+        onAccessibilityAction={(e) => (e.nativeEvent.actionName === 'resume' ? onResume?.() : onBackToTop())}
+        className={cn('font-bold text-[32px] leading-[38px]', onCover ? 'text-cover-ink' : 'text-foreground')}
+      >
+        {entry.title}
+      </AppText>
+      <AppText accessibilityLabel={metaLabel(entry)} className={cn('mt-2 text-sm', onCover ? 'text-cover-ink/80' : 'text-muted')}>
+        {metaLine(entry.kind, entry.readMin, entry.storyDescriptor, entry.listenMin)}
+      </AppText>
+    </>
+  );
+}
+
 type Credit = Pick<ReaderEntry, 'reuse' | 'author' | 'originalUrl' | 'source'>;
 
 /** Who wrote it and how it reached this page. Every entry shows it (#383). */
-export function SourceCredit({ entry }: { entry: Credit }) {
+/** The source's credit; `aside` sits at its trailing edge (the Listen pill, #411). */
+export function SourceCredit({ entry, aside }: { entry: Credit; aside?: ReactNode }) {
   const muted = useThemeColor('muted');
   const href = entry.originalUrl ?? entry.source.url;
   const line = [creditLine(entry.reuse), entry.author && `by ${entry.author}`].filter(Boolean).join(' · ');
 
   return (
-    <Pressable
-      disabled={!href}
-      onPress={() => href && Linking.openURL(href)}
-      accessibilityRole={href ? 'link' : undefined}
-      accessibilityHint={href ? 'Opens the original' : undefined}
-      className="flex-row items-center gap-3 active:opacity-70"
-    >
-      <View className="h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-surface-secondary">
-        {entry.source.logoUrl ? (
-          <Image source={{ uri: entry.source.logoUrl }} style={{ width: 36, height: 36 }} contentFit="cover" />
-        ) : (
-          <SymbolView name={SOURCE_ICON} size={15} tintColor={muted} />
-        )}
-      </View>
-      <View className="flex-1">
-        <AppText className="font-semibold text-sm">{entry.source.name}</AppText>
-        <AppText className="text-xs text-muted">{line}</AppText>
-      </View>
-    </Pressable>
+    <View className="flex-row items-center gap-3">
+      <Pressable
+        disabled={!href}
+        onPress={() => href && Linking.openURL(href)}
+        accessibilityRole={href ? 'link' : undefined}
+        accessibilityLabel={`${entry.source.name}, ${line}`}
+        accessibilityHint={href ? 'Opens the original' : undefined}
+        className="flex-1 flex-row items-center gap-3 active:opacity-70"
+      >
+        <View className="h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-surface-secondary">
+          {entry.source.logoUrl ? (
+            <Image source={{ uri: entry.source.logoUrl }} style={{ width: 36, height: 36 }} contentFit="cover" />
+          ) : (
+            <SymbolView name={SOURCE_ICON} size={15} tintColor={muted} />
+          )}
+        </View>
+        <View className="flex-1">
+          <AppText className="font-semibold text-sm">{entry.source.name}</AppText>
+          <AppText className="text-xs text-muted">{line}</AppText>
+        </View>
+      </Pressable>
+      {aside}
+    </View>
+  );
+}
+
+/** The cover photo under its scrim; the reader draws it twice (behind the scroller, in the bar). */
+export function CoverPhoto({ uri, style }: { uri?: string; style: ComponentProps<typeof Animated.View>['style'] }) {
+  return (
+    <Animated.View style={style} className="bg-cover-scrim">
+      {/* ponytail: no cover → the plain scrim; the subject's cover lands when subjects get art */}
+      {uri && <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />}
+      <LinearGradient colors={COVER_SCRIM.colors} locations={COVER_SCRIM.locations} style={StyleSheet.absoluteFill} />
+    </Animated.View>
+  );
+}
+
+/** The entry body. The renderer handles headings, links, alt text, lists and quotes for screen readers. */
+export function ReaderBody({ markdown, style }: { markdown: string; style: MarkdownStyle }) {
+  return (
+    <EnrichedMarkdownText
+      flavor="github"
+      markdown={prepareBody(markdown)}
+      markdownStyle={style}
+      onLinkPress={({ url }) => Linking.openURL(url)}
+      accessibilityLabels={A11Y_LABELS}
+    />
   );
 }

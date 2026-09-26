@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import { mutation, query, type MutationCtx, type QueryCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
+import { listenMin } from "./audio";
+import { toListItem } from "./entries";
 
 /**
  * What a reader leaves behind on an entry (#410, CONTEXT.md "Library:
@@ -11,6 +13,8 @@ import { requireAuth } from "../lib/auth";
 
 /** "N found this helpful" stays hidden below this, so a small count can't point at anyone. */
 export const HELPED_FLOOR = 15;
+// Unfinished reads walked to find Continue; past this many retracted/unstarted in a row, there's none.
+const CONTINUE_SCAN = 50;
 
 type EntryId = Id<"library_entries">;
 type ProfileId = Id<"emotional_profiles">;
@@ -37,15 +41,46 @@ async function bumpTotals(ctx: MutationCtx, entryId: EntryId, delta: { views?: n
   else await ctx.db.insert("library_entry_totals", { entryId, views, helped });
 }
 
-/** Views plus this reader's saved state, for every entry card. */
+/** Views, listen time (#411) and this reader's saved state, for every entry card. */
 export async function cardSignals(ctx: QueryCtx, profileId: ProfileId, entryId: EntryId) {
-  const [t, r] = await Promise.all([totalsRow(ctx, entryId), readRow(ctx, profileId, entryId)]);
-  return { views: t?.views ?? 0, saved: r?.saved ?? false };
+  const [t, r, listen] = await Promise.all([
+    totalsRow(ctx, entryId),
+    readRow(ctx, profileId, entryId),
+    listenMin(ctx, entryId),
+  ]);
+  return { views: t?.views ?? 0, saved: r?.saved ?? false, listenMin: listen };
 }
 
 /** Attaches `cardSignals` to already-shaped list items. */
 export const withCardSignals = <T extends { _id: EntryId }>(ctx: QueryCtx, profileId: ProfileId, items: T[]) =>
   Promise.all(items.map(async (i) => ({ ...i, ...(await cardSignals(ctx, profileId, i._id)) })));
+
+/**
+ * Continue reading (#419): the most recently read entry that's in progress
+ * and still listed. Drops out on finish; rows from before `lastReadAt` wait
+ * until they're next read.
+ */
+export async function continueReading(
+  ctx: QueryCtx,
+  profileId: ProfileId,
+  active: Map<EntryId, Doc<"library_entries">>,
+) {
+  // Finished rows are outside the index range, so they can't crowd out an older in-progress read.
+  const reads = await ctx.db
+    .query("library_reads")
+    .withIndex("by_emotionalProfileId_and_finishedAt_and_lastReadAt", (q) =>
+      q.eq("emotionalProfileId", profileId).eq("finishedAt", undefined).gt("lastReadAt", 0),
+    )
+    .order("desc")
+    .take(CONTINUE_SCAN);
+  const r = reads.find((r) => (r.position ?? 0) > 0 && active.has(r.entryId));
+  if (!r) return null;
+  return {
+    ...toListItem(active.get(r.entryId)!),
+    ...(await cardSignals(ctx, profileId, r.entryId)),
+    position: r.position!,
+  };
+}
 
 /** The reader's own row plus the end-of-read total. */
 export const getReaderState = query({
@@ -119,6 +154,9 @@ export const record = mutation({
       await bumpTotals(ctx, args.entryId, { views: 1 });
     }
     if (args.position !== undefined) patch.position = Math.min(Math.max(args.position, 0), 1);
+    // Only in-progress opens count, so quick peeks can't push Continue out of CONTINUE_SCAN.
+    const inProgress = (row.position ?? 0) > 0 && row.finishedAt === undefined;
+    if (args.position !== undefined || (args.opened && inProgress)) patch.lastReadAt = Date.now();
     if (args.finished && row.finishedAt === undefined) patch.finishedAt = Date.now();
     if (args.saved !== undefined) patch.saved = args.saved;
     if (args.helped !== undefined && args.helped !== row.helped) {

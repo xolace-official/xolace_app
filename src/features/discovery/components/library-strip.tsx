@@ -8,6 +8,7 @@ import { ScrollView, View } from "react-native";
 import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { ShelfTile } from "@/src/features/browse/components/shelf-tile";
+import { LibraryStripSkeleton } from "./skeletons";
 import { playSoftPress } from "@/src/lib/haptics";
 
 const TILE = 132;
@@ -25,7 +26,8 @@ export function LibraryStrip() {
   const accent = useThemeColor("accent") as string;
   const shelf = useQuery(api.browse.getNewShelf, {});
 
-  if (!shelf || shelf.length === 0) return null;
+  if (shelf === undefined) return <LibraryStripSkeleton tile={TILE} />;
+  if (shelf.length === 0) return null;
 
   const seeAll = () => {
     playSoftPress();

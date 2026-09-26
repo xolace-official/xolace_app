@@ -7,7 +7,9 @@ import type { FunctionReturnType } from 'convex/server';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { SymbolView } from 'expo-symbols';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 
 import type { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
@@ -15,38 +17,52 @@ import { facetLabel, readTimeLine } from '@/src/features/library/home/library-co
 import { COVER_SCRIM } from '@/src/features/library/reader/cover-palette';
 import { capitalise } from '@/src/features/library/reader/reader-copy';
 import { SaveButton } from '@/src/features/library/reader/reader-parts';
+import type { ReaderFrom } from '@/src/features/library/analytics';
 
 export type EntryItem = FunctionReturnType<typeof api.library.entries.listEntries>[number];
 
 /** Photo cards' corner, shared with the For you blur that sits over them. */
 export const CARD_RADIUS = 28;
+// iOS's first accessibility text size (AX1) is ~1.65×; at these titles go uncapped.
+export const AX_FONT_SCALE = 1.6;
 
-export const readerHref = (slug: string) => ({ pathname: '/library/[slug]', params: { slug } }) as const;
+/** `hub` rides along from a hub so the reader's Up next follows its order (#417). */
+export const readerHref = (slug: string, from: ReaderFrom, hub?: string) =>
+  ({ pathname: '/library/[slug]', params: { slug, from, ...(hub && { hub }) } }) as const;
 
-/** Full-bleed cover photo, kicker, title, meta. Ink is the reader cover's fixed palette. */
+/**
+ * Full-bleed cover photo, kicker, title, meta, and a play mark when the entry
+ * has audio. Ink is the reader cover's fixed palette. At accessibility text
+ * sizes the title is uncapped and the card grows to fit (#400).
+ */
 export function PhotoCard({
   entry,
   kicker,
   width,
   height,
+  href = readerHref(entry.slug, 'home'),
+  meta = readTimeLine(entry.readMin, entry.views),
+  label = `${entry.title}. ${kicker}. ${meta}`,
 }: {
-  entry: EntryItem;
+  entry: Omit<EntryItem, 'views' | 'saved'> & { views?: number };
   kicker: string;
   width: number;
   height: number;
+  href?: ReturnType<typeof readerHref>;
+  meta?: string;
+  label?: string;
 }) {
-  // Save sits beside the link, not in it: a nested button is unreachable to
-  // screen readers and, on web, a click inside the anchor follows it.
+  const ax = useWindowDimensions().fontScale >= AX_FONT_SCALE;
   return (
-    <View style={{ width, height }}>
-      <Link href={readerHref(entry.slug)} asChild>
+    <View style={{ width, minHeight: height }}>
+      <Link href={href} asChild>
         <Pressable
           accessibilityRole="link"
-          accessibilityLabel={`${entry.title}. ${kicker}. ${readTimeLine(entry.readMin, entry.views)}`}
+          accessibilityLabel={label}
           className="overflow-hidden bg-cover-scrim active:opacity-90"
           style={{
             width,
-            height,
+            minHeight: height,
             borderRadius: CARD_RADIUS,
             borderCurve: 'continuous',
           }}
@@ -66,25 +82,50 @@ export function PhotoCard({
           />
           <View className="flex-1 justify-end gap-2 p-5">
             <AppText className="text-[12px] font-medium uppercase tracking-[1.5px] text-cover-ink/70">{kicker}</AppText>
-            <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={3}>
+            <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={ax ? undefined : 3}>
               {entry.title}
             </AppText>
-            <AppText className="text-[13px] text-cover-ink/75">{readTimeLine(entry.readMin, entry.views)}</AppText>
+            <AppText className="text-[13px] text-cover-ink/75">{meta}</AppText>
           </View>
         </Pressable>
       </Link>
-      <View className="absolute right-3 top-3">
-        <SaveButton entryId={entry._id} saved={entry.saved} onCover />
-      </View>
+      {entry.listenMin !== undefined && <HasAudio />}
+    </View>
+  );
+}
+
+const PLAY = { ios: 'play.fill', android: 'play_arrow', web: 'play_arrow' } as const;
+
+/** A mark, not a control: this entry has audio. Taps fall through to the card. */
+function HasAudio() {
+  const coverInk = String(useCSSVariable('--color-cover-ink'));
+  return (
+    <View
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      className="absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full bg-cover-scrim/30"
+    >
+      <SymbolView name={PLAY} size={15} weight="semibold" tintColor={coverInk} />
     </View>
   );
 }
 
 /** Thumbnail left, "Kind · Subject" kicker, bold title, meta. */
-export function EntryRow({ entry, index }: { entry: EntryItem; index?: number }) {
+export function EntryRow({
+  entry,
+  index,
+  from,
+  hub,
+}: {
+  entry: EntryItem;
+  index?: number;
+  from: ReaderFrom;
+  hub?: string;
+}) {
   return (
     <View className="flex-row items-center pr-4">
-      <Link href={readerHref(entry.slug)} asChild>
+      <Link href={readerHref(entry.slug, from, hub)} asChild>
         <Pressable accessibilityRole="link" className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70">
           {index !== undefined && <AppText className="w-4 text-[13px] text-muted">{index + 1}</AppText>}
           <View className="overflow-hidden rounded-[14px] bg-surface-secondary" style={THUMB}>
@@ -97,7 +138,7 @@ export function EntryRow({ entry, index }: { entry: EntryItem; index?: number })
             <AppText className="text-[16px] font-semibold leading-[21px]" numberOfLines={2}>
               {entry.title}
             </AppText>
-            <AppText className="text-[13px] text-muted">{readTimeLine(entry.readMin, entry.views)}</AppText>
+            <AppText className="text-[13px] text-muted">{readTimeLine(entry.readMin, entry.views, entry.listenMin)}</AppText>
           </View>
         </Pressable>
       </Link>
