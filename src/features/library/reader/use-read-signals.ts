@@ -6,10 +6,10 @@
  */
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import { useConvexConnectionState, useMutation, useQuery } from 'convex/react';
+import { useConvex, useMutation, useQuery } from 'convex/react';
 import { useLocalSearchParams } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type Animated from 'react-native-reanimated';
 import { useAnimatedReaction, type AnimatedRef, type SharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -115,7 +115,13 @@ export function useReadSignals({
   // A read twig is tended by the finish alone (reading or listening), once.
   // A rejection frees it to try again when the connection comes back, a few times at most.
   const completeStep = useMutation(api.paths.completeStep);
-  const { isWebSocketConnected } = useConvexConnectionState();
+  // Only the boolean: useConvexConnectionState re-renders the reader on every request start/finish.
+  const convex = useConvex();
+  const subscribeConnection = useCallback((cb: () => void) => convex.subscribeToConnectionState(cb), [convex]);
+  const isWebSocketConnected = useSyncExternalStore(
+    subscribeConnection,
+    () => convex.connectionState().isWebSocketConnected,
+  );
   const tended = useRef(false);
   const tendAttempts = useRef(0);
   useEffect(() => {
