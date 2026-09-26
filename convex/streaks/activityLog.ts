@@ -1,6 +1,5 @@
 import { Doc, Id } from "../_generated/dataModel";
 import { MutationCtx } from "../_generated/server";
-import { isStreakExpired } from "../lib/streak";
 
 export type ActivityActionType = Doc<"activity_log">["actionType"];
 
@@ -41,8 +40,9 @@ export function localDayKey(timestampMs: number, timezone: string): string {
 /**
  * Single write path for streak-affecting events. Upserts the (profile, local
  * day, action type) log row, then keeps the deprecated currentStreak /
- * longestStreak / lastSessionAt mirror on emotional_profiles in sync — old
- * app binaries still read those directly (Deferred Deprecations, CLAUDE.md).
+ * longestStreak mirror on emotional_profiles in sync — old app binaries still
+ * read those directly (Deferred Deprecations, CLAUDE.md) — and bumps
+ * lastSessionAt on reflect only.
  *
  * No production call sites yet (#432) — this is the shared core other
  * mutations will call directly (same transaction, no nested ctx.runMutation).
@@ -68,14 +68,20 @@ export async function recordActivity(
 
   // The last qualifying (non-zero-weight) day's dayKey, read off its own
   // persisted row — never recomputed from lastSessionAt under whatever
-  // timezone is active now. A handful of recent rows is enough to skip past
-  // any zero-weight (quotes) rows that don't count as a streak day.
+  // timezone is active now. At most 6 rows per day, so 20 always reaches
+  // back past yesterday — the only day the gap check cares about.
   const recentLogs = await ctx.db
     .query("activity_log")
     .withIndex("by_profile_day_action", (q) => q.eq("emotionalProfileId", args.emotionalProfileId))
     .order("desc")
     .take(20);
-  const previousDayKey = recentLogs.find((log) => ACTION_WEIGHTS[log.actionType] > 0)?.dayKey;
+  // No qualifying row yet: a profile the cutover hasn't reached. Pre-cutover
+  // the only qualifying action was reflect, so its day is the one the cutover
+  // would seed from lastSessionAt — without this, a reflect racing the
+  // migration would reset a live streak to 1.
+  const previousDayKey =
+    recentLogs.find((log) => ACTION_WEIGHTS[log.actionType] > 0)?.dayKey ??
+    (profile.lastSessionAt === undefined ? undefined : localDayKey(profile.lastSessionAt, timezone));
 
   const existing = await ctx.db
     .query("activity_log")
@@ -106,13 +112,19 @@ export async function recordActivity(
   // Zero-weight actions (quotes) log history but never touch the streak.
   if (ACTION_WEIGHTS[args.actionType] === 0) return;
 
+  // expectedPrevious gap check on day keys (#426): yesterday → +1, today →
+  // unchanged, otherwise reset. A dayKey *behind* the last one (timezone moved
+  // west, or a backdated timestamp) counts as "today" — past days stand and
+  // are never double-counted. Floor at 1: this day now has a qualifying row.
   let newStreak: number;
-  if (!profile.lastSessionAt || isStreakExpired(profile.lastSessionAt, now)) {
+  if (previousDayKey === undefined) {
     newStreak = 1;
-  } else if (previousDayKey === dayKey) {
-    newStreak = profile.currentStreak; // same local day — no increment
-  } else {
+  } else if (dayKey <= previousDayKey) {
+    newStreak = Math.max(profile.currentStreak, 1);
+  } else if (previousDayKey === shiftDayKey(dayKey, -1)) {
     newStreak = profile.currentStreak + 1;
+  } else {
+    newStreak = 1;
   }
 
   const newLongestStreak = Math.max(newStreak, profile.longestStreak ?? profile.currentStreak);
@@ -120,7 +132,18 @@ export async function recordActivity(
   await ctx.db.patch("emotional_profiles", args.emotionalProfileId, {
     currentStreak: newStreak,
     longestStreak: newLongestStreak,
-    lastSessionAt: now,
+    // lastSessionAt keeps meaning "last completed reflect" (#426) — nudges,
+    // Return Welcome and plus-offers read it. Never moves backward.
+    ...(args.actionType === "reflect" && {
+      lastSessionAt: Math.max(now, profile.lastSessionAt ?? 0),
+    }),
     updatedAt: now,
   });
+}
+
+/** "YYYY-MM-DD" shifted by whole calendar days (DST-free: pure date math). */
+export function shiftDayKey(dayKey: string, days: number): string {
+  const date = new Date(`${dayKey}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }

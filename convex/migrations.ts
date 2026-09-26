@@ -59,6 +59,9 @@ export const backfillReflectionRank = migrations.define({
 // zeroed to match what users already see; a live streak gets a single
 // "reflect" row for its last qualifying local day. Idempotent — skips a
 // profile that already has a row for that day/action.
+// Run only once #433 has replaced profileStats' inline streak writer: a
+// reflect it counts after the seed leaves no log row, so the next
+// recordActivity would read the stale seed day and reset a live streak.
 //   bunx convex run migrations:run '{"fn": "migrations:cutoverActivityLog"}'
 export const cutoverActivityLog = migrations.define({
   table: "emotional_profiles",
@@ -66,7 +69,10 @@ export const cutoverActivityLog = migrations.define({
     const streak = displayStreak(doc.currentStreak, doc.lastSessionAt);
 
     if (streak === 0) {
-      if (doc.currentStreak !== 0) return { currentStreak: 0 };
+      // Zeroing must not erase the record on rows backfillLongestStreak missed.
+      if (doc.currentStreak !== 0) {
+        return { currentStreak: 0, longestStreak: doc.longestStreak ?? doc.currentStreak };
+      }
       return;
     }
 

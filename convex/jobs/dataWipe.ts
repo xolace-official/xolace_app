@@ -13,7 +13,7 @@ const BATCH_SIZE = 100;
  * preferences, and consent records.
  *
  * Deletes: sessions, emotional_metadata, session_turns,
- *          reflection_resonances, notification_log, library_reads
+ *          reflection_resonances, notification_log, library_reads, activity_log
  * Anonymizes: escalation_events (strip profileId for safety audit)
  * Resets: emotional_profile counters
  *
@@ -92,6 +92,19 @@ export const wipe = internalMutation({
 
     if (reads.length === BATCH_SIZE) hasMore = true;
     for (const r of reads) await ctx.db.delete("library_reads", r._id);
+
+    // ── Delete activity log ──────────────────────────────────────
+    // When they showed up is their data too. Left behind, a surviving row for
+    // today would also hold the reset streak at "same day" instead of 1.
+    const activity = await ctx.db
+      .query("activity_log")
+      .withIndex("by_profile_day_action", (q) =>
+        q.eq("emotionalProfileId", emotionalProfileId)
+      )
+      .take(BATCH_SIZE);
+
+    if (activity.length === BATCH_SIZE) hasMore = true;
+    for (const a of activity) await ctx.db.delete("activity_log", a._id);
 
     // ── Anonymize escalation events ──────────────────────────────
     const escalations = await ctx.db

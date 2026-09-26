@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import {
+  drainActivityLog,
   drainConsentRecords,
   drainEscalations,
   drainFeedback,
@@ -106,6 +107,7 @@ export const purgeUser = internalMutation({
       drainSemanticVersions,
       drainPushDevices,
       drainLibraryReads,
+      drainActivityLog,
     ];
 
     let hasMore = false;
