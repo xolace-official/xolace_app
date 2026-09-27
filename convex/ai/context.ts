@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalQuery } from "../_generated/server";
 import { renderSemanticProfile } from "../semanticProfiles";
 import { hasPremium } from "../lib/premium";
+import { streakState } from "../streaks/state";
 import { shapeIntakeSignals, type IntakeSignals } from "./intakeSignals";
 
 /** Canonical return type of buildSessionContext. */
@@ -152,7 +153,7 @@ export const buildSessionContext = internalQuery({
       isFirstSession,
       profile: {
         sessionCount: profile.sessionCount,
-        currentStreak: profile.currentStreak,
+        currentStreak: (await streakState(ctx, profile)).streak,
         dominantEmotionTags: profile.dominantEmotionTags,
         averageSessionDuration: profile.averageSessionDuration,
         onboardingComplete: profile.onboardingComplete,

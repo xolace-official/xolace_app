@@ -1,5 +1,6 @@
 import { Doc, Id } from "../_generated/dataModel";
 import { MutationCtx } from "../_generated/server";
+import { earnFreeze, settleStreak } from "./state";
 
 export type ActivityActionType = Doc<"activity_log">["actionType"];
 
@@ -59,29 +60,13 @@ export async function recordActivity(
   if (!profile) return;
 
   const now = args.timestamp ?? Date.now();
-  const preferences = await ctx.db
-    .query("preferences")
-    .withIndex("by_profile", (q) => q.eq("emotionalProfileId", args.emotionalProfileId))
-    .unique();
-  const timezone = preferences?.notifications.timezone ?? "UTC";
-  const dayKey = localDayKey(now, timezone);
-
-  // The last qualifying (non-zero-weight) day's dayKey, read off its own
+  // Bridge any gap a freeze covers first, so an action the day after a frozen
+  // day reads that day as yesterday. The last covered dayKey comes off its own
   // persisted row — never recomputed from lastSessionAt under whatever
-  // timezone is active now. At most 6 rows per day, so 20 always reaches
-  // back past yesterday — the only day the gap check cares about.
-  const recentLogs = await ctx.db
-    .query("activity_log")
-    .withIndex("by_profile_day_action", (q) => q.eq("emotionalProfileId", args.emotionalProfileId))
-    .order("desc")
-    .take(20);
-  // No qualifying row yet: a profile the cutover hasn't reached. Pre-cutover
-  // the only qualifying action was reflect, so its day is the one the cutover
-  // would seed from lastSessionAt — without this, a reflect racing the
-  // migration would reset a live streak to 1.
-  const previousDayKey =
-    recentLogs.find((log) => ACTION_WEIGHTS[log.actionType] > 0)?.dayKey ??
-    (profile.lastSessionAt === undefined ? undefined : localDayKey(profile.lastSessionAt, timezone));
+  // timezone is active now.
+  const state = await settleStreak(ctx, profile, now);
+  const dayKey = localDayKey(now, state.timezone);
+  const previousDayKey = state.lastCoveredDay;
 
   const existing = await ctx.db
     .query("activity_log")
@@ -117,12 +102,14 @@ export async function recordActivity(
   // west, or a backdated timestamp) counts as "today" — past days stand and
   // are never double-counted. Floor at 1: this day now has a qualifying row.
   let newStreak: number;
+  let freezes = state.freezes;
   if (previousDayKey === undefined) {
     newStreak = 1;
   } else if (dayKey <= previousDayKey) {
     newStreak = Math.max(profile.currentStreak, 1);
   } else if (previousDayKey === shiftDayKey(dayKey, -1)) {
     newStreak = profile.currentStreak + 1;
+    freezes = earnFreeze(newStreak, freezes);
   } else {
     newStreak = 1;
   }
@@ -132,6 +119,7 @@ export async function recordActivity(
   await ctx.db.patch("emotional_profiles", args.emotionalProfileId, {
     currentStreak: newStreak,
     longestStreak: newLongestStreak,
+    streakFreezes: freezes,
     // lastSessionAt keeps meaning "last completed reflect" (#426) — nudges,
     // Return Welcome and plus-offers read it. Never moves backward.
     ...(args.actionType === "reflect" && {

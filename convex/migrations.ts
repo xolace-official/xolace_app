@@ -2,7 +2,6 @@ import { Migrations } from "@convex-dev/migrations";
 import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 import { reflectionRank } from "./lib/aggregates";
-import { displayStreak } from "./lib/streak";
 import { localDayKey } from "./streaks/activityLog";
 
 // Run both in sequence (renameRawInput first, then renameUserInput):
@@ -54,7 +53,7 @@ export const backfillReflectionRank = migrations.define({
   },
 });
 // Activity-log cutover (#432). Seeds one `activity_log` row per profile from
-// the streak as it's *currently displayed* (displayStreak), not a full
+// the streak as it's *currently displayed* (48h window), not a full
 // historical backfill — an expired streak seeds nothing and its mirror is
 // zeroed to match what users already see; a live streak gets a single
 // "reflect" row for its last qualifying local day. Idempotent — skips a
@@ -66,9 +65,10 @@ export const backfillReflectionRank = migrations.define({
 export const cutoverActivityLog = migrations.define({
   table: "emotional_profiles",
   migrateOne: async (ctx, doc) => {
-    const streak = displayStreak(doc.currentStreak, doc.lastSessionAt);
+    // The pre-log 48h window this cutover seeds from (the old lib/streak.ts).
+    const expired = !doc.lastSessionAt || Date.now() - doc.lastSessionAt > 48 * 60 * 60 * 1000;
 
-    if (streak === 0) {
+    if (expired || doc.currentStreak === 0) {
       // Zeroing must not erase the record on rows backfillLongestStreak missed.
       if (doc.currentStreak !== 0) {
         return { currentStreak: 0, longestStreak: doc.longestStreak ?? doc.currentStreak };

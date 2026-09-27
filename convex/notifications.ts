@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
+import { streakState } from "./streaks/state";
 import {
   deletePushDevice,
   MAX_DEVICES_PER_PROFILE,
@@ -420,7 +421,8 @@ export const loadGenerationContext = internalQuery({
       .map(([tag]) => tag);
 
     return {
-      profile,
+      // The stored currentStreak is a stale mirror; the writer gets the live one.
+      profile: { ...profile, currentStreak: (await streakState(ctx, profile)).streak },
       preferences,
       lastSession,
       userLanguageTags,

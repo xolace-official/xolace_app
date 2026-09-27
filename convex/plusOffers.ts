@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
-import { displayStreak } from "./lib/streak";
+import { streakState } from "./streaks/state";
 import {
   gapObservation,
   milestoneObservation,
@@ -107,7 +107,7 @@ export const offerContext = query({
       firstSession: profile.sessionCount === 1,
       gapObservation: gapMs === null ? null : gapObservation(gapMs),
       milestoneObservation: milestoneObservation({
-        streak: displayStreak(profile.currentStreak, profile.lastSessionAt, now),
+        streak: (await streakState(ctx, profile, now)).streak,
         sessionCount: profile.sessionCount,
       }),
       patternObservation: patternObservation(

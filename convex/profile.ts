@@ -4,7 +4,7 @@ import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
 import { insightFeatureValidator } from "./lib/validators";
 import { generateDisplayName, validateDisplayName } from "./lib/displayName";
-import { displayStreak } from "./lib/streak";
+import { streakState } from "./streaks/state";
 import { reflectionRank } from "./lib/aggregates";
 
 // Deterministic fallback name for users created before displayName existed.
@@ -64,10 +64,9 @@ export const getSummary = query({
       avatarId: prefs?.avatarId ?? "default",
       firstSessionAt: profile.firstSessionAt ?? null,
       sessionCount: profile.sessionCount,
-      // Derive live: the stored streak goes stale once the 48h window lapses
-      // (only rewritten on session completion). Reset to 0 for display so the
-      // profile screen agrees with the home screen's live computation.
-      currentStreak: displayStreak(profile.currentStreak, profile.lastSessionAt),
+      // Derive live: the stored streak goes stale once a gap outruns the
+      // freezes (it's only rewritten on a qualifying action).
+      currentStreak: (await streakState(ctx, profile)).streak,
       // Raw, not live-derived: longest is a record and never decays. Fall back
       // to the stored streak for rows predating the field (pre-backfill).
       longestStreak: profile.longestStreak ?? profile.currentStreak,

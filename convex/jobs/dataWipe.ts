@@ -13,7 +13,8 @@ const BATCH_SIZE = 100;
  * preferences, and consent records.
  *
  * Deletes: sessions, emotional_metadata, session_turns,
- *          reflection_resonances, notification_log, library_reads, activity_log
+ *          reflection_resonances, notification_log, library_reads, activity_log,
+ *          frozen_days
  * Anonymizes: escalation_events (strip profileId for safety audit)
  * Resets: emotional_profile counters
  *
@@ -106,6 +107,15 @@ export const wipe = internalMutation({
     if (activity.length === BATCH_SIZE) hasMore = true;
     for (const a of activity) await ctx.db.delete("activity_log", a._id);
 
+    // Frozen days go with the log they bridged.
+    const frozen = await ctx.db
+      .query("frozen_days")
+      .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", emotionalProfileId))
+      .take(BATCH_SIZE);
+
+    if (frozen.length === BATCH_SIZE) hasMore = true;
+    for (const f of frozen) await ctx.db.delete("frozen_days", f._id);
+
     // ── Anonymize escalation events ──────────────────────────────
     const escalations = await ctx.db
       .query("escalation_events")
@@ -162,6 +172,7 @@ export const wipe = internalMutation({
         // every daily_quotes row for this profile was deleted above, saved ones included
         savedQuoteCount: 0,
         currentStreak: 0,
+        streakFreezes: undefined,
         dominantEmotionTags: [],
         firstSessionAt: undefined,
         lastSessionAt: undefined,

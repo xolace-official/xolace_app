@@ -3,28 +3,27 @@ import type { QuietReturnTier } from '@/src/features/reflect/quiet-return-copy';
 
 type ProfileFields = {
   sessionCount: number;
-  currentStreak: number;
   lastSessionAt?: number;
   firstSessionAt?: number;
 };
 
-const STREAK_WINDOW_MS = 48 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function computeUserVariant(profile: ProfileFields): UserVariant {
+/**
+ * `streak` is getFullContext's server-derived, freeze-aware streak (#434) —
+ * 0 once lapsed. Never recompute expiry here: lastSessionAt only moves on
+ * reflect, so it can't see a vent/library/twig day extending the streak.
+ */
+export function computeUserVariant(profile: ProfileFields, streak: number): UserVariant {
   if (profile.sessionCount === 0) {
     return { kind: 'first-time' };
   }
 
-  const streakExpired =
-    !profile.lastSessionAt ||
-    Date.now() - profile.lastSessionAt > STREAK_WINDOW_MS;
-
-  if (streakExpired) {
+  if (streak === 0) {
     return { kind: 'returning' };
   }
 
-  return { kind: 'active', dayCount: profile.currentStreak };
+  return { kind: 'active', dayCount: streak };
 }
 
 /**

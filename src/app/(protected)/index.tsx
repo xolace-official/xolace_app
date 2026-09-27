@@ -6,7 +6,7 @@ import { useIsFocused } from "expo-router/react-navigation";
 import { StatusBar } from 'expo-status-bar';
 import { useObserve } from 'expo-observe';
 
-import { useQuery } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 
 import { api } from '@/convex/_generated/api';
 import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
@@ -113,6 +113,15 @@ export default function ProtectedIndex() {
     hasPendingFollowUp,
   });
 
+  // App open is the read-time recompute that makes a freeze-bridged gap
+  // durable (frozen_days). Best-effort: every streak read derives the same
+  // answer without it.
+  const settleStreak = useMutation(api.streaks.state.settle);
+  const profileId = profile?._id;
+  useEffect(() => {
+    if (profileId) settleStreak().catch(() => {});
+  }, [profileId, settleStreak]);
+
   // Per-route TTI for the reflect home: the screen is genuinely ready once the
   // user context query resolves, not at mount. markInteractive emits telemetry
   // (a side effect), so it must run in an effect — only the first call per
@@ -126,7 +135,7 @@ export default function ProtectedIndex() {
   // focused.
   const returnWelcome = useReturnWelcome({
     active: isFocused && !!profile && !followUp.blocking,
-    variant: profile ? computeUserVariant(profile) : { kind: 'first-time' },
+    variant: profile ? computeUserVariant(profile, fullContext.streak) : { kind: 'first-time' },
     quietReturn: profile ? computeQuietReturn(profile) : null,
     lastSessionAt: profile?.lastSessionAt,
   });

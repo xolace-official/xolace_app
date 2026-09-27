@@ -134,6 +134,11 @@ export default defineSchema({
     // this field existed; backfilled to currentStreak by migration.
     longestStreak: v.optional(v.number()),
 
+    // Streak freezes on hand (#434): +1 per 7 consecutive qualifying days,
+    // capped at FREEZE_CAP. Spent lazily by settleStreak (convex/streaks/state.ts).
+    // Optional — rows predating freezes read as `?? 0`.
+    streakFreezes: v.optional(v.number()),
+
     // Session a free user bought Plus from at session-end's kindling upsell
     // (`paths.requestKindling`). The completion-time `generate.run` no-oped
     // on the free tier; `premium.onEntitlementActivated` re-queues it once
@@ -219,6 +224,15 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_profile_day_action", ["emotionalProfileId", "dayKey", "actionType"]),
+
+  // A missed day a streak freeze bridged (#434). Never an activity_log row —
+  // the log stays an honest record of showing up; this gives the contribution
+  // graph its third (frozen) state. dayKey is persisted once, at settle time.
+  frozen_days: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    dayKey: v.string(),
+    createdAt: v.number(),
+  }).index("by_profile_day", ["emotionalProfileId", "dayKey"]),
 
   // ===========================================================
   // 3. PREFERENCES

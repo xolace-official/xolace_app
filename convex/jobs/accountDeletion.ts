@@ -3,6 +3,7 @@ import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import {
   drainActivityLog,
+  drainFrozenDays,
   drainConsentRecords,
   drainEscalations,
   drainFeedback,
@@ -108,6 +109,7 @@ export const purgeUser = internalMutation({
       drainPushDevices,
       drainLibraryReads,
       drainActivityLog,
+      drainFrozenDays,
     ];
 
     let hasMore = false;

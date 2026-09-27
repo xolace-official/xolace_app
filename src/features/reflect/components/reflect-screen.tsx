@@ -161,13 +161,13 @@ export const ReflectScreen = () => {
     if (!context?.profile) return;
     dispatch({
       type: "SET_USER_VARIANT",
-      variant: computeUserVariant(context.profile),
+      variant: computeUserVariant(context.profile, context.streak),
     });
     dispatch({
       type: "SET_QUIET_RETURN",
       tier: computeQuietReturn(context.profile),
     });
-  }, [context?.profile, dispatch]);
+  }, [context?.profile, context?.streak, dispatch]);
 
 
   if (
