@@ -18,7 +18,7 @@ export type FollowUpResponse =
 
 export type FollowUpTier = "acute" | "elevated" | "standard";
 
-type StatusResponse = Exclude<FollowUpResponse, "vent">;
+export type StatusResponse = Exclude<FollowUpResponse, "vent">;
 type Chip = { key: StatusResponse; label: string };
 
 // How-is-it-sitting-now self-report. These are a single group answering one

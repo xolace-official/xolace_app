@@ -1,0 +1,180 @@
+import { useEffect, useRef, useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useMutation } from "convex/react";
+import { usePostHog } from "posthog-react-native";
+import { Image } from "expo-image";
+import { PressableFeedback } from "heroui-native";
+
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { AppText } from "@/src/components/shared/app-text";
+import { useFullContext } from "@/src/lib/convex/use-full-context";
+import { cn } from "@/src/lib/utils";
+import { Icon, OptionCard, type IconKey } from "@/src/features/follow-up/stack-cards";
+import {
+  chipsForTier,
+  FOLLOW_UP_ACK,
+  FOLLOW_UP_MASCOT_LABEL,
+  FOLLOW_UP_RESOURCES_LABEL,
+  VENT_A11Y_LABEL,
+  VENT_LABEL,
+  VENT_SUBLABEL,
+  type FollowUpResponse,
+  type FollowUpTier,
+  type StatusResponse,
+} from "@/src/features/reflect/follow-up-copy";
+
+const FLUX = require("@/assets/images/flux/flux-campfire.png");
+const FLUX_SMALL = require("@/assets/images/flux/flux-point-down-removebg-preview.png");
+
+const STATUS_LOOK: Record<StatusResponse, { icon: IconKey; tint: string }> = {
+  lighter: { icon: "sun", tint: "bg-success/20" },
+  still_here: { icon: "cloud", tint: "bg-frost/20" },
+  heavier: { icon: "rain", tint: "bg-accent/20" },
+  processed: { icon: "seal", tint: "bg-ember/25" },
+};
+
+export type FollowUpParams = {
+  cardId: Id<"follow_up_cards">;
+  cardText: string;
+  tier: FollowUpTier;
+  /** "1" when the card came out of an escalation — shows the resources link. */
+  escalation?: string;
+};
+
+/**
+ * The full-screen follow-up check-in (#448). Picker → per-answer next step.
+ * Only the picker is real so far: every status answer lands on today's generic
+ * acknowledgment until the tailored steps replace it.
+ */
+export function FollowUpScreen() {
+  const { cardId, cardText, tier, escalation } = useLocalSearchParams<FollowUpParams>();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const posthog = usePostHog();
+  const resolveCard = useMutation(api.followUps.resolveCard);
+  const streak = useFullContext()?.streak ?? 0;
+  const [picked, setPicked] = useState<StatusResponse | null>(null);
+  const answered = useRef(false);
+  const escalationDerived = escalation === "1";
+
+  // Leaving before an answer — close, Android back, anything that unmounts the
+  // route — is today's no-guilt dismiss. An answer, once given, stands.
+  useEffect(
+    () => () => {
+      if (answered.current) return;
+      void resolveCard({ cardId, response: "dismissed" });
+      posthog.capture("follow_up_dismissed", { tier, escalation_derived: escalationDerived });
+    },
+    [cardId, tier, escalationDerived, resolveCard, posthog],
+  );
+
+  // Returns false on a second tap (double tap, chip-then-vent) so it can't navigate or log twice.
+  const answer = (response: FollowUpResponse) => {
+    if (answered.current) return false;
+    answered.current = true;
+    void resolveCard({ cardId, response });
+    posthog.capture("follow_up_responded", { response, tier, escalation_derived: escalationDerived });
+    return true;
+  };
+
+  const close = () => router.back();
+
+  return (
+    <View className="flex-1 bg-surface-secondary">
+      <View className="flex-1 overflow-hidden" style={{ paddingTop: insets.top + 8 }}>
+        <View className="flex-row items-center justify-between px-5">
+          <View>
+            <AppText className="font-medium text-lg text-foreground">Checking back in</AppText>
+            <View className="mt-1 h-1.5 w-24 rounded-full bg-foreground/10">
+              <View className={cn("h-1.5 rounded-full bg-accent", picked ? "w-full" : "w-1/2")} />
+            </View>
+          </View>
+          <View className="flex-row gap-2">
+            {streak > 0 && (
+              <View
+                className="h-10 flex-row items-center gap-1.5 rounded-full bg-foreground/10 px-3.5"
+                accessibilityLabel={`${streak}-day streak`}
+              >
+                <Icon name="flame" size={16} />
+                <AppText className="text-foreground">{streak}</AppText>
+              </View>
+            )}
+            <PressableFeedback
+              onPress={close}
+              accessibilityRole="button"
+              accessibilityLabel="Close check-in"
+              hitSlop={8}
+              className="size-10 items-center justify-center rounded-full bg-foreground/10"
+            >
+              <Icon name="close" size={14} />
+            </PressableFeedback>
+          </View>
+        </View>
+        <Image
+          source={picked ? FLUX_SMALL : FLUX}
+          contentFit="contain"
+          style={picked ? styles.heroSmall : styles.hero}
+          accessibilityLabel={FOLLOW_UP_MASCOT_LABEL}
+        />
+        <AppText className="px-6 pb-12 font-serif text-2xl leading-8 text-foreground">
+          {picked ? FOLLOW_UP_ACK : cardText}
+        </AppText>
+      </View>
+
+      <ScrollView className="-mt-8 grow-0" style={styles.stack} bounces={false}>
+        {picked ? (
+          <OptionCard icon="check" tint="bg-surface" title="Close" onPress={close} />
+        ) : (
+          <>
+            {chipsForTier(tier).map(({ key, label }) => (
+              <OptionCard
+                key={key}
+                icon={STATUS_LOOK[key].icon}
+                tint={STATUS_LOOK[key].tint}
+                title={label}
+                onPress={() => {
+                  if (answer(key)) setPicked(key);
+                }}
+              />
+            ))}
+            <OptionCard
+              icon="mic"
+              tint="bg-surface"
+              title={VENT_LABEL}
+              sub={VENT_SUBLABEL}
+              a11yLabel={VENT_A11Y_LABEL}
+              onPress={() => {
+                if (answer("vent")) router.replace("/(protected)/voice-vent");
+              }}
+            />
+          </>
+        )}
+        <View className="items-center bg-surface pt-4" style={{ paddingBottom: insets.bottom + 16 }}>
+          {!picked && (tier === "acute" || escalationDerived) && (
+            <PressableFeedback
+              onPress={() => {
+                posthog.capture("follow_up_resources_tapped", { tier });
+                router.push("/crisis-resources");
+              }}
+              accessibilityRole="link"
+              accessibilityLabel={FOLLOW_UP_RESOURCES_LABEL}
+              hitSlop={12}
+              className="min-h-11 items-center justify-center"
+            >
+              <AppText className="text-sm text-warning/90 underline">{FOLLOW_UP_RESOURCES_LABEL}</AppText>
+            </PressableFeedback>
+          )}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  hero: { flex: 1, marginTop: 8 },
+  heroSmall: { width: 120, height: 100, marginTop: 16, marginLeft: 16 },
+  stack: { maxHeight: "68%" },
+});

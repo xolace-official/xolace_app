@@ -19,7 +19,6 @@ import { useAwarenessEvent } from '@/src/features/awareness-events/hooks/use-awa
 import { ReturnWelcomeSheet } from '@/src/features/reflect/components/return-welcome-sheet';
 import { useReturnWelcome } from '@/src/features/reflect/hooks/use-return-welcome';
 import { shouldShowReflectTour } from '@/src/features/reflect/tour-copy';
-import { FollowUpCheckInSheet } from '@/src/features/reflect/components/follow-up-check-in-sheet';
 import { useFollowUpCheckIn } from '@/src/features/reflect/hooks/use-follow-up-check-in';
 import {
   computeUserVariant,
@@ -214,12 +213,6 @@ export default function ProtectedIndex() {
         isOpen={returnWelcome.isOpen}
         tier={returnWelcome.tier}
         onClose={returnWelcome.dismiss}
-      />
-      <FollowUpCheckInSheet
-        card={followUp.card}
-        isOpen={followUp.isOpen}
-        onResolve={followUp.resolve}
-        onDismiss={followUp.dismiss}
       />
       <MonthlyEventSheet event={awarenessOpen ? awarenessEvent : null} />
     </View>

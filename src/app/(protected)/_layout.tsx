@@ -84,6 +84,8 @@ export default function ProtectedLayout() {
           {/* Outside `(tabs)` on purpose: the player is full-bleed, no tab bar. */}
           <Stack.Screen name="browse-player" options={PLAYER_OPTIONS} />
           <Stack.Screen name="streak-held" options={PLAYER_OPTIONS} />
+          {/* The close button (or Android back) is the no-guilt dismiss. */}
+          <Stack.Screen name="follow-up" options={PLAYER_OPTIONS} />
           {/* Hold-to-continue is the only way out, so no swipe-dismiss. */}
           <Stack.Screen name="browse-intro" options={{ ...PLAYER_OPTIONS, gestureEnabled: false }} />
           {/* Reduced motion: the Lantern reader crossfades in instead of sliding (#400). */}
