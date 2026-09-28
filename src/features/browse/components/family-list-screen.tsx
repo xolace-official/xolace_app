@@ -41,17 +41,20 @@ export function FamilyListScreen() {
   const [family, setFamily] = useState<Family>(params.family === 'music' ? 'music' : 'support');
   const posthog = usePostHog();
   const musicIntroSeen = useAppStore((s) => s.musicIntroSeen);
+  const supportAudioIntroSeen = useAppStore((s) => s.supportAudioIntroSeen);
 
   useEffect(() => {
     posthog.capture('browse_family_opened', { family });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [family]);
 
-  // Keyed on the live family, not route mount: toggling the toolbar to Music
-  // for the first time opens the welcome too. The modal sets the flag.
+  // Keyed on the live family, not route mount: toggling the toolbar to a
+  // family whose welcome hasn't been seen opens it, even mid-session. Music
+  // and Support audio are independently keyed. The modal sets its own flag.
   useEffect(() => {
-    if (family === 'music' && !musicIntroSeen) router.push('/browse-intro');
-  }, [family, musicIntroSeen]);
+    const introSeen = family === 'music' ? musicIntroSeen : supportAudioIntroSeen;
+    if (!introSeen) router.push({ pathname: '/browse-intro', params: { family } });
+  }, [family, musicIntroSeen, supportAudioIntroSeen]);
 
   const { results, status, isLoading, loadMore } = useStablePaginatedQuery(
     api.browse.listByFamily,
