@@ -38,6 +38,14 @@ export const RESOURCES: Opt[] = [
   { key: "support", label: "Support audio", sub: "A short guided piece", icon: "headphones", tint: "bg-frost/20" },
   { key: "library", label: "The Lantern", sub: "Stories from people who've been here", icon: "book", tint: "bg-ember/25" },
 ];
+// Acute: Music + Support audio fold into one row to make room for a Xolacer.
+const ACUTE_RESOURCES: Opt[] = [
+  { key: "xolacer", label: "Talk to a Xolacer", sub: "A real person, one-on-one", icon: "people", tint: "bg-success/20" },
+  { key: "listen", label: "Music & support audio", sub: "Something to listen to", icon: "headphones", tint: "bg-accent/20" },
+  RESOURCES[2],
+];
+export const resourcesFor = (tier: Tier) => (tier === "acute" ? ACUTE_RESOURCES : RESOURCES);
+
 export const CRISIS: Opt = {
   key: "crisis", label: "Talk to someone now", sub: "Phone lines & support", icon: "phone", tint: "bg-danger/15",
 };
@@ -69,6 +77,7 @@ const ICONS = {
   flame: ["flame.fill", "local_fire_department"],
   check: ["checkmark", "check"],
   share: ["square.and.arrow.up", "ios_share"],
+  people: ["person.2", "group"],
 } as const;
 export type IconKey = keyof typeof ICONS;
 

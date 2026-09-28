@@ -9,7 +9,7 @@ import { PressableFeedback, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
 import {
-  BAR_SPACE, COPY, CRISIS, FAKE_CARD_TEXT, FAKE_STREAK, Icon, RESOURCES, STATUS,
+  BAR_SPACE, COPY, CRISIS, FAKE_CARD_TEXT, FAKE_STREAK, Icon, resourcesFor, STATUS,
   type Status, type VariantProps,
 } from "@/src/features/reflect/follow-up-prototype/proto-data";
 
@@ -39,7 +39,7 @@ export function ScaleVariant({ tier, step, go, act }: VariantProps) {
       ) : s === "lighter" || s === "processed" ? (
         <Reflect s={s} act={act} />
       ) : (
-        <Menu s={s} act={act} />
+        <Menu s={s} tier={tier} act={act} />
       )}
     </ScrollView>
   );
@@ -131,7 +131,7 @@ function Reflect({ s, act }: { s: "lighter" | "processed"; act: (w: string) => v
   );
 }
 
-function Menu({ s, act }: { s: "still_here" | "heavier"; act: (w: string) => void }) {
+function Menu({ s, tier, act }: { s: "still_here" | "heavier"; tier: VariantProps["tier"]; act: (w: string) => void }) {
   return (
     <>
       <AppText className="mt-12 font-serif text-[40px] leading-[48px] text-foreground">{COPY[s].title}</AppText>
@@ -147,7 +147,7 @@ function Menu({ s, act }: { s: "still_here" | "heavier"; act: (w: string) => voi
         </PressableFeedback>
       ) : null}
       <View className={cn("flex-row gap-3", s === "heavier" ? "mt-3" : "mt-10")}>
-        {RESOURCES.map((o) => (
+        {resourcesFor(tier).map((o) => (
           <PressableFeedback key={o.key} onPress={() => act(`→ ${o.key}`)} className={cn("aspect-[3/4] flex-1 justify-between rounded-3xl p-4", o.tint)}>
             <Icon name={o.icon} size={28} />
             <AppText className="font-medium text-base leading-5 text-foreground">{o.label}</AppText>

@@ -51,7 +51,7 @@ export default function FollowUpPrototype() {
           {(Object.keys(VARIANTS) as V[]).map((v) => (
             <Pill key={v} on={v === variant} label={`${v} ${VARIANTS[v].name}`} onPress={() => set({ variant: v, last: "" })} />
           ))}
-          <Pill on={tier === "acute"} label="acute" onPress={() => set({ tier: tier === "acute" ? "standard" : "acute", step: "picker" })} />
+          <Pill on={tier === "acute"} label="acute" onPress={() => set({ tier: tier === "acute" ? "standard" : "acute" })} />
         </Row>
         <Row>
           {STEPS.map((s) => (

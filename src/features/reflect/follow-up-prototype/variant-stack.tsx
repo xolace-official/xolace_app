@@ -1,5 +1,5 @@
 // PROTOTYPE — throwaway (#446). Variant A "Stack": the reference layout.
-// Hero on top, options as overlapping rounded tinted cards stacked from the bottom.
+// Hero on top, options as separate rounded tinted cards.
 import { useState, type ReactNode } from "react";
 import { ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { Image } from "expo-image";
@@ -10,7 +10,7 @@ import { PressableFeedback, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
 import {
-  ACK, BAR_SPACE, COPY, CRISIS, FAKE_CARD_TEXT, FAKE_STREAK, Icon, RESOURCES, STATUS,
+  ACK, BAR_SPACE, COPY, CRISIS, FAKE_CARD_TEXT, FAKE_STREAK, Icon, resourcesFor, STATUS,
   statusesFor, type IconKey, type Status, type VariantProps,
 } from "@/src/features/reflect/follow-up-prototype/proto-data";
 
@@ -50,7 +50,7 @@ export function StackVariant({ tier, step, go, act }: VariantProps) {
       </View>
 
       {/* Stack */}
-      <ScrollView className="-mt-8 grow-0" style={styles.stack} bounces={false} keyboardShouldPersistTaps="handled">
+      <ScrollView className="-mt-4 grow-0 px-3" style={styles.stack} bounces={false} keyboardShouldPersistTaps="handled">
         {picker ? (
           <>
             {statusesFor(tier).map((k) => (
@@ -65,13 +65,13 @@ export function StackVariant({ tier, step, go, act }: VariantProps) {
             <Card tint="bg-surface">
               <AppText className="text-[15px] leading-6 text-foreground/70">{COPY[s].body}</AppText>
             </Card>
-            {(s === "heavier" ? [CRISIS, ...RESOURCES] : RESOURCES).map((o) => (
+            {(s === "heavier" ? [CRISIS, ...resourcesFor(tier)] : resourcesFor(tier)).map((o) => (
               <OptionCard key={o.key} icon={o.icon} tint={o.tint} title={o.label} sub={o.sub} onPress={() => act(`→ ${o.key}`)} />
             ))}
             <OptionCard icon="check" tint="bg-surface" title="I'm okay for now" onPress={() => act("done")} last />
           </>
         )}
-        <View style={{ height: insets.bottom + BAR_SPACE }} className="bg-surface" />
+        <View style={{ height: insets.bottom + BAR_SPACE }} />
       </ScrollView>
     </View>
   );
@@ -117,16 +117,16 @@ function Reflect({ s, act }: { s: "lighter" | "processed"; act: (w: string) => v
 
 function Card({ tint, children }: { tint: string; children: ReactNode }) {
   return (
-    <View className="-mb-8 overflow-hidden rounded-[36px] bg-surface">
-      <View className={cn("px-5 pb-12 pt-5", tint)}>{children}</View>
+    <View className="mb-2 overflow-hidden rounded-3xl bg-surface">
+      <View className={cn("px-5 py-5", tint)}>{children}</View>
     </View>
   );
 }
 
 function OptionCard(p: { icon: IconKey; tint: string; title: string; sub?: string; onPress: () => void; last?: boolean }) {
   return (
-    <PressableFeedback onPress={p.onPress} className="-mb-8 overflow-hidden rounded-[36px] bg-surface">
-      <View className={cn("flex-row items-center gap-4 px-5 pb-12 pt-5", p.tint)}>
+    <PressableFeedback onPress={p.onPress} className="mb-2 overflow-hidden rounded-3xl bg-surface">
+      <View className={cn("flex-row items-center gap-4 px-5 py-5", p.tint)}>
         <Bubble icon={p.icon} />
         <View className="flex-1">
           <AppText className="font-medium text-xl leading-7 text-foreground">{p.title}</AppText>
