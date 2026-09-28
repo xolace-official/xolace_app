@@ -9,6 +9,9 @@
  * Mirrors the shape of return-welcome-copy.ts (sibling sheet).
  */
 
+import { isStreakMilestone, streakMilestoneCopy } from "@/convex/streaks/milestones";
+import { getStreakCopy } from "@/src/features/reflect/streak-copy";
+
 export type FollowUpResponse =
   | "lighter"
   | "still_here"
@@ -53,6 +56,35 @@ export const VENT_A11Y_LABEL = "Let it out - open voice vent, your voice is neve
 
 /** One-line acknowledgment shown after a chip tap, before the sheet closes. */
 export const FOLLOW_UP_ACK = "Thanks for checking back in.";
+
+/** "Lighter" next step (#449): the reflective prompt and its chrome. */
+export const LIGHTER_PROMPT = "Good to hear. What helped?";
+export const LIGHTER_PLACEHOLDER = "A walk, a person, a song… or nothing you can name";
+export const LIGHTER_SHARE_LABEL = "Share anonymously with others who feel this";
+export const LIGHTER_DONE = "Done";
+export const LIGHTER_SKIP = "Skip for now";
+export const LIGHTER_INPUT_A11Y = "What helped? Optional";
+
+/**
+ * The streak nod on a lighter/processed answer — existing streak copy only
+ * (push milestone lines first, then the calendar's per-day lines).
+ */
+export function streakNod(streak: number): string | null {
+  if (streak <= 0) return null;
+  if (isStreakMilestone(streak)) return streakMilestoneCopy(streak);
+  return getStreakCopy(streak) ?? `${streak} days of coming back. It counts.`;
+}
+
+/**
+ * The headline over each answer's next step. `lighter` is tailored (#449);
+ * the rest keep the generic acknowledgment until #450–#452 replace them.
+ */
+export const STEP_HEADLINE: Record<StatusResponse, string> = {
+  lighter: LIGHTER_PROMPT,
+  still_here: FOLLOW_UP_ACK,
+  heavier: FOLLOW_UP_ACK,
+  processed: FOLLOW_UP_ACK,
+};
 
 /** Quiet link back to crisis resources (acute / escalation-derived cards). */
 export const FOLLOW_UP_RESOURCES_LABEL = "Resources are still here";

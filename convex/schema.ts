@@ -1821,6 +1821,9 @@ export default defineSchema({
         v.literal("library"),
       ),
     ),
+    // When the share job was first enqueued (#449). Set once and never
+    // cleared, so share → private → share can't contribute twice.
+    shareScheduledAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

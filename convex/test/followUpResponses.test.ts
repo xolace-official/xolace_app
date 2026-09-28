@@ -8,7 +8,7 @@
  * outliving its card when the session is purged.
  */
 import type { WorkflowId } from "@convex-dev/workflow";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { purgeSessions } from "../lib/sessionCascade";
@@ -23,6 +23,15 @@ vi.mock("../episodicMemory", async (orig) => ({
   ...(await orig<typeof import("../episodicMemory")>()),
   purgeEpisodicEntries: async () => {},
 }));
+
+// `record` enqueues the share job (#449) on a share; fake timers keep it from
+// firing after the test (it has its own coverage in followUpShare.test.ts).
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 async function seedCard(user: SeededUser) {
   const sessionId = await seedSession(user.root, user.profileId, { state: "completed" });

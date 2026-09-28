@@ -85,6 +85,7 @@ import type * as jobs_accountDeletionSteps from "../jobs/accountDeletionSteps.js
 import type * as jobs_cohortCounts from "../jobs/cohortCounts.js";
 import type * as jobs_dataRetention from "../jobs/dataRetention.js";
 import type * as jobs_dataWipe from "../jobs/dataWipe.js";
+import type * as jobs_followUpShare from "../jobs/followUpShare.js";
 import type * as jobs_notificationTriggers from "../jobs/notificationTriggers.js";
 import type * as jobs_profileStats from "../jobs/profileStats.js";
 import type * as jobs_quotesGenerator from "../jobs/quotesGenerator.js";
@@ -249,6 +250,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/cohortCounts": typeof jobs_cohortCounts;
   "jobs/dataRetention": typeof jobs_dataRetention;
   "jobs/dataWipe": typeof jobs_dataWipe;
+  "jobs/followUpShare": typeof jobs_followUpShare;
   "jobs/notificationTriggers": typeof jobs_notificationTriggers;
   "jobs/profileStats": typeof jobs_profileStats;
   "jobs/quotesGenerator": typeof jobs_quotesGenerator;

@@ -1,7 +1,9 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query, type MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
+import { isFollowUpPoolable } from "./lib/poolability";
 
 // Same order of magnitude as a product-feedback note — a sentence or a few,
 // never a session transcript.
@@ -50,15 +52,33 @@ export const record = mutation({
       .query("follow_up_responses")
       .withIndex("by_card", (q) => q.eq("cardId", args.cardId))
       .first();
-    if (existing) {
-      await ctx.db.patch("follow_up_responses", existing._id, fields);
+    let responseId = existing?._id;
+    if (responseId) {
+      await ctx.db.patch("follow_up_responses", responseId, fields);
     } else {
-      await ctx.db.insert("follow_up_responses", {
+      responseId = await ctx.db.insert("follow_up_responses", {
         ...fields,
         cardId: args.cardId,
         emotionalProfileId: profile._id,
         createdAt: fields.updatedAt,
       });
+    }
+
+    // Share at most once per card, so no re-submit double-contributes. The
+    // job re-checks every gate at run time (a later revoke wins).
+    const session = await ctx.db.get("sessions", card.sessionId);
+    if (
+      !existing?.shareScheduledAt &&
+      isFollowUpPoolable({
+        shareRequested: args.shareRequested,
+        reflectionText: text,
+        tier: card.tier,
+        escalationDerived: card.escalationDerived,
+        safeguardLevel: session?.safeguardLevel,
+      })
+    ) {
+      await ctx.db.patch("follow_up_responses", responseId, { shareScheduledAt: Date.now() });
+      await ctx.scheduler.runAfter(0, internal.jobs.followUpShare.share, { responseId });
     }
     return null;
   },

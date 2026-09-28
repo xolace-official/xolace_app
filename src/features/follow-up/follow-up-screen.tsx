@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
@@ -12,12 +13,13 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { useFullContext } from "@/src/lib/convex/use-full-context";
 import { cn } from "@/src/lib/utils";
+import { LighterStep } from "@/src/features/follow-up/lighter-step";
 import { Icon, OptionCard, type IconKey } from "@/src/features/follow-up/stack-cards";
 import {
   chipsForTier,
-  FOLLOW_UP_ACK,
   FOLLOW_UP_MASCOT_LABEL,
   FOLLOW_UP_RESOURCES_LABEL,
+  STEP_HEADLINE,
   VENT_A11Y_LABEL,
   VENT_LABEL,
   VENT_SUBLABEL,
@@ -46,8 +48,8 @@ export type FollowUpParams = {
 
 /**
  * The full-screen follow-up check-in (#448). Picker → per-answer next step.
- * Only the picker is real so far: every status answer lands on today's generic
- * acknowledgment until the tailored steps replace it.
+ * `lighter` has its tailored step (#449); the other answers still land on the
+ * generic acknowledgment until their tickets replace it.
  */
 export function FollowUpScreen() {
   const { cardId, cardText, tier, escalation } = useLocalSearchParams<FollowUpParams>();
@@ -83,7 +85,7 @@ export function FollowUpScreen() {
   const close = () => router.back();
 
   return (
-    <View className="flex-1 bg-surface-secondary">
+    <KeyboardAvoidingView behavior="padding" className="flex-1 bg-surface-secondary">
       <View className="flex-1 overflow-hidden" style={{ paddingTop: insets.top + 8 }}>
         <View className="flex-row items-center justify-between px-5">
           <View>
@@ -120,12 +122,24 @@ export function FollowUpScreen() {
           accessibilityLabel={FOLLOW_UP_MASCOT_LABEL}
         />
         <AppText className="px-6 pb-12 font-serif text-2xl leading-8 text-foreground">
-          {picked ? FOLLOW_UP_ACK : cardText}
+          {picked ? STEP_HEADLINE[picked] : cardText}
         </AppText>
       </View>
 
-      <ScrollView className="-mt-8 grow-0" style={styles.stack} bounces={false}>
-        {picked ? (
+      <ScrollView
+        className="-mt-8 grow-0"
+        style={styles.stack}
+        bounces={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {picked === "lighter" ? (
+          <LighterStep
+            cardId={cardId}
+            streak={streak}
+            canShare={tier !== "acute" && !escalationDerived}
+            onClose={close}
+          />
+        ) : picked ? (
           <OptionCard icon="check" tint="bg-surface" title="Close" onPress={close} />
         ) : (
           <>
@@ -169,7 +183,7 @@ export function FollowUpScreen() {
           )}
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

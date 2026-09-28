@@ -23,3 +23,25 @@ export function isPoolable(s: PoolabilityInputs): boolean {
     s.safeguardLevel !== "crisis"
   );
 }
+
+/**
+ * May a follow-up "what helped?" reflection (#449) enter the pool? Its own
+ * consent is the share toggle; the source session's crisis gate still holds,
+ * and an acute or escalation-derived card never shares. The text is distilled
+ * before it lands.
+ */
+export function isFollowUpPoolable(r: {
+  shareRequested: boolean;
+  reflectionText?: string;
+  tier: Doc<"follow_up_cards">["tier"];
+  escalationDerived: boolean;
+  safeguardLevel: Doc<"sessions">["safeguardLevel"];
+}): boolean {
+  return (
+    r.shareRequested &&
+    !!r.reflectionText &&
+    r.tier !== "acute" &&
+    !r.escalationDerived &&
+    r.safeguardLevel !== "crisis"
+  );
+}
