@@ -285,6 +285,9 @@ export default defineSchema({
       gentleReturn: v.boolean(), // "It's been a while..."
       patternNudge: v.boolean(), // "Sunday evening..."
       milestone: v.boolean(), // "30 days of showing up"
+      // Streak milestones (#439). Optional; absent follows `milestone` — see
+      // `streakMilestoneAllowed` (convex/streaks/milestones.ts).
+      streakMilestone: v.optional(v.boolean()),
       // Xolacer chat: requests, accepts, declines, messages. Optional because
       // every row written before it existed has to keep working, and absent
       // means enabled — see `chatNotificationsAllowed`. One toggle for the
@@ -1215,6 +1218,8 @@ export default defineSchema({
       // `reachUsed` value — kindling is its own notification type, not a
       // Reach variant, and always sends in one voice.
       v.literal("kindling_ready"),
+      // Streak hit 7/30/100/every 100 (#439). Template copy, own rate bucket.
+      v.literal("streak_milestone"),
     ),
 
     // AI-generated, contextual notification text.

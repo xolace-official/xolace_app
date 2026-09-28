@@ -133,7 +133,8 @@ export function notificationTapPlan(
   } else if (
     data?.type === "gentle_return" ||
     data?.type === "pattern_nudge" ||
-    data?.type === "milestone"
+    data?.type === "milestone" ||
+    data?.type === "streak_milestone"
   ) {
     plan.navigation = { action: "push", href: "/(protected)" };
   }

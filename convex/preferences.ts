@@ -135,6 +135,7 @@ export const update = mutation({
         gentleReturn: v.boolean(),
         patternNudge: v.boolean(),
         milestone: v.boolean(),
+        streakMilestone: v.optional(v.boolean()),
         // Accepted so the object a client read back is still a legal argument.
         // Without it, any caller that spreads the stored preferences instead of
         // building a literal would fail argument validation outright.

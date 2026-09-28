@@ -304,6 +304,7 @@ export const preferencesDocValidator = v.object({
     gentleReturn: v.boolean(),
     patternNudge: v.boolean(),
     milestone: v.boolean(),
+    streakMilestone: v.optional(v.boolean()),
     chat: v.optional(v.boolean()),
     reach: v.optional(
       v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet")),

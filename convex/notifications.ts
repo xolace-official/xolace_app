@@ -27,6 +27,7 @@ const notificationLogDocValidator = v.object({
     v.literal("affirmation"),
     v.literal("follow_up"),
     v.literal("kindling_ready"),
+    v.literal("streak_milestone"),
   ),
   content: v.string(),
   triggerReason: v.string(),
@@ -76,7 +77,8 @@ export const schedule = internalMutation({
       v.literal("milestone"),
       v.literal("affirmation"),
       v.literal("follow_up"),
-      v.literal("kindling_ready")
+      v.literal("kindling_ready"),
+      v.literal("streak_milestone")
     ),
     content: v.string(),
     triggerReason: v.string(),
@@ -108,7 +110,9 @@ export const schedule = internalMutation({
           : "followUpNudge"
         : args.type === "kindling_ready"
           ? "kindlingReady"
-          : "notification";
+          : args.type === "streak_milestone"
+            ? "streakMilestone"
+            : "notification";
     const { ok } = await rateLimiter.limit(ctx, bucket, {
       key: args.emotionalProfileId,
     });

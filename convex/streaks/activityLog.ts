@@ -1,6 +1,7 @@
+import { internal } from "../_generated/api";
 import { Doc, Id } from "../_generated/dataModel";
 import { MutationCtx } from "../_generated/server";
-import { isStreakMilestone } from "./milestones";
+import { isStreakMilestone, streakMilestoneAllowed, streakMilestoneCopy } from "./milestones";
 import { earnFreeze, SAVER_CAP, settleStreak } from "./state";
 
 export type ActivityActionType = Doc<"activity_log">["actionType"];
@@ -113,7 +114,10 @@ export async function recordActivity(
   } else if (previousDayKey === shiftDayKey(dayKey, -1)) {
     newStreak = profile.currentStreak + 1;
     freezes = await earnFreeze(ctx, profile, dayKey, newStreak, freezes);
-    if (isStreakMilestone(newStreak)) savers = Math.min(savers + 1, SAVER_CAP);
+    if (isStreakMilestone(newStreak)) {
+      savers = Math.min(savers + 1, SAVER_CAP);
+      await notifyStreakMilestone(ctx, args.emotionalProfileId, newStreak, now);
+    }
   } else {
     newStreak = 1;
     // Keep the run this reset cuts, so a revive later today can restore it.
@@ -134,6 +138,31 @@ export async function recordActivity(
       lastSessionAt: Math.max(now, profile.lastSessionAt ?? 0),
     }),
     updatedAt: now,
+  });
+}
+
+/**
+ * Streak milestone push (#439). Only reached on the day the streak first
+ * steps onto a milestone, so a second action that day can't re-fire it.
+ * Freezes and revives never push — milestones are the only interruption.
+ */
+async function notifyStreakMilestone(
+  ctx: MutationCtx,
+  emotionalProfileId: Id<"emotional_profiles">,
+  streak: number,
+  now: number,
+): Promise<void> {
+  const preferences = await ctx.db
+    .query("preferences")
+    .withIndex("by_profile", (q) => q.eq("emotionalProfileId", emotionalProfileId))
+    .unique();
+  if (!streakMilestoneAllowed(preferences?.notifications)) return;
+  await ctx.scheduler.runAfter(0, internal.notifications.schedule, {
+    emotionalProfileId,
+    type: "streak_milestone",
+    content: streakMilestoneCopy(streak),
+    triggerReason: `Streak reached ${streak}`,
+    scheduledFor: now,
   });
 }
 

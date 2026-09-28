@@ -78,6 +78,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // `notification` bucket.
   kindlingReady: { kind: "fixed window", rate: 1, period: DAY },
 
+  // streak_milestone (#439) — SEPARATE bucket: the action that crosses a
+  // milestone is often the one a gentle_return brought back the same day, and
+  // the shared bucket would swallow the milestone. Cadence caps it anyway.
+  streakMilestone: { kind: "fixed window", rate: 1, period: DAY },
+
   // Resonance toggle abuse prevention
   resonanceToggle: { kind: "token bucket", rate: 20, period: MINUTE, capacity: 5 },
 
