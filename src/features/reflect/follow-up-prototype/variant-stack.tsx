@@ -10,7 +10,7 @@ import { PressableFeedback, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
 import {
-  ACK, BAR_SPACE, COPY, CRISIS, FAKE_CARD_TEXT, FAKE_STREAK, Icon, resourcesFor, STATUS,
+  ACK, BAR_SPACE, COPY, CRISIS, FAKE_CARD_TEXT, FAKE_STREAK, Icon, RESOURCES, STATUS,
   statusesFor, type IconKey, type Status, type VariantProps,
 } from "@/src/features/reflect/follow-up-prototype/proto-data";
 
@@ -65,7 +65,7 @@ export function StackVariant({ tier, step, go, act }: VariantProps) {
             <Card tint="bg-surface">
               <AppText className="text-[15px] leading-6 text-foreground/70">{COPY[s].body}</AppText>
             </Card>
-            {(s === "heavier" ? [CRISIS, ...resourcesFor(tier)] : resourcesFor(tier)).map((o) => (
+            {(s === "heavier" ? [CRISIS, ...RESOURCES] : RESOURCES).map((o) => (
               <OptionCard key={o.key} icon={o.icon} tint={o.tint} title={o.label} sub={o.sub} onPress={() => act(`→ ${o.key}`)} />
             ))}
             <OptionCard icon="check" tint="bg-surface" title="I'm okay for now" onPress={() => act("done")} last />

@@ -33,18 +33,12 @@ export const BAR_SPACE = 104;
 export const statusesFor = (tier: Tier): Status[] =>
   tier === "acute" ? ["still_here", "lighter"] : ["lighter", "still_here", "heavier", "processed"];
 
+// Music + Support audio share one row to make room for a Xolacer (all tiers).
 export const RESOURCES: Opt[] = [
-  { key: "music", label: "Music", sub: "Something to sit beside you", icon: "music", tint: "bg-accent/20" },
-  { key: "support", label: "Support audio", sub: "A short guided piece", icon: "headphones", tint: "bg-frost/20" },
-  { key: "library", label: "The Lantern", sub: "Stories from people who've been here", icon: "book", tint: "bg-ember/25" },
-];
-// Acute: Music + Support audio fold into one row to make room for a Xolacer.
-const ACUTE_RESOURCES: Opt[] = [
   { key: "xolacer", label: "Talk to a Xolacer", sub: "A real person, one-on-one", icon: "people", tint: "bg-success/20" },
   { key: "listen", label: "Music & support audio", sub: "Something to listen to", icon: "headphones", tint: "bg-accent/20" },
-  RESOURCES[2],
+  { key: "library", label: "The Lantern", sub: "Stories from people who've been here", icon: "book", tint: "bg-ember/25" },
 ];
-export const resourcesFor = (tier: Tier) => (tier === "acute" ? ACUTE_RESOURCES : RESOURCES);
 
 export const CRISIS: Opt = {
   key: "crisis", label: "Talk to someone now", sub: "Phone lines & support", icon: "phone", tint: "bg-danger/15",

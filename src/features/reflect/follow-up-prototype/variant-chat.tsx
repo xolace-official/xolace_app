@@ -9,7 +9,7 @@ import { PressableFeedback, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
 import {
-  ACK, BAR_SPACE, COPY, CRISIS, FAKE_CARD_TEXT, Icon, resourcesFor, STATUS,
+  ACK, BAR_SPACE, COPY, CRISIS, FAKE_CARD_TEXT, Icon, RESOURCES, STATUS,
   statusesFor, type Status, type VariantProps,
 } from "@/src/features/reflect/follow-up-prototype/proto-data";
 
@@ -73,7 +73,7 @@ export function ChatVariant({ tier, step, go, act }: VariantProps) {
               <>
                 <Flux>{COPY[s].title} {COPY[s].body}</Flux>
                 <View className="ml-10 gap-2">
-                  {(s === "heavier" ? [CRISIS, ...resourcesFor(tier)] : resourcesFor(tier)).map((o) => (
+                  {(s === "heavier" ? [CRISIS, ...RESOURCES] : RESOURCES).map((o) => (
                     <PressableFeedback key={o.key} onPress={() => act(`→ ${o.key}`)} className="flex-row items-center gap-3 rounded-2xl border border-foreground/10 bg-surface p-3">
                       <View className={cn("size-10 items-center justify-center rounded-xl", o.tint)}>
                         <Icon name={o.icon} size={18} />
