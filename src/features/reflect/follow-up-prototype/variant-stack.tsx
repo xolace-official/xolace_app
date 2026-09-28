@@ -1,5 +1,5 @@
 // PROTOTYPE — throwaway (#446). Variant A "Stack": the reference layout.
-// Hero on top, options as separate rounded tinted cards.
+// Hero on top, options as overlapping rounded tinted cards stacked from the bottom.
 import { useState, type ReactNode } from "react";
 import { ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { Image } from "expo-image";
@@ -50,7 +50,7 @@ export function StackVariant({ tier, step, go, act }: VariantProps) {
       </View>
 
       {/* Stack */}
-      <ScrollView className="-mt-4 grow-0 px-3" style={styles.stack} bounces={false} keyboardShouldPersistTaps="handled">
+      <ScrollView className="-mt-8 grow-0 px-3" style={styles.stack} bounces={false} keyboardShouldPersistTaps="handled">
         {picker ? (
           <>
             {statusesFor(tier).map((k) => (
@@ -117,16 +117,16 @@ function Reflect({ s, act }: { s: "lighter" | "processed"; act: (w: string) => v
 
 function Card({ tint, children }: { tint: string; children: ReactNode }) {
   return (
-    <View className="mb-2 overflow-hidden rounded-3xl bg-surface">
-      <View className={cn("px-5 py-5", tint)}>{children}</View>
+    <View className="-mb-8 overflow-hidden rounded-[32px] bg-surface">
+      <View className={cn("px-5 pb-12 pt-5", tint)}>{children}</View>
     </View>
   );
 }
 
 function OptionCard(p: { icon: IconKey; tint: string; title: string; sub?: string; onPress: () => void; last?: boolean }) {
   return (
-    <PressableFeedback onPress={p.onPress} className="mb-2 overflow-hidden rounded-3xl bg-surface">
-      <View className={cn("flex-row items-center gap-4 px-5 py-5", p.tint)}>
+    <PressableFeedback onPress={p.onPress} className={cn("overflow-hidden", !p.last && "-mb-8", "rounded-[32px] bg-surface")}>
+      <View className={cn("flex-row items-center gap-4 px-5 pt-5", p.last ? "pb-5" : "pb-12", p.tint)}>
         <Bubble icon={p.icon} />
         <View className="flex-1">
           <AppText className="font-medium text-xl leading-7 text-foreground">{p.title}</AppText>
