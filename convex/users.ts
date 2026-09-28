@@ -47,6 +47,7 @@ const profileDocValidator = v.object({
   streakSavers: v.optional(v.number()),
   streakRevivedDay: v.optional(v.string()),
   brokenStreak: v.optional(v.object({ streak: v.number(), lastCoveredDay: v.string() })),
+  freezeAckedDay: v.optional(v.string()),
   pendingKindlingSessionId: v.optional(v.id("sessions")),
   dominantEmotionTags: v.array(v.string()),
   frequentWords: v.optional(

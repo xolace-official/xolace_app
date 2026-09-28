@@ -176,6 +176,8 @@ describe("streak freeze (#434)", () => {
     expect(await openAt(3)).toBe(1); // never shown: still pending
     await acknowledge();
     expect(await openAt(3)).toBe(0);
+    // The acknowledged profile still passes getFullContext's returns validator.
+    await expect(user.t.query(api.users.getFullContext, {})).resolves.toBeTruthy();
     await record(user, 3);
 
     // Bridged by recordActivity, not the open: still surfaces on the next open.
