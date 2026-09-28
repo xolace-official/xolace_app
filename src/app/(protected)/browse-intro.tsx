@@ -27,7 +27,7 @@ const CONTENT: Record<
     heroImage: { uri: 'https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/5cac4b6b-7e73-4018-8c2d-0c4aa3c0539b' },
     title: 'Welcome to the Lantern',
     subtitle:
-      'A library of stories and reflections, picked for how they feel. New reads arrive as the collection grows.',
+      'A library of advices, information and stories, built for support. New reads arrive as the collection grows.',
     event: 'library_intro_completed',
   },
 };
