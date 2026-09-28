@@ -2,7 +2,8 @@ import { Migrations } from "@convex-dev/migrations";
 import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 import { reflectionRank } from "./lib/aggregates";
-import { localDayKey } from "./streaks/activityLog";
+import { localDayKey, shiftDayKey } from "./streaks/activityLog";
+import { FREEZE_CAP } from "./streaks/state";
 
 // Run both in sequence (renameRawInput first, then renameUserInput):
 //   bunx convex run migrations:runAll
@@ -101,6 +102,38 @@ export const cutoverActivityLog = migrations.define({
       createdAt: doc.lastSessionAt,
       updatedAt: doc.lastSessionAt,
     });
+  },
+});
+
+// Best-streak restore. The old 48h/UTC streak (reflect-only) dropped runs people
+// had kept, so profiles active in the last 30 days restart from their best
+// run, not what survived. Run AFTER cutoverActivityLog (it zeroes expired
+// streaks; this reads longestStreak, which it keeps).
+// Lit via streakRevivedDay = yesterday: covered for the gap check with no
+// activity_log row, so the graph stays honest. FREEZE_CAP freezes give a few
+// days to come back before it lapses again. Idempotent — a set
+// streakRevivedDay means restored (or revived) already.
+//   bunx convex run migrations:run '{"fn": "migrations:restoreBestStreak"}'
+const RESTORE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+export const restoreBestStreak = migrations.define({
+  table: "emotional_profiles",
+  migrateOne: async (ctx, doc) => {
+    const best = Math.max(doc.longestStreak ?? 0, doc.currentStreak);
+    const recent = doc.lastSessionAt !== undefined && Date.now() - doc.lastSessionAt < RESTORE_WINDOW_MS;
+    if (best === 0 || !recent || doc.streakRevivedDay !== undefined) return;
+
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", doc._id))
+      .unique();
+    const today = localDayKey(Date.now(), preferences?.notifications.timezone ?? "UTC");
+    return {
+      currentStreak: best,
+      longestStreak: best,
+      streakRevivedDay: shiftDayKey(today, -1),
+      streakFreezes: Math.max(doc.streakFreezes ?? 0, FREEZE_CAP),
+      brokenStreak: undefined,
+    };
   },
 });
 

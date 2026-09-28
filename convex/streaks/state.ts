@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { Doc } from "../_generated/dataModel";
 import { mutation, MutationCtx, QueryCtx } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
+import { updateNotificationPrefs } from "../lib/notificationPrefs";
 import { ACTION_WEIGHTS, localDayKey, shiftDayKey } from "./activityLog";
 
 /** Freezes on hand never exceed this. Xolace+ may raise it later (#427). */
@@ -204,16 +205,32 @@ export async function settleOnOpen(
 
 /** App open: the read-time recompute that makes a bridged gap durable. */
 export const settle = mutation({
-  args: {},
+  // The device's IANA timezone. Only the notification flows used to store one,
+  // so everyone else's streak days ran on UTC and could break across local
+  // midnight. Optional: pre-fix clients omit it.
+  args: { timezone: v.optional(v.string()) },
   // Frozen days to acknowledge in-app (#436); pre-#436 clients ignore it.
   // Reading doesn't mark them seen — only acknowledgeFreezes does, once the
   // banner has actually shown, so an old client or a killed app loses nothing.
   returns: v.number(),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+    // Before settling, so this open's gap check already runs on local days.
+    if (args.timezone && isValidTimezone(args.timezone) && args.timezone !== (await profileTimezone(ctx, profile))) {
+      await updateNotificationPrefs(ctx, profile._id, { timezone: args.timezone });
+    }
     return await settleOnOpen(ctx, profile);
   },
 });
+
+function isValidTimezone(timezone: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-CA", { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /** The freeze banner was shown: mark every frozen day so far as seen (#436). */
 export async function acknowledgeFrozenDays(ctx: MutationCtx, profile: Doc<"emotional_profiles">) {

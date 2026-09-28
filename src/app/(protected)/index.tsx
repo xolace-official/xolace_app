@@ -127,7 +127,9 @@ export default function ProtectedIndex() {
   const freezeShown = useRef(false);
   const profileId = profile?._id;
   useEffect(() => {
-    if (profileId) settleStreak().then(setFrozenDays, () => {});
+    if (profileId) {
+      settleStreak({ timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }).then(setFrozenDays, () => {});
+    }
   }, [profileId, settleStreak]);
 
   // Per-route TTI for the reflect home: the screen is genuinely ready once the
