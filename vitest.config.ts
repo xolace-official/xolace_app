@@ -1,6 +1,12 @@
 import path from 'node:path';
 import { loadEnv } from 'vite';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
+
+const RUN_EVALS = process.env.RUN_EVALS === '1';
+const withoutAnthropicKey = (env: Record<string, string>) => {
+  if (!RUN_EVALS) delete env.ANTHROPIC_API_KEY;
+  return env;
+};
 
 export default defineConfig({
   // Mirrors the `@/*` -> `./*` path mapping in tsconfig.json.
@@ -15,6 +21,9 @@ export default defineConfig({
     // `test`/`test:coverage` drop `*.eval.test.ts` on top of this; `test:evals`
     // is what runs them.
     include: ['convex/**/*.test.ts', 'src/**/*.test.ts'],
+    // Live evals spend Anthropic credits: excluded from every run (local and
+    // CI) unless RUN_EVALS=1 opts in — see `test:evals`.
+    exclude: [...configDefaults.exclude, ...(RUN_EVALS ? [] : ['**/*.eval.test.ts'])],
     setupFiles: ['./vitest.setup.ts'],
     // edge-runtime workers occasionally race their console.log RPC against
     // worker teardown ("Closing rpc while onUserConsoleLog was pending") —
@@ -24,7 +33,8 @@ export default defineConfig({
     // `bun test` auto-loaded .env.local; vitest only exposes VITE_-prefixed
     // vars, so the live evals would silently see no ANTHROPIC_API_KEY and
     // no-op. Empty prefix = load everything into process.env.
-    env: loadEnv('test', process.cwd(), ''),
+    // Outside evals the key is dropped, so no test can reach the live API.
+    env: withoutAnthropicKey(loadEnv('test', process.cwd(), '')),
     coverage: {
       provider: 'v8',
       include: ['convex/**'],

@@ -9,11 +9,22 @@ import { describe, expect, it, vi } from "vitest";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
-import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
+import { aggregatesMock, noopJob, revenuecatMock } from "../test/mocks.helpers";
 import { streakMilestoneCopy } from "./milestones";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../revenuecat", () => revenuecatMock(false));
+// Assert at the enqueue boundary: convex-test runs `runAfter(0)` jobs on a
+// real setTimeout, and one that logs after the file finishes trips Vitest's
+// "Closing rpc while onUserConsoleLog was pending".
+vi.mock("../notifications", async (orig) => ({
+  ...(await orig<typeof import("../notifications")>()),
+  schedule: noopJob(),
+}));
+vi.mock("../streamSetup", async (orig) => ({
+  ...(await orig<typeof import("../streamSetup")>()),
+  addToXolaceChannel: noopJob(),
+}));
 
 const DAY = 24 * 60 * 60 * 1000;
 const BASE = Date.UTC(2026, 0, 5, 12);
