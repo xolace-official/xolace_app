@@ -65,6 +65,15 @@ type TogglesSlice = {
   /** One-time flag — once true, the Xolacer primer never gates a request again. */
   xolacerPrimerSeen: boolean;
   setXolacerPrimerSeen: (v: boolean) => void;
+  /** One-time flag — once true, the Music family welcome never shows again. */
+  musicIntroSeen: boolean;
+  setMusicIntroSeen: (v: boolean) => void;
+  /** One-time flag — once true, the Support audio family welcome never shows again. */
+  supportAudioIntroSeen: boolean;
+  setSupportAudioIntroSeen: (v: boolean) => void;
+  /** One-time flag — once true, the Lantern (library) welcome never shows again. */
+  libraryIntroSeen: boolean;
+  setLibraryIntroSeen: (v: boolean) => void;
   /** Last resolved `xolacerChat.status().enabled` — lets a returning chat user connect before the live query answers (#342). */
   chatEnabledCached: boolean;
   setChatEnabledCached: (v: boolean) => void;
@@ -176,6 +185,12 @@ export const useAppStore = create<AppState>()(
         setVentIntroSeen: (v) => set({ ventIntroSeen: v }),
         xolacerPrimerSeen: false,
         setXolacerPrimerSeen: (v) => set({ xolacerPrimerSeen: v }),
+        musicIntroSeen: false,
+        setMusicIntroSeen: (v) => set({ musicIntroSeen: v }),
+        supportAudioIntroSeen: false,
+        setSupportAudioIntroSeen: (v) => set({ supportAudioIntroSeen: v }),
+        libraryIntroSeen: false,
+        setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
         chatEnabledCached: false,
         setChatEnabledCached: (v) => set({ chatEnabledCached: v }),
         shakeHintSeen: false,
@@ -258,6 +273,9 @@ export const useAppStore = create<AppState>()(
           bridgeIntroSeen: s.bridgeIntroSeen,
           ventIntroSeen: s.ventIntroSeen,
           xolacerPrimerSeen: s.xolacerPrimerSeen,
+          musicIntroSeen: s.musicIntroSeen,
+          supportAudioIntroSeen: s.supportAudioIntroSeen,
+          libraryIntroSeen: s.libraryIntroSeen,
           chatEnabledCached: s.chatEnabledCached,
           shakeHintSeen: s.shakeHintSeen,
           returnWelcomeSeenAt: s.returnWelcomeSeenAt,

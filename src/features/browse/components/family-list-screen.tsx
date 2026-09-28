@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { LegendList } from '@legendapp/list/react-native';
 import { Skeleton } from 'heroui-native';
 import { usePostHog } from 'posthog-react-native';
@@ -8,6 +8,7 @@ import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { useStablePaginatedQuery } from '@/src/lib/convex/use-stable-query';
+import { useAppStore } from '@/src/store/store';
 import { BrowseFilterMenu, type FilterOption } from './browse-filter-menu';
 import { FAMILY_LABEL, TrackRow, type TrackItem } from './track-row';
 
@@ -39,11 +40,18 @@ export function FamilyListScreen() {
   const params = useLocalSearchParams<{ family?: Family }>();
   const [family, setFamily] = useState<Family>(params.family === 'music' ? 'music' : 'support');
   const posthog = usePostHog();
+  const musicIntroSeen = useAppStore((s) => s.musicIntroSeen);
 
   useEffect(() => {
     posthog.capture('browse_family_opened', { family });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [family]);
+
+  // Keyed on the live family, not route mount: toggling the toolbar to Music
+  // for the first time opens the welcome too. The modal sets the flag.
+  useEffect(() => {
+    if (family === 'music' && !musicIntroSeen) router.push('/browse-intro');
+  }, [family, musicIntroSeen]);
 
   const { results, status, isLoading, loadMore } = useStablePaginatedQuery(
     api.browse.listByFamily,

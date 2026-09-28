@@ -3,6 +3,45 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Browse surface intros: three flags, not one (2026-09-28)
+
+Each of Browse's three destination surfaces gets its own one-time welcome
+screen, following the existing `ventIntroSeen`/`bridgeIntroSeen` shape
+exactly: a client-only persisted Zustand flag, a full-screen swap-in shown
+in place of the surface's real content on first entry, one deliberate CTA
+tap that both dismisses it and sets the flag. No server field — same
+reasoning as `xolacerPrimerSeen`: orientation, not a ticked-box record.
+
+- **`musicIntroSeen`** / **`supportAudioIntroSeen`** — `FamilyListScreen`
+  (`browse/list`) is **one mounted route with an in-place toolbar toggle**
+  between the two families (`src/features/browse/components/family-list-screen.tsx`),
+  not two routes. The two flags are keyed on the live `family` value, not on
+  route mount: landing on `list?family=music` for the first time fires the
+  Music welcome; later switching the same session's toolbar to Support audio
+  for the first time fires that one too, independently. A user who only ever
+  deep-links into one family must still see the other's welcome the first
+  time they touch it.
+- **`libraryIntroSeen`** — the Library home (`browse/library`). Code says
+  "library" everywhere (flag, component name `LibraryIntro`), matching the
+  existing Library/Lantern split — the welcome's own copy says **Lantern**
+  to the reader, same as the rest of the Library's user-facing text.
+
+**Rejected: one shared flag covering all three.** A single "here's what
+Browse offers" welcome would have to stay generic across three surfaces
+that are different enough to deserve their own words, and would never
+explain Music or Support audio specifically to a user who opened Lantern
+first (or vice versa).
+
+**The CTA reuses the runbuds hold-fill animation, but not its word.** The
+component (`src/components/extras/sample-codes/runbuds/components/hold-to-end-button.tsx`)
+is a confirm-a-consequential-action pattern ("hold to end run"); nothing on
+these welcomes is gated or locked, so the label reads **"Hold to
+begin"/"Hold to continue,"** never "unlock" — the fill animation is kept for
+its tactile flourish, the copy doesn't claim a gate that isn't there.
+
+**Not an ADR** — same reasoning as the Xolacer primer: a client-only seen
+flag is trivially reversible, so two of the three ADR criteria fail.
+
 ## Library: reading mode (2026-09-24)
 
 How an entry looks is set by picking a **reading mode**, not by adjusting
