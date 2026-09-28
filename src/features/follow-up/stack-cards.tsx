@@ -22,6 +22,7 @@ const ICONS = {
   music: { ios: "music.note", android: "music_note", web: "music_note" },
   waveform: { ios: "waveform", android: "graphic_eq", web: "graphic_eq" },
   book: { ios: "book", android: "menu_book", web: "menu_book" },
+  lifebuoy: { ios: "lifepreserver", android: "support", web: "support" },
 }satisfies Record<string, Symbol>;
 export type IconKey = keyof typeof ICONS;
 

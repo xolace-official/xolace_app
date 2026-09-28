@@ -54,9 +54,6 @@ export const VENT_LABEL = "Let it out";
 export const VENT_SUBLABEL = "Say it out loud - nothing is kept";
 export const VENT_A11Y_LABEL = "Let it out - open voice vent, your voice is never stored";
 
-/** One-line acknowledgment shown after a chip tap, before the sheet closes. */
-export const FOLLOW_UP_ACK = "Thanks for checking back in.";
-
 /** The answers whose next step is the reflective prompt (#449 lighter, #450 processed). */
 export type ReflectiveAnswer = "lighter" | "processed";
 
@@ -110,14 +107,24 @@ export const STILL_HERE_LINKS = [
 export const STILL_HERE_SKIP = "Not now";
 
 /**
- * The headline over each answer's next step. `lighter` (#449), `processed`
- * (#450) and `still_here` (#451) are tailored; `heavier` keeps the generic
- * acknowledgment until #452.
+ * The `heavier` next step (#452): a menu of places to turn, support first.
+ * Keys match `follow_up_responses.heavierChoice`. Picking none is fine.
  */
+export const HEAVIER_HEADLINE = "Thank you for telling me. You don't have to carry it alone.";
+export const HEAVIER_MESSAGE = "If something would help right now, pick one. Or just close this.";
+export const HEAVIER_OPTIONS = [
+  { key: "crisis_resources", title: "Talk to someone", sub: "People you can reach right now" },
+  { key: "music", title: "Music", sub: "Something to listen to" },
+  { key: "support_audio", title: "Support audio", sub: "A voice to sit with" },
+  { key: "library", title: "Lantern", sub: "Stories from people who've been here" },
+] as const;
+export const HEAVIER_SKIP = "Not now";
+
+/** The headline over each answer's next step — all four tailored (#449–#452). */
 export const STEP_HEADLINE: Record<StatusResponse, string> = {
   lighter: REFLECTIVE_COPY.lighter.prompt,
   still_here: STILL_HERE_HEADLINE,
-  heavier: FOLLOW_UP_ACK,
+  heavier: HEAVIER_HEADLINE,
   processed: REFLECTIVE_COPY.processed.prompt,
 };
 

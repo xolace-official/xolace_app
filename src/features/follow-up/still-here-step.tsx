@@ -14,7 +14,7 @@ import {
 type LinkKey = (typeof STILL_HERE_LINKS)[number]["key"];
 
 // Same entry points as the Browse hub's tiles — static on purpose, no Kindling twig.
-const LINK: Record<LinkKey, { icon: IconKey; tint: string; href: Href }> = {
+export const LINK: Record<LinkKey, { icon: IconKey; tint: string; href: Href }> = {
   music: { icon: "music", tint: "bg-accent/20", href: "/browse/list?family=music" },
   support: { icon: "waveform", tint: "bg-frost/20", href: "/browse/list?family=support" },
   library: { icon: "book", tint: "bg-ember/25", href: "/browse/library" },
