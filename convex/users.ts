@@ -248,6 +248,8 @@ export const getFullContext = query({
     intake: v.union(intakeResponseDocValidator, v.null()),
     /** Freeze-aware live streak (#434) — profile.currentStreak is a stale mirror. */
     streak: v.number(),
+    /** The count a streak saver would rekindle right now (#437); absent when no revive is on offer. */
+    reviveStreak: v.optional(v.number()),
   }),
   handler: async (ctx) => {
     const { user, profile } = await requireAuth(ctx);
@@ -286,9 +288,9 @@ export const getFullContext = query({
       .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
       .unique();
 
-    const { streak } = await streakState(ctx, profile);
+    const { streak, revive } = await streakState(ctx, profile);
 
-    return { user, profile, preferences, hasPendingFollowUp, intake, streak };
+    return { user, profile, preferences, hasPendingFollowUp, intake, streak, reviveStreak: revive?.streak };
   },
 });
 

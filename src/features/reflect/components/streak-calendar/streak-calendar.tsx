@@ -2,11 +2,17 @@
  * Orchestrator: renders the always-visible mini card in the header
  * and, when the streak has increased past the last acknowledged day,
  * measures the mini card and mounts the reveal overlay via Portal.
+ *
+ * While a streak saver can undo a break (#437) the mini shows the prior count
+ * dimmed with a "Tap to rekindle" chip — the only prompt for a revive. With no
+ * offer (no saver, or the window closed) the card just reads the reset.
  */
 import { useEffect, useState } from "react";
+import { View } from "react-native";
 
 import { useIsFocused } from "expo-router/react-navigation";
-import { Portal, useThemeColor } from "heroui-native";
+import { useMutation } from "convex/react";
+import { Portal, PressableFeedback, useThemeColor } from "heroui-native";
 import Animated, {
   measure,
   runOnUI,
@@ -16,6 +22,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
+import { api } from "@/convex/_generated/api";
+import { AppText } from "@/src/components/shared/app-text";
+import { playSoftPress } from "@/src/lib/haptics";
 import { useAppStore } from "@/src/store/store";
 import { posthog } from "@/src/config/posthog";
 import {
@@ -24,6 +33,7 @@ import {
   REVEAL_START_DELAY_MS,
   type CardColors,
 } from "./constants";
+import { RekindleSheet } from "./rekindle-sheet";
 import { RevealOverlay } from "./reveal-overlay";
 import { StreakFlipCard } from "./streak-flip-card";
 
@@ -32,9 +42,11 @@ const miniCardStyle = { width: MINI_SIZE };
 
 type Props = {
   currentStreak: number;
+  /** The count a streak saver would restore, while a revive is on offer. */
+  reviveStreak?: number;
 };
 
-export const StreakCalendar = ({ currentStreak }: Props) => {
+export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
   const lastAcknowledgedStreak = useAppStore((s) => s.lastAcknowledgedStreak);
   const setLastAcknowledgedStreak = useAppStore(
     (s) => s.setLastAcknowledgedStreak,
@@ -61,8 +73,32 @@ export const StreakCalendar = ({ currentStreak }: Props) => {
   const miniRef = useAnimatedRef<Animated.View>();
   const [miniLayout, setMiniLayout] = useState<MeasuredDimensions | null>(null);
 
+  const revive = useMutation(api.streaks.revive.revive);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // The query doesn't re-run when the window closes at midnight, so a revive
+  // the server turns down hides the offer it was made from — silently.
+  const [expiredOffer, setExpiredOffer] = useState<number>();
+  // Re-arm once the query drops the offer, so a later break's revive at the
+  // same count still shows.
+  if (reviveStreak === undefined && expiredOffer !== undefined) setExpiredOffer(undefined);
+  const offer = reviveStreak !== expiredOffer ? reviveStreak : undefined;
+
+  const handleRekindle = async () => {
+    setSheetOpen(false);
+    try {
+      const day = await revive();
+      posthog.capture("streak_rekindled", { day });
+    } catch (error) {
+      // Anything else (offline, a server hiccup) leaves the chip up to retry.
+      if ((error as { data?: { code?: string } }).data?.code === "no_revive_available") {
+        setExpiredOffer(offer);
+      }
+    }
+  };
+
+  // The rekindled count plays the reveal once the offer is gone.
   const revealPending =
-    currentStreak > lastAcknowledgedStreak && currentStreak > 0;
+    offer === undefined && currentStreak > lastAcknowledgedStreak && currentStreak > 0;
   const revealing = miniLayout !== null;
 
   useEffect(() => {
@@ -111,6 +147,35 @@ export const StreakCalendar = ({ currentStreak }: Props) => {
 
   // While a reveal is pending/running, the mini shows the old number
   const miniDay = revealPending ? Math.max(currentStreak - 1, 0) : currentStreak;
+
+  if (offer !== undefined) {
+    return (
+      <>
+        <PressableFeedback
+          onPress={() => {
+            playSoftPress();
+            setSheetOpen(true);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={`${offer}-day streak went quiet. Tap to rekindle`}
+          className="flex-row items-center gap-2"
+        >
+          <View className="opacity-40" style={miniCardStyle}>
+            <StreakFlipCard day={offer} metrics={MINI_METRICS} colors={colors} />
+          </View>
+          <View className="rounded-full bg-accent/15 px-3 py-1">
+            <AppText className="text-xs font-semibold text-accent">Tap to rekindle</AppText>
+          </View>
+        </PressableFeedback>
+        <RekindleSheet
+          isOpen={sheetOpen}
+          streak={offer}
+          onRekindle={handleRekindle}
+          onClose={() => setSheetOpen(false)}
+        />
+      </>
+    );
+  }
 
   return (
     <>
