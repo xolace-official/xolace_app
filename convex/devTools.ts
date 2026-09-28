@@ -10,6 +10,7 @@ import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 import { rankReplace, reflectionRank } from "./lib/aggregates";
 import { migrations } from "./migrations";
+import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 import { workflow } from "./followUps";
 
 function assertDevToolsEnabled() {
@@ -311,5 +312,57 @@ export const seedKindling = internalMutation({
       await ctx.db.insert("path_steps", { pathId, ...t, state: "pending" });
     }
     return pathId;
+  },
+});
+
+/**
+ * Stage a revivable break (#437): a `streak`-day run whose last covered day
+ * was two local days ago, no freezes to bridge the miss, one streak saver on
+ * hand (pass `savers: 0` to see the silent reset). Deletes the profile's activity_log and frozen_days rows from yesterday
+ * on, so the missed day is really missed.
+ *   bunx convex run devTools:seedRevive '{"emotionalProfileId":"...","streak":5}'
+ */
+export const seedRevive = internalMutation({
+  args: { emotionalProfileId: v.id("emotional_profiles"), streak: v.number(), savers: v.optional(v.number()) },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    assertDevToolsEnabled();
+    const profileId = args.emotionalProfileId;
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
+      .unique();
+    const yesterday = shiftDayKey(localDayKey(Date.now(), preferences?.notifications.timezone ?? "UTC"), -1);
+
+    const logs = await ctx.db
+      .query("activity_log")
+      .withIndex("by_profile_day_action", (q) => q.eq("emotionalProfileId", profileId).gte("dayKey", yesterday))
+      .take(50);
+    const frozen = await ctx.db
+      .query("frozen_days")
+      .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profileId).gte("dayKey", yesterday))
+      .take(50);
+    for (const row of logs) await ctx.db.delete("activity_log", row._id);
+    for (const row of frozen) await ctx.db.delete("frozen_days", row._id);
+    // The run's last covered day is the day before the miss. Acked, so the
+    // streak-held screen (#436) doesn't claim it.
+    const lastCovered = shiftDayKey(yesterday, -1);
+    const covered = await ctx.db
+      .query("frozen_days")
+      .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profileId).eq("dayKey", lastCovered))
+      .first();
+    if (!covered) {
+      await ctx.db.insert("frozen_days", { emotionalProfileId: profileId, dayKey: lastCovered, createdAt: Date.now() });
+    }
+
+    await ctx.db.patch("emotional_profiles", profileId, {
+      freezeAckedDay: lastCovered,
+      currentStreak: args.streak,
+      streakSavers: args.savers ?? 1,
+      streakFreezes: 0,
+      streakRevivedDay: undefined,
+      brokenStreak: undefined,
+    });
+    return null;
   },
 });
