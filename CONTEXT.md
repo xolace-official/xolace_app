@@ -836,13 +836,29 @@ gated behind Xolace+, or hidden because its input does not exist yet, leaves
 the denominator rather than sitting permanently incomplete. A total a user
 cannot reach is a guilt mechanic, and this product does not ship those.
 
-**The check-in streak is recorded but not rendered.** Consecutive UTC dates
-with a mood set, broken by any gap — a *date* rule, deliberately not the
-timestamp-based "resets after 48 hours" of `emotional_profiles.currentStreak`,
-which is about to be reworked. There are no stored counters: the day rows are
-the streak, derived on read when a surface finally needs one. Two visible
-streak numbers in one app is a contradiction, so this one stays internal until
-the reflect streak rework decides what a streak means.
+**There is no separate check-in streak.** Setting the Daily Mood is a
+**qualifying action** (see Streak, below) — it feeds the one app-wide streak
+like any other. Two visible streak numbers in one app is a contradiction.
+
+## Streak (2026-09-26)
+
+The **streak** is the run of consecutive days (UTC, the same **day** as Today)
+on which the user did at least one **qualifying action**. One per day is
+enough; doing more on the same day never adds to it. It is a *date* rule — the
+old "resets after 48 hours" timestamp window is gone.
+
+A **qualifying action** is one of: completing a reflect session (however its
+path ends — exit, solo, or peers are one completion, not three), a vent, a
+library read, a sit-with-this completed from a kindling twig, or setting the
+Daily Mood. A **quote reaction** is logged but carries no streak weight: it can
+appear on the contribution graph, never keep a streak alive.
+
+The **activity log** is the record of which actions happened on which day — the
+source of truth. The streak number is kept alongside it but can always be
+rebuilt from it.
+
+`lastSessionAt` means *the last completed reflect session*, nothing more. It is
+not the streak's clock.
 
 **Today owns no gates and no generation rules of its own.** The quote row
 renders whatever `dailyQuotes.getToday` returns for that user — session-derived
