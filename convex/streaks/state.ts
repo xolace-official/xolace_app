@@ -17,7 +17,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * restarts the count, so a bridged week doesn't earn. currentStreak counts
  * qualifying days only, so the run since the last frozen day is the smaller of
  * the streak and the days elapsed since it (a frozen day from an older, lapsed
- * streak is further back than the streak itself).
+ * streak is further back than the streak itself). A revived day (#435) restarts
+ * it too — a revive bridges a gap just as a freeze does.
  */
 export async function earnFreeze(
   ctx: QueryCtx,
@@ -26,13 +27,19 @@ export async function earnFreeze(
   streak: number,
   freezes: number,
 ): Promise<number> {
-  const lastFrozen = (
-    await ctx.db
-      .query("frozen_days")
-      .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profile._id))
-      .order("desc")
-      .first()
-  )?.dayKey;
+  const lastFrozen = [
+    (
+      await ctx.db
+        .query("frozen_days")
+        .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profile._id))
+        .order("desc")
+        .first()
+    )?.dayKey,
+    profile.streakRevivedDay,
+  ]
+    .filter((day) => day !== undefined)
+    .sort()
+    .pop();
   const run =
     lastFrozen === undefined ? streak : Math.min(streak, (Date.parse(dayKey) - Date.parse(lastFrozen)) / DAY_MS);
   return run > 0 && run % FREEZE_EARN_EVERY === 0 ? Math.min(freezes + 1, FREEZE_CAP) : freezes;
@@ -48,7 +55,16 @@ export type StreakState = {
   /** Missed days a freeze covers on settle, oldest first. */
   bridge: string[];
   timezone: string;
+  /**
+   * A break a streak saver can undo right now (#435): the count a revive
+   * restores and the missed day it covers. Only once freeze couldn't — freeze
+   * is first-in-line because `streak` resolves before this is ever set.
+   */
+  revive?: { streak: number; gapDay: string };
 };
+
+/** Streak savers on hand never exceed this. Xolace+ may raise it later (#428). */
+export const SAVER_CAP = 1;
 
 /**
  * The one freeze-aware read of streak state (#434). Every streak consumer —
@@ -94,22 +110,46 @@ export async function streakState(
       .order("desc")
       .first()
   )?.dayKey;
-  const lastCoveredDay =
-    lastFrozen !== undefined && (lastQualifying === undefined || lastFrozen > lastQualifying)
-      ? lastFrozen
-      : lastQualifying;
+  // A revived day counts as covered for the gap check only — it has no row.
+  const lastCoveredDay = [lastQualifying, lastFrozen, profile.streakRevivedDay]
+    .filter((day) => day !== undefined)
+    .sort()
+    .pop();
 
-  const lapsed = { streak: 0, freezes, lastCoveredDay, bridge: [], timezone };
+  // Revive window (#428): through the day after the missed day, in local
+  // day keys — the missed day plus one more.
+  const savers = profile.streakSavers ?? 0;
+  const reviveOffer = (streak: number, coveredDay: string) =>
+    savers > 0 && today === shiftDayKey(coveredDay, 2) && profile.streakRevivedDay !== shiftDayKey(coveredDay, 1)
+      ? { streak, gapDay: shiftDayKey(coveredDay, 1) }
+      : undefined;
+
   // A freeze bridges from an existing streak; it never starts one.
-  if (lastCoveredDay === undefined || profile.currentStreak === 0) return lapsed;
+  if (lastCoveredDay === undefined || profile.currentStreak === 0) {
+    return { streak: 0, freezes, lastCoveredDay, bridge: [], timezone };
+  }
 
   // Negative when the timezone moved west past the last covered day: still lit.
   const missed = (Date.parse(today) - Date.parse(lastCoveredDay)) / DAY_MS - 1;
-  if (missed > freezes) return lapsed;
+  if (missed > freezes) {
+    const revive = reviveOffer(profile.currentStreak, lastCoveredDay);
+    return { streak: 0, freezes, lastCoveredDay, bridge: [], timezone, ...(revive && { revive }) };
+  }
 
   const bridge: string[] = [];
   for (let i = 1; i <= missed; i++) bridge.push(shiftDayKey(lastCoveredDay, i));
-  return { streak: profile.currentStreak, freezes: freezes - bridge.length, lastCoveredDay, bridge, timezone };
+  // The break's first action already reset the count: the run it cut is
+  // still revivable today, continuing into today's restarted streak.
+  const broken = profile.brokenStreak;
+  const revive = broken && reviveOffer(broken.streak + profile.currentStreak, broken.lastCoveredDay);
+  return {
+    streak: profile.currentStreak,
+    freezes: freezes - bridge.length,
+    lastCoveredDay,
+    bridge,
+    timezone,
+    ...(revive && { revive }),
+  };
 }
 
 /**

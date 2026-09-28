@@ -1,6 +1,7 @@
 import { Doc, Id } from "../_generated/dataModel";
 import { MutationCtx } from "../_generated/server";
-import { earnFreeze, settleStreak } from "./state";
+import { isStreakMilestone } from "./milestones";
+import { earnFreeze, SAVER_CAP, settleStreak } from "./state";
 
 export type ActivityActionType = Doc<"activity_log">["actionType"];
 
@@ -103,6 +104,8 @@ export async function recordActivity(
   // are never double-counted. Floor at 1: this day now has a qualifying row.
   let newStreak: number;
   let freezes = state.freezes;
+  let savers = profile.streakSavers ?? 0;
+  let brokenStreak: Doc<"emotional_profiles">["brokenStreak"];
   if (previousDayKey === undefined) {
     newStreak = 1;
   } else if (dayKey <= previousDayKey) {
@@ -110,8 +113,11 @@ export async function recordActivity(
   } else if (previousDayKey === shiftDayKey(dayKey, -1)) {
     newStreak = profile.currentStreak + 1;
     freezes = await earnFreeze(ctx, profile, dayKey, newStreak, freezes);
+    if (isStreakMilestone(newStreak)) savers = Math.min(savers + 1, SAVER_CAP);
   } else {
     newStreak = 1;
+    // Keep the run this reset cuts, so a revive later today can restore it.
+    if (profile.currentStreak > 0) brokenStreak = { streak: profile.currentStreak, lastCoveredDay: previousDayKey };
   }
 
   const newLongestStreak = Math.max(newStreak, profile.longestStreak ?? profile.currentStreak);
@@ -120,6 +126,8 @@ export async function recordActivity(
     currentStreak: newStreak,
     longestStreak: newLongestStreak,
     streakFreezes: freezes,
+    ...(savers !== (profile.streakSavers ?? 0) && { streakSavers: savers }),
+    ...(brokenStreak && { brokenStreak }),
     // lastSessionAt keeps meaning "last completed reflect" (#426) — nudges,
     // Return Welcome and plus-offers read it. Never moves backward.
     ...(args.actionType === "reflect" && {

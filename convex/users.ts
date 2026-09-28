@@ -44,6 +44,9 @@ const profileDocValidator = v.object({
   currentStreak: v.number(),
   longestStreak: v.optional(v.number()),
   streakFreezes: v.optional(v.number()),
+  streakSavers: v.optional(v.number()),
+  streakRevivedDay: v.optional(v.string()),
+  brokenStreak: v.optional(v.object({ streak: v.number(), lastCoveredDay: v.string() })),
   pendingKindlingSessionId: v.optional(v.id("sessions")),
   dominantEmotionTags: v.array(v.string()),
   frequentWords: v.optional(

@@ -151,6 +151,8 @@ import type * as sessions from "../sessions.js";
 import type * as storage_storageTools from "../storage/storageTools.js";
 import type * as streaks_activityLog from "../streaks/activityLog.js";
 import type * as streaks_manual from "../streaks/manual.js";
+import type * as streaks_milestones from "../streaks/milestones.js";
+import type * as streaks_revive from "../streaks/revive.js";
 import type * as streaks_state from "../streaks/state.js";
 import type * as streamGunzip from "../streamGunzip.js";
 import type * as streamSetup from "../streamSetup.js";
@@ -311,6 +313,8 @@ declare const fullApi: ApiFromModules<{
   "storage/storageTools": typeof storage_storageTools;
   "streaks/activityLog": typeof streaks_activityLog;
   "streaks/manual": typeof streaks_manual;
+  "streaks/milestones": typeof streaks_milestones;
+  "streaks/revive": typeof streaks_revive;
   "streaks/state": typeof streaks_state;
   streamGunzip: typeof streamGunzip;
   streamSetup: typeof streamSetup;

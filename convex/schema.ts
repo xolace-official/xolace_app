@@ -139,6 +139,19 @@ export default defineSchema({
     // Optional — rows predating freezes read as `?? 0`.
     streakFreezes: v.optional(v.number()),
 
+    // Streak savers on hand (#435): +1 at each streak milestone
+    // (convex/streaks/milestones.ts), capped at SAVER_CAP. Spent by an
+    // explicit revive (convex/streaks/revive.ts). Optional — reads as `?? 0`.
+    streakSavers: v.optional(v.number()),
+    // Missed day a revive covered: streakState treats it as covered for the
+    // gap check, with no activity_log or frozen_days row, so the graph still
+    // shows it missed. Only the latest matters.
+    streakRevivedDay: v.optional(v.string()),
+    // The run recordActivity reset when a break's first action landed, kept
+    // so a revive later that day can still restore it. Self-expiring: only
+    // honoured within the revive window of `lastCoveredDay`.
+    brokenStreak: v.optional(v.object({ streak: v.number(), lastCoveredDay: v.string() })),
+
     // Session a free user bought Plus from at session-end's kindling upsell
     // (`paths.requestKindling`). The completion-time `generate.run` no-oped
     // on the free tier; `premium.onEntitlementActivated` re-queues it once
