@@ -239,7 +239,13 @@ export const getSessionCount = query({
  * App open: return user + profile + preferences in one call.
  */
 export const getFullContext = query({
-  args: {},
+  args: {
+    // The client's local day ("YYYY-MM-DD"). Value unused: it only changes the
+    // subscription's args at midnight, so the cached result — and the
+    // Date.now()-derived streak/reviveStreak below — re-runs without a write.
+    // Optional: pre-fix clients omit it.
+    day: v.optional(v.string()),
+  },
   returns: v.object({
     user: userDocValidator,
     profile: profileDocValidator,

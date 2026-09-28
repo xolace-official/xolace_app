@@ -7,7 +7,8 @@ import { profileTimezone } from "./state";
 
 // ponytail: one read of the whole log. ≤6 rows/day, so this covers years of
 // daily use; past it the *oldest* days drop off. Page by year once a real
-// history nears it.
+// history nears it. daysShowedUp is counted from this read, so it caps too —
+// a lifetime counter on emotional_profiles is the upgrade.
 const MAX_LOG_ROWS = 8000;
 const MAX_FROZEN_ROWS = 2000;
 
@@ -41,13 +42,16 @@ export const get = query({
     const { profile } = await requireAuth(ctx);
     const timezone = await profileTimezone(ctx, profile);
 
-    const logs = (
+    let logs = (
       await ctx.db
         .query("activity_log")
         .withIndex("by_profile_day_action", (q) => q.eq("emotionalProfileId", profile._id))
         .order("desc")
         .take(MAX_LOG_ROWS)
     ).reverse();
+    // A full page may have cut the oldest day mid-way — drop it rather than
+    // report it with partial breadth.
+    if (logs.length === MAX_LOG_ROWS) logs = logs.filter((log) => log.dayKey !== logs[0].dayKey);
     const frozen = await ctx.db
       .query("frozen_days")
       .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profile._id))

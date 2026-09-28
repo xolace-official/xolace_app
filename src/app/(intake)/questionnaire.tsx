@@ -8,10 +8,9 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useQuery } from 'convex/react';
+import { useFullContext } from '@/src/lib/convex/use-full-context';
 import { usePostHog } from 'posthog-react-native';
 
-import { api } from '@/convex/_generated/api';
 import type { QuestionnaireAnswers } from '@/src/components/ui/questionnaire';
 import {
   trackPaywallSkipped,
@@ -82,7 +81,7 @@ export default function IntakeQuestionnaire() {
 
   // Deduped against the root's subscription. An existing user already has a
   // name, and Q1 pre-fills from it rather than suggesting a new handle.
-  const context = useQuery(api.users.getFullContext);
+  const context = useFullContext();
   const { isPlus } = usePlusEntitlement();
   const completeIntake = useIntakeComplete();
   const finishing = useRef(false);

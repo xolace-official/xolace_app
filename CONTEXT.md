@@ -842,8 +842,9 @@ like any other. Two visible streak numbers in one app is a contradiction.
 
 ## Streak (2026-09-26)
 
-The **streak** is the run of consecutive days (UTC, the same **day** as Today)
-on which the user did at least one **qualifying action**. One per day is
+The **streak** is the run of consecutive days on which the user did at least
+one **qualifying action**. A streak day is a local calendar day in the user's
+stored timezone, with UTC as the fallback when none is stored. One per day is
 enough; doing more on the same day never adds to it. It is a *date* rule — the
 old "resets after 48 hours" timestamp window is gone.
 

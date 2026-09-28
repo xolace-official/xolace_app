@@ -4,10 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Button, useThemeColor } from 'heroui-native';
-import { useQuery } from 'convex/react';
+import { useFullContext } from '@/src/lib/convex/use-full-context';
 import { usePostHog } from 'posthog-react-native';
 
-import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { trackIntakeStarted } from '@/src/features/intake/analytics';
 import { GateFade } from '@/src/features/profile/components/gate-fade';
@@ -43,7 +42,7 @@ export default function IntakeIndex() {
   // The root gate query (#263), not a narrow one: the root is already
   // subscribed to it and Convex dedupes, so reading `sessionCount` off it costs
   // nothing — whereas a second query is a second thing to be undefined.
-  const context = useQuery(api.users.getFullContext);
+  const context = useFullContext();
 
   // Funnel entry (T7, #267). Held until the count resolves — `session_count`
   // and `is_returning_user` are the funnel's two breakdowns, so firing early

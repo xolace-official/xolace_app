@@ -7,7 +7,8 @@ import { useIsFocused } from "expo-router/react-navigation";
 import { StatusBar } from 'expo-status-bar';
 import { useObserve } from 'expo-observe';
 
-import { useMutation, useQuery } from 'convex/react';
+import { useMutation } from 'convex/react';
+import { useFullContext } from '@/src/lib/convex/use-full-context';
 
 import { api } from '@/convex/_generated/api';
 import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
@@ -105,7 +106,7 @@ export default function ProtectedIndex() {
 
   // Same getFullContext query ReflectScreen subscribes to — Convex dedupes it,
   // so this is a cached read, not a second round-trip.
-  const fullContext = useQuery(api.users.getFullContext);
+  const fullContext = useFullContext();
   const profile = fullContext?.profile;
   const hasPendingFollowUp = fullContext?.hasPendingFollowUp ?? false;
 
