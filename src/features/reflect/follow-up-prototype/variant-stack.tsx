@@ -125,7 +125,7 @@ function Card({ tint, children }: { tint: string; children: ReactNode }) {
 
 function OptionCard(p: { icon: IconKey; tint: string; title: string; sub?: string; onPress: () => void; last?: boolean }) {
   return (
-    <PressableFeedback onPress={p.onPress} className="-mb-8 overflow-hidden rounded-[36px] bg-surface">
+    <PressableFeedback onPress={p.onPress} className="-mb-8 overflow-hidden rounded-t-[36px] bg-surface">
       <View className={cn("flex-row items-center gap-4 px-5 pb-12 pt-5", p.tint)}>
         <Bubble icon={p.icon} />
         <View className="flex-1">
