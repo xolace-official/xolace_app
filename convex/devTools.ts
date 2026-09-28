@@ -12,6 +12,7 @@ import { rankReplace, reflectionRank } from "./lib/aggregates";
 import { migrations } from "./migrations";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 import { workflow } from "./followUps";
+import { deleteResponsesForCard } from "./followUpResponses";
 
 function assertDevToolsEnabled() {
   if (process.env.DEV_TOOLS_ENABLED !== "true") {
@@ -114,7 +115,10 @@ export const seedFollowUpCard = mutation({
           q.eq("emotionalProfileId", profile._id).eq("status", status),
         )
         .collect();
-      for (const c of existing) await ctx.db.delete("follow_up_cards", c._id);
+      for (const c of existing) {
+        await deleteResponsesForCard(ctx, c._id);
+        await ctx.db.delete("follow_up_cards", c._id);
+      }
     }
 
     const defaultText =

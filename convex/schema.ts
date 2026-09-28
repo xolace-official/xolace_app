@@ -1797,6 +1797,36 @@ export default defineSchema({
     // Session cascade delete (lib/sessionCascade.purgeSessions).
     .index("by_session", ["sessionId"]),
 
+  // The structured half of a check-in answer (issue #447): what the user wrote
+  // or chose AFTER picking a chip. Kept off `follow_up_cards` so that table
+  // stays lean and its `userResponse` enum stays the single outcome field.
+  // At most one row per card (followUpResponses.record upserts). Dies with its
+  // card — see deleteResponsesForCard.
+  follow_up_responses: defineTable({
+    cardId: v.id("follow_up_cards"),
+    // Denormalized from the card so consolidation can read a profile's
+    // responses without walking cards.
+    emotionalProfileId: v.id("emotional_profiles"),
+    // "What helped?" (lighter / processed). Trimmed; absent when blank.
+    reflectionText: v.optional(v.string()),
+    // The user asked for the reflection to go to peer-reflections. Intent
+    // only — sharing itself runs through the existing consent flow.
+    shareRequested: v.boolean(),
+    // Which option the user took from the "heavier" menu, if any.
+    heavierChoice: v.optional(
+      v.union(
+        v.literal("crisis_resources"),
+        v.literal("music"),
+        v.literal("support_audio"),
+        v.literal("library"),
+      ),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_card", ["cardId"])
+    .index("by_profile_created", ["emotionalProfileId", "createdAt"]),
+
   // ===========================================================
   // 21. SEMANTIC PROFILES (Cognition Layer §1.2)
   // ===========================================================

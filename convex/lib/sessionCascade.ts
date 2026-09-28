@@ -2,6 +2,7 @@ import { Doc, Id } from "../_generated/dataModel";
 import { MutationCtx } from "../_generated/server";
 import { purgeEpisodicEntries } from "../episodicMemory";
 import { ACTIVE_STATUSES, cancelFollowUpWorkflow } from "../followUps";
+import { deleteResponsesForCard } from "../followUpResponses";
 
 /**
  * The reference graph for "what dies when a session dies."
@@ -20,6 +21,7 @@ export const SESSION_CASCADE_TABLES = [
   "session_turns",
   "emotional_metadata",
   "follow_up_cards",
+  "follow_up_responses",
   "paths",
   "path_steps",
 ] as const;
@@ -87,6 +89,7 @@ export async function purgeSessions(
       if (ACTIVE_STATUSES.has(card.status)) {
         await cancelFollowUpWorkflow(ctx, card.workflowId);
       }
+      await deleteResponsesForCard(ctx, card._id);
       await ctx.db.delete("follow_up_cards", card._id);
     }
 

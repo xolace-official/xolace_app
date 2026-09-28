@@ -35,6 +35,7 @@ import {
   fallbackFollowUpCard,
 } from "./ai/prompts/followUpCardWriter";
 import { renderSemanticProfile } from "./semanticProfiles";
+import { deleteResponsesForCard } from "./followUpResponses";
 
 const CARD_MODEL = "claude-haiku-4-5-20251001";
 const MAX_CARD_CHARS = 200;
@@ -571,6 +572,7 @@ export const purgeForProfile = internalMutation({
         // Cancel the live workflow so it stops nudging a deleted user.
         await cancelFollowUpWorkflow(ctx, card.workflowId);
       }
+      await deleteResponsesForCard(ctx, card._id);
       await ctx.db.delete("follow_up_cards", card._id);
     }
 

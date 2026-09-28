@@ -74,6 +74,7 @@ import type * as evals from "../evals.js";
 import type * as exercises from "../exercises.js";
 import type * as exercises_match from "../exercises/match.js";
 import type * as feedback from "../feedback.js";
+import type * as followUpResponses from "../followUpResponses.js";
 import type * as followUps from "../followUps.js";
 import type * as http from "../http.js";
 import type * as intake from "../intake.js";
@@ -237,6 +238,7 @@ declare const fullApi: ApiFromModules<{
   exercises: typeof exercises;
   "exercises/match": typeof exercises_match;
   feedback: typeof feedback;
+  followUpResponses: typeof followUpResponses;
   followUps: typeof followUps;
   http: typeof http;
   intake: typeof intake;
