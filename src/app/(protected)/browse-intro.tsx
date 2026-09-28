@@ -3,7 +3,7 @@ import { usePostHog } from 'posthog-react-native';
 import { BrowseIntroScreen } from '@/src/components/shared/browse-intro-screen';
 import { useAppStore } from '@/src/store/store';
 
-type Family = 'music' | 'support';
+type Family = 'music' | 'support' | 'library';
 
 const CONTENT: Record<
   Family,
@@ -23,20 +23,30 @@ const CONTENT: Record<
       'Short guided pieces to sit with, whenever things get loud. New sessions arrive as the collection grows.',
     event: 'support_audio_intro_completed',
   },
+  library: {
+    heroImage: { uri: 'https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/5cac4b6b-7e73-4018-8c2d-0c4aa3c0539b' },
+    title: 'Welcome to the Lantern',
+    subtitle:
+      'A library of stories and reflections, picked for how they feel. New reads arrive as the collection grows.',
+    event: 'library_intro_completed',
+  },
 };
 
 /**
- * Browse family welcome, presented as a full-screen modal over the family
- * list so neither the tab bar nor the list's header shows through. Opened by
- * `FamilyListScreen` the first time the live family (`?family=`) has not
- * been seen — Music and Support audio are keyed independently.
+ * Browse family welcome, presented as a full-screen modal so neither the tab
+ * bar nor the underlying screen's header shows through. Opened by
+ * `FamilyListScreen` (Music/Support, keyed on `?family=`) or
+ * `LibraryHomeScreen` (Lantern, keyed on mount) — each surface's intro flag
+ * is independent.
  */
 export default function BrowseIntroRoute() {
   const { family: rawFamily } = useLocalSearchParams<{ family?: string }>();
-  const family: Family = rawFamily === 'support' ? 'support' : 'music';
+  const family: Family =
+    rawFamily === 'support' ? 'support' : rawFamily === 'library' ? 'library' : 'music';
   const posthog = usePostHog();
   const setMusicIntroSeen = useAppStore((s) => s.setMusicIntroSeen);
   const setSupportAudioIntroSeen = useAppStore((s) => s.setSupportAudioIntroSeen);
+  const setLibraryIntroSeen = useAppStore((s) => s.setLibraryIntroSeen);
   const { heroImage, title, subtitle, event } = CONTENT[family];
 
   return (
@@ -47,7 +57,8 @@ export default function BrowseIntroRoute() {
       ctaLabel="Hold to begin"
       onContinue={() => {
         if (family === 'music') setMusicIntroSeen(true);
-        else setSupportAudioIntroSeen(true);
+        else if (family === 'support') setSupportAudioIntroSeen(true);
+        else setLibraryIntroSeen(true);
         posthog.capture(event);
         router.back();
       }}

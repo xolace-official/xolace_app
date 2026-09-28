@@ -7,6 +7,7 @@
  */
 import { useMutation, useQuery } from 'convex/react';
 import type { FunctionReturnType } from 'convex/server';
+import { router } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useEffect } from 'react';
 import { ScrollView, useWindowDimensions, View } from 'react-native';
@@ -20,15 +21,24 @@ import { HubCarousel } from '@/src/features/library/home/hub-carousel';
 import { reasonLine } from '@/src/features/library/home/library-copy';
 import { ReadingAsCard, ReadingAsMenu } from '@/src/features/library/home/reading-as';
 import { HomeSkeleton } from '@/src/features/library/skeletons';
+import { useAppStore } from '@/src/store/store';
 
 export function LibraryHomeScreen() {
   const posthog = usePostHog();
   const home = useQuery(api.library.home.getHome, {});
   const setReadingAs = useMutation(api.library.home.setReadingAs);
   const { width } = useWindowDimensions();
+  const libraryIntroSeen = useAppStore((s) => s.libraryIntroSeen);
 
   useEffect(() => {
     trackLibrary(posthog, 'library_home_opened');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // One-time Lantern welcome (#444), keyed on mount rather than a route
+  // param since Library home has no family query string.
+  useEffect(() => {
+    if (!libraryIntroSeen) router.push({ pathname: '/browse-intro', params: { family: 'library' } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
