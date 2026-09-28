@@ -54,8 +54,8 @@ export function ContributionGraphCard({ staggerDelay = 150 }: { staggerDelay?: n
     const day = dayKeyOf(cell.date);
     const state = cellState(day, indexed);
     if (state === "future") return { fillOpacity: 0.3 };
-    // Held by a freeze, not lit: frost blue, never ember.
-    if (state === "frozen") return { fill: frost, fillOpacity: 0.7 };
+    // Held by a freeze, not lit: a frost-blue outline around an unlit cell.
+    if (state === "frozen") return { stroke: frost, strokeWidth: 1, strokeDasharray: "2,2" };
     // Today wears a ring, lit or not yet.
     if (day === today) return { stroke: foreground, strokeWidth: 1 };
     return undefined;
