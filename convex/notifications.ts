@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
+import { streakState } from "./streaks/state";
 import {
   deletePushDevice,
   MAX_DEVICES_PER_PROFILE,
@@ -26,6 +27,7 @@ const notificationLogDocValidator = v.object({
     v.literal("affirmation"),
     v.literal("follow_up"),
     v.literal("kindling_ready"),
+    v.literal("streak_milestone"),
   ),
   content: v.string(),
   triggerReason: v.string(),
@@ -75,7 +77,8 @@ export const schedule = internalMutation({
       v.literal("milestone"),
       v.literal("affirmation"),
       v.literal("follow_up"),
-      v.literal("kindling_ready")
+      v.literal("kindling_ready"),
+      v.literal("streak_milestone")
     ),
     content: v.string(),
     triggerReason: v.string(),
@@ -107,7 +110,9 @@ export const schedule = internalMutation({
           : "followUpNudge"
         : args.type === "kindling_ready"
           ? "kindlingReady"
-          : "notification";
+          : args.type === "streak_milestone"
+            ? "streakMilestone"
+            : "notification";
     const { ok } = await rateLimiter.limit(ctx, bucket, {
       key: args.emotionalProfileId,
     });
@@ -420,7 +425,8 @@ export const loadGenerationContext = internalQuery({
       .map(([tag]) => tag);
 
     return {
-      profile,
+      // The stored currentStreak is a stale mirror; the writer gets the live one.
+      profile: { ...profile, currentStreak: (await streakState(ctx, profile)).streak },
       preferences,
       lastSession,
       userLanguageTags,

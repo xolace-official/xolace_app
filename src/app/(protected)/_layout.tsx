@@ -83,6 +83,7 @@ export default function ProtectedLayout() {
           <Stack.Screen name="kindling/index" />
           {/* Outside `(tabs)` on purpose: the player is full-bleed, no tab bar. */}
           <Stack.Screen name="browse-player" options={PLAYER_OPTIONS} />
+          <Stack.Screen name="streak-held" options={PLAYER_OPTIONS} />
           {/* Reduced motion: the Lantern reader crossfades in instead of sliding (#400). */}
           <Stack.Screen name="library/[slug]" options={{ animation: reducedMotion ? "fade" : "default" }} />
 

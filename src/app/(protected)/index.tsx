@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
-import { View, Pressable } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AppState, View, Pressable } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { useIsFocused } from "expo-router/react-navigation";
 import { StatusBar } from 'expo-status-bar';
 import { useObserve } from 'expo-observe';
 
-import { useQuery } from 'convex/react';
+import { useMutation } from 'convex/react';
+import { useFullContext } from '@/src/lib/convex/use-full-context';
 
 import { api } from '@/convex/_generated/api';
 import { ReflectScreen } from '@/src/features/reflect/components/reflect-screen';
@@ -26,7 +28,10 @@ import {
 
 const BANNER_INITIAL = { opacity: 0 };
 
-function NotificationBanner({ content, onDismiss }: { content: string; onDismiss: () => void }) {
+function NotificationBanner({
+  content,
+  onDismiss,
+}: { content: string; onDismiss: () => void }) {
   const insets = useSafeAreaInsets();
   const [visible, setVisible] = useState(true);
 
@@ -101,7 +106,7 @@ export default function ProtectedIndex() {
 
   // Same getFullContext query ReflectScreen subscribes to — Convex dedupes it,
   // so this is a cached read, not a second round-trip.
-  const fullContext = useQuery(api.users.getFullContext);
+  const fullContext = useFullContext();
   const profile = fullContext?.profile;
   const hasPendingFollowUp = fullContext?.hasPendingFollowUp ?? false;
 
@@ -112,6 +117,42 @@ export default function ProtectedIndex() {
     active: isFocused && !!profile,
     hasPendingFollowUp,
   });
+
+  // App open is the read-time recompute that makes a freeze-bridged gap
+  // durable (frozen_days). Best-effort: every streak read derives the same
+  // answer without it.
+  // It also returns freeze-bridged days not yet acknowledged (#436) — shown in
+  // the streak-held screen, never a push.
+  const settleStreak = useMutation(api.streaks.state.settle);
+  const [frozenDays, setFrozenDays] = useState(0);
+  const freezeShown = useRef(false);
+  const profileId = profile?._id;
+  // On every focus and every return to the foreground: an app left mounted can
+  // cross days without a remount. Home is unfocused while streak-held is up, so
+  // this re-runs on its close — after its acknowledgeFreezes, which the client
+  // sends first — and only a fresh count re-arms the screen. Results landing
+  // after blur are dropped.
+  useEffect(() => {
+    if (!profileId || !isFocused) return;
+    let live = true;
+    const settle = () =>
+      settleStreak({ timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }).then(
+        (days) => {
+          if (!live) return;
+          freezeShown.current = false;
+          setFrozenDays(days);
+        },
+        () => {},
+      );
+    settle();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') settle();
+    });
+    return () => {
+      live = false;
+      sub.remove();
+    };
+  }, [profileId, isFocused, settleStreak]);
 
   // Per-route TTI for the reflect home: the screen is genuinely ready once the
   // user context query resolves, not at mount. markInteractive emits telemetry
@@ -126,7 +167,7 @@ export default function ProtectedIndex() {
   // focused.
   const returnWelcome = useReturnWelcome({
     active: isFocused && !!profile && !followUp.blocking,
-    variant: profile ? computeUserVariant(profile) : { kind: 'first-time' },
+    variant: profile ? computeUserVariant(profile, fullContext.streak) : { kind: 'first-time' },
     quietReturn: profile ? computeQuietReturn(profile) : null,
     lastSessionAt: profile?.lastSessionAt,
   });
@@ -149,6 +190,14 @@ export default function ProtectedIndex() {
   useEffect(() => {
     setHomeSheetBlocking(sheetBlocking);
   }, [sheetBlocking, setHomeSheetBlocking]);
+
+  // Waits its turn behind the home sheets; the screen acknowledges on close.
+  useEffect(() => {
+    if (frozenDays > 0 && isFocused && !sheetBlocking && !freezeShown.current) {
+      freezeShown.current = true;
+      router.push({ pathname: '/streak-held', params: { days: frozenDays } });
+    }
+  }, [frozenDays, isFocused, sheetBlocking]);
 
   return (
     <>

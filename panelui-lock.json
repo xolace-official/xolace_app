@@ -20,6 +20,18 @@
     "src/components/ui/questionnaire.tsx": {
       "item": "questionnaire",
       "digest": "sha256:321d252604c0afcbdb00854ae90fa2a4775478b4693a57d5a33ce1214cf24f3f"
+    },
+    "src/components/ui/heatmap-chart.tsx": {
+      "item": "heatmap-chart",
+      "digest": "sha256:a4900f08a39641ce5d7393e9889de704f3a372b7be793212a2ac12c3af48a52d"
+    },
+    "src/components/ui/chart-accessibility.ts": {
+      "item": "chart-accessibility",
+      "digest": "sha256:32186807d2bc752936da901286d067f535829ba096d25f2bfffd6afa456e5590"
+    },
+    "src/lib/date.ts": {
+      "item": "date",
+      "digest": "sha256:f61a21bf7c712781f4e7e5fc9239b1e3cff04399c9fef7ea083b0e5d5a8b14f5"
     }
   },
   "roots": {
@@ -45,6 +57,14 @@
       "keyboard-avoider",
       "use-keyboard-avoidance",
       "label"
+    ],
+    "heatmap-chart": [
+      "heatmap-chart",
+      "chart-accessibility",
+      "cn",
+      "date",
+      "text",
+      "use-direction"
     ]
   },
   "legacyFiles": [],

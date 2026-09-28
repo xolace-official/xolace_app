@@ -4,6 +4,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
+import { recordActivity } from "./streaks/activityLog";
 import { ACKNOWLEDGE_MODEL, buildVentAcknowledgePrompt } from "./ai/ventAcknowledge";
 import { renderSemanticProfile } from "./semanticProfiles";
 import {
@@ -93,6 +94,9 @@ export const checkAndIncrementCap = internalMutation({
       ventDailyResetAt: needsReset ? todayStart : profile.ventDailyResetAt,
       updatedAt: Date.now(),
     });
+    // The charge is the vent's only server-side write — the burn itself is
+    // client-only — so a charged vent is the completed one.
+    await recordActivity(ctx, { emotionalProfileId: profile._id, actionType: "vent" });
 
     return { allowed: true as const, emotionalProfileId: profile._id };
   },

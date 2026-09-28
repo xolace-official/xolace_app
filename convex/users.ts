@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { streakState } from "./streaks/state";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
 import { rankInsert } from "./lib/aggregates";
@@ -42,6 +43,11 @@ const profileDocValidator = v.object({
   averageSessionDuration: v.optional(v.number()),
   currentStreak: v.number(),
   longestStreak: v.optional(v.number()),
+  streakFreezes: v.optional(v.number()),
+  streakSavers: v.optional(v.number()),
+  streakRevivedDay: v.optional(v.string()),
+  brokenStreak: v.optional(v.object({ streak: v.number(), lastCoveredDay: v.string() })),
+  freezeAckedDay: v.optional(v.string()),
   pendingKindlingSessionId: v.optional(v.id("sessions")),
   dominantEmotionTags: v.array(v.string()),
   frequentWords: v.optional(
@@ -233,13 +239,23 @@ export const getSessionCount = query({
  * App open: return user + profile + preferences in one call.
  */
 export const getFullContext = query({
-  args: {},
+  args: {
+    // The client's local day ("YYYY-MM-DD"). Value unused: it only changes the
+    // subscription's args at midnight, so the cached result — and the
+    // Date.now()-derived streak/reviveStreak below — re-runs without a write.
+    // Optional: pre-fix clients omit it.
+    day: v.optional(v.string()),
+  },
   returns: v.object({
     user: userDocValidator,
     profile: profileDocValidator,
     preferences: v.union(preferencesDocValidator, v.null()),
     hasPendingFollowUp: v.boolean(),
     intake: v.union(intakeResponseDocValidator, v.null()),
+    /** Freeze-aware live streak (#434) — profile.currentStreak is a stale mirror. */
+    streak: v.number(),
+    /** The count a streak saver would rekindle right now (#437); absent when no revive is on offer. */
+    reviveStreak: v.optional(v.number()),
   }),
   handler: async (ctx) => {
     const { user, profile } = await requireAuth(ctx);
@@ -278,7 +294,9 @@ export const getFullContext = query({
       .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
       .unique();
 
-    return { user, profile, preferences, hasPendingFollowUp, intake };
+    const { streak, revive } = await streakState(ctx, profile);
+
+    return { user, profile, preferences, hasPendingFollowUp, intake, streak, reviveStreak: revive?.streak };
   },
 });
 

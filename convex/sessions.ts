@@ -20,6 +20,7 @@ import {
   mirrorToneValidator,
 } from "./lib/validators";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
+import { recordActivity } from "./streaks/activityLog";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "./lib/rateLimits";
 import {
   abandonRequiresFollowUp,
@@ -103,6 +104,15 @@ async function finalizeCompletion(
     completedAt: now,
     sessionDuration: now - session.createdAt,
     updatedAt: now,
+  });
+
+  // One reflect per completion, whichever route (exit, solo, peers, or the
+  // cron's stranded reconciliation) — same transaction, so the streak moves
+  // with the session.
+  await recordActivity(ctx, {
+    emotionalProfileId: session.emotionalProfileId,
+    actionType: "reflect",
+    timestamp: now,
   });
 
   // Schedule post-session jobs.

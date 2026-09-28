@@ -12,6 +12,7 @@ import {
   safeguardLevelValidator,
   supportNeedValidator,
   triggerTypeValidator,
+  activityActionTypeValidator,
 } from "./lib/validators";
 import { voiceSlugValidator } from "./lib/voices";
 import { specialtyValidator } from "./lib/specialties";
@@ -134,6 +135,27 @@ export default defineSchema({
     // this field existed; backfilled to currentStreak by migration.
     longestStreak: v.optional(v.number()),
 
+    // Streak freezes on hand (#434): +1 per 7 consecutive qualifying days,
+    // capped at FREEZE_CAP. Spent lazily by settleStreak (convex/streaks/state.ts).
+    // Optional — rows predating freezes read as `?? 0`.
+    streakFreezes: v.optional(v.number()),
+
+    // Streak savers on hand (#435): +1 at each streak milestone
+    // (convex/streaks/milestones.ts), capped at SAVER_CAP. Spent by an
+    // explicit revive (convex/streaks/revive.ts). Optional — reads as `?? 0`.
+    streakSavers: v.optional(v.number()),
+    // Missed day a revive covered: streakState treats it as covered for the
+    // gap check, with no activity_log or frozen_days row, so the graph still
+    // shows it missed. Only the latest matters.
+    streakRevivedDay: v.optional(v.string()),
+    // The run recordActivity reset when a break's first action landed, kept
+    // so a revive later that day can still restore it. Self-expiring: only
+    // honoured within the revive window of `lastCoveredDay`.
+    brokenStreak: v.optional(v.object({ streak: v.number(), lastCoveredDay: v.string() })),
+    // Latest frozen_days dayKey the app has acknowledged in-app (#436), so the
+    // "a freeze kept your streak lit" banner shows once per freeze event.
+    freezeAckedDay: v.optional(v.string()),
+
     // Session a free user bought Plus from at session-end's kindling upsell
     // (`paths.requestKindling`). The completion-time `generate.run` no-oped
     // on the free tier; `premium.onEntitlementActivated` re-queues it once
@@ -197,6 +219,31 @@ export default defineSchema({
     updatedAt: v.number(),
   }),
 
+  // One row per (profile, local day, action type), with a repeat `count`.
+  // Weight is derived from `actionType` at read time (see
+  // convex/lib/activityLog.ts ACTION_WEIGHTS) — never stored, so re-weighting
+  // an action type doesn't require a backfill. `dayKey` is computed once, at
+  // write time, from whichever IANA timezone was active then (see
+  // recordActivity) — never recomputed later from a raw timestamp.
+  activity_log: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    // Local calendar day, "YYYY-MM-DD", computed once at write time.
+    dayKey: v.string(),
+    actionType: activityActionTypeValidator,
+    count: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_emotionalProfileId_and_dayKey_and_actionType", ["emotionalProfileId", "dayKey", "actionType"]),
+
+  // A missed day a streak freeze bridged (#434). Never an activity_log row —
+  // the log stays an honest record of showing up; this gives the contribution
+  // graph its third (frozen) state. dayKey is persisted once, at settle time.
+  frozen_days: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    dayKey: v.string(),
+    createdAt: v.number(),
+  }).index("by_emotionalProfileId_and_dayKey", ["emotionalProfileId", "dayKey"]),
+
   // ===========================================================
   // 3. PREFERENCES
   // ===========================================================
@@ -238,6 +285,9 @@ export default defineSchema({
       gentleReturn: v.boolean(), // "It's been a while..."
       patternNudge: v.boolean(), // "Sunday evening..."
       milestone: v.boolean(), // "30 days of showing up"
+      // Streak milestones (#439). Optional; absent follows `milestone` — see
+      // `streakMilestoneAllowed` (convex/streaks/milestones.ts).
+      streakMilestone: v.optional(v.boolean()),
       // Xolacer chat: requests, accepts, declines, messages. Optional because
       // every row written before it existed has to keep working, and absent
       // means enabled — see `chatNotificationsAllowed`. One toggle for the
@@ -1168,6 +1218,8 @@ export default defineSchema({
       // `reachUsed` value — kindling is its own notification type, not a
       // Reach variant, and always sends in one voice.
       v.literal("kindling_ready"),
+      // Streak hit 7/30/100/every 100 (#439). Template copy, own rate bucket.
+      v.literal("streak_milestone"),
     ),
 
     // AI-generated, contextual notification text.

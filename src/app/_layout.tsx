@@ -16,7 +16,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
 import { useUniwind } from 'uniwind'
 import * as SplashScreen from 'expo-splash-screen';
-import { useConvexAuth, useQuery } from 'convex/react';
+import { useConvexAuth } from 'convex/react';
+import { useFullContext } from '@/src/lib/convex/use-full-context';
 import { useAuth } from '@clerk/expo';
 import { usePostHog } from 'posthog-react-native';
 import {
@@ -28,7 +29,6 @@ import {
 } from '@expo-google-fonts/space-grotesk';
 import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 
-import { api } from '@/convex/_generated/api';
 import { RootProvider } from '@/src/providers/root-provider';
 import { usePostHogIdentity } from '@/src/lib/use-posthog-identity';
 import { useAppStore } from '@/src/store/store';
@@ -101,7 +101,7 @@ const AppContent = () => {
   // The intake gate (T6, issue #263). Hoisted to the root — with
   // usePostHogIdentity, which reads the same query — so the root is the single
   // subscriber and Convex dedupes every downstream read.
-  const context = useQuery(api.users.getFullContext, isAuthenticated ? {} : 'skip');
+  const context = useFullContext(!isAuthenticated);
   usePostHogIdentity();
   const onboardingComplete = context?.profile.onboardingComplete === true;
   const intakeGateLoading = isAuthenticated && context === undefined;

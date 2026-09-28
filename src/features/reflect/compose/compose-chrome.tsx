@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { useCSSVariable } from "uniwind";
 import { useQuery } from "convex/react";
+import { useFullContext } from "@/src/lib/convex/use-full-context";
 import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { StreakCalendar } from "@/src/features/reflect/components/streak-calendar";
@@ -51,13 +52,14 @@ export const ComposeChrome = ({
   const [eventColor] = useCSSVariable(["--color-event"]);
   const todayQuotes = useQuery(api.dailyQuotes.getToday);
   const hasQuote = !!(todayQuotes?.session ?? todayQuotes?.curated);
+  const context = useFullContext();
 
   return (
     <View className="flex-row items-center gap-2 pb-3">
       <StreakCalendar
-        currentStreak={variant.kind === "active" ? variant.dayCount : 0}
+        currentStreak={variant.kind === "returning" ? 0 : (variant.dayCount ?? 0)}
+        reviveStreak={context?.reviveStreak}
       />
-
 
       {!!spaceName && (
         <View className="shrink rounded-full bg-accent/15 px-3 py-1">

@@ -8,7 +8,8 @@ import { useThemeColor } from "heroui-native";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { EaseView } from "react-native-ease";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
+import { useFullContext } from "@/src/lib/convex/use-full-context";
 import { api } from "@/convex/_generated/api";
 import { useReflectionMachine } from "@/src/features/reflect/hooks/use-reflection-machine";
 import { MAX_TURNS } from "@/src/features/reflect/hooks/reflection-reducer";
@@ -100,7 +101,7 @@ export const ReflectScreen = () => {
   // the input's contents — the composer opens empty.
   const clearReplySeed = useAppStore((s) => s.clearReplySeed);
 
-  const context = useQuery(api.users.getFullContext);
+  const context = useFullContext();
   const updatePreferences = useMutation(api.preferences.update);
   const { current, outgoing, isTransitioning, onOutgoingComplete } =
     useScreenTransition(state.screen);
@@ -161,13 +162,13 @@ export const ReflectScreen = () => {
     if (!context?.profile) return;
     dispatch({
       type: "SET_USER_VARIANT",
-      variant: computeUserVariant(context.profile),
+      variant: computeUserVariant(context.profile, context.streak),
     });
     dispatch({
       type: "SET_QUIET_RETURN",
       tier: computeQuietReturn(context.profile),
     });
-  }, [context?.profile, dispatch]);
+  }, [context?.profile, context?.streak, dispatch]);
 
 
   if (

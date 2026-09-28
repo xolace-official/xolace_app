@@ -2,6 +2,8 @@ import { Migrations } from "@convex-dev/migrations";
 import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 import { reflectionRank } from "./lib/aggregates";
+import { localDayKey, shiftDayKey } from "./streaks/activityLog";
+import { FREEZE_CAP } from "./streaks/state";
 
 // Run both in sequence (renameRawInput first, then renameUserInput):
 //   bunx convex run migrations:runAll
@@ -51,6 +53,90 @@ export const backfillReflectionRank = migrations.define({
     await reflectionRank.insertIfDoesNotExist(ctx, doc);
   },
 });
+// Activity-log cutover (#432). Seeds one `activity_log` row per profile from
+// the streak as it's *currently displayed* (48h window), not a full
+// historical backfill — an expired streak seeds nothing and its mirror is
+// zeroed to match what users already see; a live streak gets a single
+// "reflect" row for its last qualifying local day. Idempotent — skips a
+// profile that already has a row for that day/action.
+// Run only once #433 has replaced profileStats' inline streak writer: a
+// reflect it counts after the seed leaves no log row, so the next
+// recordActivity would read the stale seed day and reset a live streak.
+//   bunx convex run migrations:run '{"fn": "migrations:cutoverActivityLog"}'
+export const cutoverActivityLog = migrations.define({
+  table: "emotional_profiles",
+  migrateOne: async (ctx, doc) => {
+    // The pre-log 48h window this cutover seeds from (the old lib/streak.ts).
+    const expired = !doc.lastSessionAt || Date.now() - doc.lastSessionAt > 48 * 60 * 60 * 1000;
+
+    if (expired || doc.currentStreak === 0) {
+      // Zeroing must not erase the record on rows backfillLongestStreak missed.
+      if (doc.currentStreak !== 0) {
+        return { currentStreak: 0, longestStreak: doc.longestStreak ?? doc.currentStreak };
+      }
+      return;
+    }
+
+    if (!doc.lastSessionAt) return;
+
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", doc._id))
+      .unique();
+    const timezone = preferences?.notifications.timezone ?? "UTC";
+    const dayKey = localDayKey(doc.lastSessionAt, timezone);
+
+    const existing = await ctx.db
+      .query("activity_log")
+      .withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) =>
+        q.eq("emotionalProfileId", doc._id).eq("dayKey", dayKey).eq("actionType", "reflect"),
+      )
+      .unique();
+    if (existing) return;
+
+    await ctx.db.insert("activity_log", {
+      emotionalProfileId: doc._id,
+      dayKey,
+      actionType: "reflect",
+      count: 1,
+      createdAt: doc.lastSessionAt,
+      updatedAt: doc.lastSessionAt,
+    });
+  },
+});
+
+// Best-streak restore. The old 48h/UTC streak (reflect-only) dropped runs people
+// had kept, so profiles active in the last 30 days restart from their best
+// run, not what survived. Run AFTER cutoverActivityLog (it zeroes expired
+// streaks; this reads longestStreak, which it keeps).
+// Lit via streakRevivedDay = yesterday: covered for the gap check with no
+// activity_log row, so the graph stays honest. FREEZE_CAP freezes give a few
+// days to come back before it lapses again. Idempotent — a set
+// streakRevivedDay means restored (or revived) already.
+//   bunx convex run migrations:run '{"fn": "migrations:restoreBestStreak"}'
+const RESTORE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+export const restoreBestStreak = migrations.define({
+  table: "emotional_profiles",
+  migrateOne: async (ctx, doc) => {
+    const best = Math.max(doc.longestStreak ?? 0, doc.currentStreak);
+    const recent = doc.lastSessionAt !== undefined && Date.now() - doc.lastSessionAt < RESTORE_WINDOW_MS;
+    if (best === 0 || !recent || doc.streakRevivedDay !== undefined) return;
+
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", doc._id))
+      .unique();
+    const today = localDayKey(Date.now(), preferences?.notifications.timezone ?? "UTC");
+    return {
+      currentStreak: best,
+      longestStreak: best,
+      streakRevivedDay: shiftDayKey(today, -1),
+      streakFreezes: Math.max(doc.streakFreezes ?? 0, FREEZE_CAP),
+      brokenStreak: undefined,
+    };
+  },
+});
+
 export const runAll = migrations.runner([
   internal.migrations.renameRawInput,
   internal.migrations.renameUserInput,

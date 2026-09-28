@@ -9,6 +9,7 @@ import { AuroraArc } from "@/src/features/profile/components/aurora-arc";
 import { ProfileSkeleton } from "@/src/features/profile/components/profile-skeleton";
 import { ProfileHero } from "@/src/features/profile/components/profile-hero";
 import { StatBand } from "@/src/features/profile/components/stat-band";
+import { ContributionGraphCard } from "@/src/features/profile/components/contribution-graph-card";
 import { EmotionChips } from "@/src/features/profile/components/emotion-chips";
 import { MirrorLines } from "@/src/features/profile/components/mirror-lines";
 import { RankCard } from "@/src/features/profile/components/rank-card";
@@ -116,6 +117,9 @@ export function ProfileScreen() {
             staggerDelay={120}
           />
         )}
+
+        {/* Visible from sign-up: join day is day one, an empty grid otherwise. */}
+        {summary && <ContributionGraphCard staggerDelay={150} />}
 
         {/* A standing door, never rate-limited — but pointless once they're in.
             `isPlus` is false while entitlement resolves, so waiting on the read
