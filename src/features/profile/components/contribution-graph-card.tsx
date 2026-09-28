@@ -25,7 +25,7 @@ export function ContributionGraphCard({ staggerDelay = 150 }: { staggerDelay?: n
   const [width, setWidth] = useState(0);
   const [heldDay, setHeldDay] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const ember = useTokenColor("ember");
+  const frost = useTokenColor("frost");
   const foreground = useTokenColor("foreground");
 
   if (!history) return null;
@@ -54,8 +54,8 @@ export function ContributionGraphCard({ staggerDelay = 150 }: { staggerDelay?: n
     const day = dayKeyOf(cell.date);
     const state = cellState(day, indexed);
     if (state === "future") return { fillOpacity: 0.3 };
-    // Held, not lit: an ember outline around an unlit cell.
-    if (state === "frozen") return { stroke: ember, strokeWidth: 1, strokeDasharray: "2,2" };
+    // Held by a freeze, not lit: frost blue, never ember.
+    if (state === "frozen") return { fill: frost, fillOpacity: 0.7 };
     // Today wears a ring, lit or not yet.
     if (day === today) return { stroke: foreground, strokeWidth: 1 };
     return undefined;
