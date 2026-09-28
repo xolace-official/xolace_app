@@ -42,7 +42,6 @@ import {
   isValidElement,
   useContext,
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -52,13 +51,12 @@ import { StyleSheet, View, type LayoutChangeEvent, type ViewProps } from 'react-
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
-  runOnJS,
-  useAnimatedProps,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import Svg, { G, Line as SvgLine, Rect } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { Text } from '@/src/components/ui/text';
@@ -523,13 +521,13 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
     if (revealed.current || grid.width <= 0) return;
     revealed.current = true;
     if (reducedMotion) {
-      reveal.value = 1;
+      reveal.set(1);
       return;
     }
-    reveal.value = withTiming(1, {
+    reveal.set(withTiming(1, {
       duration: animationDuration,
       easing: Easing.out(Easing.cubic),
-    });
+    }));
   }, [grid.width, reducedMotion, animationDuration, reveal]);
 
   const onLayout = (event: LayoutChangeEvent) => {
@@ -572,7 +570,7 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
    * effect is the same — columns arriving in order — and it costs one animated
    * value instead of one per week, which for a year is fifty-two.
    */
-  const revealStyle = useAnimatedStyle(() => ({ width: grid.width * reveal.value }));
+  const revealStyle = useAnimatedStyle(() => ({ width: grid.width * reveal.get() }));
 
   return (
     <HeatmapContext.Provider value={context}>
@@ -637,10 +635,7 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
                  */}
                 <Animated.View
                   pointerEvents="none"
-                  style={[
-                    { position: 'absolute', top: 0, bottom: 0, left: 0, overflow: 'hidden' },
-                    revealStyle,
-                  ]}
+                  style={[styles.revealClip, revealStyle]}
                 >
                   <Svg width={grid.width} height={grid.height}>
                     {parts.rules}
@@ -657,6 +652,10 @@ const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapCha
       </View>
     </HeatmapContext.Provider>
   );
+});
+
+const styles = StyleSheet.create({
+  revealClip: { position: 'absolute', top: 0, bottom: 0, left: 0, overflow: 'hidden' },
 });
 
 interface Parts {
@@ -686,6 +685,8 @@ function splitParts(children: ReactNode): Parts {
   Children.forEach(children, (child, index) => {
     if (!isValidElement(child)) return;
     const slot = (child.type as { slot?: Slot }).slot ?? 'cells';
+    // Children are a static composition list, so position is their identity.
+    // eslint-disable-next-line react/no-array-index-key
     const keyed = <ChildSlot key={index}>{child}</ChildSlot>;
 
     if (slot === 'x-axis') parts.x = keyed;
@@ -752,7 +753,7 @@ function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 
           return (
             <Rect
-              key={`${columnIndex}-${row}`}
+              key={`${column.bin}-${row}`}
               x={columnIndex * step}
               y={row * step}
               width={grid.size}
@@ -1020,9 +1021,9 @@ function HeatmapTooltip({
     const row = Math.floor(y / step);
     if (column < 0 || column >= grid.columns || row < 0 || row >= grid.rows) return;
     const key = column * grid.rows + row;
-    if (key === lastKey.value) return;
-    lastKey.value = key;
-    runOnJS(resolve)(column, row);
+    if (key === lastKey.get()) return;
+    lastKey.set(key);
+    scheduleOnRN(resolve, column, row);
   };
 
   /*
@@ -1048,9 +1049,9 @@ function HeatmapTooltip({
       'worklet';
       // Fires whether or not the gesture ever activated, so a swipe that only
       // scrolled must not report a cell change it never made.
-      if (lastKey.value === -1) return;
-      lastKey.value = -1;
-      runOnJS(clear)();
+      if (lastKey.get() === -1) return;
+      lastKey.set(-1);
+      scheduleOnRN(clear);
     });
 
   const label = activeCell
@@ -1144,6 +1145,8 @@ function HeatmapLegend({
         {lessLabel}
       </Text>
       {ramp.map((fill, level) => (
+        // The index *is* the level — a fixed five-slot ramp, never reordered.
+        // eslint-disable-next-line react/no-array-index-key
         <Svg key={level} width={size} height={size}>
           <Rect
             x={0}
@@ -1227,6 +1230,7 @@ function HeatmapHeader({
           {lessLabel}
         </Text>
         {ramp.map((fill, level) => (
+          // eslint-disable-next-line react/no-array-index-key
           <Svg key={level} width={size} height={size}>
             <Rect
               x={0}
