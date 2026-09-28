@@ -14,6 +14,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { useFullContext } from "@/src/lib/convex/use-full-context";
 import { cn } from "@/src/lib/utils";
 import { ReflectiveStep } from "@/src/features/follow-up/reflective-step";
+import { StillHereStep } from "@/src/features/follow-up/still-here-step";
 import { Icon, OptionCard, type IconKey } from "@/src/features/follow-up/stack-cards";
 import {
   chipsForTier,
@@ -48,8 +49,8 @@ export type FollowUpParams = {
 
 /**
  * The full-screen follow-up check-in (#448). Picker → per-answer next step.
- * `lighter` and `processed` share the reflective step (#449, #450); the other
- * answers still land on the generic acknowledgment until their tickets replace it.
+ * `lighter` and `processed` share the reflective step (#449, #450), `still_here`
+ * gets its own (#451); `heavier` still lands on the generic acknowledgment (#452).
  */
 export function FollowUpScreen() {
   const { cardId, cardText, tier, escalation } = useLocalSearchParams<FollowUpParams>();
@@ -140,6 +141,8 @@ export function FollowUpScreen() {
             canShare={tier !== "acute" && !escalationDerived}
             onClose={close}
           />
+        ) : picked === "still_here" ? (
+          <StillHereStep onClose={close} />
         ) : picked ? (
           <OptionCard icon="check" tint="bg-surface" title="Close" onPress={close} />
         ) : (

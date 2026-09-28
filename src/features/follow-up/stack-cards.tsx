@@ -19,7 +19,10 @@ const ICONS = {
   close: { ios: "xmark", android: "close", web: "close" },
   flame: { ios: "flame.fill", android: "local_fire_department", web: "local_fire_department" },
   check: { ios: "checkmark", android: "check", web: "check" },
-} satisfies Record<string, Symbol>;
+  music: { ios: "music.note", android: "music_note", web: "music_note" },
+  waveform: { ios: "waveform", android: "graphic_eq", web: "graphic_eq" },
+  book: { ios: "book", android: "menu_book", web: "menu_book" },
+}satisfies Record<string, Symbol>;
 export type IconKey = keyof typeof ICONS;
 
 export function Icon({ name, size = 22 }: { name: IconKey; size?: number }) {

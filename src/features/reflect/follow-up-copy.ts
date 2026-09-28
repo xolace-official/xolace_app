@@ -96,12 +96,27 @@ export function streakNod(streak: number): string | null {
 }
 
 /**
- * The headline over each answer's next step. `lighter` (#449) and `processed`
- * (#450) are tailored; the rest keep the generic acknowledgment until #451–#452.
+ * The `still_here` next step (#451): an acknowledgment, nothing to fill in,
+ * and a few static places to go if they want company while it sits.
+ */
+export const STILL_HERE_HEADLINE = "That's okay. Some things take longer to set down.";
+export const STILL_HERE_MESSAGE =
+  "Nothing to do here. If you want something beside you while it sits, these are close.";
+export const STILL_HERE_LINKS = [
+  { key: "music", title: "Music", sub: "Something to listen to" },
+  { key: "support", title: "Support audio", sub: "A voice to sit with" },
+  { key: "library", title: "Lantern", sub: "Stories from people who've been here" },
+] as const;
+export const STILL_HERE_SKIP = "Not now";
+
+/**
+ * The headline over each answer's next step. `lighter` (#449), `processed`
+ * (#450) and `still_here` (#451) are tailored; `heavier` keeps the generic
+ * acknowledgment until #452.
  */
 export const STEP_HEADLINE: Record<StatusResponse, string> = {
   lighter: REFLECTIVE_COPY.lighter.prompt,
-  still_here: FOLLOW_UP_ACK,
+  still_here: STILL_HERE_HEADLINE,
   heavier: FOLLOW_UP_ACK,
   processed: REFLECTIVE_COPY.processed.prompt,
 };
