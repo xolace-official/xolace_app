@@ -341,3 +341,14 @@ export const preferencesDocValidator = v.object({
     }),
   ),
 });
+
+// activity_log.actionType (#426). One list: schema, manual entry and the
+// history query all read it.
+export const activityActionTypeValidator = v.union(
+  v.literal("reflect"),
+  v.literal("vent"),
+  v.literal("library"),
+  v.literal("sit_with_this"),
+  v.literal("daily_mood"),
+  v.literal("quotes"),
+);

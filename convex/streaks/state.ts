@@ -63,6 +63,15 @@ export type StreakState = {
   revive?: { streak: number; gapDay: string };
 };
 
+/** The user's stored IANA timezone — the one clock every local day key uses. */
+export async function profileTimezone(ctx: QueryCtx, profile: Doc<"emotional_profiles">): Promise<string> {
+  const preferences = await ctx.db
+    .query("preferences")
+    .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+    .unique();
+  return preferences?.notifications.timezone ?? "UTC";
+}
+
 /** Streak savers on hand never exceed this. Xolace+ may raise it later (#428). */
 export const SAVER_CAP = 1;
 
@@ -83,11 +92,7 @@ export async function streakState(
   profile: Doc<"emotional_profiles">,
   now: number = Date.now(),
 ): Promise<StreakState> {
-  const preferences = await ctx.db
-    .query("preferences")
-    .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
-    .unique();
-  const timezone = preferences?.notifications.timezone ?? "UTC";
+  const timezone = await profileTimezone(ctx, profile);
   const today = localDayKey(now, timezone);
   const freezes = profile.streakFreezes ?? 0;
 

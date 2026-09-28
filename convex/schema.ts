@@ -12,6 +12,7 @@ import {
   safeguardLevelValidator,
   supportNeedValidator,
   triggerTypeValidator,
+  activityActionTypeValidator,
 } from "./lib/validators";
 import { voiceSlugValidator } from "./lib/voices";
 import { specialtyValidator } from "./lib/specialties";
@@ -228,14 +229,7 @@ export default defineSchema({
     emotionalProfileId: v.id("emotional_profiles"),
     // Local calendar day, "YYYY-MM-DD", computed once at write time.
     dayKey: v.string(),
-    actionType: v.union(
-      v.literal("reflect"),
-      v.literal("vent"),
-      v.literal("library"),
-      v.literal("sit_with_this"),
-      v.literal("daily_mood"),
-      v.literal("quotes"),
-    ),
+    actionType: activityActionTypeValidator,
     count: v.number(),
     createdAt: v.number(),
     updatedAt: v.number(),

@@ -150,6 +150,7 @@ import type * as sessionTurns from "../sessionTurns.js";
 import type * as sessions from "../sessions.js";
 import type * as storage_storageTools from "../storage/storageTools.js";
 import type * as streaks_activityLog from "../streaks/activityLog.js";
+import type * as streaks_history from "../streaks/history.js";
 import type * as streaks_manual from "../streaks/manual.js";
 import type * as streaks_milestones from "../streaks/milestones.js";
 import type * as streaks_revive from "../streaks/revive.js";
@@ -312,6 +313,7 @@ declare const fullApi: ApiFromModules<{
   sessions: typeof sessions;
   "storage/storageTools": typeof storage_storageTools;
   "streaks/activityLog": typeof streaks_activityLog;
+  "streaks/history": typeof streaks_history;
   "streaks/manual": typeof streaks_manual;
   "streaks/milestones": typeof streaks_milestones;
   "streaks/revive": typeof streaks_revive;
