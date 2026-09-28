@@ -3,6 +3,21 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Browse hub: Featured is hand-picked, decoupled from New (2026-09-28)
+
+**Featured** (`audio_tracks.featured`, a plain boolean) is an editor's pick
+for the Browse hub hero, set manually from the Convex dashboard — not a
+computed shelf. It is independent of **New** (`newUntil`, self-expiring):
+a track can be New without being Featured, Featured without being New, or
+both. The hero falls back to the same newest-active-`newUntil` pick it used
+before `featured` existed whenever no track is currently flagged, so the hub
+never shows a blank hero. Featured tracks still must be `active` — a
+retired track never shows there even if left flagged.
+
+Not an ADR: trivially reversible (flip the boolean back, or unset it), no
+real trade-off — the boolean-vs-expiring-field question was a one-line
+default, not a genuine fork.
+
 ## Browse surface intros: three flags, not one (2026-09-28)
 
 Each of Browse's three destination surfaces gets its own one-time welcome

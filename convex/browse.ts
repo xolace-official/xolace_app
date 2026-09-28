@@ -71,6 +71,38 @@ export const getNewShelf = query({
   },
 });
 
+/**
+ * Browse hub hero: the hand-picked `featured` active track, if any — set from
+ * the Convex dashboard, no ordering rule needed since only one shows. Falls
+ * back to the same newest-`newUntil` pick the hero used before `featured`
+ * existed, so an unflagged catalogue still shows something.
+ */
+export const getFeatured = query({
+  args: {},
+  returns: v.union(shelfItemValidator, v.null()),
+  handler: async (ctx) => {
+    await requireAuth(ctx);
+    const now = Date.now();
+
+    const tracks = await ctx.db.query("audio_tracks").take(1000);
+    const picked =
+      tracks.find((t) => t.active && t.featured) ??
+      tracks
+        .filter((t) => t.active && t.newUntil !== undefined && t.newUntil > now)
+        .sort((a, b) => b.newUntil! - a.newUntil!)[0];
+    if (!picked) return null;
+
+    return {
+      _id: picked._id,
+      slug: picked.slug,
+      family: picked.family,
+      title: picked.title,
+      thumbUrl: await thumbUrlFor(picked.thumbKey),
+      attribution: attributionFor(picked),
+    };
+  },
+});
+
 // ---------------------------------------------------------------------------
 // Browsing screens (#339, docs/paths-v1.md §9.3)
 // ---------------------------------------------------------------------------

@@ -2140,6 +2140,7 @@ export default defineSchema({
     thumbSha256: v.string(), // thumbnail idempotency, independent of audio
     active: v.boolean(), // retire (licence lapse) without deleting
     newUntil: v.optional(v.number()), // ms epoch; in the Browse "New" shelf while > now
+    featured: v.optional(v.boolean()), // hand-picked Browse hero; set from the Convex dashboard
 
     // support-family
     narrators: v.optional(v.array(v.string())), // display strings: ["Sage"], ["Sage","Ash"]

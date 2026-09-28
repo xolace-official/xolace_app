@@ -61,6 +61,7 @@ export function BrowseHubScreen() {
   const { width } = useWindowDimensions();
   const posthog = usePostHog();
   const shelf = useQuery(api.browse.getNewShelf, {});
+  const featured = useQuery(api.browse.getFeatured, {});
   const [tip] = useState(pickListeningTip);
   const mutedTint = useCSSVariable('--muted');
 
@@ -68,8 +69,6 @@ export function BrowseHubScreen() {
     posthog.capture('browse_opened');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const featured = shelf?.[0];
 
   return (
     <ScrollView
@@ -92,28 +91,30 @@ export function BrowseHubScreen() {
         ))}
       </View>
 
-      {featured && shelf && shelf.length > 0 && (
-        <>
-          <View className="px-4 pt-8">
-            <AppText className="text-muted text-[13px] font-semibold uppercase tracking-wide">
-              Featured this week
-            </AppText>
-            <AppText className="mt-0.5 text-2xl font-bold">{featured.title}</AppText>
-            {featured.attribution && (
-              <AppText className="text-muted mb-3 text-[15px]">{featured.attribution}</AppText>
-            )}
-            <View
-              className="bg-surface-tertiary overflow-hidden rounded-[14px]"
-              style={{ width: width - 32, height: (width - 32) * 0.55, marginTop: featured.attribution ? 0 : 8 }}
-            >
-              <Image
-                source={{ uri: featured.thumbUrl }}
-                style={{ width: '100%', height: '100%' }}
-                transition={200}
-              />
-            </View>
+      {featured && (
+        <View className="px-4 pt-8">
+          <AppText className="text-muted text-[13px] font-semibold uppercase tracking-wide">
+            Featured this week
+          </AppText>
+          <AppText className="mt-0.5 text-2xl font-bold">{featured.title}</AppText>
+          {featured.attribution && (
+            <AppText className="text-muted mb-3 text-[15px]">{featured.attribution}</AppText>
+          )}
+          <View
+            className="bg-surface-tertiary overflow-hidden rounded-[14px]"
+            style={{ width: width - 32, height: (width - 32) * 0.55, marginTop: featured.attribution ? 0 : 8 }}
+          >
+            <Image
+              source={{ uri: featured.thumbUrl }}
+              style={{ width: '100%', height: '100%' }}
+              transition={200}
+            />
           </View>
+        </View>
+      )}
 
+      {shelf && shelf.length > 0 && (
+        <>
           <AppText className="px-4 pb-2 pt-8 text-[22px] font-bold">New</AppText>
           <ScrollView
             horizontal
