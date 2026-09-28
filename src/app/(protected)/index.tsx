@@ -26,7 +26,11 @@ import {
 
 const BANNER_INITIAL = { opacity: 0 };
 
-function NotificationBanner({ content, onDismiss }: { content: string; onDismiss: () => void }) {
+function NotificationBanner({
+  content,
+  onDismiss,
+  eyebrow = 'You were reached',
+}: { content: string; onDismiss: () => void; eyebrow?: string }) {
   const insets = useSafeAreaInsets();
   const [visible, setVisible] = useState(true);
 
@@ -68,7 +72,7 @@ function NotificationBanner({ content, onDismiss }: { content: string; onDismiss
         className="bg-surface border border-border/40 rounded-2xl px-4 py-3"
       >
         <AppText className="text-[11px] uppercase tracking-wide text-foreground/40 mb-0.5">
-          You were reached
+          {eyebrow}
         </AppText>
         <AppText className="text-sm text-foreground/85 leading-5">
           {content}
@@ -116,10 +120,14 @@ export default function ProtectedIndex() {
   // App open is the read-time recompute that makes a freeze-bridged gap
   // durable (frozen_days). Best-effort: every streak read derives the same
   // answer without it.
+  // It also returns freeze-bridged days not yet acknowledged (#436) — a quiet
+  // banner, never a push, acknowledged only once it has actually shown.
   const settleStreak = useMutation(api.streaks.state.settle);
+  const acknowledgeFreezes = useMutation(api.streaks.state.acknowledgeFreezes);
+  const [frozenDays, setFrozenDays] = useState(0);
   const profileId = profile?._id;
   useEffect(() => {
-    if (profileId) settleStreak().catch(() => {});
+    if (profileId) settleStreak().then(setFrozenDays, () => {});
   }, [profileId, settleStreak]);
 
   // Per-route TTI for the reflect home: the screen is genuinely ready once the
@@ -168,6 +176,16 @@ export default function ProtectedIndex() {
         <NotificationBanner
           content={lastNotification.content}
           onDismiss={clearLastNotification}
+        />
+      )}
+      {!lastNotification && frozenDays > 0 && (
+        <NotificationBanner
+          eyebrow="Streak held"
+          content={`A freeze kept your streak lit while you were away${frozenDays > 1 ? ` — ${frozenDays} days covered` : ''}.`}
+          onDismiss={() => {
+            setFrozenDays(0);
+            acknowledgeFreezes().catch(() => {});
+          }}
         />
       )}
       <ReturnWelcomeSheet

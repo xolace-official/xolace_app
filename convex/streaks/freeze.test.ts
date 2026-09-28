@@ -10,7 +10,7 @@ import { api, internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
-import { settleStreak, streakState } from "./state";
+import { acknowledgeFrozenDays, settleOnOpen, settleStreak, streakState } from "./state";
 import type { ActivityActionType } from "./activityLog";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -156,5 +156,33 @@ describe("streak freeze (#434)", () => {
     expect(summary.currentStreak).toBe(4);
     const context = await user.t.query(api.users.getFullContext, {});
     expect(context.streak).toBe(4);
+  });
+
+  it("app open surfaces a bridged gap until acknowledged, then never again (#436)", async () => {
+    // Fails if: the banner repeats after it showed, drops a bridge nobody saw
+    // (killed app, old client), misses one recordActivity wrote before the
+    // open, or fires with no freeze spent.
+    const user = await asNewUser();
+    const openAt = (day: number) =>
+      user.root.run(async (ctx) => settleOnOpen(ctx, (await ctx.db.get("emotional_profiles", user.profileId))!, at(day)));
+    const acknowledge = () =>
+      user.root.run(async (ctx) => acknowledgeFrozenDays(ctx, (await ctx.db.get("emotional_profiles", user.profileId))!));
+    await record(user, 0);
+    await record(user, 1);
+    expect(await openAt(1)).toBe(0);
+    await setFreezes(user, 2);
+
+    expect(await openAt(3)).toBe(1); // day 2 bridged
+    expect(await openAt(3)).toBe(1); // never shown: still pending
+    await acknowledge();
+    expect(await openAt(3)).toBe(0);
+    await record(user, 3);
+
+    // Bridged by recordActivity, not the open: still surfaces on the next open.
+    await record(user, 5);
+    expect(await openAt(5)).toBe(1); // day 4
+    await acknowledge();
+    expect(await openAt(6)).toBe(0);
+    expect((await profile(user)).streakFreezes).toBe(0);
   });
 });

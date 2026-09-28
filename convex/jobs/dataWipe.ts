@@ -176,6 +176,7 @@ export const wipe = internalMutation({
         streakSavers: undefined,
         streakRevivedDay: undefined,
         brokenStreak: undefined,
+        freezeAckedDay: undefined,
         dominantEmotionTags: [],
         firstSessionAt: undefined,
         lastSessionAt: undefined,

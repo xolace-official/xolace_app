@@ -172,13 +172,56 @@ export async function settleStreak(
   return { ...state, lastCoveredDay: state.bridge[state.bridge.length - 1], bridge: [] };
 }
 
+/**
+ * Frozen days the app hasn't acknowledged yet (#436), newest first — whether a
+ * settle or recordActivity wrote them. One settle bridges at most FREEZE_CAP
+ * days; 10 comfortably spans the opens between acknowledgments.
+ */
+async function unseenFrozenDays(ctx: QueryCtx, profile: Doc<"emotional_profiles">) {
+  return await ctx.db
+    .query("frozen_days")
+    .withIndex("by_profile_day", (q) =>
+      q.eq("emotionalProfileId", profile._id).gt("dayKey", profile.freezeAckedDay ?? ""),
+    )
+    .order("desc")
+    .take(10);
+}
+
+/** App open: settle, then count the frozen days still to acknowledge in-app. */
+export async function settleOnOpen(
+  ctx: MutationCtx,
+  profile: Doc<"emotional_profiles">,
+  now: number = Date.now(),
+): Promise<number> {
+  await settleStreak(ctx, profile, now);
+  return (await unseenFrozenDays(ctx, profile)).length;
+}
+
 /** App open: the read-time recompute that makes a bridged gap durable. */
 export const settle = mutation({
+  args: {},
+  // Frozen days to acknowledge in-app (#436); pre-#436 clients ignore it.
+  // Reading doesn't mark them seen — only acknowledgeFreezes does, once the
+  // banner has actually shown, so an old client or a killed app loses nothing.
+  returns: v.number(),
+  handler: async (ctx) => {
+    const { profile } = await requireAuth(ctx);
+    return await settleOnOpen(ctx, profile);
+  },
+});
+
+/** The freeze banner was shown: mark every frozen day so far as seen (#436). */
+export async function acknowledgeFrozenDays(ctx: MutationCtx, profile: Doc<"emotional_profiles">) {
+  const [latest] = await unseenFrozenDays(ctx, profile);
+  if (latest) await ctx.db.patch("emotional_profiles", profile._id, { freezeAckedDay: latest.dayKey });
+}
+
+export const acknowledgeFreezes = mutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
-    await settleStreak(ctx, profile);
+    await acknowledgeFrozenDays(ctx, profile);
     return null;
   },
 });

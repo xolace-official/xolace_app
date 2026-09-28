@@ -151,6 +151,9 @@ export default defineSchema({
     // so a revive later that day can still restore it. Self-expiring: only
     // honoured within the revive window of `lastCoveredDay`.
     brokenStreak: v.optional(v.object({ streak: v.number(), lastCoveredDay: v.string() })),
+    // Latest frozen_days dayKey the app has acknowledged in-app (#436), so the
+    // "a freeze kept your streak lit" banner shows once per freeze event.
+    freezeAckedDay: v.optional(v.string()),
 
     // Session a free user bought Plus from at session-end's kindling upsell
     // (`paths.requestKindling`). The completion-time `generate.run` no-oped
