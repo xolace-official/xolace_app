@@ -57,13 +57,33 @@ export const VENT_A11Y_LABEL = "Let it out - open voice vent, your voice is neve
 /** One-line acknowledgment shown after a chip tap, before the sheet closes. */
 export const FOLLOW_UP_ACK = "Thanks for checking back in.";
 
-/** "Lighter" next step (#449): the reflective prompt and its chrome. */
-export const LIGHTER_PROMPT = "Good to hear. What helped?";
-export const LIGHTER_PLACEHOLDER = "A walk, a person, a song… or nothing you can name";
-export const LIGHTER_SHARE_LABEL = "Share anonymously with others who feel this";
-export const LIGHTER_DONE = "Done";
-export const LIGHTER_SKIP = "Skip for now";
-export const LIGHTER_INPUT_A11Y = "What helped? Optional";
+/** The answers whose next step is the reflective prompt (#449 lighter, #450 processed). */
+export type ReflectiveAnswer = "lighter" | "processed";
+
+/**
+ * Per-answer copy for the reflective step. `processed` is the clearest
+ * resolution signal, so it also carries an always-on milestone line that
+ * sits above the streak nod.
+ */
+export const REFLECTIVE_COPY: Record<
+  ReflectiveAnswer,
+  { prompt: string; placeholder: string; inputA11y: string; milestone?: string }
+> = {
+  lighter: {
+    prompt: "Good to hear. What helped?",
+    placeholder: "A walk, a person, a song… or nothing you can name",
+    inputA11y: "What helped? Optional",
+  },
+  processed: {
+    prompt: "You worked through it. What got you there?",
+    placeholder: "A realization, a conversation, time… or nothing you can name",
+    inputA11y: "What got you there? Optional",
+    milestone: "You set this one down. That's yours to keep.",
+  },
+};
+export const REFLECTIVE_SHARE_LABEL = "Share anonymously with others who feel this";
+export const REFLECTIVE_DONE = "Done";
+export const REFLECTIVE_SKIP = "Skip for now";
 
 /**
  * The streak nod on a lighter/processed answer — existing streak copy only
@@ -76,14 +96,14 @@ export function streakNod(streak: number): string | null {
 }
 
 /**
- * The headline over each answer's next step. `lighter` is tailored (#449);
- * the rest keep the generic acknowledgment until #450–#452 replace them.
+ * The headline over each answer's next step. `lighter` (#449) and `processed`
+ * (#450) are tailored; the rest keep the generic acknowledgment until #451–#452.
  */
 export const STEP_HEADLINE: Record<StatusResponse, string> = {
-  lighter: LIGHTER_PROMPT,
+  lighter: REFLECTIVE_COPY.lighter.prompt,
   still_here: FOLLOW_UP_ACK,
   heavier: FOLLOW_UP_ACK,
-  processed: FOLLOW_UP_ACK,
+  processed: REFLECTIVE_COPY.processed.prompt,
 };
 
 /** Quiet link back to crisis resources (acute / escalation-derived cards). */

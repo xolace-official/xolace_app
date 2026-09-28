@@ -9,19 +9,25 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { Icon, OptionCard } from "@/src/features/follow-up/stack-cards";
 import {
-  LIGHTER_DONE,
-  LIGHTER_INPUT_A11Y,
-  LIGHTER_PLACEHOLDER,
-  LIGHTER_SHARE_LABEL,
-  LIGHTER_SKIP,
+  REFLECTIVE_COPY,
+  REFLECTIVE_DONE,
+  REFLECTIVE_SHARE_LABEL,
+  REFLECTIVE_SKIP,
   streakNod,
+  type ReflectiveAnswer,
 } from "@/src/features/reflect/follow-up-copy";
 
 // Mirrors REFLECTION_MAX_LENGTH in convex/followUpResponses.ts (not imported:
 // that module is server code).
 const MAX_LENGTH = 2000;
 
+const TINT: Record<ReflectiveAnswer, string> = {
+  lighter: "bg-success/20",
+  processed: "bg-ember/25",
+};
+
 type Props = {
+  answer: ReflectiveAnswer;
   cardId: Id<"follow_up_cards">;
   streak: number;
   /** False on acute / escalation cards (presence-first); the server also refuses acute and crisis. */
@@ -30,11 +36,12 @@ type Props = {
 };
 
 /**
- * The "lighter" next step (#449): an optional "what helped?" note, an optional
- * anonymous share, and a nod to the streak. Done persists the note (private
+ * The reflective next step for `lighter` (#449) and `processed` (#450): an
+ * optional note on what helped, an optional anonymous share, and a nod to the
+ * streak — `processed` adds a milestone line. Done persists the note (private
  * unless shared); Skip and X just leave — the chip answer already stands.
  */
-export function LighterStep({ cardId, streak, canShare, onClose }: Props) {
+export function ReflectiveStep({ answer, cardId, streak, canShare, onClose }: Props) {
   const posthog = usePostHog();
   const record = useMutation(api.followUpResponses.record);
   const contributeByDefault =
@@ -43,11 +50,12 @@ export function LighterStep({ cardId, streak, canShare, onClose }: Props) {
   const [shareChoice, setShareChoice] = useState<boolean | null>(null);
   const hasText = text.trim().length > 0;
   const share = canShare && hasText && (shareChoice ?? contributeByDefault);
+  const copy = REFLECTIVE_COPY[answer];
   const nod = streakNod(streak);
 
   const done = () => {
     void record({ cardId, reflectionText: text, shareRequested: share });
-    posthog.capture("follow_up_lighter_done", {
+    posthog.capture(`follow_up_${answer}_done`, {
       has_text: hasText,
       shared: share,
     });
@@ -57,7 +65,15 @@ export function LighterStep({ cardId, streak, canShare, onClose }: Props) {
   return (
     <>
       <View className="-mb-8 overflow-hidden rounded-t-[36px] bg-surface">
-        <View className="bg-success/20 px-5 pb-12 pt-5">
+        <View className={`${TINT[answer]} px-5 pb-12 pt-5`}>
+          {copy.milestone && (
+            <View className="mb-3 flex-row items-center gap-2.5">
+              <Icon name="seal" size={24} />
+              <AppText className="flex-1 font-medium text-base text-foreground">
+                {copy.milestone}
+              </AppText>
+            </View>
+          )}
           {nod && (
             <View
               className="mb-4 flex-row items-center gap-2"
@@ -72,9 +88,9 @@ export function LighterStep({ cardId, streak, canShare, onClose }: Props) {
           <TextArea
             value={text}
             onChangeText={setText}
-            placeholder={LIGHTER_PLACEHOLDER}
+            placeholder={copy.placeholder}
             maxLength={MAX_LENGTH}
-            accessibilityLabel={LIGHTER_INPUT_A11Y}
+            accessibilityLabel={copy.inputA11y}
             className="min-h-28"
           />
           {canShare && (
@@ -86,13 +102,13 @@ export function LighterStep({ cardId, streak, canShare, onClose }: Props) {
                     : "flex-1 text-foreground/40"
                 }
               >
-                {LIGHTER_SHARE_LABEL}
+                {REFLECTIVE_SHARE_LABEL}
               </AppText>
               <Switch
                 isSelected={share}
                 isDisabled={!hasText}
                 onSelectedChange={setShareChoice}
-                accessibilityLabel={LIGHTER_SHARE_LABEL}
+                accessibilityLabel={REFLECTIVE_SHARE_LABEL}
               >
                 <Switch.Thumb />
               </Switch>
@@ -103,7 +119,7 @@ export function LighterStep({ cardId, streak, canShare, onClose }: Props) {
       <OptionCard
         icon="check"
         tint="bg-surface"
-        title={LIGHTER_DONE}
+        title={REFLECTIVE_DONE}
         onPress={done}
       />
       <View className="items-center bg-surface pt-4">
@@ -114,7 +130,7 @@ export function LighterStep({ cardId, streak, canShare, onClose }: Props) {
           className="min-h-11 items-center justify-center"
         >
           <AppText className="text-sm text-foreground/55">
-            {LIGHTER_SKIP}
+            {REFLECTIVE_SKIP}
           </AppText>
         </PressableFeedback>
       </View>

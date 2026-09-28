@@ -13,7 +13,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { useFullContext } from "@/src/lib/convex/use-full-context";
 import { cn } from "@/src/lib/utils";
-import { LighterStep } from "@/src/features/follow-up/lighter-step";
+import { ReflectiveStep } from "@/src/features/follow-up/reflective-step";
 import { Icon, OptionCard, type IconKey } from "@/src/features/follow-up/stack-cards";
 import {
   chipsForTier,
@@ -48,8 +48,8 @@ export type FollowUpParams = {
 
 /**
  * The full-screen follow-up check-in (#448). Picker → per-answer next step.
- * `lighter` has its tailored step (#449); the other answers still land on the
- * generic acknowledgment until their tickets replace it.
+ * `lighter` and `processed` share the reflective step (#449, #450); the other
+ * answers still land on the generic acknowledgment until their tickets replace it.
  */
 export function FollowUpScreen() {
   const { cardId, cardText, tier, escalation } = useLocalSearchParams<FollowUpParams>();
@@ -132,8 +132,9 @@ export function FollowUpScreen() {
         bounces={false}
         keyboardShouldPersistTaps="handled"
       >
-        {picked === "lighter" ? (
-          <LighterStep
+        {picked === "lighter" || picked === "processed" ? (
+          <ReflectiveStep
+            answer={picked}
             cardId={cardId}
             streak={streak}
             canShare={tier !== "acute" && !escalationDerived}
