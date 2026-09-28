@@ -109,7 +109,7 @@ export async function recordActivity(
     newStreak = Math.max(profile.currentStreak, 1);
   } else if (previousDayKey === shiftDayKey(dayKey, -1)) {
     newStreak = profile.currentStreak + 1;
-    freezes = earnFreeze(newStreak, freezes);
+    freezes = await earnFreeze(ctx, profile, dayKey, newStreak, freezes);
   } else {
     newStreak = 1;
   }

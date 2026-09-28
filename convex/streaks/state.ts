@@ -11,9 +11,31 @@ export const FREEZE_EARN_EVERY = 7;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Freezes after the streak reaches `streak`: +1 per FREEZE_EARN_EVERY days, capped. */
-export function earnFreeze(streak: number, freezes: number): number {
-  return streak % FREEZE_EARN_EVERY === 0 ? Math.min(freezes + 1, FREEZE_CAP) : freezes;
+/**
+ * Freezes after acting on `dayKey` extends the streak to `streak`: +1 per
+ * FREEZE_EARN_EVERY consecutive *qualifying* days, capped. Strict: a frozen day
+ * restarts the count, so a bridged week doesn't earn. currentStreak counts
+ * qualifying days only, so the run since the last frozen day is the smaller of
+ * the streak and the days elapsed since it (a frozen day from an older, lapsed
+ * streak is further back than the streak itself).
+ */
+export async function earnFreeze(
+  ctx: QueryCtx,
+  profile: Doc<"emotional_profiles">,
+  dayKey: string,
+  streak: number,
+  freezes: number,
+): Promise<number> {
+  const lastFrozen = (
+    await ctx.db
+      .query("frozen_days")
+      .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profile._id))
+      .order("desc")
+      .first()
+  )?.dayKey;
+  const run =
+    lastFrozen === undefined ? streak : Math.min(streak, (Date.parse(dayKey) - Date.parse(lastFrozen)) / DAY_MS);
+  return run > 0 && run % FREEZE_EARN_EVERY === 0 ? Math.min(freezes + 1, FREEZE_CAP) : freezes;
 }
 
 export type StreakState = {

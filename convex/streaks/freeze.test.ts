@@ -133,6 +133,17 @@ describe("streak freeze (#434)", () => {
     expect((await profile(user)).streakFreezes).toBe(2);
   });
 
+  it("strict earning: a week bridged by a freeze doesn't earn; 7 real days after the frozen day do", async () => {
+    const user = await asNewUser();
+    for (let d = 0; d < 4; d++) await record(user, d);
+    await setFreezes(user, 1);
+    for (let d = 5; d < 8; d++) await record(user, d); // day 4 frozen
+    expect((await profile(user)).currentStreak).toBe(7);
+    expect((await profile(user)).streakFreezes).toBe(0);
+    for (let d = 8; d < 12; d++) await record(user, d);
+    expect((await profile(user)).streakFreezes).toBe(1);
+  });
+
   it("getSummary keeps a non-reflect streak lit past 48h from lastSessionAt", async () => {
     // reflect Mon, vent Tue–Thu → 4, though the last reflect is 72h back.
     const user = await asNewUser();
