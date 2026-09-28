@@ -5,26 +5,33 @@ import { useAppStore } from '@/src/store/store';
 
 type Family = 'music' | 'support' | 'library';
 
-const CONTENT: Record<
-  Family,
-  { heroImage: { uri: string }; title: string; subtitle: string; event: string }
-> = {
+// Dev/preview storage buckets differ from prod (Convex deploys are per-env).
+const HERO_IMAGE: Record<Family, string> = __DEV__
+  ? {
+      music: 'https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/e3196aca-e476-4708-b734-4acc433aa39b',
+      support: 'https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/a3659ad0-ea0f-4413-a583-5e7eea25639b',
+      library: 'https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/5cac4b6b-7e73-4018-8c2d-0c4aa3c0539b',
+    }
+  : {
+      music: 'https://energetic-guineapig-283.convex.cloud/api/storage/71b886f9-7035-4df2-b35c-1d2720846426',
+      support: 'https://energetic-guineapig-283.convex.cloud/api/storage/860bd876-2ea7-400b-91b8-deef7e444286',
+      library: 'https://energetic-guineapig-283.convex.cloud/api/storage/9c662010-379d-411a-90fe-6f429fcfac47',
+    };
+
+const CONTENT: Record<Family, { title: string; subtitle: string; event: string }> = {
   music: {
-    heroImage: { uri: 'https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/e3196aca-e476-4708-b734-4acc433aa39b' },
     title: 'Music, built for support',
     subtitle:
       'A growing catalogue picked for how it feels, not just how it sounds. New tracks arrive as the collection grows.',
     event: 'music_intro_completed',
   },
   support: {
-    heroImage: { uri: 'https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/a3659ad0-ea0f-4413-a583-5e7eea25639b' },
     title: 'Support audio, for when words are hard',
     subtitle:
       'Short guided pieces to sit with, whenever things get loud. New sessions arrive as the collection grows.',
     event: 'support_audio_intro_completed',
   },
   library: {
-    heroImage: { uri: 'https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/5cac4b6b-7e73-4018-8c2d-0c4aa3c0539b' },
     title: 'Welcome to the Lantern',
     subtitle:
       'A library of advices, information and stories, built for support. New reads arrive as the collection grows.',
@@ -47,11 +54,11 @@ export default function BrowseIntroRoute() {
   const setMusicIntroSeen = useAppStore((s) => s.setMusicIntroSeen);
   const setSupportAudioIntroSeen = useAppStore((s) => s.setSupportAudioIntroSeen);
   const setLibraryIntroSeen = useAppStore((s) => s.setLibraryIntroSeen);
-  const { heroImage, title, subtitle, event } = CONTENT[family];
+  const { title, subtitle, event } = CONTENT[family];
 
   return (
     <BrowseIntroScreen
-      heroImage={heroImage}
+      heroImage={{ uri: HERO_IMAGE[family] }}
       title={title}
       subtitle={subtitle}
       ctaLabel="Hold to begin"
