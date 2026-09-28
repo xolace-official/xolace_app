@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { useIsFocused } from "expo-router/react-navigation";
 import { StatusBar } from 'expo-status-bar';
 import { useObserve } from 'expo-observe';
@@ -29,8 +30,7 @@ const BANNER_INITIAL = { opacity: 0 };
 function NotificationBanner({
   content,
   onDismiss,
-  eyebrow = 'You were reached',
-}: { content: string; onDismiss: () => void; eyebrow?: string }) {
+}: { content: string; onDismiss: () => void }) {
   const insets = useSafeAreaInsets();
   const [visible, setVisible] = useState(true);
 
@@ -72,7 +72,7 @@ function NotificationBanner({
         className="bg-surface border border-border/40 rounded-2xl px-4 py-3"
       >
         <AppText className="text-[11px] uppercase tracking-wide text-foreground/40 mb-0.5">
-          {eyebrow}
+          You were reached
         </AppText>
         <AppText className="text-sm text-foreground/85 leading-5">
           {content}
@@ -120,11 +120,11 @@ export default function ProtectedIndex() {
   // App open is the read-time recompute that makes a freeze-bridged gap
   // durable (frozen_days). Best-effort: every streak read derives the same
   // answer without it.
-  // It also returns freeze-bridged days not yet acknowledged (#436) — a quiet
-  // banner, never a push, acknowledged only once it has actually shown.
+  // It also returns freeze-bridged days not yet acknowledged (#436) — shown in
+  // the streak-held screen, never a push.
   const settleStreak = useMutation(api.streaks.state.settle);
-  const acknowledgeFreezes = useMutation(api.streaks.state.acknowledgeFreezes);
   const [frozenDays, setFrozenDays] = useState(0);
+  const freezeShown = useRef(false);
   const profileId = profile?._id;
   useEffect(() => {
     if (profileId) settleStreak().then(setFrozenDays, () => {});
@@ -167,6 +167,14 @@ export default function ProtectedIndex() {
     setHomeSheetBlocking(sheetBlocking);
   }, [sheetBlocking, setHomeSheetBlocking]);
 
+  // Waits its turn behind the home sheets; the screen acknowledges on close.
+  useEffect(() => {
+    if (frozenDays > 0 && isFocused && !sheetBlocking && !freezeShown.current) {
+      freezeShown.current = true;
+      router.push({ pathname: '/streak-held', params: { days: frozenDays } });
+    }
+  }, [frozenDays, isFocused, sheetBlocking]);
+
   return (
     <>
  <StatusBar hidden />      
@@ -176,16 +184,6 @@ export default function ProtectedIndex() {
         <NotificationBanner
           content={lastNotification.content}
           onDismiss={clearLastNotification}
-        />
-      )}
-      {!lastNotification && frozenDays > 0 && (
-        <NotificationBanner
-          eyebrow="Streak held"
-          content={`A freeze kept your streak lit while you were away${frozenDays > 1 ? ` — ${frozenDays} days covered` : ''}.`}
-          onDismiss={() => {
-            setFrozenDays(0);
-            acknowledgeFreezes().catch(() => {});
-          }}
         />
       )}
       <ReturnWelcomeSheet
