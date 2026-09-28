@@ -15,8 +15,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * reflect, so it can't see a vent/library/twig day extending the streak.
  */
 export function computeUserVariant(profile: ProfileFields, streak: number): UserVariant {
+  // A first-timer can hold a live streak from non-reflect days; the greeting
+  // keys off `kind`, the calendar off `dayCount`.
   if (profile.sessionCount === 0) {
-    return { kind: 'first-time' };
+    return { kind: 'first-time', dayCount: streak };
   }
 
   if (streak === 0) {

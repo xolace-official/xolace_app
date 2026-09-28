@@ -22,8 +22,11 @@ const ACTION_LABELS: Record<ActionType, string> = {
  * with. Derived here, not by the query, whose cached result can't see midnight.
  */
 export function todayIn(timezone: string, now = Date.now()): string {
-  const format = (timeZone: string) =>
-    new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const format = (timeZone: string) => {
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+    const part = (type: string) => parts.find((p) => p.type === type)!.value;
+    return `${part("year")}-${part("month")}-${part("day")}`;
+  };
   try {
     return format(timezone);
   } catch {

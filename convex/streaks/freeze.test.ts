@@ -35,7 +35,7 @@ const frozen = (user: SeededUser) =>
     (
       await ctx.db
         .query("frozen_days")
-        .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", user.profileId))
+        .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", user.profileId))
         .collect()
     ).map((f) => f.dayKey),
   );

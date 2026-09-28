@@ -140,7 +140,7 @@ export const drainLibraryReads: DrainStep = async (ctx, profileId) => {
 export const drainActivityLog: DrainStep = async (ctx, profileId) => {
   const rows = await ctx.db
     .query("activity_log")
-    .withIndex("by_profile_day_action", (q) => q.eq("emotionalProfileId", profileId))
+    .withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) => q.eq("emotionalProfileId", profileId))
     .take(BATCH_SIZE);
   for (const r of rows) await ctx.db.delete("activity_log", r._id);
   return rows.length === BATCH_SIZE;
@@ -149,7 +149,7 @@ export const drainActivityLog: DrainStep = async (ctx, profileId) => {
 export const drainFrozenDays: DrainStep = async (ctx, profileId) => {
   const rows = await ctx.db
     .query("frozen_days")
-    .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profileId))
+    .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", profileId))
     .take(BATCH_SIZE);
   for (const r of rows) await ctx.db.delete("frozen_days", r._id);
   return rows.length === BATCH_SIZE;

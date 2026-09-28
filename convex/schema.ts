@@ -233,7 +233,7 @@ export default defineSchema({
     count: v.number(),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_profile_day_action", ["emotionalProfileId", "dayKey", "actionType"]),
+  }).index("by_emotionalProfileId_and_dayKey_and_actionType", ["emotionalProfileId", "dayKey", "actionType"]),
 
   // A missed day a streak freeze bridged (#434). Never an activity_log row —
   // the log stays an honest record of showing up; this gives the contribution
@@ -242,7 +242,7 @@ export default defineSchema({
     emotionalProfileId: v.id("emotional_profiles"),
     dayKey: v.string(),
     createdAt: v.number(),
-  }).index("by_profile_day", ["emotionalProfileId", "dayKey"]),
+  }).index("by_emotionalProfileId_and_dayKey", ["emotionalProfileId", "dayKey"]),
 
   // ===========================================================
   // 3. PREFERENCES

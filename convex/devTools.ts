@@ -336,11 +336,11 @@ export const seedRevive = internalMutation({
 
     const logs = await ctx.db
       .query("activity_log")
-      .withIndex("by_profile_day_action", (q) => q.eq("emotionalProfileId", profileId).gte("dayKey", yesterday))
+      .withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) => q.eq("emotionalProfileId", profileId).gte("dayKey", yesterday))
       .take(50);
     const frozen = await ctx.db
       .query("frozen_days")
-      .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profileId).gte("dayKey", yesterday))
+      .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", profileId).gte("dayKey", yesterday))
       .take(50);
     for (const row of logs) await ctx.db.delete("activity_log", row._id);
     for (const row of frozen) await ctx.db.delete("frozen_days", row._id);
@@ -349,7 +349,7 @@ export const seedRevive = internalMutation({
     const lastCovered = shiftDayKey(yesterday, -1);
     const covered = await ctx.db
       .query("frozen_days")
-      .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profileId).eq("dayKey", lastCovered))
+      .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", profileId).eq("dayKey", lastCovered))
       .first();
     if (!covered) {
       await ctx.db.insert("frozen_days", { emotionalProfileId: profileId, dayKey: lastCovered, createdAt: Date.now() });

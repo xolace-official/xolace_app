@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Pressable } from 'react-native';
+import { AppState, View, Pressable } from 'react-native';
 import { EaseView } from 'react-native-ease/uniwind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -127,11 +127,32 @@ export default function ProtectedIndex() {
   const [frozenDays, setFrozenDays] = useState(0);
   const freezeShown = useRef(false);
   const profileId = profile?._id;
+  // On every focus and every return to the foreground: an app left mounted can
+  // cross days without a remount. Home is unfocused while streak-held is up, so
+  // this re-runs on its close — after its acknowledgeFreezes, which the client
+  // sends first — and only a fresh count re-arms the screen. Results landing
+  // after blur are dropped.
   useEffect(() => {
-    if (profileId) {
-      settleStreak({ timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }).then(setFrozenDays, () => {});
-    }
-  }, [profileId, settleStreak]);
+    if (!profileId || !isFocused) return;
+    let live = true;
+    const settle = () =>
+      settleStreak({ timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }).then(
+        (days) => {
+          if (!live) return;
+          freezeShown.current = false;
+          setFrozenDays(days);
+        },
+        () => {},
+      );
+    settle();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') settle();
+    });
+    return () => {
+      live = false;
+      sub.remove();
+    };
+  }, [profileId, isFocused, settleStreak]);
 
   // Per-route TTI for the reflect home: the screen is genuinely ready once the
   // user context query resolves, not at mount. markInteractive emits telemetry

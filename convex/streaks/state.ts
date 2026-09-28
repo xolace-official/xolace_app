@@ -32,7 +32,7 @@ export async function earnFreeze(
     (
       await ctx.db
         .query("frozen_days")
-        .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profile._id))
+        .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", profile._id))
         .order("desc")
         .first()
     )?.dayKey,
@@ -101,7 +101,7 @@ export async function streakState(
   // capped freeze budget can bridge.
   const recentLogs = await ctx.db
     .query("activity_log")
-    .withIndex("by_profile_day_action", (q) => q.eq("emotionalProfileId", profile._id))
+    .withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) => q.eq("emotionalProfileId", profile._id))
     .order("desc")
     .take(20);
   // No qualifying row yet: a profile the cutover hasn't reached, whose only
@@ -112,7 +112,7 @@ export async function streakState(
   const lastFrozen = (
     await ctx.db
       .query("frozen_days")
-      .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profile._id))
+      .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", profile._id))
       .order("desc")
       .first()
   )?.dayKey;
@@ -186,7 +186,7 @@ export async function settleStreak(
 async function unseenFrozenDays(ctx: QueryCtx, profile: Doc<"emotional_profiles">) {
   return await ctx.db
     .query("frozen_days")
-    .withIndex("by_profile_day", (q) =>
+    .withIndex("by_emotionalProfileId_and_dayKey", (q) =>
       q.eq("emotionalProfileId", profile._id).gt("dayKey", profile.freezeAckedDay ?? ""),
     )
     .order("desc")

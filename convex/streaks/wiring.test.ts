@@ -23,7 +23,7 @@ const logRows = (user: SeededUser) =>
   user.root.run((ctx) =>
     ctx.db
       .query("activity_log")
-      .withIndex("by_profile_day_action", (q) => q.eq("emotionalProfileId", user.profileId))
+      .withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) => q.eq("emotionalProfileId", user.profileId))
       .collect(),
   );
 const actions = async (user: SeededUser) => (await logRows(user)).map((r) => r.actionType).sort();

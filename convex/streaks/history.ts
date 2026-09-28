@@ -45,7 +45,7 @@ export const get = query({
     let logs = (
       await ctx.db
         .query("activity_log")
-        .withIndex("by_profile_day_action", (q) => q.eq("emotionalProfileId", profile._id))
+        .withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) => q.eq("emotionalProfileId", profile._id))
         .order("desc")
         .take(MAX_LOG_ROWS)
     ).reverse();
@@ -54,7 +54,7 @@ export const get = query({
     if (logs.length === MAX_LOG_ROWS) logs = logs.filter((log) => log.dayKey !== logs[0].dayKey);
     const frozen = await ctx.db
       .query("frozen_days")
-      .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", profile._id))
+      .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", profile._id))
       .order("desc")
       .take(MAX_FROZEN_ROWS);
 

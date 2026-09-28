@@ -99,7 +99,7 @@ export const wipe = internalMutation({
     // today would also hold the reset streak at "same day" instead of 1.
     const activity = await ctx.db
       .query("activity_log")
-      .withIndex("by_profile_day_action", (q) =>
+      .withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) =>
         q.eq("emotionalProfileId", emotionalProfileId)
       )
       .take(BATCH_SIZE);
@@ -110,7 +110,7 @@ export const wipe = internalMutation({
     // Frozen days go with the log they bridged.
     const frozen = await ctx.db
       .query("frozen_days")
-      .withIndex("by_profile_day", (q) => q.eq("emotionalProfileId", emotionalProfileId))
+      .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", emotionalProfileId))
       .take(BATCH_SIZE);
 
     if (frozen.length === BATCH_SIZE) hasMore = true;

@@ -1,7 +1,7 @@
 import type { QuietReturnTier } from '@/src/features/reflect/quiet-return-copy';
 
 export type UserVariant =
-  | { kind: 'first-time' }
+  | { kind: 'first-time'; dayCount?: number }
   | { kind: 'returning' }
   | { kind: 'active'; dayCount: number };
 

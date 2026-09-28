@@ -72,7 +72,7 @@ export async function recordActivity(
 
   const existing = await ctx.db
     .query("activity_log")
-    .withIndex("by_profile_day_action", (q) =>
+    .withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) =>
       q
         .eq("emotionalProfileId", args.emotionalProfileId)
         .eq("dayKey", dayKey)

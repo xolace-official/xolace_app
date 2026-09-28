@@ -57,7 +57,7 @@ export const ComposeChrome = ({
   return (
     <View className="flex-row items-center gap-2 pb-3">
       <StreakCalendar
-        currentStreak={variant.kind === "active" ? variant.dayCount : 0}
+        currentStreak={variant.kind === "returning" ? 0 : (variant.dayCount ?? 0)}
         reviveStreak={context?.reviveStreak}
       />
 
