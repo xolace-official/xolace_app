@@ -23,6 +23,7 @@ import { useAskFlow } from '@/src/features/xolacer-chat/use-ask-flow';
 import { Fact } from './fact-row';
 import { XolacerMenu } from './xolacer-menu';
 import { XolacerAvatar } from './xolacer-avatar';
+import { ExpandableAvatar } from './expandable-avatar';
 import { PresenceDot } from './presence-dot';
 import { NewXolacerChip, RatingStars } from './rating-stars';
 import { SpecialtyChips } from './specialty-chips';
@@ -149,12 +150,14 @@ function ProfileBody({
       >
         <View className="items-center gap-3">
           <View>
-            <XolacerAvatar
-              name={profile.displayName}
-              photoUrl={profile.photoUrl}
-              size="lg"
-              muted={!profile.available}
-            />
+            <ExpandableAvatar photoUrl={profile.photoUrl} name={profile.displayName}>
+              <XolacerAvatar
+                name={profile.displayName}
+                photoUrl={profile.photoUrl}
+                size="lg"
+                muted={!profile.available}
+              />
+            </ExpandableAvatar>
             {profile.present && <PresenceDot large />}
           </View>
           <View className="items-center gap-1.5">
