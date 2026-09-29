@@ -1,10 +1,10 @@
 import type { ImageSource } from "expo-image";
-import type { Twig } from "@/src/features/kindling/twig-presentation";
+import { TWIG_PRESENTATION, type Twig } from "@/src/features/kindling/twig-presentation";
 
 export type TwigKind = Twig["kind"];
 
 /** All six, always — the announcement is the concept, not this session's twigs (#455). */
-export const ANNOUNCEMENT_KINDS: TwigKind[] = ["breathing", "audio", "music", "xolacer", "read", "bridge"];
+export const ANNOUNCEMENT_KINDS = Object.keys(TWIG_PRESENTATION) as TwigKind[];
 
 /**
  * Flux, one pose per twig kind (prompts: docs/kindling-flux-poses.md), hosted

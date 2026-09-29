@@ -11,8 +11,8 @@ import { KindlingAnnouncementScreen } from "@/src/features/kindling/components/k
 
 export default function KindlingAnnouncementDemo() {
   const insets = useSafeAreaInsets();
-  const p = useLocalSearchParams<{ tier?: string; last?: string }>();
-  const tier = p.tier === "free" ? "free" : "plus";
+  const params = useLocalSearchParams<{ tier?: string; last?: string }>();
+  const tier = params.tier === "free" ? "free" : "plus";
   const log = (last: string) => router.setParams({ last });
 
   if (!__DEV__) return null;
@@ -30,7 +30,7 @@ export default function KindlingAnnouncementDemo() {
         className="absolute left-4 rounded-full bg-foreground/90 px-3 py-1.5"
         style={{ top: insets.top + 10 }}
       >
-        <AppText className="text-[11px] text-background">{`DEMO · ${tier}${p.last ? ` · ${p.last}` : ""}`}</AppText>
+        <AppText className="text-[11px] text-background">{`DEMO · ${tier}${params.last ? ` · ${params.last}` : ""}`}</AppText>
       </PressableFeedback>
     </View>
   );
