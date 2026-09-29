@@ -5,8 +5,9 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CloseButton, PressableFeedback, useThemeColor } from "heroui-native";
+import { PressableFeedback, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import { cn } from "@/src/lib/utils";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 import { playSoftPress } from "@/src/lib/haptics";
 import {
@@ -15,19 +16,23 @@ import {
 } from "@/src/features/starter-suggestions/starter-rows";
 
 const FLUX = require("@/assets/images/flux/flux-map.png");
-const FLUX_STYLE = { width: 84, height: 112, marginTop: -8, marginLeft: 8 };
+const FLUX_W = 72;
+const FLUX_H = 96;
+const FLUX_STYLE = { width: FLUX_W, height: FLUX_H };
+// The tail sits over Flux's head; bubble and Flux share the same left edge.
+const TAIL_LEFT = FLUX_W / 2 - 7;
 const EASING = [0.23, 1, 0.32, 1] as [number, number, number, number];
 
 type Props = {
   onResolve: () => void;
 };
 
-/** Starter suggestions (#460): Flux, bottom-left, holding a one-time offer of places to begin. */
+/** Starter suggestions (#460): Flux, bottom-left, speaking a one-time offer of places to begin. */
 export function StarterSuggestionsBubble({ onResolve }: Props) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const reduceMotion = useEffectiveReducedMotion();
-  const foreground = useThemeColor("foreground");
+  const [muted, accent] = useThemeColor(["muted", "accent"]);
 
   const choose = (row: StarterRow) => {
     playSoftPress();
@@ -35,6 +40,8 @@ export function StarterSuggestionsBubble({ onResolve }: Props) {
     // Only Vent navigates yet; the other destinations land in #461/#462.
     if (row.id === "vent") router.push("/(protected)/voice-vent");
   };
+
+  const fluxBottom = insets.bottom + 16;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none" accessibilityViewIsModal>
@@ -49,57 +56,83 @@ export function StarterSuggestionsBubble({ onResolve }: Props) {
         <Pressable style={StyleSheet.absoluteFill} onPress={onResolve} accessible={false} />
       </EaseView>
 
+      {/* Flux arrives first, then speaks. */}
       <EaseView
-        initialAnimate={{ opacity: 0, translateY: reduceMotion ? 0 : 16 }}
+        initialAnimate={{ opacity: 0, translateY: reduceMotion ? 0 : 12 }}
         animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: "timing", duration: reduceMotion ? 150 : 320, easing: EASING }}
-        className="absolute left-4 right-4"
-        style={{ bottom: insets.bottom + 12 }}
+        transition={{ type: "timing", duration: reduceMotion ? 150 : 280, easing: EASING }}
+        className="absolute left-5"
+        style={{ bottom: fluxBottom }}
+        pointerEvents="none"
       >
-        <View className="rounded-3xl bg-surface p-4 gap-3">
-          <View className="flex-row items-start">
-            <View className="flex-1 pl-1 pt-1" accessibilityRole="header">
-              <AppText className="text-lg font-semibold text-foreground">
+        <View className="absolute -inset-3 rounded-full bg-accent/15" />
+        <Image source={FLUX} style={FLUX_STYLE} contentFit="contain" accessible={false} />
+      </EaseView>
+
+      <EaseView
+        initialAnimate={{ opacity: 0, scale: reduceMotion ? 1 : 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{
+          type: "timing",
+          duration: reduceMotion ? 150 : 260,
+          delay: reduceMotion ? 0 : 140,
+          easing: EASING,
+        }}
+        transformOrigin={{ x: 0.1, y: 1 }}
+        className="absolute left-5 w-[76%] max-w-[320px]"
+        style={{ bottom: fluxBottom + FLUX_H + 10 }}
+      >
+        <View className="rounded-3xl bg-surface pt-3 pb-1 shadow-lg">
+          <View className="flex-row items-start pl-4 pr-2">
+            <View className="flex-1 pt-1" accessibilityRole="header">
+              <AppText className="text-[15px] font-semibold text-foreground">
                 Where would you like to start?
               </AppText>
-              <AppText className="text-sm text-muted">Suggested for you</AppText>
+              <AppText className="text-xs text-muted">Suggested for you</AppText>
             </View>
-            <CloseButton onPress={onResolve} accessibilityLabel="Close suggestions" />
+            <PressableFeedback
+              onPress={onResolve}
+              accessibilityRole="button"
+              accessibilityLabel="Close suggestions"
+              hitSlop={8}
+              className="p-2"
+            >
+              <SymbolView name={{ ios: "xmark", android: "close" } as any} size={14} tintColor={muted} />
+            </PressableFeedback>
           </View>
 
-          <View className="gap-1">
-            {STARTER_ROWS.map((row) => (
+          <View className="mt-1">
+            {STARTER_ROWS.map((row, i) => (
               <PressableFeedback
                 key={row.id}
                 onPress={() => choose(row)}
                 accessibilityRole="button"
                 accessibilityLabel={`${row.title}. ${row.subtitle}`}
               >
-                <View className="flex-row items-center gap-4 rounded-2xl bg-default px-4 py-3">
-                  <SymbolView
-                    name={row.icon as any}
-                    size={20}
-                    tintColor={foreground}
-                  />
-                  <View className="flex-1">
-                    <AppText className="text-base font-medium text-foreground">
-                      {row.title}
-                    </AppText>
-                    <AppText className="text-sm text-muted" numberOfLines={1}>
-                      {row.subtitle}
-                    </AppText>
+                <View
+                  className={cn("mx-4 flex-row items-center gap-3 py-2.5", i > 0 && "border-t border-border/50")}
+                >
+                  <View className="size-9 items-center justify-center rounded-xl bg-accent/10">
+                    <SymbolView name={row.icon as any} size={17} tintColor={accent} />
                   </View>
+                  <AppText className="flex-1 text-sm text-foreground" numberOfLines={2}>
+                    {row.subtitle}
+                  </AppText>
+                  <SymbolView
+                    name={{ ios: "arrow.right", android: "arrow_forward" } as any}
+                    size={13}
+                    tintColor={muted}
+                  />
                 </View>
               </PressableFeedback>
             ))}
           </View>
         </View>
 
-        <Image
-          source={FLUX}
-          style={FLUX_STYLE}
-          contentFit="contain"
-          accessible={false}
+        {/* Speech tail, pointing down at Flux. */}
+        <View
+          className="absolute -bottom-1.5 size-3.5 rotate-45 rounded-sm bg-surface"
+          style={{ left: TAIL_LEFT }}
         />
       </EaseView>
     </View>
