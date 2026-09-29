@@ -24,9 +24,9 @@ storytelling, and the clean ones give the eye a rest.
   cropped to a circle).
   - Scene poses: **full-bleed opaque background**, the scene reaching every edge.
   - Clean poses: **transparent background**.
-- Save as `assets/images/flux/kindling/pose-<kind>.png`. The screen reads them
-  from one map (`POSE` in the prototype's `proto-data.tsx`), so dropping the
-  files in is a path swap, not a logic change.
+- Upload to Convex storage and put the URL in `POSE`
+  (`src/features/kindling/announcement-poses.ts`). Replacing a pose is a URL
+  swap there, not a logic change.
 - Generate all six in one sitting with the same references and base prompt so
   lighting and colour stay consistent across the set; reroll outliers.
 
