@@ -30,7 +30,12 @@ import {
   type StatusResponse,
 } from "@/src/features/reflect/follow-up-copy";
 
-const FLUX = require("@/assets/images/flux/flux-campfire.png");
+// Dev/preview storage buckets differ from prod (Convex deploys are per-env).
+const FLUX = {
+  uri: __DEV__
+    ? "https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/433565d2-012f-4938-b99a-7a3b77ebd8a1"
+    : "https://energetic-guineapig-283.convex.cloud/api/storage/1dbf90a4-aa6b-41fe-b16c-49677fa82bd5",
+};
 const FLUX_SMALL = require("@/assets/images/flux/flux-point-down-removebg-preview.png");
 
 const STATUS_LOOK: Record<StatusResponse, { icon: IconKey; tint: string }> = {
