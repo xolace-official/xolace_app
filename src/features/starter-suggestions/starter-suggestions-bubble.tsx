@@ -13,10 +13,8 @@ import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduce
 import { playSoftPress } from "@/src/lib/haptics";
 import { posthog } from "@/src/config/posthog";
 import { useAppStore } from "@/src/store/store";
-import {
-  STARTER_ROWS,
-  type StarterRow,
-} from "@/src/features/starter-suggestions/starter-rows";
+import type { StarterRow } from "@/src/features/starter-suggestions/starter-rows";
+import { orderStarterRows, type Intake } from "@/src/features/starter-suggestions/order-starter-rows";
 
 const FLUX = require("@/assets/images/flux/flux-map.png");
 const FLUX_W = 72;
@@ -29,11 +27,13 @@ const navToken = () => String(Date.now());
 const EASING = [0.23, 1, 0.32, 1] as [number, number, number, number];
 
 type Props = {
+  /** `getFullContext().intake`; null when intake was skipped. Orders the rows only (ADR-0017). */
+  intake: Intake | null | undefined;
   onResolve: () => void;
 };
 
 /** Starter suggestions (#460): Flux, bottom-left, speaking a one-time offer of places to begin. */
-export function StarterSuggestionsBubble({ onResolve }: Props) {
+export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const reduceMotion = useEffectiveReducedMotion();
@@ -137,7 +137,7 @@ export function StarterSuggestionsBubble({ onResolve }: Props) {
           </View>
 
           <View className="mt-1">
-            {STARTER_ROWS.map((row, i) => (
+            {orderStarterRows(intake).map((row, i) => (
               <PressableFeedback
                 key={row.id}
                 onPress={() => choose(row, i)}

@@ -9,7 +9,7 @@ export type StarterRow = {
   icon: { ios: SFSymbol; android: string };
 };
 
-/** Default order (CONTEXT.md "Starter suggestions"). Intake reordering is #464. */
+/** Default order (CONTEXT.md "Starter suggestions"). Intake reorders it via orderStarterRows (ADR-0017). */
 export const STARTER_ROWS: StarterRow[] = [
   {
     id: "reflect",

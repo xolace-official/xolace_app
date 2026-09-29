@@ -234,7 +234,9 @@ export default function ProtectedIndex() {
         onClose={returnWelcome.dismiss}
       />
       <MonthlyEventSheet event={awarenessOpen ? awarenessEvent : null} />
-      {starter.isOpen && <StarterSuggestionsBubble onResolve={starter.resolve} />}
+      {starter.isOpen && (
+        <StarterSuggestionsBubble intake={fullContext?.intake} onResolve={starter.resolve} />
+      )}
     </View>
     </>
   );
