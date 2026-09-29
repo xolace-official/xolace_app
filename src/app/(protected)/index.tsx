@@ -20,6 +20,8 @@ import { ReturnWelcomeSheet } from '@/src/features/reflect/components/return-wel
 import { useReturnWelcome } from '@/src/features/reflect/hooks/use-return-welcome';
 import { shouldShowReflectTour } from '@/src/features/reflect/tour-copy';
 import { useFollowUpCheckIn } from '@/src/features/reflect/hooks/use-follow-up-check-in';
+import { StarterSuggestionsBubble } from '@/src/features/starter-suggestions/starter-suggestions-bubble';
+import { useStarterSuggestions } from '@/src/features/starter-suggestions/use-starter-suggestions';
 import {
   computeUserVariant,
   computeQuietReturn,
@@ -171,7 +173,7 @@ export default function ProtectedIndex() {
     lastSessionAt: profile?.lastSessionAt,
   });
 
-  // Last link in the chain: ReturnWelcome → FollowUp → MonthlyEvent. It
+  // ReturnWelcome → FollowUp → MonthlyEvent. It
   // additionally waits for the tour, which owns the idle screen on a first run
   // — see tourSeenAtMount.
   const awarenessOpen =
@@ -180,11 +182,25 @@ export default function ProtectedIndex() {
     !returnWelcome.blocking &&
     !followUp.blocking;
 
+  const awarenessShowing = awarenessOpen && awarenessEvent !== null;
+
+  // After MonthlyEvent: ReturnWelcome → FollowUp → MonthlyEvent → Starter
+  // suggestions. It waits for the tour itself (see useStarterSuggestions).
+  const starter = useStarterSuggestions({
+    active:
+      isFocused &&
+      !returnWelcome.blocking &&
+      !followUp.blocking &&
+      !awarenessShowing,
+    sessionCount: profile?.sessionCount,
+  });
+
   // The tour subscribes to this so its coach marks never render under a sheet.
   const sheetBlocking =
     returnWelcome.blocking ||
     followUp.blocking ||
-    (awarenessOpen && awarenessEvent !== null);
+    awarenessShowing ||
+    starter.isOpen;
 
   useEffect(() => {
     setHomeSheetBlocking(sheetBlocking);
@@ -215,6 +231,7 @@ export default function ProtectedIndex() {
         onClose={returnWelcome.dismiss}
       />
       <MonthlyEventSheet event={awarenessOpen ? awarenessEvent : null} />
+      {starter.isOpen && <StarterSuggestionsBubble onResolve={starter.resolve} />}
     </View>
     </>
   );

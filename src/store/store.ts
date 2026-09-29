@@ -33,12 +33,15 @@ type OnboardingSlice = {
   setIntroSeen: (v: boolean) => void;
   /**
    * True while any home sheet (return welcome, follow-up,
-   * monthly event) is open or armed to open. Transient — never persisted.
+   * monthly event, starter suggestions) is open or armed to open. Transient — never persisted.
    * The reflect tour reads this so its coach marks don't render underneath a
    * sheet that is about to cover them.
    */
   homeSheetBlocking: boolean;
   setHomeSheetBlocking: (v: boolean) => void;
+  /** Starter suggestions bubble is on screen. Transient — the streak reveal waits on it. */
+  starterSuggestionsOpen: boolean;
+  setStarterSuggestionsOpen: (v: boolean) => void;
 };
 
 type PendingEventPrompt = { text: string; label?: string; expiresAt: number; fromEntryId?: Id<'library_entries'> };
@@ -74,6 +77,9 @@ type TogglesSlice = {
   /** One-time flag — once true, the Lantern (library) welcome never shows again. */
   libraryIntroSeen: boolean;
   setLibraryIntroSeen: (v: boolean) => void;
+  /** One-time flag — once true, the home Starter suggestions bubble never shows again (#460). */
+  starterSuggestionsSeen: boolean;
+  setStarterSuggestionsSeen: (v: boolean) => void;
   /** Last resolved `xolacerChat.status().enabled` — lets a returning chat user connect before the live query answers (#342). */
   chatEnabledCached: boolean;
   setChatEnabledCached: (v: boolean) => void;
@@ -166,6 +172,8 @@ export const useAppStore = create<AppState>()(
 
         homeSheetBlocking: false,
         setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
+        starterSuggestionsOpen: false,
+        setStarterSuggestionsOpen: (v) => set({ starterSuggestionsOpen: v }),
 
         nightModeEnabled: true,
         setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
@@ -191,6 +199,8 @@ export const useAppStore = create<AppState>()(
         setSupportAudioIntroSeen: (v) => set({ supportAudioIntroSeen: v }),
         libraryIntroSeen: false,
         setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
+        starterSuggestionsSeen: false,
+        setStarterSuggestionsSeen: (v) => set({ starterSuggestionsSeen: v }),
         chatEnabledCached: false,
         setChatEnabledCached: (v) => set({ chatEnabledCached: v }),
         shakeHintSeen: false,
@@ -276,6 +286,7 @@ export const useAppStore = create<AppState>()(
           musicIntroSeen: s.musicIntroSeen,
           supportAudioIntroSeen: s.supportAudioIntroSeen,
           libraryIntroSeen: s.libraryIntroSeen,
+          starterSuggestionsSeen: s.starterSuggestionsSeen,
           chatEnabledCached: s.chatEnabledCached,
           shakeHintSeen: s.shakeHintSeen,
           returnWelcomeSeenAt: s.returnWelcomeSeenAt,
