@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { BlurView } from "expo-blur";
@@ -10,6 +11,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 import { playSoftPress } from "@/src/lib/haptics";
+import { posthog } from "@/src/config/posthog";
 import { useAppStore } from "@/src/store/store";
 import {
   STARTER_ROWS,
@@ -38,9 +40,28 @@ export function StarterSuggestionsBubble({ onResolve }: Props) {
   const [muted, accent] = useThemeColor(["muted", "accent"]);
   const requestComposerOpen = useAppStore((s) => s.requestComposerOpen);
 
-  const choose = (row: StarterRow) => {
-    playSoftPress();
+  // Mounted only while eligible, so ineligible users never fire anything (#463).
+  const shownCaptured = useRef(false);
+  useEffect(() => {
+    if (shownCaptured.current) return;
+    shownCaptured.current = true;
+    posthog.capture("starter_suggestions_shown");
+  }, []);
+
+  // One resolve per showing, even if a second tap lands before the unmount.
+  const resolved = useRef(false);
+  const resolve = (event: string, props: Record<string, string | number>) => {
+    if (resolved.current) return false;
+    resolved.current = true;
+    posthog.capture(event, props);
     onResolve();
+    return true;
+  };
+  const dismiss = (via: "close" | "tap_away") => resolve("starter_suggestions_dismissed", { via });
+
+  const choose = (row: StarterRow, index: number) => {
+    if (!resolve("starter_suggestion_tapped", { row: row.id, position: index + 1 })) return;
+    playSoftPress();
     // Reflect is the screen under the bubble: ask it to open the card (#462).
     // Tab destinations replace, like the idle menu's Discovery, so reflect
     // stays the "/" landing with no back stack.
@@ -67,7 +88,7 @@ export function StarterSuggestionsBubble({ onResolve }: Props) {
       >
         <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
         {/* Tap-away closes, same as ✕. Screen readers use ✕ instead. */}
-        <Pressable style={StyleSheet.absoluteFill} onPress={onResolve} accessible={false} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={() => dismiss("tap_away")} accessible={false} />
       </EaseView>
 
       {/* Flux arrives first, then speaks. */}
@@ -105,7 +126,7 @@ export function StarterSuggestionsBubble({ onResolve }: Props) {
               <AppText className="text-xs text-muted">Suggested for you</AppText>
             </View>
             <PressableFeedback
-              onPress={onResolve}
+              onPress={() => dismiss("close")}
               accessibilityRole="button"
               accessibilityLabel="Close suggestions"
               hitSlop={8}
@@ -119,7 +140,7 @@ export function StarterSuggestionsBubble({ onResolve }: Props) {
             {STARTER_ROWS.map((row, i) => (
               <PressableFeedback
                 key={row.id}
-                onPress={() => choose(row)}
+                onPress={() => choose(row, i)}
                 accessibilityRole="button"
                 accessibilityLabel={`${row.title}. ${row.subtitle}`}
               >
