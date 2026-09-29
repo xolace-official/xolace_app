@@ -72,8 +72,8 @@ export function Bubble({ kind, size }: { kind: Kind; size: number }) {
       style={{ width: size, height: size }}
     >
       <View
-        className="absolute overflow-hidden rounded-full bg-surface"
-        style={{ top: stroke * 1.8, left: stroke * 1.8, right: stroke * 1.8, bottom: stroke * 1.8 }}
+        className="absolute overflow-hidden rounded-full"
+        style={{ backgroundColor: `${ACCENT[kind]}33`, top: stroke * 1.8, left: stroke * 1.8, right: stroke * 1.8, bottom: stroke * 1.8 }}
       >
         <Image source={POSE[kind]} contentFit="contain" style={{ width: "100%", height: "100%" }} />
       </View>
