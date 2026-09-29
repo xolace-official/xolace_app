@@ -46,16 +46,21 @@ export const ARC: Record<Kind, number> = {
   bridge: 1,
 };
 
-// Stand-ins until the real poses land (prompts: docs/kindling-flux-poses.md). Swapping in
-// `assets/images/flux/kindling/pose-<kind>.png` changes only this map.
+// Real poses (prompts: docs/kindling-flux-poses.md), hosted in Convex storage
+// like the `TWIG_PRESENTATION` images. Audio and xolacer are transparent, so
+// the circle's tint shows through; the other four carry their own scene.
+const STORAGE = "https://energetic-guineapig-283.convex.cloud/api/storage";
 export const POSE: Record<Kind, ImageSource> = {
-  breathing: require("@/assets/images/flux/flux-campfire.png"),
-  audio: require("@/assets/images/flux/flux-whisper.png"),
-  music: require("@/assets/images/flux/jump-love-bgremove.png"),
-  xolacer: require("@/assets/images/flux/flux-pair-listening.png"),
-  read: require("@/assets/images/flux/writer-flux.png"),
-  bridge: require("@/assets/images/flux/intro-2.png"),
+  breathing: { uri: `${STORAGE}/379966f6-e54e-45f9-97d1-b2897230e3b2` },
+  audio: { uri: `${STORAGE}/637bf533-a584-4add-9840-6edb07f1c591` },
+  music: { uri: `${STORAGE}/5e7bac04-fd9b-45dd-a053-7648a2c3f91b` },
+  xolacer: { uri: `${STORAGE}/c3517525-fd5a-43f6-859f-a6744e283344` },
+  read: { uri: `${STORAGE}/8530a88f-37c1-45a3-ab2f-3635a4f70ce1` },
+  bridge: { uri: `${STORAGE}/e1069c9d-e99f-46d8-b47f-49cd07e7a062` },
 };
+
+/** No background of their own — sit on the tint instead of filling the circle. */
+const CLEAN = new Set<Kind>(["audio", "xolacer"]);
 
 export const FLUX_BUNDLE = require("@/assets/images/flux/flux-bundle.png");
 
@@ -75,7 +80,7 @@ export function Bubble({ kind, size }: { kind: Kind; size: number }) {
         className="absolute overflow-hidden rounded-full"
         style={{ backgroundColor: `${ACCENT[kind]}33`, top: stroke * 1.8, left: stroke * 1.8, right: stroke * 1.8, bottom: stroke * 1.8 }}
       >
-        <Image source={POSE[kind]} contentFit="contain" style={{ width: "100%", height: "100%" }} />
+        <Image source={POSE[kind]} contentFit={CLEAN.has(kind) ? "contain" : "cover"} style={{ width: "100%", height: "100%" }} />
       </View>
       <Svg width={size} height={size} style={{ position: "absolute", transform: [{ rotate: "-90deg" }] }}>
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={ACCENT[kind]} strokeOpacity={0.2} strokeWidth={stroke} fill="none" />
