@@ -86,12 +86,20 @@ gradient, harsh contrast, dark or gloomy scenes, busy clutter.
 > quiet.
 
 ### `bridge` — "Tell someone you trust"
-> Reuse the paper-boat motif from `intro-2.png` / `bridge-intro-mascot.tsx`.
-> Flux crouching at the edge of a calm stream on a small wooden jetty, cupped
-> mitten hands lowering a small white origami paper boat onto the water, a tiny
-> folded note tucked inside the boat. Eyes open, hopeful small smile. Behind:
-> soft golden-hour light on the water, gentle ripples, a far bank with blurred
-> pastel trees. Same boat shape and white paper as the reference.
+> Flux sitting cross-legged on the wooden floor of a small treehouse at
+> sunset, holding a tin-can telephone up to the mouth with both mitten hands,
+> leaning in slightly as if saying something quiet and important. A taut
+> string runs from the can out through the treehouse window and off the edge
+> of the frame, toward someone we can't see. Eyes soft and open, a small
+> brave smile. A tiny warm glow travels along the string near the window, as
+> if the words are on their way. Behind: the round treehouse window framing a
+> peach-and-rose sunset sky, blurred leafy branches, a string of paper bunting.
+> The listener at the other end is never shown, only implied by the string.
+
+No paper boat here, so this pose doesn't lean on `intro-2.png`. The
+string reaching out of frame is the idea: a line to one specific person you
+trust. It's private and direct, and the other end is left for the viewer to
+imagine.
 
 ## Clean poses
 
