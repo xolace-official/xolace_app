@@ -204,7 +204,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
         bottom={insets.bottom + audio.dockH + 16}
         onPress={toTop}
       />
-      <AudioDock audio={audio} entryId={entry._id} title={entry.title} coverUrl={entry.coverUrl} bottom={insets.bottom} />
+      <AudioDock audio={audio} entryId={entry._id} title={audio.track?.title ?? entry.title} coverUrl={entry.coverUrl} bottom={insets.bottom} />
     </View>
   );
 }

@@ -2292,6 +2292,7 @@ export default defineSchema({
     active: v.boolean(),
     newUntil: v.optional(v.number()),
     coverUrl: v.optional(v.string()), // else the primary subject's cover
+    coverKey: v.optional(v.string()), // ingest: R2 key of an uploaded cover, `library-thumb/<sha>.<ext>`; signed at read, wins over coverUrl
     originalUrl: v.optional(v.string()),
     author: v.optional(v.string()),
     publishedAt: v.optional(v.number()),
@@ -2323,6 +2324,7 @@ export default defineSchema({
     key: v.string(), // full asset — Plus only
     previewKey: v.string(), // truncated 30s asset — free
     durationSec: v.number(), // of the full asset; the card's "M min listen"
+    title: v.optional(v.string()), // the player's title for an adapted narration; else the entry's
     sha256: v.string(), // full audio + transcript (the preview is cut from it): ingest no-op gate
     active: v.boolean(),
   }).index("by_entryId", ["entryId"]),

@@ -3,6 +3,7 @@ import { query, type QueryCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import schema from "../schema";
+import { r2 } from "../ai/paths/audioTracks";
 import { listenMin } from "./audio";
 import { readRow, withCardSignals } from "./reads";
 
@@ -35,7 +36,13 @@ export const cardItemValidator = v.object({
   listenMin: v.optional(v.number()),
 });
 
-export const toListItem = (e: Doc<"library_entries">) => ({
+const COVER_URL_TTL_SEC = 3600;
+
+/** An uploaded cover (R2 key, signed now) wins over a plain hosted `coverUrl`. */
+export const coverOf = async (e: Doc<"library_entries">) =>
+  e.coverKey ? await r2.getUrl(e.coverKey, { expiresIn: COVER_URL_TTL_SEC }) : e.coverUrl;
+
+export const toListItem = async (e: Doc<"library_entries">) => ({
   _id: e._id,
   slug: e.slug,
   kind: e.kind,
@@ -43,7 +50,7 @@ export const toListItem = (e: Doc<"library_entries">) => ({
   dek: e.dek,
   primarySubject: e.primarySubject,
   readMin: e.readMin,
-  coverUrl: e.coverUrl,
+  coverUrl: await coverOf(e),
   newUntil: e.newUntil,
 });
 
@@ -105,7 +112,7 @@ export const getEntry = query({
     if (!body || !source) throw new Error(`Library entry ${e.slug} is missing its body or source`);
 
     return {
-      ...toListItem(e),
+      ...(await toListItem(e)),
       active: e.active,
       reuse: e.reuse,
       originalUrl: e.originalUrl,
@@ -167,7 +174,7 @@ export const listEntries = query({
           kind ? q.eq("active", true).eq("kind", kind) : q.eq("active", true),
         )
         .take(limit);
-      return await withCardSignals(ctx, profile._id, rows.map(toListItem));
+      return await withCardSignals(ctx, profile._id, await Promise.all(rows.map(toListItem)));
     }
 
     const [first, ...rest] = await Promise.all(
@@ -175,10 +182,12 @@ export const listEntries = query({
     );
     const ids = [...first].filter((id) => rest.every((s) => s.has(id)));
     const rows = await Promise.all(ids.map((id) => ctx.db.get("library_entries", id)));
-    const items = rows
-      .filter((e): e is Doc<"library_entries"> => !!e && e.active && (!args.kind || e.kind === args.kind))
-      .slice(0, limit)
-      .map(toListItem);
+    const items = await Promise.all(
+      rows
+        .filter((e): e is Doc<"library_entries"> => !!e && e.active && (!args.kind || e.kind === args.kind))
+        .slice(0, limit)
+        .map(toListItem),
+    );
     return await withCardSignals(ctx, profile._id, items);
   },
 });

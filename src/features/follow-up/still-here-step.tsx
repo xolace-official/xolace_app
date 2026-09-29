@@ -48,7 +48,7 @@ export function StillHereStep({ onClose }: { onClose: () => void }) {
             // Close the modal, then swap reflect for the tab — the idle menu's
             // replace, so reflect stays the "/" landing with no back stack.
             router.back();
-            router.replace(LINK[key].href);
+            router.replace(LINK[key].href, { withAnchor: true });
           }}
         />
       ))}

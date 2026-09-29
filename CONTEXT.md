@@ -3,6 +3,36 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Starter suggestions (2026-09-29)
+
+A one-time offer on home of a few tappable places to begin, shown to someone
+who has done nothing yet. Not the **Reflect tour** (which explains what the
+home controls do) and not the **idle menu** (permanent navigation): it says
+*where you could go*, once.
+
+- **Who sees it.** A user with zero sessions. Having any session, on any
+  device, means it never appears.
+- **Once.** Resolved by tapping a suggestion or closing it (tapping away
+  counts as closing). Backgrounding or killing the app while it is open does
+  not resolve it — it returns next launch. Resolution is remembered on the
+  device only, in the same shape as the other one-time intros.
+- **Order.** It follows the Reflect tour, as the last link of the home sheet
+  chain, so it never overlaps another home sheet.
+- **Reflect suggestion.** It opens the reflect card; where that cannot be
+  done, the user is told to tap the card themselves.
+
+- **The five suggestions.** Reflect, Vent, Lantern, Listen, Xolacer chat.
+  All five always show. **Listen** is one row that opens Browse; "Music" and
+  "Support audio" appear only in its subtitle, and the not-yet-shown Vessa
+  brand is not used. **Xolacer chat** lands on the Xolacer list and never
+  starts a conversation — the "Before you ask" primer still fires on the
+  first request.
+- **Order.** Default order is the list above. For v1, intake answers only
+  reorder (see ADR-0017); the copy never says why. Anyone without intake
+  answers gets the default.
+- **Guide.** **Flux** anchors the bubble (the map pose), silent — no chat
+  voice.
+
 ## Browse hub: Featured is hand-picked, decoupled from New (2026-09-28)
 
 **Featured** (`audio_tracks.featured`, a plain boolean) is an editor's pick

@@ -65,3 +65,4 @@ google-services-preview/
 # Library audio (#411) — local media, never the audio.json
 /scripts/library/dev/media/
 /scripts/library/prod/media/
+/scripts/library/dev/research/

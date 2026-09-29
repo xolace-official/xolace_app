@@ -88,7 +88,7 @@ async function forYou(
   }
   return await Promise.all(
     [...picked].map(async ([id, reason]) => ({
-      entry: { ...toListItem(active.get(id)!), ...(await cardSignals(ctx, profileId, id)) },
+      entry: { ...(await toListItem(active.get(id)!)), ...(await cardSignals(ctx, profileId, id)) },
       reason,
     })),
   );

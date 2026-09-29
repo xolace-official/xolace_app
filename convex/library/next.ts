@@ -27,7 +27,7 @@ export const getNext = query({
     if (!current) return null;
     const next = (await nextInHub(ctx, current, args.hub)) ?? (await nextInSubject(ctx, current, profile._id));
     if (!next) return null;
-    return { ...toListItem(next), listenMin: await listenMin(ctx, next._id) };
+    return { ...(await toListItem(next)), listenMin: await listenMin(ctx, next._id) };
   },
 });
 

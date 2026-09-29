@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { internalMutation, query, type QueryCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 import { r2 } from "../ai/paths/audioTracks";
+import { coverOf } from "./entries";
 import { requireAuth } from "../lib/auth";
 import { hasPremium, requirePremium } from "../lib/premium";
 
@@ -60,8 +61,8 @@ export const getEntryAudio = query({
       expiresAt: Date.now() + AUDIO_URL_TTL_SEC * 1000,
       preview,
       durationSec: preview ? Math.min(PREVIEW_SEC, audio.durationSec) : audio.durationSec, // of what `url` plays
-      title: entry.title,
-      coverUrl: entry.coverUrl,
+      title: audio.title ?? entry.title,
+      coverUrl: await coverOf(entry),
     };
   },
 });
@@ -97,6 +98,7 @@ export const upsertEntryAudio = internalMutation({
       previewKey: v.string(),
       durationSec: v.number(),
       transcript: v.string(),
+      title: v.optional(v.string()),
       active: v.boolean(),
       sha256: v.string(),
     }),
@@ -118,8 +120,9 @@ export const upsertEntryAudio = internalMutation({
       .unique();
     if (existing?.sha256 === fields.sha256) {
       await dropUpload();
-      if (existing.active === fields.active) return { action: "unchanged" as const };
-      await ctx.db.patch("library_entry_audio", existing._id, { active: fields.active });
+      // Title and active are metadata, outside the hash: patch them in place.
+      if (existing.active === fields.active && existing.title === fields.title) return { action: "unchanged" as const };
+      await ctx.db.patch("library_entry_audio", existing._id, { active: fields.active, title: fields.title });
       return { action: "updated" as const };
     }
 

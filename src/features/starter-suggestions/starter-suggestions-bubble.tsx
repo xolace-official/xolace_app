@@ -42,7 +42,7 @@ export function StarterSuggestionsBubble({ onResolve }: Props) {
     // Reflect lands in #462. Tab destinations replace, like the idle menu's
     // Discovery, so reflect stays the "/" landing with no back stack.
     if (row.id === "vent") router.push("/(protected)/voice-vent");
-    else if (row.id === "lantern") router.replace("/browse/library");
+    else if (row.id === "lantern") router.replace("/browse/library", { withAnchor: true });
     else if (row.id === "listen") router.replace("/browse");
     // The roster, not a conversation: the request (and its "Before you ask"
     // primer) stays the user's own tap. `t` re-applies the segment if the

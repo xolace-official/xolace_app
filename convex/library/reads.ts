@@ -77,7 +77,7 @@ export async function continueReading(
   const r = reads.find((r) => (r.position ?? 0) > 0 && active.has(r.entryId));
   if (!r) return null;
   return {
-    ...toListItem(active.get(r.entryId)!),
+    ...(await toListItem(active.get(r.entryId)!)),
     ...(await cardSignals(ctx, profileId, r.entryId)),
     position: r.position!,
   };
