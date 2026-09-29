@@ -80,6 +80,8 @@ type TogglesSlice = {
   /** One-time flag — once true, the home Starter suggestions bubble never shows again (#460). */
   starterSuggestionsSeen: boolean;
   setStarterSuggestionsSeen: (v: boolean) => void;
+  /** Dev tools only (honoured under `__DEV__`): treat this account as zero-session for Starter suggestions (#465). */
+  devStarterEligible: boolean;
   /** Last resolved `xolacerChat.status().enabled` — lets a returning chat user connect before the live query answers (#342). */
   chatEnabledCached: boolean;
   setChatEnabledCached: (v: boolean) => void;
@@ -215,6 +217,7 @@ export const useAppStore = create<AppState>()(
         setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
         starterSuggestionsSeen: false,
         setStarterSuggestionsSeen: (v) => set({ starterSuggestionsSeen: v }),
+        devStarterEligible: false,
         chatEnabledCached: false,
         setChatEnabledCached: (v) => set({ chatEnabledCached: v }),
         shakeHintSeen: false,
@@ -307,6 +310,7 @@ export const useAppStore = create<AppState>()(
           supportAudioIntroSeen: s.supportAudioIntroSeen,
           libraryIntroSeen: s.libraryIntroSeen,
           starterSuggestionsSeen: s.starterSuggestionsSeen,
+          devStarterEligible: s.devStarterEligible,
           chatEnabledCached: s.chatEnabledCached,
           shakeHintSeen: s.shakeHintSeen,
           returnWelcomeSeenAt: s.returnWelcomeSeenAt,

@@ -24,7 +24,11 @@ export function useStarterSuggestions({ active, sessionCount }: Args) {
     (s) => !shouldShowReflectTour(s.reflectTourVersion),
   );
 
-  const isOpen = active && tourDone && !seen && sessionCount === 0;
+  // Dev tools override for simulator E2E (#465); the real gate is sessionCount.
+  const devEligible = useAppStore((s) => __DEV__ && s.devStarterEligible);
+  const zeroSessions = sessionCount === 0 || (devEligible && sessionCount !== undefined);
+
+  const isOpen = active && tourDone && !seen && zeroSessions;
 
   const setOpen = useAppStore((s) => s.setStarterSuggestionsOpen);
   useEffect(() => {

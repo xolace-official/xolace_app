@@ -56,7 +56,9 @@ google-services-preview/
 .env.local
 .stream/
 .gstack/
-.argent/
+.argent/*
+# Argent flows are the repeatable E2E artifacts (#465); recordings and run output stay local.
+!.argent/flows/
 
 # Kindling ingestion — local media, never the manifest (#328)
 /scripts/kindling/dev/media/

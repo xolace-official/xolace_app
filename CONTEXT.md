@@ -3,6 +3,25 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Flux (2026-09-29)
+
+Xolace's mascot: a small flame-shaped soft-vinyl character with a
+pastel-rainbow gradient. Flux appears as illustration — perched on the reflect
+card, anchoring the **Starter suggestions** bubble, on session end, return
+welcome, the streak screens and Plus offers — always as a fixed pose (a
+bundled image under `assets/images/flux/`, or a Kindling pose served from
+Convex storage), never generated at runtime.
+
+- **Silent.** Flux has no chat voice and never speaks for the AI. Copy beside
+  Flux is the app's voice, not Flux's; a talking Flux is a new decision, not
+  an extension.
+- **Not the fire.** In the campfire metaphor the AI is the fire —
+  infrastructure. Flux is a companion who sits by it, so Flux's presence never
+  implies the AI is a participant.
+- **New poses are generated art**, not code: the prompts and references live
+  in `docs/kindling-flux-poses.md`. Reuse an existing pose before asking for
+  a new one.
+
 ## Starter suggestions (2026-09-29)
 
 A one-time offer on home of a few tappable places to begin, shown to someone
