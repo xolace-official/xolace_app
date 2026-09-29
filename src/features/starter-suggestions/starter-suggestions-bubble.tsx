@@ -21,6 +21,8 @@ const FLUX_H = 96;
 const FLUX_STYLE = { width: FLUX_W, height: FLUX_H };
 // The tail sits over Flux's head; bubble and Flux share the same left edge.
 const TAIL_LEFT = FLUX_W / 2 - 7;
+// Per-tap token for /connect; module-level so the purity lint sees no render-time clock.
+const navToken = () => String(Date.now());
 const EASING = [0.23, 1, 0.32, 1] as [number, number, number, number];
 
 type Props = {
@@ -37,8 +39,16 @@ export function StarterSuggestionsBubble({ onResolve }: Props) {
   const choose = (row: StarterRow) => {
     playSoftPress();
     onResolve();
-    // Only Vent navigates yet; the other destinations land in #461/#462.
+    // Reflect lands in #462. Tab destinations replace, like the idle menu's
+    // Discovery, so reflect stays the "/" landing with no back stack.
     if (row.id === "vent") router.push("/(protected)/voice-vent");
+    else if (row.id === "lantern") router.replace("/browse/library");
+    else if (row.id === "listen") router.replace("/browse");
+    // The roster, not a conversation: the request (and its "Before you ask"
+    // primer) stays the user's own tap. `t` re-applies the segment if the
+    // tab is already mounted on Chats.
+    else if (row.id === "xolacer")
+      router.replace({ pathname: "/connect", params: { view: "xolacers", t: navToken() } });
   };
 
   const fluxBottom = insets.bottom + 16;
