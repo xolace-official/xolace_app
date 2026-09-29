@@ -9,37 +9,30 @@ import { shouldOfferKindlingAnnouncement } from "@/src/features/kindling/kindlin
  *    kindling is being set up.
  * 3. Entitlement still resolving (hook reports `isPlus: false` until settled)
  *    reads as free, flashing the upsell at a subscriber for a frame.
- * 4. An unknown / missing `supportNeed` (old session rows) is treated as
- *    qualifying.
+ * 4. Qualification still loading (`undefined`) is treated as qualifying.
  */
-const offer = (
-  supportNeed: "none" | "light" | "active" | undefined,
-  isPlus: boolean,
-  isResolved = true,
-) => shouldOfferKindlingAnnouncement({ supportNeed, isPlus, isResolved });
+const offer = (qualifies: boolean | undefined, isPlus: boolean, isResolved = true) =>
+  shouldOfferKindlingAnnouncement({ qualifies, isPlus, isResolved });
 
 describe("shouldOfferKindlingAnnouncement", () => {
-  it.each([true, false])("no support need → none (isPlus %s)", (isPlus) => {
-    expect(offer("none", isPlus)).toBe("none");
+  it.each([true, false])("not qualifying → none (isPlus %s)", (isPlus) => {
+    expect(offer(false, isPlus)).toBe("none");
   });
 
-  it.each(["light", "active"] as const)("%s + plus → plus", (supportNeed) => {
-    expect(offer(supportNeed, true)).toBe("plus");
+  it("qualifying + plus → plus", () => {
+    expect(offer(true, true)).toBe("plus");
   });
 
-  it.each(["light", "active"] as const)("%s + free → free", (supportNeed) => {
-    expect(offer(supportNeed, false)).toBe("free");
+  it("qualifying + free → free", () => {
+    expect(offer(true, false)).toBe("free");
   });
 
-  it.each(["none", "light", "active"] as const)(
-    "%s + entitlement resolving → none",
-    (supportNeed) => {
-      expect(offer(supportNeed, false, false)).toBe("none");
-      expect(offer(supportNeed, true, false)).toBe("none");
-    },
-  );
+  it.each([true, false, undefined])("%s + entitlement resolving → none", (qualifies) => {
+    expect(offer(qualifies, false, false)).toBe("none");
+    expect(offer(qualifies, true, false)).toBe("none");
+  });
 
-  it("missing support need → none", () => {
-    expect(offer(undefined, true)).toBe("none");
+  it.each([true, false])("qualification loading → none (isPlus %s)", (isPlus) => {
+    expect(offer(undefined, isPlus)).toBe("none");
   });
 });

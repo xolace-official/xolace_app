@@ -71,6 +71,7 @@ export default function ProtectedLayout() {
           <Stack.Screen name="(tabs)" options={NO_GESTURE} />
           <Stack.Screen name="sit-with-this" options={NO_GESTURE} />
           <Stack.Screen name="peer-reflections" options={NO_GESTURE} />
+          <Stack.Screen name="kindling-announcement" options={NO_GESTURE} />
           <Stack.Screen name="session-end" options={NO_GESTURE} />
           <Stack.Screen name="crisis-resources" options={NO_GESTURE} />
           <Stack.Screen name="trusted-bridge" />

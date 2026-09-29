@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { useToast } from "heroui-native";
 import { api } from "@/convex/_generated/api";
 import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
+import { useSessionEndHref } from "@/src/features/kindling/use-session-end-href";
 import { usePostHog } from "posthog-react-native";
 import { ExerciseRunner } from "./runner/exercise-runner";
 import { SwapSheet } from "./swap-sheet";
@@ -57,6 +58,7 @@ export function SitWithThisScreen() {
   const reducedMotion = useEffectiveReducedMotion();
   const recordSwapMutation = useMutation(api.exercises.recordSwap);
   const completeStep = useMutation(api.paths.completeStep);
+  const afterPath = useSessionEndHref(standalone ? null : sessionId);
 
   useEffect(() => {
     if (standalone || startedRef.current || !sessionId || !session) return;
@@ -83,11 +85,7 @@ export function SitWithThisScreen() {
       return;
     }
     await completePath(pathCompleted);
-    router.replace(
-      sessionId
-        ? `/session-end?path=solo&sessionId=${sessionId}`
-        : "/session-end?path=solo",
-    );
+    router.replace(afterPath("solo"));
   };
 
   const handleComplete = async () => {
