@@ -10,6 +10,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 import { playSoftPress } from "@/src/lib/haptics";
+import { useAppStore } from "@/src/store/store";
 import {
   STARTER_ROWS,
   type StarterRow,
@@ -35,13 +36,16 @@ export function StarterSuggestionsBubble({ onResolve }: Props) {
   const insets = useSafeAreaInsets();
   const reduceMotion = useEffectiveReducedMotion();
   const [muted, accent] = useThemeColor(["muted", "accent"]);
+  const requestComposerOpen = useAppStore((s) => s.requestComposerOpen);
 
   const choose = (row: StarterRow) => {
     playSoftPress();
     onResolve();
-    // Reflect lands in #462. Tab destinations replace, like the idle menu's
-    // Discovery, so reflect stays the "/" landing with no back stack.
-    if (row.id === "vent") router.push("/(protected)/voice-vent");
+    // Reflect is the screen under the bubble: ask it to open the card (#462).
+    // Tab destinations replace, like the idle menu's Discovery, so reflect
+    // stays the "/" landing with no back stack.
+    if (row.id === "reflect") requestComposerOpen();
+    else if (row.id === "vent") router.push("/(protected)/voice-vent");
     else if (row.id === "lantern") router.replace("/browse/library", { withAnchor: true });
     else if (row.id === "listen") router.replace("/browse");
     // The roster, not a conversation: the request (and its "Before you ask"

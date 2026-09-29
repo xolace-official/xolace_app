@@ -152,7 +152,18 @@ type ReplySeedSlice = {
   clearReplySeed: () => void;
 };
 
-export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & PlusOfferSlice & IntakeSlice & PreferencesSlice & UpdateCheckSlice & LastNotificationSlice & ReplySeedSlice;
+/**
+ * Ephemeral, not persisted. Something outside the reflect screen (the Reflect
+ * starter suggestion, #462) asking it to open the card — see
+ * useComposerOpenRequest.
+ */
+type ComposerOpenSlice = {
+  composerOpenRequested: boolean;
+  requestComposerOpen: () => void;
+  clearComposerOpenRequest: () => void;
+};
+
+export type AppState = ThemeSlice & OnboardingSlice & TogglesSlice & PlusOfferSlice & IntakeSlice & PreferencesSlice & UpdateCheckSlice & LastNotificationSlice & ReplySeedSlice & ComposerOpenSlice;
 
 export const useAppStore = create<AppState>()(
   devtools(
@@ -267,6 +278,10 @@ export const useAppStore = create<AppState>()(
         replySeed: null,
         setReplySeed: (reply) => set({ replySeed: reply }),
         clearReplySeed: () => set({ replySeed: null }),
+
+        composerOpenRequested: false,
+        requestComposerOpen: () => set({ composerOpenRequested: true }),
+        clearComposerOpenRequest: () => set({ composerOpenRequested: false }),
       }),
       {
         name: 'xolace-app',
