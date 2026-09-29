@@ -92,6 +92,7 @@ export default function ProtectedIndex() {
   const clearLastNotification = useAppStore((s) => s.clearLastNotification);
   const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
   const setHomeSheetBlocking = useAppStore((s) => s.setHomeSheetBlocking);
+  const reflectSettled = useAppStore((s) => s.reflectSettled);
   const isFocused = useIsFocused();
   const awarenessEvent = useAwarenessEvent();
   const { markInteractive } = useObserve();
@@ -185,10 +186,12 @@ export default function ProtectedIndex() {
   const awarenessShowing = awarenessOpen && awarenessEvent !== null;
 
   // After MonthlyEvent: ReturnWelcome → FollowUp → MonthlyEvent → Starter
-  // suggestions. It waits for the tour itself (see useStarterSuggestions).
+  // suggestions. It waits for the tour itself (see useStarterSuggestions), and
+  // for the reflect card underneath to have loaded and arrived.
   const starter = useStarterSuggestions({
     active:
       isFocused &&
+      reflectSettled &&
       !returnWelcome.blocking &&
       !followUp.blocking &&
       !awarenessShowing,

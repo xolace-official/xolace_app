@@ -15,7 +15,7 @@ import { useReflectionMachine } from "@/src/features/reflect/hooks/use-reflectio
 import { MAX_TURNS } from "@/src/features/reflect/hooks/reflection-reducer";
 import { useScreenTransition } from "@/src/features/reflect/hooks/use-screen-transition";
 import { useReplySeed } from "@/src/features/reflect/hooks/use-reply-seed";
-import { useComposerOpenRequest } from "@/src/features/reflect/hooks/use-composer-open-request";
+import { useReflectBridge } from "@/src/features/reflect/hooks/use-reflect-bridge";
 import {
   SCREEN_TRANSITIONS,
   DEFAULT_SCREEN_TRANSITION,
@@ -158,7 +158,7 @@ export const ReflectScreen = () => {
   };
 
   useReplySeed(state.screen, dispatch);
-  useComposerOpenRequest(state.screen, dispatch);
+  useReflectBridge(state.screen, isLoading, dispatch);
 
   useEffect(() => {
     if (!context?.profile) return;

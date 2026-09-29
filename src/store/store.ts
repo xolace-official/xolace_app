@@ -155,9 +155,12 @@ type ReplySeedSlice = {
 /**
  * Ephemeral, not persisted. Something outside the reflect screen (the Reflect
  * starter suggestion, #462) asking it to open the card — see
- * useComposerOpenRequest.
+ * useReflectBridge.
  */
 type ComposerOpenSlice = {
+  /** The reflect screen has loaded and its card has finished arriving. */
+  reflectSettled: boolean;
+  setReflectSettled: (v: boolean) => void;
   composerOpenRequested: boolean;
   requestComposerOpen: () => void;
   clearComposerOpenRequest: () => void;
@@ -279,6 +282,8 @@ export const useAppStore = create<AppState>()(
         setReplySeed: (reply) => set({ replySeed: reply }),
         clearReplySeed: () => set({ replySeed: null }),
 
+        reflectSettled: false,
+        setReflectSettled: (v) => set({ reflectSettled: v }),
         composerOpenRequested: false,
         requestComposerOpen: () => set({ composerOpenRequested: true }),
         clearComposerOpenRequest: () => set({ composerOpenRequested: false }),
