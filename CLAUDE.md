@@ -17,7 +17,7 @@ We're building the AI-native mental health app that takes people from 'I don't e
 
 ### What It Is NOT
 
-- Not clinical (no diagnoses, no therapeutic terminology)
+- Not clinical For most user facing content unless necessary for a feature (diagnoses, therapeutic, clinical terminology can be used internally)
 
 ### Retention & Engagement
 
