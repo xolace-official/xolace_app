@@ -222,9 +222,10 @@ export function AvatarPickerSheet({
         if (!open) onClose();
       }}
     >
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
+          accessible={false}
           enableDynamicSizing
           enableOverDrag={false}
           backgroundClassName="bg-background"

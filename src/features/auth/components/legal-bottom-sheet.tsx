@@ -27,9 +27,10 @@ export const LegalBottomSheet = ({ document, onClose }: Props) => {
 
   return (
     <BottomSheet isOpen={isOpen} onOpenChange={handleOpenChange}>
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
+          accessible={false}
           snapPoints={SNAP_POINTS}
           enableOverDrag={false}
           enableDynamicSizing={false}

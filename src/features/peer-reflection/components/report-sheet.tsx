@@ -33,9 +33,10 @@ export const ReportSheet = ({ isOpen, onClose, onSubmit }: Props) => {
         if (!open) onClose();
       }}
     >
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
+          accessible={false}
           snapPoints={SNAP_POINTS}
           enableOverDrag={false}
           enableDynamicSizing={false}
