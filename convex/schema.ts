@@ -2275,7 +2275,7 @@ export default defineSchema({
       v.literal("pending"),
     ),
     attributionText: v.string(), // required credit line, shown on every entry
-    dropBrandingIfAdapted: v.boolean(),
+    dropBrandingIfAdapted: v.boolean(), // no logo on an adapted entry's credit
     refreshDays: v.optional(v.number()), // verbatim refresh SLA, e.g. NHS = 7
     sha256: v.optional(v.string()), // ingest no-op gate (#406)
   }).index("by_slug", ["slug"]),
@@ -2286,15 +2286,12 @@ export default defineSchema({
     title: v.string(),
     dek: v.string(),
     primarySubject: v.string(), // shelf home; also written as a `subject` facet
-    sourceId: v.id("library_sources"),
     reuse: v.union(v.literal("verbatim"), v.literal("adapted"), v.literal("original")),
     readMin: v.number(), // computed at ingest
     active: v.boolean(),
     newUntil: v.optional(v.number()),
     coverUrl: v.optional(v.string()), // else the primary subject's cover
     coverKey: v.optional(v.string()), // ingest: R2 key of an uploaded cover, `library-thumb/<sha>.<ext>`; signed at read, wins over coverUrl
-    originalUrl: v.optional(v.string()),
-    author: v.optional(v.string()),
     publishedAt: v.optional(v.number()),
     retrievedAt: v.optional(v.number()),
     storyDescriptor: v.optional(v.string()), // stories: "a second-year student, 20"
@@ -2308,6 +2305,19 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_active_and_kind", ["active", "kind"]),
+
+  // What an entry draws on, one row per (entry, source) pair in manifest
+  // order (#468, CONTEXT.md "Most entries are adapted from several
+  // sources"). A publisher may appear twice with different pages.
+  library_entry_sources: defineTable({
+    entryId: v.id("library_entries"),
+    sourceId: v.id("library_sources"),
+    order: v.number(),
+    pageTitle: v.string(),
+    pageUrl: v.optional(v.string()),
+    author: v.optional(v.string()),
+    retrievedAt: v.optional(v.number()),
+  }).index("by_entryId_and_order", ["entryId", "order"]),
 
   // GFM markdown (#386), kept off `library_entries` so lists skip it.
   library_entry_bodies: defineTable({

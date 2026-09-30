@@ -6,6 +6,7 @@ import schema from "../schema";
 import { r2 } from "../ai/paths/audioTracks";
 import { listenMin } from "./audio";
 import { readRow, withCardSignals } from "./reads";
+import { entrySource, readSources } from "./sources";
 
 /**
  * Library base reads (#405, CONTEXT.md "Library", ADR 0015). Open to every
@@ -55,7 +56,7 @@ export const toListItem = async (e: Doc<"library_entries">) => ({
 });
 
 /**
- * One entry by slug, with its body, source credit and facets. Inactive
+ * One entry by slug, with its body, sources (credit order) and facets. Inactive
  * (retracted) entries are returned, flagged, only to a reader who saved or
  * opened one — read-only access (#404); to anyone else they're null. Every
  * list/hub read skips them.
@@ -68,20 +69,13 @@ export const getEntry = query({
       ...listItemValidator.fields,
       active: v.boolean(),
       reuse: reuseValidator,
-      originalUrl: v.optional(v.string()),
-      author: v.optional(v.string()),
       publishedAt: v.optional(v.number()),
       storyDescriptor: v.optional(v.string()),
       contentNote: v.optional(v.string()),
       reflectPrompt: v.optional(v.string()),
       listenMin: v.optional(v.number()), // set when the entry has audio (#411)
       markdown: v.string(),
-      source: v.object({
-        name: v.string(),
-        url: v.optional(v.string()),
-        logoUrl: v.optional(v.string()),
-        attributionText: v.string(),
-      }),
+      sources: v.array(entrySource), // credit order
       facets: v.array(v.object({ axis: v.string(), slug: v.string() })),
     }),
   ),
@@ -97,38 +91,31 @@ export const getEntry = query({
       if (!r || (!r.saved && r.viewedAt === undefined)) return null;
     }
 
-    const [body, source, facets] = await Promise.all([
+    const [body, sources, facets] = await Promise.all([
       ctx.db
         .query("library_entry_bodies")
         .withIndex("by_entryId", (q) => q.eq("entryId", e._id))
         .unique(),
-      ctx.db.get("library_sources", e.sourceId),
+      readSources(ctx, e),
       ctx.db
         .query("library_entry_facets")
         .withIndex("by_entryId", (q) => q.eq("entryId", e._id))
         .take(100),
     ]);
-    // Ingest writes all three together; a missing half is a broken row.
-    if (!body || !source) throw new Error(`Library entry ${e.slug} is missing its body or source`);
+    // Ingest writes these together; a missing half is a broken row.
+    if (!body) throw new Error(`Library entry ${e.slug} is missing its body`);
 
     return {
       ...(await toListItem(e)),
       active: e.active,
       reuse: e.reuse,
-      originalUrl: e.originalUrl,
-      author: e.author,
       publishedAt: e.publishedAt,
       storyDescriptor: e.storyDescriptor,
       contentNote: e.contentNote,
       reflectPrompt: e.reflectPrompt,
       listenMin: e.active ? await listenMin(ctx, e._id) : undefined,
       markdown: body.markdown,
-      source: {
-        name: source.name,
-        url: source.url,
-        logoUrl: source.logoUrl,
-        attributionText: source.attributionText,
-      },
+      sources,
       facets: facets.map((f) => ({ axis: f.axis, slug: f.slug })),
     };
   },

@@ -3,7 +3,10 @@
  * renderer. Reader-facing prose says "Lantern", never "library" (CONTEXT.md).
  */
 
+import type { Infer } from 'convex/values';
+
 import type { Doc } from '@/convex/_generated/dataModel';
+import type { entrySource } from '@/convex/library/sources';
 
 export type Kind = Doc<'library_entries'>['kind'];
 type Reuse = Doc<'library_entries'>['reuse'];
@@ -23,14 +26,34 @@ export function prepareBody(markdown: string) {
     .replace(ALERT_MARKER, (_, type: string) => `> **${capitalise(type)}**\n>`);
 }
 
-const CREDIT: Record<Reuse, string> = {
-  verbatim: 'Published as they wrote it',
-  adapted: 'Adapted from their original',
-  original: 'Written for Lantern',
-};
+type Source = Pick<Infer<typeof entrySource>, 'name' | 'url' | 'logoUrl' | 'pageUrl' | 'author' | 'attributionText'>;
+type Credited = { reuse: Reuse; sources: Source[] };
 
-/** The line under the source's name: how its words reached this page. */
-export const creditLine = (reuse: Reuse) => CREDIT[reuse];
+const XOLACE = 'Xolace';
+const XOLACE_ATTRIBUTION = '© Xolace';
+
+/**
+ * The header credit follows `reuse`, never the source count (CONTEXT.md
+ * "Most entries are adapted from several sources"): only verbatim words
+ * carry a publisher's name — an adapted entry is our wording.
+ */
+export function headerCredit({ reuse, sources }: Credited) {
+  const s = sources[0];
+  if (reuse === 'verbatim' && s) {
+    return {
+      name: s.name,
+      logoUrl: s.logoUrl,
+      line: ['Published as they wrote it', s.author && `by ${s.author}`].filter(Boolean).join(' · '),
+      href: s.pageUrl ?? s.url,
+      xolace: false,
+    };
+  }
+  return { name: XOLACE, line: reuse === 'adapted' ? 'Adapted by Xolace' : 'Written for Lantern', xolace: true };
+}
+
+/** The licence lines after the body: each once, in source order. */
+export const attributionLines = (sources: Source[]) =>
+  sources.length ? [...new Set(sources.map((s) => s.attributionText))] : [XOLACE_ATTRIBUTION];
 
 export function metaLine(kind: Kind, readMin: number, storyDescriptor?: string, listenMin?: number) {
   return [capitalise(kind), storyDescriptor, `${readMin} min read`, listenMin && `${listenMin} min listen`]
@@ -39,21 +62,16 @@ export function metaLine(kind: Kind, readMin: number, storyDescriptor?: string, 
 }
 
 /**
- * The meta line as a screen reader hears it (#400): kind · source, and
- * whether it was adapted · the times. Commas, since "·" is read aloud.
+ * The meta line as a screen reader hears it (#400): kind · who it's from ·
+ * the times. An adapted entry names no publisher. Commas, since "·" is read aloud.
  */
-export function metaLabel(e: {
-  kind: Kind;
-  reuse: Reuse;
-  source: { name: string };
-  readMin: number;
-  storyDescriptor?: string;
-  listenMin?: number;
-}) {
+export function metaLabel(
+  e: Credited & { kind: Kind; readMin: number; storyDescriptor?: string; listenMin?: number },
+) {
   return [
     capitalise(e.kind),
     e.storyDescriptor,
-    `from ${e.source.name}${e.reuse === 'adapted' ? ', adapted' : ''}`,
+    e.reuse === 'adapted' ? `adapted by ${XOLACE}` : `from ${headerCredit(e).name}`,
     `${e.readMin} min read`,
     e.listenMin && `${e.listenMin} min listen`,
   ]

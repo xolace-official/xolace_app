@@ -1,7 +1,8 @@
 // Library catalogue ingestion (#406, decisions in #392).
 //
 // Upserts `sources.json` → `manifest.json` (entries) → `hubs.json` into the
-// `library_*` tables, in that order: entries reference a `sourceSlug`, hubs
+// `library_*` tables, in that order: entries list their `sources` in credit
+// order (`[{ source: <slug>, pageTitle, pageUrl?, author?, retrievedAt? }]`), hubs
 // reference entry / kindling-audio slugs that must already be ingested.
 // Each entry's body is its own markdown file (`bodyPath`, relative to the
 // manifest dir), never inlined.
@@ -16,7 +17,7 @@
 // `consentRecordedAt`; an explainer can only be `active: true` once
 // `library/admin:markSafetyReviewed` has signed off its current body. Soft
 // gate (#404): a verbatim entry from a source with `refreshDays` (NHS = 7)
-// whose `retrievedAt` is older than that prints a refresh nag — it still
+// whose source `retrievedAt` is older than that prints a refresh nag — it still
 // ingests. Alt text is a hard gate too (#400): an image with empty alt is
 // rejected unless the record lists its src in `decorativeImages`.
 // Unpublishing is `library/admin:setActive`, not this script.
@@ -50,9 +51,8 @@ import path from "node:path";
 type Source = { slug: string; refreshDays?: number; [k: string]: unknown };
 type Entry = {
   slug: string;
-  sourceSlug: string;
+  sources: { source: string; retrievedAt?: number }[];
   reuse: string;
-  retrievedAt?: number;
   bodyPath: string;
   coverPath?: string;
   decorativeImages?: string[];
@@ -167,9 +167,10 @@ async function main() {
 
   const refreshDays = new Map(sources.map((s) => [s.slug, s.refreshDays]));
   for (const record of entries) {
-    const days = refreshDays.get(record.sourceSlug);
-    if (days && record.reuse === "verbatim" && (record.retrievedAt ?? 0) < Date.now() - days * DAY_MS) {
-      console.warn(`entry ${record.slug}: WARNING — verbatim copy older than ${days} days, re-pull it from ${record.sourceSlug}`);
+    const [s] = record.sources;
+    const days = s && refreshDays.get(s.source);
+    if (days && record.reuse === "verbatim" && (s.retrievedAt ?? 0) < Date.now() - days * DAY_MS) {
+      console.warn(`entry ${record.slug}: WARNING — verbatim copy older than ${days} days, re-pull it from ${s.source}`);
     }
     await attempt(`entry ${record.slug}`, async () => {
       const markdown = readFileSync(path.resolve(dir, record.bodyPath), "utf8");

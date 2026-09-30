@@ -96,7 +96,7 @@ describe("recordActivity wiring (#433)", () => {
         attributionText: "a",
         dropBrandingIfAdapted: true,
       });
-      return ctx.db.insert("library_entries", {
+      const entryId = await ctx.db.insert("library_entries", {
         slug: "worry",
         kind: "advice",
         title: "t",
@@ -106,8 +106,9 @@ describe("recordActivity wiring (#433)", () => {
         readMin: 4,
         active: true,
         lastReviewedAt: 1,
-        sourceId,
       });
+      await ctx.db.insert("library_entry_sources", { entryId, sourceId, order: 0, pageTitle: "Worry" });
+      return entryId;
     });
     await user.t.mutation(api.library.reads.record, { entryId, opened: true });
     expect(await actions(user)).toEqual([]);

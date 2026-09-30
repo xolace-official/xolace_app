@@ -4,6 +4,7 @@ import type { Doc } from "../_generated/dataModel";
 import { PRIMARY_EMOTIONS, THEMATIC_TAGS } from "../lib/understandingVocab";
 import schema from "../schema";
 import { assertImageAlts } from "./imageAlts";
+import { manifestSource, replaceSources, resolveSources } from "./sources";
 
 /**
  * Curator ingest for the Library (#406, decisions in #392), driven by
@@ -21,7 +22,6 @@ const upsertResult = v.object({
 // Manifest records are the table rows minus what ingest derives itself.
 const { sha256: _sourceSha, ...sourceFields } = schema.tables.library_sources.validator.fields;
 const {
-  sourceId: _sourceId,
   readMin: _readMin,
   safetyReviewedAt: _safetyReviewedAt,
   sha256: _entrySha,
@@ -76,7 +76,7 @@ export const upsertEntry = internalMutation({
   args: {
     entry: v.object({
       ...entryManifestFields,
-      sourceSlug: v.string(),
+      sources: v.array(manifestSource), // credit order
       facets: v.record(v.string(), v.array(v.string())), // axis → slugs
     }),
     markdown: v.string(),
@@ -94,12 +94,8 @@ export const upsertEntry = internalMutation({
     assertImageAlts(entry.slug, markdown, decorativeImages);
     if (existing?.sha256 === sha256) return { action: "unchanged" as const };
 
-    const { sourceSlug, facets, ...fields } = entry;
-    const source = await ctx.db
-      .query("library_sources")
-      .withIndex("by_slug", (q) => q.eq("slug", sourceSlug))
-      .unique();
-    if (!source) throw new ConvexError(`library entry "${entry.slug}": unknown source "${sourceSlug}"`);
+    const { sources, facets, ...fields } = entry;
+    const resolved = await resolveSources(ctx, entry, sources);
 
     const pairs = new Map<string, { axis: string; slug: string }>();
     for (const [axis, slugs] of [...Object.entries(facets), ["subject", [entry.primarySubject]] as const]) {
@@ -119,7 +115,6 @@ export const upsertEntry = internalMutation({
       : null;
     const doc = {
       ...fields,
-      sourceId: source._id,
       readMin: Math.max(1, Math.ceil(markdown.split(/\s+/).filter(Boolean).length / WORDS_PER_MIN)),
       // A review covers one body: any edit clears it (#392).
       safetyReviewedAt: body?.markdown === markdown ? existing?.safetyReviewedAt : undefined,
@@ -141,6 +136,7 @@ export const upsertEntry = internalMutation({
     if (body) await ctx.db.patch("library_entry_bodies", body._id, { markdown });
     else await ctx.db.insert("library_entry_bodies", { entryId, markdown });
     for (const f of pairs.values()) await ctx.db.insert("library_entry_facets", { entryId, ...f });
+    await replaceSources(ctx, entryId, sources, resolved);
 
     return { action: existing ? ("updated" as const) : ("inserted" as const) };
   },
