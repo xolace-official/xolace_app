@@ -58,7 +58,8 @@ function SourcesSheet({ sources, isOpen, onClose }: { sources: Source[]; isOpen:
   const page = READING_MODES[useAppStore((s) => s.readingMode)].page;
   return (
     <BottomSheet isOpen={isOpen} onOpenChange={(o) => !o && onClose()}>
-      <BottomSheet.Portal>
+      {/* Modal container: VoiceOver stays in the sheet instead of reaching the reader behind it. */}
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         {/* Inside the portal: the scope is context, and the portal leaves the reader's tree. */}
         <ReaderPageScope page={page}>
           <BottomSheetBlurOverlay />

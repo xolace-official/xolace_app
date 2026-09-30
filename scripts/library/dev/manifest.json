@@ -171,5 +171,32 @@
     "coverPath": "exams-stress-s.png",
     "contentNote": "Mentions exam anxiety and panic. Nothing graphic.",
     "reflectPrompt": "What helps you feel steady in the hours before something that matters to you?"
+  },
+  {
+    "slug": "dev-wind-down-adapted",
+    "kind": "advice",
+    "title": "Winding down after a long day",
+    "dek": "Small habits for the hour before bed.",
+    "primarySubject": "sleep",
+    "sources": [
+      {
+        "source": "dev-nhs",
+        "pageTitle": "How to fall asleep faster",
+        "retrievedAt": 1790697114000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790697114000,
+    "lastReviewedAt": 1790697114000,
+    "facets": {
+      "emotion": [
+        "anxiety"
+      ],
+      "lifeArea": [
+        "health"
+      ]
+    },
+    "bodyPath": "bodies/dev-wind-down-adapted.md"
   }
 ]
