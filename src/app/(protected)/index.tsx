@@ -19,8 +19,9 @@ import { useAwarenessEvent } from '@/src/features/awareness-events/hooks/use-awa
 import { ReturnWelcomeSheet } from '@/src/features/reflect/components/return-welcome-sheet';
 import { useReturnWelcome } from '@/src/features/reflect/hooks/use-return-welcome';
 import { shouldShowReflectTour } from '@/src/features/reflect/tour-copy';
-import { FollowUpCheckInSheet } from '@/src/features/reflect/components/follow-up-check-in-sheet';
 import { useFollowUpCheckIn } from '@/src/features/reflect/hooks/use-follow-up-check-in';
+import { StarterSuggestionsBubble } from '@/src/features/starter-suggestions/starter-suggestions-bubble';
+import { useStarterSuggestions } from '@/src/features/starter-suggestions/use-starter-suggestions';
 import {
   computeUserVariant,
   computeQuietReturn,
@@ -91,6 +92,7 @@ export default function ProtectedIndex() {
   const clearLastNotification = useAppStore((s) => s.clearLastNotification);
   const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
   const setHomeSheetBlocking = useAppStore((s) => s.setHomeSheetBlocking);
+  const reflectSettled = useAppStore((s) => s.reflectSettled);
   const isFocused = useIsFocused();
   const awarenessEvent = useAwarenessEvent();
   const { markInteractive } = useObserve();
@@ -172,7 +174,7 @@ export default function ProtectedIndex() {
     lastSessionAt: profile?.lastSessionAt,
   });
 
-  // Last link in the chain: ReturnWelcome → FollowUp → MonthlyEvent. It
+  // ReturnWelcome → FollowUp → MonthlyEvent. It
   // additionally waits for the tour, which owns the idle screen on a first run
   // — see tourSeenAtMount.
   const awarenessOpen =
@@ -181,11 +183,27 @@ export default function ProtectedIndex() {
     !returnWelcome.blocking &&
     !followUp.blocking;
 
+  const awarenessShowing = awarenessOpen && awarenessEvent !== null;
+
+  // After MonthlyEvent: ReturnWelcome → FollowUp → MonthlyEvent → Starter
+  // suggestions. It waits for the tour itself (see useStarterSuggestions), and
+  // for the reflect card underneath to have loaded and arrived.
+  const starter = useStarterSuggestions({
+    active:
+      isFocused &&
+      reflectSettled &&
+      !returnWelcome.blocking &&
+      !followUp.blocking &&
+      !awarenessShowing,
+    sessionCount: profile?.sessionCount,
+  });
+
   // The tour subscribes to this so its coach marks never render under a sheet.
   const sheetBlocking =
     returnWelcome.blocking ||
     followUp.blocking ||
-    (awarenessOpen && awarenessEvent !== null);
+    awarenessShowing ||
+    starter.isOpen;
 
   useEffect(() => {
     setHomeSheetBlocking(sheetBlocking);
@@ -215,13 +233,10 @@ export default function ProtectedIndex() {
         tier={returnWelcome.tier}
         onClose={returnWelcome.dismiss}
       />
-      <FollowUpCheckInSheet
-        card={followUp.card}
-        isOpen={followUp.isOpen}
-        onResolve={followUp.resolve}
-        onDismiss={followUp.dismiss}
-      />
       <MonthlyEventSheet event={awarenessOpen ? awarenessEvent : null} />
+      {starter.isOpen && (
+        <StarterSuggestionsBubble intake={fullContext?.intake} onResolve={starter.resolve} />
+      )}
     </View>
     </>
   );

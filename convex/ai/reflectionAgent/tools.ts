@@ -44,7 +44,7 @@ export const REFLECTION_TOOLS: Anthropic.Tool[] = [
   {
     name: "get_recent_sessions",
     description:
-      "Recent sessions with their shape: how the mirror landed (confirmed / refined / gave up), the path chosen, the mirror text, and post-session mood. Newest first.",
+      "Recent sessions with their shape: how the mirror landed (confirmed / refined / gave up), the path chosen, the mirror text, post-session mood, and the later check-in (followUp: how it sat days after — lighter / still_here / heavier / processed / vent, or dismissed, which says nothing about mood — what they said helped, and what they reached for if it got heavier; null if none). Newest first.",
     input_schema: { type: "object", properties: {} },
   },
   {

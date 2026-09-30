@@ -7,6 +7,7 @@ import { PlusOfferCard } from '@/src/features/purchases/components/plus-offer-ca
 import { usePlusOffer } from '@/src/features/purchases/use-plus-offer';
 import { usePaywall } from '@/src/features/purchases/use-paywall';
 import { playPathChoice } from '@/src/lib/haptics';
+import { useSessionEndHref } from '@/src/features/kindling/use-session-end-href';
 
 type Props = {
   mirror: string;
@@ -42,6 +43,7 @@ export const PathSelectionState = ({
   const router = useRouter();
   const busyRef = useRef(false);
   const openPaywall = usePaywall((s) => s.open);
+  const afterPath = useSessionEndHref(sessionId);
   // Moment 2 (#221 §4). This screen IS the beat — the user has just said the
   // mirror landed. It runs on its own call site rather than waiting for
   // session end, and spends the same one-offer-per-session budget, so a
@@ -96,6 +98,10 @@ export const PathSelectionState = ({
     if (busyRef.current) return;
     busyRef.current = true;
     playPathChoice();
+    // Read before onSelectExit completes the session. Carries the id —
+    // getActive is null afterwards — and routes via the kindling announcement
+    // when due (exit has no activity, so it sits right after path choice).
+    const href = afterPath('exit');
     try {
       await onSelectExit();
     } catch (e) {
@@ -104,13 +110,7 @@ export const PathSelectionState = ({
       return;
     }
     try {
-      // onSelectExit already completed the session, so getActive is now null.
-      // Carry the id so session-end can fetch it by id instead of getActive.
-      router.replace(
-        sessionId
-          ? `/session-end?path=exit&sessionId=${sessionId}`
-          : '/session-end?path=exit',
-      );
+      router.replace(href);
     } catch {
       // non-fatal nav error
     } finally {

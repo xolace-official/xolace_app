@@ -13,6 +13,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { PillButton } from "@/src/components/shared/pill-button";
 import { ReflectionCard } from "@/src/features/peer-reflection/components/reflection-card";
 import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
+import { useSessionEndHref } from "@/src/features/kindling/use-session-end-href";
 import { ReportSheet } from "@/src/features/peer-reflection/components/report-sheet";
 import { Id } from "@/convex/_generated/dataModel";
 
@@ -32,6 +33,7 @@ export const PeerReflectionScreen = () => {
   const { sessionId, session, isLoading, startPath, completePath } =
     usePathSession();
   const posthog = usePostHog();
+  const afterPath = useSessionEndHref(sessionId);
   // Once we complete + navigate to session-end, getActive goes null. Claim the
   // finish so the "no active session" guard below doesn't race us home.
   const finishingRef = useRef(false);
@@ -142,12 +144,11 @@ export const PeerReflectionScreen = () => {
     if (finishingRef.current) return;
     finishingRef.current = true;
     // Complete before navigating so the session is durably terminal even if the
-    // user closes the app on session-end. Carry the id — getActive is now null.
-    const id = sessionId;
+    // user closes the app on session-end. `afterPath` carries the id — getActive
+    // is null once completed — and routes via the kindling announcement if due.
+    const href = afterPath('peers');
     await completePath(true);
-    router.replace(
-      id ? `/session-end?path=peers&sessionId=${id}` : '/session-end?path=peers',
-    );
+    router.replace(href);
   };
 
   const safeAreaStyle = { paddingTop: insets.top, paddingBottom: insets.bottom };

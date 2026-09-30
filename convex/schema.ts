@@ -1797,6 +1797,39 @@ export default defineSchema({
     // Session cascade delete (lib/sessionCascade.purgeSessions).
     .index("by_session", ["sessionId"]),
 
+  // The structured half of a check-in answer (issue #447): what the user wrote
+  // or chose AFTER picking a chip. Kept off `follow_up_cards` so that table
+  // stays lean and its `userResponse` enum stays the single outcome field.
+  // At most one row per card (followUpResponses.record upserts). Dies with its
+  // card — see deleteResponsesForCard.
+  follow_up_responses: defineTable({
+    cardId: v.id("follow_up_cards"),
+    // Denormalized from the card so consolidation can read a profile's
+    // responses without walking cards.
+    emotionalProfileId: v.id("emotional_profiles"),
+    // "What helped?" (lighter / processed). Trimmed; absent when blank.
+    reflectionText: v.optional(v.string()),
+    // The user asked for the reflection to go to peer-reflections. Intent
+    // only — sharing itself runs through the existing consent flow.
+    shareRequested: v.boolean(),
+    // Which option the user took from the "heavier" menu, if any.
+    heavierChoice: v.optional(
+      v.union(
+        v.literal("crisis_resources"),
+        v.literal("music"),
+        v.literal("support_audio"),
+        v.literal("library"),
+      ),
+    ),
+    // When the share job was first enqueued (#449). Set once and never
+    // cleared, so share → private → share can't contribute twice.
+    shareScheduledAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_card", ["cardId"])
+    .index("by_profile_created", ["emotionalProfileId", "createdAt"]),
+
   // ===========================================================
   // 21. SEMANTIC PROFILES (Cognition Layer §1.2)
   // ===========================================================
@@ -2140,6 +2173,7 @@ export default defineSchema({
     thumbSha256: v.string(), // thumbnail idempotency, independent of audio
     active: v.boolean(), // retire (licence lapse) without deleting
     newUntil: v.optional(v.number()), // ms epoch; in the Browse "New" shelf while > now
+    featured: v.optional(v.boolean()), // hand-picked Browse hero; set from the Convex dashboard
 
     // support-family
     narrators: v.optional(v.array(v.string())), // display strings: ["Sage"], ["Sage","Ash"]
@@ -2258,6 +2292,7 @@ export default defineSchema({
     active: v.boolean(),
     newUntil: v.optional(v.number()),
     coverUrl: v.optional(v.string()), // else the primary subject's cover
+    coverKey: v.optional(v.string()), // ingest: R2 key of an uploaded cover, `library-thumb/<sha>.<ext>`; signed at read, wins over coverUrl
     originalUrl: v.optional(v.string()),
     author: v.optional(v.string()),
     publishedAt: v.optional(v.number()),
@@ -2289,6 +2324,7 @@ export default defineSchema({
     key: v.string(), // full asset — Plus only
     previewKey: v.string(), // truncated 30s asset — free
     durationSec: v.number(), // of the full asset; the card's "M min listen"
+    title: v.optional(v.string()), // the player's title for an adapted narration; else the entry's
     sha256: v.string(), // full audio + transcript (the preview is cut from it): ingest no-op gate
     active: v.boolean(),
   }).index("by_entryId", ["entryId"]),

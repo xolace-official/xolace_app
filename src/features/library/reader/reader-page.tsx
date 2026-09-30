@@ -10,8 +10,10 @@ import type { ReaderPage } from './reading-mode';
  * follows with no per-component wiring. The app theme is untouched.
  */
 export function ReaderPageScope({ page, children }: { page: ReaderPage; children: ReactNode }) {
+  // Classic ('app') has no page tokens; read paper's so the hook still runs (values unused).
+  const key = page === 'app' ? 'paper' : page;
   const [bg, ink, muted] = (
-    useCSSVariable([`--color-reader-${page}-bg`, `--color-reader-${page}-ink`, `--color-reader-${page}-muted`]) as string[]
+    useCSSVariable([`--color-reader-${key}-bg`, `--color-reader-${key}-ink`, `--color-reader-${key}-muted`]) as string[]
   ).map(String);
   if (page === 'app') return children;
   return (

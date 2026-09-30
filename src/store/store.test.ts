@@ -29,6 +29,27 @@ describe("store partialize", () => {
     expect(persisted).toContain("xolacerPrimerSeen");
   });
 
+  it("musicIntroSeen is persisted", () => {
+    const persisted = persistedKeys();
+    expect(persisted).toContain("musicIntroSeen");
+  });
+
+  it("supportAudioIntroSeen is persisted", () => {
+    const persisted = persistedKeys();
+    expect(persisted).toContain("supportAudioIntroSeen");
+  });
+
+  it("libraryIntroSeen is persisted", () => {
+    const persisted = persistedKeys();
+    expect(persisted).toContain("libraryIntroSeen");
+  });
+
+  // Resolved-once must survive a relaunch, or the bubble reappears (#460).
+  it("starterSuggestionsSeen is persisted", () => {
+    const persisted = persistedKeys();
+    expect(persisted).toContain("starterSuggestionsSeen");
+  });
+
   // The whole point of the cooldown is that a "no" survives a relaunch.
   it("plus offer cadence state is persisted", () => {
     const persisted = persistedKeys();

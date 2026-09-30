@@ -40,7 +40,8 @@
     "stream:setup:prod": "convex run --prod streamSetup:setup",
     "kindling:hashes": "node scripts/kindling/ingest.ts --update-hashes",
     "kindling:ingest": "node scripts/kindling/ingest.ts",
-    "kindling:ingest:prod": "node scripts/kindling/ingest.ts --prod"
+    "kindling:ingest:prod": "node scripts/kindling/ingest.ts --prod",
+    "demo:kindling": "xcrun simctl openurl booted \"xolace://kindling-announcement-demo\" || adb shell am start -a android.intent.action.VIEW -d \"xolace://kindling-announcement-demo\""
   },
   "dependencies": {
     "@ai-sdk/openai": "3.0.80",

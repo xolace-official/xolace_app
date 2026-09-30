@@ -65,7 +65,7 @@ export const getHub = query({
         if (item.kind === "entry") {
           const e = await ctx.db.get("library_entries", item.entryId);
           if (!e?.active) return null;
-          return { kind: "entry" as const, entry: { ...toListItem(e), ...(await cardSignals(ctx, profile._id, e._id)) } };
+          return { kind: "entry" as const, entry: { ...(await toListItem(e)), ...(await cardSignals(ctx, profile._id, e._id)) } };
         }
         const t = await ctx.db.get("audio_tracks", item.audioTrackId);
         return t?.active ? { kind: "audio" as const, track: await toTrackItem(t) } : null;

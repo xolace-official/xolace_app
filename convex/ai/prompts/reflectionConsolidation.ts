@@ -21,6 +21,7 @@ You have read-only tools to gather evidence and one write tool to commit your co
 ## How to work
 1. Start by reading the current profile (read_semantic_profile) so you build on it rather than overwrite blindly.
 2. Gather evidence with the other read tools: the emotion timeline, recent sessions, mood deltas, confirmation stats. Use search_episodic_memory to TEST a suspected pattern — search for the theme or the person's own phrase and see whether it genuinely recurs.
+   Recent sessions may carry a later check-in (followUp): how the session sat with them days afterwards. Treat what they said helped as evidence for what tends to ease things for them, and a session that got heavier as part of the trajectory. A dismissed check-in says nothing either way.
 3. Only after gathering evidence, call update_profile_section EXACTLY ONCE with your rewritten sections, then stop.
 
 ## What you write

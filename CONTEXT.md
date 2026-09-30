@@ -3,6 +3,109 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Flux (2026-09-29)
+
+Xolace's mascot: a small flame-shaped soft-vinyl character with a
+pastel-rainbow gradient. Flux appears as illustration — perched on the reflect
+card, anchoring the **Starter suggestions** bubble, on session end, return
+welcome, the streak screens and Plus offers — always as a fixed pose (a
+bundled image under `assets/images/flux/`, or a Kindling pose served from
+Convex storage), never generated at runtime.
+
+- **Silent.** Flux has no chat voice and never speaks for the AI. Copy beside
+  Flux is the app's voice, not Flux's; a talking Flux is a new decision, not
+  an extension.
+- **Not the fire.** In the campfire metaphor the AI is the fire —
+  infrastructure. Flux is a companion who sits by it, so Flux's presence never
+  implies the AI is a participant.
+- **New poses are generated art**, not code: the prompts and references live
+  in `docs/kindling-flux-poses.md`. Reuse an existing pose before asking for
+  a new one.
+
+## Starter suggestions (2026-09-29)
+
+A one-time offer on home of a few tappable places to begin, shown to someone
+who has done nothing yet. Not the **Reflect tour** (which explains what the
+home controls do) and not the **idle menu** (permanent navigation): it says
+*where you could go*, once.
+
+- **Who sees it.** A user with zero sessions. Having any session, on any
+  device, means it never appears.
+- **Once.** Resolved by tapping a suggestion or closing it (tapping away
+  counts as closing). Backgrounding or killing the app while it is open does
+  not resolve it — it returns next launch. Resolution is remembered on the
+  device only, in the same shape as the other one-time intros.
+- **Order.** It follows the Reflect tour, as the last link of the home sheet
+  chain, so it never overlaps another home sheet.
+- **Reflect suggestion.** It opens the reflect card; where that cannot be
+  done, the user is told to tap the card themselves.
+
+- **The five suggestions.** Reflect, Vent, Lantern, Listen, Xolacer chat.
+  All five always show. **Listen** is one row that opens Browse; "Music" and
+  "Support audio" appear only in its subtitle, and the not-yet-shown Vessa
+  brand is not used. **Xolacer chat** lands on the Xolacer list and never
+  starts a conversation — the "Before you ask" primer still fires on the
+  first request.
+- **Order.** Default order is the list above. For v1, intake answers only
+  reorder (see ADR-0017); the copy never says why. Anyone without intake
+  answers gets the default.
+- **Guide.** **Flux** anchors the bubble (the map pose), silent — no chat
+  voice.
+
+## Browse hub: Featured is hand-picked, decoupled from New (2026-09-28)
+
+**Featured** (`audio_tracks.featured`, a plain boolean) is an editor's pick
+for the Browse hub hero, set manually from the Convex dashboard — not a
+computed shelf. It is independent of **New** (`newUntil`, self-expiring):
+a track can be New without being Featured, Featured without being New, or
+both. The hero falls back to the same newest-active-`newUntil` pick it used
+before `featured` existed whenever no track is currently flagged, so the hub
+never shows a blank hero. Featured tracks still must be `active` — a
+retired track never shows there even if left flagged.
+
+Not an ADR: trivially reversible (flip the boolean back, or unset it), no
+real trade-off — the boolean-vs-expiring-field question was a one-line
+default, not a genuine fork.
+
+## Browse surface intros: three flags, not one (2026-09-28)
+
+Each of Browse's three destination surfaces gets its own one-time welcome
+screen, following the existing `ventIntroSeen`/`bridgeIntroSeen` shape
+exactly: a client-only persisted Zustand flag, a full-screen swap-in shown
+in place of the surface's real content on first entry, one deliberate CTA
+tap that both dismisses it and sets the flag. No server field — same
+reasoning as `xolacerPrimerSeen`: orientation, not a ticked-box record.
+
+- **`musicIntroSeen`** / **`supportAudioIntroSeen`** — `FamilyListScreen`
+  (`browse/list`) is **one mounted route with an in-place toolbar toggle**
+  between the two families (`src/features/browse/components/family-list-screen.tsx`),
+  not two routes. The two flags are keyed on the live `family` value, not on
+  route mount: landing on `list?family=music` for the first time fires the
+  Music welcome; later switching the same session's toolbar to Support audio
+  for the first time fires that one too, independently. A user who only ever
+  deep-links into one family must still see the other's welcome the first
+  time they touch it.
+- **`libraryIntroSeen`** — the Library home (`browse/library`). Code says
+  "library" everywhere (flag, component name `LibraryIntro`), matching the
+  existing Library/Lantern split — the welcome's own copy says **Lantern**
+  to the reader, same as the rest of the Library's user-facing text.
+
+**Rejected: one shared flag covering all three.** A single "here's what
+Browse offers" welcome would have to stay generic across three surfaces
+that are different enough to deserve their own words, and would never
+explain Music or Support audio specifically to a user who opened Lantern
+first (or vice versa).
+
+**The CTA reuses the runbuds hold-fill animation, but not its word.** The
+component (`src/components/extras/sample-codes/runbuds/components/hold-to-end-button.tsx`)
+is a confirm-a-consequential-action pattern ("hold to end run"); nothing on
+these welcomes is gated or locked, so the label reads **"Hold to
+begin"/"Hold to continue,"** never "unlock" — the fill animation is kept for
+its tactile flourish, the copy doesn't claim a gate that isn't there.
+
+**Not an ADR** — same reasoning as the Xolacer primer: a client-only seen
+flag is trivially reversible, so two of the three ADR criteria fail.
+
 ## Library: reading mode (2026-09-24)
 
 How an entry looks is set by picking a **reading mode**, not by adjusting

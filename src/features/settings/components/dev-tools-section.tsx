@@ -12,6 +12,7 @@ import * as Sentry from "@sentry/react-native";
 
 import { api } from "@/convex/_generated/api";
 import { useAppStore } from "@/src/store/store";
+import { StarterSuggestionsDevRows } from "@/src/features/starter-suggestions/starter-dev-rows";
 import { ReturnWelcomeSheet } from "@/src/features/reflect/components/return-welcome-sheet";
 import type { ReturnWelcomeTier } from "@/src/features/reflect/return-welcome-copy";
 import { SettingsRow } from "./settings-row";
@@ -214,6 +215,8 @@ export const DevToolsSection = () => {
         label="Replay intake"
         onPress={replayIntake}
       />
+
+      <StarterSuggestionsDevRows />
 
       <SettingsRow
         variant="action"

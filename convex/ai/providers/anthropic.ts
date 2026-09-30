@@ -38,7 +38,7 @@ export const REFLECTION_LIGHT_VERSION = "reflect-light-v1-haiku-4.5";
 
 export const REFLECTION_CONSOLIDATION_MODEL = "claude-sonnet-4-6";
 export const REFLECTION_CONSOLIDATION_VERSION =
-  "reflect-consolidation-v1-sonnet-4.6";
+  "reflect-consolidation-v2-sonnet-4.6"; // v2: reads follow-up check-ins (#453)
 
 // Kindling generation (docs/paths-v1.md §2.2, ADR 0010). One standalone
 // Haiku call that picks 2–3 action types and writes a `why` line each.

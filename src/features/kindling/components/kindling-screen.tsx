@@ -68,7 +68,8 @@ export function KindlingScreen() {
     const href = twigBrowseHref(twig);
     if (!href) return;
     playSoftPress();
-    router.push(href);
+    // Lands the Browse hub under the topic, so back and a tab re-tap reach it.
+    router.push(href, { withAnchor: true });
   };
 
   const handleSkip = async (twig: Twig) => {

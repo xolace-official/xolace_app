@@ -4,5 +4,12 @@
     "audioPath": "dev-exam-stress-advice.m4a",
     "transcriptPath": "dev-exam-stress-advice.txt",
     "active": true
+  },
+  {
+    "entrySlug": "dev-exam-stress-student-minds",
+    "audioPath": "Before the Paper Turns Over - Advice.mp3",
+    "transcriptPath": "exam-stress-before-the-paper-turns-over.txt",
+    "active": true,
+    "title": "Before the Paper Turns Over"
   }
 ]

@@ -21,8 +21,13 @@
 // rejected unless the record lists its src in `decorativeImages`.
 // Unpublishing is `library/admin:setActive`, not this script.
 //
+// A cover is `coverPath` on the entry, relative to `media/cover/` (gitignored).
+// It's uploaded to R2 (like kindling's thumbs) under `library-thumb/<sha>.<ext>`
+// and the key kept in `coverKey`; the URL is signed at read. A plain `coverUrl`
+// still works for a hosted image, but an uploaded cover wins.
+//
 // Audio (#411) is a last pass over `audio.json`, keyed by `entrySlug`:
-// `[{ entrySlug, audioPath, transcriptPath, active }]`, paths relative to
+// `[{ entrySlug, audioPath, transcriptPath, active, title? }]`, paths relative to
 // `media/` beside the manifest (gitignored, like kindling's). The script
 // cuts the free 30s preview itself (ffmpeg) and probes the duration
 // (ffprobe), so both need to be on PATH. No `audio.json` → no audio pass.
@@ -49,11 +54,12 @@ type Entry = {
   reuse: string;
   retrievedAt?: number;
   bodyPath: string;
+  coverPath?: string;
   decorativeImages?: string[];
   [k: string]: unknown;
 };
 type Hub = { slug: string; [k: string]: unknown };
-type Audio = { entrySlug: string; audioPath: string; transcriptPath: string; active: boolean };
+type Audio = { entrySlug: string; audioPath: string; transcriptPath: string; active: boolean; title?: string };
 
 const args = process.argv.slice(2);
 const i = args.indexOf("--manifest");
@@ -89,6 +95,15 @@ async function upload(key: string, body: Buffer) {
   const { url } = convexRun<{ url: string }>("ai/paths/audioTracks:mintUploadUrl", { key });
   const res = await fetch(url, { method: "PUT", body: new Uint8Array(body), signal: AbortSignal.timeout(10 * 60_000) });
   if (!res.ok) throw new Error(`upload failed (${res.status}): ${key}`);
+}
+
+// Content-addressed like kindling's thumbs: the key is the hash, so an unchanged
+// cover is the same key and is only re-PUT (idempotent), never duplicated.
+async function uploadCover(coverPath: string) {
+  const file = readFileSync(path.resolve(dir, "media/cover", coverPath));
+  const coverKey = `library-thumb/${createHash("sha256").update(file).digest("hex")}${path.extname(coverPath).toLowerCase()}`;
+  await upload(coverKey, file);
+  return { coverKey };
 }
 
 async function ingestAudio(a: Audio) {
@@ -130,6 +145,7 @@ async function ingestAudio(a: Audio) {
       previewKey,
       durationSec: Math.round(durationSec),
       transcript,
+      title: a.title,
       active: a.active,
       sha256: sha256(createHash("sha256").update(audio).digest("hex"), transcript),
     },
@@ -155,14 +171,16 @@ async function main() {
     if (days && record.reuse === "verbatim" && (record.retrievedAt ?? 0) < Date.now() - days * DAY_MS) {
       console.warn(`entry ${record.slug}: WARNING — verbatim copy older than ${days} days, re-pull it from ${record.sourceSlug}`);
     }
-    await attempt(`entry ${record.slug}`, () => {
+    await attempt(`entry ${record.slug}`, async () => {
       const markdown = readFileSync(path.resolve(dir, record.bodyPath), "utf8");
-      const { bodyPath: _bodyPath, decorativeImages, ...entry } = record;
+      const { bodyPath: _bodyPath, coverPath, decorativeImages, ...rest } = record;
+      const cover = coverPath ? await uploadCover(coverPath) : {};
+      const entry = { ...rest, ...cover };
       return convexRun("library/ingest:upsertEntry", {
         entry,
         markdown,
         decorativeImages,
-        sha256: sha256(JSON.stringify(record), markdown),
+        sha256: sha256(JSON.stringify({ ...record, ...cover }), markdown),
       });
     });
   }

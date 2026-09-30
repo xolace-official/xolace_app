@@ -13,7 +13,17 @@
     "active": true,
     "retrievedAt": 1789430400000,
     "lastReviewedAt": 1789430400000,
-    "facets": { "audience": ["student"], "emotion": ["anxiety"], "lifeArea": ["achievement"] },
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "anxiety"
+      ],
+      "lifeArea": [
+        "achievement"
+      ]
+    },
     "bodyPath": "bodies/dev-exam-stress-advice.md"
   },
   {
@@ -28,7 +38,14 @@
     "originalUrl": "https://www.nhs.uk/every-mind-matters/mental-health-issues/sleep/",
     "retrievedAt": 1788220800000,
     "lastReviewedAt": 1788220800000,
-    "facets": { "emotion": ["anxiety"], "lifeArea": ["health"] },
+    "facets": {
+      "emotion": [
+        "anxiety"
+      ],
+      "lifeArea": [
+        "health"
+      ]
+    },
     "bodyPath": "bodies/dev-sleep-verbatim.md"
   },
   {
@@ -42,7 +59,17 @@
     "active": false,
     "retrievedAt": 1789430400000,
     "lastReviewedAt": 1789430400000,
-    "facets": { "audience": ["professional"], "emotion": ["numbness"], "lifeArea": ["work"] },
+    "facets": {
+      "audience": [
+        "professional"
+      ],
+      "emotion": [
+        "numbness"
+      ],
+      "lifeArea": [
+        "work"
+      ]
+    },
     "bodyPath": "bodies/dev-what-is-burnout.md"
   },
   {
@@ -57,7 +84,48 @@
     "storyDescriptor": "a first-year student, 19",
     "consentRecordedAt": 1789862400000,
     "lastReviewedAt": 1789862400000,
-    "facets": { "audience": ["student"], "emotion": ["sadness"], "lifeArea": ["isolation", "change"] },
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "sadness"
+      ],
+      "lifeArea": [
+        "isolation",
+        "change"
+      ]
+    },
     "bodyPath": "bodies/dev-first-term-story.md"
+  },
+  {
+    "slug": "dev-exam-stress-student-minds",
+    "kind": "advice",
+    "title": "Exam stress",
+    "dek": "Anxiety is a common response for many people when facing exams. By taking the simple steps below you can learn how to lower your stress levels and potentially improve your performance.",
+    "primarySubject": "exams",
+    "sourceSlug": "dev-student-minds",
+    "reuse": "verbatim",
+    "active": true,
+    "author": "Jo Baker",
+    "publishedAt": 1735689600000,
+    "retrievedAt": 1790697114000,
+    "lastReviewedAt": 1790697114000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "anxiety"
+      ],
+      "lifeArea": [
+        "achievement"
+      ]
+    },
+    "bodyPath": "bodies/dev-exam-stress-student-minds.md",
+    "originalUrl": "https://www.studentminds.org.uk/advice-and-info/exam-stress/",
+    "coverPath": "exams-stress-s.png",
+    "contentNote": "Mentions exam anxiety and panic. Nothing graphic.",
+    "reflectPrompt": "What helps you feel steady in the hours before something that matters to you?"
   }
 ]

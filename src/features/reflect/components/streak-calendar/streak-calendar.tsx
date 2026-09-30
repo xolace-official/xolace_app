@@ -57,6 +57,9 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
   // a streak update would play the reveal on top of whatever screen
   // the user is on. Wait until this screen is focused again.
   const isFocused = useIsFocused();
+  // Waits for the Starter suggestions bubble so the two never stack (#460).
+  // Not homeSheetBlocking: that stays up through a follow-up's whole pending wait.
+  const starterOpen = useAppStore((s) => s.starterSuggestionsOpen);
 
   const headerColor = useThemeColor("accent") as string;
   const headerTextColor = useThemeColor("accent-foreground") as string;
@@ -107,7 +110,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
       setLastAcknowledgedStreak(currentStreak);
       return;
     }
-    if (!revealPending || revealing || !isFocused) return;
+    if (!revealPending || revealing || !isFocused || starterOpen) return;
 
     // Reduced motion: skip the reveal entirely, just update the number
     if (reducedMotion) {
@@ -135,6 +138,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
     revealing,
     reducedMotion,
     isFocused,
+    starterOpen,
     miniRef,
     setLastAcknowledgedStreak,
   ]);

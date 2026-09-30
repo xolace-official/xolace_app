@@ -71,6 +71,10 @@ export default function ProtectedLayout() {
           <Stack.Screen name="(tabs)" options={NO_GESTURE} />
           <Stack.Screen name="sit-with-this" options={NO_GESTURE} />
           <Stack.Screen name="peer-reflections" options={NO_GESTURE} />
+          <Stack.Screen
+            name="kindling-announcement"
+            options={{ gestureEnabled: false, animation: reducedMotion ? "fade" : "slide_from_bottom" }}
+          />
           <Stack.Screen name="session-end" options={NO_GESTURE} />
           <Stack.Screen name="crisis-resources" options={NO_GESTURE} />
           <Stack.Screen name="trusted-bridge" />
@@ -84,6 +88,10 @@ export default function ProtectedLayout() {
           {/* Outside `(tabs)` on purpose: the player is full-bleed, no tab bar. */}
           <Stack.Screen name="browse-player" options={PLAYER_OPTIONS} />
           <Stack.Screen name="streak-held" options={PLAYER_OPTIONS} />
+          {/* The close button (or Android back) is the no-guilt dismiss. */}
+          <Stack.Screen name="follow-up" options={PLAYER_OPTIONS} />
+          {/* Hold-to-continue is the only way out: no swipe-dismiss here, Android back swallowed in the route. */}
+          <Stack.Screen name="browse-intro" options={{ ...PLAYER_OPTIONS, gestureEnabled: false }} />
           {/* Reduced motion: the Lantern reader crossfades in instead of sliding (#400). */}
           <Stack.Screen name="library/[slug]" options={{ animation: reducedMotion ? "fade" : "default" }} />
 

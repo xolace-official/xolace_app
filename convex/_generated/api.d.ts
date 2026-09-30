@@ -74,6 +74,7 @@ import type * as evals from "../evals.js";
 import type * as exercises from "../exercises.js";
 import type * as exercises_match from "../exercises/match.js";
 import type * as feedback from "../feedback.js";
+import type * as followUpResponses from "../followUpResponses.js";
 import type * as followUps from "../followUps.js";
 import type * as http from "../http.js";
 import type * as intake from "../intake.js";
@@ -84,6 +85,7 @@ import type * as jobs_accountDeletionSteps from "../jobs/accountDeletionSteps.js
 import type * as jobs_cohortCounts from "../jobs/cohortCounts.js";
 import type * as jobs_dataRetention from "../jobs/dataRetention.js";
 import type * as jobs_dataWipe from "../jobs/dataWipe.js";
+import type * as jobs_followUpShare from "../jobs/followUpShare.js";
 import type * as jobs_notificationTriggers from "../jobs/notificationTriggers.js";
 import type * as jobs_profileStats from "../jobs/profileStats.js";
 import type * as jobs_quotesGenerator from "../jobs/quotesGenerator.js";
@@ -237,6 +239,7 @@ declare const fullApi: ApiFromModules<{
   exercises: typeof exercises;
   "exercises/match": typeof exercises_match;
   feedback: typeof feedback;
+  followUpResponses: typeof followUpResponses;
   followUps: typeof followUps;
   http: typeof http;
   intake: typeof intake;
@@ -247,6 +250,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/cohortCounts": typeof jobs_cohortCounts;
   "jobs/dataRetention": typeof jobs_dataRetention;
   "jobs/dataWipe": typeof jobs_dataWipe;
+  "jobs/followUpShare": typeof jobs_followUpShare;
   "jobs/notificationTriggers": typeof jobs_notificationTriggers;
   "jobs/profileStats": typeof jobs_profileStats;
   "jobs/quotesGenerator": typeof jobs_quotesGenerator;

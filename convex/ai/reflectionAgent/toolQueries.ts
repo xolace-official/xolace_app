@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { internalQuery } from "../../_generated/server";
+import { internalQuery, type QueryCtx } from "../../_generated/server";
+import type { Id } from "../../_generated/dataModel";
 import { renderSemanticProfile } from "../../semanticProfiles";
 
 // =============================================================
@@ -39,7 +40,11 @@ export const getEmotionTimeline = internalQuery({
   },
 });
 
-/** Recent sessions — shape, path, and how the mirror landed. */
+/**
+ * Recent sessions — shape, path, how the mirror landed, and the later
+ * follow-up check-in (#453): the chip answer plus the structured response.
+ * Read-only; the check-in never writes understanding directly.
+ */
 export const getRecentSessions = internalQuery({
   args: { emotionalProfileId: v.id("emotional_profiles") },
   handler: async (ctx, args) => {
@@ -50,17 +55,42 @@ export const getRecentSessions = internalQuery({
       )
       .order("desc")
       .take(SESSIONS_LIMIT);
-    return rows.map((s) => ({
-      state: s.state,
-      entryType: s.entryType,
-      confirmationState: s.confirmationState ?? null,
-      pathChosen: s.pathChosen ?? null,
-      mirrorText: s.mirrorText ?? null,
-      postSessionMood: s.postSessionMood ?? null,
-      createdAt: s.createdAt,
-    }));
+    return Promise.all(
+      rows.map(async (s) => ({
+        state: s.state,
+        entryType: s.entryType,
+        confirmationState: s.confirmationState ?? null,
+        pathChosen: s.pathChosen ?? null,
+        mirrorText: s.mirrorText ?? null,
+        postSessionMood: s.postSessionMood ?? null,
+        followUp: await readFollowUp(ctx, s._id),
+        createdAt: s.createdAt,
+      })),
+    );
   },
 });
+
+/** A session's answered check-in, or null if it never got one. */
+async function readFollowUp(ctx: QueryCtx, sessionId: Id<"sessions">) {
+  // One card per session in production; dev resets can add more, so take the
+  // newest one the user actually answered.
+  const cards = await ctx.db
+    .query("follow_up_cards")
+    .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+    .order("desc")
+    .take(5);
+  const card = cards.find((c) => c.userResponse);
+  if (!card?.userResponse) return null;
+  const response = await ctx.db
+    .query("follow_up_responses")
+    .withIndex("by_card", (q) => q.eq("cardId", card._id))
+    .first();
+  return {
+    answer: card.userResponse,
+    whatHelped: response?.reflectionText ?? null,
+    heavierChoice: response?.heavierChoice ?? null,
+  };
+}
 
 /** Post-session mood signal over recent sessions (lighter/same/heavier). */
 export const getMoodDeltas = internalQuery({
