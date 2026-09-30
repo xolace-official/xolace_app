@@ -63,8 +63,14 @@ export type PrimaryEmotion = (typeof PRIMARY_EMOTIONS)[number];
  * Also used for unknown words (granular labels), which are returned as-is.
  */
 export function emotionFamily(emotion: string): string[] {
-  const parent = (CHILD_EMOTION_PARENT as Record<string, string>)[emotion];
-  return parent ? [emotion, parent] : [emotion];
+  return hasOwn(CHILD_EMOTION_PARENT, emotion)
+    ? [emotion, (CHILD_EMOTION_PARENT as Record<string, string>)[emotion]]
+    : [emotion];
+}
+
+/** Own-property check, so inherited members ("constructor", …) never count as vocabulary. */
+function hasOwn(obj: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(obj, key);
 }
 
 export const THEMATIC_TAGS = [
@@ -130,5 +136,7 @@ const ALIASES: Record<"emotion" | "lifeArea", Record<string, string>> = {
 
 /** The canonical slug for an author's word on an axis; unknown words pass through. */
 export function canonicalFacet(axis: string, slug: string): string {
-  return (ALIASES as Record<string, Record<string, string>>)[axis]?.[slug] ?? slug;
+  if (!hasOwn(ALIASES, axis)) return slug;
+  const aliases = (ALIASES as Record<string, Record<string, string>>)[axis];
+  return hasOwn(aliases, slug) ? aliases[slug] : slug;
 }
