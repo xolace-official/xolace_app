@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View } from "react-native";
 import { useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
-import { PressableFeedback, Switch, TextArea } from "heroui-native";
+import { PressableFeedback, Switch, TextArea, useToast } from "heroui-native";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -11,6 +11,7 @@ import { Icon, OptionCard } from "@/src/features/follow-up/stack-cards";
 import {
   REFLECTIVE_COPY,
   REFLECTIVE_DONE,
+  REFLECTIVE_SAVING,
   REFLECTIVE_SHARE_LABEL,
   REFLECTIVE_SKIP,
   streakNod,
@@ -48,13 +49,24 @@ export function ReflectiveStep({ answer, cardId, streak, canShare, onClose }: Pr
     useQuery(api.preferences.getContributeByDefault) ?? false;
   const [text, setText] = useState("");
   const [shareChoice, setShareChoice] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
   const hasText = text.trim().length > 0;
   const share = canShare && hasText && (shareChoice ?? contributeByDefault);
   const copy = REFLECTIVE_COPY[answer];
   const nod = streakNod(streak);
 
-  const done = () => {
-    void record({ cardId, reflectionText: text, shareRequested: share });
+  const done = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await record({ cardId, reflectionText: text, shareRequested: share });
+    } catch {
+      // Keep the editor open with the note intact so the user can retry.
+      setSaving(false);
+      toast.show({ label: "Couldn't save that. Try again?" });
+      return;
+    }
     posthog.capture(`follow_up_${answer}_done`, {
       has_text: hasText,
       shared: share,
@@ -119,7 +131,7 @@ export function ReflectiveStep({ answer, cardId, streak, canShare, onClose }: Pr
       <OptionCard
         icon="check"
         tint="bg-surface"
-        title={REFLECTIVE_DONE}
+        title={saving ? REFLECTIVE_SAVING : REFLECTIVE_DONE}
         onPress={done}
       />
       <View className="items-center bg-surface pt-4">

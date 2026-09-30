@@ -136,6 +136,12 @@ export function HoldToContinueButton({
   return (
     <AnimatedPressable
       entering={FadeIn}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint="Press and hold to continue"
+      // Screen-reader double-tap can't sustain a hold; "activate" completes directly.
+      accessibilityActions={[{ name: 'activate' }]}
+      onAccessibilityAction={(e) => e.nativeEvent.actionName === 'activate' && onComplete()}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onLayout={handleButtonLayout}

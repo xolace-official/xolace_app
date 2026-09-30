@@ -80,6 +80,7 @@ export const REFLECTIVE_COPY: Record<
 };
 export const REFLECTIVE_SHARE_LABEL = "Share anonymously with others who feel this";
 export const REFLECTIVE_DONE = "Done";
+export const REFLECTIVE_SAVING = "Saving…";
 export const REFLECTIVE_SKIP = "Skip for now";
 
 /**
