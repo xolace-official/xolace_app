@@ -163,20 +163,21 @@ export function useReadSignals({
 
   // Save where they left off. The ref keeps the cleanup on the latest layout.
   const maxRef = useRef(maxScroll);
-  const authedRef = useRef(isAuthenticated);
   useEffect(() => {
     maxRef.current = maxScroll;
-    authedRef.current = isAuthenticated;
-  }, [maxScroll, isAuthenticated]);
+  }, [maxScroll]);
   useEffect(
     () => () => {
       // Unrestored, scrollY is still 0 — saving would wipe the real position.
-      // Unmounted, there's no later to retry in: a position caught without auth is dropped.
-      if (!restored.current || maxRef.current <= 0 || !authedRef.current) return;
+      // Losing auth unmounts the reader (the protected-route guard) before it re-renders,
+      // so `isAuthenticated` is stale here; ask the client. Unmounted, there's no later
+      // to retry in, so that position is dropped. `sync` is @internal to convex/react (1.45).
+      const { sync } = convex as unknown as { sync: { hasAuth(): boolean } };
+      if (!restored.current || maxRef.current <= 0 || !sync.hasAuth()) return;
       const at = scrollY.get() / maxRef.current;
       record({ entryId, position: at >= RESUME_CEILING ? 0 : at }).catch(logDropped);
     },
-    [record, entryId, scrollY],
+    [record, entryId, scrollY, convex],
   );
 
   return state;
