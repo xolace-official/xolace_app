@@ -20,9 +20,11 @@ export function TranscriptSheet({ entryId, isOpen, onClose }: Props) {
   const text = useQuery(api.library.audio.getTranscript, isOpen ? { entryId } : 'skip');
   return (
     <BottomSheet isOpen={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
+          // gorhom makes the sheet one accessible element, which reads the title and text as one blob.
+          accessible={false}
           enableDynamicSizing
           backgroundClassName="bg-background"
           handleIndicatorClassName="bg-foreground/20"

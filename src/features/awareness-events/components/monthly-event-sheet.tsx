@@ -137,7 +137,7 @@ export const MonthlyEventSheet = ({ event }: Props) => {
       isOpen={isOpen}
       onOpenChange={(open) => { if (!open) handleDismiss(); }}
     >
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheet.Overlay />
         <BottomSheet.Content
           detached={true}
@@ -149,7 +149,7 @@ export const MonthlyEventSheet = ({ event }: Props) => {
           backgroundClassName="rounded-[32px] bg-overlay overflow-hidden"
           contentContainerClassName="p-0"
           handleIndicatorClassName="opacity-0"
-          accessibilityViewIsModal
+          accessible={false}
         >
           {/* Pinned header: title stays visible while long content scrolls.
               The external-link button opens the full article when linkUrl is set. */}
