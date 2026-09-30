@@ -35,9 +35,9 @@ import { BackToTop } from './back-to-top';
 import { EndOfRead } from './end-of-read';
 import { ContentNote, FireDim, HelplineLink, ReflectOnThis, ShareButton } from './reader-extras';
 import { ReaderPageScope } from './reader-page';
-import { attributionLines } from './reader-copy';
 import { AaButton, BackButton, CoverPhoto, ReaderBody, ReaderTitle, SaveButton, SourceCredit } from './reader-parts';
 import { READING_MODES, useReadingFonts } from './reading-mode';
+import { EntryCredits } from './entry-credits';
 import { useEntryAudio } from './use-entry-audio';
 import { useReadSignals } from './use-read-signals';
 import { useMarkdownStyle } from './use-markdown-style';
@@ -164,12 +164,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
           {entry.contentNote && <ContentNote note={entry.contentNote} />}
           <ReaderBody markdown={entry.markdown} style={markdownStyle} />
           {/* Attribution straight after the body, before the end of the read (#400). */}
-          <AppText
-            className="mt-8 border-t border-separator pt-4 text-xs text-muted"
-            onLayout={(e) => setArticleEnd(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
-          >
-            {attributionLines(entry.sources).join('\n')}
-          </AppText>
+          <EntryCredits entry={entry} onLayout={(e) => setArticleEnd(e.nativeEvent.layout.y + e.nativeEvent.layout.height)} />
           {signals && <EndOfRead entry={entry} signals={signals} />}
           <ReflectOnThis entry={entry} />
           <HelplineLink kind={entry.kind} />
