@@ -5,6 +5,7 @@
  */
 
 import type { ClassificationResult, SupportNeed } from "./providers/anthropic";
+import { emotionFamily } from "../lib/understandingVocab";
 import type { ModerationResult } from "./providers/moderation";
 
 // --- Types ---
@@ -111,6 +112,9 @@ const DISTRESS_EMOTIONS = new Set([
   "emptiness",
   "anguish",
   "grief",
+  "exhaustion",
+  "demotivation",
+  "loneliness",
 ]);
 
 const HIGH_DISTRESS_EMOTIONS = new Set([
@@ -130,6 +134,28 @@ const SURVIVOR_NARRATIVE_EMOTIONS = new Set([
   "disgust",
   "numbness",
 ]);
+
+/** True if the emotion, or the broad emotion it sits under, is in the set (ADR 0018). */
+const inSet = (set: ReadonlySet<string>, emotion: string) =>
+  emotionFamily(emotion).some((e) => set.has(e));
+
+/**
+ * The first of the classification's emotion words (granular, then primary) in
+ * the set, or undefined. Both are checked: a finer primary like "hopelessness"
+ * usually carries a granular label that isn't in the set itself.
+ *
+ * `family: false` for HIGH_DISTRESS — parents there would pull children into
+ * crisis escalation by association (exhaustion → numbness).
+ */
+function distressWord(
+  set: ReadonlySet<string>,
+  c: ClassificationResult,
+  family = true,
+): string | undefined {
+  return [c.granularLabel, c.primaryEmotion].find(
+    (w): w is string => !!w && (family ? inSet(set, w.toLowerCase()) : set.has(w.toLowerCase())),
+  );
+}
 
 /**
  * Determines the appropriate safeguard level and associated actions for a message by evaluating moderation signals, classification outputs, and recent session metadata.
@@ -201,13 +227,13 @@ function isSurvivorNarrative(
   if (classification.specificity < 6) return false;
 
   // Check primaryEmotion first (broad, reliable match like "grief")
-  if (SURVIVOR_NARRATIVE_EMOTIONS.has(classification.primaryEmotion))
+  if (inSet(SURVIVOR_NARRATIVE_EMOTIONS, classification.primaryEmotion))
     return true;
 
   // Fallback: check granularLabel for exact match
   if (
     classification.granularLabel &&
-    SURVIVOR_NARRATIVE_EMOTIONS.has(classification.granularLabel)
+    inSet(SURVIVOR_NARRATIVE_EMOTIONS, classification.granularLabel)
   )
     return true;
 
@@ -383,8 +409,8 @@ function checkElevated(
   }
 
   // High intensity + distress emotion
-  const emotion = classification.granularLabel ?? classification.primaryEmotion;
-  if (classification.intensity >= 9 && HIGH_DISTRESS_EMOTIONS.has(emotion)) {
+  const emotion = distressWord(HIGH_DISTRESS_EMOTIONS, classification, false);
+  if (classification.intensity >= 9 && emotion) {
     return {
       level: "elevated",
       triggerType: "implicit_risk_language",
@@ -408,9 +434,7 @@ function checkElevated(
     const windowCount = windowSessions.length;
     const riskCount = windowSessions.filter((m) => m.riskFlag).length;
 
-    const currentEmotion =
-      classification.granularLabel ?? classification.primaryEmotion;
-    const currentShowsDistress = DISTRESS_EMOTIONS.has(currentEmotion);
+    const currentShowsDistress = !!distressWord(DISTRESS_EMOTIONS, classification);
 
     if (riskCount >= 3 && currentShowsDistress) {
       return {
@@ -455,8 +479,8 @@ function checkGentle(
   }
 
   // High intensity + distress emotion (not crisis-level)
-  const emotion = classification.granularLabel ?? classification.primaryEmotion;
-  if (classification.intensity >= 7 && DISTRESS_EMOTIONS.has(emotion)) {
+  const emotion = distressWord(DISTRESS_EMOTIONS, classification);
+  if (classification.intensity >= 7 && emotion) {
     return {
       level: "gentle",
       triggerConfidence: classification.primaryEmotionConfidence,

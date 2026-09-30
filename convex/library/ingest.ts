@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
-import { PRIMARY_EMOTIONS, THEMATIC_TAGS } from "../lib/understandingVocab";
+import { PRIMARY_EMOTIONS, THEMATIC_TAGS, canonicalFacet } from "../lib/understandingVocab";
 import schema from "../schema";
 import { assertImageAlts } from "./imageAlts";
 import { manifestSource, replaceSources, resolveSources } from "./sources";
@@ -99,7 +99,8 @@ export const upsertEntry = internalMutation({
 
     const pairs = new Map<string, { axis: string; slug: string }>();
     for (const [axis, slugs] of [...Object.entries(facets), ["subject", [entry.primarySubject]] as const]) {
-      for (const slug of slugs) {
+      for (const authored of slugs) {
+        const slug = canonicalFacet(axis, authored);
         if (FACET_VOCAB[axis] && !FACET_VOCAB[axis].has(slug)) {
           throw new ConvexError(`library entry "${entry.slug}": ${axis} "${slug}" is not in the Understanding vocabulary`);
         }

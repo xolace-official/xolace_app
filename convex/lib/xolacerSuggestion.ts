@@ -26,7 +26,7 @@ export const SUGGESTION_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
  * failure this feature can produce, and it is exactly what the non-clinical
  * specialty taxonomy exists to prevent.
  */
-const SUPPRESSED_THEMES = new Set(["trauma", "abuse", "neglect"]);
+const SUPPRESSED_THEMES = new Set(["trauma", "abuse", "neglect", "body-image"]);
 
 /**
  * Theme wins over emotion: a specialty describes a situation someone has sat
@@ -37,9 +37,7 @@ const SUPPRESSED_THEMES = new Set(["trauma", "abuse", "neglect"]);
  * `health`, `finances`, `achievement` and `creativity` are absent on purpose —
  * nothing on the roster listens to those, so they produce no suggestion.
  *
- * `sleep` is intentionally unreachable: nothing in the classifier's taxonomies
- * maps to it. The fix is adding `sleep` to the classifier's thematicTags
- * taxonomy later, not free-text matching that fires on "I'm tired of this."
+ * `housing` and `social-media` are absent on purpose too: no specialty listens to them.
  *
  * A Map, not an object literal: the keys are model output, and on an object a
  * tag of "constructor" or "toString" resolves to a truthy prototype member that
@@ -47,22 +45,38 @@ const SUPPRESSED_THEMES = new Set(["trauma", "abuse", "neglect"]);
  */
 const THEME_SPECIALTY = new Map<string, Specialty>([
   ["work", "burnout"],
+  ["burnout", "burnout"],
   ["relationships", "relationships"],
   ["conflict", "relationships"],
+  ["friendships", "relationships"],
+  ["romance", "relationships"],
   ["family", "family"],
+  ["parenting", "family"],
+  ["caregiving", "family"],
   ["identity", "identity"],
   ["self-worth", "identity"],
   ["purpose", "identity"],
+  ["belonging", "identity"],
   ["change", "change"],
+  ["settling-in", "change"],
+  ["future", "change"],
   ["loss", "grief"],
   ["isolation", "loneliness"],
+  ["sleep", "sleep"],
+  ["addiction", "addiction"],
+  ["studies", "studies"],
 ]);
 
 /** Fallback, only consulted when no theme mapped. */
 const EMOTION_SPECIALTY = new Map<string, Specialty>([
   ["anxiety", "anxiety"],
+  ["stress", "anxiety"],
+  ["overwhelm", "anxiety"],
   ["grief", "grief"],
   ["loneliness", "loneliness"],
+  ["homesickness", "loneliness"],
+  ["not-belonging", "loneliness"],
+  ["exhaustion", "sleep"],
 ]);
 
 /**

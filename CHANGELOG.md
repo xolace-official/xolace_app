@@ -4,6 +4,13 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- **Xolace names what you're feeling more precisely** — reflections now recognise finer feelings like overwhelm, loneliness, homesickness and self-doubt, and life areas like studies, friendships, sleep and settling in, so what you read and who you're suggested to talk to fits more closely.
+- **A new "Studies & exams" focus for Xolacers** — listeners can now say they're here for study and exam worries.
+
 ## [1.11.0] - (2026-09-19)
 
 ### Added

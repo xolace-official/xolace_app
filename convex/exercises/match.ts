@@ -1,3 +1,5 @@
+import { emotionFamily } from "../lib/understandingVocab";
+
 export type MatchInput = {
   primaryEmotion: string;
   granularLabel?: string;
@@ -57,8 +59,9 @@ export function matchExercise(input: MatchInput): ExerciseTitle[] {
   const { primaryEmotion, granularLabel, intensity, userLanguageTags, confirmationState } = input;
   const emotion = primaryEmotion.toLowerCase();
   const granular = granularLabel?.toLowerCase();
-  const matches = (set: Set<string>) =>
-    set.has(emotion) || (granular !== undefined && set.has(granular));
+  // Family, so a finer emotion (stress) steers like its parent (anxiety) — ADR 0018.
+  const words = [...emotionFamily(emotion), ...(granular !== undefined ? emotionFamily(granular) : [])];
+  const matches = (set: Set<string>) => words.some((w) => set.has(w));
 
   if (confirmationState === "gave_up" || confirmationState === "abandoned") {
     return ["reset", "let_it_land", "find_your_edges", "make_room", "speak_to_it", "soften_toward_it"];

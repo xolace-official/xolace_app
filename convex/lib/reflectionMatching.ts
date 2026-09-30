@@ -1,5 +1,6 @@
 import { QueryCtx } from "../_generated/server";
 import { Doc } from "../_generated/dataModel";
+import { emotionFamily } from "./understandingVocab";
 
 // =============================================================
 // Peer-reflection matching helpers for reflections.matchForSession.
@@ -53,19 +54,37 @@ export async function matchByTags(
     )
     .take(10);
 
-  // Fall back to broad emotion match
+  // Fall back to broad emotion match. A finer primary ("loneliness") also
+  // matches older rows that carried it as a granular label, then its parent
+  // ("sadness") — the pool predates the finer vocabulary (ADR 0018).
   if (reflections.length < 3) {
-    const broadMatches = await ctx.db
-      .query("reflections")
-      .withIndex("by_emotion", (q) =>
-        q.eq("primaryEmotion", metadata.primaryEmotion).eq("status", "active"),
-      )
-      .take(10);
+    const [emotion, ...parents] = emotionFamily(metadata.primaryEmotion);
+    const broadMatches = [
+      ...(await ctx.db
+        .query("reflections")
+        .withIndex("by_emotion", (q) => q.eq("primaryEmotion", emotion).eq("status", "active"))
+        .take(10)),
+      ...(parents.length > 0
+        ? await ctx.db
+            .query("reflections")
+            .withIndex("by_granular", (q) => q.eq("granularLabel", emotion).eq("status", "active"))
+            .take(10)
+        : []),
+    ];
+    for (const parent of parents) {
+      broadMatches.push(
+        ...(await ctx.db
+          .query("reflections")
+          .withIndex("by_emotion", (q) => q.eq("primaryEmotion", parent).eq("status", "active"))
+          .take(10)),
+      );
+    }
 
     // Merge without duplicates
     const existingIds = new Set(reflections.map((r) => r._id));
     for (const match of broadMatches) {
       if (!existingIds.has(match._id)) {
+        existingIds.add(match._id);
         reflections.push(match);
       }
     }

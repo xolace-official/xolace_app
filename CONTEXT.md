@@ -3,6 +3,26 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Understanding vocabulary: parent emotion, alias (2026-09-30)
+
+The Understanding's two closed lists — **primary emotion** and **life area**
+(the classifier's thematic tags) — grow from 13 and 17 to 32 and 31, driven by
+what the Library and kindling need to shelve as well as by completeness. They
+stay one shared list for the classifier and the Library (ADR 0015).
+
+A **parent emotion** is the broad emotion a finer one belongs under
+(overwhelm → anxiety, loneliness → sadness, hope → joy). The original
+thirteen have none. Anything that has not been taught a new emotion
+explicitly treats it as its parent, so safety never silently skips it.
+
+An **alias** is a word an author may use that resolves to a canonical value
+(money → finances, wellbeing → health, grief-and-loss → loss). Aliases exist
+only at ingest; they are never classifier output.
+
+The classifier never infers sexuality, religion, ethnicity or immigration
+status. Those reach the Library through the **audience** a reader chooses.
+Old Understandings are not re-labelled; new values accumulate from release.
+
 ## Flux (2026-09-29)
 
 Xolace's mascot: a small flame-shaped soft-vinyl character with a

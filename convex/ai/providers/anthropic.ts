@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { PRIMARY_EMOTIONS, THEMATIC_TAGS } from "../../lib/understandingVocab";
 
 // --- Client Singleton ---
 
@@ -69,12 +70,10 @@ export interface ClassificationResult {
 
 export type SupportNeed = "none" | "light" | "active";
 
-// --- Valid primary emotions (must match the classifier prompt enum) ---
+// --- Valid vocabularies (shared with the classifier prompt and Library — ADR 0018) ---
 
-const VALID_PRIMARY_EMOTIONS = new Set([
-  "anger", "sadness", "grief", "fear", "anxiety", "joy", "love",
-  "surprise", "disgust", "shame", "guilt", "confusion", "numbness",
-]);
+const VALID_PRIMARY_EMOTIONS: ReadonlySet<string> = new Set(PRIMARY_EMOTIONS);
+const VALID_THEMATIC_TAGS: ReadonlySet<string> = new Set(THEMATIC_TAGS);
 
 const VALID_SUPPORT_NEEDS = new Set(["none", "light", "active"]);
 
@@ -143,7 +142,11 @@ export function parseClassificationResponse(
     intensity: clamp(Math.round(Number(parsed.intensity) || 5), 1, 10),
     specificity: clamp(Math.round(Number(parsed.specificity) || 5), 1, 10),
     thematicTags: Array.isArray(parsed.thematicTags)
-      ? parsed.thematicTags.filter((t: unknown) => typeof t === "string").slice(0, 5)
+      ? parsed.thematicTags
+          .filter((t: unknown): t is string => typeof t === "string")
+          .map((t: string) => t.toLowerCase())
+          .filter((t: string) => VALID_THEMATIC_TAGS.has(t))
+          .slice(0, 5)
       : [],
     userLanguageTags: Array.isArray(parsed.userLanguageTags)
       ? parsed.userLanguageTags.filter((t: unknown) => typeof t === "string").slice(0, 5)

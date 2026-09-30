@@ -72,6 +72,12 @@ export const SPECIALTIES = [
     listensTo: "addiction and staying sober",
   },
   {
+    slug: "studies",
+    label: "Studies",
+    pickerLabel: "Studies & exams",
+    listensTo: "studies and exams",
+  },
+  {
     slug: "change",
     label: "Big changes",
     pickerLabel: "Big life changes",

@@ -33,6 +33,19 @@ const EMOTION_EMOJI: Record<string, string> = {
   restlessness: '⚡',
   disorientation: '🌪️',
   resentment: '💢',
+  stress: '😬',
+  exhaustion: '🪫',
+  demotivation: '🛋️',
+  'self-doubt': '🫣',
+  embarrassment: '😳',
+  regret: '🍂',
+  uncertainty: '❓',
+  homesickness: '🏠',
+  'not-belonging': '🚪',
+  disappointment: '🥺',
+  hopelessness: '🕳️',
+  gratitude: '🙏',
+  pride: '🌟',
 };
 
 /**
