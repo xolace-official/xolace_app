@@ -142,11 +142,14 @@ export function parseClassificationResponse(
     intensity: clamp(Math.round(Number(parsed.intensity) || 5), 1, 10),
     specificity: clamp(Math.round(Number(parsed.specificity) || 5), 1, 10),
     thematicTags: Array.isArray(parsed.thematicTags)
-      ? parsed.thematicTags
-          .filter((t: unknown): t is string => typeof t === "string")
-          .map((t: string) => t.toLowerCase())
-          .filter((t: string) => VALID_THEMATIC_TAGS.has(t))
-          .slice(0, 5)
+      ? [
+          ...new Set<string>(
+            parsed.thematicTags
+              .filter((t: unknown): t is string => typeof t === "string")
+              .map((t: string) => t.toLowerCase())
+              .filter((t: string) => VALID_THEMATIC_TAGS.has(t))
+          ),
+        ].slice(0, 5)
       : [],
     userLanguageTags: Array.isArray(parsed.userLanguageTags)
       ? parsed.userLanguageTags.filter((t: unknown) => typeof t === "string").slice(0, 5)

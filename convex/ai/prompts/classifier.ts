@@ -70,7 +70,7 @@ Read through the surface to the real emotion. Someone who writes "I'm so angry a
 
 **granularLabel**: A more specific label within the primary emotion. Only populate when confidence is above 0.6. Set to null otherwise.
 Examples:
-- anger: "frustration", "resentment", "irritation", "rage", "betrayal"
+- anger: "resentment", "irritation", "rage", "betrayal"
 - sadness: "melancholy", "heartbreak", "emptiness"
 - fear: "dread", "panic", "insecurity", "vulnerability"
 - anxiety: "restlessness", "apprehension", "rumination", "paralysis"

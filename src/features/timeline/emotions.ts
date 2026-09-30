@@ -64,11 +64,12 @@ export function getEmotionEmoji(emotion: string | null): string {
  * Produce a human-facing label for an emotion string.
  *
  * @param emotion - The emotion to label; may be `null` or empty to indicate no emotion.
- * @returns The emotion with its first character capitalized, or `'Reflection'` if `emotion` is `null` or empty.
+ * @returns The emotion with hyphens as spaces and its first character capitalized, or `'Reflection'` if `emotion` is `null` or empty.
  */
 export function getEmotionLabel(emotion: string | null): string {
   if (!emotion) return 'Reflection';
-  return emotion.charAt(0).toUpperCase() + emotion.slice(1);
+  const words = emotion.replace(/-/g, ' ');
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 const PATH_LABELS: Record<string, string> = {
