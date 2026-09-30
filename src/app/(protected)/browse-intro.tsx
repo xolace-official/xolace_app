@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { BrowseIntroScreen } from '@/src/components/shared/browse-intro-screen';
+import { useBackHandler } from '@/src/components/ui/tour/use-back-handler';
 import { useAppStore } from '@/src/store/store';
 
 type Family = 'music' | 'support' | 'library';
@@ -55,6 +56,9 @@ export default function BrowseIntroRoute() {
   const setSupportAudioIntroSeen = useAppStore((s) => s.setSupportAudioIntroSeen);
   const setLibraryIntroSeen = useAppStore((s) => s.setLibraryIntroSeen);
   const { title, subtitle, event } = CONTENT[family];
+  // gestureEnabled:false doesn't cover Android back — swallow it so the hold
+  // stays the only way out (and the seen flag always gets set).
+  useBackHandler(true, () => {});
 
   return (
     <BrowseIntroScreen

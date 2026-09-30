@@ -90,7 +90,7 @@ export default function ProtectedLayout() {
           <Stack.Screen name="streak-held" options={PLAYER_OPTIONS} />
           {/* The close button (or Android back) is the no-guilt dismiss. */}
           <Stack.Screen name="follow-up" options={PLAYER_OPTIONS} />
-          {/* Hold-to-continue is the only way out, so no swipe-dismiss. */}
+          {/* Hold-to-continue is the only way out: no swipe-dismiss here, Android back swallowed in the route. */}
           <Stack.Screen name="browse-intro" options={{ ...PLAYER_OPTIONS, gestureEnabled: false }} />
           {/* Reduced motion: the Lantern reader crossfades in instead of sliding (#400). */}
           <Stack.Screen name="library/[slug]" options={{ animation: reducedMotion ? "fade" : "default" }} />
