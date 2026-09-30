@@ -19,6 +19,7 @@ import type { ReaderEntry } from './reader-screen';
 import { READING_MODES } from './reading-mode';
 
 const SOURCES_ICON = { ios: 'books.vertical', android: 'menu_book', web: 'menu_book' } as const;
+const LINK_ICON = { ios: 'arrow.up.right', android: 'open_in_new', web: 'open_in_new' } as const;
 
 type Source = ReaderEntry['sources'][number];
 
@@ -94,6 +95,7 @@ function SourcesSheet({ sources, isOpen, onClose }: { sources: Source[]; isOpen:
 /** publisher – page title · author; the title opens the page when there is one. */
 function SourceRow({ source: s }: { source: Source }) {
   const href = s.pageUrl;
+  const muted = useThemeColor('muted');
   return (
     <Pressable
       disabled={!href}
@@ -102,14 +104,15 @@ function SourceRow({ source: s }: { source: Source }) {
       accessibilityRole={href ? 'link' : 'text'}
       accessibilityLabel={[s.pageTitle, `from ${s.name}`, s.author && `by ${s.author}`].filter(Boolean).join(', ')}
       accessibilityHint={href ? 'Opens the original page' : undefined}
-      className="px-6 py-3 active:opacity-60"
+      className="flex-row items-center gap-3 px-6 py-3 active:opacity-60"
     >
-      <AppText className="text-sm text-foreground">
+      <AppText className="flex-1 text-sm text-foreground">
         <AppText className="font-semibold text-sm text-foreground">{s.name}</AppText>
         {' – '}
         <AppText className={href ? 'text-sm text-foreground underline' : 'text-sm text-foreground'}>{s.pageTitle}</AppText>
         {s.author && <AppText className="text-sm text-muted">{` · ${s.author}`}</AppText>}
       </AppText>
+      {href && <SymbolView name={LINK_ICON} size={13} weight="semibold" tintColor={muted} />}
     </Pressable>
   );
 }
