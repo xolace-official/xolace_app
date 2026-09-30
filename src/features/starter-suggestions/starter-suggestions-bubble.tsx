@@ -150,8 +150,9 @@ export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
                   <View className="size-9 items-center justify-center rounded-xl bg-accent/10">
                     <SymbolView name={row.icon as any} size={17} tintColor={accent} />
                   </View>
-                  <AppText className="flex-1 text-sm text-foreground" numberOfLines={2}>
-                    {row.subtitle}
+                  <AppText className="flex-1 text-sm text-muted" numberOfLines={2}>
+                    <AppText className="text-sm font-semibold text-foreground">{row.title}</AppText>
+                    {`  ${row.subtitle}`}
                   </AppText>
                   <SymbolView
                     name={{ ios: "arrow.right", android: "arrow_forward" } as any}
