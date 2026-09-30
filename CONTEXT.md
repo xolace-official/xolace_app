@@ -239,10 +239,29 @@ and not a **series** (a series has continuity between episodes; a hub is an
 editor's running order). An entry may sit in many hubs. A hub may also hold
 kindling audio — a hub is a way through the whole app, not only the Library.
 
-A **source** is the publisher an entry is credited to (NHS, NIMH, Xolace
-itself for first-hand stories). Reuse terms belong to the source, not the
-entry; each entry records only how *it* was reused — **verbatim**,
-**adapted**, or **original**. Every entry credits its source, always.
+A **source** is a publisher an entry draws on (NHS, NIMH, Xolace itself for
+first-hand stories). Reuse terms belong to the source, not the entry; each
+entry records only how *it* was reused — **verbatim**, **adapted**, or
+**original**. Every entry credits every source it draws on, always.
+
+**Most entries are adapted from several sources (2026-09-30).** An entry
+carries an ordered list of sources, one row per (entry, source) pair, each
+with the specific page it came from: `pageTitle`, `pageUrl`, and optionally
+`author` and `retrievedAt`. The same publisher may appear twice with
+different pages. There is no single "the source" on an entry.
+
+The reader's credit follows `reuse`, never the source count:
+
+| `reuse` | Header credit | After the body |
+|---|---|---|
+| verbatim (exactly 1 source) | that source's logo and name — "Published as they wrote it" | the source's `attributionText` |
+| adapted (1 or more) | Xolace — "Adapted by Xolace" | **Sources** list, one line per pair: publisher – page title (linked) · author, with the licence line once per publisher |
+| original | Xolace — "Written for Lantern" | Xolace attribution |
+
+An adapted entry never puts a publisher's name in the header, since it is
+not their wording; `dropBrandingIfAdapted` on the source is what enforces
+that. Library has not shipped, so this replaced `sourceId`, `originalUrl`
+and `author` on the entry outright — no Store-Gap deprecation was needed.
 
 ## The Xolace channel (2026-09-18)
 
