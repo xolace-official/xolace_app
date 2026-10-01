@@ -140,7 +140,7 @@ If a feature makes users less afraid of human connection, better equipped with l
 
 These are not positioning statements. They are hard design constraints.
 
-**The AI mirror is not a therapist.** No diagnoses, no clinical framing, no advice, ever — this is a permanent constraint on the AI's voice. "You may be experiencing anxiety" is a failure state. "There's a restlessness — like your body is bracing for something your mind hasn't caught up to yet" is what success looks like. This does not cap what Xolace builds as a company: owning a licensed clinical layer (see Vision) is a business-model ambition, separate from the AI product surface, which stays non-clinical forever.
+**The AI mirror is not a therapist.** No user facing diagnoses, clinical framing, no advice yet, any clinical diagnoses is done internally. "You may be experiencing anxiety" is a failure state. "There's a restlessness — like your body is bracing for something your mind hasn't caught up to yet" is what success looks like. This does not cap what Xolace builds as a company: owning a licensed clinical layer (see Vision) is a business-model ambition.
 
 **Not a traditional social platform.** no follower counts, no validation loops. The peer layer exists for recognition and release at best, not dark performance(so you know, we have good performance).
 
