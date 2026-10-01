@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "slug": "before-you-arrive",
+    "coverPath": "hub/before-you-arrive.png",
+    "title": "Before you arrive",
+    "intro": "A short reading list for the weeks before university starts. It covers the nerves, the unknowns and the new language, so you can arrive a little steadier.",
+    "active": true,
+    "items": [
+      {
+        "kind": "entry",
+        "ref": "not-knowing-feels-so-stressful-why"
+      },
+      {
+        "kind": "entry",
+        "ref": "setting-expectations-you-can-adjust"
+      },
+      {
+        "kind": "entry",
+        "ref": "am-i-good-enough-for-this"
+      },
+      {
+        "kind": "entry",
+        "ref": "decoding-the-place-words-and-people"
+      }
+    ]
+  }
+]

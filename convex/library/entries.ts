@@ -40,7 +40,7 @@ export const cardItemValidator = v.object({
 const COVER_URL_TTL_SEC = 3600;
 
 /** An uploaded cover (R2 key, signed now) wins over a plain hosted `coverUrl`. */
-export const coverOf = async (e: Doc<"library_entries">) =>
+export const coverOf = async (e: Pick<Doc<"library_entries">, "coverKey" | "coverUrl">) =>
   e.coverKey ? await r2.getUrl(e.coverKey, { expiresIn: COVER_URL_TTL_SEC }) : e.coverUrl;
 
 export const toListItem = async (e: Doc<"library_entries">) => ({

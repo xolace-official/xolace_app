@@ -2364,6 +2364,7 @@ export default defineSchema({
     title: v.string(),
     intro: v.string(),
     coverUrl: v.optional(v.string()),
+    coverKey: v.optional(v.string()), // ingest: R2 key of an uploaded cover, `hub-cover/<sha>.<ext>`; signed at read, wins over coverUrl
     active: v.boolean(),
     items: v.array(
       v.union(

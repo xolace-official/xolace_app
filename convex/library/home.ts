@@ -146,11 +146,11 @@ export const getHome = query({
       continue: cont,
       // The Continue entry isn't repeated in For you.
       forYou: await forYou(ctx, profile._id, signals, active, cont?._id),
-      hubs: hubs.map((h) => ({
-        ...toHub(h),
+      hubs: await Promise.all(hubs.map(async (h) => ({
+        ...(await toHub(h)),
         entries: h.items.filter((i) => i.kind === "entry" && activeIds.has(i.entryId)).length,
         listens: h.items.filter((i) => i.kind === "audio" && activeTracks.has(i.audioTrackId)).length,
-      })),
+      }))),
     };
   },
 });

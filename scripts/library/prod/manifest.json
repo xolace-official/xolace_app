@@ -1,1 +1,273 @@
-[]
+[
+  {
+    "slug": "not-knowing-feels-so-stressful-why",
+    "coverPath": "explainer/not-knowing-feels-so-stressful-why.png",
+    "kind": "explainer",
+    "title": "Not knowing feels so stressful, why?",
+    "dek": "Why uncertainty puts the body on alert, why a long wait is draining, and what helps before you start university.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "Why uncertainty can be stressful",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/why-uncertainty-can-be-stressful/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nature-communications",
+        "pageTitle": "Computations of uncertainty mediate acute stress responses in humans",
+        "pageUrl": "https://www.nature.com/articles/ncomms10996",
+        "author": "de Berker, Rutledge, Mathys, Marshall, Cross, Dolan and Bestmann",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "computational-psychiatry",
+        "pageTitle": "Temporal Dynamics of Uncertainty Cause Anxiety and Avoidance",
+        "pageUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11192096/",
+        "author": "Holley, Varga, Boorman and Fox",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "frontiers",
+        "pageTitle": "The Intolerance of Uncertainty Inventory: Validity and Comparison of Scoring Methods to Assess Individuals Screening Positive for Anxiety and Depression",
+        "pageUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2018.00388/full",
+        "author": "Lauriola et al.",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Anxiety (Every Mind Matters)",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/mental-health-issues/anxiety/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Tips to reduce stress",
+        "pageUrl": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/tips-to-reduce-stress/",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "uncertainty",
+        "stress",
+        "anxiety"
+      ],
+      "lifeArea": [
+        "change",
+        "future",
+        "settling-in"
+      ]
+    },
+    "reflectPrompt": "What are you most unsure about right now?",
+    "bodyPath": "bodies/explainer/not-knowing-feels-so-stressful-why.md"
+  },
+  {
+    "slug": "setting-expectations-you-can-adjust",
+    "coverPath": "advice/setting-expectations-you-can-adjust.png",
+    "kind": "advice",
+    "title": "Setting expectations you can adjust",
+    "dek": "Imagining university in advance is normal; here is how to keep the picture flexible, and how to find out what it is really like.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "Managing expectations of university",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/managing-expectations-of-university/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "frontiers",
+        "pageTitle": "An Investigation of First-Year Students' and Lecturers' Expectations of University Education",
+        "pageUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5790796/",
+        "author": "Stefanie Hassel and Nathan Ridout",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "frontiers",
+        "pageTitle": "Mind wandering via mental contrasting as a tool for behavior change",
+        "pageUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3759023/",
+        "author": "Gabriele Oettingen and Bettina Schwörer",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "elsevier",
+        "pageTitle": "Positive fantasies about idealized futures sap energy",
+        "pageUrl": "https://researchonline.lse.ac.uk/id/eprint/46284/",
+        "author": "Heather Barry Kappes and Gabriele Oettingen",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "University and mental health: tips for students",
+        "pageUrl": "https://www.mentalhealth.org.uk/our-work/public-engagement/behind-books/tips-students",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Anxiety (Every Mind Matters)",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/mental-health-issues/anxiety/",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "uncertainty",
+        "anxiety",
+        "hope",
+        "disappointment"
+      ],
+      "lifeArea": [
+        "change",
+        "settling-in",
+        "future"
+      ]
+    },
+    "reflectPrompt": "What does the ordinary version of your first week look like?",
+    "bodyPath": "bodies/advice/setting-expectations-you-can-adjust.md"
+  },
+  {
+    "slug": "am-i-good-enough-for-this",
+    "coverPath": "advice/am-i-good-enough-for-this.png",
+    "kind": "advice",
+    "title": "\"Am I good enough for this?\"",
+    "dek": "Doubting your academic ability before you start is common, and there are small ways to test it before term begins.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "Will I be good enough for the next academic level?",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/will-i-be-good-enough-for-the-next-academic-level/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "frontiers",
+        "pageTitle": "Why Do I Feel More Confident? Bandura's Sources Predict Preservice Teachers' Latent Changes in Teacher Self-Efficacy",
+        "pageUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5070217/",
+        "author": "Franziska Pfitzner-Eden",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "springer",
+        "pageTitle": "Prevalence, Predictors, and Treatment of Impostor Syndrome: a Systematic Review",
+        "pageUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7174434/",
+        "author": "Bravata DM, Watts SA, Keefer AL, et al.",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Reframing unhelpful thoughts",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/self-help-cbt-techniques/reframing-unhelpful-thoughts/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "university-of-greenwich",
+        "pageTitle": "Get Academic Support",
+        "pageUrl": "https://libguides.gre.ac.uk/academicskills/support",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "self-doubt",
+        "anxiety"
+      ],
+      "lifeArea": [
+        "studies",
+        "achievement",
+        "self-worth"
+      ]
+    },
+    "reflectPrompt": "What evidence do you already have that you can do this?",
+    "bodyPath": "bodies/advice/am-i-good-enough-for-this.md"
+  },
+  {
+    "slug": "decoding-the-place-words-and-people",
+    "coverPath": "advice/decoding-the-place-words-and-people.png",
+    "kind": "advice",
+    "title": "Decoding the place: the words and the people",
+    "dek": "Universities have their own vocabulary and their own kinds of staff; here's how to read both, and why not knowing yet isn't a sign you don't belong.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "What to expect from university staff",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/what-to-expect-from-university-staff/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "student-minds",
+        "pageTitle": "Prepare for people using different language",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/prepare-for-people-using-different-language/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "university-of-salford",
+        "pageTitle": "Hidden Curriculum in Higher Education",
+        "pageUrl": "https://openjournals.salford.ac.uk/pedagogy/article/id/276/print/",
+        "author": "Helen Whitehead",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "university-of-salford",
+        "pageTitle": "Glossary for new students",
+        "pageUrl": "https://www.salford.ac.uk/welcome/on-campus/checklist-for-new-students/glossary-for-new-students",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "university-of-southampton",
+        "pageTitle": "Support and wellbeing",
+        "pageUrl": "https://www.southampton.ac.uk/studentservices/support-wellbeing.page",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "newcastle-university",
+        "pageTitle": "Disability Support",
+        "pageUrl": "https://www.ncl.ac.uk/wellbeing/disability-support/",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "not-belonging",
+        "embarrassment",
+        "uncertainty"
+      ],
+      "lifeArea": [
+        "belonging",
+        "settling-in",
+        "studies"
+      ]
+    },
+    "reflectPrompt": "Which word or role at university are you most unsure about?",
+    "bodyPath": "bodies/advice/decoding-the-place-words-and-people.md"
+  }
+]

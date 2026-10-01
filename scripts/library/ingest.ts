@@ -25,7 +25,8 @@
 // A cover is `coverPath` on the entry, relative to `media/cover/` (gitignored).
 // It's uploaded to R2 (like kindling's thumbs) under `library-thumb/<sha>.<ext>`
 // and the key kept in `coverKey`; the URL is signed at read. A plain `coverUrl`
-// still works for a hosted image, but an uploaded cover wins.
+// still works for a hosted image, but an uploaded cover wins. Hubs take the
+// same `coverPath`, uploaded under `hub-cover/<sha>.<ext>`.
 //
 // Audio (#411) is a last pass over `audio.json`, keyed by `entrySlug`:
 // `[{ entrySlug, audioPath, transcriptPath, active, title? }]`, paths relative to
@@ -58,7 +59,7 @@ type Entry = {
   decorativeImages?: string[];
   [k: string]: unknown;
 };
-type Hub = { slug: string; [k: string]: unknown };
+type Hub = { slug: string; coverPath?: string; [k: string]: unknown };
 type Audio = { entrySlug: string; audioPath: string; transcriptPath: string; active: boolean; title?: string };
 
 const args = process.argv.slice(2);
@@ -99,9 +100,9 @@ async function upload(key: string, body: Buffer) {
 
 // Content-addressed like kindling's thumbs: the key is the hash, so an unchanged
 // cover is the same key and is only re-PUT (idempotent), never duplicated.
-async function uploadCover(coverPath: string) {
+async function uploadCover(coverPath: string, prefix = "library-thumb") {
   const file = readFileSync(path.resolve(dir, "media/cover", coverPath));
-  const coverKey = `library-thumb/${createHash("sha256").update(file).digest("hex")}${path.extname(coverPath).toLowerCase()}`;
+  const coverKey = `${prefix}/${createHash("sha256").update(file).digest("hex")}${path.extname(coverPath).toLowerCase()}`;
   await upload(coverKey, file);
   return { coverKey };
 }
@@ -187,7 +188,12 @@ async function main() {
   }
 
   for (const hub of hubs) {
-    await attempt(`hub ${hub.slug}`, () => convexRun("library/ingest:upsertHub", { hub, sha256: sha256(JSON.stringify(hub)) }));
+    await attempt(`hub ${hub.slug}`, async () => {
+      const { coverPath, ...rest } = hub;
+      const cover = coverPath ? await uploadCover(coverPath, "hub-cover") : {};
+      const doc = { ...rest, ...cover };
+      return convexRun("library/ingest:upsertHub", { hub: doc, sha256: sha256(JSON.stringify(doc)) });
+    });
   }
 
   const audioPath = path.join(dir, "audio.json");
