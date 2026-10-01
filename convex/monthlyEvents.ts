@@ -52,3 +52,32 @@ export const seed = internalMutation({
     return { skipped: false, id };
   },
 });
+
+// Create or update an event by slug (edit copy/image while iterating).
+// Run via: npx convex run monthlyEvents:upsert '{...}'
+export const upsert = internalMutation({
+  args: {
+    slug: v.string(),
+    title: v.string(),
+    body: v.string(),
+    ctaLabel: v.optional(v.string()),
+    ctaRoute: v.optional(v.string()),
+    sessionPrompt: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    linkUrl: v.optional(v.string()),
+    startDate: v.string(),
+    endDate: v.string(),
+    priority: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("monthlyEvents")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .unique();
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+      return { updated: true, id: existing._id };
+    }
+    return { updated: false, id: await ctx.db.insert("monthlyEvents", args) };
+  },
+});
