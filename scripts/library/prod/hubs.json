@@ -23,5 +23,22 @@
         "ref": "decoding-the-place-words-and-people"
       }
     ]
+  },
+  {
+    "slug": "back-at-university",
+    "title": "Back at university",
+    "intro": "A short reading list for the days before a new term at a university you already know. It covers looking back at last year, easing back into your studies, and the friendships that may have changed over the break.",
+    "active": true,
+    "items": [
+      {
+        "kind": "entry",
+        "ref": "picking-up-where-you-left-off"
+      },
+      {
+        "kind": "entry",
+        "ref": "why-this-years-social-life-feels-different"
+      }
+    ],
+    "coverPath": "hub/back-at-university.png"
   }
 ]

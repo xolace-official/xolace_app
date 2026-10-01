@@ -269,5 +269,113 @@
     },
     "reflectPrompt": "Which word or role at university are you most unsure about?",
     "bodyPath": "bodies/advice/decoding-the-place-words-and-people.md"
+  },
+  {
+    "slug": "picking-up-where-you-left-off",
+    "kind": "advice",
+    "title": "Picking up where you left off",
+    "dek": "A short look back at last year, a gentle way back into your subject, and a few practical things worth sorting before term starts.",
+    "primarySubject": "returning-to-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "Preparing to go back to university",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/preparing-to-go-back-to-university/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "student-minds",
+        "pageTitle": "Returning to university",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/returning-to-university/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "informs",
+        "pageTitle": "The Fresh Start Effect: Temporal Landmarks Motivate Aspirational Behavior",
+        "pageUrl": "https://faculty.wharton.upenn.edu/wp-content/uploads/2014/06/Dai_Fresh_Start_2014_Mgmt_Sci.pdf",
+        "author": "Hengchen Dai, Katherine L. Milkman and Jason Riis",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "university-of-surrey",
+        "pageTitle": "How are habits formed: Modelling habit formation in the real world",
+        "pageUrl": "https://openresearch.surrey.ac.uk/esploro/outputs/99783513802346",
+        "author": "Phillippa Lally, Cornelia H. M. van Jaarsveld, Henry W. W. Potts and Jane Wardle",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "uncertainty",
+        "stress",
+        "hope"
+      ],
+      "lifeArea": [
+        "studies",
+        "finances",
+        "housing",
+        "change"
+      ]
+    },
+    "reflectPrompt": "What is one thing from last year you'd like to repeat, and one you'd like to leave behind?",
+    "bodyPath": "bodies/advice/picking-up-where-you-left-off.md",
+    "coverPath": "advice/picking-up-where-you-left-off.png"
+  },
+  {
+    "slug": "why-this-years-social-life-feels-different",
+    "kind": "explainer",
+    "title": "Why this year's social life feels different",
+    "dek": "Why friendships and routines shift between years at university, why that feels unsettling, and what helps.",
+    "primarySubject": "returning-to-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "Why your social life might change as you progress into the next academic year",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/why-your-social-life-might-change-as-you-progress-into-the-next-academic-year/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "student-minds",
+        "pageTitle": "Returning to university",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/returning-to-university/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Get help with loneliness",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/feeling-lonely/",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "loneliness",
+        "uncertainty",
+        "not-belonging"
+      ],
+      "lifeArea": [
+        "friendships",
+        "change",
+        "belonging",
+        "isolation"
+      ]
+    },
+    "reflectPrompt": "Who are you hoping to see this term, and what would make it easy to arrange?",
+    "bodyPath": "bodies/explainer/why-this-years-social-life-feels-different.md",
+    "coverPath": "explainer/why-this-years-social-life-feels-different.png"
   }
 ]

@@ -106,5 +106,23 @@
     "permission": "not_required",
     "attributionText": "Adapted from University of Southampton student support pages.",
     "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "informs",
+    "name": "Management Science (INFORMS)",
+    "url": "https://pubsonline.informs.org/journal/mnsc",
+    "licence": "© INFORMS; findings paraphrased, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Findings summarised from Dai, Milkman & Riis (2014), Management Science.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "university-of-surrey",
+    "name": "University of Surrey Open Research (European Journal of Social Psychology)",
+    "url": "https://openresearch.surrey.ac.uk",
+    "licence": "© authors / Wiley; findings paraphrased, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Findings summarised from Lally et al. (2010), European Journal of Social Psychology.",
+    "dropBrandingIfAdapted": true
   }
 ]
