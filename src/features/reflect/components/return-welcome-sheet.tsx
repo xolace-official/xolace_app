@@ -35,7 +35,7 @@ export const ReturnWelcomeSheet = ({ isOpen, tier, onClose }: Props) => {
         if (!open) onClose();
       }}
     >
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
           detached
@@ -44,7 +44,7 @@ export const ReturnWelcomeSheet = ({ isOpen, tier, onClose }: Props) => {
           className="mx-4"
           backgroundClassName="rounded-[32px] bg-overlay"
           handleIndicatorClassName="opacity-0"
-          accessibilityViewIsModal
+          accessible={false}
         >
           <View className="items-center px-6 pb-7 pt-1">
             <Image

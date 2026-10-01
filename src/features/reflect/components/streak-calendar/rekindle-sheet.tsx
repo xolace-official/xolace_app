@@ -27,7 +27,7 @@ export const RekindleSheet = ({ isOpen, streak, onRekindle, onClose }: Props) =>
         if (!open) onClose();
       }}
     >
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
           detached
@@ -36,7 +36,7 @@ export const RekindleSheet = ({ isOpen, streak, onRekindle, onClose }: Props) =>
           className="mx-4"
           backgroundClassName="rounded-[32px] bg-overlay"
           handleIndicatorClassName="opacity-0"
-          accessibilityViewIsModal
+          accessible={false}
         >
           <View className="items-center px-6 pb-7 pt-3">
             <BottomSheet.Title className="text-center font-serif text-2xl text-foreground">

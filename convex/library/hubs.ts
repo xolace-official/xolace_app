@@ -3,7 +3,7 @@ import { query } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import { toTrackItem, trackItemValidator } from "../browse";
-import { cardItemValidator, toListItem } from "./entries";
+import { cardItemValidator, coverOf, toListItem } from "./entries";
 import { cardSignals } from "./reads";
 
 /** Library hubs (#405): editorial, ordered reading lists (ADR 0015). */
@@ -16,12 +16,12 @@ export const hubValidator = v.object({
   coverUrl: v.optional(v.string()),
 });
 
-export const toHub = (h: Doc<"library_hubs">) => ({
+export const toHub = async (h: Doc<"library_hubs">) => ({
   _id: h._id,
   slug: h.slug,
   title: h.title,
   intro: h.intro,
-  coverUrl: h.coverUrl,
+  coverUrl: await coverOf(h),
 });
 
 export const listHubs = query({
@@ -33,7 +33,7 @@ export const listHubs = query({
       .query("library_hubs")
       .withIndex("by_active", (q) => q.eq("active", true))
       .take(50);
-    return hubs.map(toHub);
+    return await Promise.all(hubs.map(toHub));
   },
 });
 
@@ -71,6 +71,6 @@ export const getHub = query({
         return t?.active ? { kind: "audio" as const, track: await toTrackItem(t) } : null;
       }),
     );
-    return { ...toHub(hub), items: items.filter((i) => i !== null) };
+    return { ...(await toHub(hub)), items: items.filter((i) => i !== null) };
   },
 });

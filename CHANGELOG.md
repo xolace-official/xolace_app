@@ -4,6 +4,26 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [Unreleased]
+
+## [1.12.0] - (2026-09-30)
+
+### Added
+
+- **The Lantern** — a library of reads organised by topic, with a reader that remembers your position so you can pick up where you left off.
+- **New streak experience** — redesigned streak display with milestone acknowledgement for consistent days.
+
+### Changed
+
+- **Follow-up UI redesigned** — the post-session follow-up is clearer and easier to answer.
+- **Xolace names what you're feeling more precisely** — reflections now recognise finer feelings like overwhelm, loneliness, homesickness and self-doubt, and life areas like studies, friendships, sleep and settling in, so what you read and who you're suggested to talk to fits more closely.
+- **A new "Studies & exams" focus for Xolacers** — listeners can now say they're here for study and exam worries.
+- **Performance improvements** — faster loads and smoother transitions across the app.
+
+### Fixed
+
+- Assorted bug fixes and polish.
+
 ## [1.11.0] - (2026-09-19)
 
 ### Added

@@ -3,6 +3,7 @@ import { mutation, query, type QueryCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
 import { recentUnderstandings } from "../understanding";
+import { emotionFamily } from "../lib/understandingVocab";
 import { cardItemValidator, entryIdsWithFacet, toListItem } from "./entries";
 import { cardSignals, continueReading } from "./reads";
 import { hubValidator, toHub } from "./hubs";
@@ -61,7 +62,8 @@ async function forYouSignals(ctx: QueryCtx, profileId: Id<"emotional_profiles">,
   );
   const chosen: Signal[] = audiences.map((slug) => ({ axis: "audience", slug }));
   const understood: Signal[] = [
-    ...[...new Set(safe.map((m) => m.primaryEmotion))].map((slug) => ({ axis: "emotion" as const, slug })),
+    // Each emotion then its parent: "stress" also surfaces entries shelved under "anxiety" (ADR 0018).
+    ...[...new Set(safe.flatMap((m) => emotionFamily(m.primaryEmotion)))].map((slug) => ({ axis: "emotion" as const, slug })),
     ...[...new Set(safe.flatMap((m) => m.thematicTags))].map((slug) => ({ axis: "lifeArea" as const, slug })),
   ];
   const n = Math.max(chosen.length, understood.length);
@@ -144,11 +146,11 @@ export const getHome = query({
       continue: cont,
       // The Continue entry isn't repeated in For you.
       forYou: await forYou(ctx, profile._id, signals, active, cont?._id),
-      hubs: hubs.map((h) => ({
-        ...toHub(h),
+      hubs: await Promise.all(hubs.map(async (h) => ({
+        ...(await toHub(h)),
         entries: h.items.filter((i) => i.kind === "entry" && activeIds.has(i.entryId)).length,
         listens: h.items.filter((i) => i.kind === "audio" && activeTracks.has(i.audioTrackId)).length,
-      })),
+      }))),
     };
   },
 });

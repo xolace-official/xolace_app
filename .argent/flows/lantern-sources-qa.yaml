@@ -1,0 +1,67 @@
+# Lantern sources QA (#470): every reuse value in every reading mode.
+# Replay: argent flow run lantern-sources-qa --device <booted sim udid>
+executionPrerequisite: Xolace dev build signed in on the home screen, dev library manifest ingested (bun scripts/library/ingest.ts), no reader open
+steps:
+  - echo: "Classic — the app's own theme"
+  - tool: open-url
+    args: { url: "xolace://library/dev-sleep-verbatim" }
+  - await: { visible: "Reading appearance", timeout: 15000 }
+  - tap: "Reading appearance"
+  - await: { visible: "Reading mode" }
+  - tap: { text: "Classic" }
+  - wait: 400
+  - tool: screenshot
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.45, toX: 0.5, toY: 0.99, durationMs: 400 }
+  - await: { hidden: "Reading mode" }
+  - tool: gesture-swipe
+    args: { fromX: 0.01, fromY: 0.5, toX: 0.8, toY: 0.5, durationMs: 300 }
+  - wait: 800
+  - run: lantern-sources-entries
+  - echo: "Clear — the Paper page"
+  - tool: open-url
+    args: { url: "xolace://library/dev-sleep-verbatim" }
+  - await: { visible: "Reading appearance", timeout: 15000 }
+  - tap: "Reading appearance"
+  - await: { visible: "Reading mode" }
+  - tap: { text: "Clear" }
+  - wait: 400
+  - tool: screenshot
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.45, toX: 0.5, toY: 0.99, durationMs: 400 }
+  - await: { hidden: "Reading mode" }
+  - tool: gesture-swipe
+    args: { fromX: 0.01, fromY: 0.5, toX: 0.8, toY: 0.5, durationMs: 300 }
+  - wait: 800
+  - run: lantern-sources-entries
+  - echo: "By the fire — the Night page"
+  - tool: open-url
+    args: { url: "xolace://library/dev-sleep-verbatim" }
+  - await: { visible: "Reading appearance", timeout: 15000 }
+  - tap: "Reading appearance"
+  - await: { visible: "Reading mode" }
+  - tap: { text: "By the fire" }
+  - wait: 400
+  - tool: screenshot
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.45, toX: 0.5, toY: 0.99, durationMs: 400 }
+  - await: { hidden: "Reading mode" }
+  - tool: gesture-swipe
+    args: { fromX: 0.01, fromY: 0.5, toX: 0.8, toY: 0.5, durationMs: 300 }
+  - wait: 800
+  - run: lantern-sources-entries
+  - echo: "Leave the reader in Classic, as it started"
+  - tool: open-url
+    args: { url: "xolace://library/dev-sleep-verbatim" }
+  - await: { visible: "Reading appearance", timeout: 15000 }
+  - tap: "Reading appearance"
+  - await: { visible: "Reading mode" }
+  - tap: { text: "Classic" }
+  - wait: 400
+  - tool: screenshot
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.45, toX: 0.5, toY: 0.99, durationMs: 400 }
+  - await: { hidden: "Reading mode" }
+  - tool: gesture-swipe
+    args: { fromX: 0.01, fromY: 0.5, toX: 0.8, toY: 0.5, durationMs: 300 }
+  - wait: 800

@@ -5,7 +5,7 @@
  * (hub audio items) is faked at the `r2` seam, as in test/browse.test.ts.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { api } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { asNewUser, asUnauthed, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock } from "../test/mocks.helpers";
@@ -16,7 +16,7 @@ vi.mock("../ai/paths/audioTracks", () => ({
 }));
 afterEach(() => vi.restoreAllMocks());
 
-type Entry = Omit<Doc<"library_entries">, "_id" | "_creationTime" | "sourceId">;
+type Entry = Omit<Doc<"library_entries">, "_id" | "_creationTime">;
 
 const entry = (slug: string, extra: Partial<Entry> = {}): Entry => ({
   slug,
@@ -47,8 +47,9 @@ async function seed(
     });
     const ids: Record<string, Id<"library_entries">> = {};
     for (const { e, facets = [] } of rows) {
-      const entryId = await ctx.db.insert("library_entries", { ...e, sourceId });
+      const entryId = await ctx.db.insert("library_entries", e);
       ids[e.slug] = entryId;
+      await ctx.db.insert("library_entry_sources", { entryId, sourceId, order: 0, pageTitle: "Stress" });
       await ctx.db.insert("library_entry_bodies", { entryId, markdown: `# ${e.slug}` });
       for (const [axis, slug] of facets) {
         await ctx.db.insert("library_entry_facets", { entryId, axis, slug });
@@ -73,7 +74,7 @@ describe("library.getEntry", () => {
       slug: "worry",
       kind: "explainer",
       markdown: "# worry",
-      source: { name: "NHS", attributionText: expect.stringContaining("OGL") },
+      sources: [{ name: "NHS", pageTitle: "Stress", attributionText: expect.stringContaining("OGL") }],
       facets: expect.arrayContaining([
         { axis: "subject", slug: "anxiety" },
         { axis: "audience", slug: "student" },
@@ -193,5 +194,125 @@ describe("library hubs", () => {
     ).toEqual(["two", "calm", "one"]);
 
     expect(await user.t.query(api.library.hubs.getHub, { slug: "hidden" })).toBeNull();
+  });
+});
+
+describe("library sources: manifest ingest → getEntry", () => {
+  const nhs = {
+    slug: "nhs",
+    name: "NHS",
+    url: "https://www.nhs.uk",
+    logoUrl: "https://logo.test/nhs.png",
+    licence: "OGL v3.0",
+    permission: "not_required" as const,
+    attributionText: "Contains public sector information licensed under the OGL v3.0",
+    dropBrandingIfAdapted: true,
+  };
+  const mind = {
+    ...nhs,
+    slug: "mind",
+    name: "Mind",
+    url: "https://www.mind.org.uk",
+    logoUrl: "https://logo.test/mind.png",
+    licence: "Used with permission", dropBrandingIfAdapted: false };
+  const xolace = { ...nhs, slug: "xolace", name: "Xolace", url: undefined, logoUrl: undefined, licence: "Xolace original" };
+
+  type EntryArg = typeof internal.library.ingest.upsertEntry._args.entry;
+  type Pair = EntryArg["sources"][number];
+  const page = (source: string, n: number, extra: Partial<Pair> = {}): Pair => ({
+    source,
+    pageTitle: `${source} page ${n}`,
+    pageUrl: `https://${source}.test/${n}`,
+    ...extra,
+  });
+  const record = (extra: Partial<EntryArg> = {}): EntryArg => ({
+    slug: "e",
+    kind: "advice",
+    title: "T",
+    dek: "D",
+    primarySubject: "anxiety",
+    reuse: "adapted",
+    active: true,
+    lastReviewedAt: 1,
+    facets: {},
+    sources: [page("nhs", 1)],
+    ...extra,
+  });
+
+  async function setup() {
+    const user = await asNewUser();
+    for (const source of [nhs, mind, xolace]) {
+      await user.t.mutation(internal.library.ingest.upsertSource, { source, sha256: source.slug });
+    }
+    const ingest = (e: EntryArg, sha256 = "h1") =>
+      user.t.mutation(internal.library.ingest.upsertEntry, { entry: e, markdown: "body", sha256 });
+    const read = async () => (await user.t.query(api.library.entries.getEntry, { slug: "e" }))?.sources;
+    return { user, ingest, read };
+  }
+
+  it("returns sources in manifest order, the same publisher twice with different pages", async () => {
+    const { ingest, read } = await setup();
+    await ingest(
+      record({
+        sources: [page("mind", 1, { author: "Jo Baker", retrievedAt: 7 }), page("nhs", 1), page("nhs", 2)],
+      }),
+    );
+    expect(await read()).toEqual([
+      {
+        name: "Mind",
+        url: "https://www.mind.org.uk",
+        logoUrl: "https://logo.test/mind.png",
+        licence: "Used with permission",
+        attributionText: nhs.attributionText,
+        pageTitle: "mind page 1",
+        pageUrl: "https://mind.test/1",
+        author: "Jo Baker",
+        retrievedAt: 7,
+      },
+      expect.objectContaining({ name: "NHS", pageTitle: "nhs page 1", licence: "OGL v3.0" }),
+      expect.objectContaining({ name: "NHS", pageTitle: "nhs page 2", pageUrl: "https://nhs.test/2" }),
+    ]);
+  });
+
+  it("drops a source's logo from an adapted entry when dropBrandingIfAdapted, keeps it verbatim", async () => {
+    const { ingest, read } = await setup();
+    await ingest(record());
+    expect((await read())?.[0]).not.toHaveProperty("logoUrl");
+    await ingest(record({ reuse: "verbatim" }), "h2");
+    expect((await read())?.[0].logoUrl).toBe(nhs.logoUrl);
+  });
+
+  it("enforces the per-reuse source count and rejects an unknown slug", async () => {
+    const { ingest, read } = await setup();
+    await expect(ingest(record({ reuse: "verbatim", sources: [] }))).rejects.toThrow(/verbatim.*exactly 1/);
+    await expect(ingest(record({ reuse: "verbatim", sources: [page("nhs", 1), page("mind", 1)] }))).rejects.toThrow(
+      /verbatim.*exactly 1/,
+    );
+    await expect(ingest(record({ reuse: "adapted", sources: [] }))).rejects.toThrow(/adapted.*at least 1/);
+    await expect(ingest(record({ reuse: "original", sources: [page("nhs", 1)] }))).rejects.toThrow(/original.*NHS/);
+    await expect(ingest(record({ sources: [page("nhs", 1), page("ghost", 1)] }))).rejects.toThrow(/source "ghost"/);
+    expect(await read()).toBeUndefined();
+
+    expect(await ingest(record({ reuse: "original", sources: [] }))).toEqual({ action: "inserted" });
+    expect(await read()).toEqual([]);
+    expect(await ingest(record({ reuse: "original", sources: [page("xolace", 1)] }), "h2")).toEqual({
+      action: "updated",
+    });
+  });
+
+  it("re-ingests a source-list-only edit and leaves no stale pairs", async () => {
+    const { user, ingest, read } = await setup();
+    await ingest(record({ sources: [page("nhs", 1), page("mind", 1), page("nhs", 2)] }));
+    expect(await ingest(record({ sources: [page("mind", 1)] }), "h2")).toEqual({ action: "updated" });
+    expect((await read())?.map((s) => s.pageTitle)).toEqual(["mind page 1"]);
+    const pairs = await user.root.run((ctx) => ctx.db.query("library_entry_sources").take(10));
+    expect(pairs).toHaveLength(1);
+  });
+
+  it("rejects the old single-source fields", async () => {
+    const { ingest } = await setup();
+    for (const old of [{ sourceSlug: "nhs" }, { originalUrl: "https://x" }, { author: "A" }]) {
+      await expect(ingest({ ...record(), ...old } as EntryArg)).rejects.toThrow(/Unexpected field/);
+    }
   });
 });

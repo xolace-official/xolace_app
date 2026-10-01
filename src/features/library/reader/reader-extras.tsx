@@ -21,7 +21,7 @@ import type { ReaderEntry } from './reader-screen';
 const NOTE_ICON = { ios: 'exclamationmark.circle', android: 'info', web: 'info' } as const;
 const SHARE_ICON = { ios: 'square.and.arrow.up', android: 'share', web: 'share' } as const;
 const HELP_ICON = { ios: 'phone', android: 'call', web: 'call' } as const;
-const CHEVRON = { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' } as const;
+export const CHEVRON = { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' } as const;
 const DAY_MS = 86_400_000;
 
 /** A curator's heads-up, before the body begins. */

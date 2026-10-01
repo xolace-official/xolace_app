@@ -49,9 +49,10 @@ function FeedbackSheetFrame({ snapPoints, isOpen, onClose, children, keyboardBeh
       isOpen={isOpen}
       onOpenChange={(open) => { if (!open) onClose(); }}
     >
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
+          accessible={false}
           {...(snapPoints ? { snapPoints } : {})}
           enableOverDrag={false}
           enableDynamicSizing={dynamic}

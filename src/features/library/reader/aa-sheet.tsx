@@ -17,9 +17,11 @@ import { READING_MODE_KEYS, READING_MODES, stepTextSize, TEXT_SIZES, type Readin
 export function AaSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   return (
     <BottomSheet isOpen={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
+          // gorhom makes the sheet one accessible element, which hides the mode cards and controls.
+          accessible={false}
           enableDynamicSizing
           enableOverDrag={false}
           backgroundClassName="bg-background"

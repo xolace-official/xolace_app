@@ -25,8 +25,8 @@ const entry = (slug: string, extra: Partial<EntryArg> = {}): EntryArg => ({
   title: `Title ${slug}`,
   dek: `Dek ${slug}`,
   primarySubject: "anxiety",
-  sourceSlug: "nhs",
   reuse: "adapted",
+  sources: [{ source: "nhs", pageTitle: "Stress", pageUrl: "https://www.nhs.uk/stress" }],
   active: true,
   lastReviewedAt: 1,
   facets: { audience: ["student"], emotion: ["anxiety"] },
@@ -100,7 +100,7 @@ describe("upsertEntry", () => {
 
   it("rejects an unknown source and an off-vocabulary emotion/lifeArea facet", async () => {
     const t = await withSource();
-    await expect(ingest(t, entry("a", { sourceSlug: "nope" }))).rejects.toThrow(/source "nope"/);
+    await expect(ingest(t, entry("a", { sources: [{ source: "nope", pageTitle: "x" }] }))).rejects.toThrow(/source "nope"/);
     await expect(ingest(t, entry("b", { facets: { emotion: ["meh"] } }))).rejects.toThrow(/emotion "meh"/);
     expect(await row(t, "a")).toBeNull();
     expect(await row(t, "b")).toBeNull();
@@ -108,7 +108,7 @@ describe("upsertEntry", () => {
 
   it("hard-fails a first-hand story with no consentRecordedAt", async () => {
     const t = await withSource();
-    const story = entry("s", { kind: "story", reuse: "original", active: false });
+    const story = entry("s", { kind: "story", reuse: "original", active: false, sources: [] });
     await expect(ingest(t, story)).rejects.toThrow(/consentRecordedAt/);
     expect(await row(t, "s")).toBeNull();
     expect(await ingest(t, { ...story, consentRecordedAt: 5 })).toEqual({ action: "inserted" });

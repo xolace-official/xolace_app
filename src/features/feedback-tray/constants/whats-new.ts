@@ -30,6 +30,33 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "1.12.0",
+    label: "Version 1.12.0",
+    date: "September 2026",
+    highlights: [
+      {
+        icon: { ios: "book.fill", android: "menu_book" },
+        title: "Meet the Lantern",
+        body: "A new library of reads for when you want to understand what you're carrying; browse by topic, pick one up, and come back to where you left off.",
+      },
+      {
+        icon: { ios: "flame.fill", android: "local_fire_department" },
+        title: "A new streak experience",
+        body: "Showing up now feels like something. Your streak has a fresh look and a quiet acknowledgement for the days you keep coming back.",
+      },
+      {
+        icon: { ios: "arrow.turn.down.right", android: "subdirectory_arrow_right" },
+        title: "A gentler follow-up",
+        body: "The follow-up after a moment has been redesigned to be clearer and easier to answer, at whatever pace suits you.",
+      },
+      {
+        icon: { ios: "wand.and.stars", android: "auto_fix_high" },
+        title: "Faster, steadier",
+        body: "The app loads and moves more smoothly, and a round of bug fixes and polish is tucked in throughout.",
+      },
+    ],
+  },
+  {
     id: "2026-09-ota-polish",
     label: "OTA Update",
     date: "September 2026",

@@ -6,7 +6,7 @@
  */
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import { useConvex, useMutation, useQuery } from 'convex/react';
+import { useConvex, useConvexAuth, useMutation, useQuery } from 'convex/react';
 import { useLocalSearchParams } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -31,6 +31,9 @@ const HELPED_FLOOR = 15; // mirrors convex/library/reads.ts
 // At or past this the read is done; the next open starts from the top.
 const RESUME_CEILING = 0.98;
 const TEND_ATTEMPTS = 3;
+
+/** A passive signal that didn't land; the auth-gated ones re-send once auth drops and returns. */
+export const logDropped = (e: unknown) => console.warn('[library] read signal dropped:', e);
 
 const nudgeHelped = (count: number | null, was: boolean, now?: boolean) => {
   if (count === null || now === undefined || now === was) return count;
@@ -80,15 +83,27 @@ export function useReadSignals({
   const [reachedEnd, setReachedEnd] = useState(false);
   const posthog = usePostHog();
   const { stepId, from } = useReaderParams();
+  // A resumed app can run the reader while Convex waits on Clerk for a fresh
+  // token (#472): writes wait for auth, and a flip back re-sends what didn't land.
+  const { isAuthenticated } = useConvexAuth();
 
-  // The view: the server counts only the first open. Analytics counts every one.
+  // Every way in sets `from` (shared links too); missing means a link forgot it.
   useEffect(() => {
-    record({ entryId, opened: true });
-    // Every way in sets `from` (shared links too); missing means a link forgot it.
     trackLibrary(posthog, 'library_entry_opened', { slug, from: from ?? 'unknown' });
     // Once per entry: slug/from/posthog are fixed for a mounted reader.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [record, entryId]);
+  }, [entryId]);
+
+  // The view: the server counts only the first open.
+  const openedFor = useRef<EntryId | null>(null);
+  useEffect(() => {
+    if (openedFor.current === entryId || !isAuthenticated) return;
+    openedFor.current = entryId;
+    record({ entryId, opened: true }).catch((e) => {
+      openedFor.current = null;
+      logDropped(e);
+    });
+  }, [record, entryId, isAuthenticated]);
 
   useAnimatedReaction(
     () => scrollY.get() >= endAt,
@@ -101,11 +116,11 @@ export function useReadSignals({
   // Finished once the end was reached and the dwell has run, whichever comes last.
   const finished = state?.finished;
   useEffect(() => {
-    if (!reachedEnd || finished !== false) return;
+    if (!reachedEnd || finished !== false || !isAuthenticated) return;
     const wait = openedAt + DWELL_SHARE * readMin * 60_000 - Date.now();
-    const t = setTimeout(() => record({ entryId, finished: true }), Math.max(wait, 0));
+    const t = setTimeout(() => record({ entryId, finished: true }).catch(logDropped), Math.max(wait, 0));
     return () => clearTimeout(t);
-  }, [reachedEnd, finished, openedAt, readMin, record, entryId]);
+  }, [reachedEnd, finished, isAuthenticated, openedAt, readMin, record, entryId]);
 
   // Seen flip to finished while open (read or listened), not already finished on arrival.
   const wasFinished = useRef(finished);
@@ -127,7 +142,7 @@ export function useReadSignals({
   const tended = useRef(false);
   const tendAttempts = useRef(0);
   useEffect(() => {
-    if (!stepId || finished !== true || tended.current || !isWebSocketConnected) return;
+    if (!stepId || finished !== true || tended.current || !isWebSocketConnected || !isAuthenticated) return;
     if (tendAttempts.current >= TEND_ATTEMPTS) return;
     tended.current = true;
     tendAttempts.current += 1;
@@ -135,7 +150,7 @@ export function useReadSignals({
       tended.current = false;
       console.error('[useReadSignals] completeStep failed:', e);
     });
-  }, [stepId, finished, completeStep, isWebSocketConnected]);
+  }, [stepId, finished, completeStep, isWebSocketConnected, isAuthenticated]);
 
   // Resume once, as soon as both the saved position and the layout are in.
   const restored = useRef(false);
@@ -154,11 +169,15 @@ export function useReadSignals({
   useEffect(
     () => () => {
       // Unrestored, scrollY is still 0 — saving would wipe the real position.
-      if (!restored.current || maxRef.current <= 0) return;
+      // Losing auth unmounts the reader (the protected-route guard) before it re-renders,
+      // so `isAuthenticated` is stale here; ask the client. Unmounted, there's no later
+      // to retry in, so that position is dropped. `sync` is @internal to convex/react (1.45).
+      const { sync } = convex as unknown as { sync: { hasAuth(): boolean } };
+      if (!restored.current || maxRef.current <= 0 || !sync.hasAuth()) return;
       const at = scrollY.get() / maxRef.current;
-      record({ entryId, position: at >= RESUME_CEILING ? 0 : at });
+      record({ entryId, position: at >= RESUME_CEILING ? 0 : at }).catch(logDropped);
     },
-    [record, entryId, scrollY],
+    [record, entryId, scrollY, convex],
   );
 
   return state;

@@ -183,10 +183,11 @@ export function CohortCard() {
 type Card = FunctionReturnType<typeof api.cohort.getWeeklyCohortCard>;
 
 function CohortSpeech({ card, reduced }: { card: Exclude<Card, { status: 'hidden' }>; reduced: boolean }) {
+  const emotion = card.emotion.replace(/-/g, ' ');
   const fact =
     card.status === 'count'
-      ? `campers sat with ${card.emotion} by the fire this week.`
-      : `Others have sat with ${card.emotion} by this fire too.`;
+      ? `campers sat with ${emotion} by the fire this week.`
+      : `Others have sat with ${emotion} by this fire too.`;
   const closer = 'You are not alone.';
 
   const words = fact.split(' ');

@@ -1,5 +1,6 @@
 import type { Doc } from "../../_generated/dataModel";
 import { CATALOG_BY_KEY } from "./catalog";
+import { emotionFamily } from "../../lib/understandingVocab";
 
 /**
  * Kindling content binder (docs/paths-v1.md §2.3, §8; #332).
@@ -86,8 +87,7 @@ function bindTrack(
   if (candidates.length === 0) return null;
 
   const wanted = new Set([
-    u.primaryEmotion,
-    ...(u.secondaryEmotion ? [u.secondaryEmotion] : []),
+    ...understoodEmotions(u),
     ...u.thematicTags,
     ...entry.emotions,
     ...entry.themes,
@@ -103,12 +103,17 @@ function bindTrack(
  * thematic tags against `lifeArea`. Finished entries never reach here.
  */
 function bindEntry(u: BindUnderstanding, entries: readonly BindEntry[]): { slug: string } | null {
-  const emotions = new Set([u.primaryEmotion, ...(u.secondaryEmotion ? [u.secondaryEmotion] : [])]);
+  const emotions = new Set(understoodEmotions(u));
   const areas = new Set(u.thematicTags);
   const score = (e: BindEntry) =>
     e.emotions.filter((s) => emotions.has(s)).length + e.lifeAreas.filter((s) => areas.has(s)).length;
   const candidates = entries.filter((e) => score(e) > 0);
   return candidates.length === 0 ? null : pickSeeded(candidates, score, u);
+}
+
+/** The Understanding's emotions plus their parents, so finer labels still meet older tags (ADR 0018). */
+function understoodEmotions(u: BindUnderstanding): string[] {
+  return [u.primaryEmotion, ...(u.secondaryEmotion ? [u.secondaryEmotion] : [])].flatMap(emotionFamily);
 }
 
 function pickSeeded<T extends { slug: string }>(

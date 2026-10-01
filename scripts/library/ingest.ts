@@ -1,7 +1,8 @@
 // Library catalogue ingestion (#406, decisions in #392).
 //
 // Upserts `sources.json` → `manifest.json` (entries) → `hubs.json` into the
-// `library_*` tables, in that order: entries reference a `sourceSlug`, hubs
+// `library_*` tables, in that order: entries list their `sources` in credit
+// order (`[{ source: <slug>, pageTitle, pageUrl?, author?, retrievedAt? }]`), hubs
 // reference entry / kindling-audio slugs that must already be ingested.
 // Each entry's body is its own markdown file (`bodyPath`, relative to the
 // manifest dir), never inlined.
@@ -16,7 +17,7 @@
 // `consentRecordedAt`; an explainer can only be `active: true` once
 // `library/admin:markSafetyReviewed` has signed off its current body. Soft
 // gate (#404): a verbatim entry from a source with `refreshDays` (NHS = 7)
-// whose `retrievedAt` is older than that prints a refresh nag — it still
+// whose source `retrievedAt` is older than that prints a refresh nag — it still
 // ingests. Alt text is a hard gate too (#400): an image with empty alt is
 // rejected unless the record lists its src in `decorativeImages`.
 // Unpublishing is `library/admin:setActive`, not this script.
@@ -24,7 +25,8 @@
 // A cover is `coverPath` on the entry, relative to `media/cover/` (gitignored).
 // It's uploaded to R2 (like kindling's thumbs) under `library-thumb/<sha>.<ext>`
 // and the key kept in `coverKey`; the URL is signed at read. A plain `coverUrl`
-// still works for a hosted image, but an uploaded cover wins.
+// still works for a hosted image, but an uploaded cover wins. Hubs take the
+// same `coverPath`, uploaded under `hub-cover/<sha>.<ext>`.
 //
 // Audio (#411) is a last pass over `audio.json`, keyed by `entrySlug`:
 // `[{ entrySlug, audioPath, transcriptPath, active, title? }]`, paths relative to
@@ -50,15 +52,14 @@ import path from "node:path";
 type Source = { slug: string; refreshDays?: number; [k: string]: unknown };
 type Entry = {
   slug: string;
-  sourceSlug: string;
+  sources: { source: string; retrievedAt?: number }[];
   reuse: string;
-  retrievedAt?: number;
   bodyPath: string;
   coverPath?: string;
   decorativeImages?: string[];
   [k: string]: unknown;
 };
-type Hub = { slug: string; [k: string]: unknown };
+type Hub = { slug: string; coverPath?: string; [k: string]: unknown };
 type Audio = { entrySlug: string; audioPath: string; transcriptPath: string; active: boolean; title?: string };
 
 const args = process.argv.slice(2);
@@ -99,9 +100,9 @@ async function upload(key: string, body: Buffer) {
 
 // Content-addressed like kindling's thumbs: the key is the hash, so an unchanged
 // cover is the same key and is only re-PUT (idempotent), never duplicated.
-async function uploadCover(coverPath: string) {
+async function uploadCover(coverPath: string, prefix = "library-thumb") {
   const file = readFileSync(path.resolve(dir, "media/cover", coverPath));
-  const coverKey = `library-thumb/${createHash("sha256").update(file).digest("hex")}${path.extname(coverPath).toLowerCase()}`;
+  const coverKey = `${prefix}/${createHash("sha256").update(file).digest("hex")}${path.extname(coverPath).toLowerCase()}`;
   await upload(coverKey, file);
   return { coverKey };
 }
@@ -167,9 +168,10 @@ async function main() {
 
   const refreshDays = new Map(sources.map((s) => [s.slug, s.refreshDays]));
   for (const record of entries) {
-    const days = refreshDays.get(record.sourceSlug);
-    if (days && record.reuse === "verbatim" && (record.retrievedAt ?? 0) < Date.now() - days * DAY_MS) {
-      console.warn(`entry ${record.slug}: WARNING — verbatim copy older than ${days} days, re-pull it from ${record.sourceSlug}`);
+    const [s] = record.sources;
+    const days = s && refreshDays.get(s.source);
+    if (days && record.reuse === "verbatim" && (s.retrievedAt ?? 0) < Date.now() - days * DAY_MS) {
+      console.warn(`entry ${record.slug}: WARNING — verbatim copy older than ${days} days, re-pull it from ${s.source}`);
     }
     await attempt(`entry ${record.slug}`, async () => {
       const markdown = readFileSync(path.resolve(dir, record.bodyPath), "utf8");
@@ -186,7 +188,12 @@ async function main() {
   }
 
   for (const hub of hubs) {
-    await attempt(`hub ${hub.slug}`, () => convexRun("library/ingest:upsertHub", { hub, sha256: sha256(JSON.stringify(hub)) }));
+    await attempt(`hub ${hub.slug}`, async () => {
+      const { coverPath, ...rest } = hub;
+      const cover = coverPath ? await uploadCover(coverPath, "hub-cover") : {};
+      const doc = { ...rest, ...cover };
+      return convexRun("library/ingest:upsertHub", { hub: doc, sha256: sha256(JSON.stringify(doc)) });
+    });
   }
 
   const audioPath = path.join(dir, "audio.json");

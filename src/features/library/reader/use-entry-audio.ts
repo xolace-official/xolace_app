@@ -1,10 +1,11 @@
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import { useConvex, useMutation, useQuery } from 'convex/react';
+import { useConvex, useConvexAuth, useMutation, useQuery } from 'convex/react';
 import { usePostHog } from 'posthog-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { trackLibrary } from '@/src/features/library/analytics';
+import { logDropped } from '@/src/features/library/reader/use-read-signals';
 import { usePlayback } from '@/src/lib/audio/use-playback';
 
 /** The dock's height above the safe area — what the page and Back to top clear. */
@@ -53,10 +54,19 @@ export function useEntryAudio(entryId: Id<'library_entries'>, slug: string, hasA
   const [listened, setListened] = useState(false);
   if (p.didJustFinish && p.track && !p.track.preview && !listened) setListened(true);
   useEffect(() => {
-    if (!listened) return;
-    record({ entryId, finished: true });
-    trackLibrary(posthog, 'library_audio_completed', { slug });
-  }, [listened, record, entryId, posthog, slug]);
+    if (listened) trackLibrary(posthog, 'library_audio_completed', { slug });
+  }, [listened, posthog, slug]);
+  // Audio can end while the app is backgrounded and the token lapsed (#472): wait for auth.
+  const { isAuthenticated } = useConvexAuth();
+  const sentFinish = useRef(false);
+  useEffect(() => {
+    if (!listened || sentFinish.current || !isAuthenticated) return;
+    sentFinish.current = true;
+    record({ entryId, finished: true }).catch((e) => {
+      sentFinish.current = false;
+      logDropped(e);
+    });
+  }, [listened, isAuthenticated, record, entryId]);
 
   return {
     ...p,

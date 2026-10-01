@@ -12,7 +12,7 @@ import { useCSSVariable } from 'uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { cn } from '@/src/lib/utils';
 import { COVER_SCRIM } from './cover-palette';
-import { creditLine, metaLabel, metaLine, prepareBody } from './reader-copy';
+import { headerCredit, metaLabel, metaLine, prepareBody } from './reader-copy';
 import type { ReaderEntry } from './reader-screen';
 import { useRecord } from './use-read-signals';
 
@@ -21,6 +21,7 @@ const AA_ICON = { ios: 'textformat.size', android: 'text_fields', web: 'text_fie
 const SAVE_ICON = { ios: 'bookmark', android: 'bookmark_border', web: 'bookmark_border' } as const;
 const SAVED_ICON = { ios: 'bookmark.fill', android: 'bookmark_added', web: 'bookmark_added' } as const;
 const SOURCE_ICON = { ios: 'building.columns', android: 'account_balance', web: 'account_balance' } as const;
+const XOLACE_LOGO = require('@/assets/images/icon.png');
 // Callouts arrive as quotes led by their kind in bold (`prepareBody`), so the kind is read first.
 const A11Y_LABELS = { blockquote: { quote: 'Quote' } };
 
@@ -133,14 +134,13 @@ export function ReaderTitle({
   );
 }
 
-type Credit = Pick<ReaderEntry, 'reuse' | 'author' | 'originalUrl' | 'source'>;
-
-/** Who wrote it and how it reached this page. Every entry shows it (#383). */
-/** The source's credit; `aside` sits at its trailing edge (the Listen pill, #411). */
-export function SourceCredit({ entry, aside }: { entry: Credit; aside?: ReactNode }) {
+/**
+ * Who wrote it and how it reached this page, keyed on `reuse`. Every entry
+ * shows it (#383); `aside` sits at its trailing edge (the Listen pill, #411).
+ */
+export function SourceCredit({ entry, aside }: { entry: Pick<ReaderEntry, 'reuse' | 'sources'>; aside?: ReactNode }) {
   const muted = useThemeColor('muted');
-  const href = entry.originalUrl ?? entry.source.url;
-  const line = [creditLine(entry.reuse), entry.author && `by ${entry.author}`].filter(Boolean).join(' · ');
+  const { name, line, href, logoUrl, xolace } = headerCredit(entry);
 
   return (
     <View className="flex-row items-center gap-3">
@@ -148,19 +148,19 @@ export function SourceCredit({ entry, aside }: { entry: Credit; aside?: ReactNod
         disabled={!href}
         onPress={() => href && Linking.openURL(href)}
         accessibilityRole={href ? 'link' : undefined}
-        accessibilityLabel={`${entry.source.name}, ${line}`}
+        accessibilityLabel={`${name}, ${line}`}
         accessibilityHint={href ? 'Opens the original' : undefined}
         className="flex-1 flex-row items-center gap-3 active:opacity-70"
       >
         <View className="h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-surface-secondary">
-          {entry.source.logoUrl ? (
-            <Image source={{ uri: entry.source.logoUrl }} style={{ width: 36, height: 36 }} contentFit="cover" />
+          {xolace || logoUrl ? (
+            <Image source={xolace ? XOLACE_LOGO : { uri: logoUrl }} style={{ width: 36, height: 36 }} contentFit="cover" />
           ) : (
             <SymbolView name={SOURCE_ICON} size={15} tintColor={muted} />
           )}
         </View>
         <View className="flex-1">
-          <AppText className="font-semibold text-sm">{entry.source.name}</AppText>
+          <AppText className="font-semibold text-sm">{name}</AppText>
           <AppText className="text-xs text-muted">{line}</AppText>
         </View>
       </Pressable>

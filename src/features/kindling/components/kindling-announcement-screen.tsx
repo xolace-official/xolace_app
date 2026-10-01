@@ -10,8 +10,8 @@ import { PoseBubble } from "@/src/features/kindling/components/pose-bubble";
 const COPY = {
   eyebrow: "Your kindling",
   title: "We're gathering a few things for you",
-  plus: "Small steps for after this — something to breathe with, hear, read, or share. It'll be waiting when you're done.",
-  free: "Xolace+ gathers a kindling after sessions like this one — small steps, picked for what you brought.",
+  plus: "Small support steps for after this, something to breathe with, hear, read, or share. It'll be waiting when you're done.",
+  free: "Xolace+ gathers a kindling after sessions like this one, small support steps, picked for what you brought.",
   continue: "Continue",
   paywall: "Get my kindling with Xolace+",
 };
@@ -35,11 +35,7 @@ type Props = {
   onPaywall: () => void;
 };
 
-/**
- * "We're building you a kindling" (#455, #457). Presentational only — the
- * caller decides whether it shows and which `variant` via
- * `shouldOfferKindlingAnnouncement`. Always all six kinds; skippable in one tap.
- */
+
 export function KindlingAnnouncementScreen({ variant, onSkip, onContinue, onPaywall }: Props) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height } = useWindowDimensions();

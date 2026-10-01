@@ -59,9 +59,9 @@ export function XolacerPrimerSheet({
 
   return (
     <BottomSheet isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
-        <BottomSheet.Content backgroundClassName="bg-background">
+        <BottomSheet.Content accessible={false} backgroundClassName="bg-background">
           <BottomSheet.Close className="absolute top-0 right-4 z-10" />
 
           <BottomSheetScrollView

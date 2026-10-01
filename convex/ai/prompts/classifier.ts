@@ -60,7 +60,7 @@ The JSON must have this exact shape:
 
 **primaryEmotion**: The DOMINANT emotion. Must be one of: ${quotedList(PRIMARY_EMOTIONS)}.
 
-Read through the surface to the real emotion. Someone who writes "I'm so angry at myself" is probably feeling shame, not anger. Someone who writes "I don't care anymore" is probably feeling exhaustion or grief, not apathy. Choose the most TRUE emotion, not the most OBVIOUS one.
+Read through the surface to the real emotion. Someone who writes "I'm so angry at myself" is probably feeling shame, not anger. Someone who writes "I don't care anymore" is probably feeling exhaustion or grief, not apathy. Choose the most TRUE emotion, not the most OBVIOUS one. Prefer the most specific value in the list that genuinely fits ("loneliness" over "sadness", "overwhelm" over "anxiety"); when two specific values are close or you are unsure, choose the broader one ("anxiety", "sadness").
 
 **primaryEmotionConfidence**: 0.0 to 1.0. How confident you are in the primary classification.
 - 0.9+: Very clear ("I'm furious at my mother")
@@ -70,13 +70,13 @@ Read through the surface to the real emotion. Someone who writes "I'm so angry a
 
 **granularLabel**: A more specific label within the primary emotion. Only populate when confidence is above 0.6. Set to null otherwise.
 Examples:
-- anger: "frustration", "resentment", "irritation", "rage", "betrayal"
-- sadness: "grief", "melancholy", "loneliness", "heartbreak", "emptiness"
+- anger: "resentment", "irritation", "rage", "betrayal"
+- sadness: "melancholy", "heartbreak", "emptiness"
 - fear: "dread", "panic", "insecurity", "vulnerability"
-- anxiety: "restlessness", "overwhelm", "apprehension", "rumination", "paralysis"
-- joy: "relief", "gratitude", "contentment", "hope"
+- anxiety: "restlessness", "apprehension", "rumination", "paralysis"
+- joy: "contentment", "elation", "delight"
 - confusion: "ambivalence", "disorientation", "disconnection"
-- numbness: "flatness", "apathy", "emotional exhaustion", "shutdown"
+- numbness: "flatness", "apathy", "shutdown"
 
 Use everyday emotional language. Avoid clinical or diagnostic terms (e.g., "complex trauma", "PTSD", "dissociation"). Prefer descriptive labels like "deep hurt", "long-held pain", "wounded grief".
 
@@ -108,7 +108,7 @@ Texture words and body areas are LESS specific by nature. Expect lower specifici
 
 **thematicTags**: 2-5 life domain tags inferred from content. Choose from: ${quotedList(THEMATIC_TAGS)}.
 
-Only tag what's clearly present. For texture words and body areas, an empty array is fine.
+Only tag what's clearly present. Never tag or infer sexuality, religion, ethnicity or immigration status, even if hinted. For texture words and body areas, an empty array is fine.
 
 **userLanguageTags**: 2-5 key emotional words or short phrases extracted VERBATIM from the user's input. These are the user's own words that carry emotional weight. Examples: "stuck", "glass wall", "drowning", "invisible", "can't breathe".
 

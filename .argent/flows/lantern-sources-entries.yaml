@@ -1,0 +1,76 @@
+executionPrerequisite: Xolace dev build signed in, dev library manifest ingested (bun scripts/library/ingest.ts), no sheet open
+steps:
+  - echo: Verbatim — publisher in the header, its licence line after the body, no View sources row
+  - tool: open-url
+    args: { url: "xolace://library/dev-sleep-verbatim" }
+  - await: { visible: "NHS, Published as they wrote it", timeout: 15000 }
+  - assert: { visible: "Advice, from NHS" }
+  - scroll-to: "Open Government Licence"
+  - assert: { hidden: "View sources" }
+  - tool: screenshot
+  - echo: Pop the reader so the next entry's selectors can't match a screen underneath
+  - tool: gesture-swipe
+    args: { fromX: 0.01, fromY: 0.5, toX: 0.8, toY: 0.5, durationMs: 300 }
+  - wait: 800
+
+  - echo: Single-source adapted — "Adapted by Xolace", View sources row, sheet row with no URL is not a link
+  - tool: open-url
+    args: { url: "xolace://library/dev-wind-down-adapted" }
+  - await: { visible: "Xolace, Adapted by Xolace", timeout: 15000 }
+  - assert: { visible: "Advice, adapted by Xolace" }
+  - scroll-to: "View sources"
+  # scroll-to stops at the bottom edge, under the floating "Back to top" pill; lift the row clear of it.
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.7, toX: 0.5, toY: 0.4, settle: true }
+  - tool: screenshot
+  - tap: "View sources"
+  - await: { visible: "Sources adapted from" }
+  - assert: { visible: "For further reading" }
+  - assert: { visible: "How to fall asleep faster, from NHS" }
+  - assert: { visible: "Contains public sector information licensed under the Open Government Licence v3.0" }
+  - tool: screenshot
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.6, toX: 0.5, toY: 0.99, durationMs: 400 }
+  - await: { hidden: "Sources adapted from" }
+  - echo: Pop the reader so the next entry's selectors can't match a screen underneath
+  - tool: gesture-swipe
+    args: { fromX: 0.01, fromY: 0.5, toX: 0.8, toY: 0.5, durationMs: 300 }
+  - wait: 800
+
+  - echo: Multi-source adapted, NHS cited twice — manifest order, author, NHS licence once
+  - tool: open-url
+    args: { url: "xolace://library/dev-exam-stress-advice" }
+  - scroll-to: { target: "Advice, adapted by Xolace", direction: up }
+  - assert: { visible: "Xolace, Adapted by Xolace" }
+  - tool: screenshot
+  - scroll-to: "View sources"
+  # scroll-to stops at the bottom edge, under the floating "Back to top" pill; lift the row clear of it.
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.7, toX: 0.5, toY: 0.4, settle: true }
+  - tap: "View sources"
+  - await: { visible: "Sources adapted from" }
+  - assert: { visible: "Tips to reduce stress, from NHS" }
+  - assert: { visible: "Exam stress, from Student Minds, by Jo Baker" }
+  - assert: { visible: "How to get to sleep, from NHS" }
+  - assert: { visible: "Contains public sector information licensed under the Open Government Licence v3.0\nExam stress, by Jo Baker, Student Minds (studentminds.org.uk). Shared with permission." }
+  - tool: screenshot
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.6, toX: 0.5, toY: 0.99, durationMs: 400 }
+  - await: { hidden: "Sources adapted from" }
+  - echo: Pop the reader so the next entry's selectors can't match a screen underneath
+  - tool: gesture-swipe
+    args: { fromX: 0.01, fromY: 0.5, toX: 0.8, toY: 0.5, durationMs: 300 }
+  - wait: 800
+
+  - echo: Original — "Written for Lantern", Xolace attribution after the body, no View sources row
+  - tool: open-url
+    args: { url: "xolace://library/dev-first-term-story" }
+  - scroll-to: { target: "Written for Lantern", direction: up }
+  - tool: screenshot
+  - scroll-to: "Shared with Xolace, with permission"
+  - assert: { hidden: "View sources" }
+  - tool: screenshot
+  - echo: Pop the reader so the next entry's selectors can't match a screen underneath
+  - tool: gesture-swipe
+    args: { fromX: 0.01, fromY: 0.5, toX: 0.8, toY: 0.5, durationMs: 300 }
+  - wait: 800

@@ -44,9 +44,10 @@ export const UpdateBottomSheet: FC<Props> = ({ isOpen, onOpenChange, mode }) => 
 
   return (
     <BottomSheet isOpen={isOpen} onOpenChange={onOpenChange}>
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
+          accessible={false}
           backgroundClassName="bg-background"
           handleIndicatorClassName="bg-foreground/20"
         >

@@ -9,6 +9,7 @@ import { posthog } from "../../posthog";
 import type { PathsPromptUnderstanding } from "./prompt";
 import type { BindEntry, BindTrack, BindUnderstanding } from "./bind";
 import { readRow } from "../../library/reads";
+import { emotionFamily } from "../../lib/understandingVocab";
 
 /**
  * Kindling generation — the DB halves of `generate.ts` (#331): the context
@@ -46,7 +47,9 @@ async function loadReadCandidates(
 ): Promise<BindEntry[]> {
   if (u.safeguardLevel === "elevated" || u.safeguardLevel === "crisis") return [];
   const wanted = [
-    ...[u.primaryEmotion, u.secondaryEmotion].filter((s): s is string => !!s).map((slug) => ({ axis: "emotion", slug })),
+    // Family: a "stress" session still reaches entries shelved under "anxiety" (ADR 0018).
+    ...[...new Set([u.primaryEmotion, u.secondaryEmotion].filter((s): s is string => !!s).flatMap(emotionFamily))]
+      .map((slug) => ({ axis: "emotion", slug })),
     ...u.thematicTags.map((slug) => ({ axis: "lifeArea", slug })),
   ];
   const matched = new Map<Id<"library_entries">, { emotions: string[]; lifeAreas: string[] }>();

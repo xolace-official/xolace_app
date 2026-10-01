@@ -52,9 +52,10 @@ export function SwapSheet({
 
   return (
     <BottomSheet isOpen={isOpen} onOpenChange={onOpenChange}>
-      <BottomSheet.Portal>
+      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheetBlurOverlay />
         <BottomSheet.Content
+          accessible={false}
           snapPoints={SNAP_POINTS}
           enableOverDrag={false}
           enableDynamicSizing={false}

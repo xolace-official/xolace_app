@@ -1,1 +1,128 @@
-[]
+[
+  {
+    "slug": "student-minds",
+    "name": "Student Minds",
+    "url": "https://www.studentminds.org.uk",
+    "licence": "© Student Minds; adapted in our own words, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Adapted in part from guidance by Student Minds (studentminds.org.uk).",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "computational-psychiatry",
+    "name": "Computational Psychiatry (Ubiquity Press)",
+    "url": "https://cpsyjournal.org",
+    "licence": "CC BY 4.0",
+    "permission": "not_required",
+    "attributionText": "Holley, Varga, Boorman and Fox (2024), Computational Psychiatry (CC BY 4.0). Findings summarised in our own words.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "elsevier",
+    "name": "Journal of Experimental Social Psychology (Elsevier)",
+    "url": "https://www.sciencedirect.com/journal/journal-of-experimental-social-psychology",
+    "licence": "© Elsevier; findings paraphrased, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Findings summarised from Kappes & Oettingen (2011), Journal of Experimental Social Psychology.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "frontiers",
+    "name": "Frontiers in Psychology",
+    "url": "https://www.frontiersin.org/journals/psychology",
+    "licence": "CC BY (open-access Frontiers in Psychology articles); findings paraphrased",
+    "permission": "not_required",
+    "attributionText": "Findings summarised, in our own words, from open-access articles in Frontiers in Psychology (CC BY).",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "mental-health-foundation",
+    "name": "Mental Health Foundation",
+    "url": "https://www.mentalhealth.org.uk",
+    "licence": "© Mental Health Foundation; advice paraphrased, not reproduced (no reuse licence found)",
+    "permission": "not_required",
+    "attributionText": "Adapted from advice by the Mental Health Foundation.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "nature-communications",
+    "name": "Nature Communications (Springer Nature)",
+    "url": "https://www.nature.com/ncomms/",
+    "licence": "© Springer Nature; findings paraphrased, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Findings from de Berker et al. (2016), Nature Communications, paraphrased.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "newcastle-university",
+    "name": "Newcastle University",
+    "url": "https://www.ncl.ac.uk",
+    "licence": "© Newcastle University; findings paraphrased, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Adapted from Newcastle University disability support pages.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "nhs",
+    "name": "NHS",
+    "url": "https://www.nhs.uk",
+    "licence": "Open Government Licence v3.0",
+    "permission": "not_required",
+    "attributionText": "Contains public sector information licensed under the Open Government Licence v3.0",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "springer",
+    "name": "Journal of General Internal Medicine (Springer Nature)",
+    "url": "https://link.springer.com/journal/11606",
+    "licence": "CC BY 4.0",
+    "permission": "not_required",
+    "attributionText": "Bravata et al., Journal of General Internal Medicine (CC BY 4.0). Findings summarised in our own words.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "university-of-greenwich",
+    "name": "University of Greenwich",
+    "url": "https://www.gre.ac.uk",
+    "licence": "© University of Greenwich; information paraphrased, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Information adapted from University of Greenwich library guides.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "university-of-salford",
+    "name": "University of Salford",
+    "url": "https://www.salford.ac.uk",
+    "licence": "© University of Salford; findings paraphrased, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Adapted from University of Salford web pages and the Salford Pedagogy journal.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "university-of-southampton",
+    "name": "University of Southampton",
+    "url": "https://www.southampton.ac.uk",
+    "licence": "© University of Southampton; findings paraphrased, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Adapted from University of Southampton student support pages.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "informs",
+    "name": "Management Science (INFORMS)",
+    "url": "https://pubsonline.informs.org/journal/mnsc",
+    "licence": "© INFORMS; findings paraphrased, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Findings summarised from Dai, Milkman & Riis (2014), Management Science.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "university-of-surrey",
+    "name": "University of Surrey Open Research (European Journal of Social Psychology)",
+    "url": "https://openresearch.surrey.ac.uk",
+    "licence": "© authors / Wiley; findings paraphrased, not reproduced",
+    "permission": "not_required",
+    "attributionText": "Findings summarised from Lally et al. (2010), European Journal of Social Psychology.",
+    "dropBrandingIfAdapted": true
+  }
+]
