@@ -1,0 +1,56 @@
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{
+{"id":"job-caps","register":"excited","emotions":["joy","joy","joy"],"intensity":[9,9,9],"mean":9,"reading":11}
+{"id":"engaged","register":"excited","emotions":["joy","joy","joy"],"intensity":[9,9,9],"mean":9,"reading":11}
+{"id":"exam-pass","register":"excited","emotions":["joy","joy","joy"],"intensity":[8,8,8],"mean":8,"reading":22}
+{"id":"baby","register":"excited","emotions":["joy","joy","joy"],"intensity":[8,8,8],"mean":8,"reading":22}
+{"id":"love-partner","register":"warm","emotions":["love","love","love"],"intensity":[6,6,6],"mean":6,"reading":44}
+{"id":"proud-run","register":"warm","emotions":["pride","pride","pride"],"intensity":[7,6,7],"mean":6.67,"reading":37}
+{"id":"relief-scan","register":"warm","emotions":["relief","relief","relief"],"intensity":[6,6,6],"mean":6,"reading":44}
+{"id":"friends-dinner","register":"warm","emotions":["joy","joy","joy"],"intensity":[6,6,6],"mean":6,"reading":44}
+{"id":"grateful-quiet","register":"calm","emotions":["gratitude","gratitude","calm"],"intensity":[3,3,3],"mean":3,"reading":78}
+{"id":"hope-therapy","register":"calm","emotions":["hope","hope","hope"],"intensity":[4,4,4],"mean":4,"reading":67}
+{"id":"content-sunday","register":"calm","emotions":["calm","calm","calm"],"intensity":[2,2,2],"mean":2,"reading":89}
+{"id":"job-nervous","register":"mixed","emotions":["joy","joy","joy"],"intensity":[6,6,6],"mean":6,"reading":44}
+{"id":"engaged-family","register":"mixed","emotions":["anxiety","anxiety","anxiety"],"intensity":[6,6,6],"mean":6,"reading":44}
+excited: mean intensity 8.50 -> reading 17
+warm: mean intensity 6.17 -> reading 43
+calm: mean intensity 3.00 -> reading 78
+mixed: mean intensity 6.00 -> reading 44
