@@ -3,6 +3,31 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Steadiness insight (2026-10-02)
+
+A **steadiness insight** is a written observation about one domain (or a link
+between two) that teaches the person something about themselves. It is
+grounded in the past sessions it cites. It never sets or changes a
+**steadiness** score: the score is counted, the insight is noticed. When it
+falls out of date (the score has really moved since it was written), it is
+withdrawn rather than shown beside a score it contradicts.
+
+## Compounding vocabulary: domain, texture, sensitive life area (2026-10-02)
+
+A **domain** is a group of life areas that gets its own steadiness score —
+Self, Purpose & Future, Work & Studies, Love & Friendship, Family,
+Belonging, Health & Rest, Money & Home. A *domain* groups *life areas*; a
+life area stays one thematic tag, as the Library uses it. Each life area has
+at most one home domain.
+
+A **texture** life area says what is happening, not where (loss, change,
+conflict, achievement). It is never scored on its own; it colours the
+domains it appears beside.
+
+A **sensitive** life area (trauma, abuse, neglect, addiction) is never
+scored and never shown as a label. It still lets a session count toward the
+domains of its other life areas, and it informs safety and follow-up.
+
 ## Understanding vocabulary: parent emotion, alias (2026-09-30)
 
 The Understanding's two closed lists — **primary emotion** and **life area**

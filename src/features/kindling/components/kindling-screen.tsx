@@ -14,11 +14,13 @@ import { trackLibrary } from "@/src/features/library/analytics";
 import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
 import { playSoftPress } from "@/src/lib/haptics";
 import { twigBrowseHref, twigHref, twigSlug, type Twig } from "../twig-presentation";
-import { TwigRow } from "./twig-row";
+import { KindlingTrail } from "./kindling-trail";
+import { TwigSheet } from "./twig-sheet";
 
 /**
- * The active-kindling screen (docs/paths-v1.md §9.1, #333) — Variant D:
- * header progress line, then a continuous rail of full-width twig cards.
+ * The active-kindling screen (docs/paths-v1.md §9.1, #333) — the Lantern
+ * trail: header progress line, then one stop per twig down a winding trail
+ * to Flux's fire, with the open twig floating over the bottom.
  * Only ever waits on its own query; generation runs off `completeSession`.
  */
 export function KindlingScreen() {
@@ -38,6 +40,7 @@ export function KindlingScreen() {
   const skipStep = useMutation(api.paths.skipStep);
   const dismiss = useMutation(api.paths.dismiss);
   const [confirmDismiss, setConfirmDismiss] = useState(false);
+  const [openId, setOpenId] = useState<Twig["_id"]>();
 
   useEffect(() => {
     if (!kindling) return;
@@ -94,6 +97,12 @@ export function KindlingScreen() {
   };
 
   const tended = kindling ? kindling.twigs.filter((t) => t.state === "done").length : 0;
+  // The tapped twig, else the first one still waiting, else the first.
+  const open = kindling
+    ? (kindling.twigs.find((t) => t._id === openId) ??
+      kindling.twigs.find((t) => t.state === "pending") ??
+      kindling.twigs[0])
+    : undefined;
 
   // One ScrollView as the root for every state: UIKit collapses the large
   // title only when the screen's first native child is the scroll view, and
@@ -113,7 +122,7 @@ export function KindlingScreen() {
         className="flex-1 bg-background"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="grow"
-        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + (open ? 260 : 40) }}
       >
         {kindling === undefined ? (
           <View className="flex-1 items-center justify-center">
@@ -133,7 +142,7 @@ export function KindlingScreen() {
           </View>
         ) : (
           <>
-            <View className="px-5 pb-6">
+            <View className="px-5 pb-2">
               <AppText className="text-[15px] text-muted">
                 A few things to try, from what your last session held.
               </AppText>
@@ -147,7 +156,7 @@ export function KindlingScreen() {
                       key={t._id}
                       className={`h-1.5 flex-1 rounded-full ${
                         t.state === "done"
-                          ? "bg-accent"
+                          ? "bg-ember"
                           : t.state === "skipped"
                             ? "bg-border"
                             : "bg-surface-secondary"
@@ -158,21 +167,24 @@ export function KindlingScreen() {
               </View>
             </View>
 
-            <View className="px-5">
-              {kindling.twigs.map((twig, i) => (
-                <TwigRow
-                  key={twig._id}
-                  twig={twig}
-                  last={i === kindling.twigs.length - 1}
-                  onBegin={() => handleBegin(twig)}
-                  onSkip={() => handleSkip(twig)}
-                  onBrowseMore={() => handleBrowseMore(twig)}
-                />
-              ))}
-            </View>
+            <KindlingTrail
+              twigs={kindling.twigs}
+              openId={open?._id}
+              onOpen={(twig) => setOpenId(twig._id)}
+            />
           </>
         )}
       </ScrollView>
+
+      {open ? (
+        <TwigSheet
+          twig={open}
+          bottom={insets.bottom + 12}
+          onBegin={() => handleBegin(open)}
+          onSkip={() => handleSkip(open)}
+          onBrowseMore={() => handleBrowseMore(open)}
+        />
+      ) : null}
 
       <ConfirmationDialog
         isOpen={confirmDismiss}
