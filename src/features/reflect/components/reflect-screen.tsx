@@ -268,7 +268,6 @@ export const ReflectScreen = () => {
       case "path-selection":
         return (
           <PathSelectionState
-            mirror={mirrorText ?? ""}
             sessionId={sessionId}
             mirrorLanded={
               claimStrength !== "reaching" &&

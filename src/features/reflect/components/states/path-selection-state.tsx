@@ -1,16 +1,17 @@
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { EaseView } from 'react-native-ease/uniwind';
-import { useRouter } from 'expo-router';
+import { View } from 'react-native';
+import { Image } from 'expo-image';
+import { useRouter, type Href } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
 import { PlusOfferCard } from '@/src/features/purchases/components/plus-offer-card';
 import { usePlusOffer } from '@/src/features/purchases/use-plus-offer';
 import { usePaywall } from '@/src/features/purchases/use-paywall';
 import { playPathChoice } from '@/src/lib/haptics';
 import { useSessionEndHref } from '@/src/features/kindling/use-session-end-href';
+import { PathChoiceCard } from '@/src/features/reflect/components/states/path-choice-card';
 
 type Props = {
-  mirror: string;
   sessionId: string | null;
   /**
    * The mirror this was affirmed on actually named something. False when it
@@ -24,16 +25,35 @@ type Props = {
   onSelectExit: () => Promise<void>;
 };
 
-const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
-const EASE_INITIAL = { opacity: 0, translateY: 20 };
-const EASE_ANIMATE = { opacity: 1, translateY: 0 };
-const EASE_T1 = { type: 'timing' as const, duration: 400, delay: 200, easing: EASING };
-const EASE_T2 = { type: 'timing' as const, duration: 400, delay: 400, easing: EASING };
-const EASE_T3 = { type: 'timing' as const, duration: 400, delay: 600, easing: EASING };
-const SCROLL_STYLE = { flexGrow: 0, maxHeight: '40%' as const };
+const FLUX_MAP = require('@/assets/images/flux/flux-map.png');
+const FLUX_MAP_STYLE = { width: 132, height: 186 };
+const LAST_TINT = 'bg-accent/15';
+
+const PATHS = [
+  {
+    key: 'solo',
+    title: 'Sit with this',
+    sub: 'A quiet space to breathe',
+    image: require('@/assets/images/flux/flux-campfire.png'),
+    tint: 'bg-ember/25',
+  },
+  {
+    key: 'peers',
+    title: "You're not alone",
+    sub: 'See what others have shared',
+    image: require('@/assets/images/flux/flux-pair-listening.png'),
+    tint: 'bg-frost/20',
+  },
+  {
+    key: 'exit',
+    title: 'I just needed to say it',
+    sub: 'Return to the beginning',
+    image: require('@/assets/images/flux/flux-whisper.png'),
+    tint: LAST_TINT,
+  },
+] as const;
 
 export const PathSelectionState = ({
-  mirror,
   sessionId,
   mirrorLanded,
   onSelectSolo,
@@ -41,6 +61,7 @@ export const PathSelectionState = ({
   onSelectExit,
 }: Props) => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const busyRef = useRef(false);
   const openPaywall = usePaywall((s) => s.open);
   const afterPath = useSessionEndHref(sessionId);
@@ -54,58 +75,16 @@ export const PathSelectionState = ({
     sessionId,
   });
 
-  const handleSolo = async () => {
+  // `href` is read by the caller before `select` runs: exit's must be, since
+  // completing the session nulls getActive (see useSessionEndHref).
+  const choose = async (select: () => Promise<void>, href: Href) => {
     if (busyRef.current) return;
     busyRef.current = true;
     playPathChoice();
     try {
-      await onSelectSolo();
+      await select();
     } catch (e) {
-      if (__DEV__) console.error('[PathSelection] onSelectSolo failed:', e);
-      busyRef.current = false;
-      return;
-    }
-    try {
-      router.replace('/sit-with-this');
-    } catch {
-      // non-fatal nav error
-    } finally {
-      busyRef.current = false;
-    }
-  };
-
-  const handlePeers = async () => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    playPathChoice();
-    try {
-      await onSelectPeers();
-    } catch (e) {
-      if (__DEV__) console.error('[PathSelection] onSelectPeers failed:', e);
-      busyRef.current = false;
-      return;
-    }
-    try {
-      router.replace('/peer-reflections');
-    } catch {
-      // non-fatal nav error
-    } finally {
-      busyRef.current = false;
-    }
-  };
-
-  const handleExit = async () => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    playPathChoice();
-    // Read before onSelectExit completes the session. Carries the id —
-    // getActive is null afterwards — and routes via the kindling announcement
-    // when due (exit has no activity, so it sits right after path choice).
-    const href = afterPath('exit');
-    try {
-      await onSelectExit();
-    } catch (e) {
-      if (__DEV__) console.error('[PathSelection] onSelectExit failed:', e);
+      if (__DEV__) console.error('[PathSelection] select failed:', e);
       busyRef.current = false;
       return;
     }
@@ -118,81 +97,62 @@ export const PathSelectionState = ({
     }
   };
 
+  const select = {
+    solo: () => choose(onSelectSolo, '/sit-with-this'),
+    peers: () => choose(onSelectPeers, '/peer-reflections'),
+    // Exit has no activity, so the kindling announcement (when due) sits
+    // right after the path choice.
+    exit: () => choose(onSelectExit, afterPath('exit')),
+  };
+
   return (
-    <View className="flex-1 justify-center px-6">
-      {/* The card stands where the faded recap does rather than above it: the
-          path choice below must stay on screen, and stacking a card onto a
-          full-height layout is what pushes it off. */}
+    <View className="flex-1">
+      {/* The offer stands where Flux and the question do rather than above
+          them: the stack below must stay on screen. */}
       {plusOffer && !declined ? (
-        <PlusOfferCard
-          moment={plusOffer.moment}
-          variant={plusOffer.variant}
-          observation={plusOffer.observation}
-          sessionId={plusOffer.sessionId}
-          onOpen={() => openPaywall('mirror_landed')}
-          onDismiss={() => setDeclined(true)}
-        />
+        <View className="flex-1 justify-center px-6 pb-16">
+          <PlusOfferCard
+            moment={plusOffer.moment}
+            variant={plusOffer.variant}
+            observation={plusOffer.observation}
+            sessionId={plusOffer.sessionId}
+            onOpen={() => openPaywall('mirror_landed')}
+            onDismiss={() => setDeclined(true)}
+          />
+        </View>
       ) : (
-        <ScrollView
-          style={SCROLL_STYLE}
-          showsVerticalScrollIndicator={false}
-        >
-          <AppText className="text-base italic leading-7 text-foreground/30">
-            {mirror}
-          </AppText>
-        </ScrollView>
+        <View className="flex-1 flex-row items-end gap-2 px-5 pb-16 pt-6">
+          <Image
+            source={FLUX_MAP}
+            contentFit="contain"
+            style={FLUX_MAP_STYLE}
+            accessibilityLabel="Flux, holding a map"
+          />
+          <View className="mb-24 flex-1 rounded-3xl rounded-bl-md bg-surface px-5 py-4 shadow-sm">
+            <AppText className="font-medium text-2xl leading-8 text-foreground">
+              Where to from here?
+            </AppText>
+            <AppText className="mt-1 text-sm text-foreground/50">
+              Pick whichever feels right.
+            </AppText>
+          </View>
+        </View>
       )}
 
-      <AppText className="mb-2 mt-10 text-lg text-foreground">
-        Where would you like to go from here?
-      </AppText>
-      <AppText className="mb-6 text-sm text-foreground/20">
-        Take a moment; once you choose, you&apos;ll continue there.
-      </AppText>
-
-      <View className="gap-8">
-        <EaseView
-          initialAnimate={EASE_INITIAL}
-          animate={EASE_ANIMATE}
-          transition={EASE_T1}
-        >
-          <Pressable onPress={handleSolo}>
-            <AppText className="text-lg text-foreground">Sit with this</AppText>
-            <AppText className="mt-1 text-sm text-foreground/30">
-              A quiet space to breathe
-            </AppText>
-          </Pressable>
-        </EaseView>
-
-        <EaseView
-          initialAnimate={EASE_INITIAL}
-          animate={EASE_ANIMATE}
-          transition={EASE_T2}
-        >
-          <Pressable onPress={handlePeers}>
-            <AppText className="text-lg text-foreground">
-              You&apos;re not alone
-            </AppText>
-            <AppText className="mt-1 text-sm text-foreground/30">
-              See what others have shared
-            </AppText>
-          </Pressable>
-        </EaseView>
-
-        <EaseView
-          initialAnimate={EASE_INITIAL}
-          animate={EASE_ANIMATE}
-          transition={EASE_T3}
-        >
-          <Pressable onPress={handleExit}>
-            <AppText className="text-lg text-foreground">
-              I just needed to say it
-            </AppText>
-            <AppText className="mt-1 text-sm text-foreground/30">
-              Return to the beginning
-            </AppText>
-          </Pressable>
-        </EaseView>
+      {PATHS.map((p, i) => (
+        <PathChoiceCard
+          key={p.key}
+          index={i}
+          last={i === PATHS.length - 1}
+          title={p.title}
+          sub={p.sub}
+          image={p.image}
+          tint={p.tint}
+          onPress={() => void select[p.key]()}
+        />
+      ))}
+      <View className="bg-surface">
+        <View className={LAST_TINT} style={{ height: insets.bottom + 40 }} />
       </View>
     </View>
   );
