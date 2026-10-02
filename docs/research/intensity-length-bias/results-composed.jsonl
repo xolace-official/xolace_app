@@ -1,0 +1,10 @@
+{"id":"breakup-composed","v":"A","weight":8,"short":[8,8,8],"long":[7,8,7],"delta":-0.67,"shortErr":0,"longErr":-0.67}
+{"id":"breakup-composed","v":"B","weight":8,"short":[8,8,8],"long":[7,7,7],"delta":-1,"shortErr":0,"longErr":-1}
+{"id":"done-composed","v":"A","weight":9,"short":[8,8,8],"long":[8,8,8],"delta":0,"shortErr":-1,"longErr":-1}
+{"id":"done-composed","v":"B","weight":9,"short":[8,8,8],"long":[8,8,8],"delta":0,"shortErr":-1,"longErr":-1}
+{"id":"fraud-composed","v":"A","weight":7,"short":[8,8,8],"long":[7,7,7],"delta":-1,"shortErr":1,"longErr":0}
+{"id":"fraud-composed","v":"B","weight":7,"short":[8,8,8],"long":[7,7,7],"delta":-1,"shortErr":1,"longErr":0}
+{"id":"mum-composed","v":"A","weight":8,"short":[9,9,9],"long":[8,8,8],"delta":-1,"shortErr":1,"longErr":0}
+{"id":"mum-composed","v":"B","weight":8,"short":[9,9,9],"long":[8,8,8],"delta":-1,"shortErr":1,"longErr":0}
+variant A: mean(long-short)=-0.67  heavy(w>=7) delta=-0.67  MAE short=0.75 long=0.42
+variant B: mean(long-short)=-0.75  heavy(w>=7) delta=-0.75  MAE short=0.75 long=0.50

@@ -1,0 +1,22 @@
+{"id":"anger-dad","v":"A","weight":7,"short":[8,8,8],"long":[8,8,8],"delta":0,"shortErr":1,"longErr":1}
+{"id":"anger-dad","v":"B","weight":7,"short":[8,8,8],"long":[8,8,8],"delta":0,"shortErr":1,"longErr":1}
+{"id":"breakup-heavy","v":"A","weight":8,"short":[8,8,8],"long":[9,9,9],"delta":1,"shortErr":0,"longErr":1}
+{"id":"breakup-heavy","v":"B","weight":8,"short":[8,8,8],"long":[9,9,9],"delta":1,"shortErr":0,"longErr":1}
+{"id":"exam-stress","v":"A","weight":5,"short":[5,5,5],"long":[5,5,5],"delta":0,"shortErr":0,"longErr":0}
+{"id":"exam-stress","v":"B","weight":5,"short":[5,5,5],"long":[5,5,5],"delta":0,"shortErr":0,"longErr":0}
+{"id":"friend-cancelled","v":"A","weight":3,"short":[3,3,3],"long":[3,4,4],"delta":0.67,"shortErr":0,"longErr":0.67}
+{"id":"friend-cancelled","v":"B","weight":3,"short":[3,3,3],"long":[4,4,3],"delta":0.67,"shortErr":0,"longErr":0.67}
+{"id":"grateful","v":"A","weight":2,"short":[3,3,3],"long":[3,3,3],"delta":0,"shortErr":1,"longErr":1}
+{"id":"grateful","v":"B","weight":2,"short":[2,2,2],"long":[3,3,3],"delta":1,"shortErr":0,"longErr":1}
+{"id":"lonely-city","v":"A","weight":6,"short":[6,6,6],"long":[7,7,7],"delta":1,"shortErr":0,"longErr":1}
+{"id":"lonely-city","v":"B","weight":6,"short":[6,6,6],"long":[7,7,7],"delta":1,"shortErr":0,"longErr":1}
+{"id":"mum-illness","v":"A","weight":8,"short":[9,9,9],"long":[9,9,9],"delta":0,"shortErr":1,"longErr":1}
+{"id":"mum-illness","v":"B","weight":8,"short":[9,9,9],"long":[9,9,9],"delta":0,"shortErr":1,"longErr":1}
+{"id":"numb-done","v":"A","weight":9,"short":[8,8,8],"long":[8,8,8],"delta":0,"shortErr":-1,"longErr":-1}
+{"id":"numb-done","v":"B","weight":9,"short":[8,8,8],"long":[8,8,8],"delta":0,"shortErr":-1,"longErr":-1}
+{"id":"sleep-tired","v":"A","weight":4,"short":[4,4,4],"long":[4,4,4],"delta":0,"shortErr":0,"longErr":0}
+{"id":"sleep-tired","v":"B","weight":4,"short":[4,4,4],"long":[4,4,4],"delta":0,"shortErr":0,"longErr":0}
+{"id":"work-fraud","v":"A","weight":7,"short":[8,8,8],"long":[8,8,8],"delta":0,"shortErr":1,"longErr":1}
+{"id":"work-fraud","v":"B","weight":7,"short":[8,8,7],"long":[8,8,8],"delta":0.33,"shortErr":0.67,"longErr":1}
+variant A: mean(long-short)=0.27  heavy(w>=7) delta=0.20  MAE short=0.50 long=0.77
+variant B: mean(long-short)=0.40  heavy(w>=7) delta=0.27  MAE short=0.37 long=0.77
