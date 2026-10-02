@@ -4,6 +4,7 @@ import { Button } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 import { TWIG_PRESENTATION, twigBrowseHref, type Twig } from "../twig-presentation";
 
 /**
@@ -28,12 +29,16 @@ export function TwigSheet({
   const done = twig.state === "done";
   const skipped = twig.state === "skipped";
   const browsable = twigBrowseHref(twig) !== null;
+  const reduced = useEffectiveReducedMotion();
 
   return (
     <EaseView
       key={twig._id}
-      initialAnimate={{ opacity: 0, translateY: 24 }}
+      // Remounts per twig, and switching stops is a frequent tap: short and
+      // ease-out so the new card is readable at once, not a 300ms ease-in-out.
+      initialAnimate={{ opacity: 0, translateY: reduced ? 0 : 10 }}
       animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: "timing", duration: 180, easing: [0.23, 1, 0.32, 1] }}
       className="absolute left-3 right-3 rounded-3xl border border-border bg-surface p-5 shadow-lg"
       style={{ bottom }}
     >

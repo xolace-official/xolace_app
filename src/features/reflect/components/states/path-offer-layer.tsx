@@ -7,6 +7,8 @@ import { PlusValue } from '@/src/features/purchases/components/plus-offer-card';
 import { PLUS_OFFER_DECLINE_LABEL } from '@/src/features/purchases/plus-offer-copy';
 import type { PlusOfferMoment, PlusOfferVariant } from '@/src/features/purchases/plus-offer-policy';
 import { usePlusOfferPresence } from '@/src/features/purchases/use-plus-offer-presence';
+import { riseFrom, riseTransition } from '@/src/features/reflect/components/states/path-choice-card';
+import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 
 const MASCOT = require('@/assets/images/flux/plus-mascot.png');
 const MASCOT_STYLE = {
@@ -16,7 +18,6 @@ const MASCOT_STYLE = {
   width: 96,
   height: 96,
 };
-const RISE = { opacity: 0, translateY: 60 };
 const SETTLED = { opacity: 1, translateY: 0 };
 
 type Props = {
@@ -36,6 +37,7 @@ type Props = {
  */
 export function PathOfferLayer({ moment, variant, sessionId, onOpen, onDismiss }: Props) {
   const accentColor = useThemeColor('accent') as string;
+  const reduced = useEffectiveReducedMotion();
   const { copy, declined, open, dismiss } = usePlusOfferPresence({
     moment,
     variant,
@@ -48,9 +50,9 @@ export function PathOfferLayer({ moment, variant, sessionId, onOpen, onDismiss }
 
   return (
     <EaseView
-      initialAnimate={RISE}
+      initialAnimate={riseFrom(reduced)}
       animate={SETTLED}
-      transition={{ type: 'spring', damping: 16, stiffness: 140, delay: 150 }}
+      transition={riseTransition(0, reduced)}
       className="-mb-8"
     >
       <View className="overflow-hidden rounded-t-[40px] bg-plus-night px-6 pb-14 pt-6">

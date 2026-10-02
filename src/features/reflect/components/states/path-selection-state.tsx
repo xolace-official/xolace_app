@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { Easing, FadeOut, FadeOutDown, LinearTransition } from 'react-native-reanimated';
 import { AppText } from '@/src/components/shared/app-text';
 import { usePlusOffer } from '@/src/features/purchases/use-plus-offer';
 import { usePaywall } from '@/src/features/purchases/use-paywall';
@@ -10,6 +11,7 @@ import { playPathChoice } from '@/src/lib/haptics';
 import { useSessionEndHref } from '@/src/features/kindling/use-session-end-href';
 import { PathChoiceCard } from '@/src/features/reflect/components/states/path-choice-card';
 import { PathOfferLayer } from '@/src/features/reflect/components/states/path-offer-layer';
+import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import { cn } from '@/src/lib/utils';
 
 type Props = {
@@ -30,7 +32,12 @@ const FLUX_MAP = require('@/assets/images/flux/flux-map.png');
 const FLUX_MAP_STYLE = { width: 132, height: 186 };
 /** Flux steps back while the offer layer takes the top of the stack. */
 const FLUX_MAP_SMALL = { width: 72, height: 101 };
+const FILL = { width: '100%' as const, height: '100%' as const };
 const LAST_TINT = 'bg-accent/15';
+/** Flux and his bubble resize when the offer arrives late or is declined. */
+const REFLOW = LinearTransition.duration(280).easing(Easing.bezier(0.77, 0, 0.175, 1));
+const OFFER_OUT = FadeOutDown.duration(200).easing(Easing.bezier(0.23, 1, 0.32, 1));
+const OFFER_OUT_REDUCED = FadeOut.duration(150);
 
 const PATHS = [
   {
@@ -65,6 +72,8 @@ export const PathSelectionState = ({
 }: Props) => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const reduced = useEffectiveReducedMotion();
+  const reflow = reduced ? undefined : REFLOW;
   const busyRef = useRef(false);
   const openPaywall = usePaywall((s) => s.open);
   const afterPath = useSessionEndHref(sessionId);
@@ -115,13 +124,15 @@ export const PathSelectionState = ({
       {/* Flux asks; the question floats up-right of his head with a tail back
           to him, so it reads as him speaking, not a card beside him. */}
       <View className={cn('flex-1 flex-row items-end px-5 pt-2', offering ? 'pb-12' : 'pb-16')}>
-        <Image
-          source={FLUX_MAP}
-          contentFit="contain"
-          style={offering ? FLUX_MAP_SMALL : FLUX_MAP_STYLE}
-          accessibilityLabel="Flux, holding a map"
-        />
-        <View className={cn('ml-1 flex-1', offering ? 'mb-20' : 'mb-32')}>
+        <Animated.View layout={reflow} style={offering ? FLUX_MAP_SMALL : FLUX_MAP_STYLE}>
+          <Image
+            source={FLUX_MAP}
+            contentFit="contain"
+            style={FILL}
+            accessibilityLabel="Flux, holding a map"
+          />
+        </Animated.View>
+        <Animated.View layout={reflow} className={cn('ml-1 flex-1', offering ? 'mb-20' : 'mb-32')}>
           <View className={cn('rounded-3xl bg-surface shadow-sm', offering ? 'px-4 py-3' : 'px-5 py-4')}>
             <AppText
               className={cn('font-medium text-foreground', offering ? 'text-lg' : 'text-2xl leading-8')}
@@ -131,19 +142,21 @@ export const PathSelectionState = ({
             <AppText className="mt-1 text-sm text-foreground/50">Pick whichever feels right.</AppText>
           </View>
           <View className="absolute -bottom-1.5 left-3 h-4 w-4 rotate-45 rounded-sm bg-surface" />
-        </View>
+        </Animated.View>
       </View>
 
       {/* The offer is the stack's top layer, not a replacement for the
           question: the three paths stay on screen and one tap away. */}
       {offering ? (
-        <PathOfferLayer
-          moment={plusOffer.moment}
-          variant={plusOffer.variant}
-          sessionId={plusOffer.sessionId}
-          onOpen={() => openPaywall('mirror_landed')}
-          onDismiss={() => setDeclined(true)}
-        />
+        <Animated.View exiting={reduced ? OFFER_OUT_REDUCED : OFFER_OUT}>
+          <PathOfferLayer
+            moment={plusOffer.moment}
+            variant={plusOffer.variant}
+            sessionId={plusOffer.sessionId}
+            onOpen={() => openPaywall('mirror_landed')}
+            onDismiss={() => setDeclined(true)}
+          />
+        </Animated.View>
       ) : null}
 
       {PATHS.map((p, i) => (

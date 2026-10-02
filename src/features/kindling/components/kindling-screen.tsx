@@ -12,7 +12,7 @@ import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog"
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { trackLibrary } from "@/src/features/library/analytics";
 import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
-import { playSoftPress } from "@/src/lib/haptics";
+import { playSoftPress, playTextureSelect } from "@/src/lib/haptics";
 import { twigBrowseHref, twigHref, twigSlug, type Twig } from "../twig-presentation";
 import { KindlingTrail } from "./kindling-trail";
 import { TwigSheet } from "./twig-sheet";
@@ -170,7 +170,12 @@ export function KindlingScreen() {
             <KindlingTrail
               twigs={kindling.twigs}
               openId={open?._id}
-              onOpen={(twig) => setOpenId(twig._id)}
+              onOpen={(twig) => {
+                // Only a change of stop ticks; re-tapping the open one is silent.
+                if (twig._id === open?._id) return;
+                playTextureSelect();
+                setOpenId(twig._id);
+              }}
             />
           </>
         )}

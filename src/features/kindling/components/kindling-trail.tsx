@@ -3,15 +3,16 @@ import { View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import Svg, { Path } from "react-native-svg";
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedProps,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
 import { useThemeColor } from "heroui-native";
 import { useCSSVariable } from "uniwind";
+import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 import type { Twig } from "../twig-presentation";
 import { TrailStop, STOP_NODE } from "./trail-stop";
 
@@ -39,12 +40,14 @@ export function KindlingTrail({
   const { width: w } = useWindowDimensions();
   const foreground = useThemeColor("foreground") as string;
   const ember = useCSSVariable("--color-ember") as string;
-  const reduced = useReducedMotion();
+  const reduced = useEffectiveReducedMotion();
   const offset = useSharedValue(0);
 
   useEffect(() => {
     if (reduced) return;
     offset.set(withRepeat(withTiming(-48, { duration: 1600, easing: Easing.linear }), -1));
+    // Stops the march when reduce motion turns on mid-visit, and on unmount.
+    return () => cancelAnimation(offset);
   }, [reduced, offset]);
   const dashProps = useAnimatedProps(() => ({ strokeDashoffset: offset.get() }));
 
