@@ -4,12 +4,13 @@ import { Image } from 'expo-image';
 import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/shared/app-text';
-import { PlusOfferCard } from '@/src/features/purchases/components/plus-offer-card';
 import { usePlusOffer } from '@/src/features/purchases/use-plus-offer';
 import { usePaywall } from '@/src/features/purchases/use-paywall';
 import { playPathChoice } from '@/src/lib/haptics';
 import { useSessionEndHref } from '@/src/features/kindling/use-session-end-href';
 import { PathChoiceCard } from '@/src/features/reflect/components/states/path-choice-card';
+import { PathOfferLayer } from '@/src/features/reflect/components/states/path-offer-layer';
+import { cn } from '@/src/lib/utils';
 
 type Props = {
   sessionId: string | null;
@@ -27,6 +28,8 @@ type Props = {
 
 const FLUX_MAP = require('@/assets/images/flux/flux-map.png');
 const FLUX_MAP_STYLE = { width: 132, height: 186 };
+/** Flux steps back while the offer layer takes the top of the stack. */
+const FLUX_MAP_SMALL = { width: 72, height: 101 };
 const LAST_TINT = 'bg-accent/15';
 
 const PATHS = [
@@ -105,44 +108,48 @@ export const PathSelectionState = ({
     exit: () => choose(onSelectExit, afterPath('exit')),
   };
 
+  const offering = plusOffer !== null && !declined;
+
   return (
     <View className="flex-1">
-      {/* The offer stands where Flux and the question do rather than above
-          them: the stack below must stay on screen. */}
-      {plusOffer && !declined ? (
-        <View className="flex-1 justify-center px-6 pb-16">
-          <PlusOfferCard
-            moment={plusOffer.moment}
-            variant={plusOffer.variant}
-            observation={plusOffer.observation}
-            sessionId={plusOffer.sessionId}
-            onOpen={() => openPaywall('mirror_landed')}
-            onDismiss={() => setDeclined(true)}
-          />
-        </View>
-      ) : (
-        <View className="flex-1 flex-row items-end gap-2 px-5 pb-16 pt-6">
-          <Image
-            source={FLUX_MAP}
-            contentFit="contain"
-            style={FLUX_MAP_STYLE}
-            accessibilityLabel="Flux, holding a map"
-          />
-          <View className="mb-24 flex-1 rounded-3xl rounded-bl-md bg-surface px-5 py-4 shadow-sm">
-            <AppText className="font-medium text-2xl leading-8 text-foreground">
+      {/* Flux asks; the question floats up-right of his head with a tail back
+          to him, so it reads as him speaking, not a card beside him. */}
+      <View className={cn('flex-1 flex-row items-end px-5 pt-2', offering ? 'pb-12' : 'pb-16')}>
+        <Image
+          source={FLUX_MAP}
+          contentFit="contain"
+          style={offering ? FLUX_MAP_SMALL : FLUX_MAP_STYLE}
+          accessibilityLabel="Flux, holding a map"
+        />
+        <View className={cn('ml-1 flex-1', offering ? 'mb-20' : 'mb-32')}>
+          <View className={cn('rounded-3xl bg-surface shadow-sm', offering ? 'px-4 py-3' : 'px-5 py-4')}>
+            <AppText
+              className={cn('font-medium text-foreground', offering ? 'text-lg' : 'text-2xl leading-8')}
+            >
               Where to from here?
             </AppText>
-            <AppText className="mt-1 text-sm text-foreground/50">
-              Pick whichever feels right.
-            </AppText>
+            <AppText className="mt-1 text-sm text-foreground/50">Pick whichever feels right.</AppText>
           </View>
+          <View className="absolute -bottom-1.5 left-3 h-4 w-4 rotate-45 rounded-sm bg-surface" />
         </View>
-      )}
+      </View>
+
+      {/* The offer is the stack's top layer, not a replacement for the
+          question: the three paths stay on screen and one tap away. */}
+      {offering ? (
+        <PathOfferLayer
+          moment={plusOffer.moment}
+          variant={plusOffer.variant}
+          sessionId={plusOffer.sessionId}
+          onOpen={() => openPaywall('mirror_landed')}
+          onDismiss={() => setDeclined(true)}
+        />
+      ) : null}
 
       {PATHS.map((p, i) => (
         <PathChoiceCard
           key={p.key}
-          index={i}
+          index={offering ? i + 1 : i}
           last={i === PATHS.length - 1}
           title={p.title}
           sub={p.sub}
