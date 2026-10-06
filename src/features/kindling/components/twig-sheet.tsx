@@ -18,12 +18,14 @@ export function TwigSheet({
   onBegin,
   onSkip,
   onBrowseMore,
+  onHeight,
 }: {
   twig: Twig;
   bottom: number;
   onBegin: () => void;
   onSkip: () => void;
   onBrowseMore: () => void;
+  onHeight: (height: number) => void;
 }) {
   const look = TWIG_PRESENTATION[twig.kind];
   const done = twig.state === "done";
@@ -41,6 +43,7 @@ export function TwigSheet({
       transition={{ type: "timing", duration: 180, easing: [0.23, 1, 0.32, 1] }}
       className="absolute left-3 right-3 rounded-3xl border border-border bg-surface p-5 shadow-lg"
       style={{ bottom }}
+      onLayout={(e) => onHeight(e.nativeEvent.layout.height)}
     >
       <View className="flex-row items-center gap-3">
         <View className="flex-1">

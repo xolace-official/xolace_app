@@ -41,6 +41,7 @@ export function KindlingScreen() {
   const dismiss = useMutation(api.paths.dismiss);
   const [confirmDismiss, setConfirmDismiss] = useState(false);
   const [openId, setOpenId] = useState<Twig["_id"]>();
+  const [sheetHeight, setSheetHeight] = useState<number>();
 
   useEffect(() => {
     if (!kindling) return;
@@ -122,7 +123,10 @@ export function KindlingScreen() {
         className="flex-1 bg-background"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="grow"
-        contentContainerStyle={{ paddingBottom: insets.bottom + (open ? 260 : 40) }}
+        // Clear the floating sheet (offset 12 + 28 breathing room); 260 until it measures.
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + (open ? (sheetHeight ? sheetHeight + 40 : 260) : 40),
+        }}
       >
         {kindling === undefined ? (
           <View className="flex-1 items-center justify-center">
@@ -188,6 +192,7 @@ export function KindlingScreen() {
           onBegin={() => handleBegin(open)}
           onSkip={() => handleSkip(open)}
           onBrowseMore={() => handleBrowseMore(open)}
+          onHeight={setSheetHeight}
         />
       ) : null}
 

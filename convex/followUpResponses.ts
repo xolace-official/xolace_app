@@ -32,7 +32,8 @@ export const record = mutation({
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const card = await ctx.db.get("follow_up_cards", args.cardId);
-    if (!card || card.emotionalProfileId !== profile._id) return null;
+    // false = nothing written; the client keeps its editor open.
+    if (!card || card.emotionalProfileId !== profile._id) return false;
 
     const text = args.reflectionText?.trim() || undefined;
     if (text && text.length > REFLECTION_MAX_LENGTH) {
@@ -80,7 +81,7 @@ export const record = mutation({
       await ctx.db.patch("follow_up_responses", responseId, { shareScheduledAt: Date.now() });
       await ctx.scheduler.runAfter(0, internal.jobs.followUpShare.share, { responseId });
     }
-    return null;
+    return true;
   },
 });
 
