@@ -30,6 +30,7 @@ import {
   type FollowUpTier,
   type StatusResponse,
 } from "@/src/features/reflect/follow-up-copy";
+import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 
 // Dev/preview storage buckets differ from prod (Convex deploys are per-env).
 const FLUX = {
@@ -132,8 +133,8 @@ export function FollowUpScreen() {
           style={picked ? styles.heroSmall : styles.hero}
           accessibilityLabel={FOLLOW_UP_MASCOT_LABEL}
         />
-        <AppText className="px-6 pb-12 font-serif text-2xl leading-8 text-foreground">
-          {picked ? STEP_HEADLINE[picked] : cardText}
+        <AppText className="px-6 pb-12 font-serif text-xl leading-8 text-foreground">
+          {picked ? removeEmDash(STEP_HEADLINE[picked]) : removeEmDash(cardText)}
         </AppText>
       </View>
 
