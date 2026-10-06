@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import { useRef, useState, type ComponentProps } from "react";
 import { View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
@@ -7,12 +7,11 @@ import { AppText } from "@/src/components/shared/app-text";
 import { playSoftPress } from "@/src/lib/haptics";
 import { cn } from "@/src/lib/utils";
 
-// Shared across every card, not per instance: a chip tap swaps in the next
-// step's cards at the same spot, and a double tap's second half must not land
-// on them. One soft tap, one onPress. A real second press (retrying Done, back
-// from crisis resources) is outside the window and still goes through.
+// Per card, counted from mount: a chip tap swaps in the next step's cards at
+// the same spot, so a double tap's second half lands on a card that just
+// mounted, and is dropped. A card also drops its own repeat within the window
+// (double navigation). Taps on other, already-settled cards always go through.
 const DOUBLE_TAP_MS = 500;
-let lastPress = 0;
 
 type Symbol = Exclude<ComponentProps<typeof SymbolView>["name"], string>;
 
@@ -60,10 +59,12 @@ type OptionProps = {
  * corner restyles were rejected in the #446 prototype.
  */
 export function OptionCard({ icon, tint, title, sub, a11yLabel, onPress }: OptionProps) {
+  const [mountedAt] = useState(Date.now);
+  const lastPress = useRef(mountedAt);
   const press = () => {
     const now = Date.now();
-    if (now - lastPress < DOUBLE_TAP_MS) return;
-    lastPress = now;
+    if (now - lastPress.current < DOUBLE_TAP_MS) return;
+    lastPress.current = now;
     playSoftPress();
     onPress();
   };

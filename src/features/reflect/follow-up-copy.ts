@@ -49,6 +49,9 @@ export function chipsForTier(tier: FollowUpTier): Chip[] {
   return [CHIPS.lighter, CHIPS.still_here, CHIPS.heavier, CHIPS.processed];
 }
 
+/** Headline when a restored/deep-linked route arrives without the card's sentence. */
+export const FOLLOW_UP_FALLBACK_HEADLINE = "How is it sitting with you now?";
+
 /** The vent doorway — a separate kind of action from the status chips. */
 export const VENT_LABEL = "Let it out";
 export const VENT_SUBLABEL = "Say it out loud - nothing is kept";

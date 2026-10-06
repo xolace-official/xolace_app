@@ -20,6 +20,7 @@ import { StillHereStep } from "@/src/features/follow-up/still-here-step";
 import { Icon, OptionCard, type IconKey } from "@/src/features/follow-up/stack-cards";
 import {
   chipsForTier,
+  FOLLOW_UP_FALLBACK_HEADLINE,
   FOLLOW_UP_MASCOT_LABEL,
   FOLLOW_UP_RESOURCES_LABEL,
   STEP_HEADLINE,
@@ -49,7 +50,8 @@ const STATUS_LOOK: Record<StatusResponse, { icon: IconKey; tint: string }> = {
 
 export type FollowUpParams = {
   cardId: Id<"follow_up_cards">;
-  cardText: string;
+  /** Absent on restored or deep-linked routes — falls back to generic copy. */
+  cardText?: string;
   tier: FollowUpTier;
   /** "1" when the card came out of an escalation — shows the resources link. */
   escalation?: string;
@@ -134,7 +136,7 @@ export function FollowUpScreen() {
           accessibilityLabel={FOLLOW_UP_MASCOT_LABEL}
         />
         <AppText className="px-6 pb-12 font-serif text-xl leading-8 text-foreground">
-          {picked ? removeEmDash(STEP_HEADLINE[picked]) : removeEmDash(cardText)}
+          {picked ? removeEmDash(STEP_HEADLINE[picked]) : removeEmDash(cardText || FOLLOW_UP_FALLBACK_HEADLINE)}
         </AppText>
       </View>
 

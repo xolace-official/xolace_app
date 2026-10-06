@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,6 +33,7 @@ const FLUX_MAP_STYLE = { width: 132, height: 186 };
 /** Flux steps back while the offer layer takes the top of the stack. */
 const FLUX_MAP_SMALL = { width: 72, height: 101 };
 const FILL = { width: '100%' as const, height: '100%' as const };
+const GROW = { flexGrow: 1 };
 const LAST_TINT = 'bg-accent/15';
 /** Flux and his bubble resize when the offer arrives late or is declined. */
 const REFLOW = LinearTransition.duration(280).easing(Easing.bezier(0.77, 0, 0.175, 1));
@@ -119,8 +120,15 @@ export const PathSelectionState = ({
 
   const offering = plusOffer !== null && !declined;
 
+  // Scrolls only when the stack outgrows the screen (short device, large
+  // text, offer on top); otherwise flexGrow keeps Flux filling the space.
   return (
-    <View className="flex-1">
+    <ScrollView
+      contentContainerStyle={GROW}
+      bounces={false}
+      overScrollMode="never"
+      showsVerticalScrollIndicator={false}
+    >
       {/* Flux asks; the question floats up-right of his head with a tail back
           to him, so it reads as him speaking, not a card beside him. */}
       <View className={cn('flex-1 flex-row items-end px-5 pt-2', offering ? 'pb-12' : 'pb-16')}>
@@ -174,6 +182,6 @@ export const PathSelectionState = ({
       <View className="bg-surface">
         <View className={LAST_TINT} style={{ height: insets.bottom + 40 }} />
       </View>
-    </View>
+    </ScrollView>
   );
 };
