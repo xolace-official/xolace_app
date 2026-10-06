@@ -8,6 +8,7 @@ import { Pressable, View } from 'react-native';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { trackLibrary } from '@/src/features/library/analytics';
+import { playResonanceToggle, playSoftPress } from '@/src/lib/haptics';
 import { cn } from '@/src/lib/utils';
 import type { ReaderEntry } from './reader-screen';
 import { UpNext } from './up-next';
@@ -53,6 +54,7 @@ export function EndOfRead({
         </View>
         <Pressable
           onPress={() => {
+            (helped ? playSoftPress : playResonanceToggle)();
             record({ entryId, helped: !helped });
             trackLibrary(posthog, 'library_entry_helped', { slug, helped: !helped });
           }}

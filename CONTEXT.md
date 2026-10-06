@@ -3,6 +3,94 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Stretch, returning, linked domains (2026-10-04)
+
+A **stretch** is one run of a domain compounding, from the session that
+tipped it in until it is back near the person's usual (or goes quiet). A
+compounding check-in happens at most once per stretch. A stretch that starts
+soon after the previous one ended is **returning**: never "relapse".
+
+**Linked domains** are domains compounding in the same stretch that keep
+coming up in the same sessions: work, sleep and a partner, each heavier
+because of the others. Insights name the link and the order it built in;
+kindling only reaches for the domains the person brought tonight.
+
+## Free view, compounding upsell (2026-10-03)
+
+The **free view** is what a person without Xolace+ sees of their steadiness:
+the unlock moment, the overall steadiness, and which domains are warming or
+unlocked. Each domain's own number, "your usual", whether it is compounding
+or easing, and steadiness insights are Xolace+. Steadiness is still counted
+for everyone, so upgrading shows the person's history straight away; only
+the written insight waits for Xolace+. Compounding timing for follow-ups is
+Xolace+; safety follow-ups and crisis resources never are.
+
+A **compounding upsell** tells a free user, inside the app only, that a named
+domain has been heavier than their usual, with no number. It shows at most
+once per compounding stretch, never in a session safeguard flagged or one
+that burned, and it offers seeing the pattern, never relief.
+
+## Warming, unlocked, settled (2026-10-03)
+
+A domain passes through three states as evidence builds. It is **warming**
+from its first session reading: it shows on the insights screen, with no
+number. It is **unlocked** once session readings land on enough distinct
+days that its steadiness means something; only then does a number show.
+It is **settled** once its readings span long enough that the baseline is
+the person's real usual, not a copy of their recent weeks; only then does
+"your usual" show and can the domain compound. Coming back, not talking
+more in one night, is what moves a domain forward. Silence never re-locks a
+domain; it goes cold again only if retention or a wipe leaves it no
+readings. Unlocking is earned by signal alone, never by payment; what a
+person may *view* once a domain is unlocked is a separate gate.
+"Unlocked" is the code's word, not necessarily the user's.
+
+## Compounding, easing (2026-10-02)
+
+A domain is **compounding** when its steadiness has sat clearly below the
+person's own baseline across more than one day. One heavy night is not
+enough. "Clearly" is measured against how much that domain normally swings
+for that person. While a domain compounds, its baseline is held where it
+was when the stretch began, so a long low patch can't quietly become the
+new usual. The hold is time-limited.
+
+A compounding domain is **easing** when it is still below the person's usual
+but its latest readings are lifting. It stops compounding once it is back
+close to the baseline. A compounding domain that goes quiet for a month
+stops compounding: Xolace doesn't claim something is building when it hasn't
+heard from the person.
+
+Compounding is not a risk signal and is never part of safety. Safeguard
+watches the present moment, over hours. Compounding watches one domain
+over weeks. Neither reads the other.
+
+Steadiness above the baseline is not the opposite of compounding and has no
+name yet.
+
+## Steadiness, baseline, reading, burn (2026-10-02)
+
+A domain's **steadiness** is a 0–100 number for how that domain has been
+lately: higher is steadier, lower is room to grow, never a grade. It is
+counted from **readings**, never judged by a model. A **reading** is one
+dated piece of evidence about a domain: what a session brought, or how the
+person said it ended (the mood check, and later the follow-up). How often a
+domain comes up is not part of its steadiness; that belongs to compounding.
+Intensity says how big a feeling is, not which way it points, so a good
+session (joy, love) never counts against steadiness: its reading has a
+floor, the **valence guard**.
+
+A domain's **baseline** is the person's own usual for that domain: the same
+readings remembered over months rather than weeks. Steadiness is only ever
+compared with the person's own baseline, never with other people. Silence
+moves neither; a quiet domain keeps its last steadiness and is marked as not
+recent.
+
+**Overall steadiness** is the plain average of the domains being shown.
+
+To **burn** a session is to take it off the person's timeline. Its
+Understanding still counts toward steadiness, but its words are never kept
+in memory, so no insight can quote or cite it.
+
 ## Steadiness insight (2026-10-02)
 
 A **steadiness insight** is a written observation about one domain (or a link

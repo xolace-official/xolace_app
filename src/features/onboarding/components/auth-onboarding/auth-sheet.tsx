@@ -35,6 +35,9 @@ const SEAT_ICON = { ios: 'person', android: 'person', web: 'person' } as const;
 const FLAME_ICON = { ios: 'flame', android: 'local_fire_department', web: 'local_fire_department' } as const;
 const BUTTON_CLASS =
   'flex-row h-12 items-center justify-center gap-3 rounded-full border border-border bg-surface-secondary';
+// Sign in with Apple HIG: solid light fill (dark deck), dark logo + label.
+const APPLE_BUTTON_CLASS =
+  'flex-row h-12 items-center justify-center gap-3 rounded-full bg-foreground';
 
 export const AuthSheetBlock = ({
   progress,
@@ -45,6 +48,7 @@ export const AuthSheetBlock = ({
 }) => {
   const muted = useDeckColor('muted');
   const foreground = useDeckColor('foreground');
+  const background = useDeckColor('background');
   const [activeDocument, setActiveDocument] = useState<LegalDocument | null>(null);
   const { loadingProvider, signInWithApple, signInWithGoogle } = useProviderSignIn();
 
@@ -91,14 +95,14 @@ export const AuthSheetBlock = ({
           isDisabled={loadingProvider !== null}
           isIconOnly={loadingProvider === 'apple'}
           layout={BUTTON_LAYOUT}
-          className={`${BUTTON_CLASS}${loadingProvider === 'apple' ? ' self-center' : ''}`}
+          className={`${APPLE_BUTTON_CLASS}${loadingProvider === 'apple' ? ' self-center' : ''}`}
         >
           {loadingProvider === 'apple' ? (
-            <Spinner entering={SPINNER_ENTERING} color={foreground} />
+            <Spinner entering={SPINNER_ENTERING} color={background} />
           ) : (
             <>
-              <AppleIcon size={17} color={foreground} />
-              <Button.Label className="text-foreground/90 text-[15px]">
+              <AppleIcon size={17} color={background} />
+              <Button.Label className="text-background text-[15px]">
                 Continue with Apple
               </Button.Label>
             </>
