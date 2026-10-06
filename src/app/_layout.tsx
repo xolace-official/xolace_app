@@ -75,6 +75,7 @@ Settings.preloadPresets([
   'Propel',    // form submit
   'Strike',    // affirmativePress
   'Cascade',   // onboardingEntrance
+  'BellToll',  // followUpEntrance — plays on mount, must not lag
   'Wobble',    // errorNotice, clarifyState mount
   'Peal',      // escalationState mount
   'Flick',     // carousel advance, textureSelect

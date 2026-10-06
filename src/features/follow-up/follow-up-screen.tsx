@@ -12,6 +12,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { useFullContext } from "@/src/lib/convex/use-full-context";
+import { playFollowUpEntrance } from "@/src/lib/haptics";
 import { cn } from "@/src/lib/utils";
 import { HeavierStep } from "@/src/features/follow-up/heavier-step";
 import { ReflectiveStep } from "@/src/features/follow-up/reflective-step";
@@ -68,6 +69,9 @@ export function FollowUpScreen() {
   const [picked, setPicked] = useState<StatusResponse | null>(null);
   const answered = useRef(false);
   const escalationDerived = escalation === "1";
+
+  // One cue per open, same for every tier — the screen is the single trigger.
+  useEffect(() => playFollowUpEntrance(), []);
 
   // Leaving before an answer — close, Android back, anything that unmounts the
   // route — is today's no-guilt dismiss. An answer, once given, stands.

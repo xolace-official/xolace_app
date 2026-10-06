@@ -4,7 +4,15 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 
 import { AppText } from "@/src/components/shared/app-text";
+import { playSoftPress } from "@/src/lib/haptics";
 import { cn } from "@/src/lib/utils";
+
+// Shared across every card, not per instance: a chip tap swaps in the next
+// step's cards at the same spot, and a double tap's second half must not land
+// on them. One soft tap, one onPress. A real second press (retrying Done, back
+// from crisis resources) is outside the window and still goes through.
+const DOUBLE_TAP_MS = 500;
+let lastPress = 0;
 
 type Symbol = Exclude<ComponentProps<typeof SymbolView>["name"], string>;
 
@@ -52,9 +60,16 @@ type OptionProps = {
  * corner restyles were rejected in the #446 prototype.
  */
 export function OptionCard({ icon, tint, title, sub, a11yLabel, onPress }: OptionProps) {
+  const press = () => {
+    const now = Date.now();
+    if (now - lastPress < DOUBLE_TAP_MS) return;
+    lastPress = now;
+    playSoftPress();
+    onPress();
+  };
   return (
     <PressableFeedback
-      onPress={onPress}
+      onPress={press}
       accessibilityRole="button"
       accessibilityLabel={a11yLabel ?? title}
       className="-mb-8 overflow-hidden rounded-t-[36px] bg-surface"
