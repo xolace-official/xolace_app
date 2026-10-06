@@ -8,9 +8,12 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { Icon, OptionCard } from "@/src/features/follow-up/stack-cards";
+import { playAffirmativePress, playErrorNotice } from "@/src/lib/haptics";
 import {
   REFLECTIVE_COPY,
   REFLECTIVE_DONE,
+  REFLECTIVE_SAVED,
+  REFLECTIVE_SAVED_SHARED,
   REFLECTIVE_SAVING,
   REFLECTIVE_SHARE_LABEL,
   REFLECTIVE_SKIP,
@@ -64,6 +67,7 @@ export function ReflectiveStep({ answer, cardId, streak, canShare, onClose }: Pr
     } catch {
       // Keep the editor open with the note intact so the user can retry.
       setSaving(false);
+      playErrorNotice();
       toast.show({ label: "Couldn't save that. Try again?" });
       return;
     }
@@ -71,6 +75,12 @@ export function ReflectiveStep({ answer, cardId, streak, canShare, onClose }: Pr
       has_text: hasText,
       shared: share,
     });
+    // An empty Done closes quietly — nothing was saved to acknowledge. The
+    // toast provider sits above the route, so the toast outlives the close.
+    if (hasText) {
+      playAffirmativePress();
+      toast.show({ label: share ? REFLECTIVE_SAVED_SHARED : REFLECTIVE_SAVED });
+    }
     onClose();
   };
 

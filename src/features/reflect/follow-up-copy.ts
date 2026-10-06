@@ -82,6 +82,8 @@ export const REFLECTIVE_SHARE_LABEL = "Share anonymously with others who feel th
 export const REFLECTIVE_DONE = "Done";
 export const REFLECTIVE_SAVING = "Saving…";
 export const REFLECTIVE_SKIP = "Skip for now";
+export const REFLECTIVE_SAVED = "Saved.";
+export const REFLECTIVE_SAVED_SHARED = "Saved and shared anonymously.";
 
 /**
  * The streak nod on a lighter/processed answer — existing streak copy only
