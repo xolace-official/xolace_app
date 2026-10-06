@@ -1,0 +1,6 @@
+steps:
+  - echo: 'Follow-up check-in (#498) end to end. Each case is its own e2e flow and seeds its own card.'
+  - run: follow-up-chips
+  - run: follow-up-saved
+  - run: follow-up-quiet-exits
+  - run: follow-up-save-failure
