@@ -599,5 +599,123 @@
     "bodyPath": "bodies/advice/loneliness-what-helps.md",
     "coverPath": "advice/loneliness-what-helps.png",
     "contentNote": "Mentions hopelessness and thoughts of self-harm as signs to seek professional support. Nothing graphic."
+  },
+  {
+    "slug": "depression-what-it-is",
+    "kind": "explainer",
+    "title": "Depression: what it is",
+    "dek": "How depression differs from a bad day, what it can feel like, why it happens, and how it can change the way you see yourself.",
+    "primarySubject": "depression",
+    "sources": [
+      {
+        "source": "world-health-organization",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.who.int/health-topics/depression/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Depression in adults",
+        "pageUrl": "https://www.nhs.uk/mental-health/conditions/depression-in-adults/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/depression/",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": false,
+    "facets": {
+      "emotion": [
+        "sadness",
+        "hopelessness",
+        "numbness"
+      ],
+      "lifeArea": [
+        "health",
+        "self-worth",
+        "isolation"
+      ]
+    },
+    "reflectPrompt": "What has felt heavier than usual lately, and for how long?",
+    "bodyPath": "bodies/explainer/depression-what-it-is.md",
+    "coverPath": "explainer/depression-what-it-is.png",
+    "contentNote": "Mentions hopelessness, worthlessness and thoughts of suicide as possible symptoms. Nothing graphic."
+  },
+  {
+    "slug": "depression-what-helps",
+    "kind": "advice",
+    "title": "Depression: what helps",
+    "dek": "Small, realistic first steps when you're struggling, what professional treatment can involve, and when to reach out for support.",
+    "primarySubject": "depression",
+    "sources": [
+      {
+        "source": "world-health-organization",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.who.int/health-topics/depression/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Depression in adults",
+        "pageUrl": "https://www.nhs.uk/mental-health/conditions/depression-in-adults/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/depression/",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": true,
+    "facets": {
+      "emotion": [
+        "hopelessness",
+        "hope",
+        "sadness"
+      ],
+      "lifeArea": [
+        "health",
+        "isolation",
+        "self-worth"
+      ]
+    },
+    "reflectPrompt": "Who is one person you could tell, even in a few words, that you haven't been feeling like yourself?",
+    "bodyPath": "bodies/advice/depression-what-helps.md",
+    "coverPath": "advice/depression-what-helps.png",
+    "contentNote": "Mentions hopelessness and thoughts of suicide or self-harm, with advice to seek urgent support. Nothing graphic."
   }
 ]
