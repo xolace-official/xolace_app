@@ -124,5 +124,23 @@
     "permission": "not_required",
     "attributionText": "Findings summarised from Lally et al. (2010), European Journal of Social Psychology.",
     "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "mind",
+    "name": "Mind",
+    "url": "https://www.mind.org.uk",
+    "licence": "© Mind; advice paraphrased, not reproduced (no reuse licence checked)",
+    "permission": "not_required",
+    "attributionText": "Adapted from information by Mind (mind.org.uk).",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "american-psychological-association",
+    "name": "American Psychological Association",
+    "url": "https://www.apa.org",
+    "licence": "© American Psychological Association; advice paraphrased, not reproduced (no reuse licence checked)",
+    "permission": "not_required",
+    "attributionText": "Adapted from guidance by the American Psychological Association (apa.org).",
+    "dropBrandingIfAdapted": true
   }
 ]

@@ -377,5 +377,122 @@
     "reflectPrompt": "Who are you hoping to see this term, and what would make it easy to arrange?",
     "bodyPath": "bodies/explainer/why-this-years-social-life-feels-different.md",
     "coverPath": "explainer/why-this-years-social-life-feels-different.png"
+  },
+  {
+    "slug": "anxiety-what-it-is-and-why-it-happens",
+    "kind": "explainer",
+    "title": "Anxiety: what it is and why it happens",
+    "dek": "What anxiety is, how it shows up in your mind and body, why it happens, and when ordinary worry starts to be too much.",
+    "primarySubject": "anxiety",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Anxiety, fear and panic",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/anxiety-fear-panic/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Understanding anxiety",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/anxiety-problems/understanding-anxiety/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.apa.org/topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "How psychologists help with anxiety disorders",
+        "pageUrl": "https://www.apa.org/topics/anxiety-disorders",
+        "retrievedAt": 1791359721872
+      }
+    ],
+    "reuse": "adapted",
+    "active": false,
+    "retrievedAt": 1791359721872,
+    "lastReviewedAt": 1791359721872,
+    "facets": {
+      "emotion": [
+        "anxiety",
+        "fear",
+        "stress"
+      ],
+      "lifeArea": [
+        "health",
+        "sleep"
+      ]
+    },
+    "reflectPrompt": "When does your mind feel loudest, and what is your body doing then?",
+    "bodyPath": "bodies/explainer/anxiety-what-it-is-and-why-it-happens.md",
+    "coverPath": "explainer/anxiety-what-it-is-and-why-it-happens.png",
+    "contentNote": "Mentions panic, racing thoughts and physical symptoms such as a fast heartbeat. Nothing graphic."
+  },
+  {
+    "slug": "anxiety-what-helps",
+    "kind": "advice",
+    "title": "Anxiety: what helps",
+    "dek": "How anxiety shapes everyday life, five small things that can help when it feels overwhelming, and when to reach out for support.",
+    "primarySubject": "anxiety",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Anxiety, fear and panic",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/anxiety-fear-panic/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Understanding anxiety",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/anxiety-problems/understanding-anxiety/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.apa.org/topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "How psychologists help with anxiety disorders",
+        "pageUrl": "https://www.apa.org/topics/anxiety-disorders",
+        "retrievedAt": 1791359721872
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1791359721872,
+    "lastReviewedAt": 1791359721872,
+    "facets": {
+      "emotion": [
+        "anxiety",
+        "overwhelm",
+        "stress"
+      ],
+      "lifeArea": [
+        "health",
+        "studies",
+        "work"
+      ]
+    },
+    "reflectPrompt": "What is one small next step you could take today?",
+    "bodyPath": "bodies/advice/anxiety-what-helps.md",
+    "coverPath": "advice/anxiety-what-helps.png",
+    "contentNote": "Mentions panic, sleep trouble and relying on alcohol or other substances to cope. Nothing graphic."
   }
 ]
