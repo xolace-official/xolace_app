@@ -198,5 +198,64 @@
       ]
     },
     "bodyPath": "bodies/dev-wind-down-adapted.md"
+  },
+  {
+    "slug": "dev-anxiety-what-helps",
+    "kind": "advice",
+    "title": "Anxiety: what helps",
+    "dek": "How anxiety shapes everyday life, five small things that can help when it feels overwhelming, and when to reach out for support.",
+    "primarySubject": "anxiety",
+    "sources": [
+      {
+        "source": "dev-mental-health-foundation",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "dev-nhs",
+        "pageTitle": "Anxiety, fear and panic",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/anxiety-fear-panic/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "dev-mind",
+        "pageTitle": "Understanding anxiety",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/anxiety-problems/understanding-anxiety/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "dev-american-psychological-association",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.apa.org/topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "dev-american-psychological-association",
+        "pageTitle": "How psychologists help with anxiety disorders",
+        "pageUrl": "https://www.apa.org/topics/anxiety-disorders",
+        "retrievedAt": 1791359721872
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1791359721872,
+    "lastReviewedAt": 1791359721872,
+    "facets": {
+      "emotion": [
+        "anxiety",
+        "overwhelm",
+        "stress"
+      ],
+      "lifeArea": [
+        "health",
+        "studies",
+        "work"
+      ]
+    },
+    "reflectPrompt": "What is one small next step you could take today?",
+    "bodyPath": "bodies/dev-anxiety-what-helps.md",
+    "coverPath": "anxiety-what-helps.png",
+    "contentNote": "Mentions panic, sleep trouble and relying on alcohol or other substances to cope. Nothing graphic."
   }
 ]
