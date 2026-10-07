@@ -196,6 +196,34 @@ describe("library hubs", () => {
 
     expect(await user.t.query(api.library.hubs.getHub, { slug: "hidden" })).toBeNull();
   });
+
+  describe("resized covers (#508)", () => {
+    async function viewsOf(cover: Record<string, string>) {
+      const user = await asNewUser();
+      await user.t.mutation(internal.library.ingest.upsertHub, {
+        hub: { slug: "h", title: "H", intro: "", active: true, items: [], coverKey: "hub-cover/o.png", ...cover },
+        sha256: "h1",
+      });
+      const [listed] = await user.t.query(api.library.hubs.listHubs, {});
+      const one = (await user.t.query(api.library.hubs.getHub, { slug: "h" }))!;
+      const [home] = (await user.t.query(api.library.home.getHome, {})).hubs;
+      return [listed, one, home].map((h) => ({
+        coverUrl: h.coverUrl,
+        coverThumbhash: h.coverThumbhash,
+        thumbUrl: "coverThumbUrl" in h,
+      }));
+    }
+
+    it("serves the 1280 file and the ThumbHash in list, detail and home views, with no thumb URL", async () => {
+      const want = { coverUrl: "https://r2.test/hub-cover/l.webp", coverThumbhash: "1QcSHQ", thumbUrl: false };
+      expect(await viewsOf({ cover1280Key: "hub-cover/l.webp", coverThumbhash: "1QcSHQ" })).toEqual([want, want, want]);
+    });
+
+    it("a hub without them keeps today's shape", async () => {
+      const want = { coverUrl: "https://r2.test/hub-cover/o.png", coverThumbhash: undefined, thumbUrl: false };
+      expect(await viewsOf({})).toEqual([want, want, want]);
+    });
+  });
 });
 
 describe("library sources: manifest ingest → getEntry", () => {

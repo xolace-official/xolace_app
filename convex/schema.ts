@@ -2368,6 +2368,8 @@ export default defineSchema({
     intro: v.string(),
     coverUrl: v.optional(v.string()),
     coverKey: v.optional(v.string()), // ingest: R2 key of an uploaded cover, `hub-cover/<sha>.<ext>`; signed at read, wins over coverUrl
+    cover1280Key: v.optional(v.string()), // ingest --cover-variants (#508): 1280px WebP; wins over coverKey (hubs are never shown small)
+    coverThumbhash: v.optional(v.string()), // ingest --cover-variants (#508): base64 ThumbHash, the cover's load placeholder
     active: v.boolean(),
     items: v.array(
       v.union(

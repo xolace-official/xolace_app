@@ -68,7 +68,7 @@ export function HubCarousel({ hubs }: { hubs: Hub[] }) {
                 style={{ width: cardW, borderCurve: 'continuous' }}
               >
                 <View className="overflow-hidden rounded-[22px] bg-surface-secondary" style={{ height: cardW * 0.62 }}>
-                  <CoverImage uri={hub.coverUrl} style={{ width: '100%', height: '100%' }} transition={200} />
+                  <CoverImage uri={hub.coverUrl} thumbhash={hub.coverThumbhash} style={{ width: '100%', height: '100%' }} transition={200} />
                 </View>
                 <View className="gap-1.5 px-3 pb-3 pt-3">
                   <AppText className="text-[22px] font-bold leading-[27px]">{hub.title}</AppText>

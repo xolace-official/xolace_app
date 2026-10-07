@@ -38,6 +38,10 @@
 // bytes makes the next flagged run update every entry (old WebPs stay as orphans).
 // The same flag stores a base64 ThumbHash of the cover (#507) in `coverThumbhash`,
 // encoded from a ≤100px sharp copy; the app shows it while the cover loads.
+// Hubs (#508) get the same flag but only the 1280 WebP (`hub-cover/<sha>.webp`,
+// `cover1280Key`) and the ThumbHash — a hub cover is never shown small.
+// The variant fields join the hash, so an unflagged run after a flagged one
+// drops them again (back to the original cover): keep the flag on every run.
 //
 // Audio (#411) is a last pass over `audio.json`, keyed by `entrySlug`:
 // `[{ entrySlug, audioPath, transcriptPath, active, title? }]`, paths relative to
@@ -127,18 +131,36 @@ async function uploadCover(coverPath: string, prefix = "library-thumb", file = r
   return { coverKey: await uploadContent(prefix, file, path.extname(coverPath).toLowerCase()) };
 }
 
-// --cover-variants: the entry cover's 512 (list thumbnails) and 1280 (full-width) WebPs.
+// The original's key, plus the --cover-variants fields when the flag is on.
+async function coverFields(coverPath: string | undefined, prefix: string, variants: (file: Buffer) => Promise<object>) {
+  if (!coverPath) return {};
+  const file = readCover(coverPath);
+  return { ...(await uploadCover(coverPath, prefix, file)), ...(coverVariants ? await variants(file) : {}) };
+}
+
+// --cover-variants: a resized WebP of the cover, uploaded and logged with its size.
+async function uploadCoverVariant(file: Buffer, px: number, prefix: string) {
+  const webp = await sharp(file)
+    .resize(px, px, { fit: "inside", withoutEnlargement: true, kernel: "lanczos3" })
+    .webp({ quality: 78, effort: 6 })
+    .toBuffer();
+  const key = await uploadContent(prefix, webp, ".webp");
+  console.log(`  ${px}px ${key}: ${webp.length} bytes (original ${file.length} bytes)`);
+  return key;
+}
+
+// The entry cover's 512 (list thumbnails) and 1280 (full-width) WebPs.
 async function uploadCoverVariants(file: Buffer) {
-  const variant = async (px: number) => {
-    const webp = await sharp(file)
-      .resize(px, px, { fit: "inside", withoutEnlargement: true, kernel: "lanczos3" })
-      .webp({ quality: 78, effort: 6 })
-      .toBuffer();
-    const key = await uploadContent("library-thumb", webp, ".webp");
-    console.log(`  ${px}px ${key}: ${webp.length} bytes (original ${file.length} bytes)`);
-    return key;
+  return {
+    cover512Key: await uploadCoverVariant(file, 512, "library-thumb"),
+    cover1280Key: await uploadCoverVariant(file, 1280, "library-thumb"),
+    coverThumbhash: await thumbhashOf(file),
   };
-  return { cover512Key: await variant(512), cover1280Key: await variant(1280), coverThumbhash: await thumbhashOf(file) };
+}
+
+// Hubs are never shown small (#508): only the 1280.
+async function uploadHubCoverVariants(file: Buffer) {
+  return { cover1280Key: await uploadCoverVariant(file, 1280, "hub-cover"), coverThumbhash: await thumbhashOf(file) };
 }
 
 // ThumbHash encodes at most 100×100 RGBA.
@@ -220,10 +242,7 @@ async function main() {
     await attempt(`entry ${record.slug}`, async () => {
       const markdown = readFileSync(path.resolve(dir, record.bodyPath), "utf8");
       const { bodyPath: _bodyPath, coverPath, decorativeImages, ...rest } = record;
-      const file = coverPath ? readCover(coverPath) : undefined;
-      const cover = file
-        ? { ...(await uploadCover(coverPath!, undefined, file)), ...(coverVariants ? await uploadCoverVariants(file) : {}) }
-        : {};
+      const cover = await coverFields(coverPath, "library-thumb", uploadCoverVariants);
       const entry = { ...rest, ...cover };
       return convexRun("library/ingest:upsertEntry", {
         entry,
@@ -237,7 +256,7 @@ async function main() {
   for (const hub of hubs) {
     await attempt(`hub ${hub.slug}`, async () => {
       const { coverPath, ...rest } = hub;
-      const cover = coverPath ? await uploadCover(coverPath, "hub-cover") : {};
+      const cover = await coverFields(coverPath, "hub-cover", uploadHubCoverVariants);
       const doc = { ...rest, ...cover };
       return convexRun("library/ingest:upsertHub", { hub: doc, sha256: sha256(JSON.stringify(doc)) });
     });
