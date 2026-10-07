@@ -15,6 +15,52 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-10-06 — Users "randomly" logged out on cold start (it was Clerk's 7-day max session lifetime)
+
+**Symptom**
+Signed-in users open the app and land on the auth screen. It never happens mid-use, only on the next cold start. Reports said it looked random: some users after 3–6 days, some the day after they'd used the app, and sometimes many users at once.
+
+**Where it appeared**
+Production, both platforms, for months. `@clerk/expo` 4.6.1 / `convex` 1.45.0.
+
+**Root cause**
+Clerk's **Maximum lifetime** was still at the default of 7 days. That lifetime counts from **sign-in**, not from the last activity, so a daily user who signed in last Tuesday is logged out this Tuesday. The session expires in the background, and the next launch finds it dead. Users count from when they *remember* signing in, so "3–6 days" was really 7 days. The "everyone at once" reports were cohort echoes: users who re-sign-in on the same day all expire together 7 days later (e.g. 6/29–30 → 7/7, 9/16–17 → 9/30–10/1). This wasn't the inactivity timeout: users who were active the day before were still cut off at exactly 168h.
+
+**How we diagnosed it**
+1. Ruled out our own sign-out paths first. `AuthSyncGuard` and `AccountBootstrapBoundary` are the only places the app signs users out by itself, and each logs a distinct Sentry message. We couldn't read Sentry: the `SENTRY_AUTH_TOKEN` in `.env.local` only has upload scope and gets 403 on the issues API.
+2. Switched to PostHog. `user_signed_out` is only captured on a manual sign-out, so a `user_signed_in` whose previous auth event is another `user_signed_in` means a forced logout. There were 235 of these in 120 days.
+3. Bucketed them by hours since the previous sign-in. There's a hard cliff at **168h**: 5 forced re-logins in all of 144–167h, then 22 in 168–171h, tapering off as users return on their next open. Only 27 fell between 1h and 6.5 days.
+4. 58 of the 185 users forced out after 7+ days had opened the app the day before. Activity doesn't extend Clerk's maximum lifetime, so this is the lifetime limit, not the inactivity timeout.
+
+Query (HogQL, PostHog `execute-sql`):
+```sql
+SELECT intDiv(gap_h, 4) * 4 AS gap_hour_bucket, count() AS relogins
+FROM (
+  SELECT event,
+         lagInFrame(event) OVER w AS prev_event,
+         dateDiff('hour', lagInFrame(timestamp) OVER w, timestamp) AS gap_h
+  FROM events
+  WHERE timestamp >= now() - INTERVAL 120 DAY
+    AND event IN ('user_signed_in', 'user_signed_out')
+  WINDOW w AS (PARTITION BY person_id ORDER BY timestamp
+               ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+)
+WHERE event = 'user_signed_in' AND prev_event = 'user_signed_in'
+GROUP BY gap_hour_bucket ORDER BY gap_hour_bucket
+```
+
+**Fix**
+Clerk Dashboard → **Sessions** → raise **Maximum lifetime**, or turn it off and use a long **Inactivity timeout** instead. Changing either in production requires a paid Clerk plan. No code change. Sessions that already exist may keep their old expiry, so expect the pattern to fade over about a week.
+
+**Prevention / future reference**
+- **Verify:** re-run the query above a week or two after the change. The fix worked if the spike at 168h is gone.
+- If "random logout on cold start" comes back, run this query **before** touching auth code. A cliff at a round number of hours means a Clerk session setting. A spread with no cliff means our code (`AuthSyncGuard`, `AccountBootstrapBoundary`, the token cache), so check Sentry for their sign-out messages next.
+- Before this, months of earlier fixes (online polyfill, getToken retry, `AuthSyncGuard`, token-cache instrumentation) went after client-side causes. They were real bugs, but none of them was this one. Check the server-side session config first.
+- Get a Sentry token with `event:read` scope so the sign-out messages from `AuthSyncGuard` and `AccountBootstrapBoundary` can be queried next time.
+- Still open, separate: 21 forced re-logins less than an hour after the previous sign-in (12 users). Probably double-taps or reinstalls, but not checked.
+
+---
+
 ## 2026-09-13 — iOS 18: pushed Stack screens look "laggy" — the previous screen ghosts through them for the whole transition
 
 **Symptom**

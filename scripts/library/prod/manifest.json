@@ -377,5 +377,345 @@
     "reflectPrompt": "Who are you hoping to see this term, and what would make it easy to arrange?",
     "bodyPath": "bodies/explainer/why-this-years-social-life-feels-different.md",
     "coverPath": "explainer/why-this-years-social-life-feels-different.png"
+  },
+  {
+    "slug": "anxiety-what-it-is-and-why-it-happens",
+    "kind": "explainer",
+    "title": "Anxiety: what it is and why it happens",
+    "dek": "What anxiety is, how it shows up in your mind and body, why it happens, and when ordinary worry starts to be too much.",
+    "primarySubject": "anxiety",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Anxiety, fear and panic",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/anxiety-fear-panic/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Understanding anxiety",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/anxiety-problems/understanding-anxiety/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.apa.org/topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "How psychologists help with anxiety disorders",
+        "pageUrl": "https://www.apa.org/topics/anxiety-disorders",
+        "retrievedAt": 1791359721872
+      }
+    ],
+    "reuse": "adapted",
+    "active": false,
+    "retrievedAt": 1791359721872,
+    "lastReviewedAt": 1791359721872,
+    "facets": {
+      "emotion": [
+        "anxiety",
+        "fear",
+        "stress"
+      ],
+      "lifeArea": [
+        "health",
+        "sleep"
+      ]
+    },
+    "reflectPrompt": "When does your mind feel loudest, and what is your body doing then?",
+    "bodyPath": "bodies/explainer/anxiety-what-it-is-and-why-it-happens.md",
+    "coverPath": "explainer/anxiety-what-it-is-and-why-it-happens.png",
+    "contentNote": "Mentions panic, racing thoughts and physical symptoms such as a fast heartbeat. Nothing graphic."
+  },
+  {
+    "slug": "anxiety-what-helps",
+    "kind": "advice",
+    "title": "Anxiety: what helps",
+    "dek": "How anxiety shapes everyday life, five small things that can help when it feels overwhelming, and when to reach out for support.",
+    "primarySubject": "anxiety",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Anxiety, fear and panic",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/anxiety-fear-panic/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Understanding anxiety",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/anxiety-problems/understanding-anxiety/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.apa.org/topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "How psychologists help with anxiety disorders",
+        "pageUrl": "https://www.apa.org/topics/anxiety-disorders",
+        "retrievedAt": 1791359721872
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1791359721872,
+    "lastReviewedAt": 1791359721872,
+    "facets": {
+      "emotion": [
+        "anxiety",
+        "overwhelm",
+        "stress"
+      ],
+      "lifeArea": [
+        "health",
+        "studies",
+        "work"
+      ]
+    },
+    "reflectPrompt": "What is one small next step you could take today?",
+    "bodyPath": "bodies/advice/anxiety-what-helps.md",
+    "coverPath": "advice/anxiety-what-helps.png",
+    "contentNote": "Mentions panic, sleep trouble and relying on alcohol or other substances to cope. Nothing graphic."
+  },
+  {
+    "slug": "loneliness-what-it-is",
+    "kind": "explainer",
+    "title": "Loneliness: what it is",
+    "dek": "Why you can feel alone in a crowd, what loneliness looks like, why it happens, and how it can quietly feed itself.",
+    "primarySubject": "loneliness",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Loneliness",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/loneliness",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Every Mind Matters: Loneliness",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/lifes-challenges/loneliness/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Feeling lonely",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/feeling-lonely/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "mind",
+        "pageTitle": "About loneliness",
+        "pageUrl": "https://www.mind.org.uk/information-support/tips-for-everyday-living/loneliness/about-loneliness/",
+        "retrievedAt": 1791364428236
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791364428236,
+    "lastReviewedAt": 1791364428236,
+    "active": false,
+    "facets": {
+      "emotion": [
+        "loneliness",
+        "not-belonging",
+        "anxiety"
+      ],
+      "lifeArea": [
+        "isolation",
+        "friendships",
+        "belonging"
+      ]
+    },
+    "reflectPrompt": "When did you last feel truly understood by someone?",
+    "bodyPath": "bodies/explainer/loneliness-what-it-is.md",
+    "coverPath": "explainer/loneliness-what-it-is.png",
+    "contentNote": "Mentions isolation, low mood and depression. Nothing graphic."
+  },
+  {
+    "slug": "loneliness-what-helps",
+    "kind": "advice",
+    "title": "Loneliness: what helps",
+    "dek": "Small, low-pressure ways to rebuild connection, and when loneliness is a sign to reach out for more support.",
+    "primarySubject": "loneliness",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Loneliness",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/loneliness",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Every Mind Matters: Loneliness",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/lifes-challenges/loneliness/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Feeling lonely",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/feeling-lonely/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "mind",
+        "pageTitle": "About loneliness",
+        "pageUrl": "https://www.mind.org.uk/information-support/tips-for-everyday-living/loneliness/about-loneliness/",
+        "retrievedAt": 1791364428236
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791364428236,
+    "lastReviewedAt": 1791364428236,
+    "active": true,
+    "facets": {
+      "emotion": [
+        "loneliness",
+        "hope"
+      ],
+      "lifeArea": [
+        "isolation",
+        "friendships",
+        "belonging"
+      ]
+    },
+    "reflectPrompt": "Who is one person you could send a small message to today?",
+    "bodyPath": "bodies/advice/loneliness-what-helps.md",
+    "coverPath": "advice/loneliness-what-helps.png",
+    "contentNote": "Mentions hopelessness and thoughts of self-harm as signs to seek professional support. Nothing graphic."
+  },
+  {
+    "slug": "depression-what-it-is",
+    "kind": "explainer",
+    "title": "Depression: what it is",
+    "dek": "How depression differs from a bad day, what it can feel like, why it happens, and how it can change the way you see yourself.",
+    "primarySubject": "depression",
+    "sources": [
+      {
+        "source": "world-health-organization",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.who.int/health-topics/depression/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Depression in adults",
+        "pageUrl": "https://www.nhs.uk/mental-health/conditions/depression-in-adults/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/depression/",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": false,
+    "facets": {
+      "emotion": [
+        "sadness",
+        "hopelessness",
+        "numbness"
+      ],
+      "lifeArea": [
+        "health",
+        "self-worth",
+        "isolation"
+      ]
+    },
+    "reflectPrompt": "What has felt heavier than usual lately, and for how long?",
+    "bodyPath": "bodies/explainer/depression-what-it-is.md",
+    "coverPath": "explainer/depression-what-it-is.png",
+    "contentNote": "Mentions hopelessness, worthlessness and thoughts of suicide as possible symptoms. Nothing graphic."
+  },
+  {
+    "slug": "depression-what-helps",
+    "kind": "advice",
+    "title": "Depression: what helps",
+    "dek": "Small, realistic first steps when you're struggling, what professional treatment can involve, and when to reach out for support.",
+    "primarySubject": "depression",
+    "sources": [
+      {
+        "source": "world-health-organization",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.who.int/health-topics/depression/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Depression in adults",
+        "pageUrl": "https://www.nhs.uk/mental-health/conditions/depression-in-adults/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/depression/",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": true,
+    "facets": {
+      "emotion": [
+        "hopelessness",
+        "hope",
+        "sadness"
+      ],
+      "lifeArea": [
+        "health",
+        "isolation",
+        "self-worth"
+      ]
+    },
+    "reflectPrompt": "Who is one person you could tell, even in a few words, that you haven't been feeling like yourself?",
+    "bodyPath": "bodies/advice/depression-what-helps.md",
+    "coverPath": "advice/depression-what-helps.png",
+    "contentNote": "Mentions hopelessness and thoughts of suicide or self-harm, with advice to seek urgent support. Nothing graphic."
   }
 ]

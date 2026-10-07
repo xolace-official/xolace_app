@@ -131,6 +131,10 @@ export function playHomeEntrance(): void {
   run(() => Presets.thud());
 }
 
+export function playFollowUpEntrance(): void {
+  run(() => Presets.bellToll());
+}
+
 // ── Breath phase haptics ─────────────────────────────────────────────
 // Best-effort preset approximations. Duration-matched continuous envelopes
 // (matching the iOS CoreHaptics implementation) are a planned Phase 2 upgrade
@@ -170,6 +174,7 @@ const handlerMap: Record<HapticName, () => void> = {
   onboardingEntrance: playOnboardingEntrance,
   homeEntrance: playHomeEntrance,
   softenPulse: playSoftenPulse,
+  followUpEntrance: playFollowUpEntrance,
 };
 
 export function playHaptic(name: HapticName): void {

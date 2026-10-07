@@ -1,0 +1,37 @@
+steps:
+  - echo: 'A failed save shows the error toast and keeps the editor open with the note intact; a retry then saves.'
+  - launch: com.xolaceincorg.xolace.dev
+  - await: { visible: "Tap to begin writing", timeout: 30000 }
+  - run: follow-up-open
+  - tap: { x: 0.5, y: 0.469 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "Good to hear. What helped?" } }
+  - tap: { x: 0.5, y: 0.599 }
+  - tool: keyboard
+    args: { text: "Music on the way home" }
+  - echo: 'Force the next followUpResponses:record to reject once (Hermes, via Metro). No app code: patches ConvexReactClient.prototype.mutation and restores it on first use.'
+  - tool: debugger-connect
+  - tool: debugger-evaluate
+    args:
+      expression: >-
+        (() => { let p; for (const [, m] of __r.getModules()) { const e = m && m.publicModule && m.publicModule.exports;
+        if (e && e.ConvexReactClient) { p = e.ConvexReactClient.prototype; break; } }
+        const orig = p.mutation;
+        p.mutation = function (ref, ...rest) { const name = typeof ref === 'string' ? ref : ref[Symbol.for('functionName')];
+        if (name === 'followUpResponses:record') { p.mutation = orig;
+        return Promise.reject(new Error('forced by follow-up-save-failure flow')); } return orig.call(this, ref, ...rest); };
+        return 'armed'; })()
+  - echo: 'Tap "Done" (keyboard up) → error toast; still on the step with the note in the box'
+  - tap: { x: 0.5, y: 0.515 }
+  - await: { visible: "Couldn't save that. Try again?" }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "Good to hear. What helped?" } }
+  - tool: await-ui-element
+    args: { condition: text, selector: { text: "What helped? Optional" }, expectedText: "Music on the way home" }
+  - assert: { hidden: "Saved." }
+  - tool: screenshot
+  - echo: 'Retry Done (patch already restored) → "Saved." and the check-in closes'
+  - await: { hidden: "Couldn't save that", timeout: 10000 }
+  - tap: { x: 0.5, y: 0.515 }
+  - await: { visible: "Saved." }
+  - await: { visible: "Tap to begin writing" }

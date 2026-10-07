@@ -40,6 +40,12 @@ type Props = {
  * present, reading 0 when there is no live streak: it anchors the left of the
  * strip, and a counter that vanishes the moment it lapses hides exactly the
  * fact it exists to report.
+ *
+ * Beside the calendar the strip is two lines: space name and "A word for
+ * today" on top, the event pill alone underneath. In one row they split the
+ * width and a long event label ("Breast Cancer Awareness Month") truncated;
+ * on its own line the event gets the full width, and the two lines fit in the
+ * calendar's height, so the strip is no taller.
  */
 export const ComposeChrome = ({
   variant,
@@ -57,56 +63,66 @@ export const ComposeChrome = ({
   return (
     <View className="flex-row items-center gap-2 pb-3">
       <StreakCalendar
-        currentStreak={variant.kind === "returning" ? 0 : (variant.dayCount ?? 0)}
+        currentStreak={
+          variant.kind === "returning" ? 0 : (variant.dayCount ?? 0)
+        }
         reviveStreak={context?.reviveStreak}
       />
 
-      {!!spaceName && (
-        <View className="shrink rounded-full bg-accent/15 px-3 py-1">
-          <AppText
-            className="text-xs font-semibold text-accent"
-            numberOfLines={1}
-          >
-            {spaceName}
-          </AppText>
+      <View className="flex-1 gap-1.5">
+        <View className="flex-row items-center gap-2">
+          {!!spaceName && (
+            <View className="shrink rounded-full bg-accent/15 px-3 py-1">
+              <AppText
+                className="text-xs font-semibold text-accent"
+                numberOfLines={1}
+              >
+                {spaceName}
+              </AppText>
+            </View>
+          )}
+
+          <View className="flex-1" />
+
+          {hasQuote && (
+            <PressableFeedback
+              onPress={() => {
+                playSoftPress();
+                router.push("/(protected)/quotes");
+              }}
+              accessibilityLabel="Open today's reflection"
+              hitSlop={8}
+            >
+              <View className="flex-row items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1.5">
+                <SymbolView
+                  name={QUOTE_ICON_NAME}
+                  size={11}
+                  tintColor={accentColor}
+                />
+                <AppText className="text-xs font-medium text-accent/80">
+                  A word for today
+                </AppText>
+              </View>
+            </PressableFeedback>
+          )}
         </View>
-      )}
 
-      {!!eventPrompt && (
-        <View className="shrink flex-row items-center gap-1.5 rounded-full bg-event/15 px-3 py-1">
-          <SymbolView
-            name={EVENT_ICON_NAME}
-            size={11}
-            tintColor={String(eventColor)}
-          />
-          <AppText
-            className="shrink text-xs font-semibold text-event"
-            numberOfLines={1}
-          >
-            {eventLabel ?? "This month"}
-          </AppText>
-        </View>
-      )}
-
-      <View className="flex-1" />
-
-      {hasQuote && (
-        <PressableFeedback
-          onPress={() => {
-            playSoftPress();
-            router.push("/(protected)/quotes");
-          }}
-          accessibilityLabel="Open today's reflection"
-          hitSlop={8}
-        >
-          <View className="flex-row items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1.5">
-            <SymbolView name={QUOTE_ICON_NAME} size={11} tintColor={accentColor} />
-            <AppText className="text-xs font-medium text-accent/80">
-              A word for today
+        {!!eventPrompt && (
+          <View className="max-w-full flex-row items-center gap-1.5 self-start rounded-full bg-event/15 px-3 py-1">
+            <SymbolView
+              name={EVENT_ICON_NAME}
+              size={11}
+              tintColor={String(eventColor)}
+            />
+            <AppText
+              className="shrink text-xs font-semibold text-event"
+              numberOfLines={1}
+            >
+              {eventLabel ?? "This month"}
             </AppText>
           </View>
-        </PressableFeedback>
-      )}
+        )}
+      </View>
     </View>
   );
 };

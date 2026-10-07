@@ -86,7 +86,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
       {
         icon: { ios: "wand.and.stars", android: "auto_fix_high" },
         title: "Small fixes",
-        body: "The vent screen stays lit while you're in it, tapping the reflect card always opens it, and a few layout rough edges on Android are smoothed out.",
+        body: "The vent screen stays lit while you're in it, tapping the reflect card always opens it, and a few layout rough edges are smoothed out.",
       },
     ],
   },

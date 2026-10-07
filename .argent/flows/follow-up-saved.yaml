@@ -1,0 +1,44 @@
+steps:
+  - echo: 'A saved note is acknowledged: private → "Saved.", shared → "Saved and shared anonymously.", and the check-in closes both times.'
+  - launch: com.xolaceincorg.xolace.dev
+  - await: { visible: "Tap to begin writing", timeout: 30000 }
+  - run: follow-up-open
+  - echo: 'Private: "Feeling lighter" → type a note, share toggle left off'
+  - tap: { x: 0.5, y: 0.469 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "Good to hear. What helped?" } }
+  - tap: { x: 0.5, y: 0.599 }
+  - tool: keyboard
+    args: { text: "A walk helped" }
+  - echo: 'Keyboard up: share switch (value 0 = off) sits above Done'
+  - tool: await-ui-element
+    args: { condition: text, selector: { text: "Share anonymously", role: button }, expectedText: "0" }
+  - echo: 'Tap "Done" (keyboard up, no milestone line) → toast "Saved." and back on home'
+  - tap: { x: 0.5, y: 0.515 }
+  - await: { visible: "Saved." }
+  - assert: { hidden: "shared anonymously" }
+  - await: { visible: "Tap to begin writing" }
+  - tool: await-ui-element
+    args: { condition: hidden, selector: { text: "Checking back in" } }
+  - await: { hidden: "Saved.", timeout: 10000 }
+  - run: follow-up-open
+  - echo: 'Shared: "I worked through it" → type a note → switch share on'
+  - tap: { x: 0.5, y: 0.785 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "You worked through it. What got you there?" } }
+  - tap: { x: 0.5, y: 0.599 }
+  - tool: keyboard
+    args: { text: "Talking it through with a friend" }
+  - echo: 'Keyboard up, milestone line above the box: switch at 0.89,0.474 flips to 1'
+  - tool: await-ui-element
+    args: { condition: text, selector: { text: "Share anonymously", role: button }, expectedText: "0" }
+  - tap: { x: 0.89, y: 0.474 }
+  - tool: await-ui-element
+    args: { condition: text, selector: { text: "Share anonymously", role: button }, expectedText: "1" }
+  - echo: 'Tap "Done" → toast "Saved and shared anonymously." and back on home'
+  - tap: { x: 0.5, y: 0.584 }
+  - await: { visible: "Saved and shared anonymously." }
+  - await: { visible: "Tap to begin writing" }
+  - tool: await-ui-element
+    args: { condition: hidden, selector: { text: "Checking back in" } }
+  - tool: screenshot

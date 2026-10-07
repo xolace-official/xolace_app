@@ -1,0 +1,36 @@
+steps:
+  - echo: 'Each chip leads to its matching next step. Answering resolves the card, so every chip gets a freshly seeded one.'
+  - launch: com.xolaceincorg.xolace.dev
+  - await: { visible: "Tap to begin writing", timeout: 30000 }
+  - run: follow-up-open
+  - echo: 'Picker → "Feeling lighter" → reflective step: "Good to hear. What helped?" with the note box and Done'
+  - tap: { x: 0.5, y: 0.469 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "Good to hear. What helped?" } }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "Done", role: button } }
+  - tap: { x: 0.901, y: 0.103 }
+  - await: { visible: "Tap to begin writing" }
+  - run: follow-up-open
+  - echo: 'Picker → "Still sitting with it" → the still_here step'
+  - tap: { x: 0.5, y: 0.574 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "Some things take longer to set down" } }
+  - tap: { x: 0.901, y: 0.103 }
+  - await: { visible: "Tap to begin writing" }
+  - run: follow-up-open
+  - echo: 'Picker → "Got heavier" → the support-first heavier step'
+  - tap: { x: 0.5, y: 0.680 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "You don't have to carry it alone" } }
+  - tap: { x: 0.901, y: 0.103 }
+  - await: { visible: "Tap to begin writing" }
+  - run: follow-up-open
+  - echo: 'Picker → "I worked through it" → reflective step with the milestone line'
+  - tap: { x: 0.5, y: 0.785 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "You worked through it. What got you there?" } }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "You set this one down" } }
+  - tap: { x: 0.901, y: 0.103 }
+  - await: { visible: "Tap to begin writing" }

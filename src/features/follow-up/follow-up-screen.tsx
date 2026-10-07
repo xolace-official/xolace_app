@@ -12,6 +12,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { useFullContext } from "@/src/lib/convex/use-full-context";
+import { playFollowUpEntrance } from "@/src/lib/haptics";
 import { cn } from "@/src/lib/utils";
 import { HeavierStep } from "@/src/features/follow-up/heavier-step";
 import { ReflectiveStep } from "@/src/features/follow-up/reflective-step";
@@ -19,6 +20,7 @@ import { StillHereStep } from "@/src/features/follow-up/still-here-step";
 import { Icon, OptionCard, type IconKey } from "@/src/features/follow-up/stack-cards";
 import {
   chipsForTier,
+  FOLLOW_UP_FALLBACK_HEADLINE,
   FOLLOW_UP_MASCOT_LABEL,
   FOLLOW_UP_RESOURCES_LABEL,
   STEP_HEADLINE,
@@ -29,6 +31,7 @@ import {
   type FollowUpTier,
   type StatusResponse,
 } from "@/src/features/reflect/follow-up-copy";
+import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 
 // Dev/preview storage buckets differ from prod (Convex deploys are per-env).
 const FLUX = {
@@ -47,7 +50,8 @@ const STATUS_LOOK: Record<StatusResponse, { icon: IconKey; tint: string }> = {
 
 export type FollowUpParams = {
   cardId: Id<"follow_up_cards">;
-  cardText: string;
+  /** Absent on restored or deep-linked routes — falls back to generic copy. */
+  cardText?: string;
   tier: FollowUpTier;
   /** "1" when the card came out of an escalation — shows the resources link. */
   escalation?: string;
@@ -68,6 +72,9 @@ export function FollowUpScreen() {
   const [picked, setPicked] = useState<StatusResponse | null>(null);
   const answered = useRef(false);
   const escalationDerived = escalation === "1";
+
+  // One cue per open, same for every tier — the screen is the single trigger.
+  useEffect(() => playFollowUpEntrance(), []);
 
   // Leaving before an answer — close, Android back, anything that unmounts the
   // route — is today's no-guilt dismiss. An answer, once given, stands.
@@ -128,8 +135,8 @@ export function FollowUpScreen() {
           style={picked ? styles.heroSmall : styles.hero}
           accessibilityLabel={FOLLOW_UP_MASCOT_LABEL}
         />
-        <AppText className="px-6 pb-12 font-serif text-2xl leading-8 text-foreground">
-          {picked ? STEP_HEADLINE[picked] : cardText}
+        <AppText className="px-6 pb-12 font-serif text-xl leading-8 text-foreground">
+          {picked ? removeEmDash(STEP_HEADLINE[picked]) : removeEmDash(cardText || FOLLOW_UP_FALLBACK_HEADLINE)}
         </AppText>
       </View>
 

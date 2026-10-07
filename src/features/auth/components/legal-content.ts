@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export type LegalDocument = {
   title: string;
   fullUrl: string;
@@ -77,7 +79,10 @@ export const TERMS_OF_SERVICE: LegalDocument = {
     },
     {
       heading: 'Subscriptions & Purchases',
-      body: 'Xolace+ is an auto-renewing subscription (monthly or annual) billed through your Apple or Google account. Free trials, where offered, convert automatically to a paid subscription unless cancelled before the trial ends — on iOS, at least 24 hours before; on Google Play, any time before the trial period expires. Your subscription renews automatically at the price shown at purchase unless cancelled; we will give advance notice in the app before any price change takes effect for existing subscribers. Manage or cancel anytime in your device\'s App Store or Google Play account settings — cancelling stops future renewals but does not refund the current period. All payments are processed by Apple or Google, and refunds are governed by their respective policies, not by Xolace directly.',
+      // App Review 2.3.10 rejects any mention of Google Play in the iOS binary.
+      body: Platform.OS === 'ios'
+        ? 'Xolace+ is an auto-renewing subscription (monthly or annual) billed through your Apple account. Free trials, where offered, convert automatically to a paid subscription unless cancelled at least 24 hours before the trial ends. Your subscription renews automatically at the price shown at purchase unless cancelled; we will give advance notice in the app before any price change takes effect for existing subscribers. Manage or cancel anytime in your App Store account settings — cancelling stops future renewals but does not refund the current period. All payments are processed by Apple, and refunds are governed by Apple\'s policies, not by Xolace directly.'
+        : 'Xolace+ is an auto-renewing subscription (monthly or annual) billed through your Google account. Free trials, where offered, convert automatically to a paid subscription unless cancelled before the trial period expires. Your subscription renews automatically at the price shown at purchase unless cancelled; we will give advance notice in the app before any price change takes effect for existing subscribers. Manage or cancel anytime in your Google Play account settings — cancelling stops future renewals but does not refund the current period. All payments are processed by Google, and refunds are governed by Google\'s policies, not by Xolace directly.',
     },
     {
       heading: 'Limitation of Liability',

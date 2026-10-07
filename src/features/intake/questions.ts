@@ -15,6 +15,7 @@
  * carry a native neutral ("depends on the day", "Not sure") and get no second
  * escape hatch.
  */
+import { Platform } from 'react-native';
 import type { IntakeAnswers } from '@/src/store/intake-slice';
 
 /** Cap on a multi-select question, mirrored server-side in `intake.complete`. */
@@ -166,7 +167,11 @@ export const SECTION_FINDING: readonly IntakeQuestion[] = [
       },
       { value: 'social', label: 'A social media post or account' },
       { value: 'ad', label: 'An online ad' },
-      { value: 'store_search', label: 'App Store or Google Play search' },
+      // App Review 2.3.10 rejects any mention of Google Play in the iOS binary.
+      {
+        value: 'store_search',
+        label: Platform.OS === 'ios' ? 'App Store search' : 'Google Play search',
+      },
       { value: 'editorial', label: 'An article, podcast, or newsletter' },
       { value: 'other', label: 'Somewhere else' },
     ],

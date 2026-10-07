@@ -1,24 +1,20 @@
-import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { PressableFeedback, useThemeColor } from "heroui-native";
-import { usePostHog } from "posthog-react-native";
 import { AppText } from "@/src/components/shared/app-text";
-import {
-  plusOfferCopy,
-  PLUS_OFFER_DECLINE_LABEL,
-} from "@/src/features/purchases/plus-offer-copy";
-import {
-  plusOfferSurfaceForMoment,
-  type PlusOfferMoment,
-  type PlusOfferVariant,
-} from "@/src/features/purchases/plus-offer-policy";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useAppStore } from "@/src/store/store";
+import { PLUS_OFFER_DECLINE_LABEL } from "@/src/features/purchases/plus-offer-copy";
+import type { PlusOfferMoment, PlusOfferVariant } from "@/src/features/purchases/plus-offer-policy";
+import { usePlusOfferPresence } from "@/src/features/purchases/use-plus-offer-presence";
 
 const BG = require("@/assets/images/flux/plus-postcard-bg.png");
-const ABS_FILL = { position: "absolute" as const, top: 0, left: 0, right: 0, bottom: 0 };
+const ABS_FILL = {
+  position: "absolute" as const,
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+};
 /** The scene's own night, not a theme color — the art is dark in every theme. */
 const NIGHT = "#0b0716";
 
@@ -46,7 +42,7 @@ type Props = {
  * what makes it vanish in light mode. AppText defaults to `text-foreground`, so
  * any bare nested <AppText> would re-inherit it; keep this flat.
  */
-const PlusValue = ({ text, accent }: { text: string; accent: string }) => {
+export const PlusValue = ({ text, accent }: { text: string; accent: string }) => {
   const [before, after] = text.split("Xolace+");
   return (
     <AppText className="text-[13px] font-light leading-5 text-white">
@@ -78,31 +74,15 @@ export const PlusOfferCard = ({
   onOpen,
   onDismiss,
 }: Props) => {
-  const posthog = usePostHog();
   const accentColor = useThemeColor("accent") as string;
-  const recordDismissal = useAppStore((s) => s.recordPlusOfferDismissal);
-  const recordShown = useAppStore((s) => s.recordPlusOfferShown);
-  const copy = plusOfferCopy(moment, variant);
-  const shownRef = useRef(false);
-  // The card takes itself off screen. A decline that leaves the ask sitting
-  // there is a second ask, and every call site forgetting to hide it is the
-  // same bug three times.
-  const [declined, setDeclined] = useState(false);
-
-  useEffect(() => {
-    if (shownRef.current) return;
-    shownRef.current = true;
-    posthog.capture("plus_offer_shown", { moment, variant });
-    recordShown(sessionId);
-  }, [posthog, moment, variant, recordShown, sessionId]);
-
-  const handleDismiss = () => {
-    playSoftPress();
-    setDeclined(true);
-    posthog.capture("plus_offer_dismissed", { moment, variant });
-    recordDismissal(plusOfferSurfaceForMoment(moment));
-    onDismiss?.();
-  };
+  // The card takes itself off screen on a decline — see usePlusOfferPresence.
+  const { copy, declined, open, dismiss } = usePlusOfferPresence({
+    moment,
+    variant,
+    sessionId,
+    onOpen,
+    onDismiss,
+  });
 
   if (declined) return null;
 
@@ -156,28 +136,21 @@ export const PlusOfferCard = ({
 
         <View className="mt-4 flex-row items-center gap-4">
           <PressableFeedback
-            onPress={() => {
-              playSoftPress();
-              onOpen();
-            }}
+            onPress={open}
             accessibilityRole="button"
             accessibilityLabel={copy.cta}
             className="rounded-full px-4 py-2.5"
             style={{ backgroundColor: accentColor }}
           >
-            <AppText className="text-[13px] font-semibold text-background">
-              {copy.cta}
-            </AppText>
+            <AppText className="text-[13px] font-semibold text-background">{copy.cta}</AppText>
           </PressableFeedback>
           <PressableFeedback
-            onPress={handleDismiss}
+            onPress={dismiss}
             accessibilityRole="button"
             accessibilityLabel={PLUS_OFFER_DECLINE_LABEL}
             hitSlop={8}
           >
-            <AppText className="text-[13px] text-white/55">
-              {PLUS_OFFER_DECLINE_LABEL}
-            </AppText>
+            <AppText className="text-[13px] text-white/55">{PLUS_OFFER_DECLINE_LABEL}</AppText>
           </PressableFeedback>
         </View>
       </LinearGradient>

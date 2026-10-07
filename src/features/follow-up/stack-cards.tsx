@@ -1,10 +1,17 @@
-import type { ComponentProps } from "react";
+import { useRef, useState, type ComponentProps } from "react";
 import { View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 
 import { AppText } from "@/src/components/shared/app-text";
+import { playSoftPress } from "@/src/lib/haptics";
 import { cn } from "@/src/lib/utils";
+
+// Per card, counted from mount: a chip tap swaps in the next step's cards at
+// the same spot, so a double tap's second half lands on a card that just
+// mounted, and is dropped. A card also drops its own repeat within the window
+// (double navigation). Taps on other, already-settled cards always go through.
+const DOUBLE_TAP_MS = 500;
 
 type Symbol = Exclude<ComponentProps<typeof SymbolView>["name"], string>;
 
@@ -52,9 +59,18 @@ type OptionProps = {
  * corner restyles were rejected in the #446 prototype.
  */
 export function OptionCard({ icon, tint, title, sub, a11yLabel, onPress }: OptionProps) {
+  const [mountedAt] = useState(Date.now);
+  const lastPress = useRef(mountedAt);
+  const press = () => {
+    const now = Date.now();
+    if (now - lastPress.current < DOUBLE_TAP_MS) return;
+    lastPress.current = now;
+    playSoftPress();
+    onPress();
+  };
   return (
     <PressableFeedback
-      onPress={onPress}
+      onPress={press}
       accessibilityRole="button"
       accessibilityLabel={a11yLabel ?? title}
       className="-mb-8 overflow-hidden rounded-t-[36px] bg-surface"

@@ -1,0 +1,39 @@
+steps:
+  - echo: 'Quiet exits: empty Done, Skip for now, and X (on the picker and on the step) close the check-in with no toast.'
+  - launch: com.xolaceincorg.xolace.dev
+  - await: { visible: "Tap to begin writing", timeout: 30000 }
+  - run: follow-up-open
+  - echo: 'Empty Done: "Feeling lighter" → tap Done with nothing typed (no keyboard: Done at 0.5,0.822)'
+  - tap: { x: 0.5, y: 0.469 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "Good to hear. What helped?" } }
+  - tap: { x: 0.5, y: 0.822 }
+  - await: { visible: "Tap to begin writing" }
+  - wait: 1000
+  - assert: { hidden: "Saved" }
+  - assert: { hidden: "Couldn't save" }
+  - run: follow-up-open
+  - echo: 'Skip: "I worked through it" → "Skip for now" (0.5,0.899)'
+  - tap: { x: 0.5, y: 0.785 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "You worked through it. What got you there?" } }
+  - tap: { x: 0.5, y: 0.899 }
+  - await: { visible: "Tap to begin writing" }
+  - wait: 1000
+  - assert: { hidden: "Saved" }
+  - run: follow-up-open
+  - echo: 'X on the reflective step: "Feeling lighter" → Close check-in (top right)'
+  - tap: { x: 0.5, y: 0.469 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "Good to hear. What helped?" } }
+  - tap: { x: 0.901, y: 0.103 }
+  - await: { visible: "Tap to begin writing" }
+  - wait: 1000
+  - assert: { hidden: "Saved" }
+  - run: follow-up-open
+  - echo: 'X on the picker, no answer given'
+  - tap: { x: 0.901, y: 0.103 }
+  - await: { visible: "Tap to begin writing" }
+  - wait: 1000
+  - assert: { hidden: "Saved" }
+  - tool: screenshot

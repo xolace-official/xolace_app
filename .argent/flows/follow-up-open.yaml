@@ -1,0 +1,21 @@
+executionPrerequisite: Xolace dev build (__DEV__, so Dev tools render) signed in to the dev account, DEV_TOOLS_ENABLED on the dev deployment, on any screen with no composer or sheet open.
+steps:
+  - echo: Seed a ready standard follow-up card (replaces any active card)
+  - tool: open-url
+    args: { url: "xolace://settings/account" }
+  - await: { exists: "Sign-in method", timeout: 15000 }
+  - await: { visible: "Bump streak +1" }
+  - wait: 500
+  - scroll-to: "Seed follow-up · standard"
+  - tap: { text: "Seed follow-up · standard" }
+  - await: { visible: "Follow-up card seeded", timeout: 10000 }
+  - echo: Home → the check-in takes the screen, picker showing all four chips and the vent doorway
+  - tool: open-url
+    args: { url: "xolace://" }
+  # Raw tools: the pushed check-in screen is missing from the full native hierarchy.
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "Checking back in" }, timeoutMs: 15000 }
+  - tool: await-ui-element
+    args: { condition: visible, selector: { text: "I worked through it" } }
+  - tool: await-ui-element
+    args: { condition: hidden, selector: { text: "Follow-up card seeded" }, timeoutMs: 10000 }

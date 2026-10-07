@@ -14,6 +14,7 @@ export {
   playCompassionateHold,
   playOnboardingEntrance,
   playHomeEntrance,
+  playFollowUpEntrance,
   playSoftenPulse,
   playBreathPhase,
   playHaptic,

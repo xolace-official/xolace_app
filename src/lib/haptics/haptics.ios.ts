@@ -1,3 +1,4 @@
+import { Presets } from 'react-native-pulsar';
 import CoreHaptics from '@/modules/native-core-haptics';
 import type { HapticPatternData } from '@/modules/native-core-haptics';
 import type { BreathPhase, HapticName } from './haptics.types';
@@ -107,6 +108,12 @@ export function playHomeEntrance(): void {
   play(homeEntrance);
 }
 
+// The one iOS haptic backed by a Pulsar preset rather than a CoreHaptics
+// pattern — `bellToll` is used as-is on both platforms (#499).
+export function playFollowUpEntrance(): void {
+  Presets.bellToll();
+}
+
 // ── Breath phase haptics ─────────────────────────────────────────────
 // Called per PacedOrb phase transition. The continuous patterns breathe
 // *with* the orb rather than ticking at boundaries.
@@ -128,7 +135,7 @@ export function playBreathPhase(phase: BreathPhase, durationMs: number): void {
 
 // ── Dynamic play-by-name ─────────────────────────────────────────────
 
-const patternMap: Record<HapticName, HapticPatternData> = {
+const patternMap: Record<Exclude<HapticName, 'followUpEntrance'>, HapticPatternData> = {
   processingBreath,
   gentlePresence,
   mirrorArrival,
@@ -149,5 +156,6 @@ const patternMap: Record<HapticName, HapticPatternData> = {
 export type { BreathPhase, HapticName };
 
 export function playHaptic(name: HapticName): void {
+  if (name === 'followUpEntrance') return playFollowUpEntrance();
   play(patternMap[name]);
 }

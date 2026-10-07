@@ -49,6 +49,9 @@
     --color-ember: oklch(78% 0.13 75);
     /* Frost — a day a streak freeze held (contribution graph). */
     --color-frost: oklch(72% 0.12 240);
+    /* Plus night — the Xolace+ offer's own sky (postcard art, path-stack
+     * layer). Dark in every theme because the art is. */
+    --color-plus-night: #0b0716;
 
     --font-poppins-medium: "Poppins-Medium";
 

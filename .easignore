@@ -44,3 +44,7 @@ app-example
 
 # key files
 /xolace-app-firebase-adminsdk-fbsvc-68c84aaff8.json
+
+.argent/
+/scripts
+/script

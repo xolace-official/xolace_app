@@ -18,7 +18,7 @@ export const TWIG_PRESENTATION: Record<
     eyebrow: string;
     title: string;
     actionLabel: string;
-    image?: string;
+    image: string;
   }
 > = {
   breathing: {
@@ -54,6 +54,8 @@ export const TWIG_PRESENTATION: Record<
     eyebrow: "Something to read",
     title: "A few pages for this",
     actionLabel: "Read",
+    // Borrows breathing's until read has an image of its own.
+    image: "https://energetic-guineapig-283.convex.cloud/api/storage/6d4d937e-8dd9-4e8d-bbd6-3ee58b538988",
   },
   bridge: {
     symbol: { ios: "envelope", android: "mail", web: "mail" },

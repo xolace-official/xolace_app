@@ -57,7 +57,7 @@ export function HeavierStep({
     }
     leaving.current = true;
     router.back();
-    router.replace(DOORWAY[choice].href);
+    router.replace(DOORWAY[choice].href, { withAnchor: true });
   };
 
   return (
