@@ -11,21 +11,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-### What Xolace Is
-
-We're building the AI-native mental health app that takes people from 'I don't even know what I'm feeling' to real support; end to end.
-
-### What It Is NOT
-
-- Not clinical For most user facing content unless necessary for a feature (diagnoses, therapeutic, clinical terminology can be used internally)
-
-### Retention & Engagement
-
-Retention mechanics are on the table. Gamification is welcome anything like streaks, milestones, insight unlocks, progress tracking, and consistency acknowledgment are all legitimate tools, obviously thinking up  other niche stuff to is also important. We need to build features that enable proactive mental health care and engagement, giving the user a sense of goal to achieve. Building up retention is crucially important 
-
-### The Metaphor
-
-A digital campfire. You sit by the fire alone. The flames help you see what you're carrying. Sometimes you hear quiet voices from others in the darkness — strangers who feel what you feel. The fire is the AI. It illuminates and warms but is not a participant. It's infrastructure.
+What Xolace is, why, and the rules every feature follows live in
+`docs/foundation/` — read `docs/foundation/xolace-for-agents.md` before
+product or feature work. Team doc: `xolace.md`. Numbers/models: `xolace-technical.md`.
 
 ## Commands
 

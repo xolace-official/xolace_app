@@ -130,8 +130,6 @@ You sit by the fire on your own. Its light helps you see what you're carrying. N
 
 Skincare only works if it's daily, so retention matters to us, and habit mechanics (streaks, milestones, progress) are welcome.
 
-But the reason someone comes back has to be that their life is actually better for it. We don't put hard limits on how much people use Xolace. We watch for unhealthy use and act on it.
-
 The Fire is not a character. It's closer to a very capable journal that remembers you. We don't rule out persona or companion-style features in future. If they come, they follow the same rules as everything else (§6, §13).
 
 ---
@@ -397,3 +395,234 @@ These are where today's product falls short of the standard above. Each needs an
 | 10 | **AI provider retention is unverified.** We send text to Anthropic, OpenAI and ElevenLabs. Whether they keep it is an account setting we haven't confirmed. | Promise 5 is true in our code but not guaranteed end to end. |
 
 Anything user-facing (store listing, privacy policy, in-app copy) uses only wording that's literally true today. This list is the gap between that wording and the standard we're holding ourselves to.
+
+---
+
+## 10. Phases
+
+Big vision, one phase at a time. Each phase has to be valuable on its own, and each one makes the next stronger.
+
+### Phase 1 — Reflect · `Shipped`
+
+The Fire: people reflect, get a mirror that names what's underneath, and Xolace remembers them across sessions. The Hearth's basics are in place: streaks, quotes, timeline, campfire card, check-ins.
+
+### Phase 2 — The support layer · *we are here*
+
+The sandbox: Kindling routes people to curated support, and the same Kindlings can be browsed directly.
+
+| Done | Next |
+|---|---|
+| Kindling routing (Plus) | **Steadiness and compounding**: a score, a personal baseline, and showing people what's stacking up. This is what makes "catch what's compounding" true. |
+| Six routed Kindlings (§6) | **Insights**: real views, replacing today's previews |
+| Browse and Connect tabs | Route Vent through Kindling |
+| | Show the Vessa name in the app |
+| | Use Kindling completions to improve future picks |
+| | Grow the catalogue |
+| | Close the safety and privacy gaps (below) |
+
+### Phase 3 — Proactive
+
+Xolace stops waiting to be opened. When it sees something compounding, it reaches out first, with a check-in, a nudge, or a Kindling, before the person thinks to ask.
+
+Early pieces already exist: follow-up check-ins after sessions, pattern-based nudges, and gentle return messages after time away.
+
+**Meet people where they already are.** Skincare sits on the bathroom shelf, not in a separate building. Proactive care shouldn't depend on someone remembering to open an app. Channels that fit, all opt-in:
+
+- **WhatsApp:** follow-up check-ins sent directly, which the person can answer in the thread, including with a voice note. A short reply can become a light reflection, with a link into the app for the full mirror or a Kindling. This matters most in Ghana and other WhatsApp-first markets.
+- **SMS:** the same check-in for people on low data or basic phones.
+- **Home-screen and lock-screen widgets:** a one-tap check-in ("how's today?") and today's Kindling, without opening the app.
+- **Wearables:** a check-in from the watch. With consent, sleep and heart-rate signals could hint that something is stacking up before the person notices.
+- **Calendar moments:** the person marks hard dates (exams, anniversaries, a difficult meeting), and Xolace checks in before and after.
+- **Voice assistants:** "Hey Siri, check in with Xolace" starts a voice reflection hands-free.
+- **Weekly email:** a short look back at the week (what came up, what helped) for people who prefer a slower rhythm.
+
+Two rules come with leaving the app:
+
+1. **Discreet by default.** Phones get seen by others. Messages outside the app never reveal what someone is carrying, only that Xolace is checking in, unless the person chooses otherwise.
+2. **The sandbox still holds.** Outside channels check in and listen. Support is still a Kindling, and anything that signals risk goes through the same safety check (§9) and links to crisis resources.
+
+### Phase 4 — Clinical
+
+Licensed care becomes the top of the sandbox. When someone needs more than Xolace, we route them to a professional, and with their consent the context they've built carries over, so their first session doesn't start from zero.
+
+### Closing the gaps
+
+The §9 gaps belong to Phase 2. Suggested order, highest risk first:
+
+| Priority | Gaps (§9) | Before | Owner | Date |
+|---|---|---|---|---|
+| 1 | Escalation alerts no one (1), Ghana-only resources (2) | Any growth outside Ghana | | |
+| 2 | No clinical reviewer (3), Xolacer training unrecorded (4) | Adding more Kindlings | | |
+| 3 | Pool falls back to raw mirror (6), Vent traces (9), deletion gaps (8) | The next privacy-policy update | | |
+| 4 | Post-delivery moderation (5), shared reflections can't be withdrawn (7), provider retention (10) | Scale | | |
+
+---
+
+## 11. Business model
+
+> **The mirror is free, and always will be. The support layer is what Plus pays for.**
+
+Understanding what you feel shouldn't depend on whether you can pay. Kindling, the deeper support and the depth over time are where Xolace earns. Running them costs real compute, so we don't give that compute away.
+
+### Free and Plus today
+
+| | Free | Xolace Plus |
+|---|---|---|
+| **The Fire** | Reflect and get mirrors, with refinements, within fair-use limits | Higher limits · extra mirror tones and voice |
+| **Kindling** | An invitation to Plus at the moment support would appear | Daily routed Kindlings, with a *why* for each |
+| **Vessa** | Previews | Full audio, with transcripts |
+| **Trusted Bridge** | — | Message drafts |
+| **Peer reflections** | Matched by theme | Matched more closely to what you felt |
+| **Vent** | A few minutes a day | More minutes |
+| **Timeline** | Last 30 days | Full history |
+| **Quotes** | The daily quote | Quotes from your own sessions, kept |
+| **Insights** | Previews | Full insights (`Building`) |
+| **Look and feel** | Core themes and avatars | Premium themes and avatars |
+
+*Lantern and Xolacer chat aren't Plus-gated in the code today. Confirm whether that's intended.*
+
+Plus is sold as an annual plan with a 7-day free trial, offered at the end of intake. The price isn't fixed in this doc because it will change. Exact limits are in `xolace-technical.md`.
+
+### Later
+
+- **Organisations** (universities, employers) offering Xolace to their people, once the consumer product has proven itself.
+- **Clinical care** (Phase 4), as a revenue line of its own.
+
+### Never
+
+- **No ads.**
+- **No selling or licensing user data**, in any form.
+
+The product only works if people trust it with what they don't say anywhere else. Anything that trades that trust for revenue is off the table.
+
+---
+
+## 12. How we measure
+
+### North star
+
+> **Weekly active reflectors:** people who complete at least one reflection in a given week.
+
+Skincare works because it's regular, so the number that tells us the vision is happening is how many people make Xolace part of their week.
+
+### The counterweight
+
+> **Steadiness over time:** whether people's steadiness improves across 30 days. · `Building` (tracked in-app once steadiness and compounding ship)
+
+The north star alone could be gamed by compulsion. This one checks that people come back because it's helping. If reflectors rise while steadiness doesn't, something is wrong.
+
+### Supporting metrics, by layer
+
+| Layer | Metric | What it tells us |
+|---|---|---|
+| **The Fire** | Mirror landed rate: share of sessions where the person confirms a mirror | Whether we're actually naming what people feel |
+| | Give-up rate: sessions that hit the refinement limit unconfirmed | Where the Fire is missing |
+| **Kindlings** | Kindling start and completion rates | Whether routed support gets used |
+| | Human reach: share of weekly reflectors who touch a human Kindling (Xolacers, peer reflections, Trusted Bridge) | Whether the 20% is real |
+| **The Hearth** | Return within 7 days | Whether the habit is forming |
+| | Check-in response rate | Whether proactive care lands |
+| **Business** | Free to Plus at the Kindling invitation · trial to paid | Whether the support layer is worth paying for |
+
+### Guardrails
+
+- **Escalation reaches help.** Every crisis-level session shows crisis resources, and once gap 1 (§9) is closed, a person is alerted.
+- **Unhealthy use is watched.** Unusually heavy or late-night-only use is a signal to look at, not a win to celebrate.
+- **Fewer referrals is never a goal** (§3). If people who need care stop reaching it, nothing else on this page counts.
+
+### Not goals
+
+Time in app. Sessions per user for their own sake. Streak length for its own sake.
+
+---
+
+## 13. Open questions
+
+Things we haven't decided yet. Each will be answered by research or a decision, then moved into the right section.
+
+**Research**
+
+1. **Who exactly is it for?** The persona in §2 is a working hypothesis. Which person, in which situation, gets the most from Xolace?
+2. **Who are our real competitors?** The §2 table is a starting point. Which products do our users actually use instead of us?
+3. **Which market?** We build in Ghana. Is the global English-speaking market the right target, and in what order do we reach it?
+
+**Product**
+
+4. **Persona and companion features.** Not ruled out. If they come, how do they fit the sandbox rules (§6)?
+5. **Suggestion tone.** If the mirror gets a tone that suggests, which free-form nudges are safe enough to allow?
+6. **Peer reflections through Kindling.** Should they become routable like other Kindlings?
+7. **Episode reframe.** Confirm what it does and how we describe it (§6).
+8. **Free access to Lantern and Xolacer chat.** Intended, or a gap in gating (§11)?
+9. **Mission statement.** The §4 mission is a draft.
+
+**Operations**
+
+10. **Owners and dates** for the safety and privacy gaps (§10).
+11. **Clinical review.** Who reviews Kindlings and the mirror's behaviour, and when do we add them?
+
+---
+
+## 14. Glossary
+
+Product names are what the team and users say. Code names are what engineers will find in the codebase.
+
+### The layers
+
+| Term | Meaning | In code |
+|---|---|---|
+| **The Fire** | The part of Xolace that reflects, understands and remembers | Classifier, safeguard, articulator, Understanding, memory |
+| **Kindlings** | The support layer: the curated set of support tools | The catalogue of path/twig types |
+| **The Hearth** | Everything that brings people back daily | Streaks, daily quotes, timeline, cohort card, follow-ups, notifications |
+
+### The Fire
+
+| Term | Meaning | In code |
+|---|---|---|
+| **Reflection / session** | One time someone shares and gets a mirror | `sessions` |
+| **Mirror** | The short reflection Xolace writes back | Articulator output |
+| **Refinement** | "Not quite" / "Say more": rewriting the mirror (two at most) | `sessionTurns` |
+| **Landed** | The person confirms a mirror is right | `confirmMirror` (confirmed) |
+| **Safety level** | *none, gentle, elevated, crisis* | Safeguard level |
+| **Support need** | *none, light, active*: how much support a session suggests | `supportNeed` |
+| **Claim strength** | How confidently the mirror speaks | `claimStrength` |
+| **Understanding** | Everything learned about one session, stored once and read by every feature | `emotional_metadata`, read via `understanding.getUnderstanding` |
+| **Memory** | Past sessions the Fire can search for similar moments | Episodic memory (RAG) |
+| **Profile** | A person's recurring themes, patterns and direction over time | `semantic_profiles`, written by the Reflection Agent |
+
+### Kindlings
+
+| Term | Meaning | In code |
+|---|---|---|
+| **Kindling** | The AI step that picks a person's supports for the day, and the set it produces | Paths (`ai/paths`, `features/kindling`) |
+| **Twig** | One support item in the sandbox | A twig / path step |
+| **Sit with this** | Short guided exercise | `sit-with-this`, `breathing` |
+| **Vessa** | Audio and music by topic | Browse audio, `audio_topic_*`, `music_topic_*` |
+| **Lantern** | The reading library | `library` |
+| **Xolacers** | Trained volunteer peer counsellors, and chatting with them | `xolacer`, Stream chat |
+| **Trusted Bridge** | Help drafting a message to someone in your life | `bridge` |
+| **Episode reframe** | Revisiting a past reflection | `episode_reframe` |
+| **Peer reflections** | Anonymous reflections shared by others | `reflections`, the peer pool |
+| **Vent** | Voice release; nothing is kept | `vent`, `voice-vent` |
+
+### The Hearth and the rest
+
+| Term | Meaning | In code |
+|---|---|---|
+| **Campfire card** | How many others felt what you felt this week | Cohort card |
+| **Follow-up check-in** | A check-in after a session, timed by how heavy it was | `followUps` |
+| **Xolace channel** | Updates from the founders | `xolace-channel` (Stream) |
+| **Intake** | First-run letter and questionnaire | `(intake)` |
+| **Xolace Plus** | The paid plan | Entitlement `xolace-plus` |
+| **Compounding** | Small unaddressed things stacking into something bigger over time | Not yet in code |
+| **Steadiness** | A measure of how steady someone is over time, against their own baseline | Not yet in code |
+
+---
+
+## A note from the founder
+
+If you've read this far: thank you.
+
+From the outside, this can look like a lot of features. It isn't. It's one idea: help people look after their minds the way they look after their skin, a little every day and before anything goes wrong, and when they need support, make sure what they reach for is something we built carefully enough to trust.
+
+"Own the whole staircase, up to clinical care" is a big sentence for a small team. Good. We earn it one phase at a time, and the phase we're in is the one that matters.
+
+Build the next Kindling well. Close the next gap. Let's go.
