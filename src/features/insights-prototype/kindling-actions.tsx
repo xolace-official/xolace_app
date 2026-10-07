@@ -2,6 +2,7 @@
 // Real routing is the Support routing map (#497); these do nothing.
 import { Pressable, View } from "react-native";
 import { SymbolView } from "expo-symbols";
+import { Presets } from "react-native-pulsar";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { CAVEAT, type Icon } from "./mock";
@@ -20,7 +21,10 @@ export function KindlingActions({ compact }: { compact?: boolean }) {
       {list.map((a) => (
         <Pressable
           key={a.label}
-          onPress={() => console.log("[prototype] kindling:", a.label)}
+          onPress={() => {
+            Presets.strike(); // the app's affirmativePress
+            console.log("[prototype] kindling:", a.label);
+          }}
           className="flex-row items-center gap-3 rounded-2xl bg-surface-secondary px-4 py-3 active:opacity-70"
         >
           <SymbolView name={a.icon} size={16} tintColor={ember} />

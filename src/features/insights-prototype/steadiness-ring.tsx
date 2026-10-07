@@ -37,6 +37,10 @@ export function SteadinessRing({
   const at = (pct: number, radius = r) => polar(c, radius, START + (SWEEP * pct) / 100);
 
   const tip = value !== null ? at(value) : null;
+  // The gap icon sits at the bottom; keep the disc clear of it.
+  const iconSize = Math.round(size * 0.16);
+  const iconBottom = Math.max(0, stroke / 2 - 2);
+  const discR = Math.min(r - stroke * 1.4, icon ? size - iconBottom - iconSize - 4 - c : Infinity);
   const tickIn = baseline != null ? at(baseline, r - stroke) : null;
   const tickOut = baseline != null ? at(baseline, r + stroke) : null;
 
@@ -54,8 +58,8 @@ export function SteadinessRing({
                 <Circle cx={4.5} cy={4.5} r={0.8} fill={fg} fillOpacity={0.09} />
               </Pattern>
             </Defs>
-            <Circle cx={c} cy={c} r={r - stroke * 1.4} fill="url(#disc)" stroke={color} strokeOpacity={0.18} strokeWidth={1} />
-            <Circle cx={c} cy={c} r={r - stroke * 1.4} fill="url(#dots)" />
+            <Circle cx={c} cy={c} r={discR} fill="url(#disc)" stroke={color} strokeOpacity={0.18} strokeWidth={1} />
+            <Circle cx={c} cy={c} r={discR} fill="url(#dots)" />
           </>
         )}
         <Circle
@@ -80,8 +84,8 @@ export function SteadinessRing({
       </Svg>
       {children}
       {icon && (
-        <View style={{ position: "absolute", bottom: Math.max(0, stroke / 2 - 2) }}>
-          <SymbolView name={icon} size={Math.round(size * 0.16)} tintColor={dashed ? track : color} />
+        <View style={{ position: "absolute", bottom: iconBottom }}>
+          <SymbolView name={icon} size={iconSize} tintColor={dashed ? track : color} />
         </View>
       )}
     </View>
