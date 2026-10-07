@@ -21,7 +21,7 @@ interface AppInfoFromStore {
  * Fetches the latest app info from the iOS App Store via the iTunes lookup API.
  * @param country - optional ISO country code for regional lookups
  */
-export async function getInfoFromAppStore(
+async function getInfoFromAppStore(
   country = ''
 ): Promise<AppInfoFromStore | null> {
   try {
@@ -52,7 +52,7 @@ export async function getInfoFromAppStore(
  * Fetches the latest app info from the Google Play Store by scraping the
  * store page HTML. Tries two known layout patterns.
  */
-export async function getInfoFromPlayStore(
+async function getInfoFromPlayStore(
   _country = ''
 ): Promise<AppInfoFromStore | null> {
   try {

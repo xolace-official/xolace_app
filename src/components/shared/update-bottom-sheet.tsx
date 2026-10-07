@@ -1,9 +1,9 @@
 import * as Linking from 'expo-linking';
 import { BottomSheet, Button } from 'heroui-native';
 import type { FC } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { BottomSheetBlurOverlay } from '@/src/components/bottom-sheet-blur-overlay';
-import { APP_STORE_URL, PLAY_MARKET_URL } from '@/src/lib/constants/links';
+import { STORE_URL } from '@/src/lib/constants/links';
 
 export type UpdateBottomSheetMode = 'new-version' | 'ota-update';
 
@@ -31,8 +31,7 @@ export const UpdateBottomSheet: FC<Props> = ({ isOpen, onOpenChange, mode }) => 
 
   const handlePrimaryPress = () => {
     if (mode === 'new-version') {
-      const storeLink = Platform.select({ ios: APP_STORE_URL, android: PLAY_MARKET_URL });
-      if (storeLink) Linking.openURL(storeLink);
+      if (STORE_URL) Linking.openURL(STORE_URL);
       return;
     }
     // No Updates.reloadAsync() here: the relaunch destroys the JS runtime while pending
