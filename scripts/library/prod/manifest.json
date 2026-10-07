@@ -494,5 +494,110 @@
     "bodyPath": "bodies/advice/anxiety-what-helps.md",
     "coverPath": "advice/anxiety-what-helps.png",
     "contentNote": "Mentions panic, sleep trouble and relying on alcohol or other substances to cope. Nothing graphic."
+  },
+  {
+    "slug": "loneliness-what-it-is",
+    "kind": "explainer",
+    "title": "Loneliness: what it is",
+    "dek": "Why you can feel alone in a crowd, what loneliness looks like, why it happens, and how it can quietly feed itself.",
+    "primarySubject": "loneliness",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Loneliness",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/loneliness",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Every Mind Matters: Loneliness",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/lifes-challenges/loneliness/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Feeling lonely",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/feeling-lonely/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "mind",
+        "pageTitle": "About loneliness",
+        "pageUrl": "https://www.mind.org.uk/information-support/tips-for-everyday-living/loneliness/about-loneliness/",
+        "retrievedAt": 1791364428236
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791364428236,
+    "lastReviewedAt": 1791364428236,
+    "active": false,
+    "facets": {
+      "emotion": [
+        "loneliness",
+        "not-belonging",
+        "anxiety"
+      ],
+      "lifeArea": [
+        "isolation",
+        "friendships",
+        "belonging"
+      ]
+    },
+    "reflectPrompt": "When did you last feel truly understood by someone?",
+    "bodyPath": "bodies/explainer/loneliness-what-it-is.md",
+    "coverPath": "explainer/loneliness-what-it-is.png",
+    "contentNote": "Mentions isolation, low mood and depression. Nothing graphic."
+  },
+  {
+    "slug": "loneliness-what-helps",
+    "kind": "advice",
+    "title": "Loneliness: what helps",
+    "dek": "Small, low-pressure ways to rebuild connection, and when loneliness is a sign to reach out for more support.",
+    "primarySubject": "loneliness",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Loneliness",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/loneliness",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Every Mind Matters: Loneliness",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/lifes-challenges/loneliness/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Feeling lonely",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/feeling-lonely/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "mind",
+        "pageTitle": "About loneliness",
+        "pageUrl": "https://www.mind.org.uk/information-support/tips-for-everyday-living/loneliness/about-loneliness/",
+        "retrievedAt": 1791364428236
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791364428236,
+    "lastReviewedAt": 1791364428236,
+    "active": true,
+    "facets": {
+      "emotion": [
+        "loneliness",
+        "hope"
+      ],
+      "lifeArea": [
+        "isolation",
+        "friendships",
+        "belonging"
+      ]
+    },
+    "reflectPrompt": "Who is one person you could send a small message to today?",
+    "bodyPath": "bodies/advice/loneliness-what-helps.md",
+    "coverPath": "advice/loneliness-what-helps.png",
+    "contentNote": "Mentions hopelessness and thoughts of self-harm as signs to seek professional support. Nothing graphic."
   }
 ]
