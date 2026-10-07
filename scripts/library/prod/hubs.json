@@ -40,5 +40,30 @@
       }
     ],
     "coverPath": "hub/back-at-university.png"
+  },
+  {
+    "slug": "when-you-cant-switch-off",
+    "title": "When you can't switch off",
+    "intro": "A short reading list for the nights and weeks when your body is tired but your mind keeps running. It covers what stress does, why sleep and mood pull on each other, and small ways to ease both.",
+    "active": false,
+    "items": [
+      {
+        "kind": "entry",
+        "ref": "stress-what-it-is"
+      },
+      {
+        "kind": "entry",
+        "ref": "sleep-why-it-matters"
+      },
+      {
+        "kind": "entry",
+        "ref": "stress-what-helps"
+      },
+      {
+        "kind": "entry",
+        "ref": "sleep-what-helps"
+      }
+    ],
+    "coverPath": "hub/when-you-cant-switch-off.jpg"
   }
 ]

@@ -717,5 +717,205 @@
     "bodyPath": "bodies/advice/depression-what-helps.md",
     "coverPath": "advice/depression-what-helps.jpg",
     "contentNote": "Mentions hopelessness and thoughts of suicide or self-harm, with advice to seek urgent support. Nothing graphic."
+  },
+  {
+    "slug": "stress-what-it-is",
+    "kind": "explainer",
+    "title": "Stress: what it is",
+    "dek": "How stress shows up in your body, thoughts and behaviour, what builds it, and how one pressure can feed the next.",
+    "primarySubject": "stress",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/stress",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/stress/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "world-health-organization",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.who.int/news-room/questions-and-answers/item/stress",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Caring for Your Mental Health",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/caring-for-your-mental-health",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": false,
+    "facets": {
+      "emotion": [
+        "stress",
+        "overwhelm",
+        "anxiety"
+      ],
+      "lifeArea": [
+        "health",
+        "work",
+        "studies"
+      ]
+    },
+    "reflectPrompt": "Where do you notice stress first: in your body, your thoughts, or how you treat people?",
+    "bodyPath": "bodies/explainer/stress-what-it-is.md",
+    "coverPath": "explainer/stress-what-it-is.jpg",
+    "contentNote": "Describes physical and emotional signs of stress, including sleep and appetite changes. Nothing graphic."
+  },
+  {
+    "slug": "stress-what-helps",
+    "kind": "advice",
+    "title": "Stress: what helps",
+    "dek": "Small ways to ease stress as it builds, how to tell when it's too much, and why being stressed isn't a personal failure.",
+    "primarySubject": "stress",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/stress",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/stress/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "world-health-organization",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.who.int/news-room/questions-and-answers/item/stress",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Caring for Your Mental Health",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/caring-for-your-mental-health",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": true,
+    "facets": {
+      "emotion": [
+        "stress",
+        "overwhelm",
+        "hope"
+      ],
+      "lifeArea": [
+        "health",
+        "work",
+        "studies"
+      ]
+    },
+    "reflectPrompt": "What is one thing on your list that could wait until tomorrow?",
+    "bodyPath": "bodies/advice/stress-what-helps.md",
+    "coverPath": "advice/stress-what-helps.jpg",
+    "contentNote": "Mentions alcohol, smoking and drugs as coping habits that can backfire. Nothing graphic."
+  },
+  {
+    "slug": "sleep-why-it-matters",
+    "kind": "explainer",
+    "title": "Sleep: why it matters",
+    "dek": "Why sleep and mental health affect each other, the cycle that keeps you awake, and the signs your sleep needs attention.",
+    "primarySubject": "sleep",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Sleep and mental health",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/sleep-and-mental-health",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Insomnia",
+        "pageUrl": "https://www.nhs.uk/conditions/insomnia/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Caring for Your Mental Health",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/caring-for-your-mental-health",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": false,
+    "facets": {
+      "emotion": [
+        "stress",
+        "anxiety",
+        "overwhelm"
+      ],
+      "lifeArea": [
+        "sleep",
+        "health",
+        "studies"
+      ]
+    },
+    "reflectPrompt": "What is your mind doing when your body is ready to sleep?",
+    "bodyPath": "bodies/explainer/sleep-why-it-matters.md",
+    "coverPath": "explainer/sleep-why-it-matters.jpg",
+    "contentNote": "Mentions anxiety, depression and substance use in connection with poor sleep. Nothing graphic."
+  },
+  {
+    "slug": "sleep-what-helps",
+    "kind": "advice",
+    "title": "Sleep: what helps",
+    "dek": "Small changes to wind down, ease the worry about not sleeping, and when to talk to a professional.",
+    "primarySubject": "sleep",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Sleep and mental health",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/sleep-and-mental-health",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Insomnia",
+        "pageUrl": "https://www.nhs.uk/conditions/insomnia/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Caring for Your Mental Health",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/caring-for-your-mental-health",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": true,
+    "facets": {
+      "emotion": [
+        "stress",
+        "overwhelm",
+        "hope"
+      ],
+      "lifeArea": [
+        "sleep",
+        "health",
+        "studies"
+      ]
+    },
+    "reflectPrompt": "What is one small thing you could do tonight to let the day end?",
+    "bodyPath": "bodies/advice/sleep-what-helps.md",
+    "coverPath": "advice/sleep-what-helps.jpg",
+    "contentNote": "Mentions alcohol and medication used to sleep, with advice to seek professional help. Nothing graphic."
   }
 ]
