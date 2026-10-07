@@ -4,7 +4,6 @@
  * of a kind or subject. Filter/sort menu from #396 is not built yet.
  */
 import { useQuery } from 'convex/react';
-import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useEffect } from 'react';
@@ -12,6 +11,7 @@ import { ScrollView, View, useWindowDimensions } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { CoverImage } from '@/src/features/library/cover-image';
 import { trackLibrary } from '@/src/features/library/analytics';
 import { TrackRow } from '@/src/features/browse/components/track-row';
 import { EntryRow } from '@/src/features/library/home/entry-cards';
@@ -30,7 +30,7 @@ function HubList({ slug }: { slug: string }) {
   return (
     <>
       <View className="bg-surface-secondary" style={{ width, height: width * 0.62 }}>
-        {hub.coverUrl && <Image source={{ uri: hub.coverUrl }} style={{ width: '100%', height: '100%' }} transition={200} />}
+        <CoverImage uri={hub.coverUrl} style={{ width: '100%', height: '100%' }} transition={200} />
       </View>
       <View className="gap-2 px-4 pb-2 pt-5">
         <AppText accessibilityRole="header" className="text-[30px] font-bold leading-[35px]">

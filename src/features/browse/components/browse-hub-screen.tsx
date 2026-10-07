@@ -9,6 +9,7 @@ import { useCSSVariable } from 'uniwind';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { imageSource } from '@/src/lib/image-source';
 import { playSoftPress } from '@/src/lib/haptics';
 import { ShelfTile } from '@/src/features/browse/components/shelf-tile';
 import { pickListeningTip } from '@/src/features/browse/components/listening-tip';
@@ -105,7 +106,7 @@ export function BrowseHubScreen() {
             style={{ width: width - 32, height: (width - 32) * 0.55, marginTop: featured.attribution ? 0 : 8 }}
           >
             <Image
-              source={{ uri: featured.thumbUrl }}
+              source={imageSource(featured.thumbUrl)}
               style={{ width: '100%', height: '100%' }}
               transition={200}
             />

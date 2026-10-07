@@ -4,7 +4,6 @@
  * `library/[slug]` (#407).
  */
 import type { FunctionReturnType } from 'convex/server';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -13,6 +12,7 @@ import { useCSSVariable } from 'uniwind';
 
 import type { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { CoverImage } from '@/src/features/library/cover-image';
 import { facetLabel, readTimeLine } from '@/src/features/library/home/library-copy';
 import { COVER_SCRIM } from '@/src/features/library/reader/cover-palette';
 import { capitalise } from '@/src/features/library/reader/reader-copy';
@@ -67,14 +67,7 @@ export function PhotoCard({
             borderCurve: 'continuous',
           }}
         >
-          {entry.coverUrl && (
-            <Image
-              source={{ uri: entry.coverUrl }}
-              style={StyleSheet.absoluteFill}
-              contentFit="cover"
-              transition={200}
-            />
-          )}
+          <CoverImage uri={entry.coverUrl} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
           <LinearGradient
             colors={COVER_SCRIM.colors}
             locations={COVER_SCRIM.locations}
@@ -129,7 +122,7 @@ export function EntryRow({
         <Pressable accessibilityRole="link" className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70">
           {index !== undefined && <AppText className="w-4 text-[13px] text-muted">{index + 1}</AppText>}
           <View className="overflow-hidden rounded-[14px] bg-surface-secondary" style={THUMB}>
-            {entry.coverUrl && <Image source={{ uri: entry.coverUrl }} style={THUMB} transition={200} />}
+            <CoverImage uri={entry.coverUrl} style={THUMB} transition={200} />
           </View>
           <View className="flex-1 gap-1">
             <AppText className="text-[12px] text-muted">

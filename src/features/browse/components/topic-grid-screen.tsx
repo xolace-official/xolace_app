@@ -10,6 +10,7 @@ import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { imageSource } from '@/src/lib/image-source';
 import { playSoftPress } from '@/src/lib/haptics';
 
 type Topic = FunctionReturnType<typeof api.browse.getTopics>[number];
@@ -84,7 +85,7 @@ export function TopicGridScreen() {
           }}
         >
           <View className="bg-surface-tertiary overflow-hidden rounded-xl" style={{ width: tile, height: tile }}>
-            <Image source={{ uri: item.thumbUrl }} style={{ width: tile, height: tile }} />
+            <Image source={imageSource(item.thumbUrl)} style={{ width: tile, height: tile }} />
           </View>
           <View className="mt-2">
             <AppText className="text-[15px] font-semibold" numberOfLines={1}>
