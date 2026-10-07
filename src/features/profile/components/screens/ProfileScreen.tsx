@@ -156,6 +156,16 @@ export function ProfileScreen() {
           </EaseView>
         )}
 
+        {/* PROTOTYPE (#491): dev-only door to the insights-screen variants. */}
+        {__DEV__ && (
+          <AppText
+            onPress={() => router.push("/profile/insights-prototype" as never)}
+            className="text-[12px] text-accent text-center mb-4"
+          >
+            Open steadiness prototype ›
+          </AppText>
+        )}
+
         {/* Widest lens first: you among everyone, then your week, then your
             words. Always rendered — the card carries its own pending state. */}
         {rank && (
