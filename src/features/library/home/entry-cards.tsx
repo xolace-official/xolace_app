@@ -122,7 +122,7 @@ export function EntryRow({
         <Pressable accessibilityRole="link" className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70">
           {index !== undefined && <AppText className="w-4 text-[13px] text-muted">{index + 1}</AppText>}
           <View className="overflow-hidden rounded-[14px] bg-surface-secondary" style={THUMB}>
-            <CoverImage uri={entry.coverUrl} style={THUMB} transition={200} />
+            <CoverImage uri={entry.coverThumbUrl ?? entry.coverUrl} style={THUMB} transition={200} />
           </View>
           <View className="flex-1 gap-1">
             <AppText className="text-[12px] text-muted">

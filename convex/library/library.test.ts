@@ -8,9 +8,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { asNewUser, asUnauthed, type SeededUser } from "../test/harness.helpers";
-import { aggregatesMock } from "../test/mocks.helpers";
+import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
+vi.mock("../revenuecat", () => revenuecatMock());
 vi.mock("../ai/paths/audioTracks", () => ({
   r2: { getUrl: async (key: string) => `https://r2.test/${key}` },
 }));
@@ -307,6 +308,47 @@ describe("library sources: manifest ingest → getEntry", () => {
     expect((await read())?.map((s) => s.pageTitle)).toEqual(["mind page 1"]);
     const pairs = await user.root.run((ctx) => ctx.db.query("library_entry_sources").take(10));
     expect(pairs).toHaveLength(1);
+  });
+
+  describe("resized covers (#506)", () => {
+    const covers = { coverKey: "library-thumb/o.png", cover512Key: "library-thumb/s.webp", cover1280Key: "library-thumb/l.webp" };
+    async function views() {
+      const { user, ingest } = await setup();
+      const viewsOf = async () => {
+        const e = (await user.t.query(api.library.entries.getEntry, { slug: "e" }))!;
+        const [item] = await user.t.query(api.library.entries.listEntries, {});
+        await user.root.run(async (ctx) => {
+          if (!(await ctx.db.query("library_entry_audio").first())) {
+            await ctx.db.insert("library_entry_audio", {
+              entryId: e._id, key: "a", previewKey: "p", durationSec: 90, sha256: "a", active: true,
+            });
+          }
+        });
+        const audio = (await user.t.query(api.library.audio.getEntryAudio, { entryId: e._id }))!;
+        return [e, item, audio].map((v) => ({ coverUrl: v.coverUrl, coverThumbUrl: v.coverThumbUrl }));
+      };
+      return { ingest, viewsOf };
+    }
+
+    it("serves the 1280 file as coverUrl and the 512 file as coverThumbUrl in entry, list and audio views", async () => {
+      const { ingest, viewsOf } = await views();
+      await ingest(record(covers));
+      const want = { coverUrl: "https://r2.test/library-thumb/l.webp", coverThumbUrl: "https://r2.test/library-thumb/s.webp" };
+      expect(await viewsOf()).toEqual([want, want, want]);
+    });
+
+    it("an entry without resized keys keeps today's shape", async () => {
+      const { ingest, viewsOf } = await views();
+      await ingest(record({ coverKey: covers.coverKey }));
+      const want = { coverUrl: "https://r2.test/library-thumb/o.png", coverThumbUrl: undefined };
+      expect(await viewsOf()).toEqual([want, want, want]);
+    });
+
+    it("re-ingesting the same record with resized keys is a no-op", async () => {
+      const { ingest } = await views();
+      expect(await ingest(record(covers))).toEqual({ action: "inserted" });
+      expect(await ingest(record(covers))).toEqual({ action: "unchanged" });
+    });
   });
 
   it("rejects the old single-source fields", async () => {

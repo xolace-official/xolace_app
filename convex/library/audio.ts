@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { internalMutation, query, type QueryCtx } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 import { r2 } from "../ai/paths/audioTracks";
-import { coverOf } from "./entries";
+import { coversOf } from "./entries";
 import { requireAuth } from "../lib/auth";
 import { hasPremium, requirePremium } from "../lib/premium";
 
@@ -48,6 +48,7 @@ export const getEntryAudio = query({
       durationSec: v.number(),
       title: v.string(),
       coverUrl: v.optional(v.string()),
+      coverThumbUrl: v.optional(v.string()),
     }),
   ),
   handler: async (ctx, args) => {
@@ -62,7 +63,7 @@ export const getEntryAudio = query({
       preview,
       durationSec: preview ? Math.min(PREVIEW_SEC, audio.durationSec) : audio.durationSec, // of what `url` plays
       title: audio.title ?? entry.title,
-      coverUrl: await coverOf(entry),
+      ...(await coversOf(entry)),
     };
   },
 });

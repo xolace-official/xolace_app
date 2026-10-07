@@ -153,6 +153,7 @@
     "eslint-plugin-react-native": "^5.0.0",
     "eslint-plugin-react-perf": "^3.3.3",
     "expo-atlas": "^0.4.0",
+    "sharp": "^0.35.5",
     "typescript": "~6.0.3",
     "vitest": "^4.1.11"
   },
