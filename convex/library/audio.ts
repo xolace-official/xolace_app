@@ -49,6 +49,7 @@ export const getEntryAudio = query({
       title: v.string(),
       coverUrl: v.optional(v.string()),
       coverThumbUrl: v.optional(v.string()),
+      coverThumbhash: v.optional(v.string()),
     }),
   ),
   handler: async (ctx, args) => {

@@ -36,6 +36,8 @@
 // flag, output and hashes are exactly as before — try it on dev before --prod.
 // The WebP keys hash sharp's output, so a sharp/libvips upgrade that changes the
 // bytes makes the next flagged run update every entry (old WebPs stay as orphans).
+// The same flag stores a base64 ThumbHash of the cover (#507) in `coverThumbhash`,
+// encoded from a ≤100px sharp copy; the app shows it while the cover loads.
 //
 // Audio (#411) is a last pass over `audio.json`, keyed by `entrySlug`:
 // `[{ entrySlug, audioPath, transcriptPath, active, title? }]`, paths relative to
@@ -59,6 +61,7 @@ import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import sharp from "sharp";
+import { rgbaToThumbHash } from "thumbhash";
 
 type Source = { slug: string; refreshDays?: number; [k: string]: unknown };
 type Entry = {
@@ -135,7 +138,17 @@ async function uploadCoverVariants(file: Buffer) {
     console.log(`  ${px}px ${key}: ${webp.length} bytes (original ${file.length} bytes)`);
     return key;
   };
-  return { cover512Key: await variant(512), cover1280Key: await variant(1280) };
+  return { cover512Key: await variant(512), cover1280Key: await variant(1280), coverThumbhash: await thumbhashOf(file) };
+}
+
+// ThumbHash encodes at most 100×100 RGBA.
+async function thumbhashOf(file: Buffer) {
+  const { data, info } = await sharp(file)
+    .resize(100, 100, { fit: "inside" })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return Buffer.from(rgbaToThumbHash(info.width, info.height, data)).toString("base64");
 }
 
 async function ingestAudio(a: Audio) {

@@ -129,7 +129,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
   }));
 
   // One element, drawn twice: behind the scroller and inside the bar window.
-  const photoEl = <CoverPhoto uri={entry.coverUrl} style={[{ width, height: coverH }, photo]} />;
+  const photoEl = <CoverPhoto uri={entry.coverUrl} thumbhash={entry.coverThumbhash} style={[{ width, height: coverH }, photo]} />;
 
   return (
     <View className="flex-1" style={{ backgroundColor: page }} onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>

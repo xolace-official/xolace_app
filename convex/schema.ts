@@ -2294,6 +2294,7 @@ export default defineSchema({
     coverKey: v.optional(v.string()), // ingest: R2 key of an uploaded cover, `library-thumb/<sha>.<ext>`; signed at read, wins over coverUrl
     cover512Key: v.optional(v.string()), // ingest --cover-variants (#506): 512px WebP for small thumbnails
     cover1280Key: v.optional(v.string()), // ingest --cover-variants (#506): 1280px WebP; wins over coverKey
+    coverThumbhash: v.optional(v.string()), // ingest --cover-variants (#507): base64 ThumbHash, the cover's load placeholder
     publishedAt: v.optional(v.number()),
     retrievedAt: v.optional(v.number()),
     storyDescriptor: v.optional(v.string()), // stories: "a second-year student, 20"

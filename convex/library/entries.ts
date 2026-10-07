@@ -27,6 +27,7 @@ export const listItemValidator = v.object({
   readMin: v.number(),
   coverUrl: v.optional(v.string()),
   coverThumbUrl: v.optional(v.string()), // 512px cover, when ingest resized it (#506)
+  coverThumbhash: v.optional(v.string()), // base64 ThumbHash placeholder (#507)
   newUntil: v.optional(v.number()),
 });
 
@@ -51,10 +52,11 @@ export const coverOf = async (
 ) =>
   (await signCover(e.cover1280Key ?? e.coverKey)) ?? e.coverUrl;
 
-/** Both cover fields: `coverThumbUrl` (512) only when ingest resized the cover. */
+/** The cover fields: `coverThumbUrl` (512) and `coverThumbhash` only when ingest made them. */
 export const coversOf = async (e: Doc<"library_entries">) => ({
   coverUrl: await coverOf(e),
   coverThumbUrl: await signCover(e.cover512Key),
+  coverThumbhash: e.coverThumbhash,
 });
 
 export const toListItem = async (e: Doc<"library_entries">) => ({

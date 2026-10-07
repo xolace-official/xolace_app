@@ -325,7 +325,7 @@ describe("library sources: manifest ingest → getEntry", () => {
           }
         });
         const audio = (await user.t.query(api.library.audio.getEntryAudio, { entryId: e._id }))!;
-        return [e, item, audio].map((v) => ({ coverUrl: v.coverUrl, coverThumbUrl: v.coverThumbUrl }));
+        return [e, item, audio].map((v) => ({ coverUrl: v.coverUrl, coverThumbUrl: v.coverThumbUrl, coverThumbhash: v.coverThumbhash }));
       };
       return { ingest, viewsOf };
     }
@@ -333,15 +333,22 @@ describe("library sources: manifest ingest → getEntry", () => {
     it("serves the 1280 file as coverUrl and the 512 file as coverThumbUrl in entry, list and audio views", async () => {
       const { ingest, viewsOf } = await views();
       await ingest(record(covers));
-      const want = { coverUrl: "https://r2.test/library-thumb/l.webp", coverThumbUrl: "https://r2.test/library-thumb/s.webp" };
+      const want = { coverUrl: "https://r2.test/library-thumb/l.webp", coverThumbUrl: "https://r2.test/library-thumb/s.webp", coverThumbhash: undefined };
       expect(await viewsOf()).toEqual([want, want, want]);
     });
 
     it("an entry without resized keys keeps today's shape", async () => {
       const { ingest, viewsOf } = await views();
       await ingest(record({ coverKey: covers.coverKey }));
-      const want = { coverUrl: "https://r2.test/library-thumb/o.png", coverThumbUrl: undefined };
+      const want = { coverUrl: "https://r2.test/library-thumb/o.png", coverThumbUrl: undefined, coverThumbhash: undefined };
       expect(await viewsOf()).toEqual([want, want, want]);
+    });
+
+    it("returns the cover ThumbHash (#507) in entry, list and audio views", async () => {
+      const { ingest, viewsOf } = await views();
+      await ingest(record({ ...covers, coverThumbhash: "1QcSHQRnh493V4dIh4eXh1h4kJUI" }));
+      const views_ = await viewsOf();
+      expect(views_.map((v) => v.coverThumbhash)).toEqual(Array(3).fill("1QcSHQRnh493V4dIh4eXh1h4kJUI"));
     });
 
     it("re-ingesting the same record with resized keys is a no-op", async () => {
