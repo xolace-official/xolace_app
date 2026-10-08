@@ -16,6 +16,7 @@ import {
 } from "./lib/validators";
 import { voiceSlugValidator } from "./lib/voices";
 import { specialtyValidator } from "./lib/specialties";
+import { DOMAINS } from "./lib/understandingVocab";
 
 // =============================================================
 // XOLACE BETA
@@ -2407,4 +2408,25 @@ export default defineSchema({
     views: v.number(),
     helped: v.number(),
   }).index("by_entryId", ["entryId"]),
+
+  // One run of a domain compounding (ADR 0020, CONTEXT.md "Stretch"). Stored,
+  // never replayed: written by compounding/stretches.evaluateCompounding when
+  // a reading lands. At most one open row (no endedAt) per profile + domain.
+  // Retention drops closed rows past the cutoff, never open ones; wipe and
+  // account deletion drop all.
+  compounding_stretches: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    domain: v.union(...DOMAINS.map((d) => v.literal(d))),
+    startedAt: v.number(),
+    // The baseline held while the stretch runs, for at most 90 days.
+    anchorBaseline: v.number(),
+    // Absent while open. A quiet stretch's end (last reading + 30 days) is
+    // written by the next evaluation; readers derive it until then.
+    endedAt: v.optional(v.number()),
+    // Events no reading records (#492, #496): once set, spent for the stretch.
+    followUpStartedAt: v.optional(v.number()),
+    upsellShownAt: v.optional(v.number()),
+  })
+    .index("by_emotionalProfileId_and_domain_and_startedAt", ["emotionalProfileId", "domain", "startedAt"])
+    .index("by_emotionalProfileId_and_endedAt", ["emotionalProfileId", "endedAt"]),
 });

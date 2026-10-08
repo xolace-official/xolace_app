@@ -36,6 +36,7 @@ import {
 } from "./ai/prompts/followUpCardWriter";
 import { renderSemanticProfile } from "./semanticProfiles";
 import { deleteResponsesForCard } from "./followUpResponses";
+import { evaluateCompounding } from "./compounding/stretches";
 
 const CARD_MODEL = "claude-haiku-4-5-20251001";
 const MAX_CARD_CHARS = 200;
@@ -516,6 +517,8 @@ export const resolveCard = mutation({
       userResponse: args.response,
       resolvedAt: Date.now(),
     });
+    // An answer is a reading: it can close a stretch, never open one (#519).
+    await evaluateCompounding(ctx, profile._id);
     return null;
   },
 });

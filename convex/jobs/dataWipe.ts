@@ -14,7 +14,7 @@ const BATCH_SIZE = 100;
  *
  * Deletes: sessions, emotional_metadata, session_turns,
  *          reflection_resonances, notification_log, library_reads, activity_log,
- *          frozen_days
+ *          frozen_days, compounding_stretches
  * Anonymizes: escalation_events (strip profileId for safety audit)
  * Resets: emotional_profile counters
  *
@@ -115,6 +115,18 @@ export const wipe = internalMutation({
 
     if (frozen.length === BATCH_SIZE) hasMore = true;
     for (const f of frozen) await ctx.db.delete("frozen_days", f._id);
+
+    // ── Delete compounding stretches ─────────────────────────────
+    // Open and closed alike: a wipe forgets every stretch (ADR 0020).
+    const stretches = await ctx.db
+      .query("compounding_stretches")
+      .withIndex("by_emotionalProfileId_and_endedAt", (q) =>
+        q.eq("emotionalProfileId", emotionalProfileId)
+      )
+      .take(BATCH_SIZE);
+
+    if (stretches.length === BATCH_SIZE) hasMore = true;
+    for (const s of stretches) await ctx.db.delete("compounding_stretches", s._id);
 
     // ── Anonymize escalation events ──────────────────────────────
     const escalations = await ctx.db

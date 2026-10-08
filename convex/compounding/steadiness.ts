@@ -9,8 +9,8 @@ import { localDayKey } from "../streaks/activityLog";
 
 const DAY_MS = 86_400_000;
 const STEADINESS_HALF_LIFE_DAYS = 21;
-const BASELINE_HALF_LIFE_DAYS = 90;
-const QUIET_AFTER_DAYS = 30;
+export const BASELINE_HALF_LIFE_DAYS = 90;
+export const QUIET_AFTER_DAYS = 30;
 const UNLOCK_DAYS = 3;
 const SETTLE_DAYS = 5;
 const SETTLE_SPAN_DAYS = 21;
@@ -104,18 +104,17 @@ function domainSteadiness(
 /**
  * Weighted mean with weight × 2^(−age / halfLife). Decay is relative to the
  * newest reading, not `now`: the ratio is the same either way, and anchoring
- * to `now` would underflow to 0/0 after a long silence. Silence holds.
+ * to `now` would underflow to 0/0 after a long silence. Silence holds. `sd`
+ * is the weighted spread around that mean.
  */
-function decayedMean(readings: Reading[], now: number, halfLifeDays: number) {
+export function decayedMean(readings: Reading[], now: number, halfLifeDays: number) {
   const newest = Math.max(...readings.map((r) => r.at));
   const halfLife = halfLifeDays * DAY_MS;
-  let weight = 0;
-  let total = 0;
-  for (const r of readings) {
-    const w = r.weight * 2 ** (-(newest - r.at) / halfLife);
-    weight += w;
-    total += w * r.value;
-  }
+  const weights = readings.map((r) => r.weight * 2 ** (-(newest - r.at) / halfLife));
+  const weight = weights.reduce((a, b) => a + b, 0);
+  const mean = readings.reduce((sum, r, i) => sum + weights[i] * r.value, 0) / weight;
+  const variance =
+    readings.reduce((sum, r, i) => sum + weights[i] * (r.value - mean) ** 2, 0) / weight;
   // evidenceWeight is honest about age, so it decays with `now`.
-  return { mean: total / weight, weight: weight * 2 ** (-(now - newest) / halfLife) };
+  return { mean, sd: Math.sqrt(variance), weight: weight * 2 ** (-(now - newest) / halfLife) };
 }

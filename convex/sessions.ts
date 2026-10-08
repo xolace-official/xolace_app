@@ -21,6 +21,7 @@ import {
 } from "./lib/validators";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
 import { recordActivity } from "./streaks/activityLog";
+import { evaluateCompounding } from "./compounding/stretches";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "./lib/rateLimits";
 import {
   abandonRequiresFollowUp,
@@ -93,6 +94,7 @@ async function finalizeCompletion(
   opts: {
     pathCompleted: boolean;
     pathChosen?: Doc<"sessions">["pathChosen"];
+    deferCompounding?: boolean;
   },
 ): Promise<void> {
   const now = Date.now();
@@ -114,6 +116,18 @@ async function finalizeCompletion(
     actionType: "reflect",
     timestamp: now,
   });
+
+  // Compounding moves with the reading that moved it (#519): this session's
+  // reading may open a stretch, and any open one may close. The cron's batch
+  // reconciliation defers it to its own transaction (read limits).
+  if (opts.deferCompounding) {
+    await ctx.scheduler.runAfter(0, internal.compounding.stretches.evaluate, {
+      profileId: session.emotionalProfileId,
+      sessionId: session._id,
+    });
+  } else {
+    await evaluateCompounding(ctx, session.emotionalProfileId, { sessionId: session._id });
+  }
 
   // Schedule post-session jobs.
   await ctx.scheduler.runAfter(
@@ -181,6 +195,11 @@ async function applyPostSessionFeedback(
       : {}),
     updatedAt: Date.now(),
   });
+
+  // A mood check is a reading: it can close a stretch, never open one (#519).
+  if (feedback.postSessionMood) {
+    await evaluateCompounding(ctx, session.emotionalProfileId);
+  }
 
   // Schedule the anonymizer only on a fresh opt-in, so repeated feedback
   // writes (or a re-tap) never double-contribute to the peer pool.
@@ -1136,7 +1155,7 @@ export const checkAbandoned = internalMutation({
 
       for (const session of staleSessions) {
         if ((stalePathStates as readonly string[]).includes(state)) {
-          await finalizeCompletion(ctx, session, { pathCompleted: false });
+          await finalizeCompletion(ctx, session, { pathCompleted: false, deferCompounding: true });
         } else {
           await ctx.db.patch("sessions", session._id, {
             state: "abandoned",
