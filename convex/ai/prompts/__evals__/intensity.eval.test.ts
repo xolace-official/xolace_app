@@ -60,7 +60,8 @@ describe.skipIf(!hasApiKey())(`intensity release gate: ${CLASSIFIER_VERSION}`, (
 
   beforeAll(async () => {
     const texts = [...POSITIVE.map((p) => p.text), ...PAIRS.flatMap((p) => [p.short, p.long])];
-    await Promise.all([...new Set(texts)].map(async (t) => scored.set(t, await score(t))));
+    // One text at a time (REPS in flight): low usage tiers cap concurrent requests.
+    for (const t of new Set(texts)) scored.set(t, await score(t));
   }, 300_000);
 
   for (const p of POSITIVE.filter((x) => x.family)) {
