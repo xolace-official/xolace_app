@@ -115,12 +115,35 @@ describe("compounding/dev.steadiness", () => {
   });
 });
 
-describe("compounding/devSeed.seedCompounding", () => {
+describe("compounding/devSeedCompounding.seedCompounding", () => {
   it("leaves Work compounding with the kindling hand-off for a Xolace+ reader", async () => {
     vi.stubEnv("PREMIUM_DEV_OVERRIDE", "true");
     const user = await asNewUser();
-    await user.root.mutation(internal.compounding.devSeed.seedCompounding, { profileId: user.profileId });
+    await user.root.mutation(internal.compounding.devSeedCompounding.seedCompounding, { profileId: user.profileId });
     const out = await user.t.query(api.compounding.insights.plusView, {});
     expect(out!.domains[0]).toMatchObject({ domain: "work", compounding: "compounding", kindling: true });
+  });
+});
+
+describe("compounding/devSeedCompounding.unseedCompounding", () => {
+  it("removes every seeded row and restores the replaced kindling", async () => {
+    const user = await asNewUser();
+    const sessionId = await seed(user, 1, 4);
+    const pathId = await user.root.run((ctx) =>
+      ctx.db.insert("paths", {
+        emotionalProfileId: user.profileId, sessionId, status: "active", model: "m", modelVersion: "m", generatedAt: NOW,
+      }),
+    );
+    await user.root.mutation(internal.compounding.devSeedCompounding.seedCompounding, { profileId: user.profileId });
+    expect(
+      await user.root.mutation(internal.compounding.devSeedCompounding.unseedCompounding, { profileId: user.profileId, restorePathId: pathId }),
+    ).toBe(58);
+    const left = await user.root.run(async (ctx) => ({
+      sessions: (await ctx.db.query("sessions").collect()).length,
+      stretches: (await ctx.db.query("compounding_stretches").collect()).length,
+      paths: (await ctx.db.query("paths").collect()).map((p) => [p._id, p.status]),
+      steps: (await ctx.db.query("path_steps").collect()).length,
+    }));
+    expect(left).toEqual({ sessions: 1, stretches: 0, paths: [[pathId, "active"]], steps: 0 });
   });
 });

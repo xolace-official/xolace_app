@@ -65,6 +65,7 @@ import type * as cohort from "../cohort.js";
 import type * as compounding_detect from "../compounding/detect.js";
 import type * as compounding_dev from "../compounding/dev.js";
 import type * as compounding_devSeed from "../compounding/devSeed.js";
+import type * as compounding_devSeedCompounding from "../compounding/devSeedCompounding.js";
 import type * as compounding_insights from "../compounding/insights.js";
 import type * as compounding_readings from "../compounding/readings.js";
 import type * as compounding_steadiness from "../compounding/steadiness.js";
@@ -239,6 +240,7 @@ declare const fullApi: ApiFromModules<{
   "compounding/detect": typeof compounding_detect;
   "compounding/dev": typeof compounding_dev;
   "compounding/devSeed": typeof compounding_devSeed;
+  "compounding/devSeedCompounding": typeof compounding_devSeedCompounding;
   "compounding/insights": typeof compounding_insights;
   "compounding/readings": typeof compounding_readings;
   "compounding/steadiness": typeof compounding_steadiness;

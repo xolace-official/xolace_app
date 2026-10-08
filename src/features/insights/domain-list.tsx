@@ -6,7 +6,7 @@ import { Presets } from "react-native-pulsar";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { SteadinessRing } from "./steadiness-ring";
-import { COMPOUNDING_WORD, DOMAIN_META, STAGE_WORD, icon, lastSeen, subOf, toneOf, type DomainItem } from "./domains";
+import { COMPOUNDING_SHORT, COMPOUNDING_WORD, DOMAIN_META, STAGE_WORD, icon, lastSeen, subOf, toneOf, type DomainItem } from "./domains";
 import { TrendChip } from "./trend-chip";
 
 export type DomainView = "grid" | "list";
@@ -75,8 +75,8 @@ export function DomainCell({ d, selected, onPress }: ItemProps) {
       {d.lastSeenAt !== null && (
         <AppText className="text-[9px] text-muted">last seen {lastSeen(d.lastSeenAt)}</AppText>
       )}
-      {toneOf(d) === "ember" && (
-        <AppText numberOfLines={1} className="text-[9px] text-ember">{word}</AppText>
+      {toneOf(d) === "ember" && d.compounding && (
+        <AppText numberOfLines={1} className="text-[9px] text-ember">{COMPOUNDING_SHORT[d.compounding]}</AppText>
       )}
     </Pressable>
   );

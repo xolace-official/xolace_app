@@ -34,6 +34,8 @@ export const STAGE_WORD: Record<DomainItem["state"], string> = {
 
 /** Xolace+ only (#520): what Xolace saw, in the free upsell's words — never a grade. */
 export const COMPOUNDING_WORD = { compounding: "Heavier than your usual", easing: "Easing" } as const;
+/** The grid cell's narrower line. */
+export const COMPOUNDING_SHORT = { compounding: "Heavier lately", easing: "Easing" } as const;
 
 /** Colour is state, never domain (#491): quiet is muted, compounding and easing ember (amber, never red). */
 export type Tone = "accent" | "ember" | "muted";
