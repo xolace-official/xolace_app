@@ -1,7 +1,7 @@
 // Liquid-glass card and tick gauge, ported from sample-codes/clarity-main
 // (ui/glass-surface, session/tick-gauge) onto Xolace tokens (#491).
 import type { ReactNode } from "react";
-import { View, type StyleProp, type ViewStyle } from "react-native";
+import { View, type ViewStyle } from "react-native";
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import Animated, {
   Extrapolation,
@@ -14,20 +14,22 @@ import Svg, { Line } from "react-native-svg";
 import { useAppTheme } from "@/src/context/app-theme-context";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 
-type SurfaceProps = { children?: ReactNode; radius?: number; style?: StyleProp<ViewStyle> };
+type SurfaceProps = { children?: ReactNode; radius?: number; className?: string };
 
 /** Frosted surface. Never put it under an animated opacity — the blur stops rendering. */
-export function GlassSurface({ children, radius = 32, style }: SurfaceProps) {
+export function GlassSurface({ children, radius = 32, className }: SurfaceProps) {
   const surface = useTokenColor("surface");
   const { isDark } = useAppTheme();
   const shape: ViewStyle = { borderRadius: radius, borderCurve: "continuous", overflow: "hidden" };
+  // GlassView is third-party, so Uniwind ignores a className on it; style the inside instead.
+  const inner = <View className={className}>{children}</View>;
   if (!isLiquidGlassAvailable()) {
-    return <View style={[shape, { backgroundColor: surface + "CC" }, style]}>{children}</View>;
+    return <View style={[shape, { backgroundColor: surface + "CC" }]}>{inner}</View>;
   }
   return (
     // Follow the app's theme, not the OS: the two can disagree.
-    <GlassView glassEffectStyle="regular" colorScheme={isDark ? "dark" : "light"} style={[shape, { backgroundColor: surface + "40" }, style]}>
-      {children}
+    <GlassView glassEffectStyle="regular" colorScheme={isDark ? "dark" : "light"} style={[shape, { backgroundColor: surface + "40" }]}>
+      {inner}
     </GlassView>
   );
 }
@@ -66,7 +68,7 @@ export function TickGauge({ ticks, startAngle, sweep, radius, tickLength, tickWi
           );
         })}
       </Svg>
-      <View style={{ position: "absolute", inset: 0 }} className="items-center justify-center" pointerEvents="none">
+      <View className="absolute inset-0 items-center justify-center" pointerEvents="none">
         {children}
       </View>
     </View>

@@ -26,14 +26,14 @@ export function OverallDial({ overall }: { overall: number | null }) {
   }, [overall, progress]);
 
   return (
-    <GlassSurface style={{ paddingVertical: 24, alignItems: "center", gap: 12 }}>
+    <GlassSurface className="items-center gap-3 py-6">
       {overall === null ? (
         <AppText className="text-[15px] text-foreground/75 text-center px-8 leading-6">
           Your overall steadiness lights up once Xolace knows two parts of your life.
         </AppText>
       ) : (
         // The 270° sweep leaves its bottom quarter empty; tuck the card up into it.
-        <View accessible accessibilityLabel={`Overall steadiness, ${overall} out of 100`} style={{ marginBottom: -28 }}>
+        <View accessible accessibilityLabel={`Overall steadiness, ${overall} out of 100`} className="-mb-7">
           <TickGauge
             ticks={56} startAngle={135} sweep={270} radius={118} tickLength={20} tickWidth={4}
             progress={progress} fill={accent} track={track}

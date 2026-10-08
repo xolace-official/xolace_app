@@ -34,7 +34,7 @@ export function PartsOfLife({ domains, isPlus }: { domains: DomainItem[]; isPlus
           <Chip.Label>Unlock numbers</Chip.Label>
         </Chip>
       )}
-      <GlassSurface radius={24} style={{ padding: view === "grid" ? 16 : 8 }}>
+      <GlassSurface radius={24} className={view === "grid" ? "p-4" : "p-2"}>
         {view === "grid" ? (
           <View className="flex-row flex-wrap justify-between gap-y-5">
             {domains.map((d) => <DomainCell key={d.domain} d={d} />)}

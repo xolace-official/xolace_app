@@ -44,12 +44,11 @@ export function ViewToggle({ value, onChange }: { value: DomainView; onChange: (
 export function DomainCell({ d }: { d: DomainItem }) {
   const { label, icon } = DOMAIN_META[d.domain];
   const warming = d.state === "warming";
+  const word = warming ? "warming" : d.lastSeenAt !== null ? "Not recently" : STAGE_WORD[d.state];
   return (
-    <View className="w-[31%] items-center gap-1 py-2" accessible accessibilityLabel={`${label}, ${STAGE_WORD[d.state]}`}>
+    <View className="w-[31%] items-center gap-1 py-2" accessible accessibilityLabel={`${label}, ${word}`}>
       <SteadinessRing size={86} value={null} tone={toneOf(d)} dashed={warming} icon={icon}>
-        <AppText className="text-[10px] text-muted text-center px-3">
-          {warming ? "warming" : d.lastSeenAt !== null ? "Not recently" : STAGE_WORD[d.state]}
-        </AppText>
+        <AppText className="text-[10px] text-muted text-center px-3">{word}</AppText>
       </SteadinessRing>
       <AppText numberOfLines={1} className="text-[11px] text-foreground/85">{label}</AppText>
       {d.lastSeenAt !== null && (
@@ -61,7 +60,7 @@ export function DomainCell({ d }: { d: DomainItem }) {
 
 export function DomainRow({ d }: { d: DomainItem }) {
   const { label, icon } = DOMAIN_META[d.domain];
-  const [ink, muted, track] = [useTokenColor(toneOf(d)), useTokenColor("muted"), useTokenColor("border")];
+  const [ink, muted] = [useTokenColor(toneOf(d)), useTokenColor("muted")];
   const warming = d.state === "warming";
   const sub = d.lastSeenAt !== null ? `Not recently · last seen ${lastSeen(d.lastSeenAt)}` : STAGE_WORD[d.state];
   return (
@@ -77,9 +76,9 @@ export function DomainRow({ d }: { d: DomainItem }) {
       </View>
       {/* Unfilled in the free view: the meter's shape, never its value. */}
       {!warming && (
-        <View className="flex-row items-center justify-between" style={{ height: 22 }}>
+        <View className="h-[22px] flex-row items-center justify-between">
           {Array.from({ length: TICKS }, (_, i) => (
-            <View key={i} style={{ width: 4, height: 14, borderRadius: 2, backgroundColor: track }} />
+            <View key={i} className="h-3.5 w-1 rounded-full bg-border" />
           ))}
         </View>
       )}

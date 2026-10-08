@@ -17,7 +17,7 @@ export function TopBlur({ height }: { height: number }) {
   const bg = useTokenColor("background");
   const strong = Platform.OS === "android" ? "F0" : "B0";
   return (
-    <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height }}>
+    <View pointerEvents="none" className="absolute inset-x-0 top-0" style={{ height }}>
       {Platform.OS === "ios" && (
         <MaskedView style={StyleSheet.absoluteFill} maskElement={<View style={{ flex: 1, experimental_backgroundImage: MASK }} />}>
           <BlurView tint={isDark ? "dark" : "light"} intensity={40} style={StyleSheet.absoluteFill} />
