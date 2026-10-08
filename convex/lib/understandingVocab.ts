@@ -107,6 +107,84 @@ export const THEMATIC_TAGS = [
   "housing",
 ] as const;
 
+export type ThematicTag = (typeof THEMATIC_TAGS)[number];
+
+/** The 8 scored domains (CONTEXT.md, #486). Keys, not labels. */
+export const DOMAINS = [
+  "self",
+  "purpose",
+  "work",
+  "love",
+  "family",
+  "belonging",
+  "health",
+  "money",
+] as const;
+
+export type Domain = (typeof DOMAINS)[number];
+
+/**
+ * Every life area's one home (#486). Typed over the full tag union, so adding a
+ * tag to THEMATIC_TAGS is a type error until its home is decided here.
+ * Texture says what is happening, not where; sensitive is never scored or
+ * shown. Neither gives a reading, and neither stops the session's other tags.
+ */
+export const LIFE_AREA_HOME: Record<ThematicTag, Domain | "texture" | "sensitive"> = {
+  "self-worth": "self",
+  identity: "self",
+  "body-image": "self",
+  purpose: "purpose",
+  future: "purpose",
+  creativity: "purpose",
+  work: "work",
+  studies: "work",
+  burnout: "work",
+  relationships: "love",
+  romance: "love",
+  friendships: "love",
+  family: "family",
+  parenting: "family",
+  caregiving: "family",
+  belonging: "belonging",
+  "settling-in": "belonging",
+  isolation: "belonging",
+  "social-media": "belonging",
+  health: "health",
+  sleep: "health",
+  finances: "money",
+  housing: "money",
+  loss: "texture",
+  change: "texture",
+  conflict: "texture",
+  achievement: "texture",
+  trauma: "sensitive",
+  abuse: "sensitive",
+  neglect: "sensitive",
+  addiction: "sensitive",
+};
+
+/**
+ * Tags older classifier versions wrote outside the closed list (#490). Two are
+ * plain synonyms of a life area and are remapped; every other off-list tag
+ * (trust, mood, overwhelm, …) is ignored.
+ */
+const LEGACY_LIFE_AREA: Record<string, ThematicTag> = {
+  direction: "purpose",
+  "self-awareness": "identity",
+};
+
+/** The domain a tag scores, or null when it gives no reading. */
+export function domainOf(tag: string): Domain | null {
+  const area = hasOwn(LIFE_AREA_HOME, tag)
+    ? (tag as ThematicTag)
+    : hasOwn(LEGACY_LIFE_AREA, tag)
+      ? LEGACY_LIFE_AREA[tag]
+      : null;
+  if (!area) return null;
+  const home = LIFE_AREA_HOME[area];
+  return home === "texture" || home === "sensitive" ? null : home;
+}
+
 /**
  * Words authors use in the Library sheet that resolve to a canonical value.
  * Used at ingest only — never shown to the classifier. `low` is deliberately
