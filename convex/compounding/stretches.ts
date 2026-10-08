@@ -116,9 +116,9 @@ export const evaluate = internalMutation({
 export async function compoundingFor(
   ctx: QueryCtx,
   profileId: Id<"emotional_profiles">,
-  now = Date.now(),
+  { now = Date.now(), loaded }: { now?: number; loaded?: Awaited<ReturnType<typeof loadReadings>> } = {},
 ): Promise<Compounding[]> {
-  const { readings, timezone } = await loadReadings(ctx, profileId);
+  const { readings, timezone } = loaded ?? (await loadReadings(ctx, profileId));
   const live: Omit<Compounding, "coDomains">[] = [];
   for (const d of computeSteadiness(readings, { now, timezone }).domains) {
     const [row, previous] = await newestStretches(ctx, profileId, d.domain);

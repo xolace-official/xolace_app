@@ -9,7 +9,7 @@
  */
 import type { WorkflowId } from "@convex-dev/workflow";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { internal } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import { seedMetadata, seedSession } from "../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock } from "../test/mocks.helpers";
@@ -112,5 +112,15 @@ describe("compounding/dev.steadiness", () => {
     vi.stubEnv("DEV_TOOLS_ENABLED", "false");
     const user = await asNewUser();
     await expect(read(user)).rejects.toThrow(/Dev tools are disabled/);
+  });
+});
+
+describe("compounding/devSeed.seedCompounding", () => {
+  it("leaves Work compounding with the kindling hand-off for a Xolace+ reader", async () => {
+    vi.stubEnv("PREMIUM_DEV_OVERRIDE", "true");
+    const user = await asNewUser();
+    await user.root.mutation(internal.compounding.devSeed.seedCompounding, { profileId: user.profileId });
+    const out = await user.t.query(api.compounding.insights.plusView, {});
+    expect(out!.domains[0]).toMatchObject({ domain: "work", compounding: "compounding", kindling: true });
   });
 });

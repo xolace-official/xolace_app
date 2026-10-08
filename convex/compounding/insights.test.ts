@@ -8,6 +8,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 import { seedMetadata, seedSession } from "../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
@@ -41,6 +42,7 @@ async function seed(user: SeededUser, daysAgo: number, tags: string[], intensity
     thematicTags: tags,
     createdAt: at,
   });
+  return sessionId;
 }
 
 const read = (user: SeededUser) => user.t.query(api.compounding.insights.freeView, {});
@@ -96,6 +98,8 @@ describe("compounding/insights.freeView", () => {
  * plusView (#518). Failure modes: numbers reaching a free (or lapsed) user;
  * a baseline before settled or a number while warming; a trend chip for a
  * domain warming a week ago; upgrade needing a backfill before history shows.
+ * #520: a compounding domain not ranked first, or a steady one marked; the
+ * Kindling hand-off offered for a domain tonight's kindling never touched.
  */
 describe("compounding/insights.plusView", () => {
   const readPlus = (user: SeededUser) => user.t.query(api.compounding.insights.plusView, {});
@@ -133,5 +137,65 @@ describe("compounding/insights.plusView", () => {
     // Only work was unlocked a week ago.
     expect(out.overallTrend).toBeNull();
     expect(out.overall).toBe((await read(user)).overall);
+  });
+
+  /** A settled work usual (intensity 4), then a heavy last week (10). */
+  async function compoundingWork(user: SeededUser) {
+    for (let i = 0; i < 50; i++) await seed(user, 120 - i * 2, ["work"], 4);
+    for (let d = 1; d <= 7; d++) await seed(user, d + 0.5, ["work"], 10);
+    await user.root.run((ctx) =>
+      ctx.db.insert("compounding_stretches", {
+        emotionalProfileId: user.profileId,
+        domain: "work",
+        startedAt: NOW - 5 * DAY,
+        anchorBaseline: 67,
+      }),
+    );
+  }
+
+  const activeKindling = (user: SeededUser, sessionId: Id<"sessions">) =>
+    user.root.run((ctx) =>
+      ctx.db.insert("paths", {
+        emotionalProfileId: user.profileId,
+        sessionId,
+        status: "active",
+        model: "test",
+        modelVersion: "test",
+        generatedAt: NOW,
+      }),
+    );
+
+  it("ranks a compounding domain first and marks only it", async () => {
+    const user = await asNewUser();
+    for (let i = 0; i < 50; i++) await seed(user, 120 - i * 2, ["self-worth"], 4);
+    await compoundingWork(user);
+    plus = true;
+    const out = (await readPlus(user))!;
+    expect(out.domains.map((d) => [d.domain, d.compounding])).toEqual([
+      ["work", "compounding"],
+      ["self", null],
+    ]);
+  });
+
+  it("offers Kindling only for a compounding domain the active kindling's session touched", async () => {
+    const user = await asNewUser();
+    await compoundingWork(user);
+    for (const d of [0.2, 1, 2]) await seed(user, d, ["sleep"], 4);
+    plus = true;
+
+    await activeKindling(user, await seed(user, 0.1, ["sleep"], 4));
+    expect((await readPlus(user))!.domains.map((d) => [d.domain, d.kindling])).toEqual([
+      ["work", false],
+      ["health", false],
+    ]);
+
+    await user.root.run(async (ctx) => {
+      for (const p of await ctx.db.query("paths").collect()) await ctx.db.patch("paths", p._id, { status: "replaced" });
+    });
+    await activeKindling(user, await seed(user, 0.1, ["burnout", "sleep"], 4));
+    expect((await readPlus(user))!.domains.map((d) => [d.domain, d.kindling])).toEqual([
+      ["work", true],
+      ["health", false],
+    ]);
   });
 });

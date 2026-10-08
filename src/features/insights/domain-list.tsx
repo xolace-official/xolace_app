@@ -6,7 +6,7 @@ import { Presets } from "react-native-pulsar";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { SteadinessRing } from "./steadiness-ring";
-import { DOMAIN_META, STAGE_WORD, icon, lastSeen, type DomainItem } from "./domains";
+import { COMPOUNDING_WORD, DOMAIN_META, STAGE_WORD, icon, lastSeen, subOf, toneOf, type DomainItem } from "./domains";
 import { TrendChip } from "./trend-chip";
 
 export type DomainView = "grid" | "list";
@@ -14,8 +14,6 @@ export type DomainView = "grid" | "list";
 const GRID = icon("circle.grid.2x2", "grid_view");
 const LIST = icon("list.bullet", "view_list");
 const TICKS = 36;
-
-const toneOf = (d: DomainItem) => (d.lastSeenAt !== null ? "muted" : "accent");
 
 export function ViewToggle({ value, onChange }: { value: DomainView; onChange: (v: DomainView) => void }) {
   const [accentFg, muted] = [useTokenColor("accent-foreground"), useTokenColor("muted")];
@@ -54,7 +52,7 @@ const scoreLabel = (d: DomainItem) =>
 export function DomainCell({ d, selected, onPress }: ItemProps) {
   const { label, icon } = DOMAIN_META[d.domain];
   const warming = d.state === "warming";
-  const word = warming ? "warming" : d.lastSeenAt !== null ? "Not recently" : STAGE_WORD[d.state];
+  const word = warming ? "warming" : d.lastSeenAt !== null ? "Not recently" : d.compounding ? COMPOUNDING_WORD[d.compounding] : STAGE_WORD[d.state];
   const score = d.steadiness ?? null;
   return (
     <Pressable
@@ -77,6 +75,9 @@ export function DomainCell({ d, selected, onPress }: ItemProps) {
       {d.lastSeenAt !== null && (
         <AppText className="text-[9px] text-muted">last seen {lastSeen(d.lastSeenAt)}</AppText>
       )}
+      {toneOf(d) === "ember" && (
+        <AppText numberOfLines={1} className="text-[9px] text-ember">{word}</AppText>
+      )}
     </Pressable>
   );
 }
@@ -85,7 +86,7 @@ export function DomainRow({ d, selected, onPress }: ItemProps) {
   const { label, icon } = DOMAIN_META[d.domain];
   const [ink, muted] = [useTokenColor(toneOf(d)), useTokenColor("muted")];
   const warming = d.state === "warming";
-  const sub = d.lastSeenAt !== null ? `Not recently · last seen ${lastSeen(d.lastSeenAt)}` : STAGE_WORD[d.state];
+  const sub = subOf(d);
   return (
     <Pressable
       disabled={!onPress} onPress={onPress}
@@ -99,7 +100,7 @@ export function DomainRow({ d, selected, onPress }: ItemProps) {
         </View>
         <View className="flex-1">
           <AppText className="text-[15px]">{label}</AppText>
-          <AppText className="text-[12px] text-muted">{sub}</AppText>
+          <AppText className={`text-[12px] ${d.compounding ? "text-ember" : "text-muted"}`}>{sub}</AppText>
         </View>
         {d.steadiness != null && <AppText className="text-[20px] font-bold">{d.steadiness}</AppText>}
         {d.trend != null && <TrendChip delta={d.trend} short />}

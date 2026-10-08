@@ -4,7 +4,7 @@ import { View } from "react-native";
 import Svg, { Circle, Defs, Pattern, RadialGradient, Stop } from "react-native-svg";
 import { SymbolView } from "expo-symbols";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import type { Icon } from "./domains";
+import type { Icon, Tone } from "./domains";
 
 const SWEEP = 300; // degrees of arc; the remaining 60° is the bottom gap
 const START = 90 + (360 - SWEEP) / 2; // svg angles run clockwise from +x
@@ -15,7 +15,7 @@ type Props = {
   /** 0–100, or null for an unfilled ring (warming, or the free view). */
   value: number | null;
   /** Colour is state, never domain. */
-  tone: "accent" | "muted";
+  tone: Tone;
   dashed?: boolean;
   icon: Icon;
   children?: ReactNode;

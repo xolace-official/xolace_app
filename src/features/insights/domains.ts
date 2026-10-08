@@ -9,7 +9,7 @@ type PlusView = NonNullable<FunctionReturnType<typeof api.compounding.insights.p
 /** Free or Xolace+: the Xolace+ fields are simply absent from the free view. */
 export type InsightsView = FreeView & Partial<Pick<PlusView, "overallTrend">>;
 export type DomainItem = FreeView["domains"][number] &
-  Partial<Pick<PlusView["domains"][number], "steadiness" | "baseline" | "trend">>;
+  Partial<Pick<PlusView["domains"][number], "steadiness" | "baseline" | "trend" | "compounding" | "kindling">>;
 
 export const icon = (ios: string, android: string) => ({ ios, android, web: android }) as Icon;
 export const GAUGE = icon("gauge.with.needle", "speed");
@@ -31,6 +31,19 @@ export const STAGE_WORD: Record<DomainItem["state"], string> = {
   unlocked: "Getting to know it",
   settled: "Known well",
 };
+
+/** Xolace+ only (#520): what Xolace saw, in the free upsell's words — never a grade. */
+export const COMPOUNDING_WORD = { compounding: "Heavier than your usual", easing: "Easing" } as const;
+
+/** Colour is state, never domain (#491): quiet is muted, compounding and easing ember (amber, never red). */
+export type Tone = "accent" | "ember" | "muted";
+export const toneOf = (d: DomainItem): Tone => (d.lastSeenAt !== null ? "muted" : d.compounding ? "ember" : "accent");
+
+/** The sub-line under a domain's name in rows and the detail card. */
+export const subOf = (d: DomainItem) =>
+  d.lastSeenAt !== null
+    ? `Not recently · last seen ${lastSeen(d.lastSeenAt)}`
+    : d.compounding ? COMPOUNDING_WORD[d.compounding] : STAGE_WORD[d.state];
 
 export const lastSeen = (at: number) =>
   new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });

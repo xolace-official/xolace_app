@@ -3,14 +3,17 @@
  * Xolace+ may see (CONTEXT.md "Free view"): the overall steadiness and each
  * touched domain's state. Per-domain numbers, "your usual" and the trend only
  * leave through plusView (#518), which re-checks the entitlement on every read.
+ * So does compounding (#520), down to the order: the free view never sorts by it.
  */
 import { v } from "convex/values";
-import { query } from "../_generated/server";
+import type { Id } from "../_generated/dataModel";
+import { query, type QueryCtx } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import { hasPremium } from "../lib/premium";
-import { DOMAINS } from "../lib/understandingVocab";
+import { DOMAINS, domainOf, type Domain } from "../lib/understandingVocab";
 import { loadReadings } from "./readings";
 import { computeSteadiness, type DomainSteadiness } from "./steadiness";
+import { compoundingFor } from "./stretches";
 import { trendFor } from "./trend";
 
 const domainV = v.union(...DOMAINS.map((d) => v.literal(d)));
@@ -23,7 +26,7 @@ const freeDomain = {
   lastSeenAt: nullableNumber,
 };
 
-/** Live first, quiet next, warming last (#491); compounding joins in #520. */
+/** Live first, quiet next, warming last (#491). */
 const rank = (d: DomainSteadiness) => (d.state === "warming" ? 2 : d.quiet ? 1 : 0);
 
 const ordered = (domains: DomainSteadiness[]) =>
@@ -36,6 +39,20 @@ const freeFields = (d: DomainSteadiness) => ({
 });
 
 const round = (n: number | null) => (n === null ? null : Math.round(n));
+
+/** Domains the active kindling's session touched: where the hand-off lands (#520). */
+async function kindlingDomains(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
+  const path = await ctx.db
+    .query("paths")
+    .withIndex("by_profile_and_status", (q) => q.eq("emotionalProfileId", profileId).eq("status", "active"))
+    .first();
+  if (!path) return new Set<Domain>();
+  const meta = await ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_session", (q) => q.eq("sessionId", path.sessionId))
+    .first();
+  return new Set((meta?.thematicTags ?? []).map(domainOf).filter((d): d is Domain => d !== null));
+}
 
 export const freeView = query({
   args: {},
@@ -68,6 +85,9 @@ export const plusView = query({
           baseline: nullableNumber,
           /** Null when warming 7 days ago or quiet since; 0 = "same as last week". */
           trend: nullableNumber,
+          compounding: v.union(v.literal("compounding"), v.literal("easing"), v.null()),
+          /** Compounding, and tonight's kindling came from a session that touched it. */
+          kindling: v.boolean(),
         }),
       ),
     }),
@@ -79,15 +99,31 @@ export const plusView = query({
     const now = Date.now();
     const { domains, overall } = computeSteadiness(readings, { now, timezone });
     const trend = trendFor(readings, { now, timezone });
+    const live = await compoundingFor(ctx, profile._id, { now, loaded: { readings, timezone } });
+    // Compounding first, then easing, each by compoundingFor's rank (#491).
+    const flagged = new Map(
+      [...live.filter((c) => c.state === "compounding"), ...live.filter((c) => c.state === "easing")].map(
+        (c, i) => [c.domain, { i, state: c.state }],
+      ),
+    );
+    const at = (d: DomainSteadiness) => flagged.get(d.domain)?.i ?? flagged.size;
+    const kindling = flagged.size ? await kindlingDomains(ctx, profile._id) : new Set<Domain>();
     return {
       overall: round(overall),
       overallTrend: trend.overall,
-      domains: ordered(domains).map((d) => ({
-        ...freeFields(d),
-        steadiness: round(d.steadiness),
-        baseline: round(d.baseline),
-        trend: trend.domains.get(d.domain) ?? null,
-      })),
+      domains: ordered(domains)
+        .sort((a, b) => at(a) - at(b))
+        .map((d) => {
+          const state = flagged.get(d.domain)?.state ?? null;
+          return {
+            ...freeFields(d),
+            steadiness: round(d.steadiness),
+            baseline: round(d.baseline),
+            trend: trend.domains.get(d.domain) ?? null,
+            compounding: state,
+            kindling: state !== null && kindling.has(d.domain),
+          };
+        }),
     };
   },
 });

@@ -15,9 +15,10 @@
  */
 import type { WorkflowId } from "@convex-dev/workflow";
 import { v } from "convex/values";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { internalMutation } from "../_generated/server";
 import { assertDevToolsEnabled } from "../devTools";
+import { evaluateCompounding } from "./stretches";
 
 const DAY = 86_400_000;
 
@@ -106,5 +107,81 @@ export const seedScenario = internalMutation({
       }
     }
     return SCENARIO.length;
+  },
+});
+
+/**
+ * Dev-only (#520): a compounding Work on any profile, for the insights screen.
+ * A settled usual every other day, a heavy last week, then tonight's session
+ * opens the stretch through the real evaluation, and lights an active kindling
+ * (one breathing twig) so the detail card's hand-off shows. Tagged
+ * `seed-compounding`; run with PREMIUM_DEV_OVERRIDE=true to see it. Adds
+ * 58 sessions to the profile and replaces its active kindling: use a test
+ * profile, not one whose data you want kept.
+ *
+ *   bunx convex run compounding/devSeed:seedCompounding '{"profileId":"…"}'
+ */
+export const seedCompounding = internalMutation({
+  args: { profileId: v.id("emotional_profiles") },
+  returns: v.null(),
+  handler: async (ctx, { profileId }) => {
+    assertDevToolsEnabled();
+    const now = Date.now();
+    const days = [
+      ...Array.from({ length: 50 }, (_, i) => ({ daysAgo: 120 - i * 2, intensity: 4 })),
+      ...Array.from({ length: 7 }, (_, i) => ({ daysAgo: 1.5 + i, intensity: 10 })),
+      { daysAgo: 0.05, intensity: 10 },
+    ];
+    let sessionId: Id<"sessions"> | undefined;
+    for (const { daysAgo, intensity } of days) {
+      const at = now - daysAgo * DAY;
+      sessionId = await ctx.db.insert("sessions", {
+        emotionalProfileId: profileId,
+        state: "completed",
+        entryType: "open_prompt",
+        confirmationState: "confirmed",
+        kept: true,
+        createdAt: at,
+        updatedAt: at,
+      });
+      await ctx.db.insert("emotional_metadata", {
+        sessionId,
+        emotionalProfileId: profileId,
+        classifierVersion: "seed-compounding",
+        primaryEmotion: "anxiety",
+        primaryEmotionConfidence: 0.9,
+        intensity,
+        specificity: 5,
+        thematicTags: ["work"],
+        userLanguageTags: [],
+        riskFlag: false,
+        createdAt: at,
+      });
+    }
+    await evaluateCompounding(ctx, profileId, { sessionId });
+
+    for (const old of await ctx.db
+      .query("paths")
+      .withIndex("by_profile_and_status", (q) => q.eq("emotionalProfileId", profileId).eq("status", "active"))
+      .take(10)) {
+      await ctx.db.patch("paths", old._id, { status: "replaced" });
+    }
+    const pathId = await ctx.db.insert("paths", {
+      emotionalProfileId: profileId,
+      sessionId: sessionId!, // days is never empty
+      status: "active",
+      model: "seed-compounding",
+      modelVersion: "seed-compounding",
+      generatedAt: now,
+    });
+    await ctx.db.insert("path_steps", {
+      pathId,
+      actionType: "breathing",
+      order: 1,
+      why: "A minute to let the day settle.",
+      params: null,
+      state: "pending",
+    });
+    return null;
   },
 });
