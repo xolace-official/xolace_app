@@ -9,8 +9,17 @@ import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { GlassSurface, TickGauge } from "./glass";
 import { GAUGE } from "./domains";
+import { LockedTrendChip, TrendChip } from "./trend-chip";
 
-export function OverallDial({ overall }: { overall: number | null }) {
+type Props = {
+  overall: number | null;
+  /** Xolace+ only; null hides it (quiet week, under 2 domains). */
+  trend?: number | null;
+  /** Free view: the chip is a locked upsell instead. */
+  locked: boolean;
+};
+
+export function OverallDial({ overall, trend, locked }: Props) {
   const accent = useTokenColor("accent");
   const track = useTokenColor("border");
   const progress = useSharedValue(0);
@@ -46,6 +55,9 @@ export function OverallDial({ overall }: { overall: number | null }) {
             <AppText className="text-[12px] text-muted -mt-1">/100</AppText>
           </TickGauge>
         </View>
+      )}
+      {overall !== null && (locked || trend != null) && (
+        <View className="self-center">{locked ? <LockedTrendChip /> : <TrendChip delta={trend!} />}</View>
       )}
     </GlassSurface>
   );

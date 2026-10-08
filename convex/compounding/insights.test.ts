@@ -10,9 +10,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import { seedMetadata, seedSession } from "../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
-import { aggregatesMock } from "../test/mocks.helpers";
+import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
+let plus = false;
+vi.mock("../revenuecat", () => revenuecatMock(() => plus));
 
 const DAY = 86_400_000;
 const NOW = Date.UTC(2026, 9, 8, 12);
@@ -21,7 +23,10 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(NOW);
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  plus = false;
+});
 
 async function seed(user: SeededUser, daysAgo: number, tags: string[], intensity = 5) {
   const at = NOW - daysAgo * DAY;
@@ -84,5 +89,49 @@ describe("compounding/insights.freeView", () => {
       { domain: "family", state: "unlocked", lastSeenAt: NOW - 40 * DAY },
       { domain: "money", state: "warming", lastSeenAt: null },
     ]);
+  });
+});
+
+/**
+ * plusView (#518). Failure modes: numbers reaching a free (or lapsed) user;
+ * a baseline before settled or a number while warming; a trend chip for a
+ * domain warming a week ago; upgrade needing a backfill before history shows.
+ */
+describe("compounding/insights.plusView", () => {
+  const readPlus = (user: SeededUser) => user.t.query(api.compounding.insights.plusView, {});
+
+  it("is null without Xolace+, and again after a lapse", async () => {
+    const user = await asNewUser();
+    for (const d of [0, 1, 2]) await seed(user, d, ["work"]);
+    expect(await readPlus(user)).toBeNull();
+    plus = true;
+    expect(await readPlus(user)).not.toBeNull();
+    plus = false;
+    expect(await readPlus(user)).toBeNull();
+    expect((await read(user)).domains).toHaveLength(1); // nothing deleted
+  });
+
+  it("shows numbers, the usual once settled, and last week's trend straight after upgrading", async () => {
+    const user = await asNewUser();
+    for (const d of [30, 25, 20, 15, 10]) await seed(user, d, ["work"], 4);
+    await seed(user, 1, ["work"], 8);
+    for (const d of [0, 1, 2]) await seed(user, d, ["sleep"], 6);
+    await seed(user, 0, ["family"]);
+    plus = true;
+    const out = (await readPlus(user))!;
+    const [work, health, family] = out.domains;
+
+    expect(work).toMatchObject({ domain: "work", state: "settled" });
+    expect(Number.isInteger(work.steadiness)).toBe(true);
+    expect(Number.isInteger(work.baseline)).toBe(true);
+    expect(work.trend).toBeLessThan(0);
+
+    expect(health).toMatchObject({ domain: "health", state: "unlocked", baseline: null, trend: null });
+    expect(health.steadiness).toBe(Math.round(100 - 500 / 9));
+
+    expect(family).toMatchObject({ state: "warming", steadiness: null, baseline: null, trend: null });
+    // Only work was unlocked a week ago.
+    expect(out.overallTrend).toBeNull();
+    expect(out.overall).toBe((await read(user)).overall);
   });
 });

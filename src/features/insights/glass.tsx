@@ -36,6 +36,10 @@ export function GlassSurface({ children, radius = 32, className }: SurfaceProps)
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 
+/** TickGauge's box. Room for the taller mark only when there is one, so the overall dial keeps its size. */
+export const gaugeSize = (radius: number, tickWidth: number, tickLength: number, marked: boolean) =>
+  radius * 2 + tickWidth + (marked ? tickLength * 0.5 : 0);
+
 type GaugeProps = {
   ticks: number;
   /** Screen degrees: 0 = right, 90 = down. */
@@ -48,17 +52,32 @@ type GaugeProps = {
   progress: SharedValue<number>;
   fill: string;
   track: string;
+  /** 0..1 — the person's usual, drawn taller in --foreground. */
+  mark?: number | null;
   children?: ReactNode;
 };
 
-export function TickGauge({ ticks, startAngle, sweep, radius, tickLength, tickWidth, progress, fill, track, children }: GaugeProps) {
-  const size = radius * 2 + tickWidth;
+export function TickGauge({ ticks, startAngle, sweep, radius, tickLength, tickWidth, progress, fill, track, mark, children }: GaugeProps) {
+  const fg = useTokenColor("foreground");
+  // Same scale as the fill: a usual equal to the value lands on the last lit tick.
+  const markAt = mark != null ? Math.max(0, Math.round(mark * ticks) - 1) : -1;
+  const size = gaugeSize(radius, tickWidth, tickLength, mark != null);
   const c = size / 2;
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size}>
         {Array.from({ length: ticks }, (_, i) => {
           const a = ((startAngle + (sweep / (ticks - 1)) * i) * Math.PI) / 180;
+          if (i === markAt) {
+            const out = radius + tickLength * 0.25;
+            return (
+              <Line
+                key={i} stroke={fg} strokeWidth={tickWidth} strokeLinecap="round"
+                x1={c + Math.cos(a) * (radius - tickLength)} y1={c + Math.sin(a) * (radius - tickLength)}
+                x2={c + Math.cos(a) * out} y2={c + Math.sin(a) * out}
+              />
+            );
+          }
           return (
             <Tick
               key={i} i={i} n={ticks} progress={progress} fill={fill} track={track} width={tickWidth}

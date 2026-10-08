@@ -4,8 +4,12 @@ import type { FunctionReturnType } from "convex/server";
 import type { api } from "@/convex/_generated/api";
 
 export type Icon = Exclude<ComponentProps<typeof SymbolView>["name"], string>;
-export type InsightsView = FunctionReturnType<typeof api.compounding.insights.freeView>;
-export type DomainItem = InsightsView["domains"][number];
+type FreeView = FunctionReturnType<typeof api.compounding.insights.freeView>;
+type PlusView = NonNullable<FunctionReturnType<typeof api.compounding.insights.plusView>>;
+/** Free or Xolace+: the Xolace+ fields are simply absent from the free view. */
+export type InsightsView = FreeView & Partial<Pick<PlusView, "overallTrend">>;
+export type DomainItem = FreeView["domains"][number] &
+  Partial<Pick<PlusView["domains"][number], "steadiness" | "baseline" | "trend">>;
 
 export const icon = (ios: string, android: string) => ({ ios, android, web: android }) as Icon;
 export const GAUGE = icon("gauge.with.needle", "speed");
