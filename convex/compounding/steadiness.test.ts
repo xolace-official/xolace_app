@@ -26,10 +26,13 @@
  * 17. Overall shows with fewer than 2 unlocked domains, or counts warming ones.
  * 18. A metadata row whose session is gone crashes (dev.test.ts, the loader
  *     seam).
+ * 19. A classifier change shifts intensity and the baseline jumps with it, or
+ *     a new version ships with no offset recorded (#516).
  */
 import { describe, expect, it } from "vitest";
 import { domainOf } from "../lib/understandingVocab";
-import { readingsFromSession, type SessionEvidence } from "./readings";
+import { CLASSIFIER_VERSION } from "../ai/providers/anthropic";
+import { INTENSITY_OFFSET, readingsFromSession, type SessionEvidence } from "./readings";
 import { computeSteadiness, type Reading } from "./steadiness";
 
 const DAY = 86_400_000;
@@ -100,6 +103,21 @@ describe("readingsFromSession", () => {
     expect(readingsFromSession(session({ intensity: 9, primaryEmotion: "love" }))[0].value).toBe(75);
     expect(readingsFromSession(session({ intensity: 2, primaryEmotion: "joy" }))[0].value).toBeCloseTo(88.9, 1);
     expect(readingsFromSession(session({ intensity: 9, primaryEmotion: "anger" }))[0].value).toBeCloseTo(11.1, 1);
+  });
+
+  it("reads a shifted classifier on the reference scale via its offset, guard after", () => {
+    // A version that scores 1 hotter: its 5 is the reference's 4.
+    expect(readingsFromSession(session({ intensity: 5, intensityOffset: 1 }))[0].value).toBeCloseTo(66.67, 1);
+    expect(readingsFromSession(session({ intensity: 4 }))[0].value).toBeCloseTo(66.67, 1);
+    expect(
+      readingsFromSession(session({ intensity: 10, intensityOffset: -1, primaryEmotion: "joy" }))[0].value,
+    ).toBe(75);
+  });
+
+  it("every shipped classifier version has a recorded intensity offset (release gate)", () => {
+    expect(INTENSITY_OFFSET).toHaveProperty([CLASSIFIER_VERSION]);
+    // The reference scale itself never moves, or its stored history would shift.
+    expect(INTENSITY_OFFSET["classifier-v1-haiku-4.5"]).toBe(0);
   });
 
   it("adds a mood reading on the session's date, relative and capped", () => {

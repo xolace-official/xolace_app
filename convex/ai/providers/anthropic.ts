@@ -24,6 +24,9 @@ export function getAnthropicClient(): Anthropic {
 // --- Model Constants ---
 
 export const CLASSIFIER_MODEL = "claude-haiku-4-5-20251001";
+// Changing the classifier prompt or model? Bump this, run the intensity release
+// gate (`bun run test:evals`, __evals__/intensity.eval.test.ts) and record the
+// new version in INTENSITY_OFFSET (convex/compounding/readings.ts).
 export const CLASSIFIER_VERSION = "classifier-v1-haiku-4.5";
 
 export const ARTICULATOR_MODEL = "claude-sonnet-4-6";

@@ -12,6 +12,18 @@ import type { Reading } from "./steadiness";
 const VALENCE_FLOOR = 75;
 const UNCONFIRMED_WEIGHT = 0.5;
 
+/**
+ * How much hotter each classifier version scores intensity than the reference
+ * (`classifier-v1-haiku-4.5`), as measured by the intensity release gate
+ * (`convex/ai/prompts/__evals__/intensity.eval.test.ts`). Subtracted at read
+ * time, so stored intensity stays raw and baselines carry across a classifier
+ * change instead of resetting. A version ships only with its entry here (0 when
+ * the gate finds no shift); unlisted versions (seeds, tests) read as 0.
+ */
+export const INTENSITY_OFFSET: Record<string, number> = {
+  "classifier-v1-haiku-4.5": 0,
+};
+
 const MOOD_STEP: Partial<Record<NonNullable<Doc<"sessions">["postSessionMood"]>, number>> = {
   lighter: 15,
   same: 0,
@@ -31,6 +43,8 @@ const FOLLOW_UP_STEP: Partial<
 export type SessionEvidence = {
   at: number;
   intensity: number;
+  /** INTENSITY_OFFSET for the version that scored `intensity`. */
+  intensityOffset?: number;
   primaryEmotion: string;
   thematicTags: string[];
   confirmationState?: Doc<"sessions">["confirmationState"];
@@ -46,7 +60,8 @@ export function readingsFromSession(s: SessionEvidence): Reading[] {
   );
   if (domains.size === 0) return [];
 
-  const linear = clamp(100 - ((s.intensity - 1) * 100) / 9);
+  const intensity = s.intensity - (s.intensityOffset ?? 0);
+  const linear = clamp(100 - ((intensity - 1) * 100) / 9);
   const family = emotionFamily(s.primaryEmotion);
   const value =
     family.includes("joy") || family.includes("love") ? Math.max(linear, VALENCE_FLOOR) : linear;
@@ -114,6 +129,7 @@ export async function loadReadings(
     return readingsFromSession({
       at: session.createdAt,
       intensity: meta.intensity,
+      intensityOffset: INTENSITY_OFFSET[meta.classifierVersion],
       primaryEmotion: meta.primaryEmotion,
       thematicTags: meta.thematicTags,
       confirmationState: session.confirmationState,
