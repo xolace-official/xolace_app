@@ -19,6 +19,9 @@ import {
 const DAY_MS = 86_400_000;
 const MIN_BAND = 12;
 const SIGNAL_WINDOW_MS = 21 * DAY_MS;
+// Readings older than this are "the usual" the band is measured on. Matches the
+// signal window so no reading is both evidence of the drop and part of the usual.
+const USUAL_AFTER_MS = 21 * DAY_MS;
 const MIN_BELOW_DAYS = 2;
 const ANCHOR_CAP_MS = 90 * DAY_MS;
 const SILENCE_MS = QUIET_AFTER_DAYS * DAY_MS; // the same silence that marks a score quiet
@@ -33,14 +36,14 @@ export type Judged =
 /**
  * How far below the usual counts as "clearly": 12 points, or one SD of how
  * this domain normally swings (CONTEXT.md "Compounding"), weighted like the
- * baseline. "Normally" is the readings before the 21-day window: measured over
+ * baseline. "Normally" is the readings older than USUAL_AFTER_MS: measured over
  * all of them, the drop widens its own band, and a steady 70 falling to 10
  * every day for two weeks never clears it (gap 18, SD 28). `since` is the
  * moment being judged: now for opening, the stretch's start while it runs, so
  * the stretch's own readings never count as the usual either.
  */
 export function bandOf(d: DomainSteadiness, since: number): number {
-  const usual = d.readings.filter((r) => r.at <= since - SIGNAL_WINDOW_MS);
+  const usual = d.readings.filter((r) => r.at <= since - USUAL_AFTER_MS);
   if (usual.length === 0) return MIN_BAND;
   return Math.max(MIN_BAND, decayedMean(usual, since, BASELINE_HALF_LIFE_DAYS).sd);
 }
