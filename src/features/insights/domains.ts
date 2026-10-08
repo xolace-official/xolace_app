@@ -7,7 +7,8 @@ export type Icon = Exclude<ComponentProps<typeof SymbolView>["name"], string>;
 export type InsightsView = FunctionReturnType<typeof api.compounding.insights.freeView>;
 export type DomainItem = InsightsView["domains"][number];
 
-const icon = (ios: string, android: string) => ({ ios, android, web: android }) as Icon;
+export const icon = (ios: string, android: string) => ({ ios, android, web: android }) as Icon;
+export const GAUGE = icon("gauge.with.needle", "speed");
 
 export const DOMAIN_META: Record<DomainItem["domain"], { label: string; icon: Icon }> = {
   self: { label: "Self", icon: icon("person.fill", "person") },

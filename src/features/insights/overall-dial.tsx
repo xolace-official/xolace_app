@@ -1,6 +1,6 @@
 // The hero: overall steadiness as a fan of ticks that fill in on mount (#491).
 // Lit at two unlocked domains; before that, one line of presence instead.
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import { Presets } from "react-native-pulsar";
@@ -8,19 +8,20 @@ import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { GlassSurface, TickGauge } from "./glass";
-import type { Icon } from "./domains";
-
-const GAUGE_ICON = { ios: "gauge.with.needle", android: "speed", web: "speed" } as Icon;
+import { GAUGE } from "./domains";
 
 export function OverallDial({ overall }: { overall: number | null }) {
   const accent = useTokenColor("accent");
   const track = useTokenColor("border");
   const progress = useSharedValue(0);
+  const swelled = useRef(false);
 
   useEffect(() => {
     if (overall === null) return;
-    // A rising swell as the ticks fill: the number arriving, not a reward.
-    Presets.swell();
+    // A rising swell as the ticks first fill: the number arriving, not a reward.
+    // Once per visit — a reactive update just moves the ticks.
+    if (!swelled.current) Presets.swell();
+    swelled.current = true;
     progress.set(withTiming(overall / 100, { duration: 1100, easing: Easing.out(Easing.cubic) }));
   }, [overall, progress]);
 
@@ -38,7 +39,7 @@ export function OverallDial({ overall }: { overall: number | null }) {
             progress={progress} fill={accent} track={track}
           >
             <View className="flex-row items-center gap-1.5">
-              <SymbolView name={GAUGE_ICON} size={14} tintColor={accent} />
+              <SymbolView name={GAUGE} size={14} tintColor={accent} />
               <AppText className="text-[14px] text-accent">overall</AppText>
             </View>
             <AppText className="text-[68px] leading-[76px] font-bold tracking-tight">{overall}</AppText>

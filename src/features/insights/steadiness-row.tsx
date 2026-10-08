@@ -6,10 +6,9 @@ import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { playSoftPress } from "@/src/lib/haptics";
-import type { Icon } from "./domains";
+import { GAUGE, icon } from "./domains";
 
-const GAUGE = { ios: "gauge.with.needle", android: "speed", web: "speed" } as Icon;
-const CHEVRON = { ios: "chevron.right", android: "chevron_right", web: "chevron_right" } as Icon;
+const CHEVRON = icon("chevron.right", "chevron_right");
 
 export function SteadinessRow() {
   const router = useRouter();

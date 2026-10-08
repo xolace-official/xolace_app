@@ -9,9 +9,9 @@ import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { GlassSurface } from "./glass";
 import { DomainCell, DomainRow, ViewToggle, type DomainView } from "./domain-list";
-import type { DomainItem, Icon } from "./domains";
+import { icon, type DomainItem } from "./domains";
 
-const LOCK = { ios: "lock", android: "lock", web: "lock" } as Icon;
+const LOCK = icon("lock", "lock");
 
 export function PartsOfLife({ domains, isPlus }: { domains: DomainItem[]; isPlus: boolean }) {
   const [view, setView] = useState<DomainView>("grid");

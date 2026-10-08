@@ -6,12 +6,12 @@ import { Presets } from "react-native-pulsar";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { SteadinessRing } from "./steadiness-ring";
-import { DOMAIN_META, STAGE_WORD, lastSeen, type DomainItem, type Icon } from "./domains";
+import { DOMAIN_META, STAGE_WORD, icon, lastSeen, type DomainItem } from "./domains";
 
 export type DomainView = "grid" | "list";
 
-const GRID = { ios: "circle.grid.2x2", android: "grid_view", web: "grid_view" } as Icon;
-const LIST = { ios: "list.bullet", android: "view_list", web: "view_list" } as Icon;
+const GRID = icon("circle.grid.2x2", "grid_view");
+const LIST = icon("list.bullet", "view_list");
 const TICKS = 36;
 
 const toneOf = (d: DomainItem) => (d.lastSeenAt !== null ? "muted" : "accent");
@@ -48,7 +48,7 @@ export function DomainCell({ d }: { d: DomainItem }) {
     <View className="w-[31%] items-center gap-1 py-2" accessible accessibilityLabel={`${label}, ${STAGE_WORD[d.state]}`}>
       <SteadinessRing size={86} value={null} tone={toneOf(d)} dashed={warming} icon={icon}>
         <AppText className="text-[10px] text-muted text-center px-3">
-          {warming ? "warming" : STAGE_WORD[d.state]}
+          {warming ? "warming" : d.lastSeenAt !== null ? "Not recently" : STAGE_WORD[d.state]}
         </AppText>
       </SteadinessRing>
       <AppText numberOfLines={1} className="text-[11px] text-foreground/85">{label}</AppText>
