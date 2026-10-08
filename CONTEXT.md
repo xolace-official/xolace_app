@@ -91,6 +91,13 @@ recent.
 
 **Overall steadiness** is the plain average of the domains being shown.
 
+A domain's **trend** is how far its steadiness has moved since exactly a
+week ago. It only exists when the person could have seen a number a week ago
+and has brought the domain up since; a quiet week has no trend. The overall
+trend is the average of the domains' trends, so a domain joining never reads
+as things getting heavier. Past steadiness is never stored: it is counted
+again from the readings that remain, so it fades exactly as they do.
+
 To **burn** a session is to take it off the person's timeline. Its
 Understanding still counts toward steadiness, but its words are never kept
 in memory, so no insight can quote or cite it.
