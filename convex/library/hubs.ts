@@ -14,6 +14,7 @@ export const hubValidator = v.object({
   title: v.string(),
   intro: v.string(),
   coverUrl: v.optional(v.string()),
+  coverThumbhash: v.optional(v.string()), // base64 ThumbHash placeholder (#508)
 });
 
 export const toHub = async (h: Doc<"library_hubs">) => ({
@@ -22,6 +23,7 @@ export const toHub = async (h: Doc<"library_hubs">) => ({
   title: h.title,
   intro: h.intro,
   coverUrl: await coverOf(h),
+  coverThumbhash: h.coverThumbhash,
 });
 
 export const listHubs = query({

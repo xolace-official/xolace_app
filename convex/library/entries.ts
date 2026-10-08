@@ -26,6 +26,8 @@ export const listItemValidator = v.object({
   primarySubject: v.string(),
   readMin: v.number(),
   coverUrl: v.optional(v.string()),
+  coverThumbUrl: v.optional(v.string()), // 512px cover, when ingest resized it (#506)
+  coverThumbhash: v.optional(v.string()), // base64 ThumbHash placeholder (#507)
   newUntil: v.optional(v.number()),
 });
 
@@ -39,9 +41,23 @@ export const cardItemValidator = v.object({
 
 const COVER_URL_TTL_SEC = 3600;
 
-/** An uploaded cover (R2 key, signed now) wins over a plain hosted `coverUrl`. */
-export const coverOf = async (e: Pick<Doc<"library_entries">, "coverKey" | "coverUrl">) =>
-  e.coverKey ? await r2.getUrl(e.coverKey, { expiresIn: COVER_URL_TTL_SEC }) : e.coverUrl;
+const signCover = (key: string | undefined) => (key ? r2.getUrl(key, { expiresIn: COVER_URL_TTL_SEC }) : undefined);
+
+/**
+ * The 1280 WebP (#506), then the uploaded original (R2 key, signed now), then a
+ * plain hosted `coverUrl` — so shipped apps get the lighter cover unchanged.
+ */
+export const coverOf = async (
+  e: Pick<Doc<"library_entries">, "coverKey" | "coverUrl"> & Partial<Pick<Doc<"library_entries">, "cover1280Key">>,
+) =>
+  (await signCover(e.cover1280Key ?? e.coverKey)) ?? e.coverUrl;
+
+/** The cover fields: `coverThumbUrl` (512) and `coverThumbhash` only when ingest made them. */
+export const coversOf = async (e: Doc<"library_entries">) => ({
+  coverUrl: await coverOf(e),
+  coverThumbUrl: await signCover(e.cover512Key),
+  coverThumbhash: e.coverThumbhash,
+});
 
 export const toListItem = async (e: Doc<"library_entries">) => ({
   _id: e._id,
@@ -51,7 +67,7 @@ export const toListItem = async (e: Doc<"library_entries">) => ({
   dek: e.dek,
   primarySubject: e.primarySubject,
   readMin: e.readMin,
-  coverUrl: await coverOf(e),
+  ...(await coversOf(e)),
   newUntil: e.newUntil,
 });
 

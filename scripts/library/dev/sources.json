@@ -25,5 +25,32 @@
     "permission": "granted",
     "attributionText": "Exam stress, by Jo Baker, Student Minds (studentminds.org.uk). Shared with permission.",
     "dropBrandingIfAdapted": false
+  },
+  {
+    "slug": "dev-mental-health-foundation",
+    "name": "Mental Health Foundation",
+    "url": "https://www.mentalhealth.org.uk",
+    "licence": "© Mental Health Foundation; advice paraphrased, not reproduced (no reuse licence found)",
+    "permission": "not_required",
+    "attributionText": "Adapted from advice by the Mental Health Foundation.",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "dev-mind",
+    "name": "Mind",
+    "url": "https://www.mind.org.uk",
+    "licence": "© Mind; advice paraphrased, not reproduced (no reuse licence checked)",
+    "permission": "not_required",
+    "attributionText": "Adapted from information by Mind (mind.org.uk).",
+    "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "dev-american-psychological-association",
+    "name": "American Psychological Association",
+    "url": "https://www.apa.org",
+    "licence": "© American Psychological Association; advice paraphrased, not reproduced (no reuse licence checked)",
+    "permission": "not_required",
+    "attributionText": "Adapted from guidance by the American Psychological Association (apa.org).",
+    "dropBrandingIfAdapted": true
   }
 ]

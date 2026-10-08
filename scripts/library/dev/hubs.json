@@ -3,6 +3,7 @@
     "slug": "dev-starting-university",
     "title": "Starting university",
     "intro": "A short running order for the first few months away.",
+    "coverPath": "anxiety-what-helps.png",
     "active": true,
     "items": [
       { "kind": "entry", "ref": "dev-first-term-story" },

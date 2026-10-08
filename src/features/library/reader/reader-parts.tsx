@@ -10,6 +10,7 @@ import Animated from 'react-native-reanimated';
 import { useCSSVariable } from 'uniwind';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { CoverImage } from '@/src/features/library/cover-image';
 import { cn } from '@/src/lib/utils';
 import { COVER_SCRIM } from './cover-palette';
 import { headerCredit, metaLabel, metaLine, prepareBody } from './reader-copy';
@@ -170,11 +171,19 @@ export function SourceCredit({ entry, aside }: { entry: Pick<ReaderEntry, 'reuse
 }
 
 /** The cover photo under its scrim; the reader draws it twice (behind the scroller, in the bar). */
-export function CoverPhoto({ uri, style }: { uri?: string; style: ComponentProps<typeof Animated.View>['style'] }) {
+export function CoverPhoto({
+  uri,
+  thumbhash,
+  style,
+}: {
+  uri?: string;
+  thumbhash?: string;
+  style: ComponentProps<typeof Animated.View>['style'];
+}) {
   return (
     <Animated.View style={style} className="bg-cover-scrim">
       {/* ponytail: no cover → the plain scrim; the subject's cover lands when subjects get art */}
-      {uri && <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />}
+      <CoverImage uri={uri} thumbhash={thumbhash} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
       <LinearGradient colors={COVER_SCRIM.colors} locations={COVER_SCRIM.locations} style={StyleSheet.absoluteFill} />
     </Animated.View>
   );

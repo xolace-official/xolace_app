@@ -8,9 +8,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { asNewUser, asUnauthed, type SeededUser } from "../test/harness.helpers";
-import { aggregatesMock } from "../test/mocks.helpers";
+import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
+vi.mock("../revenuecat", () => revenuecatMock());
 vi.mock("../ai/paths/audioTracks", () => ({
   r2: { getUrl: async (key: string) => `https://r2.test/${key}` },
 }));
@@ -195,6 +196,34 @@ describe("library hubs", () => {
 
     expect(await user.t.query(api.library.hubs.getHub, { slug: "hidden" })).toBeNull();
   });
+
+  describe("resized covers (#508)", () => {
+    async function viewsOf(cover: Record<string, string>) {
+      const user = await asNewUser();
+      await user.t.mutation(internal.library.ingest.upsertHub, {
+        hub: { slug: "h", title: "H", intro: "", active: true, items: [], coverKey: "hub-cover/o.png", ...cover },
+        sha256: "h1",
+      });
+      const [listed] = await user.t.query(api.library.hubs.listHubs, {});
+      const one = (await user.t.query(api.library.hubs.getHub, { slug: "h" }))!;
+      const [home] = (await user.t.query(api.library.home.getHome, {})).hubs;
+      return [listed, one, home].map((h) => ({
+        coverUrl: h.coverUrl,
+        coverThumbhash: h.coverThumbhash,
+        thumbUrl: "coverThumbUrl" in h,
+      }));
+    }
+
+    it("serves the 1280 file and the ThumbHash in list, detail and home views, with no thumb URL", async () => {
+      const want = { coverUrl: "https://r2.test/hub-cover/l.webp", coverThumbhash: "1QcSHQ", thumbUrl: false };
+      expect(await viewsOf({ cover1280Key: "hub-cover/l.webp", coverThumbhash: "1QcSHQ" })).toEqual([want, want, want]);
+    });
+
+    it("a hub without them keeps today's shape", async () => {
+      const want = { coverUrl: "https://r2.test/hub-cover/o.png", coverThumbhash: undefined, thumbUrl: false };
+      expect(await viewsOf({})).toEqual([want, want, want]);
+    });
+  });
 });
 
 describe("library sources: manifest ingest → getEntry", () => {
@@ -307,6 +336,54 @@ describe("library sources: manifest ingest → getEntry", () => {
     expect((await read())?.map((s) => s.pageTitle)).toEqual(["mind page 1"]);
     const pairs = await user.root.run((ctx) => ctx.db.query("library_entry_sources").take(10));
     expect(pairs).toHaveLength(1);
+  });
+
+  describe("resized covers (#506)", () => {
+    const covers = { coverKey: "library-thumb/o.png", cover512Key: "library-thumb/s.webp", cover1280Key: "library-thumb/l.webp" };
+    async function views() {
+      const { user, ingest } = await setup();
+      const viewsOf = async () => {
+        const e = (await user.t.query(api.library.entries.getEntry, { slug: "e" }))!;
+        const [item] = await user.t.query(api.library.entries.listEntries, {});
+        await user.root.run(async (ctx) => {
+          if (!(await ctx.db.query("library_entry_audio").first())) {
+            await ctx.db.insert("library_entry_audio", {
+              entryId: e._id, key: "a", previewKey: "p", durationSec: 90, sha256: "a", active: true,
+            });
+          }
+        });
+        const audio = (await user.t.query(api.library.audio.getEntryAudio, { entryId: e._id }))!;
+        return [e, item, audio].map((v) => ({ coverUrl: v.coverUrl, coverThumbUrl: v.coverThumbUrl, coverThumbhash: v.coverThumbhash }));
+      };
+      return { ingest, viewsOf };
+    }
+
+    it("serves the 1280 file as coverUrl and the 512 file as coverThumbUrl in entry, list and audio views", async () => {
+      const { ingest, viewsOf } = await views();
+      await ingest(record(covers));
+      const want = { coverUrl: "https://r2.test/library-thumb/l.webp", coverThumbUrl: "https://r2.test/library-thumb/s.webp", coverThumbhash: undefined };
+      expect(await viewsOf()).toEqual([want, want, want]);
+    });
+
+    it("an entry without resized keys keeps today's shape", async () => {
+      const { ingest, viewsOf } = await views();
+      await ingest(record({ coverKey: covers.coverKey }));
+      const want = { coverUrl: "https://r2.test/library-thumb/o.png", coverThumbUrl: undefined, coverThumbhash: undefined };
+      expect(await viewsOf()).toEqual([want, want, want]);
+    });
+
+    it("returns the cover ThumbHash (#507) in entry, list and audio views", async () => {
+      const { ingest, viewsOf } = await views();
+      await ingest(record({ ...covers, coverThumbhash: "1QcSHQRnh493V4dIh4eXh1h4kJUI" }));
+      const views_ = await viewsOf();
+      expect(views_.map((v) => v.coverThumbhash)).toEqual(Array(3).fill("1QcSHQRnh493V4dIh4eXh1h4kJUI"));
+    });
+
+    it("re-ingesting the same record with resized keys is a no-op", async () => {
+      const { ingest } = await views();
+      expect(await ingest(record(covers))).toEqual({ action: "inserted" });
+      expect(await ingest(record(covers))).toEqual({ action: "unchanged" });
+    });
   });
 
   it("rejects the old single-source fields", async () => {

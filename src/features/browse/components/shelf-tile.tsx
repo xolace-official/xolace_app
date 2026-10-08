@@ -6,6 +6,7 @@ import { useCSSVariable } from 'uniwind';
 import type { FunctionReturnType } from 'convex/server';
 import type { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { imageSource } from '@/src/lib/image-source';
 import { useOpenTrack, type BrowseFrom } from '@/src/features/browse/use-open-track';
 
 export type ShelfItem = FunctionReturnType<typeof api.browse.getNewShelf>[number];
@@ -30,7 +31,7 @@ export function ShelfTile({ item, from, size = TILE }: { item: ShelfItem; from: 
       onPress={() => open(item)}
     >
       <View className="bg-surface-tertiary overflow-hidden rounded-[10px]" style={{ width: size, height: size }}>
-        <Image source={{ uri: item.thumbUrl }} style={{ width: size, height: size }} />
+        <Image source={imageSource(item.thumbUrl)} style={{ width: size, height: size }} />
         {locked && (
           <View className="bg-background/85 absolute bottom-1.5 right-1.5 h-5 w-5 items-center justify-center rounded-full">
             <SymbolView name={{ ios: "lock.fill", android: "lock", web: "lock" }} size={10} tintColor={String(lockTint)} accessibilityLabel="Xolace+" />

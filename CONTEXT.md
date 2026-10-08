@@ -10,6 +10,10 @@ tipped it in until it is back near the person's usual (or goes quiet). A
 compounding check-in happens at most once per stretch. A stretch that starts
 soon after the previous one ended is **returning**: never "relapse".
 
+Unlike steadiness, a stretch is remembered, not recounted: once it has
+happened it stays as it was, even if the readings behind it later fade or
+the way steadiness is counted changes.
+
 **Linked domains** are domains compounding in the same stretch that keep
 coming up in the same sessions: work, sleep and a partner, each heavier
 because of the others. Insights name the link and the order it built in;

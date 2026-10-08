@@ -28,6 +28,21 @@
 // still works for a hosted image, but an uploaded cover wins. Hubs take the
 // same `coverPath`, uploaded under `hub-cover/<sha>.<ext>`.
 //
+// `--cover-variants` (#506, off by default) also resizes each entry cover to a
+// 512px and a 1280px WebP (sharp: lanczos3, q78, effort 6), uploaded beside the
+// untouched original as `library-thumb/<sha>.webp` and kept in `cover512Key` /
+// `cover1280Key`; the run logs each file's key and size. The keys join the
+// record hash, so the first flagged run updates every entry once; without the
+// flag, output and hashes are exactly as before — try it on dev before --prod.
+// The WebP keys hash sharp's output, so a sharp/libvips upgrade that changes the
+// bytes makes the next flagged run update every entry (old WebPs stay as orphans).
+// The same flag stores a base64 ThumbHash of the cover (#507) in `coverThumbhash`,
+// encoded from a ≤100px sharp copy; the app shows it while the cover loads.
+// Hubs (#508) get the same flag but only the 1280 WebP (`hub-cover/<sha>.webp`,
+// `cover1280Key`) and the ThumbHash — a hub cover is never shown small.
+// The variant fields join the hash, so an unflagged run after a flagged one
+// drops them again (back to the original cover): keep the flag on every run.
+//
 // Audio (#411) is a last pass over `audio.json`, keyed by `entrySlug`:
 // `[{ entrySlug, audioPath, transcriptPath, active, title? }]`, paths relative to
 // `media/` beside the manifest (gitignored, like kindling's). The script
@@ -41,6 +56,7 @@
 // Usage:
 //   bun scripts/library/ingest.ts             # dev deployment + dev/ fixtures
 //   bun scripts/library/ingest.ts --prod      # prod deployment + prod/ catalogue
+//   bun scripts/library/ingest.ts --cover-variants   # + 512/1280 WebP covers (add --prod for prod)
 //   bun scripts/library/ingest.ts --manifest scripts/library/dev/manifest.json   # sources/hubs read from the same dir
 
 import { createHash, randomUUID } from "node:crypto";
@@ -48,6 +64,8 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import sharp from "sharp";
+import { rgbaToThumbHash } from "thumbhash";
 
 type Source = { slug: string; refreshDays?: number; [k: string]: unknown };
 type Entry = {
@@ -65,6 +83,7 @@ type Audio = { entrySlug: string; audioPath: string; transcriptPath: string; act
 const args = process.argv.slice(2);
 const i = args.indexOf("--manifest");
 const prod = args.includes("--prod");
+const coverVariants = args.includes("--cover-variants");
 const manifestPath = path.resolve(i === -1 ? `scripts/library/${prod ? "prod" : "dev"}/manifest.json` : args[i + 1]);
 const dir = path.dirname(manifestPath);
 const DAY_MS = 86_400_000;
@@ -100,11 +119,58 @@ async function upload(key: string, body: Buffer) {
 
 // Content-addressed like kindling's thumbs: the key is the hash, so an unchanged
 // cover is the same key and is only re-PUT (idempotent), never duplicated.
-async function uploadCover(coverPath: string, prefix = "library-thumb") {
-  const file = readFileSync(path.resolve(dir, "media/cover", coverPath));
-  const coverKey = `${prefix}/${createHash("sha256").update(file).digest("hex")}${path.extname(coverPath).toLowerCase()}`;
-  await upload(coverKey, file);
-  return { coverKey };
+async function uploadContent(prefix: string, file: Buffer, ext: string) {
+  const key = `${prefix}/${createHash("sha256").update(file).digest("hex")}${ext}`;
+  await upload(key, file);
+  return key;
+}
+
+const readCover = (coverPath: string) => readFileSync(path.resolve(dir, "media/cover", coverPath));
+
+async function uploadCover(coverPath: string, prefix = "library-thumb", file = readCover(coverPath)) {
+  return { coverKey: await uploadContent(prefix, file, path.extname(coverPath).toLowerCase()) };
+}
+
+// The original's key, plus the --cover-variants fields when the flag is on.
+async function coverFields(coverPath: string | undefined, prefix: string, variants: (file: Buffer) => Promise<object>) {
+  if (!coverPath) return {};
+  const file = readCover(coverPath);
+  return { ...(await uploadCover(coverPath, prefix, file)), ...(coverVariants ? await variants(file) : {}) };
+}
+
+// --cover-variants: a resized WebP of the cover, uploaded and logged with its size.
+async function uploadCoverVariant(file: Buffer, px: number, prefix: string) {
+  const webp = await sharp(file)
+    .resize(px, px, { fit: "inside", withoutEnlargement: true, kernel: "lanczos3" })
+    .webp({ quality: 78, effort: 6 })
+    .toBuffer();
+  const key = await uploadContent(prefix, webp, ".webp");
+  console.log(`  ${px}px ${key}: ${webp.length} bytes (original ${file.length} bytes)`);
+  return key;
+}
+
+// The entry cover's 512 (list thumbnails) and 1280 (full-width) WebPs.
+async function uploadCoverVariants(file: Buffer) {
+  return {
+    cover512Key: await uploadCoverVariant(file, 512, "library-thumb"),
+    cover1280Key: await uploadCoverVariant(file, 1280, "library-thumb"),
+    coverThumbhash: await thumbhashOf(file),
+  };
+}
+
+// Hubs are never shown small (#508): only the 1280.
+async function uploadHubCoverVariants(file: Buffer) {
+  return { cover1280Key: await uploadCoverVariant(file, 1280, "hub-cover"), coverThumbhash: await thumbhashOf(file) };
+}
+
+// ThumbHash encodes at most 100×100 RGBA.
+async function thumbhashOf(file: Buffer) {
+  const { data, info } = await sharp(file)
+    .resize(100, 100, { fit: "inside" })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return Buffer.from(rgbaToThumbHash(info.width, info.height, data)).toString("base64");
 }
 
 async function ingestAudio(a: Audio) {
@@ -176,7 +242,7 @@ async function main() {
     await attempt(`entry ${record.slug}`, async () => {
       const markdown = readFileSync(path.resolve(dir, record.bodyPath), "utf8");
       const { bodyPath: _bodyPath, coverPath, decorativeImages, ...rest } = record;
-      const cover = coverPath ? await uploadCover(coverPath) : {};
+      const cover = await coverFields(coverPath, "library-thumb", uploadCoverVariants);
       const entry = { ...rest, ...cover };
       return convexRun("library/ingest:upsertEntry", {
         entry,
@@ -190,7 +256,7 @@ async function main() {
   for (const hub of hubs) {
     await attempt(`hub ${hub.slug}`, async () => {
       const { coverPath, ...rest } = hub;
-      const cover = coverPath ? await uploadCover(coverPath, "hub-cover") : {};
+      const cover = await coverFields(coverPath, "hub-cover", uploadHubCoverVariants);
       const doc = { ...rest, ...cover };
       return convexRun("library/ingest:upsertHub", { hub: doc, sha256: sha256(JSON.stringify(doc)) });
     });

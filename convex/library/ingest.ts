@@ -152,6 +152,8 @@ export const upsertHub = internalMutation({
       intro: v.string(),
       coverUrl: v.optional(v.string()),
       coverKey: v.optional(v.string()),
+      cover1280Key: v.optional(v.string()),
+      coverThumbhash: v.optional(v.string()),
       active: v.boolean(),
       items: v.array(v.object({ kind: v.union(v.literal("entry"), v.literal("audio")), ref: v.string() })),
     }),

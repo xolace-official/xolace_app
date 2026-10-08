@@ -8,7 +8,6 @@
  */
 import type { Id } from '@/convex/_generated/dataModel';
 import { BlurView } from 'expo-blur';
-import { Image } from 'expo-image';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
 import { usePostHog } from 'posthog-react-native';
@@ -17,6 +16,7 @@ import { AccessibilityInfo, findNodeHandle, Pressable, StyleSheet, View } from '
 import Animated, { Easing, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { CoverImage } from '@/src/features/library/cover-image';
 import { trackLibrary } from '@/src/features/library/analytics';
 import { formatTime } from '@/src/features/browse/player/format-time';
 import { usePaywall } from '@/src/features/purchases/use-paywall';
@@ -84,7 +84,7 @@ export function AudioDock({ audio, entryId, title, coverUrl, bottom }: DockProps
 
       <View className="flex-row items-center gap-3 p-3">
         <View className="h-11 w-11 overflow-hidden rounded-xl bg-cover-scrim">
-          {coverUrl && <Image source={{ uri: coverUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />}
+          <CoverImage uri={coverUrl} style={StyleSheet.absoluteFill} contentFit="cover" />
         </View>
         <View className="flex-1">
           <AppText numberOfLines={1} maxFontSizeMultiplier={BAR_MAX_SCALE} className="font-semibold text-sm">

@@ -15,6 +15,7 @@ import { useTrackPlayback } from "@/src/features/browse/use-track-playback";
 import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/src/lib/haptics";
+import { imageSource } from "@/src/lib/image-source";
 import { formatTime } from "./format-time";
 import { CrisisLine, GlyphButton, VolumeRow, usePlayerInk } from "./player-controls";
 import { PLAYER_SCRIM } from "./player-palette";
@@ -74,7 +75,7 @@ function Player() {
   return (
     <View className="flex-1 bg-player-scrim">
       {track && (
-        <Image source={{ uri: track.thumbUrl }} style={ABSOLUTE_FILL} contentFit="cover" blurRadius={40} />
+        <Image source={imageSource(track.thumbUrl)} style={ABSOLUTE_FILL} contentFit="cover" blurRadius={40} />
       )}
       <LinearGradient colors={PLAYER_SCRIM.colors} locations={PLAYER_SCRIM.locations} style={ABSOLUTE_FILL} />
 
@@ -99,7 +100,7 @@ function Player() {
         <View className="flex-1 justify-end px-6 pb-30">
           <View className="flex-row items-center gap-4">
             <View className="overflow-hidden rounded-lg bg-player-ink/10" style={{ width: TILE, height: TILE }}>
-              {track && <Image source={{ uri: track.thumbUrl }} style={{ width: TILE, height: TILE }} />}
+              {track && <Image source={imageSource(track.thumbUrl)} style={{ width: TILE, height: TILE }} />}
             </View>
             <View className="flex-1">
               <AppText className="text-[11px] font-semibold uppercase tracking-wider text-player-ink/50">
