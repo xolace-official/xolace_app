@@ -20,6 +20,7 @@ import { FollowUpsSection } from "@/src/features/profile/components/follow-ups-s
 import { PlusRow } from "@/src/features/profile/components/plus-row";
 import { PlusInsightOffer } from "@/src/features/profile/components/plus-insight-offer";
 import { AvatarPickerSheet } from "@/src/features/profile/components/avatar-picker-sheet";
+import { SteadinessRow } from "@/src/features/insights/steadiness-row";
 import { useProfileSummary } from "@/src/features/profile/hooks/use-profile-summary";
 import { useMoodDelta } from "@/src/features/profile/hooks/use-mood-delta";
 import { useWeekIntensity } from "@/src/features/profile/hooks/use-week-intensity";
@@ -156,15 +157,7 @@ export function ProfileScreen() {
           </EaseView>
         )}
 
-        {/* PROTOTYPE (#491): dev-only door to the insights-screen variants. */}
-        {__DEV__ && (
-          <AppText
-            onPress={() => router.push("/profile/insights-prototype" as never)}
-            className="text-[12px] text-accent text-center mb-4"
-          >
-            Open steadiness prototype ›
-          </AppText>
-        )}
+        {hasEnoughForChart && <SteadinessRow />}
 
         {/* Widest lens first: you among everyone, then your week, then your
             words. Always rendered — the card carries its own pending state. */}

@@ -1,4 +1,4 @@
-// PROTOTYPE (#491) — progressive blur under the transparent header (from
+// Progressive blur under the transparent header (from
 // clarity-main glass-tabs/progressive-blur): one BlurView alpha-masked by an
 // eased gradient, plus a --background scrim so the title stays legible.
 // Android gets the scrim only (BlurView under a MaskedView is unreliable there).

@@ -45,4 +45,10 @@ export const PAYWALL_SURFACE_FEATURE: Record<PaywallSurface, PaywallFeatureId | 
   // Kindling binds to curated audio/music twigs (docs/paths-v1.md §0).
   kindling: "audio",
   library_audio: "audio",
+  steadiness_numbers: "insights",
+};
+
+/** A surface's own line under the Xolace+ title, replacing the default (#513). */
+export const PAYWALL_SURFACE_LINE: Partial<Record<PaywallSurface, string>> = {
+  steadiness_numbers: "Your steadiness is already counted. Xolace+ shows you the numbers.",
 };

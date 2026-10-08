@@ -64,6 +64,7 @@ import type * as chatNotifications from "../chatNotifications.js";
 import type * as cohort from "../cohort.js";
 import type * as compounding_dev from "../compounding/dev.js";
 import type * as compounding_devSeed from "../compounding/devSeed.js";
+import type * as compounding_insights from "../compounding/insights.js";
 import type * as compounding_readings from "../compounding/readings.js";
 import type * as compounding_steadiness from "../compounding/steadiness.js";
 import type * as consent from "../consent.js";
@@ -234,6 +235,7 @@ declare const fullApi: ApiFromModules<{
   cohort: typeof cohort;
   "compounding/dev": typeof compounding_dev;
   "compounding/devSeed": typeof compounding_devSeed;
+  "compounding/insights": typeof compounding_insights;
   "compounding/readings": typeof compounding_readings;
   "compounding/steadiness": typeof compounding_steadiness;
   consent: typeof consent;
