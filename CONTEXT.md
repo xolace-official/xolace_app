@@ -80,8 +80,10 @@ dated piece of evidence about a domain: what a session brought, or how the
 person said it ended (the mood check, and later the follow-up). How often a
 domain comes up is not part of its steadiness; that belongs to compounding.
 Intensity says how big a feeling is, not which way it points, so a good
-session (joy, love) never counts against steadiness: its reading has a
-floor, the **valence guard**.
+session (joy, love) never counts against steadiness: its session reading
+has a floor, the **valence guard**. The floor corrects the classifier, not
+the person: mood and follow-up readings still step from the guarded value,
+so "heavier" after good news can read below it.
 
 A domain's **baseline** is the person's own usual for that domain: the same
 readings remembered over months rather than weeks. Steadiness is only ever
