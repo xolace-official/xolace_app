@@ -65,7 +65,7 @@ export function UnlockBeat({ sessionId, unlock }: Props) {
           <View className="flex-1 gap-1">
             <AppText className="text-[15px] font-medium text-foreground">{titleOf(shown.domains)}</AppText>
             <AppText className="text-[13px] leading-5 text-muted">{bodyOf(shown.domains)}</AppText>
-            <PressableFeedback onPress={seeIt} accessibilityRole="button" className="self-start pt-1">
+            <PressableFeedback onPress={seeIt} accessibilityRole="button" hitSlop={12} className="self-start pt-1">
               <AppText className="text-[13px] font-semibold text-accent">See it</AppText>
             </PressableFeedback>
           </View>
@@ -80,6 +80,8 @@ export function UnlockBeat({ sessionId, unlock }: Props) {
       animate={{ opacity: 1 }}
       transition={TRANSITION}
       className="absolute inset-0 bg-background px-6"
+      // Screen readers stay on the milestone, not the session end beneath it.
+      accessibilityViewIsModal
       style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 8 }}
     >
       <View className="flex-1 justify-between">

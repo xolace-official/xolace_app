@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { internalMutation } from "../_generated/server";
 import { assertDevToolsEnabled } from "../devTools";
+import { domainValidator } from "../lib/validators";
 import { loadReadings } from "./readings";
 import { computeSteadiness } from "./steadiness";
 import { evaluateCompounding } from "./stretches";
@@ -138,5 +139,32 @@ export const unseedCompounding = internalMutation({
     }
     if (restorePathId) await ctx.db.patch("paths", restorePathId, { status: "active" });
     return seeded.length;
+  },
+});
+
+/**
+ * Dev-only (#523): stamp an unlock on the profile's newest completed session
+ * (seen cleared), so its session-end screen shows the beat. No domains
+ * clears the stamp. Returns the id.
+ *
+ *   bunx convex run compounding/devSeedCompounding:seedUnlock '{"profileId":"…","domains":["work"],"first":true}'
+ */
+export const seedUnlock = internalMutation({
+  args: { profileId: v.id("emotional_profiles"), domains: v.array(domainValidator), first: v.boolean() },
+  returns: v.id("sessions"),
+  handler: async (ctx, { profileId, domains, first }) => {
+    assertDevToolsEnabled();
+    const session = (
+      await ctx.db
+        .query("sessions")
+        .withIndex("by_profile_time", (q) => q.eq("emotionalProfileId", profileId))
+        .order("desc")
+        .take(20)
+    ).find((s) => s.state === "completed");
+    if (!session) throw new Error("No completed session to stamp");
+    await ctx.db.patch("sessions", session._id, {
+      domainUnlock: domains.length > 0 ? { domains, first } : undefined,
+    });
+    return session._id;
   },
 });
