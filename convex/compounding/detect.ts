@@ -30,7 +30,7 @@ const SHARE_LONG_MS = 90 * DAY_MS;
 type Clock = { now: number; timezone: string };
 export type OpenStretch = { startedAt: number; anchorBaseline: number };
 export type Judged =
-  | { state: "compounding" | "easing"; gap: number; band: number }
+  | { state: "compounding" | "easing"; gap: number; band: number; baseline: number }
   | { ended: "quiet" | "usual"; endedAt: number };
 
 /**
@@ -81,7 +81,7 @@ export function judgeOpen(d: DomainSteadiness, row: OpenStretch, clock: Clock): 
   const band = bandOf(d, row.startedAt);
   const gap = baseline - d.raw.steadiness;
   if (gap < band / 2) return { ended: "usual", endedAt: clock.now };
-  return { state: isEasing(d, clock.timezone) ? "easing" : "compounding", gap, band };
+  return { state: isEasing(d, clock.timezone) ? "easing" : "compounding", gap, band, baseline };
 }
 
 function lapsedAt(readings: Reading[], startedAt: number, now: number): number | null {

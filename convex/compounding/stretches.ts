@@ -26,6 +26,8 @@ export type Compounding = {
   state: "compounding" | "easing";
   /** Points below the (anchored) baseline. */
   gap: number;
+  /** The usual it's judged against: the anchor for 90 days, then the live baseline. */
+  baseline: number;
   band: number;
   /** Started within 30 days of this domain's previous stretch ending. */
   returning: boolean;

@@ -103,7 +103,7 @@ export const plusView = query({
     // Compounding first, then easing, each by compoundingFor's rank (#491).
     const flagged = new Map(
       [...live.filter((c) => c.state === "compounding"), ...live.filter((c) => c.state === "easing")].map(
-        (c, i) => [c.domain, { i, state: c.state }],
+        (c, i) => [c.domain, { i, state: c.state, baseline: c.baseline }],
       ),
     );
     const at = (d: DomainSteadiness) => flagged.get(d.domain)?.i ?? flagged.size;
@@ -114,11 +114,13 @@ export const plusView = query({
       domains: ordered(domains)
         .sort((a, b) => at(a) - at(b))
         .map((d) => {
-          const state = flagged.get(d.domain)?.state ?? null;
+          const flag = flagged.get(d.domain);
+          const state = flag?.state ?? null;
           return {
             ...freeFields(d),
             steadiness: round(d.steadiness),
-            baseline: round(d.baseline),
+            // While it compounds, "your usual" is the anchor it's judged against (CONTEXT.md).
+            baseline: round(flag?.baseline ?? d.baseline),
             trend: trend.domains.get(d.domain) ?? null,
             compounding: state,
             kindling: state !== null && kindling.has(d.domain),

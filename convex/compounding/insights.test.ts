@@ -98,7 +98,8 @@ describe("compounding/insights.freeView", () => {
  * plusView (#518). Failure modes: numbers reaching a free (or lapsed) user;
  * a baseline before settled or a number while warming; a trend chip for a
  * domain warming a week ago; upgrade needing a backfill before history shows.
- * #520: a compounding domain not ranked first, or a steady one marked; the
+ * #520: a compounding domain not ranked first, or a steady one marked; its
+ * usual shown live instead of the anchor it's judged against; the
  * Kindling hand-off offered for a domain tonight's kindling never touched.
  */
 describe("compounding/insights.plusView", () => {
@@ -175,6 +176,9 @@ describe("compounding/insights.plusView", () => {
       ["work", "compounding"],
       ["self", null],
     ]);
+    // "Your usual" is the anchor the stretch is judged against, not the sinking live one.
+    expect(out.domains[0].baseline).toBe(67);
+    expect(out.domains[1].baseline).toBe(67); // steady Self keeps its live usual
   });
 
   it("offers Kindling only for a compounding domain the active kindling's session touched", async () => {
