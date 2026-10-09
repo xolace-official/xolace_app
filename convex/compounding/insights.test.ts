@@ -100,6 +100,7 @@ describe("compounding/insights.freeView", () => {
  * domain warming a week ago; upgrade needing a backfill before history shows.
  * #520: a compounding domain not ranked first, or a steady one marked; its
  * usual shown live instead of the anchor it's judged against; the
+ * hand-off offered for a kindling lit before the stretch began; the
  * Kindling hand-off offered for a domain tonight's kindling never touched.
  */
 describe("compounding/insights.plusView", () => {
@@ -154,7 +155,7 @@ describe("compounding/insights.plusView", () => {
     );
   }
 
-  const activeKindling = (user: SeededUser, sessionId: Id<"sessions">) =>
+  const activeKindling = (user: SeededUser, sessionId: Id<"sessions">, generatedAt = NOW) =>
     user.root.run((ctx) =>
       ctx.db.insert("paths", {
         emotionalProfileId: user.profileId,
@@ -162,7 +163,7 @@ describe("compounding/insights.plusView", () => {
         status: "active",
         model: "test",
         modelVersion: "test",
-        generatedAt: NOW,
+        generatedAt,
       }),
     );
 
@@ -201,5 +202,13 @@ describe("compounding/insights.plusView", () => {
       ["work", true],
       ["health", false],
     ]);
+  });
+
+  it("offers no hand-off for a kindling lit before the stretch began", async () => {
+    const user = await asNewUser();
+    await compoundingWork(user); // the stretch started 5 days ago
+    plus = true;
+    await activeKindling(user, await seed(user, 6, ["work"], 4), NOW - 6 * DAY);
+    expect((await readPlus(user))!.domains[0]).toMatchObject({ domain: "work", kindling: false });
   });
 });

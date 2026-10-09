@@ -40,18 +40,23 @@ const freeFields = (d: DomainSteadiness) => ({
 
 const round = (n: number | null) => (n === null ? null : Math.round(n));
 
-/** Domains the active kindling's session touched: where the hand-off lands (#520). */
-async function kindlingDomains(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
+/**
+ * The active kindling: when it was lit and the domains its session touched.
+ * The hand-off lands where both hold for a stretch (#520): lit during it, and
+ * about it. Once #521 feeds stretches to generation, that means made for it.
+ */
+async function activeKindling(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
   const path = await ctx.db
     .query("paths")
     .withIndex("by_profile_and_status", (q) => q.eq("emotionalProfileId", profileId).eq("status", "active"))
     .first();
-  if (!path) return new Set<Domain>();
+  if (!path) return null;
   const meta = await ctx.db
     .query("emotional_metadata")
     .withIndex("by_session", (q) => q.eq("sessionId", path.sessionId))
     .first();
-  return new Set((meta?.thematicTags ?? []).map(domainOf).filter((d): d is Domain => d !== null));
+  const domains = new Set((meta?.thematicTags ?? []).map(domainOf).filter((d): d is Domain => d !== null));
+  return { generatedAt: path.generatedAt, domains };
 }
 
 export const freeView = query({
@@ -86,7 +91,7 @@ export const plusView = query({
           /** Null when warming 7 days ago or quiet since; 0 = "same as last week". */
           trend: nullableNumber,
           compounding: v.union(v.literal("compounding"), v.literal("easing"), v.null()),
-          /** Compounding, and tonight's kindling came from a session that touched it. */
+          /** Compounding, and the active kindling was lit since the stretch began, from a session that touched it. */
           kindling: v.boolean(),
         }),
       ),
@@ -103,11 +108,11 @@ export const plusView = query({
     // Compounding first, then easing, each by compoundingFor's rank (#491).
     const flagged = new Map(
       [...live.filter((c) => c.state === "compounding"), ...live.filter((c) => c.state === "easing")].map(
-        (c, i) => [c.domain, { i, state: c.state, baseline: c.baseline }],
+        (c, i) => [c.domain, { i, state: c.state, baseline: c.baseline, startedAt: c.startedAt }],
       ),
     );
     const at = (d: DomainSteadiness) => flagged.get(d.domain)?.i ?? flagged.size;
-    const kindling = flagged.size ? await kindlingDomains(ctx, profile._id) : new Set<Domain>();
+    const kindling = flagged.size ? await activeKindling(ctx, profile._id) : null;
     return {
       overall: round(overall),
       overallTrend: trend.overall,
@@ -123,7 +128,8 @@ export const plusView = query({
             baseline: round(flag?.baseline ?? d.baseline),
             trend: trend.domains.get(d.domain) ?? null,
             compounding: state,
-            kindling: state !== null && kindling.has(d.domain),
+            kindling:
+              !!flag && !!kindling && kindling.generatedAt >= flag.startedAt && kindling.domains.has(d.domain),
           };
         }),
     };

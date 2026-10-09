@@ -86,7 +86,7 @@ export const seedCompounding = internalMutation({
       status: "active",
       model: "seed-compounding",
       modelVersion: "seed-compounding",
-      generatedAt: now,
+      generatedAt: Date.now(), // after the stretch, as generation runs after completion
     });
     await ctx.db.insert("path_steps", {
       pathId,
