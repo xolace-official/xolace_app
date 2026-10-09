@@ -6,10 +6,11 @@ import { hasPremium } from "../../lib/premium";
 import { rateLimiter } from "../../lib/rateLimits";
 import { renderSemanticProfile } from "../../semanticProfiles";
 import { posthog } from "../../posthog";
-import type { PathsPromptUnderstanding } from "./prompt";
+import type { PathsPromptUnderstanding, PromptCompounding } from "./prompt";
 import type { BindEntry, BindTrack, BindUnderstanding } from "./bind";
 import { readRow } from "../../library/reads";
-import { emotionFamily } from "../../lib/understandingVocab";
+import { domainOf, emotionFamily, lifeAreasOf } from "../../lib/understandingVocab";
+import { compoundingFor } from "../../compounding/stretches";
 
 /**
  * Kindling generation — the DB halves of `generate.ts` (#331): the context
@@ -24,6 +25,7 @@ export interface GenerateContext {
   binding: BindUnderstanding;
   tracks: BindTrack[];
   entries: BindEntry[];
+  compounding: PromptCompounding[];
 }
 
 // ponytail: the whole active catalogue in one read (~200–400 rows, six small
@@ -75,6 +77,32 @@ async function loadReadCandidates(
   return entries;
 }
 
+const DAY_MS = 86_400_000;
+
+/**
+ * The compounding domains tonight's session touched (#521, #492 §2) — never
+ * a linked or untouched one — and none at all on an elevated/crisis or burned
+ * session (§4). Kindling's own gates stay as they are: this only adds context.
+ */
+async function touchedCompounding(
+  ctx: QueryCtx,
+  profileId: Id<"emotional_profiles">,
+  u: Doc<"emotional_metadata">,
+): Promise<PromptCompounding[]> {
+  if (u.safeguardLevel === "elevated" || u.safeguardLevel === "crisis") return [];
+  if ((await ctx.db.get("sessions", u.sessionId))?.kept === false) return [];
+  const touched = new Set(u.thematicTags.map(domainOf));
+  const now = Date.now();
+  return (await compoundingFor(ctx, profileId, { now }))
+    .filter((c) => touched.has(c.domain))
+    .map((c) => ({
+      domain: c.domain,
+      state: c.state,
+      returning: c.returning,
+      days: (now - c.startedAt) / DAY_MS,
+    }));
+}
+
 /**
  * Null means "do nothing, silently": free user (ADR 0009), no Understanding
  * yet, or `supportNeed` absent/none (§1 — pre-classifier rows read as none).
@@ -99,6 +127,7 @@ export const getContext = internalQuery({
       ? await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId)
       : null;
 
+    const compounding = await touchedCompounding(ctx, profile._id, u);
     const tracks = (await ctx.db.query("audio_tracks").take(MAX_TRACKS))
       .filter((t) => t.active)
       .map(({ slug, family, topic, tags, active, series }) => ({
@@ -124,9 +153,11 @@ export const getContext = internalQuery({
         secondaryEmotion: u.secondaryEmotion,
         thematicTags: u.thematicTags,
         suggestedSpecialty: u.suggestedSpecialty,
+        compoundingTags: compounding.flatMap((c) => lifeAreasOf(c.domain)),
       },
       tracks,
       entries: await loadReadCandidates(ctx, profile._id, u),
+      compounding,
     };
   },
 });

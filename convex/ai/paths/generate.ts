@@ -94,6 +94,7 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     profile: context.profile,
     catalog,
     tier: "plus",
+    compounding: context.compounding,
   });
   const response = await getAnthropicClient().messages.create({
     model: PATHS_MODEL,

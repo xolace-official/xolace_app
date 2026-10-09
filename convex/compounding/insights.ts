@@ -43,7 +43,7 @@ const round = (n: number | null) => (n === null ? null : Math.round(n));
 /**
  * The active kindling: when it was lit and the domains its session touched.
  * The hand-off lands where both hold for a stretch (#520): lit during it, and
- * about it. Once #521 feeds stretches to generation, that means made for it.
+ * about it. Generation sees tonight's stretches (#521), so that means made for it.
  */
 async function activeKindling(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
   const path = await ctx.db

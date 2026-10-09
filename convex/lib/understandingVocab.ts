@@ -163,6 +163,10 @@ export const LIFE_AREA_HOME: Record<ThematicTag, Domain | "texture" | "sensitive
   addiction: "sensitive",
 };
 
+/** The life areas whose home is this domain. */
+export const lifeAreasOf = (domain: Domain): ThematicTag[] =>
+  THEMATIC_TAGS.filter((tag) => LIFE_AREA_HOME[tag] === domain);
+
 /**
  * Tags older classifier versions wrote outside the closed list (#490). Two are
  * plain synonyms of a life area and are remapped; every other off-list tag

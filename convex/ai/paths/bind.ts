@@ -21,6 +21,8 @@ export interface BindUnderstanding {
   secondaryEmotion?: string;
   thematicTags: string[];
   suggestedSpecialty: Doc<"emotional_metadata">["suggestedSpecialty"];
+  /** Life areas of the compounding domains tonight touched (#521): tie-breakers, never a gate. */
+  compoundingTags?: string[];
 }
 
 /** A Library entry the reader hasn't finished, with the facets that matched this Understanding. */
@@ -89,6 +91,7 @@ function bindTrack(
   const wanted = new Set([
     ...understoodEmotions(u),
     ...u.thematicTags,
+    ...(u.compoundingTags ?? []),
     ...entry.emotions,
     ...entry.themes,
   ]);

@@ -839,3 +839,83 @@ describe("ai/paths/audioTracks.discardUpload (#354)", () => {
     deleteObject.mockRestore();
   });
 });
+
+/**
+ * Compounding context (#521). Failure modes: an untouched (or merely linked)
+ * compounding domain reaching the prompt; compounding context on an elevated,
+ * crisis or burned session; a free user getting a model call at all.
+ */
+describe("compounding context for Kindling (#521)", () => {
+  const DAY = 86_400_000;
+
+  async function seedReading(user: SeededUser, daysAgo: number, tags: string[], intensity: number) {
+    const sessionId = await seedSession(user.root, user.profileId, {
+      state: "completed",
+      confirmationState: "confirmed",
+      createdAt: Date.now() - daysAgo * DAY,
+    });
+    await seedMetadata(user.root, sessionId, user.profileId, { intensity, thematicTags: tags });
+  }
+
+  /** A settled work usual (intensity 4), a heavy last week, and its open stretch. */
+  async function compoundingWork(user: SeededUser) {
+    for (let i = 0; i < 50; i++) await seedReading(user, 120 - i * 2, ["work"], 4);
+    for (let d = 1; d <= 7; d++) await seedReading(user, d + 0.5, ["work"], 10);
+    await user.root.run((ctx) =>
+      ctx.db.insert("compounding_stretches", {
+        emotionalProfileId: user.profileId,
+        domain: "work",
+        startedAt: Date.now() - 20 * DAY,
+        anchorBaseline: 67,
+      }),
+    );
+  }
+
+  async function tonight(
+    user: SeededUser,
+    tags: string[],
+    over: { kept?: boolean; safeguardLevel?: Doc<"emotional_metadata">["safeguardLevel"] } = {},
+  ) {
+    const sessionId = await seedSession(user.root, user.profileId, { state: "confirmed", kept: over.kept ?? true });
+    await seedMetadata(user.root, sessionId, user.profileId, {
+      supportNeed: "light",
+      thematicTags: tags,
+      ...(over.safeguardLevel ? { safeguardLevel: over.safeguardLevel } : {}),
+    });
+    await generate(user, sessionId);
+    return String(stub.requests.at(-1)?.messages[0].content ?? "");
+  }
+
+  it("names a compounding domain tonight's session touched, roughly dated", async () => {
+    const user = await asNewUser();
+    await compoundingWork(user);
+    expect(await tonight(user, ["burnout"])).toContain("- weighing on them lately: work for about 3 weeks");
+  });
+
+  it("stays silent about a compounding domain tonight's session didn't touch", async () => {
+    const user = await asNewUser();
+    await compoundingWork(user);
+    const prompt = await tonight(user, ["sleep"]);
+    expect(prompt).toContain("## This session");
+    expect(prompt).not.toContain("weighing on them");
+  });
+
+  it.each([
+    ["elevated", { safeguardLevel: "elevated" as const }],
+    ["crisis", { safeguardLevel: "crisis" as const }],
+    ["burned", { kept: false }],
+  ])("carries no compounding context on a %s session", async (_, over) => {
+    const user = await asNewUser();
+    await compoundingWork(user);
+    const prompt = await tonight(user, ["burnout"], over);
+    expect(prompt).not.toContain("weighing on them");
+  });
+
+  it("makes no call at all for a free user", async () => {
+    stub.isPlus = false;
+    const user = await asNewUser();
+    await compoundingWork(user);
+    await tonight(user, ["burnout"]);
+    expect(stub.requests).toEqual([]);
+  });
+});

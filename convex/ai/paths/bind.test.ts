@@ -103,4 +103,14 @@ describe("bindTwig", () => {
     expect(bind("audio_topic_anxiety_relief", [track({ slug: "off", active: false })])).toBeNull();
     expect(bind("not_a_key", [track({ slug: "x" })])).toBeNull();
   });
+
+  it("lets a compounding domain's life areas outweigh tonight's own tags (#521)", () => {
+    const racing = track({ slug: "racing", tags: ["anxiety", "racing-thoughts"] });
+    const rest = track({ slug: "rest", tags: ["anxiety", "sleep", "health"] });
+    const tags = { thematicTags: ["racing-thoughts"] };
+    expect(bind("audio_topic_anxiety_relief", [racing, rest], tags)).toEqual({ slug: "racing" });
+    expect(
+      bind("audio_topic_anxiety_relief", [racing, rest], { ...tags, compoundingTags: ["health", "sleep"] }),
+    ).toEqual({ slug: "rest" });
+  });
 });
