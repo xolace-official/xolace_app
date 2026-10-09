@@ -56,7 +56,7 @@ export function PartsOfLife({ domains: touched, isPlus }: { domains: DomainItem[
         </Chip>
       )}
       {/* Above the domains, so it's on screen when it's spent (#524). */}
-      {upsell && <CompoundingUpsellLine upsell={upsell} />}
+      {upsell && <CompoundingUpsellLine upsell={upsell} glass />}
       <GlassSurface radius={24} className={view === "grid" ? "p-4" : "p-2"}>
         {view === "grid" ? (
           <View className="flex-row flex-wrap justify-between gap-y-5">

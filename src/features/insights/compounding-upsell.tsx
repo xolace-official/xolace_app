@@ -16,6 +16,7 @@ import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/src/lib/haptics";
 import { DOMAIN_META } from "./domains";
+import { GlassSurface } from "./glass";
 
 export type Upsell = NonNullable<FunctionReturnType<typeof api.compounding.upsell.get>>;
 
@@ -49,25 +50,32 @@ export function useOpenUpsell() {
   };
 }
 
-export function CompoundingUpsellLine({ upsell }: { upsell: Upsell }) {
+/**
+ * Glass on Insights, like the cards around it. Session end fades its close
+ * phase in, and the blur stops rendering under animated opacity: solid there.
+ */
+export function CompoundingUpsellLine({ upsell, glass = false }: { upsell: Upsell; glass?: boolean }) {
   const ember = useTokenColor("ember");
   const open = useOpenUpsell();
   const { label, icon } = DOMAIN_META[upsell.domain];
   const line = `${label} has been heavier lately than your usual.`;
-  return (
+  const pressable = (
     <PressableFeedback
       onPress={open}
       accessibilityRole="button"
       accessibilityLabel={`${line} See the pattern with Xolace+.`}
-      className="w-full flex-row items-center gap-3 rounded-2xl border border-ember/30 bg-ember/10 px-4 py-3"
+      className={`w-full flex-row items-center gap-3 px-4 py-3 ${glass ? "" : "rounded-2xl border border-ember/30 bg-ember/10"}`}
     >
-      <SymbolView name={icon} size={17} tintColor={ember} />
+      <View className="size-9 items-center justify-center rounded-xl bg-ember/12">
+        <SymbolView name={icon} size={17} tintColor={ember} />
+      </View>
       <View className="flex-1 gap-0.5">
         <AppText className="text-[14px] leading-5 text-foreground">{line}</AppText>
         <AppText className="text-[13px] font-semibold text-ember">See the pattern</AppText>
       </View>
     </PressableFeedback>
   );
+  return glass ? <GlassSurface radius={24}>{pressable}</GlassSurface> : pressable;
 }
 
 /** The session-end line: nothing when there's none, or the user has Xolace+. */
