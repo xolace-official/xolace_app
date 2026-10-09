@@ -10,7 +10,7 @@ import type { PathsPromptUnderstanding, PromptCompounding } from "./prompt";
 import type { BindEntry, BindTrack, BindUnderstanding } from "./bind";
 import { readRow } from "../../library/reads";
 import { domainOf, emotionFamily, lifeAreasOf } from "../../lib/understandingVocab";
-import { compoundingFor } from "../../compounding/stretches";
+import { compoundingFor, type Compounding } from "../../compounding/stretches";
 
 /**
  * Kindling generation — the DB halves of `generate.ts` (#331): the context
@@ -82,25 +82,19 @@ const DAY_MS = 86_400_000;
 /**
  * The compounding domains tonight's session touched (#521, #492 §2) — never
  * a linked or untouched one — and none at all on an elevated/crisis or burned
- * session (§4). Kindling's own gates stay as they are: this only adds context.
+ * session (§4). The gate lives here, not in compounding/, which never reads
+ * safeguard state. Kindling's own gates are unchanged: this only adds context.
  */
 async function touchedCompounding(
   ctx: QueryCtx,
   profileId: Id<"emotional_profiles">,
   u: Doc<"emotional_metadata">,
-): Promise<PromptCompounding[]> {
+  now: number,
+): Promise<Compounding[]> {
   if (u.safeguardLevel === "elevated" || u.safeguardLevel === "crisis") return [];
   if ((await ctx.db.get("sessions", u.sessionId))?.kept === false) return [];
   const touched = new Set(u.thematicTags.map(domainOf));
-  const now = Date.now();
-  return (await compoundingFor(ctx, profileId, { now }))
-    .filter((c) => touched.has(c.domain))
-    .map((c) => ({
-      domain: c.domain,
-      state: c.state,
-      returning: c.returning,
-      days: (now - c.startedAt) / DAY_MS,
-    }));
+  return (await compoundingFor(ctx, profileId, { now })).filter((c) => touched.has(c.domain));
 }
 
 /**
@@ -127,7 +121,10 @@ export const getContext = internalQuery({
       ? await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId)
       : null;
 
-    const compounding = await touchedCompounding(ctx, profile._id, u);
+    const now = Date.now();
+    const compounding: PromptCompounding[] = (await touchedCompounding(ctx, profile._id, u, now)).map(
+      (c) => ({ domain: c.domain, state: c.state, returning: c.returning, days: (now - c.startedAt) / DAY_MS }),
+    );
     const tracks = (await ctx.db.query("audio_tracks").take(MAX_TRACKS))
       .filter((t) => t.active)
       .map(({ slug, family, topic, tags, active, series }) => ({

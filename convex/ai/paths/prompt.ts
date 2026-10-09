@@ -1,7 +1,7 @@
 import type { SupportNeed } from "../providers/anthropic";
 import type { PremiumTier } from "../../lib/premium";
 import type { CatalogEntry } from "./catalog";
-import type { Domain } from "../../lib/understandingVocab";
+import type { Compounding } from "../../compounding/stretches";
 
 /**
  * Kindling generation prompt + parser (docs/paths-v1.md §2.2, #331).
@@ -28,12 +28,9 @@ export interface PathsPromptUnderstanding {
 }
 
 /** A compounding domain tonight's session touched (#521). Context, never a rule. */
-export interface PromptCompounding {
-  domain: Domain;
-  state: "compounding" | "easing";
-  returning: boolean;
+export type PromptCompounding = Pick<Compounding, "domain" | "state" | "returning"> & {
   days: number; // since the stretch began
-}
+};
 
 export interface PathsPromptContext {
   understanding: PathsPromptUnderstanding;
@@ -79,11 +76,13 @@ const WHY_MAX_WORDS = 32;
 // "coping", "regulation", "grounded", "managing" all fail too.
 const BANNED_WHY = /\b(anxi|symptom|cop(e|es|ed|ing)\b|regulat|ground(ing|ed)\b|manag)/i;
 
+// Compounding is context for the pick, never something the why line says
+// (#521): not the word, not "your usual", not how long it has weighed.
+const COMPOUNDING_WHY = /compound|\busual\b|\b(\d+|few|couple of) days\b|\bweeks?\b|\bmonths?\b/i;
+
 // Outcome promises (§2.2 "Do NOT promise an outcome"): "this will help",
 // "you'll feel calmer", "proven to", "guaranteed". Modal forms only — a bare
 // "you feel" is usually the person's own words being quoted back.
-// Compounding is context for the pick, never something the why line says (#521).
-const COMPOUNDING_WHY = /compound|\busual\b/i;
 
 const PROMISE_WHY =
   /\b(will|would|going to) (help|calm|ease|make|feel|work)\b|\byou('ll| will|'d| would) feel\b|\b(proven|guaranteed)\b/i;
@@ -149,7 +148,7 @@ Respond with ONLY a JSON array, no fences, no prose:
   return { system, user };
 }
 
-function roughly(days: number): string {
+function roughDuration(days: number): string {
   if (days < 7) return "a few days";
   if (days < 11) return "about a week";
   if (days < 60) return `about ${Math.round(days / 7)} weeks`;
@@ -157,7 +156,7 @@ function roughly(days: number): string {
 }
 
 const compoundingPhrase = (c: PromptCompounding) =>
-  [`${c.domain} for ${roughly(c.days)}`, c.state === "easing" ? "easing" : null, c.returning ? "returning" : null]
+  [`${c.domain} for ${roughDuration(c.days)}`, c.state === "easing" ? "easing" : null, c.returning ? "returning" : null]
     .filter((part): part is string => !!part)
     .join(", ");
 

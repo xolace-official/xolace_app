@@ -184,9 +184,10 @@ describe("the why line never carries compounding (#521)", () => {
   it.each([
     "You said work has been heavier than your usual, so this is one slow minute before the day.",
     "You said work keeps compounding lately, so this is one slow minute before the day starts.",
+    "You said work has weighed on you for three weeks, so this is one slow minute before the day.",
+    "You said work has been heavy for 20 days, so this is one slow minute before the day starts.",
   ])("drops %s", (why) => {
     const { dropped } = parsePathsResponse(JSON.stringify([entry("breathing", 1, why)]), CATALOG);
     expect(dropped[0].reason).toBe("why_vocabulary");
   });
 });
-

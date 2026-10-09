@@ -882,8 +882,10 @@ describe("compounding context for Kindling (#521)", () => {
       thematicTags: tags,
       ...(over.safeguardLevel ? { safeguardLevel: over.safeguardLevel } : {}),
     });
+    const before = stub.requests.length;
     await generate(user, sessionId);
-    return String(stub.requests.at(-1)?.messages[0].content ?? "");
+    if (stub.requests.length === before) return null;
+    return String(stub.requests.at(-1)!.messages[0].content);
   }
 
   it("names a compounding domain tonight's session touched, roughly dated", async () => {
@@ -908,6 +910,7 @@ describe("compounding context for Kindling (#521)", () => {
     const user = await asNewUser();
     await compoundingWork(user);
     const prompt = await tonight(user, ["burnout"], over);
+    expect(prompt).toContain("## This session"); // the call still happened
     expect(prompt).not.toContain("weighing on them");
   });
 
@@ -915,7 +918,6 @@ describe("compounding context for Kindling (#521)", () => {
     stub.isPlus = false;
     const user = await asNewUser();
     await compoundingWork(user);
-    await tonight(user, ["burnout"]);
-    expect(stub.requests).toEqual([]);
+    expect(await tonight(user, ["burnout"])).toBeNull();
   });
 });
