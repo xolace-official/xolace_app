@@ -608,6 +608,20 @@ export default defineSchema({
       ),
     ),
 
+    // --- Unlock moment (#523) ---
+
+    // The domains this session's reading moved out of warming, stamped at
+    // completion. `first`: nothing was unlocked before it. `seenAt`: the
+    // session-end beat showed; unset next day → one generic push. Lives and
+    // dies with the session, so retention and wipe carry it.
+    domainUnlock: v.optional(
+      v.object({
+        domains: v.array(domainValidator),
+        first: v.boolean(),
+        seenAt: v.optional(v.number()),
+      }),
+    ),
+
     // --- Safety ---
 
     // Whether this session triggered escalation.
@@ -1221,6 +1235,9 @@ export default defineSchema({
       v.literal("kindling_ready"),
       // Streak hit 7/30/100/every 100 (#439). Template copy, own rate bucket.
       v.literal("streak_milestone"),
+      // A domain unlocked and the beat went unseen (#523). Generic text,
+      // never the domain; own weekly bucket.
+      v.literal("domain_unlock"),
     ),
 
     // AI-generated, contextual notification text.

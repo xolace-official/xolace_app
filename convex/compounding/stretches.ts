@@ -4,7 +4,8 @@
  *
  * evaluateCompounding runs inside every mutation that writes a reading
  * (session completion, the mood check, a follow-up answer), so a stretch
- * moves in the same transaction as the reading that moved it. compoundingFor
+ * moves in the same transaction as the reading that moved it. A session
+ * reading also stamps any domain it unlocks (unlocks.ts). compoundingFor
  * is the pure read every consumer shares (#492).
  *
  * Neither reads nor writes safeguard state (riskFlag, safeguardLevel,
@@ -17,6 +18,7 @@ import { domainOf, type Domain } from "../lib/understandingVocab";
 import { judgeOpen, opens, sharedSessions, shareTrend } from "./detect";
 import { loadReadings } from "./readings";
 import { computeSteadiness } from "./steadiness";
+import { recordUnlock } from "./unlocks";
 
 const RETURNING_MS = 30 * 86_400_000;
 const LINK_MIN_SESSIONS = 2;
@@ -75,8 +77,12 @@ export async function evaluateCompounding(
     }
   }
 
-  const { readings, timezone } = await loadReadings(ctx, profileId);
+  const loaded = await loadReadings(ctx, profileId);
+  const { readings, timezone } = loaded;
   const clock = { now, timezone };
+  // The same reading may unlock a domain (#523).
+  const session = sessionId && (await ctx.db.get("sessions", sessionId));
+  if (session) await recordUnlock(ctx, session, loaded);
   for (const d of computeSteadiness(readings, clock).domains) {
     const [newest] = await newestStretches(ctx, profileId, d.domain);
     if (newest && newest.endedAt === undefined) {
