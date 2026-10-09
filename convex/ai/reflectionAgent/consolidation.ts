@@ -16,6 +16,7 @@ import {
   REFLECTION_CONSOLIDATION_VERSION,
 } from "../providers/anthropic";
 import { buildConsolidationSystemPrompt } from "../prompts/reflectionConsolidation";
+import { INSIGHT_TOOLS } from "./insightTools";
 import { REFLECTION_TOOLS, WRITE_TOOL, dispatchTool } from "./tools";
 
 // =============================================================
@@ -34,9 +35,9 @@ import { REFLECTION_TOOLS, WRITE_TOOL, dispatchTool } from "./tools";
 export const workflow = new WorkflowManager(components.workflow);
 
 // Cap the loop so a misbehaving model can never spin. Generous: a well-behaved
-// pass reads a handful of tools then writes once.
-const MAX_ITERATIONS = 8;
-const MAX_TOKENS = 2048;
+// pass reads a handful of tools, writes its insights (Xolace+), then writes once.
+const MAX_ITERATIONS = 12;
+const MAX_TOKENS = 3072;
 
 // The shared client's 30s default is sized for the Haiku calls. A non-streaming
 // Sonnet tool-use turn at MAX_TOKENS routinely runs past it, and Convex's fetch
@@ -117,13 +118,20 @@ export const runConsolidation = internalAction({
   returns: v.boolean(),
   handler: async (ctx, args): Promise<boolean> => {
     const anthropic = getAnthropicClient();
-    const system = buildConsolidationSystemPrompt();
+    // Free users and personal memory off: no insight compute at all (#525).
+    const insights: boolean = await ctx.runQuery(
+      internal.compounding.insightEvidence.insightsEnabled,
+      { emotionalProfileId: args.emotionalProfileId },
+    );
+    const system = buildConsolidationSystemPrompt({ insights });
+    const tools = insights ? [...REFLECTION_TOOLS, ...INSIGHT_TOOLS] : REFLECTION_TOOLS;
+    // A retried run gets a new runAt, so its first insight replaces a partial set.
+    const runAt = Date.now();
 
     const messages: Anthropic.MessageParam[] = [
       {
         role: "user",
-        content:
-          "Consolidate this person's emotional profile. Read the current profile first, gather evidence with the read tools, then write the new version once.",
+        content: `Consolidate this person's emotional profile. Read the current profile first, gather evidence with the read tools, ${insights ? "write any steadiness insights that pass the bar, " : ""}then write the new version once.`,
       },
     ];
 
@@ -138,7 +146,7 @@ export const runConsolidation = internalAction({
             model: REFLECTION_CONSOLIDATION_MODEL,
             max_tokens: MAX_TOKENS,
             system,
-            tools: REFLECTION_TOOLS,
+            tools,
             messages,
           },
           CONSOLIDATION_REQUEST_OPTIONS,
@@ -157,6 +165,7 @@ export const runConsolidation = internalAction({
             args.emotionalProfileId,
             block.name,
             block.input as Record<string, unknown>,
+            { runAt, insights },
           );
           toolResults.push({
             type: "tool_result",
@@ -180,6 +189,14 @@ export const runConsolidation = internalAction({
         iterations,
       });
       throw err;
+    }
+
+    // This run's insights (possibly none) replace the last run's.
+    if (insights) {
+      await ctx.runMutation(internal.compounding.insightStore.endRun, {
+        emotionalProfileId: args.emotionalProfileId,
+        runAt,
+      });
     }
 
     if (!wroteProfile) {

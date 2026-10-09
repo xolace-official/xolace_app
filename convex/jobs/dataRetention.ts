@@ -93,6 +93,17 @@ export const enforce = internalMutation({
         await ctx.db.delete("compounding_stretches", stretch._id);
       }
 
+      // Steadiness insights citing a session past the cutoff go with it (#525).
+      const oldInsights = await ctx.db
+        .query("steadiness_insights")
+        .withIndex("by_emotionalProfileId_and_oldestCitedAt", (q) =>
+          q.eq("emotionalProfileId", pref.emotionalProfileId).lt("oldestCitedAt", cutoff)
+        )
+        .take(BATCH_SIZE);
+      for (const insight of oldInsights) {
+        await ctx.db.delete("steadiness_insights", insight._id);
+      }
+
       // Delete feedback records for this profile older than the retention cutoff
       const feedbackRecords = await ctx.db
         .query("feedback")

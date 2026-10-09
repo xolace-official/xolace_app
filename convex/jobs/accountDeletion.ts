@@ -5,6 +5,7 @@ import {
   drainActivityLog,
   drainFrozenDays,
   drainStretches,
+  drainInsights,
   drainConsentRecords,
   drainEscalations,
   drainFeedback,
@@ -112,6 +113,7 @@ export const purgeUser = internalMutation({
       drainActivityLog,
       drainFrozenDays,
       drainStretches,
+      drainInsights,
     ];
 
     let hasMore = false;

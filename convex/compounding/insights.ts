@@ -3,7 +3,8 @@
  * Xolace+ may see (CONTEXT.md "Free view"): the overall steadiness and each
  * touched domain's state. Per-domain numbers, "your usual" and the trend only
  * leave through plusView (#518), which re-checks the entitlement on every read.
- * So does compounding (#520), down to the order: the free view never sorts by it.
+ * So does compounding (#520), down to the order: the free view never sorts by it,
+ * and so do steadiness insights (#525).
  */
 import { v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
@@ -12,6 +13,7 @@ import { requireAuth } from "../lib/auth";
 import { hasPremium } from "../lib/premium";
 import { DOMAINS, domainOf, type Domain } from "../lib/understandingVocab";
 import { loadReadings } from "./readings";
+import { insightValidator, insightsFor } from "./insightStore";
 import { computeSteadiness, type DomainSteadiness } from "./steadiness";
 import { compoundingFor } from "./stretches";
 import { trendFor } from "./trend";
@@ -95,6 +97,8 @@ export const plusView = query({
           kindling: v.boolean(),
         }),
       ),
+      /** Steadiness insights that passed the gate (#525), newest first. */
+      insights: v.array(insightValidator),
     }),
   ),
   handler: async (ctx) => {
@@ -116,6 +120,7 @@ export const plusView = query({
     return {
       overall: round(overall),
       overallTrend: trend.overall,
+      insights: await insightsFor(ctx, profile._id),
       domains: ordered(domains)
         .sort((a, b) => at(a) - at(b))
         .map((d) => {

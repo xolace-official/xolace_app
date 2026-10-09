@@ -2,7 +2,7 @@
 // centre sits on the card's top edge, so the card's rounded clip cuts the top
 // arc (from clarity-main daily-goal-card). The taller tick is the person's usual.
 // Compounding and easing read ember, and hand off to the kindling a session
-// about this domain lit (#520). Insight text arrives with #525.
+// about this domain lit (#520). Its steadiness insights sit under the name (#525).
 import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -12,7 +12,8 @@ import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { playSoftPress } from "@/src/lib/haptics";
 import { GlassSurface, TickGauge, gaugeSize } from "./glass";
-import { DOMAIN_META, icon, subOf, toneOf, type DomainItem, type Tone } from "./domains";
+import { DOMAIN_META, icon, subOf, toneOf, type DomainItem, type Insight, type Tone } from "./domains";
+import { SteadinessInsights } from "./steadiness-insights";
 import { TrendChip } from "./trend-chip";
 
 const RADIUS = 120;
@@ -23,7 +24,7 @@ const WINDOW = 150;
 const FLAME = icon("flame", "local_fire_department");
 const CHEVRON = icon("chevron.right", "chevron_right");
 
-export function DetailCard({ d, value }: { d: DomainItem; value: number }) {
+export function DetailCard({ d, value, insights }: { d: DomainItem; value: number; insights: Insight[] }) {
   const baseline = d.baseline ?? null;
   return (
     <GlassSurface radius={24} className="overflow-hidden px-5 pb-5 gap-4">
@@ -38,6 +39,7 @@ export function DetailCard({ d, value }: { d: DomainItem; value: number }) {
         </View>
         {d.trend != null && <TrendChip delta={d.trend} />}
       </View>
+      <SteadinessInsights domain={d.domain} insights={insights} />
       {d.kindling && <KindlingRow />}
     </GlassSurface>
   );

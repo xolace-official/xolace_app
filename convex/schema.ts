@@ -2450,4 +2450,21 @@ export default defineSchema({
   })
     .index("by_emotionalProfileId_and_domain_and_startedAt", ["emotionalProfileId", "domain", "startedAt"])
     .index("by_emotionalProfileId_and_endedAt", ["emotionalProfileId", "endedAt"]),
+
+  // Steadiness insights (#525, ADR 0019): written by the Reflection Agent's
+  // consolidation pass, only after the quality gate passes. Each run replaces
+  // the last run's set. Retention drops a row once its oldest cited session
+  // is past the cutoff; a wipe or account deletion drops every row.
+  steadiness_insights: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    kind: v.union(v.literal("link"), v.literal("helped"), v.literal("then_now"), v.literal("shape")),
+    // One domain; a link names two, the one that slipped first leading.
+    domains: v.array(domainValidator),
+    text: v.string(),
+    citedSessionIds: v.array(v.id("sessions")),
+    oldestCitedAt: v.number(),
+    // The consolidation run that wrote it; a new run's first write clears older runs.
+    runAt: v.number(),
+    writtenAt: v.number(),
+  }).index("by_emotionalProfileId_and_oldestCitedAt", ["emotionalProfileId", "oldestCitedAt"]),
 });

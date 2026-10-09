@@ -109,9 +109,12 @@ in memory, so no insight can quote or cite it.
 A **steadiness insight** is a written observation about one domain (or a link
 between two) that teaches the person something about themselves. It is
 grounded in the past sessions it cites. It never sets or changes a
-**steadiness** score: the score is counted, the insight is noticed. When it
-falls out of date (the score has really moved since it was written), it is
-withdrawn rather than shown beside a score it contradicts.
+**steadiness** score: the score is counted, the insight is noticed. There are
+four kinds: a **link** (two domains slipping together, and which went first),
+**what's helped** (what eased it before, in the person's terms), **then vs
+now** (their own words for it, weeks apart), and a **shape** (when or how it
+tends to arrive). Each shows the date it was noticed; the next consolidation
+replaces the set, and one citing a session that is gone is not shown.
 
 ## Compounding vocabulary: domain, texture, sensitive life area (2026-10-02)
 

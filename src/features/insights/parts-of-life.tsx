@@ -14,11 +14,13 @@ import { GlassSurface } from "./glass";
 import { DomainCell, DomainRow, ViewToggle, type DomainView } from "./domain-list";
 import { DetailCard } from "./detail-card";
 import { CompoundingUpsellLine, useCompoundingUpsell, useOpenUpsell } from "./compounding-upsell";
-import { icon, type DomainItem } from "./domains";
+import { icon, type DomainItem, type Insight } from "./domains";
 
 const LOCK = icon("lock", "lock");
 
-export function PartsOfLife({ domains: touched, isPlus }: { domains: DomainItem[]; isPlus: boolean }) {
+export function PartsOfLife({
+  domains: touched, isPlus, insights,
+}: { domains: DomainItem[]; isPlus: boolean; insights: Insight[] }) {
   const [view, setView] = useState<DomainView>("grid");
   const accent = useTokenColor("accent");
   const openPaywall = usePaywall((s) => s.open);
@@ -70,7 +72,7 @@ export function PartsOfLife({ domains: touched, isPlus }: { domains: DomainItem[
           domains.map((d) => <DomainRow key={d.domain} d={d} selected={d === sel} onPress={select(d)} />)
         )}
       </GlassSurface>
-      {sel?.steadiness != null && <DetailCard d={sel} value={sel.steadiness} />}
+      {sel?.steadiness != null && <DetailCard d={sel} value={sel.steadiness} insights={insights} />}
     </View>
   );
 }

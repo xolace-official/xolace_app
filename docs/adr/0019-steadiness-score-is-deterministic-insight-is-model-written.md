@@ -29,10 +29,11 @@ deterministic facts sit beneath it as evidence.
 
 ## Consequences
 
-- The insight inherits the consolidation cadence (5 sessions or 7 days). When
-  a domain's score crosses its reliable-change band, the stale insight is
-  hidden and consolidation runs early, within the per-user token budget.
-  Every insight shows the date it was written.
+- The insight inherits the consolidation cadence (5 sessions or 7 days), and
+  each run replaces the last run's set. Every insight shows the date it was
+  written. (#525 dropped hiding an insight when its score crosses the band:
+  the gate already checks direction at write time, and the cadence refreshes
+  it within days. Revisit if a contradicting insight shows up in practice.)
 - Before commit, a quality gate rejects any insight that a template could have
   produced from the score and counts, that cites fewer than two sessions, that
   contradicts the score's direction, or that names a sensitive life area.

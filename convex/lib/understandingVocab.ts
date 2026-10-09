@@ -123,6 +123,18 @@ export const DOMAINS = [
 
 export type Domain = (typeof DOMAINS)[number];
 
+/** The names people see (the insights screen uses the same). */
+export const DOMAIN_LABELS: Record<Domain, string> = {
+  self: "Self",
+  purpose: "Purpose & Future",
+  work: "Work & Studies",
+  love: "Love & Friendship",
+  family: "Family",
+  belonging: "Belonging",
+  health: "Health & Rest",
+  money: "Money & Home",
+};
+
 /**
  * Every life area's one home (#486). Typed over the full tag union, so adding a
  * tag to THEMATIC_TAGS is a type error until its home is decided here.
