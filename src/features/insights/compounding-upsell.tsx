@@ -75,7 +75,7 @@ export function CompoundingUpsellLine({ upsell, glass = false }: { upsell: Upsel
       </View>
     </PressableFeedback>
   );
-  return glass ? <GlassSurface radius={24}>{pressable}</GlassSurface> : pressable;
+  return glass ? <GlassSurface radius={24} tint="ember">{pressable}</GlassSurface> : pressable;
 }
 
 /** The session-end line: nothing when there's none, or the user has Xolace+. */
