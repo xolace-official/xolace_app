@@ -106,15 +106,25 @@ in memory, so no insight can quote or cite it.
 
 ## Steadiness insight (2026-10-02)
 
-A **steadiness insight** is a written observation about one domain (or a link
-between two) that teaches the person something about themselves. It is
-grounded in the past sessions it cites. It never sets or changes a
-**steadiness** score: the score is counted, the insight is noticed. There are
-four kinds: a **link** (two domains slipping together, and which went first),
-**what's helped** (what eased it before, in the person's terms), **then vs
-now** (their own words for it, weeks apart), and a **shape** (when or how it
-tends to arrive). Each shows the date it was noticed; the next consolidation
-replaces the set, and one citing a session that is gone is not shown.
+A **steadiness insight** shows the person something about themselves that is
+not easy to notice: what is only visible from a distance, across months and
+across parts of their life, which no single session can show. It is
+grounded in the past sessions it cites, spread across time; reading their own
+log back to them, or reframing one session as the mirror does, is not an
+insight. It never sets or changes a **steadiness** score: the score is
+counted, the insight is noticed. When it falls out of date (the score has
+really moved since it was written), it is withdrawn rather than shown beside
+a score it contradicts.
+
+An **overall insight** sits under the overall steadiness and spans domains:
+one thread under what look like separate problems, or one domain crowding
+out another. A **domain insight** sits in that domain's card: what the person
+says at the end of a session against what happens after, where relief
+actually came from, or what never appears. An insight waits for its domains
+to unlock, and one that speaks of "your usual" waits for settled. It is never
+held back because the person seems vulnerable. Each shows the date it was
+noticed; the next consolidation replaces the set, and one citing a session
+that is gone is not shown.
 
 ## Compounding vocabulary: domain, texture, sensitive life area (2026-10-02)
 

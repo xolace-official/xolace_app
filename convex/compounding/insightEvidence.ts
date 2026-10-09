@@ -1,25 +1,30 @@
 /**
- * What the Reflection Agent gets to write steadiness insights from (#525):
- * the counted facts per domain (score, usual, trend, compounding with the
- * linked domains in onset order) and the citable sessions behind them, each
- * with when it happened in the person's own week, their words, what they
- * chose and how it sat afterwards. Code finds the facts; the model only
- * notices what they mean (ADR 0019). Burned sessions are never listed, so
- * they can't be cited; a crisis session gives its metadata only.
+ * What the Reflection Agent gets to write steadiness insights from (#525,
+ * #526): the counted facts per domain (score, usual, trend, compounding with
+ * the linked domains in onset order) and the citable sessions behind them,
+ * each with when it happened in the person's own week, their words, what they
+ * chose and how it sat afterwards. `raw` feeds insightFacts (the action adds
+ * the RAG half). Code finds the facts; the model only notices what they mean
+ * (ADR 0019). Burned sessions are never listed, so they can't be cited; a
+ * crisis session gives its metadata only, and still counts toward every
+ * pattern.
  */
 import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { internalQuery, type QueryCtx } from "../_generated/server";
 import { readFollowUp } from "../ai/reflectionAgent/toolQueries";
 import { hasPremium } from "../lib/premium";
-import { DOMAIN_LABELS, LIFE_AREA_HOME, domainOf, type Domain, type ThematicTag } from "../lib/understandingVocab";
+import { DOMAIN_LABELS, LIFE_AREA_HOME, domainOf, emotionFamily, type Domain, type ThematicTag } from "../lib/understandingVocab";
+import type { FactSession } from "./insightFacts";
 import { loadReadings } from "./readings";
 import { computeSteadiness } from "./steadiness";
 import { compoundingFor } from "./stretches";
 import { trendFor } from "./trend";
 
-// ponytail: the newest 60 sessions. Then-vs-now past that reaches back through search_episodic_memory.
+// ponytail: the newest 60 sessions (months for most people). Past that, only search_episodic_memory reaches.
 const SESSIONS = 60;
+/** Enough of a session to find its neighbours by. */
+const QUERY_CHARS = 1500;
 
 /** What each post-mirror path meant, in words the model can use. */
 const PATH_WORDS: Record<NonNullable<Doc<"sessions">["pathChosen"]>, string> = {
@@ -102,7 +107,7 @@ export const domainSteadiness = internalQuery({
       };
     });
 
-    return { today: when(now, timezone), domains, sessions: await citableSessions(ctx, profileId, timezone) };
+    return { today: when(now, timezone), timezone, domains, ...(await citableSessions(ctx, profileId, timezone)) };
   },
 });
 
@@ -112,24 +117,40 @@ async function citableSessions(ctx: QueryCtx, profileId: Id<"emotional_profiles"
     .withIndex("by_profile_createdAt", (q) => q.eq("emotionalProfileId", profileId))
     .order("desc")
     .take(SESSIONS);
-  const out = [];
+  const sessions = [];
+  const raw: FactSession[] = [];
   for (const m of metas) {
     const s = await ctx.db.get("sessions", m.sessionId);
     const domains = domainsOf(m.thematicTags);
     if (!s || s.kept === false || domains.length === 0) continue;
     const crisis = isCrisis(s, m);
-    out.push({
+    const followUp = await readFollowUp(ctx, s._id);
+    const alsoAbout = m.thematicTags.filter((t) => LIFE_AREA_HOME[t as ThematicTag] === "texture");
+    sessions.push({
       id: s._id,
       when: when(s.createdAt, timezone),
       domains,
-      alsoAbout: m.thematicTags.filter((t) => LIFE_AREA_HOME[t as ThematicTag] === "texture"),
+      alsoAbout,
       emotion: m.granularLabel ?? m.primaryEmotion,
       intensity: m.intensity,
       theirWords: crisis ? [] : m.userLanguageTags,
       chose: s.pathChosen ? PATH_WORDS[s.pathChosen] : null,
       moodAfter: s.postSessionMood ?? null,
-      checkIn: crisis ? null : await readFollowUp(ctx, s._id),
+      checkIn: crisis ? null : followUp,
+    });
+    const family = emotionFamily(m.primaryEmotion);
+    raw.push({
+      id: s._id,
+      at: s.createdAt,
+      domains,
+      intensity: m.intensity,
+      good: family.includes("joy") || family.includes("love"),
+      moodAfter: s.postSessionMood ?? null,
+      checkIn: followUp?.answer ?? null,
+      alsoAbout,
+      theirWords: crisis ? [] : m.userLanguageTags,
+      text: crisis ? null : (s.distilledText ?? s.rawInput ?? "").slice(0, QUERY_CHARS) || null,
     });
   }
-  return out;
+  return { sessions, raw };
 }

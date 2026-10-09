@@ -68,6 +68,7 @@ import type * as compounding_dev from "../compounding/dev.js";
 import type * as compounding_devSeed from "../compounding/devSeed.js";
 import type * as compounding_devSeedCompounding from "../compounding/devSeedCompounding.js";
 import type * as compounding_insightEvidence from "../compounding/insightEvidence.js";
+import type * as compounding_insightFacts from "../compounding/insightFacts.js";
 import type * as compounding_insightGate from "../compounding/insightGate.js";
 import type * as compounding_insightStore from "../compounding/insightStore.js";
 import type * as compounding_insights from "../compounding/insights.js";
@@ -249,6 +250,7 @@ declare const fullApi: ApiFromModules<{
   "compounding/devSeed": typeof compounding_devSeed;
   "compounding/devSeedCompounding": typeof compounding_devSeedCompounding;
   "compounding/insightEvidence": typeof compounding_insightEvidence;
+  "compounding/insightFacts": typeof compounding_insightFacts;
   "compounding/insightGate": typeof compounding_insightGate;
   "compounding/insightStore": typeof compounding_insightStore;
   "compounding/insights": typeof compounding_insights;

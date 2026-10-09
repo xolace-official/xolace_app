@@ -2451,15 +2451,28 @@ export default defineSchema({
     .index("by_emotionalProfileId_and_domain_and_startedAt", ["emotionalProfileId", "domain", "startedAt"])
     .index("by_emotionalProfileId_and_endedAt", ["emotionalProfileId", "endedAt"]),
 
-  // Steadiness insights (#525, ADR 0019): written by the Reflection Agent's
-  // consolidation pass, only after the quality gate passes. Each run replaces
-  // the last run's set. Retention drops a row once its oldest cited session
-  // is past the cutoff; a wipe or account deletion drops every row.
+  // Steadiness insights (#525, #526, ADR 0019): written by the Reflection
+  // Agent's consolidation pass, only after the quality gate passes. Each run
+  // replaces the last run's set. Retention drops a row once its oldest cited
+  // session is past the cutoff; a wipe or account deletion drops every row.
   steadiness_insights: defineTable({
     emotionalProfileId: v.id("emotional_profiles"),
-    kind: v.union(v.literal("link"), v.literal("helped"), v.literal("then_now"), v.literal("shape")),
-    // One domain; a link names two, the one that slipped first leading.
+    kind: v.union(
+      // Overall (under the dial), then per-domain (#526).
+      v.literal("thread"), v.literal("crowding"),
+      v.literal("say_vs_after"), v.literal("relief"), v.literal("absence"),
+      // DEPRECATED(remove-after: no steadiness_insights row has these kinds): #525's
+      // first build; never shown (insightsFor drops them), replaced by each profile's next run.
+      v.literal("link"), v.literal("helped"), v.literal("then_now"), v.literal("shape"),
+    ),
+    // One domain; an overall insight names every domain it spans, the lead one first.
     domains: v.array(domainValidator),
+    // What the text claims about the lead domain against its usual (#526):
+    // anything but "none" waits for that domain to settle.
+    direction: v.optional(v.union(v.literal("lower"), v.literal("higher"), v.literal("none"))),
+    // Each named domain's raw steadiness when written, in `domains` order: the
+    // insight is hidden once one moves past its reliable-change band (#526).
+    scoresAt: v.optional(v.array(v.number())),
     text: v.string(),
     citedSessionIds: v.array(v.id("sessions")),
     oldestCitedAt: v.number(),

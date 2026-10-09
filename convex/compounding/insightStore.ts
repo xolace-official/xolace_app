@@ -1,20 +1,34 @@
 /**
- * Steadiness insights in and out (#525). `save` is the write_insight tool:
- * it rebuilds the evidence from the database (never trusting the model's
- * copy), runs the gate, and stores what passes. `endRun` then drops every
- * earlier run's rows, so a run that finds nothing leaves nothing behind. `insightsFor` is the read: an insight whose cited
- * session has gone (retention, wipe) or burned is never shown.
+ * Steadiness insights in and out (#525, #526). `save` is the write_insight
+ * tool: it rebuilds the evidence from the database (never trusting the
+ * model's copy), runs the gate, and stores what passes with each named
+ * domain's score at that moment. `endRun` then drops every earlier run's rows,
+ * so a run that finds nothing leaves nothing behind. `insightsFor` is the
+ * read: an insight whose cited session has gone (retention, wipe) or burned
+ * is never shown, and shownNow holds back one that waits or has gone stale.
  */
 import { v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { internalMutation, type QueryCtx } from "../_generated/server";
+import type { Domain } from "../lib/understandingVocab";
 import { domainValidator } from "../lib/validators";
-import { DIRECTIONS, INSIGHT_KINDS, gateInsight, type CitableSession } from "./insightGate";
+import {
+  DIRECTIONS,
+  INSIGHT_KINDS,
+  gateInsight,
+  isOverall,
+  shownNow,
+  type CitableSession,
+  type InsightKind,
+  type LiveDomain,
+} from "./insightGate";
 import { domainsOf } from "./insightEvidence";
 import { loadReadings } from "./readings";
 import { computeSteadiness } from "./steadiness";
 
 const PER_RUN = 4;
+/** "One, at most two" under the overall dial. */
+const OVERALL_PER_RUN = 2;
 const ROWS = 50;
 
 export const kindValidator = v.union(...INSIGHT_KINDS.map((k) => v.literal(k)));
@@ -44,7 +58,13 @@ async function citable(
   const lighter =
     session.postSessionMood === "lighter" ||
     cards.some((c) => c.userResponse === "lighter" || c.userResponse === "processed");
-  return { id, at: session.createdAt, domains: domainsOf(meta?.thematicTags ?? []), lighter };
+  return {
+    id,
+    at: session.createdAt,
+    domains: domainsOf(meta?.thematicTags ?? []),
+    lighter,
+    checkedIn: cards.some((c) => c.userResponse),
+  };
 }
 
 export const save = internalMutation({
@@ -76,9 +96,12 @@ export const save = internalMutation({
 
     const thisRun = (await rowsOf(ctx, profileId)).filter((r) => r.runAt === runAt);
     if (thisRun.length >= PER_RUN) return `Not saved: ${PER_RUN} insights is the most per run.`;
+    if (isOverall(draft.kind) && thisRun.filter((r) => isOverall(r.kind)).length >= OVERALL_PER_RUN) {
+      return `Not saved: ${OVERALL_PER_RUN} overall insights is the most per run.`;
+    }
     const key = `${draft.kind}:${draft.domains.join()}`;
     if (thisRun.some((r) => `${r.kind}:${r.domains.join()}` === key)) {
-      return "Not saved: you already wrote this kind of insight for this domain in this run.";
+      return "Not saved: you already wrote this kind of insight for these domains in this run.";
     }
 
     const cited = [...sessions.values()];
@@ -86,6 +109,9 @@ export const save = internalMutation({
       emotionalProfileId: profileId,
       kind: draft.kind,
       domains: draft.domains,
+      direction: draft.direction,
+      // The gate saw every named domain in a cited session, so each has a reading.
+      scoresAt: draft.domains.map((d) => domains.get(d)!.steadiness),
       text: draft.text.trim(),
       citedSessionIds: cited.map((s) => s.id as Id<"sessions">),
       oldestCitedAt: Math.min(...cited.map((s) => s.at)),
@@ -113,18 +139,31 @@ export const hasInsights = async (ctx: QueryCtx, profileId: Id<"emotional_profil
 
 export const insightValidator = v.object({
   kind: kindValidator,
+  /** Overall ones sit under the overall dial; domain ones in that domain's card. */
+  level: v.union(v.literal("overall"), v.literal("domain")),
   domains: v.array(domainValidator),
   text: v.string(),
   writtenAt: v.number(),
 });
 
-/** Newest first; only those whose every cited session is still here and kept. */
-export async function insightsFor(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
+/** Newest first; only current kinds, shown now, whose every cited session is still here and kept. */
+export async function insightsFor(
+  ctx: QueryCtx,
+  profileId: Id<"emotional_profiles">,
+  live: Map<Domain, LiveDomain>,
+) {
   const out = [];
   for (const row of await rowsOf(ctx, profileId)) {
+    if (!(INSIGHT_KINDS as readonly string[]).includes(row.kind) || !shownNow(row, live)) continue;
     const cited = await Promise.all(row.citedSessionIds.map((id) => ctx.db.get("sessions", id)));
     if (cited.some((s) => !s || s.kept === false)) continue;
-    out.push({ kind: row.kind, domains: row.domains, text: row.text, writtenAt: row.writtenAt });
+    out.push({
+      kind: row.kind as InsightKind,
+      level: isOverall(row.kind) ? ("overall" as const) : ("domain" as const),
+      domains: row.domains,
+      text: row.text,
+      writtenAt: row.writtenAt,
+    });
   }
   return out.sort((a, b) => b.writtenAt - a.writtenAt);
 }

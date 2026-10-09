@@ -1,24 +1,31 @@
 /**
- * Steadiness insights, live (#525). Runs the real consolidation prompt and
- * tool set over a fixture person, with every write_insight going through the
- * real quality gate, and prints what passed and what was turned away.
+ * Steadiness insights, live (#525, #526). Runs the real consolidation prompt
+ * and tool set over a fixture person, with get_domain_steadiness built by the
+ * real raw-material code (a keyword stand-in for RAG) and every write_insight
+ * going through the real quality gate, and prints what passed and what was
+ * turned away.
  *
- * Run: `bun run test:evals convex/ai/prompts/__evals__/steadinessInsights`
- * (needs ANTHROPIC_API_KEY; skips cleanly without).
+ * Run: `EVAL_OUT=insights.txt bun run test:evals convex/ai/prompts/__evals__/steadinessInsights`
+ * (needs ANTHROPIC_API_KEY; skips cleanly without). EVAL_OUT keeps the output.
  *
- * Bar: a person with real patterns (sleep slipping days before work, a walk
- * that helped twice, "drowning" → "stretched", money on Sunday evenings) gets
- * at least two insights, all through the gate; a person with thin evidence
- * gets none. Filler is the failure, not silence.
+ * The real bar is a person reading the output and agreeing it's a revelation
+ * (#526): not their log read back, not one session reframed. The rich person
+ * carries all five shapes: "behind" under work, sleep and money (thread);
+ * friends gone since work got heavy (crowding); work sessions ending fine and
+ * checking in heavier (say vs after); the lightest session being the sister's
+ * wedding (relief); never a good or light work session (absence). The thin
+ * person gets none. Filler is the failure, not silence.
  */
+import { appendFileSync } from "node:fs";
 import type Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, it } from "vitest";
-import { gateInsight, type CitableSession, type InsightDraft } from "../../../compounding/insightGate";
+import { gateInsight, isOverall, type CitableSession, type InsightDraft } from "../../../compounding/insightGate";
 import { when } from "../../../compounding/insightEvidence";
+import type { FactSession } from "../../../compounding/insightFacts";
 import type { Domain } from "../../../lib/understandingVocab";
 import { DOMAIN_LABELS } from "../../../lib/understandingVocab";
 import { getAnthropicClient, REFLECTION_CONSOLIDATION_MODEL } from "../../providers/anthropic";
-import { INSIGHT_TOOLS } from "../../reflectionAgent/insightTools";
+import { INSIGHT_TOOLS, steadinessView } from "../../reflectionAgent/insightTools";
 import { REFLECTION_TOOLS, WRITE_TOOL } from "../../reflectionAgent/tools";
 import { buildConsolidationSystemPrompt } from "../reflectionConsolidation";
 import { hasApiKey } from "./harness.eval";
@@ -30,12 +37,6 @@ const at = (daysAgo: number, hour: number) => {
   const d = new Date(NOW - daysAgo * DAY);
   return d.setUTCHours(hour, 0, 0, 0);
 };
-/** The nth Sunday before NOW, at `hour`. */
-const sunday = (n: number, hour: number) => {
-  const d = new Date(NOW);
-  const back = d.getUTCDay() === 0 ? 7 : d.getUTCDay();
-  return at(back + (n - 1) * 7, hour);
-};
 
 type FixtureSession = {
   id: string;
@@ -44,37 +45,55 @@ type FixtureSession = {
   emotion: string;
   intensity: number;
   theirWords: string[];
+  good?: boolean;
+  alsoAbout?: string[];
   chose?: string;
   moodAfter?: "lighter" | "same" | "heavier";
   checkIn?: { answer: string; whatHelped: string | null };
 };
-type Fixture = { sessions: FixtureSession[]; domains: Record<string, { steadiness: number; usual: number; compounding?: object }> };
+type Fixture = {
+  sessions: FixtureSession[];
+  domains: Record<string, { steadiness: number; usual: number; quietSince?: string; compounding?: object }>;
+};
 
 const SOLO = "stayed with it a while (Sit with this)";
+const EXIT = "just needed to say it, and left";
+const heavier = { answer: "heavier", whatHelped: null };
 const RICH: Fixture = {
   sessions: [
-    { id: "s01", at: at(78, 1), domains: ["health"], emotion: "exhaustion", intensity: 7, theirWords: ["couldn't sleep again", "3am ceiling"] },
-    { id: "s02", at: at(76, 2), domains: ["health"], emotion: "restlessness", intensity: 7, theirWords: ["awake till 4"] },
-    { id: "s03", at: at(73, 9), domains: ["work"], emotion: "overwhelm", intensity: 8, theirWords: ["drowning", "can't breathe at my desk"], chose: SOLO, moodAfter: "heavier" },
-    { id: "s04", at: at(71, 15), domains: ["work", "health"], emotion: "dread", intensity: 8, theirWords: ["drowning in tickets", "tired all the time"] },
-    { id: "s05", at: at(69, 19), domains: ["work"], emotion: "overwhelm", intensity: 7, theirWords: ["drowning"], chose: SOLO, moodAfter: "lighter", checkIn: { answer: "lighter", whatHelped: "walked to the lagoon before opening my laptop" } },
-    { id: "s06", at: at(40, 18), domains: ["family"], emotion: "joy", intensity: 3, theirWords: ["sister's wedding"], moodAfter: "lighter" },
-    { id: "s07", at: at(30, 1), domains: ["health"], emotion: "exhaustion", intensity: 7, theirWords: ["can't switch off at night"] },
-    { id: "s08", at: at(28, 2), domains: ["health", "work"], emotion: "restlessness", intensity: 6, theirWords: ["lying awake replaying standup"] },
-    { id: "s09", at: at(25, 9), domains: ["work"], emotion: "anxiety", intensity: 7, theirWords: ["behind again"] },
-    { id: "s10", at: at(23, 19), domains: ["work"], emotion: "overwhelm", intensity: 6, theirWords: ["stretched"], chose: SOLO, moodAfter: "lighter", checkIn: { answer: "lighter", whatHelped: "the morning walk again, and writing the list on paper" } },
-    { id: "s11", at: at(5, 15), domains: ["work"], emotion: "frustration", intensity: 5, theirWords: ["stretched", "behind but managing"] },
-    { id: "s12", at: at(2, 9), domains: ["work"], emotion: "anxiety", intensity: 5, theirWords: ["stretched thin but okay"] },
-    { id: "s13", at: sunday(1, 20), domains: ["money"], emotion: "dread", intensity: 6, theirWords: ["rent", "sunday scaries"] },
-    { id: "s14", at: sunday(3, 21), domains: ["money"], emotion: "anxiety", intensity: 6, theirWords: ["rent again", "counting what's left"] },
-    { id: "s15", at: sunday(6, 20), domains: ["money"], emotion: "dread", intensity: 7, theirWords: ["sunday scaries", "bank app"] },
-    { id: "s16", at: sunday(9, 19), domains: ["money"], emotion: "worry", intensity: 5, theirWords: ["landlord text"] },
+    // Friends, until work got heavy.
+    { id: "l1", at: at(121, 19), domains: ["love"], alsoAbout: ["friendships"], emotion: "contentment", intensity: 3, good: true, theirWords: ["Friday drinks with Ade and Tomi", "laughed till it hurt"], moodAfter: "lighter" },
+    { id: "l2", at: at(110, 20), domains: ["love"], alsoAbout: ["friendships"], emotion: "longing", intensity: 5, theirWords: ["group chat's gone quiet", "miss the gang"], moodAfter: "same" },
+    { id: "l3", at: at(101, 18), domains: ["love"], alsoAbout: ["friendships"], emotion: "warmth", intensity: 3, good: true, theirWords: ["Tomi's birthday", "felt like myself"], moodAfter: "lighter" },
+    { id: "l4", at: at(92, 21), domains: ["love"], alsoAbout: ["friendships"], emotion: "guilt", intensity: 5, theirWords: ["cancelled on Ade again", "no energy for anyone"], moodAfter: "same" },
+    // Work gets heavy from mid-July; ends "fine", checks in heavier.
+    { id: "w1", at: at(85, 9), domains: ["work"], emotion: "overwhelm", intensity: 7, theirWords: ["new manager", "behind before I've started"], chose: SOLO, moodAfter: "same", checkIn: heavier },
+    { id: "w2", at: at(78, 22), domains: ["work"], emotion: "anxiety", intensity: 7, theirWords: ["it's fine, just busy", "behind on the roadmap"], chose: EXIT, moodAfter: "same", checkIn: heavier },
+    { id: "w3", at: at(62, 9), domains: ["work"], emotion: "frustration", intensity: 6, theirWords: ["fine really", "everyone else keeps up"], chose: SOLO, moodAfter: "lighter", checkIn: heavier },
+    { id: "w4", at: at(47, 21), domains: ["work"], emotion: "dread", intensity: 8, theirWords: ["behind on everything", "Monday already"], chose: EXIT, moodAfter: "same", checkIn: heavier },
+    { id: "w5", at: at(40, 13), domains: ["work"], emotion: "tiredness", intensity: 6, theirWords: ["it's fine", "just tired"], moodAfter: "same", checkIn: { answer: "still_here", whatHelped: null } },
+    { id: "w6", at: at(26, 22), domains: ["work"], emotion: "overwhelm", intensity: 7, theirWords: ["behind again", "fine, I'll sort it"], chose: EXIT, moodAfter: "same", checkIn: heavier },
+    { id: "w7", at: at(12, 9), domains: ["work"], emotion: "anxiety", intensity: 6, theirWords: ["fine", "catching up at weekends"], chose: SOLO, moodAfter: "lighter", checkIn: heavier },
+    { id: "w8", at: at(4, 21), domains: ["work"], emotion: "exhaustion", intensity: 7, theirWords: ["behind", "can't see the end of it"], moodAfter: "same" },
+    // Sleep and money, both "behind".
+    { id: "h1", at: at(75, 2), domains: ["health"], emotion: "restlessness", intensity: 7, theirWords: ["lying awake doing the maths of what I'm behind on"] },
+    { id: "h2", at: at(50, 3), domains: ["health"], emotion: "exhaustion", intensity: 7, theirWords: ["behind on sleep", "4am again"] },
+    { id: "h3", at: at(30, 1), domains: ["health", "work"], emotion: "restlessness", intensity: 6, theirWords: ["replaying the standup", "behind"] },
+    { id: "h4", at: at(15, 2), domains: ["health"], emotion: "exhaustion", intensity: 7, theirWords: ["can't switch off", "behind on rest"] },
+    { id: "m1", at: at(68, 20), domains: ["money"], emotion: "worry", intensity: 6, theirWords: ["behind on rent", "landlord text"] },
+    { id: "m2", at: at(45, 21), domains: ["money"], emotion: "dread", intensity: 7, theirWords: ["behind on savings", "counting what's left"] },
+    { id: "m3", at: at(22, 20), domains: ["money"], emotion: "anxiety", intensity: 6, theirWords: ["behind again", "bank app"] },
+    { id: "m4", at: at(8, 20), domains: ["money"], emotion: "worry", intensity: 6, theirWords: ["rent going up"] },
+    // Where relief came from.
+    { id: "f1", at: at(64, 18), domains: ["family"], emotion: "warmth", intensity: 3, good: true, theirWords: ["sister's engagement dinner"], moodAfter: "lighter" },
+    { id: "f2", at: at(37, 23), domains: ["family"], emotion: "joy", intensity: 2, good: true, theirWords: ["my sister's wedding", "danced all night", "phone off all day"], moodAfter: "lighter", checkIn: { answer: "processed", whatHelped: "being with my sister, phone off, not thinking about work at all" } },
   ],
   domains: {
-    work: { steadiness: 52, usual: 64, compounding: { state: "easing", since: when(at(25, 9), TZ), linkedOnsetOrder: [`health (${when(at(30, 1), TZ)})`, `work (${when(at(25, 9), TZ)})`] } },
-    health: { steadiness: 55, usual: 62, compounding: { state: "compounding", since: when(at(30, 1), TZ), linkedOnsetOrder: [`health (${when(at(30, 1), TZ)})`, `work (${when(at(25, 9), TZ)})`] } },
-    money: { steadiness: 58, usual: 65 },
-    family: { steadiness: 80, usual: 78 },
+    work: { steadiness: 44, usual: 63, compounding: { state: "compounding", since: when(at(85, 9), TZ), linkedOnsetOrder: [`work (${when(at(85, 9), TZ)})`, `health (${when(at(75, 2), TZ)})`] } },
+    health: { steadiness: 52, usual: 60 },
+    money: { steadiness: 55, usual: 62 },
+    love: { steadiness: 70, usual: 70, quietSince: when(at(92, 21), TZ) },
+    family: { steadiness: 84, usual: 78 },
   },
 };
 
@@ -87,40 +106,61 @@ const THIN: Fixture = {
   domains: { work: { steadiness: 60, usual: 62 } },
 };
 
-const view = (f: Fixture) => ({
-  today: when(NOW, TZ),
-  domains: Object.entries(f.domains).map(([domain, d]) => ({
-    domain, label: DOMAIN_LABELS[domain as Domain], steadiness: d.steadiness, usual: d.usual, weekTrend: null, quietSince: null, compounding: d.compounding ?? null,
-  })),
-  sessions: [...f.sessions].sort((a, b) => b.at - a.at).map((s) => ({
-    id: s.id, when: when(s.at, TZ), domains: s.domains, alsoAbout: [], emotion: s.emotion, intensity: s.intensity,
-    theirWords: s.theirWords, chose: s.chose ?? null, moodAfter: s.moodAfter ?? null, checkIn: s.checkIn ?? null,
-  })),
-});
+const textOf = (s: FixtureSession) => `${s.emotion} | ${s.theirWords.join(", ")}`;
+
+/** The real get_domain_steadiness output, with RAG stood in for by shared words. */
+const view = (f: Fixture) => {
+  const sessions = [...f.sessions].sort((a, b) => b.at - a.at);
+  const raw: FactSession[] = sessions.map((s) => ({
+    id: s.id, at: s.at, domains: s.domains, intensity: s.intensity, good: s.good ?? false,
+    moodAfter: s.moodAfter ?? null, checkIn: s.checkIn?.answer ?? null, alsoAbout: s.alsoAbout ?? [],
+    theirWords: s.theirWords, text: textOf(s),
+  }));
+  const wordsOf = (t: string) => new Set(t.toLowerCase().match(/[a-z']{4,}/g) ?? []);
+  const search = async (query: string) => {
+    const q = wordsOf(query);
+    return sessions
+      .map((s) => ({ id: s.id, hits: [...wordsOf(textOf(s))].filter((w) => q.has(w)).length }))
+      .filter((s) => s.hits > 0)
+      .sort((a, b) => b.hits - a.hits)
+      .slice(0, 8)
+      .map((s) => s.id);
+  };
+  return steadinessView(
+    {
+      today: when(NOW, TZ),
+      timezone: TZ,
+      domains: Object.entries(f.domains).map(([domain, d]) => ({
+        domain, label: DOMAIN_LABELS[domain as Domain], steadiness: d.steadiness, usual: d.usual, weekTrend: null,
+        quietSince: d.quietSince ?? null, compounding: d.compounding ?? null,
+      })),
+      sessions: sessions.map((s) => ({
+        id: s.id, when: when(s.at, TZ), domains: s.domains, alsoAbout: s.alsoAbout ?? [], emotion: s.emotion, intensity: s.intensity,
+        theirWords: s.theirWords, chose: s.chose ?? null, moodAfter: s.moodAfter ?? null, checkIn: s.checkIn ?? null,
+      })),
+      raw,
+    },
+    { now: NOW, search },
+  );
+};
 
 type Outcome = { saved: InsightDraft[]; rejected: { draft: InsightDraft; reason: string }[] };
 
 async function runPass(f: Fixture): Promise<Outcome> {
   const evidence = {
     sessions: new Map<string, CitableSession>(f.sessions.map((s) => [s.id, {
-      id: s.id, at: s.at, domains: s.domains,
+      id: s.id, at: s.at, domains: s.domains, checkedIn: !!s.checkIn,
       lighter: s.moodAfter === "lighter" || s.checkIn?.answer === "lighter" || s.checkIn?.answer === "processed",
     }])),
     domains: new Map(Object.entries(f.domains).map(([d, n]) => [d as Domain, { steadiness: n.steadiness, baseline: n.usual }])),
   };
   const out: Outcome = { saved: [], rejected: [] };
-  const search = (q: string) => {
-    const words = q.toLowerCase().split(/\W+/).filter((w) => w.length > 3);
-    return f.sessions
-      .filter((s) => words.some((w) => [...s.theirWords, s.emotion, ...s.domains].join(" ").toLowerCase().includes(w)))
-      .slice(0, 5)
-      .map((s) => ({ sessionId: s.id, text: `${when(s.at, TZ)} | emotion: ${s.emotion} | their words: ${s.theirWords.join(", ")}` }));
-  };
+  const steadiness = JSON.stringify(await view(f));
   const tool = (name: string, input: Record<string, unknown>): string => {
     switch (name) {
       case "read_semantic_profile": return JSON.stringify({ version: null, rendered: null });
-      case "get_domain_steadiness": return JSON.stringify(view(f));
-      case "search_episodic_memory": return JSON.stringify({ matches: search(String(input.query ?? "")) });
+      case "get_domain_steadiness": return steadiness;
+      case "search_episodic_memory": return JSON.stringify({ matches: [] });
       case "write_insight": {
         const draft = input as InsightDraft;
         const r = gateInsight(draft, evidence);
@@ -151,19 +191,24 @@ async function runPass(f: Fixture): Promise<Outcome> {
   return out;
 }
 
-const report = (label: string, o: Outcome) =>
-  console.log(
+/** Printed, and appended to $EVAL_OUT when set: the artifact a person reads to judge the bar. */
+const report = (label: string, o: Outcome) => {
+  const out =
     `\n── ${label} ──\n` +
-      o.saved.map((d) => `SAVED  [${d.kind} ${d.domains.join("→")}] ${d.text}  (cites ${d.citedSessionIds.join(", ")})`).join("\n") +
-      (o.rejected.length ? "\n" : "") +
-      o.rejected.map((r) => `REJECT [${r.draft.kind} ${r.draft.domains?.join("→")}] ${r.draft.text}\n       ↳ ${r.reason}`).join("\n"),
-  );
+    o.saved.map((d) => `SAVED  [${d.kind} ${d.domains.join("+")}] ${d.text}  (cites ${d.citedSessionIds.join(", ")})`).join("\n") +
+    (o.rejected.length ? "\n" : "") +
+    o.rejected.map((r) => `REJECT [${r.draft.kind} ${r.draft.domains?.join("+")}] ${r.draft.text}\n       ↳ ${r.reason}`).join("\n");
+  console.log(out);
+  if (process.env.EVAL_OUT) appendFileSync(process.env.EVAL_OUT, `${out}\n`);
+};
 
 describe("steadiness insights (live)", () => {
-  it.skipIf(!hasApiKey())("finds real patterns for a person who has them", async () => {
+  it.skipIf(!hasApiKey())("finds revelations for a person who has them, overall and per domain", async () => {
     const o = await runPass(RICH);
     report("rich", o);
     expect(o.saved.length).toBeGreaterThanOrEqual(2);
+    expect(o.saved.some((d) => isOverall(d.kind))).toBe(true);
+    expect(o.saved.some((d) => !isOverall(d.kind))).toBe(true);
   }, 300_000);
 
   it.skipIf(!hasApiKey())("writes nothing for thin evidence", async () => {

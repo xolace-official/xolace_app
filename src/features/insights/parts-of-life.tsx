@@ -20,7 +20,7 @@ const LOCK = icon("lock", "lock");
 
 export function PartsOfLife({
   domains: touched, isPlus, insights,
-}: { domains: DomainItem[]; isPlus: boolean; insights: Insight[] }) {
+}: { domains: DomainItem[]; isPlus: boolean; insights?: Insight[] }) {
   const [view, setView] = useState<DomainView>("grid");
   const accent = useTokenColor("accent");
   const openPaywall = usePaywall((s) => s.open);

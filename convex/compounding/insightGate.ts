@@ -1,28 +1,36 @@
 /**
- * The steadiness-insight quality gate (#525, ADR 0019): pure, so every rule
- * is a test. An insight is shown only if it is grounded (two or more citable
- * sessions that touched what it names, kind-specific evidence, the score's
- * direction) and says something a template couldn't. A rejection's reason
- * goes back to the model, so it can try again with something real.
+ * The steadiness-insight quality gate (#525, #526, ADR 0019): pure, so every
+ * rule is a test. An insight is kept only if it is grounded (citable sessions
+ * that touched what it names, spread across time, kind-specific evidence, the
+ * score's direction) and is neither a template line nor a recap of their log.
+ * A rejection's reason goes back to the model, so it can try again with
+ * something real. shownNow is the read-time half: unlock, settled, stale.
  */
 import type { Domain } from "../lib/understandingVocab";
 
-export const INSIGHT_KINDS = ["link", "helped", "then_now", "shape"] as const;
+/** Cross-domain, under the overall dial: one thread under separate problems, and crowding out. */
+export const OVERALL_KINDS = ["thread", "crowding"] as const;
+/** In one domain's detail card: what you say vs what happens after, where relief came from, what never appears. */
+export const DOMAIN_KINDS = ["say_vs_after", "relief", "absence"] as const;
+export const INSIGHT_KINDS = [...OVERALL_KINDS, ...DOMAIN_KINDS] as const;
 export type InsightKind = (typeof INSIGHT_KINDS)[number];
 export const DIRECTIONS = ["lower", "higher", "none"] as const;
+export type Direction = (typeof DIRECTIONS)[number];
+
+export const isOverall = (kind: string) => (OVERALL_KINDS as readonly string[]).includes(kind);
 
 export type InsightDraft = {
   kind: InsightKind;
-  /** One domain; a link names two, the one that slipped first leading. */
+  /** One domain; an overall insight names every domain it spans, the lead one first. */
   domains: Domain[];
   text: string;
   citedSessionIds: string[];
-  /** What the text says about the domain now against its usual. */
-  direction: (typeof DIRECTIONS)[number];
+  /** What the text says about its first domain now against its usual. */
+  direction: Direction;
 };
 
 /** A session this person may be shown a citation of: theirs, kept, still here. */
-export type CitableSession = { id: string; at: number; domains: Domain[]; lighter: boolean };
+export type CitableSession = { id: string; at: number; domains: Domain[]; lighter: boolean; checkedIn: boolean };
 
 export type GateEvidence = {
   sessions: Map<string, CitableSession>;
@@ -31,7 +39,7 @@ export type GateEvidence = {
 };
 
 const DAY = 86_400_000;
-/** Then vs now, and a shape (a recurrence, not one bad week), span at least this. */
+/** Something only seen from a distance: its sessions span at least this, never one week. */
 const SPAN_DAYS = 14;
 const MIN_CHARS = 40;
 const MAX_CHARS = 320;
@@ -60,6 +68,17 @@ const GENERIC = [
   /\btake (some )?time for\b/i,
 ];
 
+const MONTH = "(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\\.?";
+/** "Aug 9" or "9 August": a date someone could look up in their log. */
+const DATE = new RegExp(`\\b(?:${MONTH}\\s+\\d{1,2}(?:st|nd|rd|th)?|\\d{1,2}(?:st|nd|rd|th)?\\s+(?:of\\s+)?${MONTH})\\b`, "gi");
+const MANY = "(?:\\d+|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|several)";
+const NUM = `(?:one|${MANY})`;
+/** "four times", "6 of your last 10", "twice": a tally, not a meaning. Durations ("eleven weeks"), "one of those" and "once you've" pass. */
+const COUNT = new RegExp(`\\b(?:${NUM}\\s+(?:times|sessions?|conversations?)|${MANY}\\s+(?:of|out of)\\s+(?:your|the|those|these|them|its|last)|twice)\\b`, "i");
+/** A quoted span: 'fine', "fine", ‘fine’, “fine”. Apostrophes inside words don't open one. */
+const QUOTE = /(?:^|[\s(—–-])['"‘“]([^'"‘’“”]{1,60}?)['"’”](?=[\s.,;:!?)—–-]|$)/g;
+const MAX_QUOTES = 2;
+
 /** Words a score-and-counts template is made of; an insight needs more than these. */
 const TEMPLATE_WORDS = new Set(
   (
@@ -78,8 +97,9 @@ const no = (reason: string): Result => ({ ok: false, reason });
 export function gateInsight(draft: InsightDraft, evidence: GateEvidence): Result {
   const { kind, domains, text } = draft;
   const named = new Set(domains);
-  if (kind === "link" ? named.size !== 2 || domains.length !== 2 : domains.length !== 1) {
-    return no(kind === "link" ? "A link needs two domains." : `A ${kind} insight names one domain.`);
+  const overall = isOverall(kind);
+  if (overall ? named.size < 2 || named.size !== domains.length : domains.length !== 1) {
+    return no(overall ? "An overall insight names two domains or more, each once." : `A ${kind} insight names one domain.`);
   }
 
   const ids = [...new Set(draft.citedSessionIds)];
@@ -88,36 +108,34 @@ export function gateInsight(draft: InsightDraft, evidence: GateEvidence): Result
   for (const id of ids) {
     const session = evidence.sessions.get(id);
     if (!session) return no(`Session ${id} can't be cited (burned, gone, or not in the evidence).`);
-    if (!session.domains.some((d) => named.has(d))) {
+    // Relief is often found elsewhere: its lighter session may be about any part of life.
+    if (kind !== "relief" && !session.domains.some((d) => named.has(d))) {
       return no(`Session ${id} doesn't touch ${domains.join(" or ")}.`);
     }
     cited.push(session);
   }
-  const firstAt = (d: Domain) => Math.min(...cited.filter((s) => s.domains.includes(d)).map((s) => s.at));
   for (const d of domains) {
-    if (firstAt(d) === Infinity) return no(`No cited session is about ${d}.`);
+    if (!cited.some((s) => s.domains.includes(d))) return no(`No cited session is about ${d}; cite at least one that is.`);
+  }
+  if ((overall || kind === "absence") && cited.length < 3) {
+    return no("This kind rests on at least three cited sessions.");
+  }
+  const at = cited.map((s) => s.at);
+  if (Math.max(...at) - Math.min(...at) < SPAN_DAYS * DAY) {
+    return no(`That reframes one moment. Cite sessions spread across at least ${SPAN_DAYS} days.`);
+  }
+  if (kind === "relief" && !cited.some((s) => s.lighter)) {
+    return no("Nothing cited ended lighter, so it can't show where relief came from.");
+  }
+  if (kind === "say_vs_after" && cited.filter((s) => s.checkedIn).length < 2) {
+    return no("Cite at least two sessions with a later check-in, or it can't show what happened after.");
   }
 
-  if (kind === "link" && firstAt(domains[0]) > firstAt(domains[1])) {
-    return no(`Onset order: in these sessions ${domains[1]} came up first, so lead with it.`);
-  }
-  if (kind === "helped" && !cited.some((s) => s.lighter)) {
-    return no("Nothing cited ended lighter, so it can't show what helped.");
-  }
-  if (kind === "shape" && cited.length < 3) return no("A recurring shape needs at least three cited sessions.");
-  if (kind === "then_now" || kind === "shape") {
-    const at = cited.map((s) => s.at);
-    if (Math.max(...at) - Math.min(...at) < SPAN_DAYS * DAY) {
-      return no(`Cited sessions must span at least ${SPAN_DAYS} days for this kind.`);
-    }
-  }
-
-  for (const d of domains) {
-    const now = evidence.domains.get(d);
-    if (!now || draft.direction === "none") continue;
-    const actual = now.steadiness < now.baseline ? "lower" : "higher";
+  const lead = evidence.domains.get(domains[0]);
+  if (lead && draft.direction !== "none") {
+    const actual = lead.steadiness < lead.baseline ? "lower" : lead.steadiness > lead.baseline ? "higher" : "at";
     if (actual !== draft.direction) {
-      return no(`Wrong direction: ${d} is ${actual} than its usual right now.`);
+      return no(`Wrong direction: ${domains[0]} is ${actual === "at" ? "at" : `${actual} than`} its usual right now.`);
     }
   }
 
@@ -131,6 +149,11 @@ function textCheck(text: string, domains: Domain[], evidence: GateEvidence): Res
   if (SENSITIVE.test(t) || CLINICAL.test(t)) return no("Uses a sensitive or clinical word.");
   if (INTERNAL.test(t)) return no("Uses internal numbers or terms the person never sees.");
   if (GENERIC.some((re) => re.test(t))) return no("Generic phrasing; say what their sessions show.");
+
+  if ((t.match(DATE) ?? []).length >= 2) return no("A list of dates is a log recap, not an insight. Say what it means.");
+  if (COUNT.test(t)) return no("A restated count is a log recap, not an insight. Say what it means.");
+  const quotes = new Set([...t.matchAll(QUOTE)].map((m) => m[1].toLowerCase().trim()));
+  if (quotes.size > MAX_QUOTES) return no("A string of their own quotes is a log recap, not an insight. Say what it means.");
 
   const scores = new Set(
     domains.flatMap((d) => {
@@ -147,4 +170,23 @@ function textCheck(text: string, domains: Domain[], evidence: GateEvidence): Res
     return no("A template could write this from the score and counts; say what their sessions show.");
   }
   return { ok: true };
+}
+
+/** A domain as it stands now: its state, raw steadiness and reliable-change band. */
+export type LiveDomain = { state: "warming" | "unlocked" | "settled"; steadiness: number; band: number };
+
+/**
+ * Read time: shown only once every named domain is unlocked, and its lead
+ * domain settled if it says anything against "your usual". Hidden when stale:
+ * a named domain's score has moved past its band since it was written.
+ */
+export function shownNow(
+  row: { domains: Domain[]; direction?: Direction; scoresAt?: number[] },
+  live: Map<Domain, LiveDomain>,
+): boolean {
+  if (!row.scoresAt || !row.direction) return false;
+  const now = row.domains.map((d) => live.get(d));
+  if (now.some((d) => !d || d.state === "warming")) return false;
+  if (row.direction !== "none" && now[0]?.state !== "settled") return false;
+  return now.every((d, i) => Math.abs(d!.steadiness - row.scoresAt![i]) <= d!.band);
 }

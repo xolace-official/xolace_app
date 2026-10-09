@@ -1,5 +1,6 @@
 // The hero: overall steadiness as a fan of ticks that fill in on mount (#491).
 // Lit at two unlocked domains; before that, one line of presence instead.
+// Xolace+: the overall steadiness insights sit under it (#526).
 import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
@@ -8,7 +9,8 @@ import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { GlassSurface, TickGauge } from "./glass";
-import { GAUGE } from "./domains";
+import { GAUGE, type Insight } from "./domains";
+import { SteadinessInsights } from "./steadiness-insights";
 import { LockedTrendChip, TrendChip } from "./trend-chip";
 
 type Props = {
@@ -17,9 +19,10 @@ type Props = {
   trend?: number | null;
   /** Free view: the chip is a locked upsell instead. */
   locked: boolean;
+  insights?: Insight[];
 };
 
-export function OverallDial({ overall, trend, locked }: Props) {
+export function OverallDial({ overall, trend, locked, insights }: Props) {
   const accent = useTokenColor("accent");
   const track = useTokenColor("border");
   const progress = useSharedValue(0);
@@ -58,6 +61,11 @@ export function OverallDial({ overall, trend, locked }: Props) {
       )}
       {overall !== null && (locked || trend != null) && (
         <View className="self-center">{locked ? <LockedTrendChip /> : <TrendChip delta={trend!} />}</View>
+      )}
+      {overall !== null && (
+        <View className="self-stretch px-5">
+          <SteadinessInsights insights={insights} />
+        </View>
       )}
     </GlassSurface>
   );

@@ -12,6 +12,7 @@ import { query, type QueryCtx } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import { hasPremium } from "../lib/premium";
 import { DOMAINS, domainOf, type Domain } from "../lib/understandingVocab";
+import { bandOf } from "./detect";
 import { loadReadings } from "./readings";
 import { insightValidator, insightsFor } from "./insightStore";
 import { computeSteadiness, type DomainSteadiness } from "./steadiness";
@@ -97,7 +98,7 @@ export const plusView = query({
           kindling: v.boolean(),
         }),
       ),
-      /** Steadiness insights that passed the gate (#525), newest first. */
+      /** Steadiness insights that passed the gate and are current (#525, #526), newest first. */
       insights: v.array(insightValidator),
     }),
   ),
@@ -120,7 +121,11 @@ export const plusView = query({
     return {
       overall: round(overall),
       overallTrend: trend.overall,
-      insights: await insightsFor(ctx, profile._id),
+      insights: await insightsFor(
+        ctx,
+        profile._id,
+        new Map(domains.map((d) => [d.domain, { state: d.state, steadiness: d.raw.steadiness, band: bandOf(d, now) }])),
+      ),
       domains: ordered(domains)
         .sort((a, b) => at(a) - at(b))
         .map((d) => {
