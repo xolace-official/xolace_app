@@ -72,6 +72,7 @@ import type * as compounding_steadiness from "../compounding/steadiness.js";
 import type * as compounding_stretches from "../compounding/stretches.js";
 import type * as compounding_trend from "../compounding/trend.js";
 import type * as compounding_unlocks from "../compounding/unlocks.js";
+import type * as compounding_upsell from "../compounding/upsell.js";
 import type * as consent from "../consent.js";
 import type * as crons from "../crons.js";
 import type * as dailyQuotes from "../dailyQuotes.js";
@@ -248,6 +249,7 @@ declare const fullApi: ApiFromModules<{
   "compounding/stretches": typeof compounding_stretches;
   "compounding/trend": typeof compounding_trend;
   "compounding/unlocks": typeof compounding_unlocks;
+  "compounding/upsell": typeof compounding_upsell;
   consent: typeof consent;
   crons: typeof crons;
   dailyQuotes: typeof dailyQuotes;

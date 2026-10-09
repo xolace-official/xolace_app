@@ -39,7 +39,7 @@ import { deleteResponsesForCard } from "./followUpResponses";
 import {
   compoundingFor,
   evaluateCompounding,
-  spendFollowUp,
+  spendStretch,
   type StretchRef,
 } from "./compounding/stretches";
 import { hasPremium } from "./lib/premium";
@@ -355,7 +355,7 @@ export const createAndStart = internalMutation({
     // Spent only now the workflow is certain to start. A sibling session in
     // the same stretch may have spent it since getStartContext looked.
     const spent =
-      !!args.compounding && (await spendFollowUp(ctx, args.emotionalProfileId, args.compounding));
+      !!args.compounding && (await spendStretch(ctx, args.emotionalProfileId, args.compounding, "followUpStartedAt"));
     if (compoundingOnly && !spent) return null;
     // An ordinary follow-up that lost the stretch to a sibling keeps going,
     // but without the framing: naming the domain again would be a re-fire.

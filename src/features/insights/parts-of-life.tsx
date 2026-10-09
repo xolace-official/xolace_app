@@ -1,6 +1,7 @@
 // Every touched domain, as a ring grid or tick-meter list on glass (#491).
 // Free users get unfilled rings and the "Unlock numbers" pill (#513);
 // Xolace+ gets numbers, and tapping a domain opens its detail card (#518).
+// A free domain compounding may carry the upsell (#524): no number, just the word.
 import { useState } from "react";
 import { View } from "react-native";
 import { Chip } from "heroui-native";
@@ -12,14 +13,18 @@ import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { GlassSurface } from "./glass";
 import { DomainCell, DomainRow, ViewToggle, type DomainView } from "./domain-list";
 import { DetailCard } from "./detail-card";
+import { CompoundingUpsellLine, useCompoundingUpsell, useOpenUpsell } from "./compounding-upsell";
 import { icon, type DomainItem } from "./domains";
 
 const LOCK = icon("lock", "lock");
 
-export function PartsOfLife({ domains, isPlus }: { domains: DomainItem[]; isPlus: boolean }) {
+export function PartsOfLife({ domains: touched, isPlus }: { domains: DomainItem[]; isPlus: boolean }) {
   const [view, setView] = useState<DomainView>("grid");
   const accent = useTokenColor("accent");
   const openPaywall = usePaywall((s) => s.open);
+  const upsell = useCompoundingUpsell({});
+  const openUpsell = useOpenUpsell();
+  const domains = touched.map((d) => (d.domain === upsell?.domain ? { ...d, compounding: "compounding" as const } : d));
   const [selKey, setSelKey] = useState<DomainItem["domain"]>();
   // Only a domain with a number has a detail card; free numbers never arrive.
   const scored = domains.filter((d) => d.steadiness != null);
@@ -30,7 +35,9 @@ export function PartsOfLife({ domains, isPlus }: { domains: DomainItem[]; isPlus
           if (d.domain !== sel?.domain) Presets.flick(); // the app's select cue
           setSelKey(d.domain);
         }
-      : undefined;
+      : d.domain === upsell?.domain
+        ? openUpsell
+        : undefined;
 
   return (
     <View className="gap-3">
@@ -48,6 +55,8 @@ export function PartsOfLife({ domains, isPlus }: { domains: DomainItem[]; isPlus
           <Chip.Label>Unlock numbers</Chip.Label>
         </Chip>
       )}
+      {/* Above the domains, so it's on screen when it's spent (#524). */}
+      {upsell && <CompoundingUpsellLine upsell={upsell} />}
       <GlassSurface radius={24} className={view === "grid" ? "p-4" : "p-2"}>
         {view === "grid" ? (
           <View className="flex-row flex-wrap justify-between gap-y-5">

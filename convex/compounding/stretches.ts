@@ -40,6 +40,8 @@ export type Compounding = {
   startedAt: number;
   /** This stretch's one compounding follow-up has started (#522). */
   followUpUsed: boolean;
+  /** This stretch's one free-user upsell has shown (#524). */
+  upsellShown: boolean;
   /** Linked domains, in the order their stretches started. */
   coDomains: { domain: Domain; firstBelowAt: number }[];
 };
@@ -144,6 +146,7 @@ export async function compoundingFor(
       stretchId: `${d.domain}:${row.startedAt}`,
       startedAt: row.startedAt,
       followUpUsed: row.followUpStartedAt !== undefined,
+      upsellShown: row.upsellShownAt !== undefined,
     });
   }
 
@@ -166,14 +169,16 @@ export async function compoundingFor(
 export type StretchRef = { domain: Domain; stretchStartedAt: number };
 
 /**
- * Spend a stretch's compounding follow-up (#522), in the transaction that
- * starts the workflow. False when it was already spent (a sibling session got
- * there first) or the row is gone, so the caller can stand down.
+ * Spend one of a stretch's once-only events: its compounding follow-up (#522),
+ * in the transaction that starts the workflow, or its upsell (#524). False
+ * when it was already spent (a sibling got there first) or the row is gone,
+ * so the caller can stand down.
  */
-export async function spendFollowUp(
+export async function spendStretch(
   ctx: MutationCtx,
   profileId: Id<"emotional_profiles">,
   { domain, stretchStartedAt }: StretchRef,
+  event: "followUpStartedAt" | "upsellShownAt",
 ): Promise<boolean> {
   const row = await ctx.db
     .query("compounding_stretches")
@@ -181,7 +186,7 @@ export async function spendFollowUp(
       q.eq("emotionalProfileId", profileId).eq("domain", domain).eq("startedAt", stretchStartedAt),
     )
     .unique();
-  if (!row || row.followUpStartedAt !== undefined) return false;
-  await ctx.db.patch("compounding_stretches", row._id, { followUpStartedAt: Date.now() });
+  if (!row || row[event] !== undefined) return false;
+  await ctx.db.patch("compounding_stretches", row._id, { [event]: Date.now() });
   return true;
 }
