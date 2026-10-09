@@ -64,13 +64,16 @@ async function finalizeFollowUp(
   ctx: MutationCtx,
   session: Doc<"sessions">,
   requiresFollowUp: boolean,
+  mayCompound = false,
 ): Promise<void> {
   if (session.requiresFollowUp !== requiresFollowUp) {
     await ctx.db.patch("sessions", session._id, { requiresFollowUp });
   }
   // One-active-per-profile + idempotency are enforced in followUps; here we
   // only guard against the obvious double-start on the same session.
-  if (requiresFollowUp && !session.followUpWorkflowId) {
+  // `mayCompound`: the compounding trigger (#522) is decided at start, in its
+  // own transaction, so the readings aren't loaded twice here.
+  if ((requiresFollowUp || mayCompound) && !session.followUpWorkflowId) {
     await ctx.scheduler.runAfter(0, internal.followUps.startFollowUpWorkflow, {
       sessionId: session._id,
     });
@@ -169,6 +172,9 @@ async function finalizeCompletion(
       confirmationState: session.confirmationState,
       escalationTriggered: session.escalationTriggered,
     }),
+    // The cron's stranded reconciliation evaluates compounding later; it
+    // never fires the trigger.
+    !opts.deferCompounding && session.kept !== false,
   );
 }
 

@@ -36,6 +36,8 @@ export type Compounding = {
   /** domain:startedAt — stable for the life of the stretch. */
   stretchId: string;
   startedAt: number;
+  /** This stretch's one compounding follow-up has started (#522). */
+  followUpUsed: boolean;
   /** Linked domains, in the order their stretches started. */
   coDomains: { domain: Domain; firstBelowAt: number }[];
 };
@@ -135,6 +137,7 @@ export async function compoundingFor(
       shareTrend: shareTrend(readings, d.domain, now),
       stretchId: `${d.domain}:${row.startedAt}`,
       startedAt: row.startedAt,
+      followUpUsed: row.followUpStartedAt !== undefined,
     });
   }
 
@@ -151,4 +154,28 @@ export async function compoundingFor(
         .map((o) => ({ domain: o.domain, firstBelowAt: o.startedAt }))
         .sort((a, b) => a.firstBelowAt - b.firstBelowAt),
     }));
+}
+
+/** One stretch, by its natural key. */
+export type StretchRef = { domain: Domain; stretchStartedAt: number };
+
+/**
+ * Spend a stretch's compounding follow-up (#522), in the transaction that
+ * starts the workflow. False when it was already spent (a sibling session got
+ * there first) or the row is gone, so the caller can stand down.
+ */
+export async function spendFollowUp(
+  ctx: MutationCtx,
+  profileId: Id<"emotional_profiles">,
+  { domain, stretchStartedAt }: StretchRef,
+): Promise<boolean> {
+  const row = await ctx.db
+    .query("compounding_stretches")
+    .withIndex("by_emotionalProfileId_and_domain_and_startedAt", (q) =>
+      q.eq("emotionalProfileId", profileId).eq("domain", domain).eq("startedAt", stretchStartedAt),
+    )
+    .unique();
+  if (!row || row.followUpStartedAt !== undefined) return false;
+  await ctx.db.patch("compounding_stretches", row._id, { followUpStartedAt: Date.now() });
+  return true;
 }

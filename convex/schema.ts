@@ -13,10 +13,10 @@ import {
   supportNeedValidator,
   triggerTypeValidator,
   activityActionTypeValidator,
+  domainValidator,
 } from "./lib/validators";
 import { voiceSlugValidator } from "./lib/voices";
 import { specialtyValidator } from "./lib/specialties";
-import { DOMAINS } from "./lib/understandingVocab";
 
 // =============================================================
 // XOLACE BETA
@@ -1754,6 +1754,10 @@ export default defineSchema({
     // "resources are still here" link in the UI.
     escalationDerived: v.boolean(),
 
+    // The compounding domain the card names (#522). Set → the push stays
+    // generic, since the lock screen isn't private.
+    compoundingDomain: v.optional(domainValidator),
+
     // "pending"    — workflow active, card not yet due
     // "ready"      — user returned (or nudge fired); show on next open
     // "shown"      — card was rendered in-app, awaiting user response
@@ -2416,7 +2420,7 @@ export default defineSchema({
   // account deletion drop all.
   compounding_stretches: defineTable({
     emotionalProfileId: v.id("emotional_profiles"),
-    domain: v.union(...DOMAINS.map((d) => v.literal(d))),
+    domain: domainValidator,
     startedAt: v.number(),
     // The baseline held while the stretch runs, for at most 90 days.
     anchorBaseline: v.number(),
