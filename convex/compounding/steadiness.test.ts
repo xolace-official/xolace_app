@@ -117,6 +117,13 @@ describe("readingsFromSession", () => {
       readingsFromSession(session({ intensity: 9, primaryEmotion: "love", secondaryEmotion }))[0].value;
     expect(love9("grief")).toBeCloseTo(11.1, 1);
     expect(love9("hopelessness")).toBeCloseTo(11.1, 1); // child of sadness
+    // secondaryEmotion is free text (#536): common words outside the vocabulary count too.
+    expect(love9("heartbreak")).toBeCloseTo(11.1, 1);
+    expect(love9("despair")).toBeCloseTo(11.1, 1);
+    expect(love9("dread")).toBeCloseTo(11.1, 1);
+    expect(love9("resentment")).toBeCloseTo(11.1, 1);
+    expect(love9("longing")).toBe(75); // ambiguous next to love, so the guard stays up
+    expect(love9("excitement")).toBe(75);
     expect(love9("joy")).toBe(75);
     expect(love9("confusion")).toBe(75);
     expect(love9(undefined)).toBe(75);

@@ -68,6 +68,16 @@ export function emotionFamily(emotion: string): string[] {
     : [emotion];
 }
 
+/**
+ * `emotionFamily` for a free-text emotion word (`secondaryEmotion`): trimmed,
+ * lowercased and run through the emotion aliases first. Read at read time, so
+ * stored rows keep the classifier's own word and replayed history is covered
+ * too (#536).
+ */
+export function freeEmotionFamily(word: string): string[] {
+  return emotionFamily(canonicalFacet("emotion", word.trim().toLowerCase()));
+}
+
 /** Own-property check, so inherited members ("constructor", …) never count as vocabulary. */
 function hasOwn(obj: object, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(obj, key);
@@ -219,6 +229,51 @@ const ALIASES: Record<"emotion" | "lifeArea", Record<string, string>> = {
     hopeful: "hope",
     homesick: "homesickness",
     "out-of-place": "not-belonging",
+    // Free-text secondaries the classifier writes (#536). Words that could go
+    // either way next to love or joy (longing, jealousy, irritation) are left
+    // out on purpose: an unknown word changes nothing.
+    heartbreak: "grief",
+    heartache: "grief",
+    heartbroken: "grief",
+    bereavement: "grief",
+    sorrow: "sadness",
+    sad: "sadness",
+    hopeless: "hopelessness",
+    hurt: "sadness",
+    pain: "sadness",
+    despair: "sadness",
+    emptiness: "sadness",
+    helplessness: "sadness",
+    isolation: "sadness",
+    disconnection: "sadness",
+    rejection: "sadness",
+    dread: "fear",
+    scared: "fear",
+    afraid: "fear",
+    terrified: "fear",
+    frightened: "fear",
+    terror: "fear",
+    panic: "anxiety",
+    worry: "anxiety",
+    nervousness: "anxiety",
+    desperation: "anxiety",
+    desperate: "anxiety",
+    worried: "anxiety",
+    insecurity: "anxiety",
+    resentment: "anger",
+    rage: "anger",
+    angry: "anger",
+    bitterness: "anger",
+    betrayal: "anger",
+    resignation: "numbness",
+    apathy: "numbness",
+    worthlessness: "shame",
+    inadequacy: "shame",
+    humiliation: "shame",
+    ashamed: "shame",
+    remorse: "guilt",
+    guilty: "guilt",
+    revulsion: "disgust",
   },
   lifeArea: {
     money: "finances",

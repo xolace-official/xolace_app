@@ -9,6 +9,7 @@ import type { QueryCtx } from "../_generated/server";
 import {
   domainOf,
   emotionFamily,
+  freeEmotionFamily,
   type Domain,
   type PrimaryEmotion,
 } from "../lib/understandingVocab";
@@ -17,7 +18,8 @@ import type { Reading, UnlockStamp } from "./steadiness";
 const VALENCE_FLOOR = 75;
 /**
  * Root emotions whose family makes a secondary feeling heavy enough to stand
- * the valence guard down (#532). Children count through `emotionFamily`.
+ * the valence guard down (#532). Children count through `emotionFamily`, and
+ * common free-text words through `freeEmotionFamily` (#536).
  * Left out: surprise and confusion (not heavy), joy and love (the guarded side).
  */
 const HEAVY_ROOTS = new Set<string>([
@@ -88,7 +90,7 @@ export function readingsFromSession(s: SessionEvidence): Reading[] {
   const family = emotionFamily(s.primaryEmotion);
   const heavySecondary =
     s.secondaryEmotion !== undefined &&
-    emotionFamily(s.secondaryEmotion).some((e) => HEAVY_ROOTS.has(e));
+    freeEmotionFamily(s.secondaryEmotion).some((e) => HEAVY_ROOTS.has(e));
   // Stands down for heartbreak labelled love, desperate hope (CONTEXT.md → valence guard).
   const guarded = (family.includes("joy") || family.includes("love")) && !heavySecondary;
   const value = guarded ? Math.max(linear, VALENCE_FLOOR) : linear;
