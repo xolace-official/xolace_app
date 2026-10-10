@@ -5,8 +5,8 @@
  *  1. One heavy night opens a stretch (needs below-baseline session readings
  *     on 2+ distinct days in 21).
  *  2. Self-reports count toward those two days.
- *  3. A wobble under 12 points fires, or a domain that always swings wide
- *     fires on its normal swing (band = max(12, 1 SD)).
+ *  3. A wobble under 10 points fires, or a domain that always swings wide
+ *     fires on its normal swing (band = max(10, 1 SD)).
  *  4. A domain compounds before it is settled.
  *  5. A drop that stays above the usual fires.
  *  6. Flicker: a stretch closes the moment the gap dips under the band
@@ -62,7 +62,7 @@ describe("opens", () => {
   it("never on one heavy night, however heavy (1)", () => {
     const night = [r(0.5, 0), r(0.4, 0), r(0.3, 0), r(0.2, 0), r(0.1, 0)];
     const d = work([...usual(), ...night]);
-    expect(d.raw.baseline - d.raw.steadiness).toBeGreaterThan(12); // the gap alone would fire
+    expect(d.raw.baseline - d.raw.steadiness).toBeGreaterThan(10); // the gap alone would fire
     expect(opens(d, at)).toBe(false);
   });
 
@@ -73,17 +73,17 @@ describe("opens", () => {
   });
 
   it("measures the band on the usual, so the drop can't widen its own (3)", () => {
-    expect(bandOf(work([...usual(), ...heavy(8)]), NOW)).toBe(12);
+    expect(bandOf(work([...usual(), ...heavy(8)]), NOW)).toBe(10);
   });
 
-  it("never on a wobble inside 12 points (3)", () => {
+  it("never on a wobble inside 10 points (3)", () => {
     expect(opens(work([...usual(), ...heavy(20, 60)]), at)).toBe(false);
   });
 
   it("never on a wide swinger's normal swing (3)", () => {
     const swings = usual().map((x, i) => ({ ...x, value: i % 2 ? 10 : 100 }));
     const d = work([...swings, ...heavy(6)]);
-    expect(d.raw.baseline - d.raw.steadiness).toBeGreaterThan(12);
+    expect(d.raw.baseline - d.raw.steadiness).toBeGreaterThan(10);
     expect(opens(d, at)).toBe(false);
   });
 
@@ -123,6 +123,12 @@ describe("the usual excludes lately (11)", () => {
     expect(day!).toBeLessThanOrEqual(4);
   });
 
+  it("a long usual dropping 20 opens within ~3 weeks (#528)", () => {
+    const day = firstOpenDay(120, 70, -20);
+    expect(day).not.toBeNull();
+    expect(day!).toBeLessThanOrEqual(21);
+  });
+
   it("a 10-point dip never opens", () => {
     expect(firstOpenDay(120, 70, -10)).toBeNull();
   });
@@ -149,8 +155,8 @@ describe("judgeOpen", () => {
 
   it("keeps a long stretch's own lows out of its band (3)", () => {
     const d = work([...usual(), ...heavy(40)]);
-    expect(bandOf(d, NOW)).toBeGreaterThan(12); // the drop, measured as the usual
-    expect(judgeOpen(d, started(39, 95), at)).toMatchObject({ band: 12 });
+    expect(bandOf(d, NOW)).toBeGreaterThan(10); // the drop, measured as the usual
+    expect(judgeOpen(d, started(39, 95), at)).toMatchObject({ band: 10 });
   });
 
   it("judges against the stored anchor, not the live baseline (7)", () => {

@@ -19,7 +19,9 @@ import {
 } from "./steadiness";
 
 const DAY_MS = 86_400_000;
-const MIN_BAND = 12;
+// Measured in #528: 12 never caught a sustained 20-point drop on a 60–120-day
+// usual; 10 does, with ~0 false opens at noise up to ±10.
+const MIN_BAND = 10;
 // Matches the usual's cutoff so no reading is both evidence of the drop and part of the usual.
 const SIGNAL_WINDOW_MS = USUAL_AFTER_MS;
 const MIN_BELOW_DAYS = 2;
@@ -34,7 +36,7 @@ export type Judged =
   | { ended: "quiet" | "usual"; endedAt: number };
 
 /**
- * How far below the usual counts as "clearly": 12 points, or one SD of how
+ * How far below the usual counts as "clearly": 10 points, or one SD of how
  * this domain normally swings (CONTEXT.md "Compounding"), weighted like the
  * baseline. "Normally" is the readings older than USUAL_AFTER_MS: measured over
  * all of them, the drop widens its own band, and a steady 70 falling to 10

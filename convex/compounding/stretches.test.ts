@@ -249,7 +249,7 @@ describe("compoundingFor", () => {
       startedAt: NOW,
       coDomains: [{ domain: "family", firstBelowAt: NOW }],
     });
-    expect(out[0].band).toBeGreaterThanOrEqual(12);
+    expect(out[0].band).toBeGreaterThanOrEqual(10);
     expect(out[0].shareTrend).toBeGreaterThan(0);
   });
 
