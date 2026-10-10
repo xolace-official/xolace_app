@@ -31,8 +31,11 @@ Xolace+; safety follow-ups and crisis resources never are.
 
 A **compounding upsell** tells a free user, inside the app only, that a named
 domain has been heavier than their usual, with no number. It shows at most
-once per compounding stretch, never in a session safeguard flagged or one
-that burned, and it offers seeing the pattern, never relief.
+once per compounding stretch, and it offers seeing the pattern, never
+relief. It never shows while a hard moment is recent: not if safeguard
+flagged, or the person burned, any session during the stretch or in the
+past week, whichever reaches further back. "Shown" means the person saw it,
+not that it was ready to show.
 
 ## Warming, unlocked, settled (2026-10-03)
 
@@ -83,10 +86,16 @@ Intensity says how big a feeling is, not which way it points, so a good
 session (joy, love) never counts against steadiness: its session reading
 has a floor, the **valence guard**. The floor corrects the classifier, not
 the person: mood and follow-up readings still step from the guarded value,
-so "heavier" after good news can read below it.
+so "heavier" after good news can read below it. The guard stands down when
+the session also carried a heavy feeling: love that is heartbreak, or hope
+that is desperate, counts at its full weight.
 
-A domain's **baseline** is the person's own usual for that domain: the same
-readings remembered over months rather than weeks. Steadiness is only ever
+A domain's **baseline** is the person's own usual for that domain: how it
+was before lately, the readings from before the last few weeks, remembered
+over months. Lately never counts toward the usual, so a low patch is always
+measured against the time before it. The baseline shown is the one
+compounding is judged against: there is one usual, not one per purpose.
+Steadiness is only ever
 compared with the person's own baseline, never with other people. Silence
 moves neither; a quiet domain keeps its last steadiness and is marked as not
 recent.
