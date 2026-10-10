@@ -9,6 +9,7 @@ import {
   extractTextFromResponse,
   REFLECTION_LIGHT_MODEL,
   REFLECTION_LIGHT_VERSION,
+  thinkingOff,
 } from "../providers/anthropic";
 import {
   buildLightPassPrompt,
@@ -60,6 +61,7 @@ export const onSessionComplete = internalAction({
         const response = await anthropic.messages.create({
           model: REFLECTION_LIGHT_MODEL,
           max_tokens: LIGHT_MAX_TOKENS,
+          thinking: thinkingOff(REFLECTION_LIGHT_MODEL),
           system: prompt.system,
           messages: [{ role: "user", content: prompt.user }],
         });

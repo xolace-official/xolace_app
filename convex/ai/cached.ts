@@ -37,6 +37,6 @@ export const distillerCache: ActionCache<
   >
 > = new ActionCache(components.actionCache, {
   action: internal.ai.cachedActions.distillerAction,
-  name: "distiller-v1",
+  name: "distiller-v2",
   ttl: 30 * DAY,
 });

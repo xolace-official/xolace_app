@@ -17,6 +17,7 @@ import type * as ai_chat_moderate from "../ai/chat/moderate.js";
 import type * as ai_clarify from "../ai/clarify.js";
 import type * as ai_context from "../ai/context.js";
 import type * as ai_evalMetrics from "../ai/evalMetrics.js";
+import type * as ai_followUpCard from "../ai/followUpCard.js";
 import type * as ai_generateNotification from "../ai/generateNotification.js";
 import type * as ai_helpers_episodicSearch from "../ai/helpers/episodicSearch.js";
 import type * as ai_helpers_patternSummary from "../ai/helpers/patternSummary.js";
@@ -199,6 +200,7 @@ declare const fullApi: ApiFromModules<{
   "ai/clarify": typeof ai_clarify;
   "ai/context": typeof ai_context;
   "ai/evalMetrics": typeof ai_evalMetrics;
+  "ai/followUpCard": typeof ai_followUpCard;
   "ai/generateNotification": typeof ai_generateNotification;
   "ai/helpers/episodicSearch": typeof ai_helpers_episodicSearch;
   "ai/helpers/patternSummary": typeof ai_helpers_patternSummary;

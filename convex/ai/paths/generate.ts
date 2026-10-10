@@ -9,6 +9,7 @@ import {
   extractTextFromResponse,
   PATHS_MODEL,
   PATHS_VERSION,
+  thinkingOff,
 } from "../providers/anthropic";
 import { bindTwig } from "./bind";
 import { CATALOG } from "./catalog";
@@ -99,6 +100,7 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
   const response = await getAnthropicClient().messages.create({
     model: PATHS_MODEL,
     max_tokens: MAX_TOKENS,
+    thinking: thinkingOff(PATHS_MODEL),
     system: prompt.system,
     messages: [{ role: "user", content: prompt.user }],
   });

@@ -25,10 +25,7 @@ import {
   shouldReshowShownCard,
   shouldSupersede,
 } from "./lib/followUpCadence";
-import {
-  getAnthropicClient,
-  extractTextFromResponse,
-} from "./ai/providers/anthropic";
+import { writeFollowUpCard } from "./ai/followUpCard";
 import { domainValidator, safeguardLevelValidator } from "./lib/validators";
 import {
   buildFollowUpCardPrompt,
@@ -44,7 +41,6 @@ import {
 import { hasPremium } from "./lib/premium";
 import { domainOf } from "./lib/understandingVocab";
 
-const CARD_MODEL = "claude-haiku-4-5-20251001";
 const MAX_CARD_CHARS = 200;
 
 export const workflow = new WorkflowManager(components.workflow);
@@ -263,7 +259,6 @@ export const startFollowUpWorkflow = internalAction({
 
     let cardText: string;
     try {
-      const anthropic = getAnthropicClient();
       const prompt = buildFollowUpCardPrompt({
         tier,
         mirrorText: start.cardCtx.mirrorText,
@@ -275,14 +270,7 @@ export const startFollowUpWorkflow = internalAction({
         compoundingDomain: start.compounding?.domain ?? null,
       });
 
-      const response = await anthropic.messages.create({
-        model: CARD_MODEL,
-        max_tokens: 120,
-        system: prompt.system,
-        messages: [{ role: "user", content: prompt.user }],
-      });
-
-      const raw = extractTextFromResponse(response)
+      const raw = (await writeFollowUpCard(prompt))
         .trim()
         .replace(/^["']|["']$/g, "");
       cardText =

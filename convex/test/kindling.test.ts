@@ -189,7 +189,7 @@ describe("ai/paths/generate.run", () => {
     expect(steps.every((s) => s.state === "pending")).toBe(true);
     expect(steps.map((s) => s.actionType).sort()).toEqual(["breathing", "bridge", "xolacer"]);
     expect(steps.find((s) => s.actionType === "xolacer")?.params).toEqual({ specialty: "burnout" });
-    expect(path.modelVersion).toBe("paths-v1-haiku-4.5");
+    expect(path.modelVersion).toBe("paths-v2-haiku-5.5");
   });
 
   it("drops a twig whose why fails validation and ships the rest", async () => {

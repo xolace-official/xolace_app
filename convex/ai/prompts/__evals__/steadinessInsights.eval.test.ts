@@ -24,7 +24,7 @@ import { when } from "../../../compounding/insightEvidence";
 import type { FactSession } from "../../../compounding/insightFacts";
 import type { Domain } from "../../../lib/understandingVocab";
 import { DOMAIN_LABELS } from "../../../lib/understandingVocab";
-import { getAnthropicClient, REFLECTION_CONSOLIDATION_MODEL } from "../../providers/anthropic";
+import { getAnthropicClient, REFLECTION_CONSOLIDATION_MODEL, thinkingOff } from "../../providers/anthropic";
 import { INSIGHT_TOOLS, steadinessView } from "../../reflectionAgent/insightTools";
 import { REFLECTION_TOOLS, WRITE_TOOL } from "../../reflectionAgent/tools";
 import { buildConsolidationSystemPrompt } from "../reflectionConsolidation";
@@ -179,7 +179,7 @@ async function runPass(f: Fixture): Promise<Outcome> {
   }];
   for (let i = 0; i < 12; i++) {
     const res = await getAnthropicClient().messages.create(
-      { model: REFLECTION_CONSOLIDATION_MODEL, max_tokens: 3072, system: buildConsolidationSystemPrompt({ insights: true }), tools: [...REFLECTION_TOOLS, ...INSIGHT_TOOLS], messages },
+      { model: REFLECTION_CONSOLIDATION_MODEL, max_tokens: 3072, thinking: thinkingOff(REFLECTION_CONSOLIDATION_MODEL), system: buildConsolidationSystemPrompt({ insights: true }), tools: [...REFLECTION_TOOLS, ...INSIGHT_TOOLS], messages },
       { timeout: 120_000 },
     );
     messages.push({ role: "assistant", content: res.content });

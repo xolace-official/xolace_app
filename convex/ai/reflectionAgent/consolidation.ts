@@ -14,6 +14,7 @@ import {
   getAnthropicClient,
   REFLECTION_CONSOLIDATION_MODEL,
   REFLECTION_CONSOLIDATION_VERSION,
+  thinkingOff,
 } from "../providers/anthropic";
 import { buildConsolidationSystemPrompt } from "../prompts/reflectionConsolidation";
 import { INSIGHT_TOOLS } from "./insightTools";
@@ -145,6 +146,7 @@ export const runConsolidation = internalAction({
           {
             model: REFLECTION_CONSOLIDATION_MODEL,
             max_tokens: MAX_TOKENS,
+            thinking: thinkingOff(REFLECTION_CONSOLIDATION_MODEL),
             system,
             tools,
             messages,
