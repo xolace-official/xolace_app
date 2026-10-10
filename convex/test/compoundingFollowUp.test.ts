@@ -13,7 +13,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { compoundingFor } from "../compounding/stretches";
-import { scheduled, scheduledCalls, seedMetadata, seedSession } from "./fixtures.helpers";
+import { runEvaluations, scheduled, scheduledCalls, seedMetadata, seedSession } from "./fixtures.helpers";
 import { asNewUser, type SeededUser } from "./harness.helpers";
 import { aggregatesMock, anthropicMock, noopJob, posthogMock, ragMock, revenuecatMock } from "./mocks.helpers";
 
@@ -67,10 +67,15 @@ async function seedReading(user: SeededUser, daysAgo: number, tags: string[], in
   await seedMetadata(user.root, sessionId, user.profileId, { intensity, thematicTags: tags });
 }
 
-/** A settled work usual (intensity 4), a heavy last week, and its open stretch. */
-async function compoundingWork(user: SeededUser) {
+/** A settled work usual (intensity 4) and a heavy last week. */
+async function heavyWork(user: SeededUser) {
   for (let i = 0; i < 50; i++) await seedReading(user, 120 - i * 2, ["work"], 4);
   for (let d = 1; d <= 7; d++) await seedReading(user, d + 0.5, ["work"], 10);
+}
+
+/** heavyWork, and its open stretch. */
+async function compoundingWork(user: SeededUser) {
+  await heavyWork(user);
   await user.root.run((ctx) =>
     ctx.db.insert("compounding_stretches", {
       emotionalProfileId: user.profileId,
@@ -102,6 +107,7 @@ async function tonight(user: SeededUser, tags: string[], over: Tonight = {}) {
     ...(over.safeguardLevel ? { safeguardLevel: over.safeguardLevel } : {}),
   });
   await user.t.mutation(api.sessions.completeSession, { sessionId });
+  await runEvaluations(user.root);
   if (scheduled(await scheduledCalls(user.root), "followUps:startFollowUpWorkflow")) {
     await user.root.action(internal.followUps.startFollowUpWorkflow, { sessionId });
   }
@@ -131,6 +137,28 @@ describe("the compounding follow-up trigger (#522)", () => {
     const card = await tonight(user, ["work"]);
     expect(card).toMatchObject({ tier: "standard", compoundingDomain: "work", status: "pending" });
     expect(stub.prompts.at(-1)).toContain("across recent sessions, not just this one: work and studies");
+    expect((await workStretch(user))?.followUpStartedAt).toBeTypeOf("number");
+  });
+
+  it("fires on the session whose reading opens the stretch, starting only once it's open (#529)", async () => {
+    const user = await asNewUser();
+    await heavyWork(user);
+    const sessionId = await seedSession(user.root, user.profileId, { state: "confirmed", kept: true });
+    await seedMetadata(user.root, sessionId, user.profileId, { intensity: 10, thematicTags: ["work"] });
+    await user.t.mutation(api.sessions.completeSession, { sessionId });
+    // Nothing compounding ran in the completion, and the start waits on it.
+    expect(await workStretch(user)).toBeNull();
+    const calls = await scheduledCalls(user.root);
+    expect(scheduled(calls, "followUps:startFollowUpWorkflow")).toBeUndefined();
+    expect(scheduled(calls, "compounding/stretches:evaluate")?.args).toMatchObject({ sessionId, startFollowUp: true });
+
+    await runEvaluations(user.root);
+    expect(scheduled(await scheduledCalls(user.root), "followUps:startFollowUpWorkflow")).toBeDefined();
+    await user.root.action(internal.followUps.startFollowUpWorkflow, { sessionId });
+    const card = await user.root.run((ctx) =>
+      ctx.db.query("follow_up_cards").withIndex("by_session", (q) => q.eq("sessionId", sessionId)).unique(),
+    );
+    expect(card).toMatchObject({ tier: "standard", compoundingDomain: "work" });
     expect((await workStretch(user))?.followUpStartedAt).toBeTypeOf("number");
   });
 

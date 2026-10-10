@@ -21,7 +21,6 @@ import {
 } from "./lib/validators";
 import { getTimeOfDay, getDayOfWeek } from "./lib/timeOfDay";
 import { recordActivity } from "./streaks/activityLog";
-import { evaluateCompounding } from "./compounding/stretches";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "./lib/rateLimits";
 import {
   abandonRequiresFollowUp,
@@ -64,16 +63,14 @@ async function finalizeFollowUp(
   ctx: MutationCtx,
   session: Doc<"sessions">,
   requiresFollowUp: boolean,
-  mayCompound = false,
 ): Promise<void> {
   if (session.requiresFollowUp !== requiresFollowUp) {
     await ctx.db.patch("sessions", session._id, { requiresFollowUp });
   }
   // One-active-per-profile + idempotency are enforced in followUps; here we
-  // only guard against the obvious double-start on the same session.
-  // `mayCompound`: the compounding trigger (#522) is decided at start, in its
-  // own transaction, so the readings aren't loaded twice here.
-  if ((requiresFollowUp || mayCompound) && !session.followUpWorkflowId) {
+  // only guard against the obvious double-start on the same session. A
+  // follow-up compounding alone may earn is started by the evaluation (#529).
+  if (requiresFollowUp && !session.followUpWorkflowId) {
     await ctx.scheduler.runAfter(0, internal.followUps.startFollowUpWorkflow, {
       sessionId: session._id,
     });
@@ -97,7 +94,8 @@ async function finalizeCompletion(
   opts: {
     pathCompleted: boolean;
     pathChosen?: Doc<"sessions">["pathChosen"];
-    deferCompounding?: boolean;
+    /** The cron's stranded reconciliation: never fires the compounding trigger. */
+    stranded?: boolean;
   },
 ): Promise<void> {
   const now = Date.now();
@@ -120,17 +118,26 @@ async function finalizeCompletion(
     timestamp: now,
   });
 
-  // Compounding moves with the reading that moved it (#519): this session's
-  // reading may open a stretch, and any open one may close. The cron's batch
-  // reconciliation defers it to its own transaction (read limits).
-  if (opts.deferCompounding) {
-    await ctx.scheduler.runAfter(0, internal.compounding.stretches.evaluate, {
-      profileId: session.emotionalProfileId,
-      sessionId: session._id,
-    });
-  } else {
-    await evaluateCompounding(ctx, session.emotionalProfileId, { sessionId: session._id });
-  }
+  const requiresFollowUp = computeRequiresFollowUp({
+    storedFlag: session.requiresFollowUp,
+    confirmationState: session.confirmationState,
+    escalationTriggered: session.escalationTriggered,
+  });
+  // Compounding (#519): this session's reading may open a stretch, and any
+  // open one may close. Its own transaction (#529), so a heavy history or a
+  // bad reading can never roll back the completion. A follow-up only the
+  // compounding trigger (#522) could earn starts from there, once the stretch
+  // this reading opened exists. One the session earned anyway starts now and
+  // never waits on compounding: it rides along only on a stretch already open.
+  // The cron's stranded reconciliation never fires the trigger.
+  const mayCompound = !opts.stranded && session.kept !== false;
+  await ctx.scheduler.runAfter(0, internal.compounding.stretches.evaluate, {
+    profileId: session.emotionalProfileId,
+    sessionId: session._id,
+    ...(mayCompound && !requiresFollowUp && !session.followUpWorkflowId
+      ? { startFollowUp: true }
+      : {}),
+  });
 
   // Schedule post-session jobs.
   await ctx.scheduler.runAfter(
@@ -164,18 +171,7 @@ async function finalizeCompletion(
   }
 
   // Finalize follow-up gate + maybe start the check-in workflow.
-  await finalizeFollowUp(
-    ctx,
-    session,
-    computeRequiresFollowUp({
-      storedFlag: session.requiresFollowUp,
-      confirmationState: session.confirmationState,
-      escalationTriggered: session.escalationTriggered,
-    }),
-    // The cron's stranded reconciliation evaluates compounding later; it
-    // never fires the trigger.
-    !opts.deferCompounding && session.kept !== false,
-  );
+  await finalizeFollowUp(ctx, session, requiresFollowUp);
 }
 
 /**
@@ -191,6 +187,8 @@ async function applyPostSessionFeedback(
     contributedReflection?: boolean;
     postSessionMood?: Doc<"sessions">["postSessionMood"];
   },
+  /** Completion already scheduled an evaluation that will read this mood. */
+  evaluating = false,
 ): Promise<void> {
   await ctx.db.patch("sessions", session._id, {
     ...(feedback.contributedReflection !== undefined
@@ -203,8 +201,11 @@ async function applyPostSessionFeedback(
   });
 
   // A mood check is a reading: it can close a stretch, never open one (#519).
-  if (feedback.postSessionMood) {
-    await evaluateCompounding(ctx, session.emotionalProfileId);
+  // Its own transaction, so it can't fail the save (#529).
+  if (feedback.postSessionMood && !evaluating) {
+    await ctx.scheduler.runAfter(0, internal.compounding.stretches.evaluate, {
+      profileId: session.emotionalProfileId,
+    });
   }
 
   // Schedule the anonymizer only on a fresh opt-in, so repeated feedback
@@ -515,7 +516,7 @@ export const completePath = mutation({
     await finalizeCompletion(ctx, session, { pathCompleted });
 
     if (hasLegacyFeedback) {
-      await applyPostSessionFeedback(ctx, session, legacyFeedback);
+      await applyPostSessionFeedback(ctx, session, legacyFeedback, true);
     }
 
     return null;
@@ -1161,7 +1162,7 @@ export const checkAbandoned = internalMutation({
 
       for (const session of staleSessions) {
         if ((stalePathStates as readonly string[]).includes(state)) {
-          await finalizeCompletion(ctx, session, { pathCompleted: false, deferCompounding: true });
+          await finalizeCompletion(ctx, session, { pathCompleted: false, stranded: true });
         } else {
           await ctx.db.patch("sessions", session._id, {
             state: "abandoned",

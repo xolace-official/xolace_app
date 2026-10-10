@@ -38,7 +38,6 @@ import { renderSemanticProfile } from "./semanticProfiles";
 import { deleteResponsesForCard } from "./followUpResponses";
 import {
   compoundingFor,
-  evaluateCompounding,
   spendStretch,
   type StretchRef,
 } from "./compounding/stretches";
@@ -582,7 +581,8 @@ export const resolveCard = mutation({
       resolvedAt: Date.now(),
     });
     // An answer is a reading: it can close a stretch, never open one (#519).
-    await evaluateCompounding(ctx, profile._id);
+    // Its own transaction, so it can't fail the answer (#529).
+    await ctx.scheduler.runAfter(0, internal.compounding.stretches.evaluate, { profileId: profile._id });
     return null;
   },
 });

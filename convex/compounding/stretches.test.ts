@@ -28,7 +28,7 @@ import type { WorkflowId } from "@convex-dev/workflow";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
-import { classificationArgs } from "../test/fixtures.helpers";
+import { classificationArgs, runEvaluations } from "../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, noopJob, posthogMock, revenuecatMock } from "../test/mocks.helpers";
 import { compoundingFor, evaluateCompounding } from "./stretches";
@@ -113,8 +113,10 @@ const insertRow = (user: SeededUser, row: Partial<Doc<"compounding_stretches">>)
     }),
   );
 
-const exit = (user: SeededUser, sessionId: Id<"sessions">) =>
-  user.t.mutation(api.sessions.completeSession, { sessionId });
+async function exit(user: SeededUser, sessionId: Id<"sessions">) {
+  await user.t.mutation(api.sessions.completeSession, { sessionId });
+  await runEvaluations(user.root);
+}
 
 const read = (user: SeededUser) => user.root.run((ctx) => compoundingFor(ctx, user.profileId));
 
@@ -152,6 +154,7 @@ describe("evaluateCompounding at session completion", () => {
       }),
     );
     await user.t.mutation(api.followUps.resolveCard, { cardId, response: "heavier" });
+    await runEvaluations(user.root);
     expect(await rows(user)).toHaveLength(0);
 
     // The signal was there all along: only the session reading may open.
@@ -167,6 +170,7 @@ describe("evaluateCompounding at session completion", () => {
       sessionId: ids.at(-1)!,
       postSessionMood: "same",
     });
+    await runEvaluations(user.root);
     expect(await rows(user)).toMatchObject([{ endedAt: NOW }]);
   });
 
@@ -211,6 +215,7 @@ describe("evaluateCompounding at session completion", () => {
       sessionId: ids.at(-1)!,
       postSessionMood: "same",
     });
+    await runEvaluations(user.root);
     const [row] = await rows(user);
     expect(row.anchorBaseline).toBe(95);
     expect(row.endedAt).toBeUndefined();

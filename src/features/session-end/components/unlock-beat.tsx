@@ -38,8 +38,10 @@ export function UnlockBeat({ sessionId, unlock }: Props) {
   const markSeen = useMutation(api.compounding.unlocks.markSeen);
   const accent = useTokenColor("accent");
   const insets = useSafeAreaInsets();
-  // Held on mount: once seen, the stamp changes underneath and must not hide the beat.
-  const [shown] = useState(() => (unlock && unlock.seenAt === undefined ? unlock : null));
+  // The first unseen stamp, held: once seen, it changes underneath and must not
+  // hide the beat. Not held on mount, since it lands a moment after (#529).
+  const [shown, setShown] = useState<Unlock | null>(null);
+  if (!shown && unlock && unlock.seenAt === undefined) setShown(unlock);
   const [open, setOpen] = useState(true);
 
   useEffect(() => {

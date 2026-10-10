@@ -57,7 +57,9 @@ export function computeSteadiness(
   const byDomain = new Map<Domain, Reading[]>();
   for (const reading of allReadings) {
     if (reading.at > now) continue;
-    byDomain.set(reading.domain, [...(byDomain.get(reading.domain) ?? []), reading]);
+    const list = byDomain.get(reading.domain);
+    if (list) list.push(reading);
+    else byDomain.set(reading.domain, [reading]);
   }
 
   const domains = [...byDomain].map(([domain, readings]) =>

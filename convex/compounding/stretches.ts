@@ -2,9 +2,10 @@
  * Compounding stretches (#519): stored rows (ADR 0020) judged live by the
  * rules in detect.ts (#489).
  *
- * evaluateCompounding runs inside every mutation that writes a reading
- * (session completion, the mood check, a follow-up answer), so a stretch
- * moves in the same transaction as the reading that moved it. A session
+ * Every mutation that writes a reading (session completion, the mood check,
+ * a follow-up answer) schedules `evaluate` right after it, in its own
+ * transaction (#529): a heavy history or a bad reading can fail the
+ * evaluation, never the person's session, mood or answer. A session
  * reading also stamps any domain it unlocks (unlocks.ts). compoundingFor
  * is the pure read every consumer shares (#492).
  *
@@ -13,6 +14,7 @@
  */
 import { v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
+import { internal } from "../_generated/api";
 import { internalMutation, type MutationCtx, type QueryCtx } from "../_generated/server";
 import { domainOf, type Domain } from "../lib/understandingVocab";
 import { judgeOpen, opens, sharedSessions, shareTrend } from "./detect";
@@ -106,15 +108,23 @@ export async function evaluateCompounding(
 }
 
 /**
- * The same evaluation in its own transaction, for a caller that completes
- * many sessions at once (the abandoned-session cron): one loadReadings per
- * session would blow that batch's read limit.
+ * The evaluation in its own transaction, scheduled by each reading's
+ * mutation. `startFollowUp`: the completed session's follow-up starts from
+ * here, after its reading has opened any stretch, so the compounding trigger
+ * (#522) can't look before the stretch exists.
  */
 export const evaluate = internalMutation({
-  args: { profileId: v.id("emotional_profiles"), sessionId: v.optional(v.id("sessions")) },
+  args: {
+    profileId: v.id("emotional_profiles"),
+    sessionId: v.optional(v.id("sessions")),
+    startFollowUp: v.optional(v.boolean()),
+  },
   returns: v.null(),
-  handler: async (ctx, { profileId, sessionId }) => {
+  handler: async (ctx, { profileId, sessionId, startFollowUp }) => {
     await evaluateCompounding(ctx, profileId, { sessionId });
+    if (startFollowUp && sessionId) {
+      await ctx.scheduler.runAfter(0, internal.followUps.startFollowUpWorkflow, { sessionId });
+    }
     return null;
   },
 });

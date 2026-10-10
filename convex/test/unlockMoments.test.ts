@@ -16,7 +16,7 @@ import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/c
 import { api } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { missedPushAt } from "../compounding/unlocks";
-import { scheduledCalls, seedMetadata, seedSession } from "./fixtures.helpers";
+import { runEvaluations, scheduledCalls, seedMetadata, seedSession } from "./fixtures.helpers";
 import { asNewUser, type SeededUser } from "./harness.helpers";
 import { aggregatesMock, anthropicMock, noopJob, posthogMock, ragMock, revenuecatMock } from "./mocks.helpers";
 
@@ -74,6 +74,7 @@ async function tonight(user: SeededUser, tags: string[]) {
   const sessionId = await seedSession(user.root, user.profileId, { state: "confirmed" });
   await seedMetadata(user.root, sessionId, user.profileId, { intensity: 5, thematicTags: tags });
   await user.t.mutation(api.sessions.completeSession, { sessionId });
+  await runEvaluations(user.root);
   const session = await user.root.run((ctx) => ctx.db.get("sessions", sessionId));
   return { sessionId, unlock: session?.domainUnlock };
 }

@@ -1,6 +1,7 @@
 // The compounding upsell (#524, #496 §4): a free user learns a named domain
 // has been heavier than their usual, with no number, on Insights and at
-// session end. Once per stretch: showing it spends it, so it's held on mount.
+// session end. Once per stretch: rendering the line spends it, so the first
+// one found is held for the mount.
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useMutation, useQuery } from "convex/react";
@@ -24,19 +25,11 @@ export type Upsell = NonNullable<FunctionReturnType<typeof api.compounding.upsel
 export function useCompoundingUpsell(args: { sessionId?: Id<"sessions"> } | "skip"): Upsell | null {
   const { isPlus, isResolved } = usePlusEntitlement();
   const live = useQuery(api.compounding.upsell.get, isResolved && !isPlus ? args : "skip");
-  const markShown = useMutation(api.compounding.upsell.markShown);
-  const posthog = usePostHog();
-  // The first answer, held: once marked, the query moves on underneath.
-  const [held, setHeld] = useState<Upsell | null>();
-  if (held === undefined && live !== undefined) setHeld(live);
-
-  useEffect(() => {
-    if (!held) return;
-    markShown(held).catch(() => {});
-    posthog.capture("plus_upsell_shown", { surface: "compounding_upsell" });
-  }, [held, markShown, posthog]);
-
-  return held ?? null;
+  // The first upsell, held: once marked, the query moves on underneath. A
+  // null isn't held, since the stretch can open a moment after mount (#529).
+  const [held, setHeld] = useState<Upsell | null>(null);
+  if (!held && live) setHeld(live);
+  return held;
 }
 
 /** The tap, from the line or the domain's row. */
@@ -55,6 +48,14 @@ export function useOpenUpsell() {
  * phase in, and the blur stops rendering under animated opacity: solid there.
  */
 export function CompoundingUpsellLine({ upsell, glass = false }: { upsell: Upsell; glass?: boolean }) {
+  const markShown = useMutation(api.compounding.upsell.markShown);
+  const posthog = usePostHog();
+  // Shown means seen (CONTEXT.md): spent when the line renders, not when found.
+  const { domain, stretchStartedAt } = upsell;
+  useEffect(() => {
+    markShown({ domain, stretchStartedAt }).catch(() => {});
+    posthog.capture("plus_upsell_shown", { surface: "compounding_upsell" });
+  }, [domain, stretchStartedAt, markShown, posthog]);
   const ember = useTokenColor("ember");
   const open = useOpenUpsell();
   const { label, icon } = DOMAIN_META[upsell.domain];
