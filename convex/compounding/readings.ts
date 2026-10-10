@@ -43,6 +43,7 @@ const UNCONFIRMED_WEIGHT = 0.5;
  */
 export const INTENSITY_OFFSET: Record<string, number> = {
   "classifier-v1-haiku-4.5": 0,
+  "classifier-v2-haiku-5.5": -0.3, // #537: measured -0.33
 };
 
 const MOOD_STEP: Partial<Record<NonNullable<Doc<"sessions">["postSessionMood"]>, number>> = {

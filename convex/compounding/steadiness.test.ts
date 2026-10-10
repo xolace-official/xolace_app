@@ -138,7 +138,7 @@ describe("readingsFromSession", () => {
   });
 
   it("the classifier version names its model, so a model swap can't skip the version bump (#533)", () => {
-    // claude-haiku-4-5-20251001 → haiku-4.5; claude-haiku-5-5 → haiku-5.5
+    // claude-haiku-5-5 → haiku-5.5; a dated id (claude-haiku-5-5-20260101) maps the same
     const id = /^claude-([a-z]+)-(\d+)-(\d+)/;
     expect(CLASSIFIER_MODEL, "model id format changed; update this check").toMatch(id);
     const [, family, major, minor] = CLASSIFIER_MODEL.match(id)!;

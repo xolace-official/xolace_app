@@ -530,8 +530,7 @@ export default defineSchema({
     mirrorText: v.optional(v.string()),
 
     // Which version of the articulation engine produced this.
-    // Format: "articulation-v{N}-{anthropic_model}"
-    // e.g., "articulation-v3-claude-sonnet-4-20250514"
+    // Format: "articulator-v{N}-{model}", e.g. "articulator-v2-sonnet-5.5" (ARTICULATOR_VERSION)
     // Critical for tracking quality across prompt iterations.
     // Optional: not set until mirror_delivered state.
     mirrorModelVersion: v.optional(v.string()),

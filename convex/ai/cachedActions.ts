@@ -53,6 +53,7 @@ export const classifierAction = internalAction({
     const response = await anthropic.messages.create({
       model: CLASSIFIER_MODEL,
       max_tokens: 512,
+      thinking: thinkingOff(CLASSIFIER_MODEL),
       system: args.systemPrompt,
       messages: [{ role: "user", content: args.userPrompt }],
     });
@@ -64,6 +65,7 @@ export const classifierAction = internalAction({
       const retryResponse = await anthropic.messages.create({
         model: CLASSIFIER_MODEL,
         max_tokens: 512,
+        thinking: thinkingOff(CLASSIFIER_MODEL),
         system: args.systemPrompt,
         messages: [
           { role: "user", content: args.userPrompt },

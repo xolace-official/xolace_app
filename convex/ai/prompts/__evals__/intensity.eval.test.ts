@@ -24,6 +24,7 @@ import {
   CLASSIFIER_VERSION,
   getAnthropicClient,
   parseClassificationResponse,
+  thinkingOff,
 } from "../../providers/anthropic";
 import { buildClassifierPrompt } from "../classifier";
 import { hasApiKey } from "./harness.eval";
@@ -40,6 +41,7 @@ async function classify(text: string) {
   const res = await getAnthropicClient().messages.create({
     model: CLASSIFIER_MODEL,
     max_tokens: 500,
+    thinking: thinkingOff(CLASSIFIER_MODEL),
     system: p.system,
     messages: [{ role: "user", content: p.user }],
   });

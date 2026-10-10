@@ -23,17 +23,13 @@ export function getAnthropicClient(): Anthropic {
 
 // --- Model Constants ---
 
-export const CLASSIFIER_MODEL = "claude-haiku-4-5-20251001";
+export const CLASSIFIER_MODEL = "claude-haiku-5-5";
 // Changing the classifier prompt or model? Bump this (it must name the model —
 // steadiness.test.ts asserts it), run the intensity release gate
 // (`bun run test:evals:intensity`; the Intensity gate CI job runs it on PRs
 // touching this file) and record the new version in INTENSITY_OFFSET
 // (convex/compounding/readings.ts).
-export const CLASSIFIER_VERSION = "classifier-v1-haiku-4.5";
-
-// The classifier stays on Haiku 4.5 until the intensity gate (#533) can
-// measure a new model's INTENSITY_OFFSET; swapping it alone shifts every
-// user's readings (#534 Phase 2).
+export const CLASSIFIER_VERSION = "classifier-v2-haiku-5.5";
 
 export const ARTICULATOR_MODEL = "claude-sonnet-5-5";
 export const ARTICULATOR_VERSION = "articulator-v2-sonnet-5.5";
