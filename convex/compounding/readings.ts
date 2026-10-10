@@ -6,7 +6,12 @@
  */
 import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
-import { domainOf, emotionFamily, type Domain } from "../lib/understandingVocab";
+import {
+  domainOf,
+  emotionFamily,
+  type Domain,
+  type PrimaryEmotion,
+} from "../lib/understandingVocab";
 import type { Reading } from "./steadiness";
 
 const VALENCE_FLOOR = 75;
@@ -15,7 +20,7 @@ const VALENCE_FLOOR = 75;
  * the valence guard down (#532). Children count through `emotionFamily`.
  * Left out: surprise and confusion (not heavy), joy and love (the guarded side).
  */
-const HEAVY_ROOTS = new Set([
+const HEAVY_ROOTS = new Set<string>([
   "anger",
   "sadness",
   "grief",
@@ -25,7 +30,7 @@ const HEAVY_ROOTS = new Set([
   "shame",
   "guilt",
   "numbness",
-]);
+] satisfies PrimaryEmotion[]);
 const UNCONFIRMED_WEIGHT = 0.5;
 
 /**
