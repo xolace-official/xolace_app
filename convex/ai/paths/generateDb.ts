@@ -7,9 +7,9 @@ import { rateLimiter } from "../../lib/rateLimits";
 import { renderSemanticProfile } from "../../semanticProfiles";
 import { posthog } from "../../posthog";
 import type { PathsPromptUnderstanding, PromptCompounding } from "./prompt";
-import type { BindEntry, BindTrack, BindUnderstanding } from "./bind";
+import { understoodEmotions, type BindEntry, type BindTrack, type BindUnderstanding } from "./bind";
 import { readRow } from "../../library/reads";
-import { domainOf, emotionFamily, lifeAreasOf } from "../../lib/understandingVocab";
+import { domainOf, lifeAreasOf } from "../../lib/understandingVocab";
 import { compoundingFor, type Compounding } from "../../compounding/stretches";
 
 /**
@@ -50,8 +50,7 @@ async function loadReadCandidates(
   if (u.safeguardLevel === "elevated" || u.safeguardLevel === "crisis") return [];
   const wanted = [
     // Family: a "stress" session still reaches entries shelved under "anxiety" (ADR 0018).
-    ...[...new Set([u.primaryEmotion, u.secondaryEmotion].filter((s): s is string => !!s).flatMap(emotionFamily))]
-      .map((slug) => ({ axis: "emotion", slug })),
+    ...understoodEmotions(u).map((slug) => ({ axis: "emotion", slug })),
     ...u.thematicTags.map((slug) => ({ axis: "lifeArea", slug })),
   ];
   const matched = new Map<Id<"library_entries">, { emotions: string[]; lifeAreas: string[] }>();

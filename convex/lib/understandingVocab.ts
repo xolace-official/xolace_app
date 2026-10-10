@@ -70,12 +70,15 @@ export function emotionFamily(emotion: string): string[] {
 
 /**
  * `emotionFamily` for a free-text emotion word (`secondaryEmotion`): trimmed,
- * lowercased and run through the emotion aliases first. Read at read time, so
+ * lowercased, and an aliased word also gains its canonical family. The word
+ * itself always stays, so a consumer matching it raw never loses a hit. Read
+ * at read time, so
  * stored rows keep the classifier's own word and replayed history is covered
  * too (#536).
  */
 export function freeEmotionFamily(word: string): string[] {
-  return emotionFamily(canonicalFacet("emotion", word.trim().toLowerCase()));
+  const w = word.trim().toLowerCase();
+  return [...new Set([w, ...emotionFamily(canonicalFacet("emotion", w))])];
 }
 
 /** Own-property check, so inherited members ("constructor", …) never count as vocabulary. */

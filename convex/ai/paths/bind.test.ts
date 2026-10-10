@@ -26,6 +26,12 @@ describe("bindTwig", () => {
     expect(bind("xolacer", [], { suggestedSpecialty: "burnout" })).toEqual({ specialty: "burnout" });
   });
 
+  it("read binds a free-text secondary to entries shelved under its emotion (#536)", () => {
+    const entries = [{ slug: "on-grief", emotions: ["grief"], lifeAreas: [] }];
+    expect(bindTwig("read", u({ primaryEmotion: "love", secondaryEmotion: "heartbreak" }), [], entries)).toEqual({ slug: "on-grief" });
+    expect(bindTwig("read", u({ primaryEmotion: "love" }), [], entries)).toBeNull();
+  });
+
   it("bridge binds without content", () => {
     expect(bind("bridge", [])).toEqual({ exercise: "trusted-bridge" });
   });

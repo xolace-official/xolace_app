@@ -1,6 +1,6 @@
 import type { Doc } from "../../_generated/dataModel";
 import { CATALOG_BY_KEY } from "./catalog";
-import { emotionFamily } from "../../lib/understandingVocab";
+import { freeEmotionFamily } from "../../lib/understandingVocab";
 
 /**
  * Kindling content binder (docs/paths-v1.md §2.3, §8; #332).
@@ -114,9 +114,12 @@ function bindEntry(u: BindUnderstanding, entries: readonly BindEntry[]): { slug:
   return candidates.length === 0 ? null : pickSeeded(candidates, score, u);
 }
 
-/** The Understanding's emotions plus their parents, so finer labels still meet older tags (ADR 0018). */
-function understoodEmotions(u: BindUnderstanding): string[] {
-  return [u.primaryEmotion, ...(u.secondaryEmotion ? [u.secondaryEmotion] : [])].flatMap(emotionFamily);
+/**
+ * The Understanding's emotions plus their parents, so finer labels still meet
+ * older tags (ADR 0018), and a free-text secondary meets the emotion it means (#536).
+ */
+export function understoodEmotions(u: Pick<BindUnderstanding, "primaryEmotion" | "secondaryEmotion">): string[] {
+  return [...new Set([u.primaryEmotion, ...(u.secondaryEmotion ? [u.secondaryEmotion] : [])].flatMap(freeEmotionFamily))];
 }
 
 function pickSeeded<T extends { slug: string }>(
