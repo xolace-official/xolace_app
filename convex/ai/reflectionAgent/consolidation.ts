@@ -125,7 +125,7 @@ export const runConsolidation = internalAction({
     );
     const system = buildConsolidationSystemPrompt({ insights });
     const tools = insights ? [...REFLECTION_TOOLS, ...INSIGHT_TOOLS] : REFLECTION_TOOLS;
-    // A retried run gets a new runAt, so its first insight replaces a partial set.
+    // A retried run gets a newer runAt, so its endRun clears a failed attempt's partial set.
     const runAt = Date.now();
 
     const messages: Anthropic.MessageParam[] = [
@@ -191,7 +191,7 @@ export const runConsolidation = internalAction({
       throw err;
     }
 
-    // This run's insights (possibly none) replace the last run's.
+    // This run's insights (possibly none) replace every older run's.
     if (insights) {
       await ctx.runMutation(internal.compounding.insightStore.endRun, {
         emotionalProfileId: args.emotionalProfileId,

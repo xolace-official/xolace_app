@@ -2476,7 +2476,7 @@ export default defineSchema({
     text: v.string(),
     citedSessionIds: v.array(v.id("sessions")),
     oldestCitedAt: v.number(),
-    // The consolidation run that wrote it; a new run's first write clears older runs.
+    // The consolidation run that wrote it; a run's end clears older runs' rows (#531).
     runAt: v.number(),
     writtenAt: v.number(),
   }).index("by_emotionalProfileId_and_oldestCitedAt", ["emotionalProfileId", "oldestCitedAt"]),

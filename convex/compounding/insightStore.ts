@@ -2,8 +2,9 @@
  * Steadiness insights in and out (#525, #526). `save` is the write_insight
  * tool: it rebuilds the evidence from the database (never trusting the
  * model's copy), runs the gate, and stores what passes with each named
- * domain's score at that moment. `endRun` then drops every earlier run's rows,
- * so a run that finds nothing leaves nothing behind. `insightsFor` is the
+ * domain's score at that moment. `endRun` then drops every older run's rows,
+ * so a run that finds nothing leaves nothing behind, and two overlapping runs
+ * can't delete each other's (#531). `insightsFor` is the
  * read: an insight whose cited session has gone (retention, wipe) or burned
  * is never shown, and shownNow holds back one that waits or has gone stale.
  */
@@ -122,13 +123,17 @@ export const save = internalMutation({
   },
 });
 
-/** An insight-enabled run finished: its set replaces every earlier run's. */
+/**
+ * An insight-enabled run finished: its set replaces every older run's. Only
+ * older — an overlapping run that started later keeps its set when this one
+ * ends late, and its own endRun then clears this one's (#531).
+ */
 export const endRun = internalMutation({
   args: { emotionalProfileId: v.id("emotional_profiles"), runAt: v.number() },
   returns: v.null(),
   handler: async (ctx, { emotionalProfileId, runAt }) => {
     for (const row of await rowsOf(ctx, emotionalProfileId)) {
-      if (row.runAt !== runAt) await ctx.db.delete("steadiness_insights", row._id);
+      if (row.runAt < runAt) await ctx.db.delete("steadiness_insights", row._id);
     }
     return null;
   },
