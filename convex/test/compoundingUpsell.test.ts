@@ -4,8 +4,9 @@
  * has been heavier than their usual, in the app only, once per stretch.
  *
  * Failure modes: a Xolace+ user or an easing domain getting it; it naming a
- * number; it showing after an elevated, crisis or burned session (session end,
- * or the latest session for Insights); it showing twice in one stretch, or
+ * number; it showing while an elevated, crisis or burned session is recent
+ * (#530: any session in the stretch or the past week, whichever reaches
+ * further back); it showing twice in one stretch, or
  * never again in the next; marking another person's stretch; it pushing.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -58,10 +59,14 @@ type Tonight = Partial<Pick<Doc<"sessions">, "kept" | "escalationTriggered" | "s
   metaLevel?: Doc<"emotional_metadata">["safeguardLevel"];
 };
 
-/** Tonight's completed session, just now. */
-async function tonight(user: SeededUser, over: Tonight = {}) {
+/** A completed session, just now or `daysAgo`. */
+async function tonight(user: SeededUser, over: Tonight = {}, daysAgo = 0) {
   const { metaLevel, ...session } = over;
-  const sessionId = await seedSession(user.root, user.profileId, { state: "completed", ...session });
+  const sessionId = await seedSession(user.root, user.profileId, {
+    state: "completed",
+    createdAt: Date.now() - daysAgo * DAY,
+    ...session,
+  });
   await seedMetadata(user.root, sessionId, user.profileId, {
     intensity: 8,
     thematicTags: ["work"],
@@ -107,8 +112,26 @@ describe("the compounding upsell (#524)", () => {
     const sessionId = await tonight(user, over);
     expect(await user.t.query(api.compounding.upsell.get, { sessionId })).toBeNull();
     expect(await user.t.query(api.compounding.upsell.get, {})).toBeNull();
-    // Nothing spent: the next ordinary session can still show it.
-    expect(await user.t.query(api.compounding.upsell.get, { sessionId: await tonight(user) })).not.toBeNull();
+    // Still blocked by the next ordinary session (#530), and nothing spent.
+    expect(await user.t.query(api.compounding.upsell.get, { sessionId: await tonight(user) })).toBeNull();
+    const [row] = await user.root.run((ctx) => ctx.db.query("compounding_stretches").take(1));
+    expect(row.upsellShownAt).toBeUndefined();
+  });
+
+  // #530: one calm session tonight mustn't hide this morning's crisis.
+  it.each<[string, Tonight, number, number, boolean]>([
+    ["crisis 3 days ago, 1-day stretch", { safeguardLevel: "crisis" }, 3, 1, false],
+    ["crisis 30 days ago, inside a 60-day stretch", { safeguardLevel: "crisis" }, 30, 60, false],
+    ["crisis 30 days ago, before a 2-day stretch", { safeguardLevel: "crisis" }, 30, 2, true],
+    ["burned yesterday", { kept: false }, 1, 20, false],
+  ])("%s → shown: %s", async (_, over, hardDaysAgo, stretchDaysAgo, shown) => {
+    const user = await asNewUser();
+    await compoundingWork(user, stretchDaysAgo);
+    await tonight(user, over, hardDaysAgo);
+    const sessionId = await tonight(user);
+    const atEnd = await user.t.query(api.compounding.upsell.get, { sessionId });
+    expect(atEnd !== null).toBe(shown);
+    expect((await user.t.query(api.compounding.upsell.get, {})) !== null).toBe(shown);
   });
 
   it("shows once per stretch, and again in the next one", async () => {
