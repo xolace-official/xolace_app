@@ -116,6 +116,8 @@ export function gateInsight(draft: InsightDraft, evidence: GateEvidence): Result
   }
   for (const d of domains) {
     if (!cited.some((s) => s.domains.includes(d))) return no(`No cited session is about ${d}; cite at least one that is.`);
+    // Its sessions are all past the loader's window: no score to store beside it (#535).
+    if (!evidence.domains.has(d)) return no(`${d} has no score right now; leave it out.`);
   }
   if ((overall || kind === "absence") && cited.length < 3) {
     return no("This kind rests on at least three cited sessions.");

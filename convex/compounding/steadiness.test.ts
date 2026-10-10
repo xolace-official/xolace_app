@@ -30,6 +30,11 @@
  *     a new version ships with no offset recorded (#516).
  * 20. Lately counts toward the usual, so a sustained drop sinks the baseline
  *     it's measured against (#527).
+ * 21. Travel (days re-cut in a new timezone) or retention leaving fewer days
+ *     re-locks a domain already recorded unlocked; or a recorded unlock leaks
+ *     into a replay from before it (#535).
+ * 22. Quiet domains drag the overall dial; or everything going quiet blanks it
+ *     instead of holding (#535).
  */
 import { describe, expect, it } from "vitest";
 import { domainOf } from "../lib/understandingVocab";
@@ -273,5 +278,26 @@ describe("computeSteadiness", () => {
     // Work has 6 readings and family 3: equal weight per domain, not per reading.
     const both = compute([...days("work", 40, 6), ...days("family", 90), ...days("money", 0, 1)]);
     expect(both.overall).toBeCloseTo(65, 9);
+  });
+
+  it("overall leaves quiet domains out, but holds when every one is quiet (22)", () => {
+    const days = (domain: Reading["domain"], value: number, agoDays: number) =>
+      [0, 1, 2].map((d) => r({ domain, value, at: NOW - (agoDays + d) * DAY }));
+    const oldMoney = compute([...days("work", 40, 0), ...days("family", 80, 0), ...days("money", 0, 150)]);
+    expect(oldMoney.overall).toBeCloseTo(60, 9);
+    // Still needs two unlocked domains, quiet or not, to show at all.
+    expect(compute([...days("work", 40, 0), ...days("money", 0, 150)]).overall).toBeCloseTo(40, 9);
+    expect(compute([...days("work", 40, 100), ...days("money", 0, 150)]).overall).toBeCloseTo(20, 9);
+  });
+
+  it("a recorded unlock holds while readings remain, never before it was recorded (21)", () => {
+    const twoDays = [r({ at: NOW - 40 * DAY }), r({ at: NOW - DAY })];
+    const unlocked = [{ domain: "work" as const, at: NOW - 50 * DAY }];
+    expect(compute(twoDays).domains[0].state).toBe("warming");
+    const held = computeSteadiness(twoDays, { now: NOW, timezone: "UTC", unlocked }).domains[0];
+    expect(held).toMatchObject({ state: "unlocked", steadiness: 50 });
+    expect(computeSteadiness(twoDays, { now: NOW, timezone: "UTC", unlocked: [{ domain: "work", at: NOW + 1 }] }).domains[0].state).toBe("warming");
+    // Only a floor: it never makes a domain settled.
+    expect(computeSteadiness(twoDays, { now: NOW, timezone: "UTC", unlocked }).domains[0].baseline).toBeNull();
   });
 });

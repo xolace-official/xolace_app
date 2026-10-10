@@ -80,11 +80,11 @@ export const domainSteadiness = internalQuery({
   handler: async (ctx, { emotionalProfileId: profileId }) => {
     const now = Date.now();
     const loaded = await loadReadings(ctx, profileId);
-    const { readings, timezone } = loaded;
-    const trend = trendFor(readings, { now, timezone });
+    const { readings, timezone, unlocked } = loaded;
+    const trend = trendFor(readings, { now, timezone, unlocked });
     const live = new Map((await compoundingFor(ctx, profileId, { now, loaded })).map((c) => [c.domain, c]));
 
-    const domains = computeSteadiness(readings, { now, timezone }).domains.map((d) => {
+    const domains = computeSteadiness(readings, { now, timezone, unlocked }).domains.map((d) => {
       const c = live.get(d.domain);
       return {
         domain: d.domain,

@@ -31,6 +31,17 @@ export type Reading = {
 
 export type DomainState = "warming" | "unlocked" | "settled";
 
+/**
+ * When a domain was first recorded out of warming (#535). A floor, not a
+ * state: it holds a domain at unlocked once travel (days re-cut in a new
+ * timezone) or retention leaves it fewer days, because silence never
+ * re-locks. Dropped when a domain is left no readings (CONTEXT.md).
+ */
+export type UnlockStamp = { domain: Domain; at: number };
+
+/** The moment to compute at, the timezone days are cut in, and the recorded unlocks. */
+export type SteadinessClock = { now: number; timezone: string; unlocked?: UnlockStamp[] };
+
 export type DomainSteadiness = {
   domain: Domain;
   state: DomainState;
@@ -52,7 +63,7 @@ export type DomainSteadiness = {
 
 export function computeSteadiness(
   allReadings: Reading[],
-  { now, timezone }: { now: number; timezone: string },
+  { now, timezone, unlocked = [] }: SteadinessClock,
 ): { domains: DomainSteadiness[]; overall: number | null } {
   const byDomain = new Map<Domain, Reading[]>();
   for (const reading of allReadings) {
@@ -63,12 +74,16 @@ export function computeSteadiness(
   }
 
   const domains = [...byDomain].map(([domain, readings]) =>
-    domainSteadiness(domain, readings, now, timezone),
+    domainSteadiness(domain, readings, now, timezone, unlocked.some((u) => u.domain === domain && u.at <= now)),
   );
-  const unlocked = domains.filter((d) => d.state !== "warming");
+  const shown = domains.filter((d) => d.state !== "warming");
+  // Product call (#535): a quiet domain stays on screen but out of the dial,
+  // so one bad month long ago can't hold it down. All quiet → silence holds.
+  const recent = shown.filter((d) => !d.quiet);
+  const counted = recent.length ? recent : shown;
   const overall =
-    unlocked.length >= OVERALL_MIN_UNLOCKED
-      ? unlocked.reduce((sum, d) => sum + d.raw.steadiness, 0) / unlocked.length
+    shown.length >= OVERALL_MIN_UNLOCKED
+      ? counted.reduce((sum, d) => sum + d.raw.steadiness, 0) / counted.length
       : null;
   return { domains, overall };
 }
@@ -78,6 +93,7 @@ function domainSteadiness(
   readings: Reading[],
   now: number,
   timezone: string,
+  recordedUnlocked: boolean,
 ): DomainSteadiness {
   const sessions = readings.filter((r) => r.source === "session");
   const sessionDays = new Set(sessions.map((r) => localDayKey(r.at, timezone))).size;
@@ -87,7 +103,7 @@ function domainSteadiness(
   const state: DomainState =
     sessionDays >= SETTLE_DAYS && now - firstSessionAt >= SETTLE_SPAN_DAYS * DAY_MS
       ? "settled"
-      : sessionDays >= UNLOCK_DAYS
+      : sessionDays >= UNLOCK_DAYS || recordedUnlocked
         ? "unlocked"
         : "warming";
 

@@ -44,10 +44,10 @@ export const steadiness = internalQuery({
   }),
   handler: async (ctx, args) => {
     assertDevToolsEnabled();
-    const { readings, timezone } = await loadReadings(ctx, args.profileId);
+    const { readings, timezone, unlocked } = await loadReadings(ctx, args.profileId);
     return {
       timezone,
-      ...computeSteadiness(readings, { now: args.now ?? Date.now(), timezone }),
+      ...computeSteadiness(readings, { now: args.now ?? Date.now(), timezone, unlocked }),
     };
   },
 });

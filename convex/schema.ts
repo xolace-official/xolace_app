@@ -215,6 +215,13 @@ export default defineSchema({
     // the data-wipe pipeline alongside currentSemanticProfileId.
     lastConsolidationAt: v.optional(v.number()),
 
+    // --- Steadiness (#535) ---
+    // When each domain first left warming. Outlives the session that unlocked
+    // it, so travel or retention leaving fewer days never re-locks it or
+    // replays its beat. Dropped by retention once a domain has no readings;
+    // cleared by the data wipe. One entry per domain at most.
+    unlockedDomains: v.optional(v.array(v.object({ domain: domainValidator, at: v.number() }))),
+
     // --- Timestamps ---
     createdAt: v.number(),
     updatedAt: v.number(),

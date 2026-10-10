@@ -82,8 +82,8 @@ export async function evaluateCompounding(
   }
 
   const loaded = await loadReadings(ctx, profileId);
-  const { readings, timezone } = loaded;
-  const clock = { now, timezone };
+  const { readings, timezone, unlocked } = loaded;
+  const clock = { now, timezone, unlocked };
   // The same reading may unlock a domain (#523).
   const session = sessionId && (await ctx.db.get("sessions", sessionId));
   if (session) await recordUnlock(ctx, session, loaded);
@@ -140,9 +140,9 @@ export async function compoundingFor(
   profileId: Id<"emotional_profiles">,
   { now = Date.now(), loaded }: { now?: number; loaded?: Awaited<ReturnType<typeof loadReadings>> } = {},
 ): Promise<Compounding[]> {
-  const { readings, timezone } = loaded ?? (await loadReadings(ctx, profileId));
+  const { readings, timezone, unlocked } = loaded ?? (await loadReadings(ctx, profileId));
   const live: Omit<Compounding, "coDomains">[] = [];
-  for (const d of computeSteadiness(readings, { now, timezone }).domains) {
+  for (const d of computeSteadiness(readings, { now, timezone, unlocked }).domains) {
     const [row, previous] = await newestStretches(ctx, profileId, d.domain);
     if (!row || row.endedAt !== undefined) continue;
     const judged = judgeOpen(d, row, { now, timezone });

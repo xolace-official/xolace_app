@@ -208,6 +208,7 @@ export const wipe = internalMutation({
         dataWipeInProgress: undefined,
         currentSemanticProfileId: undefined,
         lastConsolidationAt: undefined,
+        unlockedDomains: undefined,
         updatedAt: Date.now(),
       });
       if (profileBeforeReset) await rankReplace(ctx, profileBeforeReset);

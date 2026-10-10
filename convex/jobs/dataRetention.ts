@@ -60,6 +60,11 @@ export const enforce = internalMutation({
       }
 
       await purgeSessions(ctx, pref.emotionalProfileId, oldSessions);
+      if (oldSessions.length > 0) {
+        await ctx.scheduler.runAfter(0, internal.compounding.unlocks.dropColdUnlocks, {
+          profileId: pref.emotionalProfileId,
+        });
+      }
 
       // Sweep old semantic profile VERSIONS past the cutoff. The current
       // version is always kept — retention shortens history, it doesn't

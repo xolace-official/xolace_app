@@ -48,7 +48,9 @@ the person's real usual, not a copy of their recent weeks; only then does
 "your usual" show and can the domain compound. Coming back, not talking
 more in one night, is what moves a domain forward. Silence never re-locks a
 domain; it goes cold again only if retention or a wipe leaves it no
-readings. Unlocking is earned by signal alone, never by payment; what a
+readings. Until then it stays at least unlocked, even if travel or
+retention leaves it fewer distinct days, so its unlock moment never comes
+twice. Unlocking is earned by signal alone, never by payment; what a
 person may *view* once a domain is unlocked is a separate gate.
 "Unlocked" is the code's word, not necessarily the user's.
 
@@ -100,7 +102,10 @@ compared with the person's own baseline, never with other people. Silence
 moves neither; a quiet domain keeps its last steadiness and is marked as not
 recent.
 
-**Overall steadiness** is the plain average of the domains being shown.
+**Overall steadiness** is the plain average of the domains being shown,
+leaving out quiet ones: a quiet domain stays on screen, marked not recent,
+but a bad month long ago no longer holds the dial down. If every shown
+domain is quiet, they all count, so silence holds the dial too.
 
 A domain's **trend** is how far its steadiness has moved since exactly a
 week ago. It only exists when the person could have seen a number a week ago

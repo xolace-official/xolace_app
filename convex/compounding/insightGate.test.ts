@@ -9,6 +9,8 @@
  * sessions bunched in a single week) passing as a revelation; an overall
  * insight resting on one domain; a "what you say vs after" with no check-ins
  * behind it; "where relief came from" citing nothing that ended lighter.
+ * And a named domain with no live score (its sessions all past the loader's
+ * window) crashing the save instead of being refused (#535).
  *
  * shownNow (read time): an insight shown before its domains unlock, one
  * leaning on "your usual" before the domain settles, or one left beside a
@@ -112,6 +114,12 @@ describe("gateInsight", () => {
       // Love sits exactly at its usual: neither lower nor higher.
       expect(reason({ ...crowding, domains: ["love", "work"], direction: "higher" })).toMatch(/direction/);
     });
+  });
+
+  it("refuses a domain with no score now: its only session is past the loader's window (#535)", () => {
+    const noScore = { sessions, domains: new Map([...domains].filter(([d]) => d !== "work")) };
+    const r = gateInsight(absence(), noScore);
+    expect(r.ok ? null : r.reason).toMatch(/no score/i);
   });
 
   it("a per-domain insight names one domain", () => {

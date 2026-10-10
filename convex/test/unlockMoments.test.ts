@@ -9,7 +9,8 @@
  * domain was already open; free users left out; the push naming the domain;
  * the push firing after the beat was seen, with notifications or milestones
  * off, inside the quiet window, or twice in a week; and the push landing
- * anywhere but the next day in the person's usual hour.
+ * anywhere but the next day in the person's usual hour. Retention:
+ * unlockRetention.test.ts.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/component/schema";

@@ -12,7 +12,7 @@ import {
   type Domain,
   type PrimaryEmotion,
 } from "../lib/understandingVocab";
-import type { Reading } from "./steadiness";
+import type { Reading, UnlockStamp } from "./steadiness";
 
 const VALENCE_FLOOR = 75;
 /**
@@ -118,12 +118,15 @@ export function readingsFromSession(s: SessionEvidence): Reading[] {
 // ones barely move the baseline; replace with a stored rollup if a heavy user nears it.
 const MAX_SESSIONS = 1000;
 
-/** Every reading that remains for a profile, plus the timezone days are cut in. */
+/**
+ * Every reading that remains for a profile, plus the timezone days are cut in
+ * and the domains recorded unlocked — the rest of computeSteadiness's clock.
+ */
 export async function loadReadings(
   ctx: QueryCtx,
   profileId: Id<"emotional_profiles">,
-): Promise<{ readings: Reading[]; timezone: string }> {
-  const [metadata, cards, preferences] = await Promise.all([
+): Promise<{ readings: Reading[]; timezone: string; unlocked: UnlockStamp[]; truncated: boolean }> {
+  const [metadata, cards, preferences, profile] = await Promise.all([
     ctx.db
       .query("emotional_metadata")
       .withIndex("by_profile_createdAt", (q) => q.eq("emotionalProfileId", profileId))
@@ -138,6 +141,7 @@ export async function loadReadings(
       .query("preferences")
       .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
       .unique(),
+    ctx.db.get("emotional_profiles", profileId),
   ]);
 
   const followUps = new Map<Id<"sessions">, SessionEvidence["followUps"]>();
@@ -164,5 +168,11 @@ export async function loadReadings(
       followUps: followUps.get(meta.sessionId) ?? [],
     });
   });
-  return { readings, timezone: preferences?.notifications.timezone ?? "UTC" };
+  return {
+    readings,
+    timezone: preferences?.notifications.timezone ?? "UTC",
+    unlocked: profile?.unlockedDomains ?? [],
+    /** Hit MAX_SESSIONS: older readings exist that this read didn't see. */
+    truncated: metadata.length === MAX_SESSIONS,
+  };
 }

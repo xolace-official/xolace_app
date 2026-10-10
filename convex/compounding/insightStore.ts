@@ -88,9 +88,9 @@ export const save = internalMutation({
       const s = await citable(ctx, profileId, id);
       if (s) sessions.set(id, s);
     }
-    const { readings, timezone } = await loadReadings(ctx, profileId);
+    const { readings, timezone, unlocked } = await loadReadings(ctx, profileId);
     const domains = new Map(
-      computeSteadiness(readings, { now: Date.now(), timezone }).domains.map((d) => [d.domain, d.raw]),
+      computeSteadiness(readings, { now: Date.now(), timezone, unlocked }).domains.map((d) => [d.domain, d.raw]),
     );
     const gate = gateInsight(draft, { sessions, domains });
     if (!gate.ok) return `Rejected, not saved: ${gate.reason}`;
@@ -111,7 +111,7 @@ export const save = internalMutation({
       kind: draft.kind,
       domains: draft.domains,
       direction: draft.direction,
-      // The gate saw every named domain in a cited session, so each has a reading.
+      // The gate refused any named domain without a score.
       scoresAt: draft.domains.map((d) => domains.get(d)!.steadiness),
       text: draft.text.trim(),
       citedSessionIds: cited.map((s) => s.id as Id<"sessions">),

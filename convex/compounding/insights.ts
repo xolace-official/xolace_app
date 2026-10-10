@@ -67,8 +67,8 @@ export const freeView = query({
   returns: v.object({ overall: nullableNumber, domains: v.array(v.object(freeDomain)) }),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
-    const { readings, timezone } = await loadReadings(ctx, profile._id);
-    const { domains, overall } = computeSteadiness(readings, { now: Date.now(), timezone });
+    const { readings, timezone, unlocked } = await loadReadings(ctx, profile._id);
+    const { domains, overall } = computeSteadiness(readings, { now: Date.now(), timezone, unlocked });
     return { overall: round(overall), domains: ordered(domains).map(freeFields) };
   },
 });
@@ -105,11 +105,12 @@ export const plusView = query({
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     if (!(await hasPremium(ctx, profile))) return null;
-    const { readings, timezone } = await loadReadings(ctx, profile._id);
+    const loaded = await loadReadings(ctx, profile._id);
+    const { readings, timezone, unlocked } = loaded;
     const now = Date.now();
-    const { domains, overall } = computeSteadiness(readings, { now, timezone });
-    const trend = trendFor(readings, { now, timezone });
-    const live = await compoundingFor(ctx, profile._id, { now, loaded: { readings, timezone } });
+    const { domains, overall } = computeSteadiness(readings, { now, timezone, unlocked });
+    const trend = trendFor(readings, { now, timezone, unlocked });
+    const live = await compoundingFor(ctx, profile._id, { now, loaded });
     // Compounding first, then easing, each by compoundingFor's rank (#491).
     const flagged = new Map(
       [...live.filter((c) => c.state === "compounding"), ...live.filter((c) => c.state === "easing")].map(
