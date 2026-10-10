@@ -107,6 +107,16 @@ describe("readingsFromSession", () => {
     expect(readingsFromSession(session({ intensity: 9, primaryEmotion: "anger" }))[0].value).toBeCloseTo(11.1, 1);
   });
 
+  it("stands the guard down when a heavy secondary feeling came with it", () => {
+    const love9 = (secondaryEmotion?: string) =>
+      readingsFromSession(session({ intensity: 9, primaryEmotion: "love", secondaryEmotion }))[0].value;
+    expect(love9("grief")).toBeCloseTo(11.1, 1);
+    expect(love9("hopelessness")).toBeCloseTo(11.1, 1); // child of sadness
+    expect(love9("joy")).toBe(75);
+    expect(love9("confusion")).toBe(75);
+    expect(love9(undefined)).toBe(75);
+  });
+
   it("reads a shifted classifier on the reference scale via its offset, guard after", () => {
     // A version that scores 1 hotter: its 5 is the reference's 4.
     expect(readingsFromSession(session({ intensity: 5, intensityOffset: 1 }))[0].value).toBeCloseTo(66.67, 1);

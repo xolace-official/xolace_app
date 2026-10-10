@@ -10,6 +10,22 @@ import { domainOf, emotionFamily, type Domain } from "../lib/understandingVocab"
 import type { Reading } from "./steadiness";
 
 const VALENCE_FLOOR = 75;
+/**
+ * Root emotions whose family makes a secondary feeling heavy enough to stand
+ * the valence guard down (#532). Children count through `emotionFamily`.
+ * Left out: surprise and confusion (not heavy), joy and love (the guarded side).
+ */
+const HEAVY_ROOTS = new Set([
+  "anger",
+  "sadness",
+  "grief",
+  "fear",
+  "anxiety",
+  "disgust",
+  "shame",
+  "guilt",
+  "numbness",
+]);
 const UNCONFIRMED_WEIGHT = 0.5;
 
 /**
@@ -46,6 +62,7 @@ export type SessionEvidence = {
   /** INTENSITY_OFFSET for the version that scored `intensity`. */
   intensityOffset?: number;
   primaryEmotion: string;
+  secondaryEmotion?: string;
   thematicTags: string[];
   confirmationState?: Doc<"sessions">["confirmationState"];
   postSessionMood?: Doc<"sessions">["postSessionMood"];
@@ -63,8 +80,12 @@ export function readingsFromSession(s: SessionEvidence): Reading[] {
   const intensity = s.intensity - (s.intensityOffset ?? 0);
   const linear = clamp(100 - ((intensity - 1) * 100) / 9);
   const family = emotionFamily(s.primaryEmotion);
-  const value =
-    family.includes("joy") || family.includes("love") ? Math.max(linear, VALENCE_FLOOR) : linear;
+  const heavySecondary =
+    s.secondaryEmotion !== undefined &&
+    emotionFamily(s.secondaryEmotion).some((e) => HEAVY_ROOTS.has(e));
+  // Stands down for heartbreak labelled love, desperate hope (CONTEXT.md → valence guard).
+  const guarded = (family.includes("joy") || family.includes("love")) && !heavySecondary;
+  const value = guarded ? Math.max(linear, VALENCE_FLOOR) : linear;
   // Confirmation says how far to trust the Understanding — and so every
   // reading built on it, self-reports included.
   const weight =
@@ -131,6 +152,7 @@ export async function loadReadings(
       intensity: meta.intensity,
       intensityOffset: INTENSITY_OFFSET[meta.classifierVersion],
       primaryEmotion: meta.primaryEmotion,
+      secondaryEmotion: meta.secondaryEmotion,
       thematicTags: meta.thematicTags,
       confirmationState: session.confirmationState,
       postSessionMood: session.postSessionMood,
