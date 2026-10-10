@@ -3,7 +3,7 @@
  * change ships. Steadiness trusts stored intensity (ADR 0019), so a change
  * that moves it moves every score.
  *
- * Run: `bun run test:evals` (needs ANTHROPIC_API_KEY; skips cleanly without).
+ * Run: `bun run test:evals:intensity` (needs ANTHROPIC_API_KEY; skips cleanly without).
  *
  * Gates, all against the reference means in intensity.fixtures.eval.ts:
  *   1. Positive probe (#494): good news still lands in the joy/love family, so

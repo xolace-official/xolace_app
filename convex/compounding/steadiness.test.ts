@@ -38,7 +38,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { domainOf } from "../lib/understandingVocab";
-import { CLASSIFIER_VERSION } from "../ai/providers/anthropic";
+import { CLASSIFIER_MODEL, CLASSIFIER_VERSION } from "../ai/providers/anthropic";
 import { INTENSITY_OFFSET, readingsFromSession, type SessionEvidence } from "./readings";
 import { computeSteadiness, type Reading } from "./steadiness";
 
@@ -135,6 +135,14 @@ describe("readingsFromSession", () => {
     expect(INTENSITY_OFFSET).toHaveProperty([CLASSIFIER_VERSION]);
     // The reference scale itself never moves, or its stored history would shift.
     expect(INTENSITY_OFFSET["classifier-v1-haiku-4.5"]).toBe(0);
+  });
+
+  it("the classifier version names its model, so a model swap can't skip the version bump (#533)", () => {
+    // claude-haiku-4-5-20251001 → haiku-4.5; claude-haiku-5-5 → haiku-5.5
+    const id = /^claude-([a-z]+)-(\d+)-(\d+)/;
+    expect(CLASSIFIER_MODEL, "model id format changed; update this check").toMatch(id);
+    const [, family, major, minor] = CLASSIFIER_MODEL.match(id)!;
+    expect(CLASSIFIER_VERSION).toMatch(new RegExp(`^classifier-v\\d+-${family}-${major}\\.${minor}$`));
   });
 
   it("adds a mood reading on the session's date, relative and capped", () => {
