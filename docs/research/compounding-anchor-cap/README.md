@@ -39,3 +39,25 @@ If a new normal should stop reading as compounding sooner, the lever is the usua
 | weekly | 365 | perm | d21 | 196 | 196 | 196 | 196 |
 
 A short cap never ends a stretch while the dip is still going: every dip ends at or after its recovery day.
+
+## Noise ±10, 10 trials (median end day by cap)
+
+The same picture holds. For a permanent shift, the caps release within a few days of each other, and in most cells on exactly the same day. The cap only moves the post-recovery tail of a 60-day dip.
+
+| cadence | history | dip | opened | 30 | 45 | 60 | 90 |
+|---|---|---|---|---|---|---|---|
+| daily | 60 | perm | 90% | 111 | 111 | 114 | 116 |
+| daily | 60 | 60 | 90% | 64 | 65 | 80 | 96 |
+| daily | 120 | perm | 100% | 143 | 143 | 143 | 143 |
+| daily | 365 | perm | 100% | 186 | 186 | 186 | 186 |
+| daily | 365 | 60 | 100% | 73 | 73 | 82 | 94 |
+| 2d | 60 | perm | 90% | 100 | 100 | 100 | 112 |
+| 2d | 120 | perm | 100% | 136 | 136 | 136 | 136 |
+| 2d | 365 | perm | 100% | 174 | 174 | 174 | 174 |
+| 2d | 120 | 60 | 100% | 68 | 70 | 80 | 102 |
+| weekly | 60 | perm | 90% | 133 | 133 | 133 | 133 |
+| weekly | 120 | perm | 100% | 133 | 133 | 140 | 140 |
+| weekly | 365 | perm | 100% | 175 | 175 | 175 | 175 |
+| weekly | 60 | 60 | 80% | 63 | 70 | 84 | 105 |
+
+No stretch was still open at day 365 in any cell.
