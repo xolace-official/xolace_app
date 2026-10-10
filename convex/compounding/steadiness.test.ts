@@ -28,6 +28,8 @@
  *     seam).
  * 19. A classifier change shifts intensity and the baseline jumps with it, or
  *     a new version ships with no offset recorded (#516).
+ * 20. Lately counts toward the usual, so a sustained drop sinks the baseline
+ *     it's measured against (#527).
  */
 import { describe, expect, it } from "vitest";
 import { domainOf } from "../lib/understandingVocab";
@@ -168,7 +170,7 @@ describe("readingsFromSession", () => {
 });
 
 describe("computeSteadiness", () => {
-  it("decay-weights steadiness at a 21-day half-life and baseline at 90", () => {
+  it("decay-weights steadiness at a 21-day half-life and the usual at 90, lately excluded (20)", () => {
     const days = [0, 1, 2, 3, 4].map((d) => NOW - (21 + d) * DAY);
     const old = days.map((at) => r({ value: 0, at }));
     const recent = [r({ value: 100, at: NOW })];
@@ -178,7 +180,11 @@ describe("computeSteadiness", () => {
     const w90 = days.reduce((s, at) => s + 2 ** (-(NOW - at) / (90 * DAY)), 0);
     expect(work.state).toBe("settled");
     expect(work.steadiness).toBeCloseTo(100 / (1 + w21), 6);
-    expect(work.baseline).toBeCloseTo(100 / (1 + w90), 6);
+    expect(work.baseline).toBe(0); // today's 100 is lately, not the usual
+    const older = [...old, r({ value: 100, at: NOW - 30 * DAY })];
+    const w = 2 ** (-5 / 90); // the 30-day reading, decayed to the newest usual one (25 days ago)
+    const ws = days.reduce((s, at) => s + 2 ** (-(NOW - 25 * DAY - at) / (90 * DAY)), 0);
+    expect(compute(older).domains[0].baseline).toBeCloseTo((100 * w) / (w + ws), 6);
     expect(work.evidenceWeight).toBeCloseTo(1 + w21, 6);
   });
 

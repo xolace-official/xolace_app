@@ -14,14 +14,14 @@ import {
   QUIET_AFTER_DAYS,
   type DomainSteadiness,
   type Reading,
+  USUAL_AFTER_MS,
+  usualOf,
 } from "./steadiness";
 
 const DAY_MS = 86_400_000;
 const MIN_BAND = 12;
-const SIGNAL_WINDOW_MS = 21 * DAY_MS;
-// Readings older than this are "the usual" the band is measured on. Matches the
-// signal window so no reading is both evidence of the drop and part of the usual.
-const USUAL_AFTER_MS = 21 * DAY_MS;
+// Matches the usual's cutoff so no reading is both evidence of the drop and part of the usual.
+const SIGNAL_WINDOW_MS = USUAL_AFTER_MS;
 const MIN_BELOW_DAYS = 2;
 const ANCHOR_CAP_MS = 90 * DAY_MS;
 const SILENCE_MS = QUIET_AFTER_DAYS * DAY_MS; // the same silence that marks a score quiet
@@ -43,7 +43,7 @@ export type Judged =
  * the stretch's own readings never count as the usual either.
  */
 export function bandOf(d: DomainSteadiness, since: number): number {
-  const usual = d.readings.filter((r) => r.at <= since - USUAL_AFTER_MS);
+  const usual = usualOf(d.readings, since);
   if (usual.length === 0) return MIN_BAND;
   return Math.max(MIN_BAND, decayedMean(usual, since, BASELINE_HALF_LIFE_DAYS).sd);
 }

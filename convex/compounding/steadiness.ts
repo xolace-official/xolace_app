@@ -14,6 +14,10 @@ export const QUIET_AFTER_DAYS = 30;
 const UNLOCK_DAYS = 3;
 const SETTLE_DAYS = 5;
 const SETTLE_SPAN_DAYS = 21;
+// "Your usual" is the readings older than this (#527): lately never counts
+// toward it, so a sustained drop can't sink the usual it's measured against.
+// Equal to the settle span, so every settled domain has a usual.
+export const USUAL_AFTER_MS = SETTLE_SPAN_DAYS * DAY_MS;
 const OVERALL_MIN_UNLOCKED = 2;
 
 /** One dated piece of evidence about a domain, 0–100, higher = steadier. */
@@ -32,7 +36,7 @@ export type DomainSteadiness = {
   state: DomainState;
   /** Shown steadiness: null while warming. */
   steadiness: number | null;
-  /** "Your usual": null until settled. */
+  /** "Your usual", from readings older than USUAL_AFTER_MS: null until settled. */
   baseline: number | null;
   /** Ungated means, for replay and debugging — never put these on a screen. */
   raw: { steadiness: number; baseline: number };
@@ -86,19 +90,26 @@ function domainSteadiness(
         : "warming";
 
   const short = decayedMean(readings, now, STEADINESS_HALF_LIFE_DAYS);
-  const long = decayedMean(readings, now, BASELINE_HALF_LIFE_DAYS);
+  // A settled domain always has a usual; the fallback only feeds raw for unsettled ones.
+  const usual = usualOf(readings, now);
+  const usualMean = decayedMean(usual.length ? usual : readings, now, BASELINE_HALF_LIFE_DAYS);
   return {
     domain,
     state,
     steadiness: state === "warming" ? null : short.mean,
-    baseline: state === "settled" ? long.mean : null,
-    raw: { steadiness: short.mean, baseline: long.mean },
+    baseline: state === "settled" ? usualMean.mean : null,
+    raw: { steadiness: short.mean, baseline: usualMean.mean },
     lastReadingAt,
     quiet: now - lastReadingAt >= QUIET_AFTER_DAYS * DAY_MS,
     evidenceWeight: short.weight,
     sessionDays,
     readings,
   };
+}
+
+/** The readings that count as the usual as of `at`: everything before lately. */
+export function usualOf(readings: Reading[], at: number): Reading[] {
+  return readings.filter((r) => r.at <= at - USUAL_AFTER_MS);
 }
 
 /**

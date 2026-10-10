@@ -16,6 +16,8 @@
  *     at the next evaluation instead of last reading + 30 days.
  *  9. Easing fires on one lifted reading, or on two from the same day.
  * 10. Share trend counts readings instead of sessions, or ignores the window.
+ * 11. The usual includes lately, so it sinks with a sustained drop and the
+ *     drop never clears the band (#527).
  */
 import { describe, expect, it } from "vitest";
 import { bandOf, isEasing, judgeOpen, opens, sharedSessions, shareTrend } from "./detect";
@@ -93,6 +95,36 @@ describe("opens", () => {
     const high = Array.from({ length: 10 }, (_, i) => r(20 - i, 100));
     const d = work([...usual(50), ...high, ...heavy(4, 60)]);
     expect(opens(d, at)).toBe(false);
+  });
+});
+
+describe("the usual excludes lately (11)", () => {
+  /** Steady daily sessions for `history` days, then a daily `drop`: the first day it opens. */
+  const firstOpenDay = (history: number, steady: number, drop: number) => {
+    const start = NOW - 60 * DAY;
+    const before = Array.from({ length: history }, (_, i) => ({ ...r(0, steady), at: start - (i + 0.5) * DAY }));
+    for (let day = 1; day <= 60; day++) {
+      const after = Array.from({ length: day }, (_, i) => ({ ...r(0, steady + drop), at: start + (i + 0.5) * DAY }));
+      const now = start + day * DAY;
+      if (opens(work([...before, ...after], now), { now, timezone: TZ })) return day;
+    }
+    return null;
+  };
+
+  it("a long usual dropping 30 opens within ~16 days", () => {
+    const day = firstOpenDay(120, 70, -30);
+    expect(day).not.toBeNull();
+    expect(day!).toBeLessThanOrEqual(16);
+  });
+
+  it("a just-settled usual dropping 60 opens within days", () => {
+    const day = firstOpenDay(21, 70, -60);
+    expect(day).not.toBeNull();
+    expect(day!).toBeLessThanOrEqual(4);
+  });
+
+  it("a 10-point dip never opens", () => {
+    expect(firstOpenDay(120, 70, -10)).toBeNull();
   });
 });
 
